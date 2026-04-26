@@ -1,0 +1,327 @@
+import type { SourceWeaponDetail } from "../weapons-detail-data";
+
+export const gloriousmemory = {
+  slug: "gloriousmemory",
+  name: "찬란했던 기억",
+  enName: "Glorious Memory",
+  rarity: 6,
+  weaponType: "sword",
+  image: "/weapons/gloriousmemory.webp",
+  series: "어둠",
+  mainStatLabel: "공격력",
+  subStatLabel: "민첩",
+
+  levelStats: [
+    { level: 1, attack: 50 },
+    { level: 2, attack: 54 },
+    { level: 3, attack: 59 },
+    { level: 4, attack: 64 },
+    { level: 5, attack: 69 },
+    { level: 6, attack: 74 },
+    { level: 7, attack: 79 },
+    { level: 8, attack: 84 },
+    { level: 9, attack: 89 },
+    { level: 10, attack: 94 },
+    { level: 11, attack: 99 },
+    { level: 12, attack: 104 },
+    { level: 13, attack: 109 },
+    { level: 14, attack: 114 },
+    { level: 15, attack: 119 },
+    { level: 16, attack: 124 },
+    { level: 17, attack: 129 },
+    { level: 18, attack: 134 },
+    { level: 19, attack: 139 },
+    { level: 20, attack: 144 },
+    { level: 21, attack: 149 },
+    { level: 22, attack: 153 },
+    { level: 23, attack: 158 },
+    { level: 24, attack: 163 },
+    { level: 25, attack: 168 },
+    { level: 26, attack: 173 },
+    { level: 27, attack: 178 },
+    { level: 28, attack: 183 },
+    { level: 29, attack: 188 },
+    { level: 30, attack: 193 },
+    { level: 31, attack: 198 },
+    { level: 32, attack: 203 },
+    { level: 33, attack: 208 },
+    { level: 34, attack: 213 },
+    { level: 35, attack: 218 },
+    { level: 36, attack: 223 },
+    { level: 37, attack: 228 },
+    { level: 38, attack: 233 },
+    { level: 39, attack: 238 },
+    { level: 40, attack: 243 },
+    { level: 41, attack: 248 },
+    { level: 42, attack: 252 },
+    { level: 43, attack: 257 },
+    { level: 44, attack: 262 },
+    { level: 45, attack: 267 },
+    { level: 46, attack: 272 },
+    { level: 47, attack: 277 },
+    { level: 48, attack: 282 },
+    { level: 49, attack: 287 },
+    { level: 50, attack: 292 },
+    { level: 51, attack: 297 },
+    { level: 52, attack: 302 },
+    { level: 53, attack: 307 },
+    { level: 54, attack: 312 },
+    { level: 55, attack: 317 },
+    { level: 56, attack: 322 },
+    { level: 57, attack: 327 },
+    { level: 58, attack: 332 },
+    { level: 59, attack: 337 },
+    { level: 60, attack: 342 },
+    { level: 61, attack: 347 },
+    { level: 62, attack: 351 },
+    { level: 63, attack: 356 },
+    { level: 64, attack: 361 },
+    { level: 65, attack: 366 },
+    { level: 66, attack: 371 },
+    { level: 67, attack: 376 },
+    { level: 68, attack: 381 },
+    { level: 69, attack: 386 },
+    { level: 70, attack: 391 },
+    { level: 71, attack: 396 },
+    { level: 72, attack: 401 },
+    { level: 73, attack: 406 },
+    { level: 74, attack: 411 },
+    { level: 75, attack: 416 },
+    { level: 76, attack: 421 },
+    { level: 77, attack: 426 },
+    { level: 78, attack: 431 },
+    { level: 79, attack: 436 },
+    { level: 80, attack: 441 },
+    { level: 81, attack: 446 },
+    { level: 82, attack: 450 },
+    { level: 83, attack: 455 },
+    { level: 84, attack: 460 },
+    { level: 85, attack: 465 },
+    { level: 86, attack: 470 },
+    { level: 87, attack: 475 },
+    { level: 88, attack: 480 },
+    { level: 89, attack: 485 },
+    { level: 90, attack: 490 },
+  ],
+
+  breakthrough: [
+    {
+      stage: 0,
+      requiredLevel: 1,
+      materials: [],
+      bonuses: [
+        "민첩 증가 · 대: 1/3",
+        "치명타 확률 증가 · 대: 1/3",
+        "어둠 · 사라지지 않은 여광: 1/4",
+      ],
+    },
+    {
+      stage: 1,
+      requiredLevel: 20,
+      materials: [
+        { name: "탈로시안 화폐", count: "2.2k" },
+        { name: "모형 틀", count: 5 },
+        { name: "연한 흑암석", count: 3 },
+      ],
+      bonuses: [
+        "민첩 증가 · 대: 2/5",
+        "치명타 확률 증가 · 대: 1/4",
+        "어둠 · 사라지지 않은 여광: 1/4",
+      ],
+    },
+    {
+      stage: 2,
+      requiredLevel: 40,
+      materials: [
+        { name: "탈로시안 화폐", count: "8.5k" },
+        { name: "모형 틀", count: 18 },
+        { name: "일반 흑암석", count: 5 },
+      ],
+      bonuses: [
+        "민첩 증가 · 대: 2/6",
+        "치명타 확률 증가 · 대: 2/6",
+        "어둠 · 사라지지 않은 여광: 1/4",
+      ],
+    },
+    {
+      stage: 3,
+      requiredLevel: 60,
+      materials: [
+        { name: "탈로시안 화폐", count: "25k" },
+        { name: "중형 모형 틀", count: 20 },
+        { name: "진한 흑암석", count: 5 },
+      ],
+      bonuses: [
+        "민첩 증가 · 대: 3/8",
+        "치명타 확률 증가 · 대: 2/7",
+        "어둠 · 사라지지 않은 여광: 1/4",
+      ],
+    },
+    {
+      stage: 4,
+      requiredLevel: 80,
+      materials: [
+        { name: "탈로시안 화폐", count: "90k" },
+        { name: "중형 모형 틀", count: 30 },
+        { name: "D96강 시제품 4번", count: 16 },
+        { name: "무릉석", count: 8 },
+      ],
+      bonuses: [
+        "민첩 증가 · 대: 3/9",
+        "치명타 확률 증가 · 대: 3/9",
+        "어둠 · 사라지지 않은 여광: 1/4",
+      ],
+    },
+  ],
+
+  skills: [
+    {
+      key: "agility-large",
+      typeLabel: "무기 스킬",
+      name: "민첩 증가 · 대",
+      icon: "/icons/weapons/skills/agility-large.webp",
+      meta: [{ label: "능력치", value: "민첩" }],
+      levelValues: [
+        { rank: "1", description: "민첩 +20", stats: [{ label: "민첩", value: "+20" }] },
+        { rank: "2", description: "민첩 +36", stats: [{ label: "민첩", value: "+36" }] },
+        { rank: "3", description: "민첩 +52", stats: [{ label: "민첩", value: "+52" }] },
+        { rank: "4", description: "민첩 +68", stats: [{ label: "민첩", value: "+68" }] },
+        { rank: "5", description: "민첩 +84", stats: [{ label: "민첩", value: "+84" }] },
+        { rank: "6", description: "민첩 +100", stats: [{ label: "민첩", value: "+100" }] },
+        { rank: "7", description: "민첩 +116", stats: [{ label: "민첩", value: "+116" }] },
+        { rank: "8", description: "민첩 +132", stats: [{ label: "민첩", value: "+132" }] },
+        { rank: "9", description: "민첩 +156", stats: [{ label: "민첩", value: "+156" }] },
+      ],
+      compareRows: [
+        {
+          label: "민첩",
+          values: ["+20", "+36", "+52", "+68", "+84", "+100", "+116", "+132", "+156"],
+        },
+      ],
+    },
+    {
+      key: "crit-rate-large",
+      typeLabel: "무기 스킬",
+      name: "치명타 확률 증가 · 대",
+      icon: "/icons/weapons/skills/crit-rate-large.webp",
+      meta: [{ label: "속성", value: "치명타 확률" }],
+      levelValues: [
+        { rank: "1", description: "치명타 확률 +2.5%", stats: [{ label: "치명타 확률", value: "+2.5%" }] },
+        { rank: "2", description: "치명타 확률 +4.5%", stats: [{ label: "치명타 확률", value: "+4.5%" }] },
+        { rank: "3", description: "치명타 확률 +6.5%", stats: [{ label: "치명타 확률", value: "+6.5%" }] },
+        { rank: "4", description: "치명타 확률 +8.5%", stats: [{ label: "치명타 확률", value: "+8.5%" }] },
+        { rank: "5", description: "치명타 확률 +10.5%", stats: [{ label: "치명타 확률", value: "+10.5%" }] },
+        { rank: "6", description: "치명타 확률 +12.5%", stats: [{ label: "치명타 확률", value: "+12.5%" }] },
+        { rank: "7", description: "치명타 확률 +14.5%", stats: [{ label: "치명타 확률", value: "+14.5%" }] },
+        { rank: "8", description: "치명타 확률 +16.5%", stats: [{ label: "치명타 확률", value: "+16.5%" }] },
+        { rank: "9", description: "치명타 확률 +19.5%", stats: [{ label: "치명타 확률", value: "+19.5%" }] },
+      ],
+      compareRows: [
+        {
+          label: "치명타 확률",
+          values: ["+2.5%", "+4.5%", "+6.5%", "+8.5%", "+10.5%", "+12.5%", "+14.5%", "+16.5%", "+19.5%"],
+        },
+      ],
+    },
+    {
+      key: "darkness-unfading-afterglow",
+      typeLabel: "무기 스킬",
+      name: "어둠 · 사라지지 않은 여광",
+      icon: "/icons/weapons/skills/darkness.webp",
+      meta: [{ label: "시리즈 스킬", value: "어둠" }],
+      levelValues: [
+        {
+          rank: "1",
+          description:
+            "공격력 +7.0%\n장착자가 스킬로 방어 불능을 부여하면, 30초 내 다음 궁극기를 사용하는 중에 주는 피해 +12.0%.\n같은 이름의 효과는 최대 3스택까지 중첩되며, 중첩될 때마다 지속 시간은 따로 계산됩니다. 0.5초마다 최대 1회만 발동합니다.",
+          stats: [
+            { label: "공격력", value: "+7.0%" },
+            { label: "궁극기 피해", value: "+12.0%" },
+          ],
+        },
+        {
+          rank: "2",
+          description:
+            "공격력 +8.4%\n장착자가 스킬로 방어 불능을 부여하면, 30초 내 다음 궁극기를 사용하는 중에 주는 피해 +14.4%.\n같은 이름의 효과는 최대 3스택까지 중첩되며, 중첩될 때마다 지속 시간은 따로 계산됩니다. 0.5초마다 최대 1회만 발동합니다.",
+          stats: [
+            { label: "공격력", value: "+8.4%" },
+            { label: "궁극기 피해", value: "+14.4%" },
+          ],
+        },
+        {
+          rank: "3",
+          description:
+            "공격력 +9.8%\n장착자가 스킬로 방어 불능을 부여하면, 30초 내 다음 궁극기를 사용하는 중에 주는 피해 +16.8%.\n같은 이름의 효과는 최대 3스택까지 중첩되며, 중첩될 때마다 지속 시간은 따로 계산됩니다. 0.5초마다 최대 1회만 발동합니다.",
+          stats: [
+            { label: "공격력", value: "+9.8%" },
+            { label: "궁극기 피해", value: "+16.8%" },
+          ],
+        },
+        {
+          rank: "4",
+          description:
+            "공격력 +11.2%\n장착자가 스킬로 방어 불능을 부여하면, 30초 내 다음 궁극기를 사용하는 중에 주는 피해 +19.2%.\n같은 이름의 효과는 최대 3스택까지 중첩되며, 중첩될 때마다 지속 시간은 따로 계산됩니다. 0.5초마다 최대 1회만 발동합니다.",
+          stats: [
+            { label: "공격력", value: "+11.2%" },
+            { label: "궁극기 피해", value: "+19.2%" },
+          ],
+        },
+        {
+          rank: "5",
+          description:
+            "공격력 +12.6%\n장착자가 스킬로 방어 불능을 부여하면, 30초 내 다음 궁극기를 사용하는 중에 주는 피해 +21.6%.\n같은 이름의 효과는 최대 3스택까지 중첩되며, 중첩될 때마다 지속 시간은 따로 계산됩니다. 0.5초마다 최대 1회만 발동합니다.",
+          stats: [
+            { label: "공격력", value: "+12.6%" },
+            { label: "궁극기 피해", value: "+21.6%" },
+          ],
+        },
+        {
+          rank: "6",
+          description:
+            "공격력 +14.0%\n장착자가 스킬로 방어 불능을 부여하면, 30초 내 다음 궁극기를 사용하는 중에 주는 피해 +24.0%.\n같은 이름의 효과는 최대 3스택까지 중첩되며, 중첩될 때마다 지속 시간은 따로 계산됩니다. 0.5초마다 최대 1회만 발동합니다.",
+          stats: [
+            { label: "공격력", value: "+14.0%" },
+            { label: "궁극기 피해", value: "+24.0%" },
+          ],
+        },
+        {
+          rank: "7",
+          description:
+            "공격력 +15.4%\n장착자가 스킬로 방어 불능을 부여하면, 30초 내 다음 궁극기를 사용하는 중에 주는 피해 +26.4%.\n같은 이름의 효과는 최대 3스택까지 중첩되며, 중첩될 때마다 지속 시간은 따로 계산됩니다. 0.5초마다 최대 1회만 발동합니다.",
+          stats: [
+            { label: "공격력", value: "+15.4%" },
+            { label: "궁극기 피해", value: "+26.4%" },
+          ],
+        },
+        {
+          rank: "8",
+          description:
+            "공격력 +16.8%\n장착자가 스킬로 방어 불능을 부여하면, 30초 내 다음 궁극기를 사용하는 중에 주는 피해 +28.8%.\n같은 이름의 효과는 최대 3스택까지 중첩되며, 중첩될 때마다 지속 시간은 따로 계산됩니다. 0.5초마다 최대 1회만 발동합니다.",
+          stats: [
+            { label: "공격력", value: "+16.8%" },
+            { label: "궁극기 피해", value: "+28.8%" },
+          ],
+        },
+        {
+          rank: "9",
+          description:
+            "공격력 +19.6%\n장착자가 스킬로 방어 불능을 부여하면, 30초 내 다음 궁극기를 사용하는 중에 주는 피해 +33.6%.\n같은 이름의 효과는 최대 3스택까지 중첩되며, 중첩될 때마다 지속 시간은 따로 계산됩니다. 0.5초마다 최대 1회만 발동합니다.",
+          stats: [
+            { label: "공격력", value: "+19.6%" },
+            { label: "궁극기 피해", value: "+33.6%" },
+          ],
+        },
+      ],
+      compareRows: [
+        {
+          label: "공격력",
+          values: ["+7.0%", "+8.4%", "+9.8%", "+11.2%", "+12.6%", "+14.0%", "+15.4%", "+16.8%", "+19.6%"],
+        },
+        {
+          label: "궁극기 피해",
+          values: ["+12.0%", "+14.4%", "+16.8%", "+19.2%", "+21.6%", "+24.0%", "+26.4%", "+28.8%", "+33.6%"],
+        },
+      ],
+    },
+  ],
+} satisfies SourceWeaponDetail;

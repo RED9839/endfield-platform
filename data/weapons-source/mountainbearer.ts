@@ -1,0 +1,376 @@
+import type { SourceWeaponDetail } from "../weapons-detail-data";
+
+export const mountainbearer = {
+  slug: "mountainbearer",
+  name: "산의 지배자",
+  enName: "Mountain Bearer",
+  rarity: 6,
+  weaponType: "polearm",
+  image: "/weapons/mountainbearer.webp",
+  series: "효율",
+  mainStatLabel: "공격력",
+  subStatLabel: "민첩",
+
+  levelStats: [
+    { level: 1, attack: 51 },
+    { level: 2, attack: 56 },
+    { level: 3, attack: 61 },
+    { level: 4, attack: 66 },
+    { level: 5, attack: 71 },
+    { level: 6, attack: 76 },
+    { level: 7, attack: 81 },
+    { level: 8, attack: 86 },
+    { level: 9, attack: 91 },
+    { level: 10, attack: 96 },
+    { level: 11, attack: 101 },
+    { level: 12, attack: 106 },
+    { level: 13, attack: 111 },
+    { level: 14, attack: 116 },
+    { level: 15, attack: 121 },
+    { level: 16, attack: 126 },
+    { level: 17, attack: 131 },
+    { level: 18, attack: 136 },
+    { level: 19, attack: 141 },
+    { level: 20, attack: 146 },
+    { level: 21, attack: 152 },
+    { level: 22, attack: 157 },
+    { level: 23, attack: 162 },
+    { level: 24, attack: 167 },
+    { level: 25, attack: 172 },
+    { level: 26, attack: 177 },
+    { level: 27, attack: 182 },
+    { level: 28, attack: 187 },
+    { level: 29, attack: 192 },
+    { level: 30, attack: 197 },
+    { level: 31, attack: 202 },
+    { level: 32, attack: 207 },
+    { level: 33, attack: 212 },
+    { level: 34, attack: 217 },
+    { level: 35, attack: 222 },
+    { level: 36, attack: 227 },
+    { level: 37, attack: 232 },
+    { level: 38, attack: 237 },
+    { level: 39, attack: 242 },
+    { level: 40, attack: 247 },
+    { level: 41, attack: 253 },
+    { level: 42, attack: 258 },
+    { level: 43, attack: 263 },
+    { level: 44, attack: 268 },
+    { level: 45, attack: 273 },
+    { level: 46, attack: 278 },
+    { level: 47, attack: 283 },
+    { level: 48, attack: 288 },
+    { level: 49, attack: 293 },
+    { level: 50, attack: 298 },
+    { level: 51, attack: 303 },
+    { level: 52, attack: 308 },
+    { level: 53, attack: 313 },
+    { level: 54, attack: 318 },
+    { level: 55, attack: 323 },
+    { level: 56, attack: 328 },
+    { level: 57, attack: 333 },
+    { level: 58, attack: 338 },
+    { level: 59, attack: 343 },
+    { level: 60, attack: 348 },
+    { level: 61, attack: 354 },
+    { level: 62, attack: 359 },
+    { level: 63, attack: 364 },
+    { level: 64, attack: 369 },
+    { level: 65, attack: 374 },
+    { level: 66, attack: 379 },
+    { level: 67, attack: 384 },
+    { level: 68, attack: 389 },
+    { level: 69, attack: 394 },
+    { level: 70, attack: 399 },
+    { level: 71, attack: 404 },
+    { level: 72, attack: 409 },
+    { level: 73, attack: 414 },
+    { level: 74, attack: 419 },
+    { level: 75, attack: 424 },
+    { level: 76, attack: 429 },
+    { level: 77, attack: 434 },
+    { level: 78, attack: 439 },
+    { level: 79, attack: 444 },
+    { level: 80, attack: 449 },
+    { level: 81, attack: 455 },
+    { level: 82, attack: 460 },
+    { level: 83, attack: 465 },
+    { level: 84, attack: 470 },
+    { level: 85, attack: 475 },
+    { level: 86, attack: 480 },
+    { level: 87, attack: 485 },
+    { level: 88, attack: 490 },
+    { level: 89, attack: 495 },
+    { level: 90, attack: 500 },
+  ],
+
+  breakthrough: [
+    {
+      stage: 0,
+      requiredLevel: 1,
+      materials: [],
+      bonuses: [
+        "민첩 증가 · 대: 1/3",
+        "물리 피해 증가 · 대: 1/3",
+        "효율 · 하나 되는 자연: 1/4",
+      ],
+    },
+    {
+      stage: 1,
+      requiredLevel: 20,
+      materials: [
+        { name: "탈로시안 화폐", count: "2.2k" },
+        { name: "모형 틀", count: 5 },
+        { name: "연한 흑암석", count: 3 },
+      ],
+      bonuses: [
+        "민첩 증가 · 대: 2/5",
+        "물리 피해 증가 · 대: 1/4",
+        "효율 · 하나 되는 자연: 1/4",
+      ],
+    },
+    {
+      stage: 2,
+      requiredLevel: 40,
+      materials: [
+        { name: "탈로시안 화폐", count: "8.5k" },
+        { name: "모형 틀", count: 18 },
+        { name: "일반 흑암석", count: 5 },
+      ],
+      bonuses: [
+        "민첩 증가 · 대: 2/6",
+        "물리 피해 증가 · 대: 2/6",
+        "효율 · 하나 되는 자연: 1/4",
+      ],
+    },
+    {
+      stage: 3,
+      requiredLevel: 60,
+      materials: [
+        { name: "탈로시안 화폐", count: "25k" },
+        { name: "중형 모형 틀", count: 20 },
+        { name: "진한 흑암석", count: 5 },
+      ],
+      bonuses: [
+        "민첩 증가 · 대: 3/8",
+        "물리 피해 증가 · 대: 2/7",
+        "효율 · 하나 되는 자연: 1/4",
+      ],
+    },
+    {
+      stage: 4,
+      requiredLevel: 80,
+      materials: [
+        { name: "탈로시안 화폐", count: "90k" },
+        { name: "중형 모형 틀", count: 30 },
+        { name: "초거리 빛 반사 파이프", count: 16 },
+        { name: "화염석", count: 8 },
+      ],
+      bonuses: [
+        "민첩 증가 · 대: 3/9",
+        "물리 피해 증가 · 대: 3/9",
+        "효율 · 하나 되는 자연: 1/4",
+      ],
+    },
+  ],
+
+  skills: [
+    {
+      key: "agility-large",
+      typeLabel: "무기 스킬",
+      name: "민첩 증가 · 대",
+      icon: "/icons/weapons/skills/agility-large.webp",
+      meta: [{ label: "능력치", value: "민첩" }],
+      levelValues: [
+        { rank: "1", description: "민첩 +20", stats: [{ label: "민첩", value: "+20" }] },
+        { rank: "2", description: "민첩 +36", stats: [{ label: "민첩", value: "+36" }] },
+        { rank: "3", description: "민첩 +52", stats: [{ label: "민첩", value: "+52" }] },
+        { rank: "4", description: "민첩 +68", stats: [{ label: "민첩", value: "+68" }] },
+        { rank: "5", description: "민첩 +84", stats: [{ label: "민첩", value: "+84" }] },
+        { rank: "6", description: "민첩 +100", stats: [{ label: "민첩", value: "+100" }] },
+        { rank: "7", description: "민첩 +116", stats: [{ label: "민첩", value: "+116" }] },
+        { rank: "8", description: "민첩 +132", stats: [{ label: "민첩", value: "+132" }] },
+        { rank: "9", description: "민첩 +156", stats: [{ label: "민첩", value: "+156" }] },
+      ],
+      compareRows: [
+        {
+          label: "민첩",
+          values: ["+20", "+36", "+52", "+68", "+84", "+100", "+116", "+132", "+156"],
+        },
+      ],
+    },
+    {
+      key: "physical-dmg-large",
+      typeLabel: "무기 스킬",
+      name: "물리 피해 증가 · 대",
+      icon: "/icons/weapons/skills/physical-dmg-large.webp",
+      meta: [{ label: "속성", value: "물리 피해" }],
+      levelValues: [
+        {
+          rank: "1",
+          description: "물리 피해 +5.6%",
+          stats: [{ label: "물리 피해", value: "+5.6%" }],
+        },
+        {
+          rank: "2",
+          description: "물리 피해 +10.0%",
+          stats: [{ label: "물리 피해", value: "+10.0%" }],
+        },
+        {
+          rank: "3",
+          description: "물리 피해 +14.4%",
+          stats: [{ label: "물리 피해", value: "+14.4%" }],
+        },
+        {
+          rank: "4",
+          description: "물리 피해 +18.9%",
+          stats: [{ label: "물리 피해", value: "+18.9%" }],
+        },
+        {
+          rank: "5",
+          description: "물리 피해 +23.3%",
+          stats: [{ label: "물리 피해", value: "+23.3%" }],
+        },
+        {
+          rank: "6",
+          description: "물리 피해 +27.8%",
+          stats: [{ label: "물리 피해", value: "+27.8%" }],
+        },
+        {
+          rank: "7",
+          description: "물리 피해 +32.2%",
+          stats: [{ label: "물리 피해", value: "+32.2%" }],
+        },
+        {
+          rank: "8",
+          description: "물리 피해 +36.7%",
+          stats: [{ label: "물리 피해", value: "+36.7%" }],
+        },
+        {
+          rank: "9",
+          description: "물리 피해 +43.3%",
+          stats: [{ label: "물리 피해", value: "+43.3%" }],
+        },
+      ],
+      compareRows: [
+        {
+          label: "물리 피해",
+          values: ["+5.6%", "+10.0%", "+14.4%", "+18.9%", "+23.3%", "+27.8%", "+32.2%", "+36.7%", "+43.3%"],
+        },
+      ],
+    },
+    {
+      key: "efficiency-united-nature",
+      typeLabel: "무기 스킬",
+      name: "효율 · 하나 되는 자연",
+      icon: "/icons/weapons/skills/efficiency.webp",
+      meta: [{ label: "시리즈 스킬", value: "효율" }],
+      levelValues: [
+        {
+          rank: "1",
+          description:
+            "장착자가 방어 불능상태의 적에게 주는 피해 +20.0%\n장착자가 자신의 배틀 스킬로 방어 불능 상태를 부여할 때, 모든 능력치 +8.0%, 15초 동안 지속. 장착자가 자신의 배틀 스킬로 물리 취약 상태를 부여할 때, 모든 능력치 +8.0%, 15초 동안 지속.\n두 가지 효과는 독립적으로 적용되며 중첩되지 않습니다.",
+          stats: [
+            { label: "방어 불능 적 대상 피해", value: "+20.0%" },
+            { label: "방어 불능 부여 시 모든 능력치", value: "+8.0%" },
+            { label: "물리 취약 부여 시 모든 능력치", value: "+8.0%" },
+          ],
+        },
+        {
+          rank: "2",
+          description:
+            "장착자가 방어 불능상태의 적에게 주는 피해 +24.0%\n장착자가 자신의 배틀 스킬로 방어 불능 상태를 부여할 때, 모든 능력치 +9.6%, 15초 동안 지속. 장착자가 자신의 배틀 스킬로 물리 취약 상태를 부여할 때, 모든 능력치 +9.6%, 15초 동안 지속.\n두 가지 효과는 독립적으로 적용되며 중첩되지 않습니다.",
+          stats: [
+            { label: "방어 불능 적 대상 피해", value: "+24.0%" },
+            { label: "방어 불능 부여 시 모든 능력치", value: "+9.6%" },
+            { label: "물리 취약 부여 시 모든 능력치", value: "+9.6%" },
+          ],
+        },
+        {
+          rank: "3",
+          description:
+            "장착자가 방어 불능상태의 적에게 주는 피해 +28.0%\n장착자가 자신의 배틀 스킬로 방어 불능 상태를 부여할 때, 모든 능력치 +11.2%, 15초 동안 지속. 장착자가 자신의 배틀 스킬로 물리 취약 상태를 부여할 때, 모든 능력치 +11.2%, 15초 동안 지속.\n두 가지 효과는 독립적으로 적용되며 중첩되지 않습니다.",
+          stats: [
+            { label: "방어 불능 적 대상 피해", value: "+28.0%" },
+            { label: "방어 불능 부여 시 모든 능력치", value: "+11.2%" },
+            { label: "물리 취약 부여 시 모든 능력치", value: "+11.2%" },
+          ],
+        },
+        {
+          rank: "4",
+          description:
+            "장착자가 방어 불능상태의 적에게 주는 피해 +32.0%\n장착자가 자신의 배틀 스킬로 방어 불능 상태를 부여할 때, 모든 능력치 +12.8%, 15초 동안 지속. 장착자가 자신의 배틀 스킬로 물리 취약 상태를 부여할 때, 모든 능력치 +12.8%, 15초 동안 지속.\n두 가지 효과는 독립적으로 적용되며 중첩되지 않습니다.",
+          stats: [
+            { label: "방어 불능 적 대상 피해", value: "+32.0%" },
+            { label: "방어 불능 부여 시 모든 능력치", value: "+12.8%" },
+            { label: "물리 취약 부여 시 모든 능력치", value: "+12.8%" },
+          ],
+        },
+        {
+          rank: "5",
+          description:
+            "장착자가 방어 불능상태의 적에게 주는 피해 +36.0%\n장착자가 자신의 배틀 스킬로 방어 불능 상태를 부여할 때, 모든 능력치 +14.4%, 15초 동안 지속. 장착자가 자신의 배틀 스킬로 물리 취약 상태를 부여할 때, 모든 능력치 +14.4%, 15초 동안 지속.\n두 가지 효과는 독립적으로 적용되며 중첩되지 않습니다.",
+          stats: [
+            { label: "방어 불능 적 대상 피해", value: "+36.0%" },
+            { label: "방어 불능 부여 시 모든 능력치", value: "+14.4%" },
+            { label: "물리 취약 부여 시 모든 능력치", value: "+14.4%" },
+          ],
+        },
+        {
+          rank: "6",
+          description:
+            "장착자가 방어 불능상태의 적에게 주는 피해 +40.0%\n장착자가 자신의 배틀 스킬로 방어 불능 상태를 부여할 때, 모든 능력치 +16.0%, 15초 동안 지속. 장착자가 자신의 배틀 스킬로 물리 취약 상태를 부여할 때, 모든 능력치 +16.0%, 15초 동안 지속.\n두 가지 효과는 독립적으로 적용되며 중첩되지 않습니다.",
+          stats: [
+            { label: "방어 불능 적 대상 피해", value: "+40.0%" },
+            { label: "방어 불능 부여 시 모든 능력치", value: "+16.0%" },
+            { label: "물리 취약 부여 시 모든 능력치", value: "+16.0%" },
+          ],
+        },
+        {
+          rank: "7",
+          description:
+            "장착자가 방어 불능상태의 적에게 주는 피해 +44.0%\n장착자가 자신의 배틀 스킬로 방어 불능 상태를 부여할 때, 모든 능력치 +17.6%, 15초 동안 지속. 장착자가 자신의 배틀 스킬로 물리 취약 상태를 부여할 때, 모든 능력치 +17.6%, 15초 동안 지속.\n두 가지 효과는 독립적으로 적용되며 중첩되지 않습니다.",
+          stats: [
+            { label: "방어 불능 적 대상 피해", value: "+44.0%" },
+            { label: "방어 불능 부여 시 모든 능력치", value: "+17.6%" },
+            { label: "물리 취약 부여 시 모든 능력치", value: "+17.6%" },
+          ],
+        },
+        {
+          rank: "8",
+          description:
+            "장착자가 방어 불능상태의 적에게 주는 피해 +48.0%\n장착자가 자신의 배틀 스킬로 방어 불능 상태를 부여할 때, 모든 능력치 +19.2%, 15초 동안 지속. 장착자가 자신의 배틀 스킬로 물리 취약 상태를 부여할 때, 모든 능력치 +19.2%, 15초 동안 지속.\n두 가지 효과는 독립적으로 적용되며 중첩되지 않습니다.",
+          stats: [
+            { label: "방어 불능 적 대상 피해", value: "+48.0%" },
+            { label: "방어 불능 부여 시 모든 능력치", value: "+19.2%" },
+            { label: "물리 취약 부여 시 모든 능력치", value: "+19.2%" },
+          ],
+        },
+        {
+          rank: "9",
+          description:
+            "장착자가 방어 불능상태의 적에게 주는 피해 +56.0%\n장착자가 자신의 배틀 스킬로 방어 불능 상태를 부여할 때, 모든 능력치 +22.4%, 15초 동안 지속. 장착자가 자신의 배틀 스킬로 물리 취약 상태를 부여할 때, 모든 능력치 +22.4%, 15초 동안 지속.\n두 가지 효과는 독립적으로 적용되며 중첩되지 않습니다.",
+          stats: [
+            { label: "방어 불능 적 대상 피해", value: "+56.0%" },
+            { label: "방어 불능 부여 시 모든 능력치", value: "+22.4%" },
+            { label: "물리 취약 부여 시 모든 능력치", value: "+22.4%" },
+          ],
+        },
+      ],
+      compareRows: [
+        {
+          label: "방어 불능 적 대상 피해",
+          values: ["+20.0%", "+24.0%", "+28.0%", "+32.0%", "+36.0%", "+40.0%", "+44.0%", "+48.0%", "+56.0%"],
+        },
+        {
+          label: "방어 불능 부여 시 모든 능력치",
+          values: ["+8.0%", "+9.6%", "+11.2%", "+12.8%", "+14.4%", "+16.0%", "+17.6%", "+19.2%", "+22.4%"],
+        },
+        {
+          label: "물리 취약 부여 시 모든 능력치",
+          values: ["+8.0%", "+9.6%", "+11.2%", "+12.8%", "+14.4%", "+16.0%", "+17.6%", "+19.2%", "+22.4%"],
+        },
+      ],
+    },
+  ],
+} satisfies SourceWeaponDetail;

@@ -1,0 +1,327 @@
+import type { SourceWeaponDetail } from "../weapons-detail-data";
+
+export const rapidascent = {
+  slug: "rapidascent",
+  name: "부요",
+  enName: "Rapid Ascent",
+  rarity: 6,
+  weaponType: "sword",
+  image: "/weapons/rapidascent.webp",
+  series: "어둠",
+  mainStatLabel: "공격력",
+  subStatLabel: "치명타 확률",
+
+  levelStats: [
+    { level: 1, attack: 50 },
+    { level: 2, attack: 55 },
+    { level: 3, attack: 60 },
+    { level: 4, attack: 65 },
+    { level: 5, attack: 70 },
+    { level: 6, attack: 75 },
+    { level: 7, attack: 80 },
+    { level: 8, attack: 85 },
+    { level: 9, attack: 90 },
+    { level: 10, attack: 95 },
+    { level: 11, attack: 100 },
+    { level: 12, attack: 105 },
+    { level: 13, attack: 110 },
+    { level: 14, attack: 115 },
+    { level: 15, attack: 120 },
+    { level: 16, attack: 125 },
+    { level: 17, attack: 130 },
+    { level: 18, attack: 135 },
+    { level: 19, attack: 140 },
+    { level: 20, attack: 145 },
+    { level: 21, attack: 150 },
+    { level: 22, attack: 155 },
+    { level: 23, attack: 160 },
+    { level: 24, attack: 165 },
+    { level: 25, attack: 170 },
+    { level: 26, attack: 175 },
+    { level: 27, attack: 180 },
+    { level: 28, attack: 185 },
+    { level: 29, attack: 190 },
+    { level: 30, attack: 195 },
+    { level: 31, attack: 200 },
+    { level: 32, attack: 205 },
+    { level: 33, attack: 210 },
+    { level: 34, attack: 215 },
+    { level: 35, attack: 220 },
+    { level: 36, attack: 225 },
+    { level: 37, attack: 230 },
+    { level: 38, attack: 235 },
+    { level: 39, attack: 240 },
+    { level: 40, attack: 245 },
+    { level: 41, attack: 250 },
+    { level: 42, attack: 255 },
+    { level: 43, attack: 260 },
+    { level: 44, attack: 265 },
+    { level: 45, attack: 270 },
+    { level: 46, attack: 275 },
+    { level: 47, attack: 280 },
+    { level: 48, attack: 285 },
+    { level: 49, attack: 290 },
+    { level: 50, attack: 295 },
+    { level: 51, attack: 300 },
+    { level: 52, attack: 305 },
+    { level: 53, attack: 310 },
+    { level: 54, attack: 315 },
+    { level: 55, attack: 320 },
+    { level: 56, attack: 325 },
+    { level: 57, attack: 330 },
+    { level: 58, attack: 335 },
+    { level: 59, attack: 340 },
+    { level: 60, attack: 345 },
+    { level: 61, attack: 350 },
+    { level: 62, attack: 355 },
+    { level: 63, attack: 360 },
+    { level: 64, attack: 365 },
+    { level: 65, attack: 370 },
+    { level: 66, attack: 375 },
+    { level: 67, attack: 380 },
+    { level: 68, attack: 385 },
+    { level: 69, attack: 390 },
+    { level: 70, attack: 395 },
+    { level: 71, attack: 400 },
+    { level: 72, attack: 405 },
+    { level: 73, attack: 410 },
+    { level: 74, attack: 415 },
+    { level: 75, attack: 420 },
+    { level: 76, attack: 425 },
+    { level: 77, attack: 430 },
+    { level: 78, attack: 435 },
+    { level: 79, attack: 440 },
+    { level: 80, attack: 445 },
+    { level: 81, attack: 450 },
+    { level: 82, attack: 455 },
+    { level: 83, attack: 460 },
+    { level: 84, attack: 465 },
+    { level: 85, attack: 470 },
+    { level: 86, attack: 475 },
+    { level: 87, attack: 480 },
+    { level: 88, attack: 485 },
+    { level: 89, attack: 490 },
+    { level: 90, attack: 495 },
+  ],
+
+  breakthrough: [
+    {
+      stage: 0,
+      requiredLevel: 1,
+      materials: [],
+      bonuses: [
+        "주요 능력치 증가 · 대: 1/3",
+        "치명타 확률 증가 · 대: 1/3",
+        "어둠 · 청운: 1/4",
+      ],
+    },
+    {
+      stage: 1,
+      requiredLevel: 20,
+      materials: [
+        { name: "탈로시안 화폐", count: "2.2k" },
+        { name: "모형 틀", count: 5 },
+        { name: "연한 흑암석", count: 3 },
+      ],
+      bonuses: [
+        "주요 능력치 증가 · 대: 2/5",
+        "치명타 확률 증가 · 대: 1/4",
+        "어둠 · 청운: 1/4",
+      ],
+    },
+    {
+      stage: 2,
+      requiredLevel: 40,
+      materials: [
+        { name: "탈로시안 화폐", count: "8.5k" },
+        { name: "모형 틀", count: 18 },
+        { name: "일반 흑암석", count: 5 },
+      ],
+      bonuses: [
+        "주요 능력치 증가 · 대: 2/6",
+        "치명타 확률 증가 · 대: 2/6",
+        "어둠 · 청운: 1/4",
+      ],
+    },
+    {
+      stage: 3,
+      requiredLevel: 60,
+      materials: [
+        { name: "탈로시안 화폐", count: "25k" },
+        { name: "중형 모형 틀", count: 20 },
+        { name: "진한 흑암석", count: 5 },
+      ],
+      bonuses: [
+        "주요 능력치 증가 · 대: 3/8",
+        "치명타 확률 증가 · 대: 2/7",
+        "어둠 · 청운: 1/4",
+      ],
+    },
+    {
+      stage: 4,
+      requiredLevel: 80,
+      materials: [
+        { name: "탈로시안 화폐", count: "90k" },
+        { name: "중형 모형 틀", count: 30 },
+        { name: "초거리 빛 반사 파이프", count: 16 },
+        { name: "무릉석", count: 8 },
+      ],
+      bonuses: [
+        "주요 능력치 증가 · 대: 3/9",
+        "치명타 확률 증가 · 대: 3/9",
+        "어둠 · 청운: 1/4",
+      ],
+    },
+  ],
+
+  skills: [
+    {
+      key: "main-stat-large",
+      typeLabel: "무기 스킬",
+      name: "주요 능력치 증가 · 대",
+      icon: "/icons/weapons/skills/main-stat-large.webp",
+      meta: [{ label: "능력치", value: "주요 능력치" }],
+      levelValues: [
+        { rank: "1", description: "주요 능력치 +17", stats: [{ label: "주요 능력치", value: "+17" }] },
+        { rank: "2", description: "주요 능력치 +30", stats: [{ label: "주요 능력치", value: "+30" }] },
+        { rank: "3", description: "주요 능력치 +44", stats: [{ label: "주요 능력치", value: "+44" }] },
+        { rank: "4", description: "주요 능력치 +57", stats: [{ label: "주요 능력치", value: "+57" }] },
+        { rank: "5", description: "주요 능력치 +71", stats: [{ label: "주요 능력치", value: "+71" }] },
+        { rank: "6", description: "주요 능력치 +85", stats: [{ label: "주요 능력치", value: "+85" }] },
+        { rank: "7", description: "주요 능력치 +98", stats: [{ label: "주요 능력치", value: "+98" }] },
+        { rank: "8", description: "주요 능력치 +112", stats: [{ label: "주요 능력치", value: "+112" }] },
+        { rank: "9", description: "주요 능력치 +132", stats: [{ label: "주요 능력치", value: "+132" }] },
+      ],
+      compareRows: [
+        {
+          label: "주요 능력치",
+          values: ["+17", "+30", "+44", "+57", "+71", "+85", "+98", "+112", "+132"],
+        },
+      ],
+    },
+    {
+      key: "crit-rate-large",
+      typeLabel: "무기 스킬",
+      name: "치명타 확률 증가 · 대",
+      icon: "/icons/weapons/skills/crit-rate-large.webp",
+      meta: [{ label: "속성", value: "치명타 확률" }],
+      levelValues: [
+        { rank: "1", description: "치명타 확률 +2.5%", stats: [{ label: "치명타 확률", value: "+2.5%" }] },
+        { rank: "2", description: "치명타 확률 +4.5%", stats: [{ label: "치명타 확률", value: "+4.5%" }] },
+        { rank: "3", description: "치명타 확률 +6.5%", stats: [{ label: "치명타 확률", value: "+6.5%" }] },
+        { rank: "4", description: "치명타 확률 +8.5%", stats: [{ label: "치명타 확률", value: "+8.5%" }] },
+        { rank: "5", description: "치명타 확률 +10.5%", stats: [{ label: "치명타 확률", value: "+10.5%" }] },
+        { rank: "6", description: "치명타 확률 +12.5%", stats: [{ label: "치명타 확률", value: "+12.5%" }] },
+        { rank: "7", description: "치명타 확률 +14.5%", stats: [{ label: "치명타 확률", value: "+14.5%" }] },
+        { rank: "8", description: "치명타 확률 +16.5%", stats: [{ label: "치명타 확률", value: "+16.5%" }] },
+        { rank: "9", description: "치명타 확률 +19.5%", stats: [{ label: "치명타 확률", value: "+19.5%" }] },
+      ],
+      compareRows: [
+        {
+          label: "치명타 확률",
+          values: ["+2.5%", "+4.5%", "+6.5%", "+8.5%", "+10.5%", "+12.5%", "+14.5%", "+16.5%", "+19.5%"],
+        },
+      ],
+    },
+    {
+      key: "darkness-azure-cloud",
+      typeLabel: "무기 스킬",
+      name: "어둠 · 청운",
+      icon: "/icons/weapons/skills/darkness.webp",
+      meta: [{ label: "시리즈 스킬", value: "어둠" }],
+      levelValues: [
+        {
+          rank: "1",
+          description:
+            "배틀 스킬과 궁극기가 주는 물리 피해 +15.0%\n불균형 상태의 적에게 주는 피해 +35.0%",
+          stats: [
+            { label: "물리 피해", value: "+15.0%" },
+            { label: "불균형 적 피해", value: "+35.0%" },
+          ],
+        },
+        {
+          rank: "2",
+          description:
+            "배틀 스킬과 궁극기가 주는 물리 피해 +18.0%\n불균형 상태의 적에게 주는 피해 +42.0%",
+          stats: [
+            { label: "물리 피해", value: "+18.0%" },
+            { label: "불균형 적 피해", value: "+42.0%" },
+          ],
+        },
+        {
+          rank: "3",
+          description:
+            "배틀 스킬과 궁극기가 주는 물리 피해 +21.0%\n불균형 상태의 적에게 주는 피해 +49.0%",
+          stats: [
+            { label: "물리 피해", value: "+21.0%" },
+            { label: "불균형 적 피해", value: "+49.0%" },
+          ],
+        },
+        {
+          rank: "4",
+          description:
+            "배틀 스킬과 궁극기가 주는 물리 피해 +24.0%\n불균형 상태의 적에게 주는 피해 +56.0%",
+          stats: [
+            { label: "물리 피해", value: "+24.0%" },
+            { label: "불균형 적 피해", value: "+56.0%" },
+          ],
+        },
+        {
+          rank: "5",
+          description:
+            "배틀 스킬과 궁극기가 주는 물리 피해 +27.0%\n불균형 상태의 적에게 주는 피해 +63.0%",
+          stats: [
+            { label: "물리 피해", value: "+27.0%" },
+            { label: "불균형 적 피해", value: "+63.0%" },
+          ],
+        },
+        {
+          rank: "6",
+          description:
+            "배틀 스킬과 궁극기가 주는 물리 피해 +30.0%\n불균형 상태의 적에게 주는 피해 +70.0%",
+          stats: [
+            { label: "물리 피해", value: "+30.0%" },
+            { label: "불균형 적 피해", value: "+70.0%" },
+          ],
+        },
+        {
+          rank: "7",
+          description:
+            "배틀 스킬과 궁극기가 주는 물리 피해 +33.0%\n불균형 상태의 적에게 주는 피해 +77.0%",
+          stats: [
+            { label: "물리 피해", value: "+33.0%" },
+            { label: "불균형 적 피해", value: "+77.0%" },
+          ],
+        },
+        {
+          rank: "8",
+          description:
+            "배틀 스킬과 궁극기가 주는 물리 피해 +36.0%\n불균형 상태의 적에게 주는 피해 +84.0%",
+          stats: [
+            { label: "물리 피해", value: "+36.0%" },
+            { label: "불균형 적 피해", value: "+84.0%" },
+          ],
+        },
+        {
+          rank: "9",
+          description:
+            "배틀 스킬과 궁극기가 주는 물리 피해 +42.0%\n불균형 상태의 적에게 주는 피해 +98.0%",
+          stats: [
+            { label: "물리 피해", value: "+42.0%" },
+            { label: "불균형 적 피해", value: "+98.0%" },
+          ],
+        },
+      ],
+      compareRows: [
+        {
+          label: "물리 피해",
+          values: ["+15.0%", "+18.0%", "+21.0%", "+24.0%", "+27.0%", "+30.0%", "+33.0%", "+36.0%", "+42.0%"],
+        },
+        {
+          label: "불균형 적 피해",
+          values: ["+35.0%", "+42.0%", "+49.0%", "+56.0%", "+63.0%", "+70.0%", "+77.0%", "+84.0%", "+98.0%"],
+        },
+      ],
+    },
+  ],
+} satisfies SourceWeaponDetail;

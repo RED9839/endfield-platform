@@ -1,26 +1,264 @@
 @import "tailwindcss";
 
+/* =========================
+   🎨 COLOR SYSTEM
+========================= */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #050505;
+  --foreground: #ededed;
+
+  /* 🔥 네가 준 기준으로 통일 */
+  --yellow-main: #ffd24a;
+  --yellow-text: #ffdc70;
+  --yellow-border: rgba(255, 196, 74, 0.14);
+  --yellow-border-soft: rgba(255, 196, 74, 0.1);
+
+  /* 패널 */
+  --panel-bg: #05070b;
+  --card-bg: #090d14;
+
+  /* 스크롤 */
+  --scroll-track: #050505;
+  --scroll-thumb: #c89b2c;
+  --scroll-thumb-hover: #e0b94a;
+  --scroll-thumb-active: #ffd873;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* =========================
+   🧱 BASE
+========================= */
+html {
+  background: var(--background);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* 배경 노이즈 느낌 */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(255, 212, 74, 0.05), transparent 25%),
+    radial-gradient(circle at 80% 80%, rgba(255, 212, 74, 0.04), transparent 25%);
+}
+
+/* =========================
+   🟨 TEXT UTILS
+========================= */
+.text-yellow-main {
+  color: var(--yellow-main);
+}
+
+.text-yellow-soft {
+  color: var(--yellow-text);
+}
+
+/* =========================
+   📦 PANEL SYSTEM
+========================= */
+.panel {
+  background: var(--panel-bg);
+  border: 1px solid var(--yellow-border);
+  border-radius: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 212, 74, 0.03),
+    transparent 20%
+  );
+  pointer-events: none;
+}
+
+/* =========================
+   🧱 CARD SYSTEM
+========================= */
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--yellow-border-soft);
+  border-radius: 16px;
+  transition: all 0.2s ease;
+}
+
+.card:hover {
+  border-color: rgba(255, 212, 74, 0.3);
+  background: #0c1119;
+}
+
+/* =========================
+   🔘 BUTTON SYSTEM
+========================= */
+.btn-yellow {
+  border: 1px solid rgba(255, 212, 74, 0.35);
+  background: rgba(255, 212, 74, 0.12);
+  color: var(--yellow-text);
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.btn-yellow:hover {
+  border-color: rgba(255, 212, 74, 0.6);
+  background: rgba(255, 212, 74, 0.2);
+  color: white;
+}
+
+/* =========================
+   ✨ HERO EFFECT
+========================= */
+.hero-diagonal {
+  clip-path: polygon(58% 0, 100% 0, 100% 100%, 40% 100%);
+}
+
+.hero-divider {
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 212, 74, 0),
+    rgba(255, 212, 74, 0.7),
+    rgba(255, 212, 74, 0)
+  );
+  box-shadow:
+    0 0 12px rgba(255, 212, 74, 0.45),
+    0 0 28px rgba(255, 212, 74, 0.2);
+}
+
+/* =========================
+   🧵 SCROLLBAR (UPGRADE)
+========================= */
+
+/* Firefox */
+html,
+body,
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--yellow-main) var(--scroll-track);
+}
+
+/* Chrome, Edge, Safari */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+*::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+html::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track,
+*::-webkit-scrollbar-track {
+  background: var(--scroll-track);
+}
+
+/* 🔥 핵심: 그라데이션 + glow */
+html::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb,
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    180deg,
+    #ffd24a,
+    #e0b94a
+  );
+  border-radius: 999px;
+  border: 2px solid var(--scroll-track);
+
+  /* ✨ glow 효과 */
+  box-shadow:
+    0 0 6px rgba(255, 212, 74, 0.6),
+    0 0 12px rgba(255, 212, 74, 0.3);
+}
+
+/* hover */
+html::-webkit-scrollbar-thumb:hover,
+body::-webkit-scrollbar-thumb:hover,
+*::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    180deg,
+    #ffe27a,
+    #ffd24a
+  );
+
+  box-shadow:
+    0 0 10px rgba(255, 212, 74, 0.8),
+    0 0 20px rgba(255, 212, 74, 0.4);
+}
+
+/* active */
+html::-webkit-scrollbar-thumb:active,
+body::-webkit-scrollbar-thumb:active,
+*::-webkit-scrollbar-thumb:active {
+  background: #ffd24a;
+
+  box-shadow:
+    0 0 14px rgba(255, 212, 74, 1),
+    0 0 30px rgba(255, 212, 74, 0.5);
+}
+
+/* corner */
+html::-webkit-scrollbar-corner,
+body::-webkit-scrollbar-corner,
+*::-webkit-scrollbar-corner {
+  background: var(--scroll-track);
+}
+
+/* =========================
+   🔢 NUMBER INPUT RESET
+========================= */
+
+/* 전체 number input 기본 흰색 화살표 제거 */
+input[type="number"] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  appearance: none;
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* number input 기본 화살표 제거 */
+input[type="number"] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  appearance: none;
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* 기본 체크박스 fallback */
+input[type="checkbox"] {
+  accent-color: #ffd24a;
+}
+
+/* =========================
+   🔘 OUTLINE YELLOW BUTTON
+========================= */
+.btn-outline-yellow {
+  border: 1px solid rgba(255,196,74,0.30);
+  background: transparent;
+  color: #ffd24a;
+  border-radius: 16px;
+  font-weight: 700;
+  transition: border-color .2s ease, background .2s ease, color .2s ease;
+}
+
+.btn-outline-yellow:hover {
+  border-color: rgba(255,196,74,0.60);
+  background: rgba(255,196,74,0.05);
+  color: #ffdc70;
 }
