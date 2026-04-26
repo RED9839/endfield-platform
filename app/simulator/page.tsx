@@ -66,6 +66,53 @@ const weapons = weaponDetails as SourceWeaponDetail[];
 
 const SIMULATOR_OPERATOR_STORAGE_KEY = "simulator:selectedOperatorSlug";
 const SIMULATOR_WEAPON_STORAGE_KEY = "simulator:selectedWeaponSlug";
+const LEGACY_SIMULATOR_SELECTION_KEY = "endfield:simulator-selection";
+
+function getStoredSimulatorSlug(kind: "operator" | "weapon") {
+  if (typeof window === "undefined") return "";
+
+  const directKey =
+    kind === "operator"
+      ? SIMULATOR_OPERATOR_STORAGE_KEY
+      : SIMULATOR_WEAPON_STORAGE_KEY;
+
+  const directValue = window.sessionStorage.getItem(directKey) ?? "";
+  if (directValue) return directValue;
+
+  const legacyValue =
+    window.sessionStorage.getItem(LEGACY_SIMULATOR_SELECTION_KEY) ??
+    window.localStorage.getItem(LEGACY_SIMULATOR_SELECTION_KEY) ??
+    "";
+
+  if (!legacyValue) return "";
+
+  try {
+    const parsed = JSON.parse(legacyValue) as Record<string, unknown>;
+    const candidates =
+      kind === "operator"
+        ? [
+            parsed.operatorSlug,
+            parsed.selectedOperatorSlug,
+            parsed.operator,
+            parsed.operatorId,
+          ]
+        : [
+            parsed.weaponSlug,
+            parsed.selectedWeaponSlug,
+            parsed.weapon,
+            parsed.weaponId,
+          ];
+
+    const found = candidates.find(
+      (value) => typeof value === "string" && value.trim().length > 0
+    );
+
+    return typeof found === "string" ? found.trim() : "";
+  } catch {
+    return "";
+  }
+}
+
 
 type OperatorTargetLevel = (typeof OPERATOR_TARGET_LEVEL_OPTIONS)[number];
 
@@ -126,7 +173,7 @@ function RangeSelect({
 }
 
 function RangeSelector({
-  titleCurrent = "?�재",
+  titleCurrent = "현재",
   titleTarget = "목표",
   current,
   target,
@@ -172,7 +219,7 @@ function RangeSelector({
 }
 
 function formatRangeSummary(label: string, current: number, target: number) {
-  return `${label} ${current} ??${target}`;
+  return `${label} ${current} → ${target}`;
 }
 
 function sumMaterialCounts(
@@ -187,6 +234,7 @@ function sumMaterialCounts(
 export default function SimulatorPage() {
   const router = useRouter();
 
+  function normalizeFarmingTransferItems(items: Array<{ name: string; amount: number }>) {
     return items
       .map((item) => ({
         name: String(item.name ?? "").trim(),
@@ -195,7 +243,15 @@ export default function SimulatorPage() {
       .filter((item) => item.name && Number.isFinite(item.amount) && item.amount > 0);
   }
 
-    
+  function goFarmingCalculator(requiredMaterials: Array<{ name: string; amount: number }>, ownedMaterials: Array<{ name: string; amount: number }>) {
+    const payload = {
+      requiredMaterials: normalizeFarmingTransferItems(requiredMaterials),
+      ownedMaterials: normalizeFarmingTransferItems(ownedMaterials),
+    };
+
+    saveFarmingTransferPayload(payload);
+    router.push(buildFarmingHref(payload));
+  }
 
   function resetSimulatorAndGoHome() {
     if (typeof window !== "undefined") {
@@ -258,10 +314,13 @@ export default function SimulatorPage() {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    const storedOperatorSlug =
-      window.sessionStorage.getItem(SIMULATOR_OPERATOR_STORAGE_KEY) ?? "";
-    const storedWeaponSlug =
-      window.sessionStorage.getItem(SIMULATOR_WEAPON_STORAGE_KEY) ?? "";
+    const queryOperatorSlug =
+      searchParams.get("operator") ?? searchParams.get("operatorSlug") ?? "";
+    const queryWeaponSlug =
+      searchParams.get("weapon") ?? searchParams.get("weaponSlug") ?? "";
+
+    const storedOperatorSlug = queryOperatorSlug || getStoredSimulatorSlug("operator");
+    const storedWeaponSlug = queryWeaponSlug || getStoredSimulatorSlug("weapon");
 
     setSelectedOperatorSlug(
       storedOperatorSlug &&
@@ -276,7 +335,7 @@ export default function SimulatorPage() {
         ? storedWeaponSlug
         : ""
     );
-  }, [syncKey]);
+  }, [searchParams, syncKey]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -317,6 +376,29 @@ export default function SimulatorPage() {
       null,
     [selectedWeaponSlug]
   );
+
+  const handleOperatorSelect = (slug: string) => {
+    setSelectedOperatorSlug(slug);
+    setOperatorCurrentLevel(1);
+    setOperatorTargetLevel(90);
+    setEliteRange({ current: 0, target: 0 });
+    setTrustRange({ current: 0, target: 0 });
+    setCombatSkillState({
+      normal: { current: "1", target: "M3" },
+      combo: { current: "1", target: "M3" },
+      battle: { current: "1", target: "M3" },
+      ultimate: { current: "1", target: "M3" },
+    });
+    setTalentRanges({});
+    setInfrastructureRanges({});
+  };
+
+  const handleWeaponSelect = (slug: string) => {
+    setSelectedWeaponSlug(slug);
+    setWeaponCurrentLevel(1);
+    setWeaponTargetLevel(90);
+    setWeaponBreakthroughRange({ current: 0, target: 0 });
+  };
 
   const isEndministrator = selectedOperator?.slug === "endministrator";
 
@@ -467,7 +549,7 @@ export default function SimulatorPage() {
     return eliteSource
       .slice(eliteRange.current, eliteRange.target)
       .map((item, index) => ({
-        label: item.phase ?? `?�예??${eliteRange.current + index + 1}`,
+        label: item.phase ?? `정예화 ${eliteRange.current + index + 1}`,
         materials: toSimMaterials(item.materials ?? []),
       }))
       .filter((step) => step.materials.length > 0);
@@ -500,9 +582,9 @@ export default function SimulatorPage() {
         )
         .sort((a, b) => Number(a.stage) - Number(b.stage))
         .map((item) => ({
-          label: `${nameMap.get(talentId) ?? `?�능 ?�킬 ${talentId}`} ${Number(
+          label: `${nameMap.get(talentId) ?? `재능 스킬 ${talentId}`} ${Number(
             item.stage
-          )}?�계`,
+          )}단계`,
           materials: toSimMaterials(item.materials ?? []),
         }));
     });
@@ -526,7 +608,7 @@ export default function SimulatorPage() {
       )
       .sort((a, b) => Number(a.stage) - Number(b.stage))
       .map((item) => ({
-        label: `?�뢰??${Number(item.stage)}?�계`,
+        label: `신뢰도 ${Number(item.stage)}단계`,
         materials: toSimMaterials(item.materials ?? []),
       }));
   }, [selectedOperator, trustRange, isEndministrator]);
@@ -593,9 +675,9 @@ export default function SimulatorPage() {
 
     if (currencyTotal > 0) {
       items.unshift({
-        name: "?�로?�안 ?�폐",
+        name: "탈로시안 화폐",
         count: currencyTotal,
-        icon: "/materials/?�로?�안 ?�폐.webp",
+        icon: "/materials/탈로시안 화폐.webp",
       });
     }
 
@@ -603,7 +685,7 @@ export default function SimulatorPage() {
 
     return [
       {
-        label: "무기 ?�벨??,
+        label: "무기 레벨업",
         materials: items.map((item) => ({
           name: item.name,
           count: Number(item.count),
@@ -627,7 +709,7 @@ export default function SimulatorPage() {
           item.stage <= weaponBreakthroughRange.target
       )
       .map((item) => ({
-        label: `무기 ?�파 ${item.stage}?�계`,
+        label: `무기 돌파 ${item.stage}단계`,
         materials: toSimMaterials(item.materials ?? []),
       }))
       .filter((step) => step.materials.length > 0);
@@ -816,6 +898,8 @@ export default function SimulatorPage() {
     if (typeof window === "undefined") return;
     window.sessionStorage.removeItem(SIMULATOR_OPERATOR_STORAGE_KEY);
     window.sessionStorage.removeItem(SIMULATOR_WEAPON_STORAGE_KEY);
+    window.sessionStorage.removeItem(LEGACY_SIMULATOR_SELECTION_KEY);
+    window.localStorage.removeItem(LEGACY_SIMULATOR_SELECTION_KEY);
   };
 
   const eliteStages = Array.from(
@@ -835,52 +919,52 @@ export default function SimulatorPage() {
 
   const levelSummary = [
     selectedOperator
-      ? `?�퍼?�이??Lv.${safeOperatorCurrentLevel} ??Lv.${safeOperatorTargetLevel}`
+      ? `오퍼레이터 Lv.${safeOperatorCurrentLevel} → Lv.${safeOperatorTargetLevel}`
       : null,
     selectedWeapon
-      ? `무기 Lv.${safeWeaponCurrentLevel} ??Lv.${safeWeaponTargetLevel}`
+      ? `무기 Lv.${safeWeaponCurrentLevel} → Lv.${safeWeaponTargetLevel}`
       : null,
   ]
     .filter(Boolean)
     .join(" / ");
 
   const eliteSummary = selectedOperator
-    ? formatRangeSummary("?�예??, eliteRange.current, eliteRange.target)
-    : "?�퍼?�이?��? ?�택??주세??";
+    ? formatRangeSummary("정예화", eliteRange.current, eliteRange.target)
+    : "오퍼레이터를 선택해 주세요.";
 
   const weaponBreakthroughSummary = selectedWeapon
     ? formatRangeSummary(
-        "무기 ?�파",
+        "무기 돌파",
         weaponBreakthroughRange.current,
         weaponBreakthroughRange.target
       )
-    : "무기�??�택??주세??";
+    : "무기를 선택해 주세요.";
 
   const trustSummary = selectedOperator
     ? visibleTrustStageInfos.length
-      ? formatRangeSummary("?�뢰??보너??, trustRange.current, trustRange.target)
-      : "?�록???�뢰??보너???�이?��? ?�습?�다."
-    : "?�퍼?�이?��? ?�택??주세??";
+      ? formatRangeSummary("신뢰도 보너스", trustRange.current, trustRange.target)
+      : "등록된 신뢰도 보너스 데이터가 없습니다."
+    : "오퍼레이터를 선택해 주세요.";
 
   const combatSummary = selectedOperator
     ? combatSkillMetas
         .map((meta) => {
           const state = combatSkillState[meta.key];
-          return `${meta.label} ${state.current} ??${state.target}`;
+          return `${meta.label} ${state.current} → ${state.target}`;
         })
         .join(" / ")
-    : "?�퍼?�이?��? ?�택??주세??";
+    : "오퍼레이터를 선택해 주세요.";
 
   const talentSummary = selectedOperator
     ? talentGroups.length
       ? talentGroups
           .map((group) => {
             const range = talentRanges[group.id] ?? { current: 0, target: 0 };
-            return `${group.name} ${range.current} ??${range.target}`;
+            return `${group.name} ${range.current} → ${range.target}`;
           })
           .join(" / ")
-      : "?�록???�능 ?�킬 ?�이?��? ?�습?�다."
-    : "?�퍼?�이?��? ?�택??주세??";
+      : "등록된 재능 스킬 데이터가 없습니다."
+    : "오퍼레이터를 선택해 주세요.";
 
   const infrastructureSummary = selectedOperator
     ? visibleInfrastructureGroups.length
@@ -890,49 +974,52 @@ export default function SimulatorPage() {
               current: 0,
               target: 0,
             };
-            return `${group.name} ${range.current} ??${range.target}`;
+            return `${group.name} ${range.current} → ${range.target}`;
           })
           .join(" / ")
-      : "?�록???�프???�킬 ?�이?��? ?�습?�다."
-    : "?�퍼?�이?��? ?�택??주세??";
+      : "등록된 인프라 스킬 데이터가 없습니다."
+    : "오퍼레이터를 선택해 주세요.";
 
   const combinedSummary = selectedOperator || selectedWeapon
-    ? `?�화 ${combinedMaterialDeficitItems.length}�?/ �??�요 ${sumMaterialCounts(
+    ? `재화 ${combinedMaterialDeficitItems.length}종 / 총 필요 ${sumMaterialCounts(
         combinedMaterialDeficitItems
-      ).toLocaleString()} / 부�?${sumMaterialCounts(
+      ).toLocaleString()} / 부족 ${sumMaterialCounts(
         combinedMaterialDeficitItems,
         true
       ).toLocaleString()}`
-    : "?�퍼?�이?��? 무기�??�택??주세??";
+    : "오퍼레이터와 무기를 선택해 주세요.";
 
   const operatorMaterialsSummary = selectedOperator
-    ? `?�화 ${operatorMaterialDeficitItems.length}�?/ �??�요 ${sumMaterialCounts(
+    ? `재화 ${operatorMaterialDeficitItems.length}종 / 총 필요 ${sumMaterialCounts(
         operatorMaterialDeficitItems
-      ).toLocaleString()} / 부�?${sumMaterialCounts(
+      ).toLocaleString()} / 부족 ${sumMaterialCounts(
         operatorMaterialDeficitItems,
         true
       ).toLocaleString()}`
-    : "?�퍼?�이?��? ?�택??주세??";
+    : "오퍼레이터를 선택해 주세요.";
 
   const weaponMaterialsSummary = selectedWeapon
-    ? `?�화 ${weaponMaterialDeficitItems.length}�?/ �??�요 ${sumMaterialCounts(
+    ? `재화 ${weaponMaterialDeficitItems.length}종 / 총 필요 ${sumMaterialCounts(
         weaponMaterialDeficitItems
-      ).toLocaleString()} / 부�?${sumMaterialCounts(
+      ).toLocaleString()} / 부족 ${sumMaterialCounts(
         weaponMaterialDeficitItems,
         true
       ).toLocaleString()}`
-    : "무기�??�택??주세??";
+    : "무기를 선택해 주세요.";
 
 
+  function handleGoFarmingCalculator() {
+    const requiredMaterials = combinedMaterialDeficitItems
+      .filter((item) => Number(item.lacking ?? 0) > 0)
+      .map((item) => ({
+        name: item.name,
+        amount: Number(item.lacking ?? 0),
+      }));
 
-
-  function normalizeFarmingMaterialList(items: unknown) {
-    if (!Array.isArray(items)) return [];
-
-    return items
-      .map((item: any) => ({
-        name: String(item?.name ?? item?.material ?? "").trim(),
-        amount: Number(item?.amount ?? item?.owned ?? item?.value ?? item?.count ?? 0),
+    const ownedMaterialsForFarming = Object.entries(ownedMaterials)
+      .map(([name, amount]) => ({
+        name,
+        amount: Number(amount ?? 0),
       }))
       .filter(
         (item) =>
@@ -940,49 +1027,9 @@ export default function SimulatorPage() {
           Number.isFinite(item.amount) &&
           item.amount > 0
       );
+
+    goFarmingCalculator(requiredMaterials, ownedMaterialsForFarming);
   }
-
-  function normalizeOwnedMaterialsForFarming(items: unknown) {
-    if (Array.isArray(items)) return normalizeFarmingMaterialList(items);
-
-    if (items && typeof items === "object") {
-      return Object.entries(items as Record<string, unknown>)
-        .map(([name, amount]) => ({
-          name,
-          amount: Number(amount ?? 0),
-        }))
-        .filter(
-          (item) =>
-            item.name.length > 0 &&
-            Number.isFinite(item.amount) &&
-            item.amount > 0
-        );
-    }
-
-    return [];
-  }
-
-  function handleGoFarmingCalculator() {
-  const requiredMaterials = normalizeFarmingMaterialList(
-    combinedMaterialDeficitItems
-      .filter((item) => Number(item.lacking ?? 0) > 0)
-      .map((item) => ({
-        name: item.name,
-        amount: Number(item.lacking ?? 0),
-      }))
-  );
-
-  const ownedMaterialsForFarming =
-    normalizeOwnedMaterialsForFarming(ownedMaterials);
-
-  const payload = {
-    requiredMaterials,
-    ownedMaterials: ownedMaterialsForFarming,
-  };
-
-  saveFarmingTransferPayload(payload);
-  router.push(buildFarmingHref(payload));
-}
 
   return (
     <main className="min-h-screen bg-[#03060b] text-white">
@@ -992,9 +1039,11 @@ export default function SimulatorPage() {
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <div className="text-[11px] tracking-[0.28em] text-yellow-400/70">
-                  ?��??�이??                </div>
+                  시뮬레이션
+                </div>
                 <h1 className="mt-2 text-4xl font-black tracking-[-0.04em] text-white">
-                  ?�장 ?��??�이??                </h1>
+                  성장 시뮬레이션
+                </h1>
               </div>
 
               <Link
@@ -1002,8 +1051,50 @@ export default function SimulatorPage() {
                 onClick={handleGoHome}
                 className="inline-flex h-12 items-center justify-center rounded-2xl border border-yellow-500/20 bg-black px-4 text-sm font-semibold text-white transition hover:border-yellow-400/40 hover:text-yellow-300"
               >
-                ?�으�??�동
+                홈으로 이동
               </Link>
+            </div>
+          </section>
+
+          <section className="rounded-[24px] border border-yellow-500/15 bg-[#05070b] p-5 shadow-[0_18px_60px_rgba(0,0,0,0.25)]">
+            <div className="grid gap-4 lg:grid-cols-2">
+              <label className="grid gap-2">
+                <span className="text-xs font-bold uppercase tracking-[0.24em] text-yellow-300/80">
+                  오퍼레이터 선택
+                </span>
+                <select
+                  value={selectedOperatorSlug}
+                  onChange={(event) => handleOperatorSelect(event.target.value)}
+                  className="h-12 rounded-2xl border border-yellow-500/15 bg-black px-4 text-sm font-semibold text-white outline-none transition focus:border-yellow-300/50"
+                >
+                  <option value="">오퍼레이터를 선택해 주세요</option>
+                  {operators.map((operator: OperatorDetail) => (
+                    <option key={operator.slug} value={operator.slug}>
+                      {operator.name}
+                      {operator.enName ? ` / ${operator.enName}` : ""}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="grid gap-2">
+                <span className="text-xs font-bold uppercase tracking-[0.24em] text-yellow-300/80">
+                  무기 선택
+                </span>
+                <select
+                  value={selectedWeaponSlug}
+                  onChange={(event) => handleWeaponSelect(event.target.value)}
+                  className="h-12 rounded-2xl border border-yellow-500/15 bg-black px-4 text-sm font-semibold text-white outline-none transition focus:border-yellow-300/50"
+                >
+                  <option value="">무기를 선택해 주세요</option>
+                  {weapons.map((weapon: SourceWeaponDetail) => (
+                    <option key={weapon.slug} value={weapon.slug}>
+                      {weapon.name}
+                      {weapon.enName ? ` / ${weapon.enName}` : ""}
+                    </option>
+                  ))}
+                </select>
+              </label>
             </div>
           </section>
 
@@ -1019,7 +1110,7 @@ export default function SimulatorPage() {
 
           <div className="grid items-start gap-6 xl:grid-cols-[560px_minmax(0,1fr)]">
             <div className="grid auto-rows-max content-start gap-6 self-start">
-              <InfoPanel title="?�벨" summary={levelSummary}>
+              <InfoPanel title="레벨" summary={levelSummary}>
                 {selectedOperator || selectedWeapon ? (
                   <SimulatorLevelPanel
                     operatorCurrentLevel={safeOperatorCurrentLevel}
@@ -1049,18 +1140,18 @@ export default function SimulatorPage() {
                   />
                 ) : (
                   <div className="text-sm text-zinc-500">
-                    ?�퍼?�이???�는 무기�?먼�? ?�택??주세??
+                    오퍼레이터 또는 무기를 먼저 선택해 주세요.
                   </div>
                 )}
               </InfoPanel>
 
-              <InfoPanel title="?�예?? summary={eliteSummary}>
+              <InfoPanel title="정예화" summary={eliteSummary}>
                 {selectedOperator ? (
                   <RangeSelector
                     current={eliteRange.current}
                     target={eliteRange.target}
                     stages={eliteStages}
-                    getLabel={(stage) => (stage === 0 ? "0?�계" : `${stage}?�계`)}
+                    getLabel={(stage) => (stage === 0 ? "0단계" : `${stage}단계`)}
                     onChangeCurrent={(stage) =>
                       setEliteRange((prev) => ({
                         current: stage,
@@ -1076,22 +1167,22 @@ export default function SimulatorPage() {
                   />
                 ) : (
                   <div className="text-sm text-zinc-500">
-                    ?�퍼?�이?��? 먼�? ?�택??주세??
+                    오퍼레이터를 먼저 선택해 주세요.
                   </div>
                 )}
               </InfoPanel>
 
-              <InfoPanel title="무기 ?�파" summary={weaponBreakthroughSummary}>
+              <InfoPanel title="무기 돌파" summary={weaponBreakthroughSummary}>
                 {!selectedWeapon ? (
                   <div className="text-sm text-zinc-500">
-                    무기�?먼�? ?�택??주세??
+                    무기를 먼저 선택해 주세요.
                   </div>
                 ) : weaponBreakthroughItems.length ? (
                   <RangeSelector
                     current={weaponBreakthroughRange.current}
                     target={weaponBreakthroughRange.target}
                     stages={weaponBreakthroughStages}
-                    getLabel={(stage) => (stage === 0 ? "0?�계" : `${stage}?�계`)}
+                    getLabel={(stage) => (stage === 0 ? "0단계" : `${stage}단계`)}
                     onChangeCurrent={(stage) =>
                       setWeaponBreakthroughRange((prev) => ({
                         current: stage,
@@ -1107,12 +1198,12 @@ export default function SimulatorPage() {
                   />
                 ) : (
                   <div className="text-sm text-zinc-500">
-                    ?�록??무기 ?�파 ?�이?��? ?�습?�다.
+                    등록된 무기 돌파 데이터가 없습니다.
                   </div>
                 )}
               </InfoPanel>
 
-              <InfoPanel title="?�투 ?�킬" summary={combatSummary}>
+              <InfoPanel title="전투 스킬" summary={combatSummary}>
                 {selectedOperator ? (
                   <SimulatorSkillPanel
                     metas={combatSkillMetas}
@@ -1129,15 +1220,15 @@ export default function SimulatorPage() {
                   />
                 ) : (
                   <div className="text-sm text-zinc-500">
-                    ?�퍼?�이?��? 먼�? ?�택??주세??
+                    오퍼레이터를 먼저 선택해 주세요.
                   </div>
                 )}
               </InfoPanel>
 
-              <InfoPanel title="?�능 ?�킬" summary={talentSummary}>
+              <InfoPanel title="재능 스킬" summary={talentSummary}>
                 {selectedOperator ? (
                   <SimulatorStageSection
-                    emptyText="?�록???�능 ?�킬 ?�이?��? ?�습?�다."
+                    emptyText="등록된 재능 스킬 데이터가 없습니다."
                     items={talentGroups.map((group: TalentGroup) => ({
                       id: group.id,
                       title: group.name,
@@ -1146,7 +1237,7 @@ export default function SimulatorPage() {
                       targetStage: talentRanges[group.id]?.target ?? 0,
                       maxStage: group.maxStage,
                       getStageLabel: (stage: number) =>
-                        stage === 0 ? "0?�계" : `${stage}?�계`,
+                        stage === 0 ? "0단계" : `${stage}단계`,
                       onChangeCurrent: (stage: number) =>
                         handleTalentCurrentChange(group.id, stage),
                       onChangeTarget: (stage: number) =>
@@ -1155,15 +1246,15 @@ export default function SimulatorPage() {
                   />
                 ) : (
                   <div className="text-sm text-zinc-500">
-                    ?�퍼?�이?��? 먼�? ?�택??주세??
+                    오퍼레이터를 먼저 선택해 주세요.
                   </div>
                 )}
               </InfoPanel>
 
-              <InfoPanel title="?�프???�킬" summary={infrastructureSummary}>
+              <InfoPanel title="인프라 스킬" summary={infrastructureSummary}>
                 {selectedOperator ? (
                   <SimulatorStageSection
-                    emptyText="?�록???�프???�킬 ?�이?��? ?�습?�다."
+                    emptyText="등록된 인프라 스킬 데이터가 없습니다."
                     items={visibleInfrastructureGroups.map(
                       (group: InfrastructureGroup) => {
                         const currentStage =
@@ -1196,7 +1287,7 @@ export default function SimulatorPage() {
                               : undefined,
                           getStageLabel: (stage: number) =>
                             stage === 0
-                              ? "0?�계"
+                              ? "0단계"
                               : getInfrastructureTierLabel(
                                   selectedOperator,
                                   group.id,
@@ -1212,12 +1303,12 @@ export default function SimulatorPage() {
                   />
                 ) : (
                   <div className="text-sm text-zinc-500">
-                    ?�퍼?�이?��? 먼�? ?�택??주세??
+                    오퍼레이터를 먼저 선택해 주세요.
                   </div>
                 )}
               </InfoPanel>
 
-              <InfoPanel title="?�뢰??보너?? summary={trustSummary}>
+              <InfoPanel title="신뢰도 보너스" summary={trustSummary}>
                 {selectedOperator ? (
                   visibleTrustStageInfos.length ? (
                     <RangeSelector
@@ -1225,7 +1316,7 @@ export default function SimulatorPage() {
                       target={trustRange.target}
                       stages={trustStages}
                       getLabel={(stage) =>
-                        stage === 0 ? "0?�계" : `${stage}?�계`
+                        stage === 0 ? "0단계" : `${stage}단계`
                       }
                       onChangeCurrent={(stage) =>
                         setTrustRange((prev) => ({
@@ -1242,50 +1333,50 @@ export default function SimulatorPage() {
                     />
                   ) : (
                     <div className="text-sm text-zinc-500">
-                      ?�록???�뢰??보너???�이?��? ?�습?�다.
+                      등록된 신뢰도 보너스 데이터가 없습니다.
                     </div>
                   )
                 ) : (
                   <div className="text-sm text-zinc-500">
-                    ?�퍼?�이?��? 먼�? ?�택??주세??
+                    오퍼레이터를 먼저 선택해 주세요.
                   </div>
                 )}
               </InfoPanel>
             </div>
 
             <div className="grid gap-6">
-              <InfoPanel title="�??�요 ?�화" summary={combinedSummary}>
+              <InfoPanel title="총 필요 재화" summary={combinedSummary}>
                 {selectedOperator || selectedWeapon ? (
                   <MaterialList items={combinedMaterialDeficitItems} columns={4} />
                 ) : (
                   <div className="text-sm text-zinc-500">
-                    ?�퍼?�이?��? 무기�??�택?�시�?�??�요 ?�화�?보여?�립?�다.
+                    오퍼레이터와 무기를 선택하시면 총 필요 재화를 보여드립니다.
                   </div>
                 )}
               </InfoPanel>
 
-              <InfoPanel title="?�퍼?�이???�요 ?�화" summary={operatorMaterialsSummary}>
+              <InfoPanel title="오퍼레이터 필요 재화" summary={operatorMaterialsSummary}>
                 {selectedOperator ? (
                   <MaterialList items={operatorMaterialDeficitItems} columns={4} />
                 ) : (
                   <div className="text-sm text-zinc-500">
-                    ?�퍼?�이?��? 먼�? ?�택??주세??
+                    오퍼레이터를 먼저 선택해 주세요.
                   </div>
                 )}
               </InfoPanel>
 
-              <InfoPanel title="무기 ?�요 ?�화" summary={weaponMaterialsSummary}>
+              <InfoPanel title="무기 필요 재화" summary={weaponMaterialsSummary}>
                 {!selectedWeapon ? (
                   <div className="text-sm text-zinc-500">
-                    무기�?먼�? ?�택??주세??
+                    무기를 먼저 선택해 주세요.
                   </div>
                 ) : weaponLevelSteps.length === 0 &&
                   weaponExpSteps.length === 0 &&
                   weaponBreakthroughSteps.length === 0 ? (
                   <div className="rounded-2xl border border-yellow-500/10 bg-[#090d14] p-4 text-sm text-zinc-500">
-                    무기 ?�벨??/ ?�파 ?�화 ?�이?��? 찾�? 못했?�니??
+                    무기 레벨업 / 돌파 재화 데이터를 찾지 못했습니다.
                     <br />
-                    ?�재 ?�택??무기 slug:{" "}
+                    현재 선택된 무기 slug:{" "}
                     <span className="text-yellow-300">{selectedWeapon.slug}</span>
                   </div>
                 ) : (
@@ -1299,6 +1390,3 @@ export default function SimulatorPage() {
     </main>
   );
 }
-
-
-
