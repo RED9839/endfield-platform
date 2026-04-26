@@ -196,7 +196,7 @@ function RangeSelector({
   return (
     <div className="grid gap-3 md:grid-cols-2">
       <div className="grid gap-2">
-        <div className="text-xs font-semibold text-zinc-400">{titleCurrent}</div>
+        <div className="text-xs font-semibold text-yellow-300">{titleCurrent}</div>
         <RangeSelect
           value={current}
           options={stages}
@@ -206,7 +206,7 @@ function RangeSelector({
       </div>
 
       <div className="grid gap-2">
-        <div className="text-xs font-semibold text-zinc-400">{titleTarget}</div>
+        <div className="text-xs font-semibold text-yellow-300">{titleTarget}</div>
         <RangeSelect
           value={target}
           options={targetStages}
@@ -1056,56 +1056,22 @@ export default function SimulatorPage() {
             </div>
           </section>
 
-          <section className="rounded-[24px] border border-yellow-500/15 bg-[#05070b] p-5 shadow-[0_18px_60px_rgba(0,0,0,0.25)]">
-            <div className="grid gap-4 lg:grid-cols-2">
-              <label className="grid gap-2">
-                <span className="text-xs font-bold uppercase tracking-[0.24em] text-yellow-300/80">
-                  오퍼레이터 선택
-                </span>
-                <select
-                  value={selectedOperatorSlug}
-                  onChange={(event) => handleOperatorSelect(event.target.value)}
-                  className="h-12 rounded-2xl border border-yellow-500/15 bg-black px-4 text-sm font-semibold text-white outline-none transition focus:border-yellow-300/50"
-                >
-                  <option value="">오퍼레이터를 선택해 주세요</option>
-                  {operators.map((operator: OperatorDetail) => (
-                    <option key={operator.slug} value={operator.slug}>
-                      {operator.name}
-                      {operator.enName ? ` / ${operator.enName}` : ""}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label className="grid gap-2">
-                <span className="text-xs font-bold uppercase tracking-[0.24em] text-yellow-300/80">
-                  무기 선택
-                </span>
-                <select
-                  value={selectedWeaponSlug}
-                  onChange={(event) => handleWeaponSelect(event.target.value)}
-                  className="h-12 rounded-2xl border border-yellow-500/15 bg-black px-4 text-sm font-semibold text-white outline-none transition focus:border-yellow-300/50"
-                >
-                  <option value="">무기를 선택해 주세요</option>
-                  {weapons.map((weapon: SourceWeaponDetail) => (
-                    <option key={weapon.slug} value={weapon.slug}>
-                      {weapon.name}
-                      {weapon.enName ? ` / ${weapon.enName}` : ""}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-          </section>
-
           <SimulatorShowcaseHero
             operator={selectedOperator}
             weapon={selectedWeapon}
+            operators={operators}
+            weapons={weapons}
+            selectedOperatorSlug={selectedOperatorSlug}
+            selectedWeaponSlug={selectedWeaponSlug}
+            onSelectOperator={handleOperatorSelect}
+            onSelectWeapon={handleWeaponSelect}
             ownedItems={ownedMaterialItems}
             isOwnedPanelOpen={isOwnedPanelOpen}
             onOpenOwnedPanel={() => setIsOwnedPanelOpen(true)}
             onCloseOwnedPanel={() => setIsOwnedPanelOpen(false)}
             onChangeOwned={handleOwnedMaterialChange}
+            farmingHref="/farming"
+            onMoveToFarming={handleGoFarmingCalculator}
           />
 
           <div className="grid items-start gap-6 xl:grid-cols-[560px_minmax(0,1fr)]">
