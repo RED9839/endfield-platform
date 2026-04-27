@@ -220,8 +220,7 @@ export default async function HomePage() {
             <HeroPanel featured={heroFeaturedData} />
 
             <SectionFrame
-              title="이벤트 / 픽업"
-              subTitle="픽업오퍼레이터 → 무기 → 이벤트 → 공지 → 뉴스 → 버전 업데이트 설명 순으로 표시합니다."
+              title="픽업 / 이벤트 / 공지사항"
             >
               <BannerSection initialData={homeData} />
             </SectionFrame>
