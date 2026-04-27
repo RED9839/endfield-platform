@@ -60,7 +60,7 @@ const SLIDER_TRACK_HEIGHT = 6;
 const statIconMap: Record<string, string> = {
   생명력: "/icons/stats/hp.webp",
   공격력: "/icons/stats/attack.webp",
-  힘: "/icons/stats/power.webp",
+  힘: "/icons/stats/strength.webp",
   민첩: "/icons/stats/agility.webp",
   지능: "/icons/stats/intelligence.webp",
   의지: "/icons/stats/will.webp",
