@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
 import * as cheerio from "cheerio";
-import fs from "fs";
-import path from "path";
 
 type HomeNoticeType = "notice" | "event" | "news";
 
@@ -27,15 +25,67 @@ type OperatorState = {
   currentOperatorId: string;
 };
 
+type HomeApiResponse = {
+  ok: boolean;
+  source: "official-news";
+  fetchedAt: string;
+  latest: ParsedItem[];
+  notice: ParsedItem[];
+  event: ParsedItem[];
+  news: ParsedItem[];
+  weaponStack: WeaponStackItem[];
+  debug: {
+    parsedCount: number;
+    cache: "hit" | "miss";
+  };
+  message?: string;
+};
+
+type CheerioRoot = ReturnType<typeof cheerio.load>;
+type CheerioAcceptedElement = Parameters<CheerioRoot>[0];
+type CheerioNode = ReturnType<CheerioRoot>;
+
 const NEWS_URL = "https://endfield.gryphline.com/ko-kr/news";
 const SITE = "https://endfield.gryphline.com";
+const CACHE_TTL = 1000 * 60 * 5;
 
-const STACK_PATH = path.join(process.cwd(), "data/weapon-stack.json");
-const OPERATOR_STATE_PATH = path.join(process.cwd(), "data/operator-state.json");
+const DEFAULT_WEAPON_STACK: WeaponStackItem[] = [
+  {
+    id: "hanghae",
+    title: "항해 신청",
+    stack: 0,
+    image:
+      "https://web-static.hg-cdn.com/upload/image/20260415/c08b7435381e80dba80b70453daf22d4.jpg",
+    href: `${SITE}/ko-kr/news/0751`,
+    publishedAt: "2026.04.16",
+    createdAt: "2026-04-16T00:00:00.000Z",
+  },
+  {
+    id: "jeogok",
+    title: "적옥 신청",
+    stack: 1,
+    image:
+      "https://web-static.hg-cdn.com/upload/image/20260321/995797e6ffe60b02202749600a8ac9cd.jpg",
+    href: `${SITE}/ko-kr/news/2660`,
+    publishedAt: "2026.03.28",
+    createdAt: "2026-03-28T00:00:00.000Z",
+  },
+  {
+    id: "sina",
+    title: "신아 신청",
+    stack: 2,
+    image:
+      "https://web-static.hg-cdn.com/upload/image/20260309/94336f5ca612a44896b0288d0ea841cc.jpg",
+    href: `${SITE}/ko-kr/news/5213`,
+    publishedAt: "2026.03.11",
+    createdAt: "2026-03-11T00:00:00.000Z",
+  },
+];
 
-/* =========================
-   유틸
-========================= */
+let cachedResponse: HomeApiResponse | null = null;
+let cachedAt = 0;
+let memoryWeaponStack: WeaponStackItem[] = [...DEFAULT_WEAPON_STACK];
+let memoryOperatorState: OperatorState = { currentOperatorId: "" };
 
 function abs(url?: string | null) {
   if (!url) return "";
@@ -53,20 +103,17 @@ function getDate(text: string) {
   return text.match(/\d{4}\.\d{2}\.\d{2}/)?.[0] ?? "";
 }
 
+function dateToTime(date: string) {
+  const parsed = new Date(`${date.replace(/\./g, "-")}T00:00:00+09:00`);
+  return Number.isNaN(parsed.getTime()) ? 0 : parsed.getTime();
+}
+
 function getType(text: string): HomeNoticeType | null {
   if (text.includes("공지")) return "notice";
   if (text.includes("이벤트")) return "event";
   if (text.includes("뉴스")) return "news";
   return null;
 }
-
-function ensureDir(filePath: string) {
-  fs.mkdirSync(path.dirname(filePath), { recursive: true });
-}
-
-/* =========================
-   제목 / 링크 매핑
-========================= */
 
 function normalizeWeaponTitle(title: string) {
   return title
@@ -77,13 +124,13 @@ function normalizeWeaponTitle(title: string) {
 }
 
 function weaponId(title: string) {
-  const t = normalizeWeaponTitle(title);
+  const normalized = normalizeWeaponTitle(title);
 
-  if (t.includes("항해 신청")) return "hanghae";
-  if (t.includes("적옥 신청")) return "jeogok";
-  if (t.includes("신아 신청")) return "sina";
+  if (normalized.includes("항해 신청")) return "hanghae";
+  if (normalized.includes("적옥 신청")) return "jeogok";
+  if (normalized.includes("신아 신청")) return "sina";
 
-  return t.replace(/[^\w가-힣]/g, "").toLowerCase();
+  return normalized.replace(/[^\w가-힣]/g, "").toLowerCase();
 }
 
 function isWeapon(title: string) {
@@ -105,194 +152,131 @@ function isStackCountedOperator(title: string) {
   return isOperatorPickup(title) && !isSpecialHeadHunting(title);
 }
 
-function isVersionUpdateExplanation(title: string) {
-  return title.includes("버전 업데이트 설명");
-}
-
 function hrefMap(title: string) {
-  const cleanTitle = title.replace(/[「」]/g, "").replace(/\s+/g, " ").trim();
+  const normalized = title.replace(/[「」]/g, "").replace(/\s+/g, " ").trim();
 
-  if (cleanTitle.includes("항해 신청")) return `${SITE}/ko-kr/news/0751`;
-  if (cleanTitle.includes("적옥 신청")) return `${SITE}/ko-kr/news/2660`;
-  if (cleanTitle.includes("신아 신청")) return `${SITE}/ko-kr/news/5213`;
+  if (normalized.includes("항해 신청")) return `${SITE}/ko-kr/news/0751`;
+  if (normalized.includes("적옥 신청")) return `${SITE}/ko-kr/news/2660`;
+  if (normalized.includes("신아 신청")) return `${SITE}/ko-kr/news/5213`;
 
-  if (cleanTitle.includes("봄날의 새벽") && cleanTitle.includes("버전 업데이트 설명")) {
+  if (
+    normalized.includes("봄날의 새벽") &&
+    normalized.includes("버전 업데이트 설명")
+  ) {
     return `${SITE}/ko-kr/news/0751`;
   }
 
-  if (cleanTitle.includes("봄의 천둥, 만물의 소생") && cleanTitle.includes("특별 허가 헤드헌팅")) {
+  if (
+    normalized.includes("봄의 천둥, 만물의 소생") &&
+    normalized.includes("특별 허가 헤드헌팅")
+  ) {
     return `${SITE}/ko-kr/news/0751`;
   }
 
-  if (cleanTitle.includes("리뉴얼 월정액 선물")) {
+  if (normalized.includes("리뉴얼 월정액 선물")) {
     return `${SITE}/ko-kr/news/0751`;
   }
 
-  return `${SITE}/ko-kr/news`;
+  return NEWS_URL;
 }
 
-/* =========================
-   파일 읽기/쓰기
-========================= */
+function seedWeaponStack(stack: WeaponStackItem[]) {
+  const map = new Map<string, WeaponStackItem>();
 
-function readStack(): WeaponStackItem[] {
-  try {
-    const raw = fs.readFileSync(STACK_PATH, "utf-8");
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed.items) ? parsed.items : [];
-  } catch {
-    return [];
+  for (const item of DEFAULT_WEAPON_STACK) {
+    map.set(item.id, { ...item });
   }
-}
 
-function writeStack(items: WeaponStackItem[]) {
-  ensureDir(STACK_PATH);
-  fs.writeFileSync(
-    STACK_PATH,
-    JSON.stringify(
-      {
-        version: 1,
-        lastUpdated: new Date().toISOString(),
-        items,
-      },
-      null,
-      2
-    ),
-    "utf-8"
-  );
-}
-
-function readOperatorState(): OperatorState {
-  try {
-    const raw = fs.readFileSync(OPERATOR_STATE_PATH, "utf-8");
-    return JSON.parse(raw) as OperatorState;
-  } catch {
-    return { currentOperatorId: "" };
-  }
-}
-
-function writeOperatorState(state: OperatorState) {
-  ensureDir(OPERATOR_STATE_PATH);
-  fs.writeFileSync(OPERATOR_STATE_PATH, JSON.stringify(state, null, 2), "utf-8");
-}
-
-/* =========================
-   초기 시드
-========================= */
-
-function seed(stack: WeaponStackItem[]) {
-  const map = new Map(stack.map((item) => [item.id, item]));
-
-  const defaults: WeaponStackItem[] = [
-    {
-      id: "hanghae",
-      title: "항해 신청",
-      stack: 0,
-      image:
-        "https://web-static.hg-cdn.com/upload/image/20260415/c08b7435381e80dba80b70453daf22d4.jpg",
-      href: `${SITE}/ko-kr/news/0751`,
-      publishedAt: "2026.04.16",
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: "jeogok",
-      title: "적옥 신청",
-      stack: 1,
-      image:
-        "https://web-static.hg-cdn.com/upload/image/20260321/995797e6ffe60b02202749600a8ac9cd.jpg",
-      href: `${SITE}/ko-kr/news/2660`,
-      publishedAt: "2026.03.28",
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: "sina",
-      title: "신아 신청",
-      stack: 2,
-      image:
-        "https://web-static.hg-cdn.com/upload/image/20260309/94336f5ca612a44896b0288d0ea841cc.jpg",
-      href: `${SITE}/ko-kr/news/5213`,
-      publishedAt: "2026.03.11",
-      createdAt: new Date().toISOString(),
-    },
-  ];
-
-  for (const item of defaults) {
-    if (!map.has(item.id)) {
-      map.set(item.id, item);
-    }
+  for (const item of stack) {
+    map.set(item.id, { ...item });
   }
 
   return [...map.values()].sort((a, b) => a.stack - b.stack);
 }
 
-/* =========================
-   목록 파싱
-========================= */
+function getImageFromRoot(root: CheerioNode) {
+  const imageEl = root.find("img").first();
 
-function parse(html: string): ParsedItem[] {
+  return abs(
+    imageEl.attr("src") ||
+      imageEl.attr("data-src") ||
+      imageEl.attr("data-original") ||
+      imageEl.attr("data-lazy-src") ||
+      imageEl.attr("data-actualsrc") ||
+      "",
+  );
+}
+
+function getTitleFromRoot(root: CheerioNode, fullText: string, date: string) {
+  const imageAlt = root.find("img[alt]").first().attr("alt");
+
+  let title =
+    clean(root.find(".title").first().text()) ||
+    clean(root.find("h3").first().text()) ||
+    clean(root.find("h2").first().text()) ||
+    clean(imageAlt) ||
+    "";
+
+  if (title) return title;
+
+  const lines = fullText
+    .split(/\n+/)
+    .map((value) => clean(value))
+    .filter(Boolean);
+
+  for (const line of lines) {
+    if (line === "공지" || line === "이벤트" || line === "뉴스") continue;
+    if (/^\d{4}\.\d{2}\.\d{2}$/.test(line)) continue;
+    if (!line.includes(date)) {
+      title = line;
+      break;
+    }
+  }
+
+  return title;
+}
+
+function parseNewsList(html: string): ParsedItem[] {
   const $ = cheerio.load(html);
   const result: ParsedItem[] = [];
-  const seen = new Set<string>();
-  const candidates = new Set<any>();
+  const seenCandidate = new WeakSet<object>();
+  const seenItem = new Set<string>();
+  const candidates: CheerioAcceptedElement[] = [];
 
   $("a").each((_, el) => {
-    if ($(el).find("img").length > 0) {
-      candidates.add(el);
+    const node = el as object;
+    if ($(el).find("img").length > 0 && !seenCandidate.has(node)) {
+      seenCandidate.add(node);
+      candidates.push(el);
     }
   });
 
   $("li, article, div").each((_, el) => {
-    const text = clean($(el).text());
+    const node = el as object;
+    const root = $(el);
+    const text = clean(root.text());
+
     if (
-      $(el).find("img").length > 0 &&
-      (text.includes("공지") || text.includes("이벤트") || text.includes("뉴스"))
+      root.find("img").length > 0 &&
+      (text.includes("공지") || text.includes("이벤트") || text.includes("뉴스")) &&
+      !seenCandidate.has(node)
     ) {
-      candidates.add(el);
+      seenCandidate.add(node);
+      candidates.push(el);
     }
   });
 
   for (const el of candidates) {
     const root = $(el);
-
-    const img =
-      root.find("img").first().attr("src") ||
-      root.find("img").first().attr("data-src") ||
-      root.find("img").first().attr("data-original") ||
-      root.find("img").first().attr("data-lazy-src") ||
-      "";
-
-    const image = abs(img);
+    const image = getImageFromRoot(root);
     if (!image) continue;
 
     const fullText = clean(root.text());
     const date = getDate(fullText);
     const type = getType(fullText);
-
     if (!date || !type) continue;
 
-    let title =
-      clean(root.find(".title").first().text()) ||
-      clean(root.find("h3").first().text()) ||
-      clean(root.find("h2").first().text()) ||
-      clean(root.find("[alt]").first().attr("alt")) ||
-      "";
-
-    if (!title) {
-      const lines = fullText
-        .split(/\n+/)
-        .map((v) => clean(v))
-        .filter(Boolean);
-
-      for (const line of lines) {
-        if (line === "공지" || line === "이벤트" || line === "뉴스") continue;
-        if (/^\d{4}\.\d{2}\.\d{2}$/.test(line)) continue;
-        if (!line.includes(date)) {
-          title = line;
-          break;
-        }
-      }
-    }
-
+    const title = getTitleFromRoot(root, fullText, date);
     if (!title) continue;
 
     const rawHref =
@@ -302,10 +286,10 @@ function parse(html: string): ParsedItem[] {
       "";
 
     const href = rawHref ? abs(rawHref) : hrefMap(title);
+    const key = `${title}|${date}|${type}`;
 
-    const key = `${title}-${date}-${type}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
+    if (seenItem.has(key)) continue;
+    seenItem.add(key);
 
     result.push({
       title,
@@ -316,35 +300,22 @@ function parse(html: string): ParsedItem[] {
     });
   }
 
-  return result.sort(
-    (a, b) =>
-      new Date(`${b.date.replace(/\./g, "-")}T00:00:00+09:00`).getTime() -
-      new Date(`${a.date.replace(/\./g, "-")}T00:00:00+09:00`).getTime()
-  );
+  return result.sort((a, b) => dateToTime(b.date) - dateToTime(a.date));
 }
 
-/* =========================
-   무기 스택 업데이트
-========================= */
-
-function updateStack(items: ParsedItem[]) {
-  const beforeSeed = readStack();
-  let stack = seed(beforeSeed);
+function updateWeaponStack(items: ParsedItem[]) {
+  let stack = seedWeaponStack(memoryWeaponStack);
 
   const currentCountedOperator = items.find((item) =>
-    isStackCountedOperator(item.title)
+    isStackCountedOperator(item.title),
   );
 
-  const operatorState = readOperatorState();
-  const currentOperatorId = currentCountedOperator
-    ? currentCountedOperator.title
-    : "";
-
+  const currentOperatorId = currentCountedOperator?.title ?? "";
   const shouldAdvance =
-    beforeSeed.length > 0 &&
-    !!operatorState.currentOperatorId &&
+    memoryWeaponStack.length > 0 &&
+    !!memoryOperatorState.currentOperatorId &&
     !!currentOperatorId &&
-    operatorState.currentOperatorId !== currentOperatorId;
+    memoryOperatorState.currentOperatorId !== currentOperatorId;
 
   if (shouldAdvance) {
     stack = stack
@@ -353,14 +324,14 @@ function updateStack(items: ParsedItem[]) {
   }
 
   if (currentOperatorId) {
-    writeOperatorState({ currentOperatorId });
+    memoryOperatorState = { currentOperatorId };
   }
 
-  for (const item of items.filter((v) => isWeapon(v.title))) {
+  for (const item of items.filter((value) => isWeapon(value.title))) {
     const id = weaponId(item.title);
     if (!id) continue;
 
-    const existing = stack.find((s) => s.id === id);
+    const existing = stack.find((value) => value.id === id);
 
     if (existing) {
       existing.image = item.image || existing.image;
@@ -387,22 +358,35 @@ function updateStack(items: ParsedItem[]) {
     });
   }
 
-  stack = stack
-    .sort((a, b) => a.stack - b.stack)
-    .slice(0, 3);
+  memoryWeaponStack = stack.sort((a, b) => a.stack - b.stack).slice(0, 3);
 
-  writeStack(stack);
-
-  return stack;
+  return memoryWeaponStack;
 }
 
-/* =========================
-   API
-========================= */
+function json(data: HomeApiResponse, status = 200) {
+  return NextResponse.json(data, {
+    status,
+    headers: {
+      "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
+    },
+  });
+}
 
 export async function GET() {
+  const now = Date.now();
+
+  if (cachedResponse && now - cachedAt < CACHE_TTL) {
+    return json({
+      ...cachedResponse,
+      debug: {
+        ...cachedResponse.debug,
+        cache: "hit",
+      },
+    });
+  }
+
   try {
-    const res = await fetch(NEWS_URL, {
+    const response = await fetch(NEWS_URL, {
       cache: "no-store",
       headers: {
         "User-Agent":
@@ -413,28 +397,68 @@ export async function GET() {
       },
     });
 
-    if (!res.ok) {
-      return NextResponse.json({
-        ok: false,
-        message: `fetch failed: ${res.status}`,
-      });
+    if (!response.ok) {
+      return json(
+        {
+          ok: false,
+          source: "official-news",
+          fetchedAt: new Date().toISOString(),
+          latest: [],
+          notice: [],
+          event: [],
+          news: [],
+          weaponStack: memoryWeaponStack,
+          debug: {
+            parsedCount: 0,
+            cache: "miss",
+          },
+          message: `fetch failed: ${response.status}`,
+        },
+        502,
+      );
     }
 
-    const html = await res.text();
-    const parsed = parse(html);
+    const html = await response.text();
+    const parsed = parseNewsList(html);
+    const weaponStack = updateWeaponStack(parsed);
 
-    return NextResponse.json({
+    const payload: HomeApiResponse = {
       ok: true,
+      source: "official-news",
+      fetchedAt: new Date().toISOString(),
       latest: parsed.slice(0, 10),
-      notice: parsed.filter((v) => v.type === "notice"),
-      event: parsed.filter((v) => v.type === "event"),
-      news: parsed.filter((v) => v.type === "news"),
-      weaponStack: updateStack(parsed),
-    });
+      notice: parsed.filter((value) => value.type === "notice"),
+      event: parsed.filter((value) => value.type === "event"),
+      news: parsed.filter((value) => value.type === "news"),
+      weaponStack,
+      debug: {
+        parsedCount: parsed.length,
+        cache: "miss",
+      },
+    };
+
+    cachedResponse = payload;
+    cachedAt = now;
+
+    return json(payload);
   } catch (error) {
-    return NextResponse.json({
-      ok: false,
-      message: error instanceof Error ? error.message : "unknown error",
-    });
+    return json(
+      {
+        ok: false,
+        source: "official-news",
+        fetchedAt: new Date().toISOString(),
+        latest: [],
+        notice: [],
+        event: [],
+        news: [],
+        weaponStack: memoryWeaponStack,
+        debug: {
+          parsedCount: 0,
+          cache: "miss",
+        },
+        message: error instanceof Error ? error.message : "unknown error",
+      },
+      500,
+    );
   }
 }

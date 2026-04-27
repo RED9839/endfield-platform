@@ -1,16 +1,15 @@
-"use client";
-
 import Link from "next/link";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { headers } from "next/headers";
+import type { ReactNode } from "react";
 import HeroPanel from "@/app/components/home/HeroPanel";
 import QuickAccessPanel, {
   type QuickAccessItem,
 } from "@/app/components/home/QuickAccessPanel";
 import OperatorHighlightPanel from "@/app/components/home/OperatorHighlightPanel";
-import HomeBannerHubPanel, {
-  type HomeBannerItem,
-} from "@/app/components/home/HomeBannerHubPanel";
 import { getOperatorDetailByName } from "@/data/operators-detail-data";
+import BannerSection, {
+  type HomeApiResponse,
+} from "./components/home/BannerSection";
 
 type HomeNoticeType = "notice" | "event" | "news";
 
@@ -22,28 +21,7 @@ type SimpleHomeItem = {
   image?: string;
 };
 
-type WeaponStackItem = {
-  id: string;
-  title: string;
-  stack: number;
-  image: string;
-  href: string;
-  publishedAt?: string;
-  createdAt?: string;
-};
-
-type HomeApiResponse = {
-  ok: boolean;
-  latest?: SimpleHomeItem[];
-  notice?: SimpleHomeItem[];
-  event?: SimpleHomeItem[];
-  news?: SimpleHomeItem[];
-  weaponStack?: WeaponStackItem[];
-  message?: string;
-};
-
 const defaultFeaturedOperatorName = "장방이";
-const fallbackNewsUrl = "https://endfield.gryphline.com/ko-kr/news";
 
 const navigationItems = [
   { label: "오퍼레이터", href: "/operators" },
@@ -149,56 +127,6 @@ function SectionFrame({
   );
 }
 
-function normalizeBannerTitle(title: string) {
-  return title.replace(/\s+/g, " ").replace(/[「」<>]/g, "").trim();
-}
-
-function normalizeBannerImage(image?: string) {
-  if (!image || !image.trim()) return "";
-  return `/api/banners/image?url=${encodeURIComponent(image)}`;
-}
-
-function toIsoDate(date?: string) {
-  if (!date) return undefined;
-  const normalized = date.replace(/\./g, "-");
-  const d = new Date(`${normalized}T00:00:00+09:00`);
-  if (Number.isNaN(d.getTime())) return undefined;
-  return d.toISOString();
-}
-
-function toTime(date?: string) {
-  if (!date) return 0;
-  const normalized = date.replace(/\./g, "-");
-  const d = new Date(`${normalized}T00:00:00+09:00`);
-  if (Number.isNaN(d.getTime())) return 0;
-  return d.getTime();
-}
-
-function isValidSimpleItem(item: SimpleHomeItem) {
-  return !!item.title && !!item.image;
-}
-
-function isOperatorPickupTitle(title: string) {
-  return title.includes("특별 허가 헤드헌팅");
-}
-
-function isWeaponPickupTitle(title: string) {
-  return (
-    title.includes("신청") &&
-    (title.includes("판매 설명") || title.includes("기간 한정"))
-  );
-}
-
-function isVersionUpdateTitle(title: string) {
-  return title.includes("버전 업데이트 설명");
-}
-
-function classifyNormalKind(item: SimpleHomeItem): "notice" | "event" | "news" {
-  if (item.type === "notice") return "notice";
-  if (item.type === "event") return "event";
-  return "news";
-}
-
 function guessOperatorNameFromTitle(title: string) {
   if (title.includes("장방이")) return "장방이";
   if (title.includes("로시")) return "로시";
@@ -207,174 +135,8 @@ function guessOperatorNameFromTitle(title: string) {
   return defaultFeaturedOperatorName;
 }
 
-function dedupeSimpleItems(items: SimpleHomeItem[]) {
-  const seen = new Set<string>();
-  const result: SimpleHomeItem[] = [];
-
-  for (const item of items) {
-    if (!isValidSimpleItem(item)) continue;
-    const key = `${normalizeBannerTitle(item.title!)}-${item.date ?? ""}-${item.type ?? ""}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    result.push(item);
-  }
-
-  return result;
-}
-
-function sortSimpleItems(items: SimpleHomeItem[]) {
-  return [...items].sort((a, b) => toTime(b.date) - toTime(a.date));
-}
-
-function mapWeaponStackToBanners(
-  weaponStack: WeaponStackItem[] | undefined
-): HomeBannerItem[] {
-  if (!Array.isArray(weaponStack)) return [];
-
-  const result: HomeBannerItem[] = [];
-  const sorted = [...weaponStack].sort((a, b) => a.stack - b.stack);
-
-  for (let index = 0; index < sorted.length; index += 1) {
-    const item = sorted[index];
-    const image = normalizeBannerImage(item.image);
-    if (!image) continue;
-
-    result.push({
-      id: item.id || `weapon-${index}`,
-      title: item.title,
-      href: item.href?.trim() ? item.href : fallbackNewsUrl,
-      image,
-      kind: "weapon",
-    });
-  }
-
-  return result;
-}
-
-function mapOperatorPickups(items: SimpleHomeItem[]): HomeBannerItem[] {
-  const result: HomeBannerItem[] = [];
-  const filtered = items.filter((item) =>
-    isOperatorPickupTitle(item.title ?? "")
-  );
-
-  for (let index = 0; index < filtered.length; index += 1) {
-    const item = filtered[index];
-    if (!item.title) continue;
-
-    const image = normalizeBannerImage(item.image);
-    if (!image) continue;
-
-    const banner: HomeBannerItem = {
-      id: `operator-${normalizeBannerTitle(item.title)}-${index}`,
-      title: item.title,
-      href: item.href?.trim() ? item.href : fallbackNewsUrl,
-      image,
-      kind: "operator",
-    };
-
-    const startAt = toIsoDate(item.date);
-    if (startAt) banner.startAt = startAt;
-
-    result.push(banner);
-  }
-
-  return result;
-}
-
-function mapKindBanners(
-  items: SimpleHomeItem[],
-  kind: "event" | "notice" | "news"
-): HomeBannerItem[] {
-  const result: HomeBannerItem[] = [];
-
-  const filtered = items.filter((item) => {
-    const title = item.title ?? "";
-    if (!title) return false;
-    if (isOperatorPickupTitle(title)) return false;
-    if (isWeaponPickupTitle(title)) return false;
-    if (isVersionUpdateTitle(title)) return false;
-    return classifyNormalKind(item) === kind;
-  });
-
-  for (let index = 0; index < filtered.length; index += 1) {
-    const item = filtered[index];
-    if (!item.title) continue;
-
-    const image = normalizeBannerImage(item.image);
-    if (!image) continue;
-
-    const banner: HomeBannerItem = {
-      id: `${kind}-${normalizeBannerTitle(item.title)}-${index}`,
-      title: item.title,
-      href: item.href?.trim() ? item.href : fallbackNewsUrl,
-      image,
-      kind,
-    };
-
-    const startAt = toIsoDate(item.date);
-    if (startAt) banner.startAt = startAt;
-
-    result.push(banner);
-  }
-
-  return result;
-}
-
-function mapVersionBanner(items: SimpleHomeItem[]): HomeBannerItem[] {
-  const versionItem = items.find((item) =>
-    isVersionUpdateTitle(item.title ?? "")
-  );
-
-  if (!versionItem?.title) return [];
-
-  const image = normalizeBannerImage(versionItem.image);
-  if (!image) return [];
-
-  const banner: HomeBannerItem = {
-    id: `version-${normalizeBannerTitle(versionItem.title)}`,
-    title: versionItem.title,
-    href: versionItem.href?.trim() ? versionItem.href : fallbackNewsUrl,
-    image,
-    kind: "notice",
-  };
-
-  const startAt = toIsoDate(versionItem.date);
-  if (startAt) banner.startAt = startAt;
-
-  return [banner];
-}
-
-function convertToHomeBanners(data: HomeApiResponse | null): HomeBannerItem[] {
-  if (!data?.ok) return [];
-
-  const latest = Array.isArray(data.latest) ? data.latest : [];
-  const notice = Array.isArray(data.notice) ? data.notice : [];
-  const event = Array.isArray(data.event) ? data.event : [];
-  const news = Array.isArray(data.news) ? data.news : [];
-
-  const merged = dedupeSimpleItems(
-    sortSimpleItems([...latest, ...notice, ...event, ...news])
-  );
-
-  const operatorBanners = mapOperatorPickups(merged);
-  const weaponBanners = mapWeaponStackToBanners(data.weaponStack);
-  const eventBanners = mapKindBanners(merged, "event");
-  const noticeBanners = mapKindBanners(merged, "notice");
-  const newsBanners = mapKindBanners(merged, "news");
-  const versionBanner = mapVersionBanner(merged);
-
-  return [
-    ...operatorBanners,
-    ...weaponBanners,
-    ...eventBanners,
-    ...noticeBanners,
-    ...newsBanners,
-    ...versionBanner,
-  ].slice(0, 10);
-}
-
 function resolveFeaturedOperatorName(data: HomeApiResponse | null) {
-  const merged = [
+  const merged: SimpleHomeItem[] = [
     ...(Array.isArray(data?.latest) ? data.latest : []),
     ...(Array.isArray(data?.notice) ? data.notice : []),
     ...(Array.isArray(data?.event) ? data.event : []),
@@ -393,84 +155,38 @@ function resolveFeaturedOperatorName(data: HomeApiResponse | null) {
   return defaultFeaturedOperatorName;
 }
 
-function BannerLoadingBox({ text }: { text: string }) {
-  return (
-    <div className="flex h-[360px] w-full items-center justify-center rounded-[24px] border border-yellow-500/15 bg-black text-sm text-zinc-500">
-      {text}
-    </div>
-  );
+async function getBaseUrl() {
+  const headersList = await headers();
+  const host = headersList.get("host");
+  const protocol = headersList.get("x-forwarded-proto") ?? "http";
+
+  if (!host) return "http://localhost:3000";
+
+  return `${protocol}://${host}`;
 }
 
-function BannerErrorBox({ text }: { text: string }) {
-  return (
-    <div className="flex h-[360px] w-full items-center justify-center rounded-[24px] border border-red-500/20 bg-red-500/10 px-6 text-center text-sm text-red-200">
-      {text}
-    </div>
-  );
+async function getHomeData(): Promise<HomeApiResponse | null> {
+  try {
+    const baseUrl = await getBaseUrl();
+
+    const response = await fetch(`${baseUrl}/api/home`, {
+      next: { revalidate: 300 },
+    });
+
+    const data = (await response.json()) as HomeApiResponse;
+
+    if (!response.ok || !data?.ok) return null;
+
+    return data;
+  } catch {
+    return null;
+  }
 }
 
-export default function HomePage() {
-  const [homeData, setHomeData] = useState<HomeApiResponse | null>(null);
-  const [homeLoading, setHomeLoading] = useState(true);
-  const [homeError, setHomeError] = useState("");
-  const [featuredOperatorName, setFeaturedOperatorName] = useState(
-    defaultFeaturedOperatorName
-  );
+export default async function HomePage() {
+  const homeData = await getHomeData();
 
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadHome() {
-      try {
-        setHomeLoading(true);
-        setHomeError("");
-
-        const response = await fetch("/api/home", {
-          cache: "no-store",
-        });
-
-        const data = (await response.json()) as HomeApiResponse;
-
-        if (!response.ok || !data?.ok) {
-          throw new Error(
-            data?.message || "홈 배너 데이터를 불러오지 못했습니다."
-          );
-        }
-
-        if (cancelled) return;
-
-        setHomeData(data);
-        setFeaturedOperatorName(resolveFeaturedOperatorName(data));
-      } catch (error) {
-        if (cancelled) return;
-
-        setHomeData(null);
-        setFeaturedOperatorName(defaultFeaturedOperatorName);
-        setHomeError(
-          error instanceof Error
-            ? error.message
-            : "홈 배너 데이터를 불러오지 못했습니다."
-        );
-      } finally {
-        if (!cancelled) {
-          setHomeLoading(false);
-        }
-      }
-    }
-
-    void loadHome();
-
-    const interval = window.setInterval(() => {
-      void loadHome();
-    }, 1000 * 60 * 5);
-
-    return () => {
-      cancelled = true;
-      window.clearInterval(interval);
-    };
-  }, []);
-
-  const banners = useMemo(() => convertToHomeBanners(homeData), [homeData]);
+  const featuredOperatorName = resolveFeaturedOperatorName(homeData);
 
   const featuredOperator =
     getOperatorDetailByName(featuredOperatorName) ??
@@ -478,25 +194,21 @@ export default function HomePage() {
     getOperatorDetailByName("라스트 라이트") ??
     getOperatorDetailByName("lastrite");
 
-  const heroFeaturedData = useMemo(() => {
-    if (featuredOperator) {
-      return {
+  const heroFeaturedData = featuredOperator
+    ? {
         name: featuredOperator.name,
         enName: featuredOperator.enName ?? featuredOperator.slug,
         slug: featuredOperator.slug,
         href: `/operators/${featuredOperator.slug}`,
         heroImage: `/operators/${featuredOperator.slug}/full.webp`,
+      }
+    : {
+        name: "라스트 라이트",
+        enName: "LASTRITE",
+        slug: "lastrite",
+        href: "/operators/lastrite",
+        heroImage: "/operators/lastrite/full.webp",
       };
-    }
-
-    return {
-      name: "라스트 라이트",
-      enName: "LASTRITE",
-      slug: "lastrite",
-      href: "/operators/lastrite",
-      heroImage: "/operators/lastrite/full.webp",
-    };
-  }, [featuredOperator]);
 
   return (
     <main className="min-h-screen bg-[#050505] text-white">
@@ -511,15 +223,7 @@ export default function HomePage() {
               title="이벤트 / 픽업"
               subTitle="픽업오퍼레이터 → 무기 → 이벤트 → 공지 → 뉴스 → 버전 업데이트 설명 순으로 표시합니다."
             >
-              {homeLoading ? (
-                <BannerLoadingBox text="홈 배너를 불러오는 중입니다." />
-              ) : homeError ? (
-                <BannerErrorBox text={homeError} />
-              ) : banners.length === 0 ? (
-                <BannerErrorBox text="표시할 배너가 없습니다. /api/home 응답을 확인해 주세요." />
-              ) : (
-                <HomeBannerHubPanel items={banners} />
-              )}
+              <BannerSection initialData={homeData} />
             </SectionFrame>
 
             <SectionFrame title="빠른 이동">

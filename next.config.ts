@@ -1,7 +1,28 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "web-static.hg-cdn.com",
+      },
+      {
+        protocol: "https",
+        hostname: "*.gryphline.com",
+      },
+      {
+        protocol: "https",
+        hostname: "*.hg-cdn.com",
+      },
+    ],
+  },
+
+  poweredByHeader: false,
+
+  experimental: {
+    optimizePackageImports: ["lucide-react"],
+  },
 };
 
 export default nextConfig;
