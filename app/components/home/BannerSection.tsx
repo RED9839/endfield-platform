@@ -5,103 +5,73 @@ import HomeBannerHubPanel, {
   type HomeBannerItem,
 } from "@/app/components/home/HomeBannerHubPanel";
 
-type HomeNoticeType = "notice" | "event" | "news";
-
-type SimpleHomeItem = {
-  title?: string;
-  date?: string;
-  type?: HomeNoticeType;
-  href?: string;
-  image?: string;
-};
-
-type WeaponStackItem = {
-  id: string;
-  title: string;
-  stack: number;
-  image: string;
-  href: string;
-};
-
 export type HomeApiResponse = {
   ok: boolean;
-  latest?: SimpleHomeItem[];
-  notice?: SimpleHomeItem[];
-  event?: SimpleHomeItem[];
-  news?: SimpleHomeItem[];
-  weaponStack?: WeaponStackItem[];
-  message?: string;
+  latest?: any[];
+  notice?: any[];
+  event?: any[];
+  news?: any[];
+  weaponStack?: any[];
 };
 
-const fallbackNewsUrl = "https://endfield.gryphline.com/ko-kr/news";
+type BannerSourceItem = {
+  id?: string;
+  title?: string;
+  href?: string;
+  type?: string;
+  image?: string;
+  detailImage?: string;
+  bannerImage?: string;
+  articleImage?: string;
+  thumbnail?: string;
+};
 
-function normalizeBannerTitle(title: string) {
-  return title.replace(/\s+/g, " ").replace(/[「」<>]/g, "").trim();
+function normalizeImage(url?: string) {
+  if (!url?.trim()) return "";
+  if (url.startsWith("/api/banners/image")) return url;
+  if (url.startsWith("/")) return url;
+  return `/api/banners/image?url=${encodeURIComponent(url)}`;
 }
 
-function normalizeBannerImage(image?: string) {
-  if (!image?.trim()) return "";
-
-  if (image.startsWith("/api/banners/image")) {
-    return image;
-  }
-
-  if (image.startsWith("/")) {
-    return image;
-  }
-
-  return `/api/banners/image?url=${encodeURIComponent(image)}`;
-}
-
-function toIsoDate(date?: string) {
-  if (!date) return undefined;
-
-  const normalized = date.replace(/\./g, "-").trim();
-  const parsed = new Date(`${normalized}T00:00:00+09:00`);
-
-  return Number.isNaN(parsed.getTime()) ? undefined : parsed.toISOString();
-}
-
-function toTime(date?: string) {
-  if (!date) return 0;
-
-  const normalized = date.replace(/\./g, "-").trim();
-  const parsed = new Date(`${normalized}T00:00:00+09:00`);
-
-  return Number.isNaN(parsed.getTime()) ? 0 : parsed.getTime();
-}
-
-function isOperatorPickupTitle(title: string) {
-  return title.includes("특별 허가 헤드헌팅");
-}
-
-function isWeaponPickupTitle(title: string) {
+function pickBannerImage(item: BannerSourceItem) {
   return (
-    title.includes("신청") &&
-    (title.includes("판매 설명") || title.includes("기간 한정"))
+    item.bannerImage ||
+    item.detailImage ||
+    item.articleImage ||
+    item.image ||
+    item.thumbnail ||
+    ""
   );
 }
 
-function isVersionUpdateTitle(title: string) {
-  return title.includes("버전 업데이트 설명");
+function normalizeTitle(title?: string) {
+  return (title ?? "")
+    .replace(/\s+/g, " ")
+    .replace(/[「」<>]/g, "")
+    .trim();
 }
 
-function classifyNormalKind(item: SimpleHomeItem): HomeBannerItem["kind"] {
-  if (item.type === "notice") return "notice";
-  if (item.type === "event") return "event";
-  return "news";
-}
-
-function removeDuplicateItems(items: SimpleHomeItem[]) {
+function dedupeSourceItems(items: BannerSourceItem[]) {
   const seen = new Set<string>();
 
   return items.filter((item) => {
-    const key = [
-      normalizeBannerTitle(item.title ?? ""),
-      item.date ?? "",
-      item.type ?? "",
-      item.href ?? "",
-    ].join("|");
+    const title = normalizeTitle(item.title);
+    const image = pickBannerImage(item);
+    const key = `${title}|${image}`;
+
+    if (!title) return false;
+    if (seen.has(key)) return false;
+
+    seen.add(key);
+    return true;
+  });
+}
+
+function dedupeBannerItems(items: HomeBannerItem[]) {
+  const seen = new Set<string>();
+
+  return items.filter((item) => {
+    const key = `${normalizeTitle(item.title)}|${item.kind}|${item.image}`;
 
     if (seen.has(key)) return false;
 
@@ -110,109 +80,103 @@ function removeDuplicateItems(items: SimpleHomeItem[]) {
   });
 }
 
-function convertToHomeBanners(data: HomeApiResponse | null): HomeBannerItem[] {
+function isOperator(item: BannerSourceItem) {
+  return item.title?.includes("헤드헌팅") ?? false;
+}
+
+function isWeapon(item: BannerSourceItem) {
+  return item.title?.includes("신청") ?? false;
+}
+
+function isVersion(item: BannerSourceItem) {
+  return item.title?.includes("버전 업데이트") ?? false;
+}
+
+function hasValidImage(item: HomeBannerItem) {
+  return Boolean(item.image?.trim());
+}
+
+function convert(data: HomeApiResponse | null): HomeBannerItem[] {
   if (!data?.ok) return [];
 
-  const merged = [
+  const all = dedupeSourceItems([
     ...(data.latest ?? []),
     ...(data.notice ?? []),
     ...(data.event ?? []),
     ...(data.news ?? []),
-  ]
-    .filter((item) => item.title?.trim() && item.image?.trim())
-    .sort((a, b) => toTime(b.date) - toTime(a.date));
+  ]);
 
-  const deduped = removeDuplicateItems(merged);
+  const operator: HomeBannerItem[] = all
+    .filter(isOperator)
+    .map((item, idx) => ({
+      id: item.id ?? `op-${idx}`,
+      title: item.title ?? "특별 허가 헤드헌팅",
+      image: normalizeImage(pickBannerImage(item)),
+      kind: "operator" as const,
+    }))
+    .filter(hasValidImage);
 
-  const operatorBanners: HomeBannerItem[] = deduped
-    .filter((item) => isOperatorPickupTitle(item.title ?? ""))
-    .map(
-      (item, index): HomeBannerItem => ({
-        id: `operator-${normalizeBannerTitle(item.title ?? "")}-${index}`,
-        title: item.title ?? "",
-        href: item.href?.trim() || fallbackNewsUrl,
-        image: normalizeBannerImage(item.image),
-        kind: "operator",
-        startAt: toIsoDate(item.date),
-      }),
+  const weapon: HomeBannerItem[] = dedupeSourceItems(data.weaponStack ?? [])
+    .map((item: BannerSourceItem, idx: number) => ({
+      id: item.id ?? `wp-${idx}`,
+      title: item.title ?? "무기 신청",
+      image: normalizeImage(pickBannerImage(item)),
+      kind: "weapon" as const,
+    }))
+    .filter(hasValidImage);
+
+  const event: HomeBannerItem[] = all
+    .filter(
+      (item) =>
+        item.type === "event" &&
+        !isOperator(item) &&
+        !isWeapon(item) &&
+        !isVersion(item),
     )
-    .filter((item) => Boolean(item.image));
+    .map((item, idx) => ({
+      id: item.id ?? `ev-${idx}`,
+      title: item.title ?? "이벤트",
+      image: normalizeImage(pickBannerImage(item)),
+      kind: "event" as const,
+    }))
+    .filter(hasValidImage);
 
-  const weaponBanners: HomeBannerItem[] = (data.weaponStack ?? [])
-    .slice()
-    .sort((a, b) => a.stack - b.stack)
-    .map(
-      (item, index): HomeBannerItem => ({
-        id: item.id || `weapon-${index}`,
-        title: item.title,
-        href: item.href?.trim() || fallbackNewsUrl,
-        image: normalizeBannerImage(item.image),
-        kind: "weapon",
-      }),
+  const notice: HomeBannerItem[] = all
+    .filter(
+      (item) =>
+        item.type !== "event" &&
+        !isOperator(item) &&
+        !isWeapon(item) &&
+        !isVersion(item),
     )
-    .filter((item) => Boolean(item.image));
+    .map((item, idx) => ({
+      id: item.id ?? `nt-${idx}`,
+      title: item.title ?? "공지",
+      image: normalizeImage(pickBannerImage(item)),
+      kind: "notice" as const,
+    }))
+    .filter(hasValidImage);
 
-  const normalBanners: HomeBannerItem[] = deduped
-    .filter((item) => {
-      const title = item.title ?? "";
-
-      return (
-        !isOperatorPickupTitle(title) &&
-        !isWeaponPickupTitle(title) &&
-        !isVersionUpdateTitle(title)
-      );
-    })
-    .map((item, index): HomeBannerItem => {
-      const kind = classifyNormalKind(item);
-
-      return {
-        id: `${kind}-${normalizeBannerTitle(item.title ?? "")}-${index}`,
-        title: item.title ?? "",
-        href: item.href?.trim() || fallbackNewsUrl,
-        image: normalizeBannerImage(item.image),
-        kind,
-        startAt: toIsoDate(item.date),
-      };
-    })
-    .filter((item) => Boolean(item.image));
-
-  const versionBanner: HomeBannerItem[] = deduped
-    .filter((item) => isVersionUpdateTitle(item.title ?? ""))
+  const version: HomeBannerItem[] = all
+    .filter(isVersion)
     .slice(0, 1)
-    .map(
-      (item): HomeBannerItem => ({
-        id: `version-${normalizeBannerTitle(item.title ?? "")}`,
-        title: item.title ?? "",
-        href: item.href?.trim() || fallbackNewsUrl,
-        image: normalizeBannerImage(item.image),
-        kind: "notice",
-        startAt: toIsoDate(item.date),
-      }),
-    )
-    .filter((item) => Boolean(item.image));
+    .map((item) => ({
+      id: item.id ?? "version",
+      title: item.title ?? "버전 업데이트 설명",
+      image: normalizeImage(pickBannerImage(item)),
+      kind: "version" as const,
+      href: item.href,
+      isExternalLinkEnabled: true,
+    }))
+    .filter(hasValidImage);
 
-  return [
-    ...operatorBanners,
-    ...weaponBanners,
-    ...normalBanners,
-    ...versionBanner,
-  ].slice(0, 10);
-}
-
-function BannerLoadingBox({ text }: { text: string }) {
-  return (
-    <div className="flex h-[360px] w-full items-center justify-center rounded-[24px] border border-yellow-500/15 bg-black px-6 text-center text-sm text-zinc-500">
-      {text}
-    </div>
-  );
-}
-
-function BannerErrorBox({ text }: { text: string }) {
-  return (
-    <div className="flex h-[360px] w-full items-center justify-center rounded-[24px] border border-red-500/20 bg-red-500/10 px-6 text-center text-sm text-red-200">
-      {text}
-    </div>
-  );
+  return dedupeBannerItems([
+    ...operator.slice(0, 2),
+    ...weapon.slice(0, 3),
+    ...event.slice(0, 3),
+    ...notice.slice(0, 3),
+    ...version,
+  ]);
 }
 
 export default function BannerSection({
@@ -220,59 +184,16 @@ export default function BannerSection({
 }: {
   initialData: HomeApiResponse | null;
 }) {
-  const [homeData, setHomeData] = useState<HomeApiResponse | null>(initialData);
-  const [homeError, setHomeError] = useState("");
+  const [data, setData] = useState<HomeApiResponse | null>(initialData);
 
   useEffect(() => {
-    let cancelled = false;
-
-    async function refresh() {
-      try {
-        const response = await fetch("/api/home", { cache: "no-store" });
-        const data = (await response.json()) as HomeApiResponse;
-
-        if (!response.ok || !data?.ok) {
-          throw new Error(data?.message || "홈 배너 데이터를 불러오지 못했습니다.");
-        }
-
-        if (!cancelled) {
-          setHomeData(data);
-          setHomeError("");
-        }
-      } catch (error) {
-        if (!cancelled) {
-          setHomeError(
-            error instanceof Error
-              ? error.message
-              : "홈 배너 데이터를 불러오지 못했습니다.",
-          );
-        }
-      }
-    }
-
-    const interval = window.setInterval(refresh, 1000 * 60 * 5);
-
-    return () => {
-      cancelled = true;
-      window.clearInterval(interval);
-    };
+    fetch("/api/home", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((json: HomeApiResponse) => setData(json))
+      .catch(() => {});
   }, []);
 
-  const banners = useMemo(() => convertToHomeBanners(homeData), [homeData]);
+  const items = useMemo(() => convert(data), [data]);
 
-  if (!homeData && !homeError) {
-    return <BannerLoadingBox text="홈 배너를 불러오는 중입니다." />;
-  }
-
-  if (homeError) {
-    return <BannerErrorBox text={homeError} />;
-  }
-
-  if (banners.length === 0) {
-    return (
-      <BannerErrorBox text="표시할 배너가 없습니다. /api/home 응답을 확인해 주세요." />
-    );
-  }
-
-  return <HomeBannerHubPanel items={banners} />;
+  return <HomeBannerHubPanel items={items} />;
 }

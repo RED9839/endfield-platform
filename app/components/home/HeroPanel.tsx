@@ -46,7 +46,7 @@ export default function HeroPanel({
             href={`/operators/${featured.slug}`}
             className="mt-4 inline-block rounded-xl border border-yellow-500/25 bg-yellow-500/10 px-5 py-2 text-sm font-medium text-yellow-300 transition hover:bg-yellow-500/20"
           >
-            상세 보기 →
+            상세 보기
           </Link>
         </div>
       </div>

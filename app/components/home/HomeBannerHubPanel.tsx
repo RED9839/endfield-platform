@@ -7,51 +7,28 @@ export type HomeBannerKind =
   | "weapon"
   | "notice"
   | "event"
-  | "news";
+  | "news"
+  | "version";
 
 export type HomeBannerItem = {
   id: string;
   title: string;
-  href: string;
+  href?: string;
   image: string;
-  startAt?: string;
-  endAt?: string;
-  endLabel?: string;
   kind: HomeBannerKind;
+  isExternalLinkEnabled?: boolean;
 };
 
-const FALLBACK_NEWS_URL = "https://endfield.gryphline.com/ko-kr/news";
+const YELLOW_BORDER = "border-yellow-500/15";
+const PANEL_BG = "bg-[#05070b]";
 
-function format(value?: string) {
-  if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-
-  return new Intl.DateTimeFormat("ko-KR", {
-    timeZone: "Asia/Seoul",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(date);
-}
-
-function getDate(item: HomeBannerItem) {
-  const start = format(item.startAt);
-  const end = format(item.endAt);
-
-  if (start && end) return `${start} ~ ${end}`;
-  if (start && item.endLabel) return `${start} ~ ${item.endLabel}`;
-  if (start) return start;
-  if (item.endLabel) return item.endLabel;
-  return "";
-}
-
-function getLabel(item: HomeBannerItem) {
-  if (item.kind === "operator") return "PICK UP OPERATOR";
-  if (item.kind === "weapon") return "PICK UP WEAPON";
-  if (item.kind === "notice") return "NOTICE";
-  if (item.kind === "news") return "NEWS";
-  return "EVENT";
+function getLabel(kind: HomeBannerKind) {
+  if (kind === "operator") return "특별 허가 헤드헌팅";
+  if (kind === "weapon") return "무기 신청";
+  if (kind === "event") return "이벤트";
+  if (kind === "version") return "버전 업데이트 설명";
+  if (kind === "news") return "뉴스";
+  return "공지";
 }
 
 export default function HomeBannerHubPanel({
@@ -60,129 +37,135 @@ export default function HomeBannerHubPanel({
   items: HomeBannerItem[];
 }) {
   const [idx, setIdx] = useState(0);
-
-  useEffect(() => {
-    if (!items.length) {
-      setIdx(0);
-      return;
-    }
-
-    if (idx >= items.length) {
-      setIdx(0);
-    }
-  }, [idx, items.length]);
-
-  useEffect(() => {
-    if (items.length <= 1) return;
-
-    const t = setInterval(() => {
-      setIdx((prev) => (prev + 1) % items.length);
-    }, 5000);
-
-    return () => clearInterval(t);
-  }, [items.length]);
+  const [imageFailed, setImageFailed] = useState(false);
 
   const safeIndex = useMemo(() => {
     if (!items.length) return 0;
     return Math.min(idx, items.length - 1);
   }, [idx, items.length]);
 
-  if (!items.length) {
-    return (
-      <div className="flex h-[360px] w-full items-center justify-center rounded-[24px] border border-yellow-500/15 bg-black text-sm text-zinc-500">
-        표시할 배너가 없습니다.
-      </div>
-    );
-  }
-
   const cur = items[safeIndex];
 
-  if (!cur) {
-    return (
-      <div className="flex h-[360px] w-full items-center justify-center rounded-[24px] border border-yellow-500/15 bg-black text-sm text-zinc-500">
-        표시할 배너가 없습니다.
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (!items.length) return;
+    if (idx >= items.length) setIdx(0);
+  }, [idx, items.length]);
 
-  const targetHref = cur.href?.trim() ? cur.href : FALLBACK_NEWS_URL;
-  const linkLabel = cur.href?.trim() ? "바로 가기 →" : "공식 뉴스 보기 →";
+  useEffect(() => {
+    if (items.length <= 1) return;
+
+    const timer = window.setInterval(() => {
+      setIdx((prev) => (prev + 1) % items.length);
+    }, 5000);
+
+    return () => window.clearInterval(timer);
+  }, [items.length]);
+
+  useEffect(() => {
+    setImageFailed(false);
+  }, [safeIndex]);
 
   const movePrev = () => {
+    if (!items.length) return;
     setIdx((prev) => (prev - 1 + items.length) % items.length);
   };
 
   const moveNext = () => {
+    if (!items.length) return;
     setIdx((prev) => (prev + 1) % items.length);
   };
 
+  if (!cur) {
+    return (
+      <section
+        className={`flex h-full min-h-[340px] items-center justify-center rounded-[24px] border ${YELLOW_BORDER} ${PANEL_BG} text-sm text-zinc-400`}
+      >
+        배너 없음
+      </section>
+    );
+  }
+
+  const canOpenVersionLink =
+    cur.kind === "version" &&
+    cur.isExternalLinkEnabled &&
+    typeof cur.href === "string" &&
+    cur.href.trim();
+
+  const labelText = getLabel(cur.kind);
+
   return (
-    <div className="relative h-[360px] w-full overflow-hidden rounded-[24px] border border-yellow-500/15 bg-black">
-      <img
-        src={cur.image}
-        alt={cur.title}
-        className="absolute inset-0 h-full w-full object-cover object-center"
-        loading={safeIndex === 0 ? "eager" : "lazy"}
-      />
-
-      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.88)_0%,rgba(0,0,0,0.62)_35%,rgba(0,0,0,0.18)_70%,transparent_100%)]" />
-
-      <button
-        type="button"
-        onClick={movePrev}
-        className="absolute left-4 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-yellow-500/25 bg-black/55 text-yellow-300 transition hover:bg-yellow-500/15 hover:text-white"
-        aria-label="이전 배너"
+    <section className="grid h-full min-h-[340px] w-full grid-rows-[78px_minmax(0,1fr)] gap-3">
+      <div
+        className={`flex min-h-0 items-center justify-between rounded-[20px] border ${YELLOW_BORDER} ${PANEL_BG} px-5`}
       >
-        ←
-      </button>
+        <div className="flex min-w-0 items-center gap-3">
+          {canOpenVersionLink ? (
+            <a
+              href={cur.href}
+              target="_blank"
+              rel="noreferrer"
+              className="shrink-0 text-lg font-black text-yellow-300 transition hover:text-yellow-100"
+            >
+              {labelText}
+            </a>
+          ) : (
+            <span className="shrink-0 text-lg font-black text-yellow-300">
+              {labelText}
+            </span>
+          )}
 
-      <button
-        type="button"
-        onClick={moveNext}
-        className="absolute right-4 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-yellow-500/25 bg-black/55 text-yellow-300 transition hover:bg-yellow-500/15 hover:text-white"
-        aria-label="다음 배너"
-      >
-        →
-      </button>
+          <span className="h-5 w-px shrink-0 bg-yellow-400/35" />
 
-      <div className="relative z-10 flex h-full flex-col justify-between p-6">
-        <div className="flex justify-end">
-          <div className="flex items-center gap-2">
-            {items.map((item, dotIndex) => (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => setIdx(dotIndex)}
-                className={`h-2.5 rounded-full transition ${
-                  dotIndex === safeIndex
-                    ? "w-8 bg-yellow-400"
-                    : "w-2.5 bg-white/25 hover:bg-white/45"
-                }`}
-                aria-label={`${dotIndex + 1}번 배너 보기`}
-              />
-            ))}
+          <h2 className="truncate text-lg font-black text-yellow-300">
+            {cur.title}
+          </h2>
+        </div>
+
+        {items.length > 1 ? (
+          <div className="flex shrink-0 items-center gap-3 text-sm font-black">
+            <button
+              type="button"
+              onClick={movePrev}
+              className="text-yellow-300 transition hover:text-yellow-100"
+              aria-label="이전 배너"
+            >
+              &lt;
+            </button>
+
+            <span className="min-w-[64px] text-center text-zinc-400">
+              <span className="text-yellow-300">{safeIndex + 1}</span>
+              <span className="mx-1 text-zinc-600">/</span>
+              <span>{items.length}</span>
+            </span>
+
+            <button
+              type="button"
+              onClick={moveNext}
+              className="text-yellow-300 transition hover:text-yellow-100"
+              aria-label="다음 배너"
+            >
+              &gt;
+            </button>
           </div>
-        </div>
-
-        <div className="max-w-[520px]">
-          <p className="text-xs tracking-[0.25em] text-yellow-400/80">
-            {getLabel(cur)}
-          </p>
-
-          <h3 className="mt-2 text-3xl font-bold text-white">{cur.title}</h3>
-
-          <p className="mt-1 text-sm text-zinc-300">{getDate(cur)}</p>
-
-          <a
-            href={targetHref}
-            target="_blank"
-            rel="noreferrer"
-            className="mt-4 inline-block rounded-xl border border-yellow-500/25 bg-yellow-500/10 px-5 py-2 text-sm font-medium text-yellow-300 transition hover:bg-yellow-500/20"
-          >
-            {linkLabel}
-          </a>
-        </div>
+        ) : null}
       </div>
-    </div>
+
+      <div
+        className={`relative min-h-0 overflow-hidden rounded-[24px] border ${YELLOW_BORDER} bg-black`}
+      >
+        {!imageFailed ? (
+          <img
+            src={cur.image}
+            alt={cur.title}
+            className="h-full w-full object-cover object-[50%_32%]"
+            onError={() => setImageFailed(true)}
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-black text-sm text-zinc-500">
+            이미지를 불러오지 못했습니다.
+          </div>
+        )}
+      </div>
+    </section>
   );
 }

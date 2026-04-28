@@ -145,12 +145,10 @@ function resolveFeaturedOperatorName(data: HomeApiResponse | null) {
 
   const pickup = merged.find(
     (item) =>
-      typeof item?.title === "string" && item.title.includes("헤드헌팅")
+      typeof item?.title === "string" && item.title.includes("헤드헌팅"),
   );
 
-  if (pickup?.title) {
-    return guessOperatorNameFromTitle(pickup.title);
-  }
+  if (pickup?.title) return guessOperatorNameFromTitle(pickup.title);
 
   return defaultFeaturedOperatorName;
 }
@@ -192,7 +190,8 @@ export default async function HomePage() {
     getOperatorDetailByName(featuredOperatorName) ??
     getOperatorDetailByName(defaultFeaturedOperatorName) ??
     getOperatorDetailByName("라스트 라이트") ??
-    getOperatorDetailByName("lastrite");
+    getOperatorDetailByName("lastrite") ??
+    null;
 
   const heroFeaturedData = featuredOperator
     ? {
@@ -217,20 +216,22 @@ export default async function HomePage() {
 
         <section className="min-w-0">
           <div className="flex flex-col gap-6">
-            <HeroPanel featured={heroFeaturedData} />
+            <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.35fr_1fr]">
+              <div className="h-[340px]">
+                <HeroPanel featured={heroFeaturedData} />
+              </div>
 
-            <SectionFrame
-              title="픽업 / 이벤트 / 공지사항"
-            >
-              <BannerSection initialData={homeData} />
-            </SectionFrame>
+              <div className="h-[340px]">
+                <BannerSection initialData={homeData} />
+              </div>
+            </div>
 
             <SectionFrame title="빠른 이동">
               <QuickAccessPanel items={quickAccessItems} compact />
             </SectionFrame>
 
             <OperatorHighlightPanel
-              operator={featuredOperator ?? null}
+              operator={featuredOperator}
               title="추천 오퍼레이터"
               description="현재 픽업과 함께 확인하면 좋은 오퍼레이터 정보를 빠르게 확인할 수 있습니다."
               href="/operators"
