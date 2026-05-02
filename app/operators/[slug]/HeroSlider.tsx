@@ -10,8 +10,7 @@ type Props = {
   borderColor: string;
 };
 
-const panelClipPath =
-  "polygon(18px 0, calc(100% - 18px) 0, 100% 18px, 100% calc(100% - 18px), calc(100% - 18px) 100%, 18px 100%, 0 calc(100% - 18px), 0 18px)";
+const PANEL_RADIUS = "24px";
 
 const navButtonStyle: React.CSSProperties = {
   position: "absolute",
@@ -30,8 +29,7 @@ const navButtonStyle: React.CSSProperties = {
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  clipPath:
-    "polygon(10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px), 0 10px)",
+  borderRadius: "20px",
 };
 
 export default function HeroSlider({
@@ -62,7 +60,7 @@ export default function HeroSlider({
   return (
     <section
       style={{
-        clipPath: panelClipPath,
+        borderRadius: PANEL_RADIUS,
         position: "relative",
         height: "min(70vw, 860px)",
         border: `1px solid ${borderColor}`,

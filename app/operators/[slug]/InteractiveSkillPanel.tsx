@@ -261,8 +261,7 @@ function FoldSection({
         marginTop: "14px",
         border: "1px solid rgba(255,196,74,0.12)",
         background: "#0a0d12",
-        clipPath:
-          "polygon(12px 0, calc(100% - 12px) 0, 100% 12px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0 calc(100% - 12px), 0 12px)",
+        borderRadius: "20px",
       }}
     >
       <button
@@ -370,8 +369,7 @@ function MetaChip({
         fontSize: "12px",
         fontWeight: 700,
         whiteSpace: "nowrap",
-        clipPath:
-          "polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)",
+        borderRadius: "20px",
       }}
     >
       <span style={{ color: "#9fb3c8" }}>{label}</span>
@@ -437,8 +435,7 @@ function UpgradeColumn({ item }: { item: SkillUpgradeMaterial }) {
                 gridTemplateColumns: "26px 1fr auto",
                 gap: "8px",
                 alignItems: "center",
-                clipPath:
-                  "polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px)",
+                borderRadius: "20px",
               }}
             >
               <MaterialIcon src={material.icon} alt={material.name} />
@@ -555,8 +552,7 @@ export default function InteractiveSkillPanel({ skill, accentColor }: Props) {
   return (
     <section
       style={{
-        clipPath:
-          "polygon(18px 0, calc(100% - 18px) 0, 100% 18px, 100% calc(100% - 18px), calc(100% - 18px) 100%, 18px 100%, 0 calc(100% - 18px), 0 18px)",
+        borderRadius: "20px",
         background: "#06080c",
         border: "1px solid rgba(255,196,74,0.14)",
         padding: "16px",
@@ -582,8 +578,7 @@ export default function InteractiveSkillPanel({ skill, accentColor }: Props) {
             alignItems: "center",
             justifyContent: "center",
             overflow: "hidden",
-            clipPath:
-              "polygon(12px 0, calc(100% - 12px) 0, 100% 12px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0 calc(100% - 12px), 0 12px)",
+            borderRadius: "20px",
             transition: "border-color 0.2s ease, box-shadow 0.2s ease",
           }}
         >
@@ -671,8 +666,7 @@ export default function InteractiveSkillPanel({ skill, accentColor }: Props) {
                 color: active ? "#fff" : "#e5e7eb",
                 fontWeight: 800,
                 cursor: "pointer",
-                clipPath:
-                  "polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)",
+                borderRadius: "20px",
               }}
             >
               {level.level}
@@ -687,8 +681,7 @@ export default function InteractiveSkillPanel({ skill, accentColor }: Props) {
           padding: "14px",
           background: "#0a0d12",
           border: "1px solid rgba(255,196,74,0.10)",
-          clipPath:
-            "polygon(12px 0, calc(100% - 12px) 0, 100% 12px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0 calc(100% - 12px), 0 12px)",
+          borderRadius: "20px",
         }}
       >
         <div
@@ -735,8 +728,7 @@ export default function InteractiveSkillPanel({ skill, accentColor }: Props) {
                   border: "1px solid rgba(255,196,74,0.10)",
                   background: "#0d1118",
                   padding: "12px",
-                  clipPath:
-                    "polygon(12px 0, calc(100% - 12px) 0, 100% 12px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0 calc(100% - 12px), 0 12px)",
+                  borderRadius: "20px",
                 }}
               >
                 <div

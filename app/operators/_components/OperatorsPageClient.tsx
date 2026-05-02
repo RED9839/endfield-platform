@@ -82,18 +82,13 @@ const elementColorMap: Record<OperatorElement, string> = {
   electric: "#f0b000",
 };
 
-const panelClip: CSSProperties["clipPath"] =
-  "polygon(16px 0, calc(100% - 16px) 0, 100% 16px, 100% calc(100% - 16px), calc(100% - 16px) 100%, 16px 100%, 0 calc(100% - 16px), 0 16px)";
-
-const buttonClip: CSSProperties["clipPath"] =
-  "polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)";
 
 const styles: Record<string, CSSProperties> = {
   page: {
     minHeight: "100vh",
     background:
-      "radial-gradient(circle at top, rgba(255,170,40,0.08), transparent 18%), #000",
-    color: "#fff",
+      "radial-gradient(circle at 20% 20%, rgba(255,212,74,0.05), transparent 25%), radial-gradient(circle at 80% 80%, rgba(255,212,74,0.04), transparent 25%), #050505",
+    color: "#ededed",
     padding: "24px 28px 40px",
   },
   shell: {
@@ -103,19 +98,23 @@ const styles: Record<string, CSSProperties> = {
   },
   header: {
     marginBottom: "24px",
-    borderBottom: "1px solid rgba(247,166,0,0.28)",
-    paddingBottom: "16px",
+    background: "#05070b",
+    border: "1px solid rgba(255,196,74,0.14)",
+    borderRadius: "24px",
+    padding: "18px 20px",
+    boxShadow: "0 18px 44px rgba(0,0,0,0.28)",
+    overflow: "hidden",
   },
   subTitle: {
     fontSize: "11px",
     letterSpacing: "0.28em",
-    color: "rgba(255,210,90,0.75)",
+    color: "rgba(255,220,112,0.78)",
   },
   title: {
     marginTop: "8px",
     fontSize: "42px",
     fontWeight: 900,
-    color: "#ffcc4d",
+    color: "#ffd24a",
     letterSpacing: "-0.02em",
   },
   desc: {
@@ -143,13 +142,13 @@ const styles: Record<string, CSSProperties> = {
     justifyContent: "center",
     minHeight: "38px",
     padding: "0 14px",
-    background: "#000000",
-    color: "#f3f4f6",
-    border: "1px solid rgba(247,166,0,0.28)",
+    background: "rgba(255,212,74,0.08)",
+    color: "#ffdc70",
+    border: "1px solid rgba(255,212,74,0.35)",
+    borderRadius: "14px",
     textDecoration: "none",
     fontSize: "13px",
     fontWeight: 800,
-    clipPath: buttonClip,
   },
   layout: {
     display: "grid",
@@ -159,13 +158,14 @@ const styles: Record<string, CSSProperties> = {
   },
   sidebar: {
     width: "100%",
-    background: "#000000",
-    border: "1px solid rgba(247,166,0,0.26)",
+    background: "#05070b",
+    border: "1px solid rgba(255,196,74,0.14)",
+    borderRadius: "24px",
     padding: "16px",
     position: "sticky",
     top: "18px",
-    clipPath: panelClip,
-    boxShadow: "0 10px 28px rgba(0,0,0,0.28)",
+    boxShadow: "0 18px 44px rgba(0,0,0,0.28)",
+    overflow: "hidden",
   },
   content: {
     minWidth: 0,
@@ -176,7 +176,7 @@ const styles: Record<string, CSSProperties> = {
     fontSize: "12px",
     fontWeight: 800,
     letterSpacing: "0.14em",
-    color: "#ffcc4d",
+    color: "#ffd24a",
   },
   inputWrap: {
     position: "relative",
@@ -193,13 +193,13 @@ const styles: Record<string, CSSProperties> = {
   input: {
     width: "100%",
     height: "38px",
-    background: "#000000",
+    background: "#090d14",
     color: "#fff",
-    border: "1px solid #3a4250",
+    border: "1px solid rgba(255,196,74,0.16)",
+    borderRadius: "14px",
     padding: "0 12px 0 34px",
     fontSize: "13px",
     outline: "none",
-    clipPath: buttonClip,
   },
   buttonList: {
     display: "flex",
@@ -213,7 +213,10 @@ const styles: Record<string, CSSProperties> = {
     alignItems: "center",
     gap: "12px",
     flexWrap: "wrap",
-    padding: "0 4px",
+    padding: "12px 16px",
+    background: "#05070b",
+    border: "1px solid rgba(255,196,74,0.14)",
+    borderRadius: "20px",
   },
   resultBar: {
     fontSize: "13px",
@@ -235,19 +238,19 @@ const styles: Record<string, CSSProperties> = {
   card: {
     width: "168px",
     height: "356px",
-    background: "#000000",
+    background: "#090d14",
     overflow: "hidden",
     display: "flex",
     flexDirection: "column",
-    clipPath: panelClip,
-    boxShadow: "0 10px 24px rgba(0,0,0,0.28)",
-    transition: "transform 0.18s ease, box-shadow 0.18s ease",
+    borderRadius: "20px",
+    boxShadow: "0 14px 34px rgba(0,0,0,0.32)",
+    transition: "transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease",
   },
   imageWrap: {
     position: "relative",
     width: "168px",
     height: "228px",
-    background: "#000000",
+    background: "#05070b",
     overflow: "hidden",
     flexShrink: 0,
   },
@@ -292,9 +295,9 @@ const styles: Record<string, CSSProperties> = {
     pointerEvents: "none",
   },
   info: {
-    background: "#000000",
-    padding: "9px 9px 8px",
-    borderTop: "1px solid rgba(255,255,255,0.08)",
+    background: "#090d14",
+    padding: "10px 10px 9px",
+    borderTop: "1px solid rgba(255,196,74,0.10)",
     display: "flex",
     flexDirection: "column",
     flex: 1,
@@ -303,7 +306,7 @@ const styles: Record<string, CSSProperties> = {
   name: {
     fontSize: "18px",
     fontWeight: 900,
-    color: "#fff",
+    color: "#ffdc70",
     lineHeight: 1.15,
     minHeight: "22px",
   },
@@ -326,19 +329,19 @@ const styles: Record<string, CSSProperties> = {
     display: "inline-flex",
     alignItems: "center",
     minHeight: "22px",
-    padding: "2px 6px",
+    padding: "2px 7px",
     fontSize: "10px",
     fontWeight: 700,
     lineHeight: 1.1,
-    border: "1px solid #444",
-    background: "#000000",
+    border: "1px solid rgba(255,196,74,0.18)",
+    background: "rgba(255,212,74,0.06)",
     color: "#fff",
     gap: "4px",
     boxSizing: "border-box",
     maxWidth: "100%",
     whiteSpace: "normal",
     wordBreak: "keep-all",
-    clipPath: buttonClip,
+    borderRadius: "999px",
   },
   badgeIconWrap: {
     position: "relative",
@@ -352,14 +355,14 @@ const styles: Record<string, CSSProperties> = {
     padding: "8px 10px",
     textAlign: "left",
     fontSize: "13px",
-    background: "#000000",
+    background: "#090d14",
     color: "#d4d4d8",
-    border: "1px solid #3f3f46",
+    border: "1px solid rgba(255,196,74,0.14)",
+    borderRadius: "14px",
     cursor: "pointer",
     display: "flex",
     alignItems: "center",
     gap: "8px",
-    clipPath: buttonClip,
   },
   filterIconWrap: {
     position: "relative",
@@ -393,12 +396,12 @@ function FilterButton({
       style={{
         ...styles.filterButton,
         border: active
-          ? `1px solid ${borderColor ?? "#f7a600"}`
-          : `1px solid ${borderColor ?? "#3f3f46"}`,
+          ? `1px solid ${borderColor ?? "rgba(255,212,74,0.55)"}`
+          : `1px solid ${borderColor ? `${borderColor}55` : "rgba(255,196,74,0.14)"}`,
         background: active
-          ? `linear-gradient(90deg, ${borderColor ? `${borderColor}26` : "rgba(247,166,0,0.18)"}, rgba(247,166,0,0.08))`
-          : "#000000",
-        color: active ? "#ffd873" : "#d4d4d8",
+          ? `linear-gradient(90deg, ${borderColor ? `${borderColor}22` : "rgba(255,212,74,0.14)"}, rgba(255,212,74,0.05))`
+          : "#090d14",
+        color: active ? "#ffdc70" : "#d4d4d8",
       }}
     >
       {iconSrc ? (
@@ -444,9 +447,9 @@ function Badge({
     <span
       style={{
         ...styles.badge,
-        background: bg ?? "#000000",
+        background: bg ?? "rgba(255,212,74,0.06)",
         color,
-        border: `1px solid ${borderColor ?? "#444"}`,
+        border: `1px solid ${borderColor ?? "rgba(255,196,74,0.18)"}`,
       }}
     >
       {iconSrc ? (
@@ -476,7 +479,8 @@ function OperatorCard({
       <div
         style={{
           ...styles.card,
-          border: `2px solid ${rarityBorderMap[operator.rarity]}`,
+          border: "1px solid rgba(255,196,74,0.16)",
+          boxShadow: `0 14px 34px rgba(0,0,0,0.32), inset 0 0 0 1px ${rarityBorderMap[operator.rarity]}33`,
         }}
       >
         <div style={styles.imageWrap}>
@@ -529,9 +533,9 @@ function OperatorCard({
           <div style={styles.badgeRow}>
             <Badge
               label={`${operator.rarity}성`}
-              bg="#000000"
+              bg="rgba(255,212,74,0.06)"
               color="#ffffff"
-              borderColor="#444"
+              borderColor="rgba(255,196,74,0.18)"
               iconSrc={rarityIconMap[operator.rarity]}
             />
             <Badge
@@ -544,7 +548,7 @@ function OperatorCard({
             <Badge
               label={elementLabelMap[operator.element]}
               iconSrc={elementIconMap[operator.element]}
-              bg="#000000"
+              bg="rgba(255,212,74,0.06)"
               color="#ffffff"
               borderColor={elementBorder}
             />
@@ -679,7 +683,7 @@ export default function OperatorsPageClient() {
           <main style={styles.content}>
             <div style={styles.toolbar}>
               <div style={styles.resultBar}>
-                총 <span style={{ color: "#ffcc4d", fontWeight: 700 }}>{sortedOperators.length}</span>명
+                총 <span style={{ color: "#ffd24a", fontWeight: 700 }}>{sortedOperators.length}</span>명
               </div>
             </div>
 

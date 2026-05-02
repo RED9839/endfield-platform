@@ -16,11 +16,8 @@ import InfrastructureSkillPanel from "./InfrastructureSkillPanel";
 import TrustBonusPanel from "./TrustBonusPanel";
 import PotentialPanel from "./PotentialPanel";
 
-const panelClip: CSSProperties["clipPath"] =
-  "polygon(16px 0, calc(100% - 16px) 0, 100% 16px, 100% calc(100% - 16px), calc(100% - 16px) 100%, 16px 100%, 0 calc(100% - 16px), 0 16px)";
-
-const buttonClip: CSSProperties["clipPath"] =
-  "polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)";
+const PANEL_RADIUS = "24px";
+const BUTTON_RADIUS = "14px";
 
 const rarityBorderMap: Record<OperatorRarity, string> = {
   6: "#ff8a1f",
@@ -93,7 +90,7 @@ const styles: Record<string, CSSProperties> = {
     textDecoration: "none",
     fontSize: "13px",
     fontWeight: 800,
-    clipPath: buttonClip,
+    borderRadius: BUTTON_RADIUS,
   },
   heroWrap: {
     position: "relative",
@@ -101,7 +98,7 @@ const styles: Record<string, CSSProperties> = {
     overflow: "hidden",
     marginBottom: "18px",
     background: "#000",
-    clipPath: panelClip,
+    borderRadius: PANEL_RADIUS,
     boxShadow: "0 10px 28px rgba(0,0,0,0.28)",
   },
   heroOverlay: {

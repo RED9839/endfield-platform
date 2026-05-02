@@ -169,8 +169,7 @@ function TalentCard({
   return (
     <section
       style={{
-        clipPath:
-          "polygon(18px 0, calc(100% - 18px) 0, 100% 18px, 100% calc(100% - 18px), calc(100% - 18px) 100%, 18px 100%, 0 calc(100% - 18px), 0 18px)",
+        borderRadius: "20px",
         background: BG,
         border: `1px solid ${YELLOW_BORDER}`,
         padding: "16px",
@@ -194,8 +193,7 @@ function TalentCard({
             alignItems: "center",
             justifyContent: "center",
             overflow: "hidden",
-            clipPath:
-              "polygon(12px 0, calc(100% - 12px) 0, 100% 12px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0 calc(100% - 12px), 0 12px)",
+            borderRadius: "20px",
           }}
         >
           <div style={{ position: "relative", width: "56px", height: "56px" }}>
@@ -265,8 +263,7 @@ function TalentCard({
                   color: "#fff",
                   fontWeight: 800,
                   cursor: "pointer",
-                  clipPath:
-                    "polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)",
+                  borderRadius: "20px",
                 }}
               >
                 {getTalentLevelLabel(index)}

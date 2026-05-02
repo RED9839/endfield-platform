@@ -38,8 +38,7 @@ function FoldSection({
         marginTop: "14px",
         border: `1px solid ${YELLOW_BORDER}`,
         background: "#0a0d12",
-        clipPath:
-          "polygon(12px 0, calc(100% - 12px) 0, 100% 12px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0 calc(100% - 12px), 0 12px)",
+        borderRadius: "20px",
       }}
     >
       <button
@@ -141,8 +140,7 @@ export default function ElitePanel({ elite }: { elite: EliteStage[] }) {
   return (
     <section
       style={{
-        clipPath:
-          "polygon(18px 0, calc(100% - 18px) 0, 100% 18px, 100% calc(100% - 18px), calc(100% - 18px) 100%, 18px 100%, 0 calc(100% - 18px), 0 18px)",
+        borderRadius: "20px",
         background: "#06080c",
         border: `1px solid ${YELLOW_BORDER}`,
         padding: "16px",
@@ -167,8 +165,7 @@ export default function ElitePanel({ elite }: { elite: EliteStage[] }) {
             alignItems: "center",
             justifyContent: "center",
             overflow: "hidden",
-            clipPath:
-              "polygon(12px 0, calc(100% - 12px) 0, 100% 12px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0 calc(100% - 12px), 0 12px)",
+            borderRadius: "20px",
           }}
         >
           <div style={{ position: "relative", width: "64px", height: "64px" }}>
@@ -230,8 +227,7 @@ export default function ElitePanel({ elite }: { elite: EliteStage[] }) {
                 color: "#fff",
                 fontWeight: 800,
                 cursor: "pointer",
-                clipPath:
-                  "polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)",
+                borderRadius: "20px",
               }}
             >
               {stage.stage}
@@ -289,8 +285,7 @@ export default function ElitePanel({ elite }: { elite: EliteStage[] }) {
                         gridTemplateColumns: "26px 1fr auto",
                         gap: "8px",
                         alignItems: "center",
-                        clipPath:
-                          "polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px)",
+                        borderRadius: "20px",
                       }}
                     >
                       <MaterialIcon src={material.icon} alt={material.name} />

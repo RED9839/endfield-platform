@@ -30,8 +30,7 @@ export default function OperatorCardAdministrator({
           overflow: "hidden",
           background: "#06080c",
           border: "1px solid rgba(255,196,74,0.14)",
-          clipPath:
-            "polygon(16px 0, calc(100% - 16px) 0, 100% 16px, 100% calc(100% - 16px), calc(100% - 16px) 100%, 16px 100%, 0 calc(100% - 16px), 0 16px)",
+          borderRadius: "20px",
         }}
       >
         {/* 왼쪽 이미지 */}

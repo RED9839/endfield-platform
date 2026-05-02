@@ -46,8 +46,7 @@ function CardShell({ children }: { children: ReactNode }) {
   return (
     <section
       style={{
-        clipPath:
-          "polygon(18px 0, calc(100% - 18px) 0, 100% 18px, 100% calc(100% - 18px), calc(100% - 18px) 100%, 18px 100%, 0 calc(100% - 18px), 0 18px)",
+        borderRadius: "20px",
         background: "#06080c",
         border: `1px solid ${YELLOW_BORDER}`,
         padding: "16px",
@@ -84,8 +83,7 @@ export default function TrustBonusPanel({
               display: "flex",
               flexDirection: "column",
               gap: "6px",
-              clipPath:
-                "polygon(10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px), 0 10px)",
+              borderRadius: "20px",
             }}
           >
             <div

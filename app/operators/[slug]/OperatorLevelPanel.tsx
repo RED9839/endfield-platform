@@ -212,8 +212,7 @@ function OverviewBox({
         padding: "9px 11px",
         background: "#0d1118",
         minWidth: 0,
-        clipPath:
-          "polygon(12px 0, calc(100% - 12px) 0, 100% 12px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0 calc(100% - 12px), 0 12px)",
+        borderRadius: "20px",
       }}
     >
       <div
@@ -438,8 +437,7 @@ export default function OperatorLevelPanel({
     return (
       <section
         style={{
-          clipPath:
-            "polygon(18px 0, calc(100% - 18px) 0, 100% 18px, 100% calc(100% - 18px), calc(100% - 18px) 100%, 18px 100%, 0 calc(100% - 18px), 0 18px)",
+          borderRadius: "20px",
           border: "1px solid rgba(255,196,74,0.16)",
           background: "#06080c",
           padding: "12px",
@@ -463,8 +461,7 @@ export default function OperatorLevelPanel({
             padding: "14px",
             border: "1px solid rgba(255,196,74,0.10)",
             background: "#0a0d12",
-            clipPath:
-              "polygon(14px 0, calc(100% - 14px) 0, 100% 14px, 100% calc(100% - 14px), calc(100% - 14px) 100%, 14px 100%, 0 calc(100% - 14px), 0 14px)",
+            borderRadius: "20px",
           }}
         >
           해당 레벨 데이터가 없음
@@ -476,8 +473,7 @@ export default function OperatorLevelPanel({
   return (
     <section
       style={{
-        clipPath:
-          "polygon(18px 0, calc(100% - 18px) 0, 100% 18px, 100% calc(100% - 18px), calc(100% - 18px) 100%, 18px 100%, 0 calc(100% - 18px), 0 18px)",
+        borderRadius: "20px",
         border: "1px solid rgba(255,196,74,0.16)",
         background: "#06080c",
         padding: "12px",
@@ -625,8 +621,7 @@ export default function OperatorLevelPanel({
             border: "1px solid rgba(255,196,74,0.12)",
             background: "#0a0d12",
             padding: "12px",
-            clipPath:
-              "polygon(14px 0, calc(100% - 14px) 0, 100% 14px, 100% calc(100% - 14px), calc(100% - 14px) 100%, 14px 100%, 0 calc(100% - 14px), 0 14px)",
+            borderRadius: "20px",
           }}
         >
           <div style={{ marginBottom: "14px" }}>
@@ -702,8 +697,7 @@ export default function OperatorLevelPanel({
             border: "1px solid rgba(255,196,74,0.12)",
             background: "#0a0d12",
             padding: "12px",
-            clipPath:
-              "polygon(14px 0, calc(100% - 14px) 0, 100% 14px, 100% calc(100% - 14px), calc(100% - 14px) 100%, 14px 100%, 0 calc(100% - 14px), 0 14px)",
+            borderRadius: "20px",
           }}
         >
           <div className="operator-top-row">
