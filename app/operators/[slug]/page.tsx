@@ -2,10 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { CSSProperties } from "react";
-import {
-  getOperatorDetailBySlug,
-  type OperatorRarity,
-} from "@/data/operators-detail-data";
+import { getOperatorDetailBySlug } from "@/data/operators-detail-data";
 
 import HeroSlider from "./HeroSlider";
 import OperatorLevelPanel from "./OperatorLevelPanel";
@@ -18,12 +15,6 @@ import PotentialPanel from "./PotentialPanel";
 
 const PANEL_RADIUS = "24px";
 const BUTTON_RADIUS = "14px";
-
-const rarityBorderMap: Record<OperatorRarity, string> = {
-  6: "#ff8a1f",
-  5: "#f0c94a",
-  4: "#9a63ff",
-};
 
 const YELLOW_MAIN = "#ffd24a";
 const YELLOW_TEXT = "#ffdc70";
@@ -94,11 +85,12 @@ const styles: Record<string, CSSProperties> = {
   },
   heroWrap: {
     position: "relative",
-    height: "min(70vw, 860px)",
+    height: "min(58vw, 620px)",
     overflow: "hidden",
     marginBottom: "18px",
     background: "#000",
     borderRadius: PANEL_RADIUS,
+    border: `1px solid ${YELLOW_BORDER}`,
     boxShadow: "0 10px 28px rgba(0,0,0,0.28)",
   },
   heroOverlay: {
@@ -115,7 +107,7 @@ const styles: Record<string, CSSProperties> = {
     zIndex: 2,
   },
   heroName: {
-    fontSize: "clamp(56px, 6vw, 110px)",
+    fontSize: "clamp(42px, 5vw, 88px)",
     fontWeight: 900,
     color: "#fff",
     textShadow: "0 8px 20px rgba(0,0,0,0.8)",
@@ -123,7 +115,7 @@ const styles: Record<string, CSSProperties> = {
   },
   heroEnName: {
     marginTop: "8px",
-    fontSize: "22px",
+    fontSize: "20px",
     color: "#dbe4f0",
     textShadow: "0 4px 12px rgba(0,0,0,0.7)",
   },
@@ -151,7 +143,6 @@ export default async function OperatorDetailPage({
 
   if (!operator) notFound();
 
-  const heroBorderColor = rarityBorderMap[operator.rarity];
   const panelAccentColor = YELLOW_MAIN;
   const heroImage = operator.fullImage || operator.avatar;
 
@@ -186,30 +177,19 @@ export default async function OperatorDetailPage({
         </header>
 
         {isAdminHeroSlider && adminHeroSlides.length > 1 ? (
-          <div
-            style={{
-              ...styles.heroWrap,
-              border: `2px solid ${heroBorderColor}`,
-            }}
-          >
-            <HeroSlider
-              images={adminHeroSlides}
-              alt={operator.name}
-              enName={operator.enName}
-              borderColor={heroBorderColor}
-            />
-          </div>
+          <HeroSlider
+            images={adminHeroSlides}
+            alt={operator.name}
+            enName={operator.enName}
+          />
         ) : (
-          <section
-            style={{
-              ...styles.heroWrap,
-              border: `2px solid ${heroBorderColor}`,
-            }}
-          >
+          <section style={styles.heroWrap}>
             <Image
               src={heroImage}
               alt={operator.name}
               fill
+              priority
+              sizes="100vw"
               style={{
                 objectFit: "cover",
                 filter: "blur(16px) brightness(0.25)",
@@ -229,6 +209,8 @@ export default async function OperatorDetailPage({
                 src={heroImage}
                 alt={operator.name}
                 fill
+                priority
+                sizes="100vw"
                 style={{ objectFit: "contain" }}
               />
             </div>

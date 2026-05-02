@@ -268,8 +268,7 @@ function FoldSection({
         marginTop: "14px",
         border: `1px solid ${PANEL_BORDER}`,
         background: "#0a0d12",
-        clipPath:
-          "polygon(12px 0, calc(100% - 12px) 0, 100% 12px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0 calc(100% - 12px), 0 12px)",
+        borderRadius: "16px",
       }}
     >
       <button
@@ -408,8 +407,7 @@ export default function WeaponSkillAtlasPanel({ skill }: Props) {
   return (
     <section
       style={{
-        clipPath:
-          "polygon(18px 0, calc(100% - 18px) 0, 100% 18px, 100% calc(100% - 18px), calc(100% - 18px) 100%, 18px 100%, 0 calc(100% - 18px), 0 18px)",
+        borderRadius: "20px",
         background: PANEL_BG,
         border: `1px solid ${PANEL_BORDER}`,
         padding: "16px",
@@ -468,8 +466,7 @@ export default function WeaponSkillAtlasPanel({ skill }: Props) {
                 color: "#f3f4f6",
                 fontWeight: 800,
                 cursor: "pointer",
-                clipPath:
-                  "polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)",
+                borderRadius: "14px",
                 boxShadow: active
                   ? "inset 0 0 0 1px rgba(255,210,74,0.10)"
                   : "none",
@@ -492,8 +489,7 @@ export default function WeaponSkillAtlasPanel({ skill }: Props) {
             fontSize: "15px",
             lineHeight: 1.8,
             whiteSpace: "pre-line",
-            clipPath:
-              "polygon(12px 0, calc(100% - 12px) 0, 100% 12px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0 calc(100% - 12px), 0 12px)",
+        borderRadius: "16px",
           }}
         >
           {descriptionNodes}
@@ -516,8 +512,7 @@ export default function WeaponSkillAtlasPanel({ skill }: Props) {
                 border: `1px solid ${PANEL_BORDER_SOFT}`,
                 background: PANEL_INNER_BG,
                 padding: "12px",
-                clipPath:
-                  "polygon(12px 0, calc(100% - 12px) 0, 100% 12px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0 calc(100% - 12px), 0 12px)",
+        borderRadius: "16px",
               }}
             >
               <div

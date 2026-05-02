@@ -5,52 +5,26 @@ import Link from "next/link";
 import { CSSProperties, useMemo, useState } from "react";
 import {
   weaponDetails,
-  type WeaponDetail,
-  type WeaponType,
-  type WeaponRarity,
+  type SourceWeaponDetail,
 } from "@/data/weapons-detail-data";
 
-type WeaponAttributeFilter =
-  | "all"
-  | "attack"
-  | "hp"
-  | "physical"
-  | "heat"
-  | "electric"
-  | "cryo"
-  | "nature"
-  | "critRate"
-  | "originiumArts"
-  | "ultimateEfficiency"
-  | "artsDamage"
-  | "healEfficiency";
+const rarityBorderMap: Record<number, string> = {
+  6: "#ff8a1f",
+  5: "#f0c94a",
+  4: "#9a63ff",
+  3: "#4fa3ff",
+  2: "#36c46f",
+  1: "#9ca3af",
+};
 
-type WeaponSeriesFilter =
-  | "all"
-  | "heavyStrike"
-  | "suppression"
-  | "pursuit"
-  | "crush"
-  | "morale"
-  | "technique"
-  | "brutality"
-  | "pain"
-  | "medical"
-  | "fracture"
-  | "discharge"
-  | "darkness"
-  | "flow"
-  | "efficiency";
+const rarityIconMap: Record<number, string> = {
+  6: "/icons/rarity/6star.webp",
+  5: "/icons/rarity/5star.webp",
+  4: "/icons/rarity/4star.webp",
+  3: "/icons/rarity/3star.webp",
+};
 
-type WeaponAbilityFilter =
-  | "all"
-  | "strength"
-  | "agility"
-  | "intelligence"
-  | "will"
-  | "mainStat";
-
-const weaponLabelMap: Record<WeaponType, string> = {
+const weaponTypeLabelMap: Record<string, string> = {
   sword: "한손검",
   greatsword: "양손검",
   polearm: "장병기",
@@ -58,21 +32,7 @@ const weaponLabelMap: Record<WeaponType, string> = {
   artsunit: "아츠 유닛",
 };
 
-const rarityBorderMap: Record<WeaponRarity, string> = {
-  6: "#ff8a1f",
-  5: "#f0c94a",
-  4: "#9a63ff",
-  3: "#4fa3ff",
-};
-
-const rarityIconMap: Record<WeaponRarity, string> = {
-  6: "/icons/rarity/6star.webp",
-  5: "/icons/rarity/5star.webp",
-  4: "/icons/rarity/4star.webp",
-  3: "/icons/rarity/3star.webp",
-};
-
-const weaponIconMap: Record<WeaponType, string> = {
+const weaponTypeIconMap: Record<string, string> = {
   sword: "/icons/weapons/sword.webp",
   greatsword: "/icons/weapons/greatsword.webp",
   polearm: "/icons/weapons/polearm.webp",
@@ -80,18 +40,12 @@ const weaponIconMap: Record<WeaponType, string> = {
   artsunit: "/icons/weapons/artsunit.webp",
 };
 
-const panelClip: CSSProperties["clipPath"] =
-  "polygon(16px 0, calc(100% - 16px) 0, 100% 16px, 100% calc(100% - 16px), calc(100% - 16px) 100%, 16px 100%, 0 calc(100% - 16px), 0 16px)";
-
-const buttonClip: CSSProperties["clipPath"] =
-  "polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)";
-
 const styles: Record<string, CSSProperties> = {
   page: {
     minHeight: "100vh",
     background:
-      "radial-gradient(circle at top, rgba(255,170,40,0.08), transparent 18%), #000",
-    color: "#fff",
+      "radial-gradient(circle at 20% 20%, rgba(255,212,74,0.05), transparent 25%), radial-gradient(circle at 80% 80%, rgba(255,212,74,0.04), transparent 25%), #050505",
+    color: "#ededed",
     padding: "24px 28px 40px",
   },
   shell: {
@@ -101,19 +55,23 @@ const styles: Record<string, CSSProperties> = {
   },
   header: {
     marginBottom: "24px",
-    borderBottom: "1px solid rgba(247,166,0,0.28)",
-    paddingBottom: "16px",
+    background: "#05070b",
+    border: "1px solid rgba(255,196,74,0.14)",
+    borderRadius: "24px",
+    padding: "18px 20px",
+    boxShadow: "0 18px 44px rgba(0,0,0,0.28)",
+    overflow: "hidden",
   },
   subTitle: {
     fontSize: "11px",
     letterSpacing: "0.28em",
-    color: "rgba(255,210,90,0.75)",
+    color: "rgba(255,220,112,0.78)",
   },
   title: {
     marginTop: "8px",
     fontSize: "42px",
     fontWeight: 900,
-    color: "#ffcc4d",
+    color: "#ffd24a",
     letterSpacing: "-0.02em",
   },
   desc: {
@@ -141,13 +99,13 @@ const styles: Record<string, CSSProperties> = {
     justifyContent: "center",
     minHeight: "38px",
     padding: "0 14px",
-    background: "#000000",
-    color: "#f3f4f6",
-    border: "1px solid rgba(247,166,0,0.28)",
+    background: "rgba(255,212,74,0.08)",
+    color: "#ffdc70",
+    border: "1px solid rgba(255,212,74,0.35)",
+    borderRadius: "14px",
     textDecoration: "none",
     fontSize: "13px",
     fontWeight: 800,
-    clipPath: buttonClip,
   },
   layout: {
     display: "grid",
@@ -157,16 +115,14 @@ const styles: Record<string, CSSProperties> = {
   },
   sidebar: {
     width: "100%",
-    background: "#000000",
-    border: "1px solid rgba(247,166,0,0.26)",
+    background: "#05070b",
+    border: "1px solid rgba(255,196,74,0.14)",
+    borderRadius: "24px",
     padding: "16px",
     position: "sticky",
     top: "18px",
-    clipPath: panelClip,
-    boxShadow: "0 10px 28px rgba(0,0,0,0.28)",
-    maxHeight: "calc(100vh - 36px)",
-    overflowY: "auto",
-    overflowX: "hidden",
+    boxShadow: "0 18px 44px rgba(0,0,0,0.28)",
+    overflow: "hidden",
   },
   content: {
     minWidth: 0,
@@ -177,7 +133,7 @@ const styles: Record<string, CSSProperties> = {
     fontSize: "12px",
     fontWeight: 800,
     letterSpacing: "0.14em",
-    color: "#ffcc4d",
+    color: "#ffd24a",
   },
   inputWrap: {
     position: "relative",
@@ -194,13 +150,13 @@ const styles: Record<string, CSSProperties> = {
   input: {
     width: "100%",
     height: "38px",
-    background: "#000000",
+    background: "#090d14",
     color: "#fff",
-    border: "1px solid #3a4250",
+    border: "1px solid rgba(255,196,74,0.16)",
+    borderRadius: "14px",
     padding: "0 12px 0 34px",
     fontSize: "13px",
     outline: "none",
-    clipPath: buttonClip,
   },
   buttonList: {
     display: "flex",
@@ -214,7 +170,10 @@ const styles: Record<string, CSSProperties> = {
     alignItems: "center",
     gap: "12px",
     flexWrap: "wrap",
-    padding: "0 4px",
+    padding: "12px 16px",
+    background: "#05070b",
+    border: "1px solid rgba(255,196,74,0.14)",
+    borderRadius: "20px",
   },
   resultBar: {
     fontSize: "13px",
@@ -222,7 +181,7 @@ const styles: Record<string, CSSProperties> = {
   },
   grid: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fill, minmax(168px, 168px))",
+    gridTemplateColumns: "repeat(auto-fill, minmax(150px, 150px))",
     gap: "14px",
     alignItems: "start",
     justifyContent: "start",
@@ -234,21 +193,22 @@ const styles: Record<string, CSSProperties> = {
     display: "block",
   },
   card: {
-    width: "168px",
-    minHeight: "340px",
-    background: "#000000",
+    width: "150px",
+    height: "auto",
+    background: "#090d14",
     overflow: "hidden",
     display: "flex",
     flexDirection: "column",
-    clipPath: panelClip,
-    boxShadow: "0 10px 24px rgba(0,0,0,0.28)",
-    transition: "transform 0.18s ease, box-shadow 0.18s ease",
+    borderRadius: "20px",
+    boxShadow: "0 14px 34px rgba(0,0,0,0.32)",
+    transition:
+      "transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease",
   },
   imageWrap: {
     position: "relative",
-    width: "168px",
-    height: "200px",
-    background: "#000000",
+    width: "150px",
+    height: "170px",
+    background: "#05070b",
     overflow: "hidden",
     flexShrink: 0,
   },
@@ -260,59 +220,49 @@ const styles: Record<string, CSSProperties> = {
     pointerEvents: "none",
   },
   info: {
-    background: "#000000",
-    padding: "8px",
-    borderTop: "1px solid rgba(255,255,255,0.08)",
+    background: "#090d14",
+    padding: "7px 5px 8px",
+    borderTop: "1px solid rgba(255,196,74,0.10)",
     display: "flex",
     flexDirection: "column",
-    flex: 1,
     minHeight: 0,
   },
   name: {
-    fontSize: "17px",
+    fontSize: "15px",
     fontWeight: 900,
-    color: "#fff",
-    lineHeight: 1.1,
-    minHeight: "20px",
+    color: "#ffdc70",
+    lineHeight: 1.15,
   },
   enName: {
-    marginTop: "2px",
-    fontSize: "11px",
+    marginTop: "4px",
+    fontSize: "10px",
     color: "#cbd5e1",
     lineHeight: 1.2,
-    minHeight: "13px",
   },
-  cardBadgeRow: {
+  badgeRow: {
     display: "flex",
     flexWrap: "wrap",
     gap: "4px",
     marginTop: "6px",
-  },
-  cardSingleRow: {
-    display: "flex",
-    flexWrap: "wrap",
-    gap: "4px",
-    marginTop: "4px",
+    alignContent: "flex-start",
   },
   badge: {
     display: "inline-flex",
     alignItems: "center",
-    justifyContent: "center",
-    width: "fit-content",
-    maxWidth: "100%",
-    minHeight: "22px",
-    padding: "2px 6px",
+    minHeight: "21px",
+    padding: "2px 5px",
     fontSize: "10px",
     fontWeight: 700,
     lineHeight: 1.1,
-    border: "1px solid #444",
-    background: "#000000",
+    border: "1px solid rgba(255,196,74,0.18)",
+    background: "rgba(255,212,74,0.06)",
     color: "#fff",
     gap: "4px",
     boxSizing: "border-box",
-    whiteSpace: "nowrap",
-    clipPath: buttonClip,
-    flex: "0 0 auto",
+    maxWidth: "100%",
+    whiteSpace: "normal",
+    wordBreak: "keep-all",
+    borderRadius: "999px",
   },
   badgeIconWrap: {
     position: "relative",
@@ -320,20 +270,38 @@ const styles: Record<string, CSSProperties> = {
     height: "11px",
     flexShrink: 0,
   },
+  seriesBadge: {
+    display: "inline-flex",
+    alignItems: "center",
+    width: "fit-content",
+    maxWidth: "95px",
+    minHeight: "21px",
+    padding: "2px 6px",
+    fontSize: "10px",
+    fontWeight: 800,
+    lineHeight: 1.1,
+    border: "1px solid rgba(255,196,74,0.18)",
+    background: "rgba(255,212,74,0.06)",
+    color: "#ffffff",
+    borderRadius: "999px",
+    whiteSpace: "nowrap",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+  },
   filterButton: {
     width: "100%",
     minHeight: "40px",
     padding: "8px 10px",
     textAlign: "left",
     fontSize: "13px",
-    background: "#000000",
+    background: "#090d14",
     color: "#d4d4d8",
-    border: "1px solid #3f3f46",
+    border: "1px solid rgba(255,196,74,0.14)",
+    borderRadius: "14px",
     cursor: "pointer",
     display: "flex",
     alignItems: "center",
     gap: "8px",
-    clipPath: buttonClip,
   },
   filterIconWrap: {
     position: "relative",
@@ -347,16 +315,62 @@ const styles: Record<string, CSSProperties> = {
   },
 };
 
+function getWeaponImage(weapon: SourceWeaponDetail) {
+  const anyWeapon = weapon as any;
+  if (typeof anyWeapon.image === "string" && anyWeapon.image.trim())
+    return anyWeapon.image;
+  if (typeof anyWeapon.avatar === "string" && anyWeapon.avatar.trim())
+    return anyWeapon.avatar;
+  return `/weapons/${weapon.slug}.webp`;
+}
+
+function getWeaponRarity(weapon: SourceWeaponDetail) {
+  return Number((weapon as any).rarity ?? (weapon as any).quality ?? 0);
+}
+
+function getWeaponType(weapon: SourceWeaponDetail) {
+  return String((weapon as any).weaponType ?? (weapon as any).type ?? "");
+}
+
+function getWeaponTypeLabel(weapon: SourceWeaponDetail) {
+  const type = getWeaponType(weapon);
+  return (
+    weaponTypeLabelMap[type] ??
+    String((weapon as any).typeLabel ?? (weapon as any).category ?? type ?? "무기")
+  );
+}
+
+function getWeaponSeriesRaw(weapon: SourceWeaponDetail) {
+  return String(
+    (weapon as any).series ??
+      (weapon as any).seriesName ??
+      (weapon as any).seriesSkill?.name ??
+      "기타",
+  ).trim();
+}
+
+function normalizeWeaponSeries(value: string) {
+  const text = String(value ?? "").trim();
+  if (!text) return "기타";
+  return text.split("·")[0]?.trim() || text;
+}
+
+function getWeaponSeries(weapon: SourceWeaponDetail) {
+  return normalizeWeaponSeries(getWeaponSeriesRaw(weapon));
+}
+
 function FilterButton({
   active,
   label,
   onClick,
   iconSrc,
+  borderColor,
 }: {
   active: boolean;
   label: string;
   onClick: () => void;
   iconSrc?: string;
+  borderColor?: string;
 }) {
   return (
     <button
@@ -364,11 +378,17 @@ function FilterButton({
       onClick={onClick}
       style={{
         ...styles.filterButton,
-        border: active ? "1px solid #f7a600" : "1px solid #3f3f46",
+        border: active
+          ? `1px solid ${borderColor ?? "rgba(255,212,74,0.55)"}`
+          : `1px solid ${
+              borderColor ? `${borderColor}55` : "rgba(255,196,74,0.14)"
+            }`,
         background: active
-          ? "linear-gradient(90deg, rgba(247,166,0,0.18), rgba(247,166,0,0.08))"
-          : "#000000",
-        color: active ? "#ffd873" : "#d4d4d8",
+          ? `linear-gradient(90deg, ${
+              borderColor ? `${borderColor}22` : "rgba(255,212,74,0.14)"
+            }, rgba(255,212,74,0.05))`
+          : "#090d14",
+        color: active ? "#ffdc70" : "#d4d4d8",
       }}
     >
       {iconSrc ? (
@@ -397,6 +417,7 @@ function FilterButton({
           ◆
         </span>
       )}
+
       <span style={styles.filterLabel}>{label}</span>
     </button>
   );
@@ -405,17 +426,23 @@ function FilterButton({
 function Badge({
   label,
   iconSrc,
+  bg,
+  color = "#fff",
   borderColor,
 }: {
   label: string;
   iconSrc?: string;
+  bg?: string;
+  color?: string;
   borderColor?: string;
 }) {
   return (
     <span
       style={{
         ...styles.badge,
-        border: `1px solid ${borderColor ?? "#444"}`,
+        background: bg ?? "rgba(255,212,74,0.06)",
+        color,
+        border: `1px solid ${borderColor ?? "rgba(255,196,74,0.18)"}`,
       }}
     >
       {iconSrc ? (
@@ -434,208 +461,50 @@ function Badge({
   );
 }
 
-function normalizeSkillPrefix(value?: string) {
-  return String(value ?? "").replace(/\s+/g, "").trim();
-}
-
-function extractSeriesName(value?: string) {
-  if (!value) return "";
-  const normalized = String(value).trim();
-  if (normalized.includes("·")) return normalized.split("·")[0].trim();
-  return normalized.slice(0, 2).trim();
-}
-
-function getAbilityFromSkillName(skillName?: string) {
-  const v = normalizeSkillPrefix(skillName);
-
-  if (v.startsWith("힘증가")) return "힘";
-  if (v.startsWith("민첩증가")) return "민첩";
-  if (v.startsWith("지능증가")) return "지능";
-  if (v.startsWith("의지증가")) return "의지";
-  if (v.startsWith("주요능력치증가")) return "주요 능력치";
-
-  return "";
-}
-
-function getAttributeFromSkillName(skillName?: string) {
-  const v = normalizeSkillPrefix(skillName);
-
-  if (v.startsWith("공격력증가")) return "공격력";
-  if (v.startsWith("생명력증가")) return "생명력";
-  if (v.startsWith("물리피해증가")) return "물리 피해";
-  if (v.startsWith("열기피해증가")) return "열기 피해";
-  if (v.startsWith("전기피해증가")) return "전기 피해";
-  if (v.startsWith("냉기피해증가")) return "냉기 피해";
-  if (v.startsWith("자연피해증가")) return "자연 피해";
-  if (v.startsWith("치명타확률증가")) return "치명타 확률";
-  if (v.startsWith("오리지늄아츠강도증가")) return "오리지늄 아츠 강도";
-  if (v.startsWith("오리지늄아츠증가")) return "오리지늄 아츠 강도";
-  if (v.startsWith("궁극기충전효율증가")) return "궁극기 충전 효율";
-  if (v.startsWith("궁극기획득효율증가")) return "궁극기 충전 효율";
-  if (v.startsWith("아츠피해증가")) return "아츠 피해";
-  if (v.startsWith("치유효율증가")) return "치유 효율";
-
-  return "";
-}
-
-function normalizeAttributeValue(value?: string) {
-  const v = (value ?? "").replace(/\s+/g, "").toLowerCase();
-
-  if (v.includes("공격력")) return "attack";
-  if (v.includes("생명력") || v.includes("체력") || v.includes("hp")) return "hp";
-  if (v.includes("물리피해")) return "physical";
-  if (v.includes("열기피해")) return "heat";
-  if (v.includes("전기피해")) return "electric";
-  if (v.includes("냉기피해")) return "cryo";
-  if (v.includes("자연피해")) return "nature";
-  if (v.includes("치명타확률")) return "critRate";
-  if (v.includes("오리지늄아츠강도") || v.includes("오리지늄아츠")) return "originiumArts";
-  if (v.includes("궁극기충전효율") || v.includes("궁극기획득효율")) return "ultimateEfficiency";
-  if (v.includes("아츠피해")) return "artsDamage";
-  if (v.includes("치유효율")) return "healEfficiency";
-
-  return "";
-}
-
-function normalizeSeriesValue(value?: string) {
-  const v = extractSeriesName(value).replace(/\s+/g, "").toLowerCase();
-
-  if (v === "강공") return "heavyStrike";
-  if (v === "억제") return "suppression";
-  if (v === "추격") return "pursuit";
-  if (v === "분쇄") return "crush";
-  if (v === "사기") return "morale";
-  if (v === "기예") return "technique";
-  if (v === "잔혹") return "brutality";
-  if (v === "고통") return "pain";
-  if (v === "의료") return "medical";
-  if (v === "골절") return "fracture";
-  if (v === "방출") return "discharge";
-  if (v === "어둠") return "darkness";
-  if (v === "흐름") return "flow";
-  if (v === "효율") return "efficiency";
-
-  return "";
-}
-
-function getWeaponAbilityText(weapon: WeaponDetail) {
-  const skillBased = weapon.skills
-    ?.map((skill) => getAbilityFromSkillName(skill.name))
-    ?.find(Boolean);
-
-  if (skillBased) return skillBased;
-
-  const main = weapon.mainStatLabel?.trim();
-  if (main) return main;
-
-  const sub = weapon.subStatLabel?.trim();
-  if (sub) return sub;
-
-  return "-";
-}
-
-function getWeaponAttributeText(weapon: WeaponDetail) {
-  const skillBased = weapon.skills
-    ?.map((skill) => getAttributeFromSkillName(skill.name))
-    ?.find(Boolean);
-
-  if (skillBased) return skillBased;
-
-  const directMeta = weapon.skills
-    ?.flatMap((skill) => skill.meta ?? [])
-    ?.find((meta) => String(meta.label).trim() === "속성");
-
-  if (directMeta?.value) return String(directMeta.value);
-
-  const fuzzyMeta = weapon.skills
-    ?.flatMap((skill) => skill.meta ?? [])
-    ?.find((meta) => String(meta.label).replace(/\s+/g, "").includes("속성"));
-
-  if (fuzzyMeta?.value) return String(fuzzyMeta.value);
-
-  return "-";
-}
-
-function getWeaponSeriesSkillFullText(weapon: WeaponDetail) {
-  const seriesMeta = weapon.skills.find((skill) =>
-    skill.meta?.some((meta) => String(meta.label).includes("시리즈 스킬"))
-  );
-  return seriesMeta?.name ?? "-";
-}
-
-function getWeaponSeriesSkillDisplayText(weapon: WeaponDetail) {
-  return extractSeriesName(getWeaponSeriesSkillFullText(weapon)) || "-";
-}
-
-function getWeaponSeriesKey(weapon: WeaponDetail) {
-  return normalizeSeriesValue(getWeaponSeriesSkillFullText(weapon));
-}
-
-function getWeaponAttributeKey(weapon: WeaponDetail) {
-  return normalizeAttributeValue(getWeaponAttributeText(weapon));
-}
-
-function getWeaponAbilityKey(weapon: WeaponDetail): WeaponAbilityFilter | "" {
-  const value = getWeaponAbilityText(weapon).replace(/\s+/g, "");
-
-  if (value.includes("주요능력치")) return "mainStat";
-  if (value.includes("힘")) return "strength";
-  if (value.includes("민첩")) return "agility";
-  if (value.includes("지능")) return "intelligence";
-  if (value.includes("의지")) return "will";
-
-  return "";
-}
-
-function WeaponCard({ weapon }: { weapon: WeaponDetail }) {
-  const abilityText = getWeaponAbilityText(weapon);
-  const attributeText = getWeaponAttributeText(weapon);
-  const seriesSkillText = getWeaponSeriesSkillDisplayText(weapon);
-  const rarityColor = rarityBorderMap[weapon.rarity];
-  const weaponImageSrc = `/weapons/${weapon.slug}.webp`;
+function WeaponCard({ weapon }: { weapon: SourceWeaponDetail }) {
+  const rarity = getWeaponRarity(weapon);
+  const type = getWeaponType(weapon);
+  const series = getWeaponSeries(weapon);
 
   return (
     <Link href={`/weapons/${weapon.slug}`} style={styles.cardLink}>
       <div
         style={{
           ...styles.card,
-          border: `2px solid ${rarityColor}`,
+          border: "1px solid rgba(255,196,74,0.16)",
+          boxShadow: "0 14px 34px rgba(0,0,0,0.32)",
         }}
       >
         <div style={styles.imageWrap}>
           <Image
-            src={weaponImageSrc}
+            src={getWeaponImage(weapon)}
             alt={weapon.name}
             fill
-            sizes="168px"
-            style={{ objectFit: "cover" }}
+            sizes="150px"
+            style={{ objectFit: "contain", padding: "12px" }}
           />
           <div style={styles.overlay} />
         </div>
 
         <div style={styles.info}>
           <div style={styles.name}>{weapon.name}</div>
-          <div style={styles.enName}>{weapon.enName}</div>
+          <div style={styles.enName}>{(weapon as any).enName ?? weapon.slug}</div>
 
-          <div style={styles.cardBadgeRow}>
+          <div style={styles.badgeRow}>
             <Badge
-              label={`${weapon.rarity}성`}
-              borderColor={rarityColor}
-              iconSrc={rarityIconMap[weapon.rarity]}
+              label={rarity ? `${rarity}성` : "-"}
+              bg="rgba(255,212,74,0.06)"
+              color="#ffffff"
+              borderColor="rgba(255,196,74,0.18)"
+              iconSrc={rarityIconMap[rarity]}
             />
-            <Badge
-              label={weaponLabelMap[weapon.weaponType]}
-              iconSrc={weaponIconMap[weapon.weaponType]}
-            />
+            <Badge label={getWeaponTypeLabel(weapon)} iconSrc={weaponTypeIconMap[type]} />
           </div>
 
-          <div style={styles.cardBadgeRow}>
-            <Badge label={abilityText} />
-            <Badge label={seriesSkillText} />
-          </div>
-
-          <div style={styles.cardSingleRow}>
-            <Badge label={attributeText} />
+          <div style={styles.badgeRow}>
+            <span title={series} style={styles.seriesBadge}>
+              {series}
+            </span>
           </div>
         </div>
       </div>
@@ -645,58 +514,70 @@ function WeaponCard({ weapon }: { weapon: WeaponDetail }) {
 
 export default function WeaponsPage() {
   const [keyword, setKeyword] = useState("");
-  const [rarity, setRarity] = useState<WeaponRarity | "all">("all");
-  const [weaponType, setWeaponType] = useState<WeaponType | "all">("all");
-  const [abilityFilter, setAbilityFilter] =
-    useState<WeaponAbilityFilter>("all");
-  const [attributeFilter, setAttributeFilter] =
-    useState<WeaponAttributeFilter>("all");
-  const [seriesFilter, setSeriesFilter] =
-    useState<WeaponSeriesFilter>("all");
+  const [rarity, setRarity] = useState<number | "all">("all");
+  const [weaponType, setWeaponType] = useState<string | "all">("all");
+  const [series, setSeries] = useState<string | "all">("all");
 
-  const filteredWeapons = useMemo(() => {
-    const q = keyword.trim().toLowerCase();
+  const rarityOptions = useMemo(() => {
+    return Array.from(new Set(weaponDetails.map(getWeaponRarity).filter(Boolean))).sort(
+      (a, b) => b - a,
+    );
+  }, []);
 
-    return weaponDetails.filter((weapon) => {
-      const matchesKeyword =
-        q === "" ||
-        weapon.name.toLowerCase().includes(q) ||
-        weapon.enName.toLowerCase().includes(q);
+  const weaponTypeOptions = useMemo(() => {
+    return Array.from(new Set(weaponDetails.map(getWeaponType).filter(Boolean))).sort(
+      (a, b) =>
+        getWeaponTypeLabel({ ...(weaponDetails[0] as any), weaponType: a }).localeCompare(
+          getWeaponTypeLabel({ ...(weaponDetails[0] as any), weaponType: b }),
+          "ko",
+        ),
+    );
+  }, []);
 
-      const matchesRarity = rarity === "all" || weapon.rarity === rarity;
-      const matchesWeaponType =
-        weaponType === "all" || weapon.weaponType === weaponType;
-
-      const weaponAbilityKey = getWeaponAbilityKey(weapon);
-      const weaponAttributeKey = getWeaponAttributeKey(weapon);
-      const weaponSeriesKey = getWeaponSeriesKey(weapon);
-
-      const matchesAbility =
-        abilityFilter === "all" || weaponAbilityKey === abilityFilter;
-
-      const matchesAttribute =
-        attributeFilter === "all" || weaponAttributeKey === attributeFilter;
-
-      const matchesSeries =
-        seriesFilter === "all" || weaponSeriesKey === seriesFilter;
-
-      return (
-        matchesKeyword &&
-        matchesRarity &&
-        matchesWeaponType &&
-        matchesAbility &&
-        matchesAttribute &&
-        matchesSeries
-      );
-    });
-  }, [keyword, rarity, weaponType, abilityFilter, attributeFilter, seriesFilter]);
+  const seriesOptions = useMemo(() => {
+    return Array.from(new Set(weaponDetails.map(getWeaponSeries).filter(Boolean))).sort(
+      (a, b) => a.localeCompare(b, "ko"),
+    );
+  }, []);
 
   const sortedWeapons = useMemo(() => {
-    return [...filteredWeapons].sort((a, b) => {
-      if (b.rarity !== a.rarity) return b.rarity - a.rarity;
-      return a.name.localeCompare(b.name, "ko");
-    });
-  }, [filteredWeapons]);
+    const q = keyword.trim().toLowerCase();
+
+    const uniqueWeapons = Array.from(
+      new Map(weaponDetails.map((weapon) => [String(weapon.slug ?? weapon.name), weapon])).values(),
+    );
+
+    return uniqueWeapons
+      .filter((weapon) => {
+        const weaponRarity = getWeaponRarity(weapon);
+        const type = getWeaponType(weapon);
+        const weaponSeries = getWeaponSeries(weapon);
+        const rawWeaponSeries = getWeaponSeriesRaw(weapon);
+        const name = String(weapon.name ?? "").toLowerCase();
+        const enName = String((weapon as any).enName ?? "").toLowerCase();
+        const slug = String(weapon.slug ?? "").toLowerCase();
+
+        const matchesKeyword =
+          q === "" ||
+          name.includes(q) ||
+          enName.includes(q) ||
+          slug.includes(q) ||
+          weaponSeries.toLowerCase().includes(q) ||
+          rawWeaponSeries.toLowerCase().includes(q);
+
+        return (
+          matchesKeyword &&
+          (rarity === "all" || weaponRarity === rarity) &&
+          (weaponType === "all" || type === weaponType) &&
+          (series === "all" || weaponSeries === series)
+        );
+      })
+      .sort((a, b) => {
+        const rarityDiff = getWeaponRarity(b) - getWeaponRarity(a);
+        if (rarityDiff !== 0) return rarityDiff;
+        return a.name.localeCompare(b.name, "ko");
+      });
+  }, [keyword, rarity, weaponType, series]);
 
   return (
     <div style={styles.page}>
@@ -727,7 +608,8 @@ export default function WeaponsPage() {
                 <input
                   value={keyword}
                   onChange={(e) => setKeyword(e.target.value)}
-                  placeholder="이름 검색"
+                  placeholder="무기 이름 검색"
+                  autoComplete="off"
                   style={styles.input}
                 />
               </div>
@@ -741,30 +623,16 @@ export default function WeaponsPage() {
                   label="전체"
                   onClick={() => setRarity("all")}
                 />
-                <FilterButton
-                  active={rarity === 6}
-                  label="6성"
-                  onClick={() => setRarity(6)}
-                  iconSrc={rarityIconMap[6]}
-                />
-                <FilterButton
-                  active={rarity === 5}
-                  label="5성"
-                  onClick={() => setRarity(5)}
-                  iconSrc={rarityIconMap[5]}
-                />
-                <FilterButton
-                  active={rarity === 4}
-                  label="4성"
-                  onClick={() => setRarity(4)}
-                  iconSrc={rarityIconMap[4]}
-                />
-                <FilterButton
-                  active={rarity === 3}
-                  label="3성"
-                  onClick={() => setRarity(3)}
-                  iconSrc={rarityIconMap[3]}
-                />
+                {rarityOptions.map((value) => (
+                  <FilterButton
+                    key={value}
+                    active={rarity === value}
+                    label={`${value}성`}
+                    onClick={() => setRarity(value)}
+                    iconSrc={rarityIconMap[value]}
+                    borderColor={rarityBorderMap[value]}
+                  />
+                ))}
               </div>
             </div>
 
@@ -776,224 +644,34 @@ export default function WeaponsPage() {
                   label="전체"
                   onClick={() => setWeaponType("all")}
                 />
-                <FilterButton
-                  active={weaponType === "sword"}
-                  label="한손검"
-                  onClick={() => setWeaponType("sword")}
-                  iconSrc={weaponIconMap.sword}
-                />
-                <FilterButton
-                  active={weaponType === "greatsword"}
-                  label="양손검"
-                  onClick={() => setWeaponType("greatsword")}
-                  iconSrc={weaponIconMap.greatsword}
-                />
-                <FilterButton
-                  active={weaponType === "polearm"}
-                  label="장병기"
-                  onClick={() => setWeaponType("polearm")}
-                  iconSrc={weaponIconMap.polearm}
-                />
-                <FilterButton
-                  active={weaponType === "handcannon"}
-                  label="권총"
-                  onClick={() => setWeaponType("handcannon")}
-                  iconSrc={weaponIconMap.handcannon}
-                />
-                <FilterButton
-                  active={weaponType === "artsunit"}
-                  label="아츠 유닛"
-                  onClick={() => setWeaponType("artsunit")}
-                  iconSrc={weaponIconMap.artsunit}
-                />
-              </div>
-            </div>
-
-            <div style={{ marginBottom: "18px" }}>
-              <div style={styles.sectionTitle}>능력치</div>
-              <div style={styles.buttonList}>
-                <FilterButton
-                  active={abilityFilter === "all"}
-                  label="전체"
-                  onClick={() => setAbilityFilter("all")}
-                />
-                <FilterButton
-                  active={abilityFilter === "agility"}
-                  label="민첩 증가"
-                  onClick={() => setAbilityFilter("agility")}
-                />
-                <FilterButton
-                  active={abilityFilter === "strength"}
-                  label="힘 증가"
-                  onClick={() => setAbilityFilter("strength")}
-                />
-                <FilterButton
-                  active={abilityFilter === "will"}
-                  label="의지 증가"
-                  onClick={() => setAbilityFilter("will")}
-                />
-                <FilterButton
-                  active={abilityFilter === "intelligence"}
-                  label="지능 증가"
-                  onClick={() => setAbilityFilter("intelligence")}
-                />
-                <FilterButton
-                  active={abilityFilter === "mainStat"}
-                  label="주요 능력치 증가"
-                  onClick={() => setAbilityFilter("mainStat")}
-                />
-              </div>
-            </div>
-
-            <div style={{ marginBottom: "18px" }}>
-              <div style={styles.sectionTitle}>속성</div>
-              <div style={styles.buttonList}>
-                <FilterButton
-                  active={attributeFilter === "all"}
-                  label="전체"
-                  onClick={() => setAttributeFilter("all")}
-                />
-                <FilterButton
-                  active={attributeFilter === "attack"}
-                  label="공격력 증가"
-                  onClick={() => setAttributeFilter("attack")}
-                />
-                <FilterButton
-                  active={attributeFilter === "hp"}
-                  label="생명력 증가"
-                  onClick={() => setAttributeFilter("hp")}
-                />
-                <FilterButton
-                  active={attributeFilter === "physical"}
-                  label="물리 피해 증가"
-                  onClick={() => setAttributeFilter("physical")}
-                />
-                <FilterButton
-                  active={attributeFilter === "heat"}
-                  label="열기 피해 증가"
-                  onClick={() => setAttributeFilter("heat")}
-                />
-                <FilterButton
-                  active={attributeFilter === "electric"}
-                  label="전기 피해 증가"
-                  onClick={() => setAttributeFilter("electric")}
-                />
-                <FilterButton
-                  active={attributeFilter === "cryo"}
-                  label="냉기 피해 증가"
-                  onClick={() => setAttributeFilter("cryo")}
-                />
-                <FilterButton
-                  active={attributeFilter === "nature"}
-                  label="자연 피해 증가"
-                  onClick={() => setAttributeFilter("nature")}
-                />
-                <FilterButton
-                  active={attributeFilter === "critRate"}
-                  label="치명타 확률 증가"
-                  onClick={() => setAttributeFilter("critRate")}
-                />
-                <FilterButton
-                  active={attributeFilter === "originiumArts"}
-                  label="오리지늄 아츠 강도"
-                  onClick={() => setAttributeFilter("originiumArts")}
-                />
-                <FilterButton
-                  active={attributeFilter === "ultimateEfficiency"}
-                  label="궁극기 충전 효율"
-                  onClick={() => setAttributeFilter("ultimateEfficiency")}
-                />
-                <FilterButton
-                  active={attributeFilter === "artsDamage"}
-                  label="아츠 피해 증가"
-                  onClick={() => setAttributeFilter("artsDamage")}
-                />
-                <FilterButton
-                  active={attributeFilter === "healEfficiency"}
-                  label="치유 효율 증가"
-                  onClick={() => setAttributeFilter("healEfficiency")}
-                />
+                {weaponTypeOptions.map((value) => (
+                  <FilterButton
+                    key={value}
+                    active={weaponType === value}
+                    label={weaponTypeLabelMap[value] ?? value}
+                    onClick={() => setWeaponType(value)}
+                    iconSrc={weaponTypeIconMap[value]}
+                  />
+                ))}
               </div>
             </div>
 
             <div>
-              <div style={styles.sectionTitle}>시리즈 스킬</div>
+              <div style={styles.sectionTitle}>시리즈</div>
               <div style={styles.buttonList}>
                 <FilterButton
-                  active={seriesFilter === "all"}
+                  active={series === "all"}
                   label="전체"
-                  onClick={() => setSeriesFilter("all")}
+                  onClick={() => setSeries("all")}
                 />
-                <FilterButton
-                  active={seriesFilter === "heavyStrike"}
-                  label="강공"
-                  onClick={() => setSeriesFilter("heavyStrike")}
-                />
-                <FilterButton
-                  active={seriesFilter === "suppression"}
-                  label="억제"
-                  onClick={() => setSeriesFilter("suppression")}
-                />
-                <FilterButton
-                  active={seriesFilter === "pursuit"}
-                  label="추격"
-                  onClick={() => setSeriesFilter("pursuit")}
-                />
-                <FilterButton
-                  active={seriesFilter === "crush"}
-                  label="분쇄"
-                  onClick={() => setSeriesFilter("crush")}
-                />
-                <FilterButton
-                  active={seriesFilter === "morale"}
-                  label="사기"
-                  onClick={() => setSeriesFilter("morale")}
-                />
-                <FilterButton
-                  active={seriesFilter === "technique"}
-                  label="기예"
-                  onClick={() => setSeriesFilter("technique")}
-                />
-                <FilterButton
-                  active={seriesFilter === "brutality"}
-                  label="잔혹"
-                  onClick={() => setSeriesFilter("brutality")}
-                />
-                <FilterButton
-                  active={seriesFilter === "pain"}
-                  label="고통"
-                  onClick={() => setSeriesFilter("pain")}
-                />
-                <FilterButton
-                  active={seriesFilter === "medical"}
-                  label="의료"
-                  onClick={() => setSeriesFilter("medical")}
-                />
-                <FilterButton
-                  active={seriesFilter === "fracture"}
-                  label="골절"
-                  onClick={() => setSeriesFilter("fracture")}
-                />
-                <FilterButton
-                  active={seriesFilter === "discharge"}
-                  label="방출"
-                  onClick={() => setSeriesFilter("discharge")}
-                />
-                <FilterButton
-                  active={seriesFilter === "darkness"}
-                  label="어둠"
-                  onClick={() => setSeriesFilter("darkness")}
-                />
-                <FilterButton
-                  active={seriesFilter === "flow"}
-                  label="흐름"
-                  onClick={() => setSeriesFilter("flow")}
-                />
-                <FilterButton
-                  active={seriesFilter === "efficiency"}
-                  label="효율"
-                  onClick={() => setSeriesFilter("efficiency")}
-                />
+                {seriesOptions.map((value) => (
+                  <FilterButton
+                    key={value}
+                    active={series === value}
+                    label={value}
+                    onClick={() => setSeries(value)}
+                  />
+                ))}
               </div>
             </div>
           </aside>
@@ -1002,7 +680,7 @@ export default function WeaponsPage() {
             <div style={styles.toolbar}>
               <div style={styles.resultBar}>
                 총{" "}
-                <span style={{ color: "#ffcc4d", fontWeight: 700 }}>
+                <span style={{ color: "#ffd24a", fontWeight: 700 }}>
                   {sortedWeapons.length}
                 </span>
                 개

@@ -108,7 +108,7 @@ const styles: Record<string, CSSProperties> = {
   },
   header: {
     marginBottom: "24px",
-    borderBottom: "1px solid rgba(247,166,0,0.28)",
+    borderBottom: `1px solid ${YELLOW_BORDER}`,
     paddingBottom: "16px",
   },
   subTitle: {
@@ -150,14 +150,14 @@ const styles: Record<string, CSSProperties> = {
     padding: "0 14px",
     background: "#000000",
     color: "#f3f4f6",
-    border: "1px solid rgba(247,166,0,0.28)",
+    border: `1px solid ${YELLOW_BORDER}`,
+    borderRadius: "14px",
     textDecoration: "none",
     fontSize: "13px",
     fontWeight: 800,
-    clipPath: buttonClip,
   },
   sectionTitle: {
-    marginTop: "18px",
+    marginTop: "22px",
     marginBottom: "12px",
     fontSize: "22px",
     fontWeight: 900,
@@ -576,6 +576,7 @@ function InfoBadge({
         minHeight: "28px",
         padding: "4px 10px",
         border: `1px solid ${borderColor}`,
+        borderRadius: "999px",
         color: textColor,
         fontSize: "12px",
         fontWeight: 800,
@@ -683,6 +684,7 @@ export default async function WeaponDetailPage({
             position: "relative",
             overflow: "hidden",
             border: `1px solid ${YELLOW_BORDER}`,
+            borderRadius: "24px",
             background: "#05070b",
             boxShadow: "0 10px 28px rgba(0,0,0,0.28)",
             padding: "22px",
@@ -713,6 +715,7 @@ export default async function WeaponDetailPage({
                 minHeight: "540px",
                 background: "#000",
                 border: `1px solid ${heroBorderColor}`,
+                borderRadius: "20px",
                 overflow: "hidden",
               }}
             >
@@ -804,8 +807,10 @@ export default async function WeaponDetailPage({
 
                 <div
                   style={{
-                    border: `1px solid ${YELLOW_BORDER_FAINT}`,
-                    background: "#0b1018",
+                    border: `1px solid rgba(255,196,74,0.16)`,
+                    borderRadius: "20px",
+                    background: "#06080c",
+                    overflow: "hidden",
                   }}
                 >
                   <BasicStatRow
@@ -855,15 +860,7 @@ export default async function WeaponDetailPage({
                   LEVEL PANEL
                 </div>
 
-                <div
-                  style={{
-                    border: `1px solid ${YELLOW_BORDER_SOFT}`,
-                    background: "#0b1018",
-                    padding: "0",
-                  }}
-                >
-                  <WeaponLevelPanel levelStats={weapon.levelStats} />
-                </div>
+                <WeaponLevelPanel levelStats={weapon.levelStats} />
               </div>
             </div>
           </div>
@@ -873,13 +870,20 @@ export default async function WeaponDetailPage({
           <>
             <PageSectionTitle>무기 스킬</PageSectionTitle>
 
-            {weapon.skills.map((skill) => (
-              <WeaponSkillAtlasPanel
-                key={skill.key}
-                accentColor={accentColor}
-                skill={skill}
-              />
-            ))}
+            <div
+              style={{
+                display: "grid",
+                gap: "14px",
+              }}
+            >
+              {weapon.skills.map((skill) => (
+                <WeaponSkillAtlasPanel
+                  key={skill.key}
+                  accentColor={accentColor}
+                  skill={skill}
+                />
+              ))}
+            </div>
           </>
         )}
 

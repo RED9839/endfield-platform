@@ -134,8 +134,7 @@ export default function WeaponLevelPanel({
   return (
     <section
       style={{
-        clipPath:
-          "polygon(18px 0, calc(100% - 18px) 0, 100% 18px, 100% calc(100% - 18px), calc(100% - 18px) 100%, 18px 100%, 0 calc(100% - 18px), 0 18px)",
+        borderRadius: "20px",
         border: "1px solid rgba(255,196,74,0.16)",
         background: "#06080c",
         padding: "12px",
@@ -242,8 +241,7 @@ export default function WeaponLevelPanel({
           border: "1px solid rgba(255,196,74,0.12)",
           background: "#0a0d12",
           padding: "12px",
-          clipPath:
-            "polygon(14px 0, calc(100% - 14px) 0, 100% 14px, 100% calc(100% - 14px), calc(100% - 14px) 100%, 14px 100%, 0 calc(100% - 14px), 0 14px)",
+          borderRadius: "18px",
         }}
       >
         <div className="weapon-top-row">

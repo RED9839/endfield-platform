@@ -7,10 +7,10 @@ type Props = {
   images: string[];
   alt: string;
   enName: string;
-  borderColor: string;
 };
 
 const PANEL_RADIUS = "24px";
+const BORDER_COLOR = "rgba(255,196,74,0.14)";
 
 const navButtonStyle: React.CSSProperties = {
   position: "absolute",
@@ -32,12 +32,7 @@ const navButtonStyle: React.CSSProperties = {
   borderRadius: "20px",
 };
 
-export default function HeroSlider({
-  images,
-  alt,
-  enName,
-  borderColor,
-}: Props) {
+export default function HeroSlider({ images, alt, enName }: Props) {
   const validImages = images.filter(Boolean);
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -62,11 +57,12 @@ export default function HeroSlider({
       style={{
         borderRadius: PANEL_RADIUS,
         position: "relative",
-        height: "min(70vw, 860px)",
-        border: `1px solid ${borderColor}`,
+        height: "min(58vw, 620px)",
+        border: `1px solid ${BORDER_COLOR}`,
         overflow: "hidden",
         marginBottom: "18px",
         background: "#000",
+        boxShadow: "0 10px 28px rgba(0,0,0,0.28)",
       }}
     >
       <Image
@@ -74,6 +70,7 @@ export default function HeroSlider({
         alt={alt}
         fill
         priority
+        sizes="100vw"
         style={{
           objectFit: "cover",
           filter: "blur(16px) brightness(0.25)",
@@ -94,9 +91,8 @@ export default function HeroSlider({
           alt={alt}
           fill
           priority
-          style={{
-            objectFit: "contain",
-          }}
+          sizes="100vw"
+          style={{ objectFit: "contain" }}
         />
       </div>
 
@@ -106,10 +102,7 @@ export default function HeroSlider({
             type="button"
             onClick={goPrev}
             aria-label="이전 이미지"
-            style={{
-              ...navButtonStyle,
-              left: "14px",
-            }}
+            style={{ ...navButtonStyle, left: "14px" }}
           >
             ‹
           </button>
@@ -118,10 +111,7 @@ export default function HeroSlider({
             type="button"
             onClick={goNext}
             aria-label="다음 이미지"
-            style={{
-              ...navButtonStyle,
-              right: "14px",
-            }}
+            style={{ ...navButtonStyle, right: "14px" }}
           >
             ›
           </button>
@@ -138,7 +128,7 @@ export default function HeroSlider({
       >
         <div
           style={{
-            fontSize: "clamp(56px, 6vw, 110px)",
+            fontSize: "clamp(42px, 5vw, 88px)",
             fontWeight: 900,
             textShadow: "0 8px 20px rgba(0,0,0,0.8)",
             color: "#fff",
@@ -149,7 +139,7 @@ export default function HeroSlider({
 
         <div
           style={{
-            fontSize: "22px",
+            fontSize: "20px",
             color: "#dbe4f0",
             textShadow: "0 4px 12px rgba(0,0,0,0.7)",
             marginTop: "6px",
