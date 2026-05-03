@@ -5,15 +5,6 @@ import HomeBannerHubPanel, {
   type HomeBannerItem,
 } from "@/app/components/home/HomeBannerHubPanel";
 
-export type HomeApiResponse = {
-  ok: boolean;
-  latest?: any[];
-  notice?: any[];
-  event?: any[];
-  news?: any[];
-  weaponStack?: any[];
-};
-
 type BannerSourceItem = {
   id?: string;
   title?: string;
@@ -26,20 +17,32 @@ type BannerSourceItem = {
   thumbnail?: string;
 };
 
+export type HomeApiResponse = {
+  ok: boolean;
+  latest?: BannerSourceItem[];
+  notice?: BannerSourceItem[];
+  event?: BannerSourceItem[];
+  news?: BannerSourceItem[];
+  weaponStack?: BannerSourceItem[];
+};
+
 function normalizeImage(url?: string) {
-  if (!url?.trim()) return "";
-  if (url.startsWith("/api/banners/image")) return url;
-  if (url.startsWith("/")) return url;
-  return `/api/banners/image?url=${encodeURIComponent(url)}`;
+  const src = url?.trim();
+  if (!src) return "";
+
+  if (src.startsWith("/api/banners/image")) return src;
+  if (src.startsWith("/")) return src;
+
+  return `/api/banners/image?url=${encodeURIComponent(src)}`;
 }
 
 function pickBannerImage(item: BannerSourceItem) {
   return (
-    item.bannerImage ||
-    item.detailImage ||
-    item.articleImage ||
-    item.image ||
     item.thumbnail ||
+    item.image ||
+    item.detailImage ||
+    item.bannerImage ||
+    item.articleImage ||
     ""
   );
 }
@@ -72,9 +75,7 @@ function dedupeBannerItems(items: HomeBannerItem[]) {
 
   return items.filter((item) => {
     const key = `${normalizeTitle(item.title)}|${item.kind}|${item.image}`;
-
     if (seen.has(key)) return false;
-
     seen.add(key);
     return true;
   });
@@ -113,15 +114,17 @@ function convert(data: HomeApiResponse | null): HomeBannerItem[] {
       title: item.title ?? "특별 허가 헤드헌팅",
       image: normalizeImage(pickBannerImage(item)),
       kind: "operator" as const,
+      href: item.href,
     }))
     .filter(hasValidImage);
 
   const weapon: HomeBannerItem[] = dedupeSourceItems(data.weaponStack ?? [])
-    .map((item: BannerSourceItem, idx: number) => ({
+    .map((item, idx) => ({
       id: item.id ?? `wp-${idx}`,
       title: item.title ?? "무기 신청",
       image: normalizeImage(pickBannerImage(item)),
       kind: "weapon" as const,
+      href: item.href,
     }))
     .filter(hasValidImage);
 
@@ -138,6 +141,7 @@ function convert(data: HomeApiResponse | null): HomeBannerItem[] {
       title: item.title ?? "이벤트",
       image: normalizeImage(pickBannerImage(item)),
       kind: "event" as const,
+      href: item.href,
     }))
     .filter(hasValidImage);
 
@@ -154,6 +158,7 @@ function convert(data: HomeApiResponse | null): HomeBannerItem[] {
       title: item.title ?? "공지",
       image: normalizeImage(pickBannerImage(item)),
       kind: "notice" as const,
+      href: item.href,
     }))
     .filter(hasValidImage);
 

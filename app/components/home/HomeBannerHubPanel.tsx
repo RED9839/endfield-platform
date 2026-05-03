@@ -78,15 +78,14 @@ export default function HomeBannerHubPanel({
   if (!cur) {
     return (
       <section
-        className={`flex h-full min-h-[340px] items-center justify-center rounded-[24px] border ${YELLOW_BORDER} ${PANEL_BG} text-sm text-zinc-400`}
+        className={`flex h-full min-h-[280px] items-center justify-center rounded-[24px] border ${YELLOW_BORDER} ${PANEL_BG} text-sm text-zinc-400`}
       >
         배너 없음
       </section>
     );
   }
 
-  const canOpenVersionLink =
-    cur.kind === "version" &&
+  const canOpenLink =
     cur.isExternalLinkEnabled &&
     typeof cur.href === "string" &&
     cur.href.trim();
@@ -94,29 +93,29 @@ export default function HomeBannerHubPanel({
   const labelText = getLabel(cur.kind);
 
   return (
-    <section className="grid h-full min-h-[340px] w-full grid-rows-[78px_minmax(0,1fr)] gap-3">
+    <section className="grid h-full min-h-[280px] w-full grid-rows-[64px_minmax(0,1fr)] gap-3">
       <div
-        className={`flex min-h-0 items-center justify-between rounded-[20px] border ${YELLOW_BORDER} ${PANEL_BG} px-5`}
+        className={`flex min-h-0 items-center justify-between rounded-[18px] border ${YELLOW_BORDER} ${PANEL_BG} px-5`}
       >
         <div className="flex min-w-0 items-center gap-3">
-          {canOpenVersionLink ? (
+          {canOpenLink ? (
             <a
               href={cur.href}
               target="_blank"
               rel="noreferrer"
-              className="shrink-0 text-lg font-black text-yellow-300 transition hover:text-yellow-100"
+              className="shrink-0 text-base font-black text-yellow-300 transition hover:text-yellow-100"
             >
               {labelText}
             </a>
           ) : (
-            <span className="shrink-0 text-lg font-black text-yellow-300">
+            <span className="shrink-0 text-base font-black text-yellow-300">
               {labelText}
             </span>
           )}
 
           <span className="h-5 w-px shrink-0 bg-yellow-400/35" />
 
-          <h2 className="truncate text-lg font-black text-yellow-300">
+          <h2 className="truncate text-base font-black text-yellow-300">
             {cur.title}
           </h2>
         </div>
@@ -150,21 +149,23 @@ export default function HomeBannerHubPanel({
         ) : null}
       </div>
 
-      <div
-        className={`relative min-h-0 overflow-hidden rounded-[24px] border ${YELLOW_BORDER} bg-black`}
-      >
-        {!imageFailed ? (
-          <img
-            src={cur.image}
-            alt={cur.title}
-            className="h-full w-full object-cover object-[50%_32%]"
-            onError={() => setImageFailed(true)}
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center bg-black text-sm text-zinc-500">
-            이미지를 불러오지 못했습니다.
-          </div>
-        )}
+      <div className="flex min-h-0 items-center justify-center">
+        <div
+          className={`relative h-full max-h-[210px] w-full overflow-hidden rounded-[20px] border ${YELLOW_BORDER} bg-black`}
+        >
+          {!imageFailed ? (
+            <img
+              src={cur.image}
+              alt={cur.title}
+              className="h-full w-full object-cover object-center"
+              onError={() => setImageFailed(true)}
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center bg-black text-sm text-zinc-500">
+              이미지를 불러오지 못했습니다.
+            </div>
+          )}
+        </div>
       </div>
     </section>
   );

@@ -11,14 +11,17 @@ import BannerSection, {
   type HomeApiResponse,
 } from "./components/home/BannerSection";
 
-type HomeNoticeType = "notice" | "event" | "news";
-
 type SimpleHomeItem = {
+  id?: string;
   title?: string;
   date?: string;
-  type?: HomeNoticeType;
+  type?: string;
   href?: string;
   image?: string;
+  detailImage?: string;
+  bannerImage?: string;
+  articleImage?: string;
+  thumbnail?: string;
 };
 
 const defaultFeaturedOperatorName = "장방이";
@@ -137,10 +140,10 @@ function guessOperatorNameFromTitle(title: string) {
 
 function resolveFeaturedOperatorName(data: HomeApiResponse | null) {
   const merged: SimpleHomeItem[] = [
-    ...(Array.isArray(data?.latest) ? data.latest : []),
-    ...(Array.isArray(data?.notice) ? data.notice : []),
-    ...(Array.isArray(data?.event) ? data.event : []),
-    ...(Array.isArray(data?.news) ? data.news : []),
+    ...((data?.latest ?? []) as SimpleHomeItem[]),
+    ...((data?.notice ?? []) as SimpleHomeItem[]),
+    ...((data?.event ?? []) as SimpleHomeItem[]),
+    ...((data?.news ?? []) as SimpleHomeItem[]),
   ];
 
   const pickup = merged.find(
@@ -216,7 +219,7 @@ export default async function HomePage() {
 
         <section className="min-w-0">
           <div className="flex flex-col gap-6">
-            <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.35fr_1fr]">
+            <div className="flex flex-col gap-6">
               <div className="h-[340px]">
                 <HeroPanel featured={heroFeaturedData} />
               </div>
