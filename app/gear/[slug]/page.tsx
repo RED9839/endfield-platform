@@ -7,6 +7,10 @@ import GearAbilityPanel from "./GearAbilityPanel";
 import GearAttributePanel from "./GearAttributePanel";
 import GearUpgradeComparePanel from "./GearUpgradeComparePanel";
 
+const YELLOW_TEXT = "#ffdc70";
+const YELLOW_BORDER = "rgba(255,196,74,0.14)";
+const YELLOW_BORDER_SOFT = "rgba(255,196,74,0.10)";
+
 const categoryLabelMap: Record<GearDetail["category"], string> = {
   armor: "방어구",
   gloves: "보호 장갑",
@@ -21,164 +25,79 @@ export default async function GearDetailPage({
   const { slug } = await params;
   const gear = getGearDetailBySlug(slug);
 
-  if (!gear) {
-    notFound();
-  }
-
-  const ability2 = gear.ability2;
+  if (!gear) notFound();
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background:
-          "radial-gradient(circle at top, rgba(255,170,40,0.08), transparent 18%), #000",
-        color: "#fff",
-        padding: "24px 28px 40px",
-      }}
-    >
-      <div
-        style={{
-          width: "100%",
-          maxWidth: "1840px",
-          margin: "0 auto",
-        }}
-      >
-        <div
-          style={{
-            marginBottom: "24px",
-            borderBottom: "1px solid rgba(247,166,0,0.28)",
-            paddingBottom: "16px",
-          }}
+    <main className="min-h-screen bg-[#050505] px-4 py-6 text-white md:px-6">
+      <div className="mx-auto max-w-[1840px]">
+        <header
+          className="mb-6 rounded-[24px] bg-[#05070b] p-5 shadow-[0_0_30px_rgba(250,204,21,0.04)]"
+          style={{ border: `1px solid ${YELLOW_BORDER}` }}
         >
-          <div
-            style={{
-              fontSize: "11px",
-              letterSpacing: "0.28em",
-              color: "rgba(255,210,90,0.75)",
-            }}
-          >
-            ENDFIELD SUPPORT PLATFORM
-          </div>
-
-          <div
-            style={{
-              marginTop: "14px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: "12px",
-              flexWrap: "wrap",
-            }}
-          >
+          <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
-              <div
-                style={{
-                  fontSize: "42px",
-                  fontWeight: 900,
-                  color: "#ffcc4d",
-                  letterSpacing: "-0.02em",
-                }}
+              <p
+                className="text-[11px] font-semibold tracking-[0.35em]"
+                style={{ color: YELLOW_TEXT }}
+              >
+                ENDFIELD SUPPORT PLATFORM
+              </p>
+
+              <h1
+                className="mt-2 text-4xl font-black tracking-tight"
+                style={{ color: YELLOW_TEXT }}
               >
                 GEAR
-              </div>
-              <div
-                style={{
-                  marginTop: "8px",
-                  fontSize: "13px",
-                  color: "#9ca3af",
-                }}
-              >
-                Gear Detail
-              </div>
+              </h1>
+
+              <p className="mt-1 text-sm text-zinc-500">Gear Detail</p>
             </div>
 
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                flexWrap: "wrap",
-              }}
-            >
+            <div className="flex flex-wrap gap-2">
               <Link
                 href="/gear"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  minHeight: "38px",
-                  padding: "0 14px",
-                  background: "#000000",
-                  color: "#f3f4f6",
-                  border: "1px solid rgba(247,166,0,0.28)",
-                  textDecoration: "none",
-                  fontSize: "13px",
-                  fontWeight: 800,
-                }}
+                className="rounded-xl bg-black px-4 py-2 text-sm font-bold text-zinc-200 transition hover:bg-[#0b1018]"
+                style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
               >
                 목록으로
               </Link>
+
               <Link
                 href="/"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  minHeight: "38px",
-                  padding: "0 14px",
-                  background: "#000000",
-                  color: "#f3f4f6",
-                  border: "1px solid rgba(247,166,0,0.28)",
-                  textDecoration: "none",
-                  fontSize: "13px",
-                  fontWeight: 800,
-                }}
+                className="rounded-xl bg-black px-4 py-2 text-sm font-bold text-zinc-200 transition hover:bg-[#0b1018]"
+                style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
               >
                 홈으로
               </Link>
             </div>
           </div>
-        </div>
+        </header>
 
-        <div
-          style={{
-            display: "grid",
-            gap: "18px",
-          }}
-        >
+        <div className="flex flex-col gap-5">
           <GearHeroPanel
             gear={gear}
             categoryLabel={categoryLabelMap[gear.category]}
           />
 
           <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: ability2 ? "1fr 1fr 1fr" : "1fr 1fr",
-              gap: "18px",
-            }}
+            className={
+              gear.ability2
+                ? "grid gap-5 xl:grid-cols-3"
+                : "grid gap-5 xl:grid-cols-2"
+            }
           >
-            <GearAbilityPanel
-              title="능력치 1"
-              block={gear.ability1}
-            />
+            <GearAbilityPanel title="능력치 1" block={gear.ability1} />
 
-            {ability2 ? (
-              <GearAbilityPanel
-                title="능력치 2"
-                block={ability2}
-              />
+            {gear.ability2 ? (
+              <GearAbilityPanel title="능력치 2" block={gear.ability2} />
             ) : null}
 
-            <GearAttributePanel
-              block={gear.attribute}
-            />
+            <GearAttributePanel block={gear.attribute} />
           </div>
 
           <GearUpgradeComparePanel gear={gear} />
         </div>
       </div>
-    </div>
+    </main>
   );
 }
