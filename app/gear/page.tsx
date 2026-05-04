@@ -2,17 +2,20 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { CSSProperties, useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { gearDetails } from "@/data/gear-detail-data";
 import type {
+  GearAbilityKey,
+  GearAttributeKey,
   GearCategory,
   GearDetail,
   GearLevel,
   GearQuality,
   GearSetName,
-  GearAbilityKey,
-  GearAttributeKey,
 } from "@/data/gear-types";
+
+const GEAR_ACCENT = "#ffcc4d";
+const FILTER_BG = "#071019";
 
 const categoryLabelMap: Record<GearCategory, string> = {
   armor: "방어구",
@@ -102,462 +105,164 @@ const attributeOptions: Array<{ key: GearAttributeKey; label: string }> = [
   { key: "heatNatureDamage", label: "열기와 자연 피해 보너스" },
 ];
 
-const panelClip: CSSProperties["clipPath"] =
-  "polygon(16px 0, calc(100% - 16px) 0, 100% 16px, 100% calc(100% - 16px), calc(100% - 16px) 100%, 16px 100%, 0 calc(100% - 16px), 0 16px)";
+function getPrimaryAttributeText(item: GearDetail) {
+  if (!item.attributeTypes || item.attributeTypes.length === 0) return "";
 
-const buttonClip: CSSProperties["clipPath"] =
-  "polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)";
+  const match = attributeOptions.find((option) =>
+    item.attributeTypes.includes(option.key),
+  );
 
-const styles: Record<string, CSSProperties> = {
-  page: {
-    minHeight: "100vh",
-    background: "#000000",
-    color: "#ffffff",
-    padding: "24px 28px 40px",
-  },
-  shell: {
-    width: "100%",
-    maxWidth: "1840px",
-    margin: "0 auto",
-  },
-  header: {
-    marginBottom: "24px",
-    borderBottom: "1px solid rgba(247,166,0,0.28)",
-    paddingBottom: "16px",
-  },
-  subTitle: {
-    fontSize: "11px",
-    letterSpacing: "0.28em",
-    color: "#ffcc4d",
-  },
-  title: {
-    marginTop: "8px",
-    fontSize: "42px",
-    fontWeight: 900,
-    color: "#ffcc4d",
-    letterSpacing: "-0.02em",
-  },
-  desc: {
-    marginTop: "8px",
-    fontSize: "13px",
-    color: "#9ca3af",
-  },
-  headerTopRow: {
-    marginTop: "14px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: "12px",
-    flexWrap: "wrap",
-  },
-  headerButtonRow: {
-    display: "flex",
-    alignItems: "center",
-    gap: "8px",
-    flexWrap: "wrap",
-  },
-  topLinkButton: {
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: "38px",
-    padding: "0 14px",
-    background: "#000000",
-    color: "#f3f4f6",
-    border: "1px solid rgba(247,166,0,0.28)",
-    textDecoration: "none",
-    fontSize: "13px",
-    fontWeight: 800,
-    clipPath: buttonClip,
-  },
-  layout: {
-    display: "grid",
-    gridTemplateColumns: "280px minmax(0, 1fr)",
-    gap: "28px",
-    alignItems: "start",
-  },
-  sidebar: {
-    width: "100%",
-    background: "#000000",
-    border: "1px solid rgba(247,166,0,0.26)",
-    padding: "16px",
-    position: "sticky",
-    top: "18px",
-    clipPath: panelClip,
-    boxShadow: "0 10px 28px rgba(0,0,0,0.28)",
-    maxHeight: "calc(100vh - 36px)",
-    overflowY: "auto",
-    overflowX: "hidden",
-  },
-  content: {
-    minWidth: 0,
-    paddingRight: "8px",
-  },
-  sectionTitle: {
-    marginBottom: "10px",
-    fontSize: "12px",
-    fontWeight: 800,
-    letterSpacing: "0.14em",
-    color: "#ffcc4d",
-  },
-  inputWrap: {
-    position: "relative",
-  },
-  inputIcon: {
-    position: "absolute",
-    left: "12px",
-    top: "50%",
-    transform: "translateY(-50%)",
-    color: "#8b98ad",
-    fontSize: "12px",
-    pointerEvents: "none",
-  },
-  input: {
-    width: "100%",
-    height: "38px",
-    background: "#000000",
-    color: "#ffffff",
-    border: "1px solid #3a4250",
-    padding: "0 12px 0 34px",
-    fontSize: "13px",
-    outline: "none",
-    clipPath: buttonClip,
-  },
-  buttonList: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "7px",
-  },
-  toolbar: {
-    marginBottom: "14px",
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: "12px",
-    flexWrap: "wrap",
-    padding: "0 4px",
-  },
-  resultBar: {
-    fontSize: "13px",
-    color: "#9ca3af",
-  },
-  gridOuter: {
-    width: "100%",
-    maxWidth: "1500px",
-  },
-  grid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fill, minmax(168px, 168px))",
-    gap: "14px",
-    alignItems: "start",
-    justifyContent: "start",
-    padding: "2px 4px 0",
-  },
-  emptyState: {
-    minHeight: "240px",
-    border: "1px solid rgba(247,166,0,0.18)",
-    background: "#05070b",
-    clipPath: panelClip,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    color: "#9ca3af",
-    fontSize: "14px",
-    textAlign: "center",
-    padding: "24px",
-  },
-  cardLink: {
-    textDecoration: "none",
-    color: "inherit",
-    display: "block",
-  },
-  card: {
-    width: "168px",
-    height: "370px",
-    background: "#000000",
-    overflow: "hidden",
-    display: "flex",
-    flexDirection: "column",
-    clipPath: panelClip,
-    boxShadow: "0 10px 24px rgba(0,0,0,0.28)",
-    transition: "transform 0.18s ease, box-shadow 0.18s ease",
-  },
-  imageWrap: {
-    position: "relative",
-    width: "168px",
-    height: "200px",
-    background: "#000000",
-    overflow: "hidden",
-    flexShrink: 0,
-  },
-  overlay: {
-    position: "absolute",
-    inset: 0,
-    background: "rgba(0,0,0,0.16)",
-    pointerEvents: "none",
-  },
-  info: {
-    background: "#000000",
-    padding: "8px",
-    borderTop: "1px solid rgba(255,255,255,0.08)",
-    display: "flex",
-    flexDirection: "column",
-    flex: 1,
-    minHeight: 0,
-  },
-  name: {
-    fontSize: "17px",
-    fontWeight: 900,
-    color: "#ffffff",
-    lineHeight: 1.15,
-    minHeight: "40px",
-    maxHeight: "40px",
-    overflow: "hidden",
-    wordBreak: "keep-all",
-    display: "-webkit-box",
-    WebkitLineClamp: 2,
-    WebkitBoxOrient: "vertical",
-  },
-  enName: {
-    marginTop: "3px",
-    fontSize: "11px",
-    color: "#cbd5e1",
-    lineHeight: 1.2,
-    minHeight: "26px",
-    maxHeight: "26px",
-    overflow: "hidden",
-    display: "-webkit-box",
-    WebkitLineClamp: 2,
-    WebkitBoxOrient: "vertical",
-    wordBreak: "break-word",
-  },
-  cardBadgeRow: {
-    display: "flex",
-    flexWrap: "wrap",
-    gap: "4px",
-    marginTop: "6px",
-    minHeight: "24px",
-    maxHeight: "48px",
-    alignContent: "flex-start",
-    overflow: "hidden",
-  },
-  cardSingleRow: {
-    display: "flex",
-    flexWrap: "wrap",
-    gap: "4px",
-    marginTop: "4px",
-    minHeight: "24px",
-    maxHeight: "24px",
-    alignContent: "flex-start",
-    overflow: "hidden",
-  },
-  badge: {
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    width: "fit-content",
-    maxWidth: "100%",
-    minHeight: "22px",
-    padding: "2px 6px",
-    fontSize: "10px",
-    fontWeight: 700,
-    lineHeight: 1.1,
-    border: "1px solid #444444",
-    background: "#000000",
-    color: "#ffffff",
-    gap: "4px",
-    boxSizing: "border-box",
-    whiteSpace: "nowrap",
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    clipPath: buttonClip,
-    flex: "0 0 auto",
-  },
-  badgeIconWrap: {
-    position: "relative",
-    width: "11px",
-    height: "11px",
-    flexShrink: 0,
-  },
-  filterButton: {
-    width: "100%",
-    minHeight: "40px",
-    padding: "8px 10px",
-    textAlign: "left",
-    fontSize: "13px",
-    background: "#000000",
-    color: "#d4d4d8",
-    border: "1px solid #3f3f46",
-    cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-    gap: "8px",
-    clipPath: buttonClip,
-  },
-  filterIconWrap: {
-    position: "relative",
-    width: "16px",
-    height: "16px",
-    flexShrink: 0,
-  },
-  filterLabel: {
-    flex: 1,
-    minWidth: 0,
-  },
-};
+  return match?.label ?? item.attribute?.label ?? "";
+}
 
 function FilterButton({
   active,
   label,
   onClick,
   iconSrc,
-  borderColor,
+  color = GEAR_ACCENT,
+  colored = false,
 }: {
   active: boolean;
   label: string;
   onClick: () => void;
   iconSrc?: string;
-  borderColor?: string;
+  color?: string;
+  colored?: boolean;
 }) {
-  const resolvedBorderColor = borderColor;
+  const pointColor = colored ? color : GEAR_ACCENT;
 
   return (
     <button
       type="button"
       onClick={onClick}
+      className="group flex h-[38px] w-full items-center gap-2 rounded-xl border px-3 text-left text-[12px] font-bold transition hover:bg-[#101923]"
       style={{
-        ...styles.filterButton,
-        border: active
-          ? `1px solid ${resolvedBorderColor ?? "#f7a600"}`
-          : `1px solid ${resolvedBorderColor ?? "#3f3f46"}`,
-        background: active ? "rgba(247,166,0,0.12)" : "#000000",
-        color: active ? "#ffd873" : "#d4d4d8",
+        borderColor: active
+          ? pointColor
+          : colored
+            ? `${pointColor}88`
+            : "rgba(255, 204, 77, 0.18)",
+        background: active ? `${pointColor}22` : FILTER_BG,
+        color: active ? "#ffffff" : "#d4d4d8",
       }}
     >
       {iconSrc ? (
-        <span style={styles.filterIconWrap}>
+        <span className="relative h-3.5 w-3.5 shrink-0">
           <Image
             src={iconSrc}
             alt=""
             fill
-            sizes="16px"
-            style={{ objectFit: "contain" }}
+            sizes="14px"
+            className="object-contain"
           />
         </span>
       ) : (
         <span
-          style={{
-            width: "16px",
-            height: "16px",
-            flexShrink: 0,
-            display: "inline-flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: "10px",
-            color: active ? "#ffd873" : "#6b7280",
-          }}
+          className="flex h-3.5 w-3.5 shrink-0 items-center justify-center text-[9px]"
+          style={{ color: pointColor }}
         >
           ◆
         </span>
       )}
-      <span style={styles.filterLabel}>{label}</span>
+
+      <span className="min-w-0 flex-1 truncate leading-none">{label}</span>
     </button>
   );
 }
 
-function Badge({
-  label,
-  iconSrc,
-  bg,
-  color = "#ffffff",
-  borderColor,
+function GearChip({
+  children,
+  color,
+  muted = false,
 }: {
-  label: string;
-  iconSrc?: string;
-  bg?: string;
+  children: ReactNode;
   color?: string;
-  borderColor?: string;
+  muted?: boolean;
 }) {
+  const chipColor = color ?? GEAR_ACCENT;
+
   return (
     <span
+      className="shrink-0 whitespace-nowrap rounded-md bg-black px-1.5 py-[1px] text-[10px] font-black leading-4"
       style={{
-        ...styles.badge,
-        background: bg ?? "#000000",
-        color,
-        border: `1px solid ${borderColor ?? "#444444"}`,
+        border: muted
+          ? "1px solid rgba(255,255,255,0.24)"
+          : `1px solid ${chipColor}`,
+        color: muted ? "#e5e7eb" : chipColor,
       }}
-      title={label}
     >
-      {iconSrc ? (
-        <span style={styles.badgeIconWrap}>
-          <Image
-            src={iconSrc}
-            alt=""
-            fill
-            sizes="11px"
-            style={{ objectFit: "contain" }}
-          />
-        </span>
-      ) : null}
-      <span>{label}</span>
+      {children}
     </span>
   );
 }
 
-function getPrimaryAttributeText(item: GearDetail) {
-  if (!item.attributeTypes || item.attributeTypes.length === 0) return "-";
-
-  const match = attributeOptions.find((option) =>
-    item.attributeTypes.includes(option.key)
-  );
-
-  return match?.label ?? item.attribute.label ?? "-";
-}
-
 function GearCard({ item }: { item: GearDetail }) {
   const qualityColor = qualityColorMap[item.quality];
+  const attributeText = getPrimaryAttributeText(item);
 
   return (
-    <Link href={`/gear/${item.slug}`} style={styles.cardLink}>
-      <div
-        style={{
-          ...styles.card,
-          border: `2px solid ${qualityColor}`,
-        }}
-      >
-        <div style={styles.imageWrap}>
-          <Image
-            src={item.image}
-            alt={item.name}
-            fill
-            sizes="168px"
-            style={{ objectFit: "cover" }}
-          />
-          <div style={styles.overlay} />
-        </div>
+    <Link
+      href={`/gear/${item.slug}`}
+      className="group relative block h-[244px] overflow-hidden rounded-[18px] border border-yellow-500/10 bg-black transition hover:-translate-y-1 hover:border-yellow-400/35"
+    >
+      <Image
+        src={item.image}
+        alt={item.name}
+        fill
+        sizes="(max-width: 1840px) 12.5vw, 180px"
+        className="object-cover object-center transition duration-300 group-hover:scale-105"
+      />
 
-        <div style={styles.info}>
-          <div style={styles.name}>{item.name}</div>
-          <div style={styles.enName}>{item.enName}</div>
+      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/55 to-transparent" />
 
-          <div style={styles.cardBadgeRow}>
-            <Badge
-              label={`${categoryLabelMap[item.category]} · Lv.${item.level}`}
-              borderColor={qualityColor}
-            />
-            <Badge label={item.ability1.label} />
-            {item.ability2 ? <Badge label={item.ability2.label} /> : null}
-          </div>
+      <div className="absolute bottom-0 left-0 w-full p-3">
+        <h3 className="line-clamp-2 text-[14px] font-black text-yellow-300">
+          {item.name}
+        </h3>
 
-          <div style={styles.cardSingleRow}>
-            <Badge
-              label={getPrimaryAttributeText(item)}
-              borderColor={qualityColor}
-            />
-          </div>
+        <p className="mt-1 line-clamp-1 text-[10px] text-zinc-300">
+          {item.enName}
+        </p>
+
+        <div className="mt-2 flex flex-wrap gap-1 overflow-hidden">
+          <GearChip color={qualityColor}>
+            {categoryLabelMap[item.category]} · Lv.{item.level}
+          </GearChip>
+
+          {item.ability1?.label ? (
+            <GearChip muted>{item.ability1.label}</GearChip>
+          ) : null}
+
+          {item.ability2?.label ? (
+            <GearChip muted>{item.ability2.label}</GearChip>
+          ) : null}
+
+          {attributeText ? (
+            <GearChip color={qualityColor}>{attributeText}</GearChip>
+          ) : null}
         </div>
       </div>
     </Link>
+  );
+}
+
+function FilterGroup({
+  title,
+  children,
+  last = false,
+}: {
+  title: string;
+  children: ReactNode;
+  last?: boolean;
+}) {
+  return (
+    <div className={last ? "" : "mb-5"}>
+      <h2 className="mb-2 text-[11px] font-black tracking-[0.2em] text-yellow-300">
+        {title}
+      </h2>
+      <div className="flex flex-col gap-2">{children}</div>
+    </div>
   );
 }
 
@@ -607,54 +312,66 @@ export default function GearPage() {
   const sortedItems = useMemo(() => {
     return [...filteredItems].sort((a, b) => {
       if (b.quality !== a.quality) return b.quality - a.quality;
+
       if (categoryOrderMap[a.category] !== categoryOrderMap[b.category]) {
         return categoryOrderMap[a.category] - categoryOrderMap[b.category];
       }
+
       const setCompare = a.setName.localeCompare(b.setName, "ko");
       if (setCompare !== 0) return setCompare;
+
       if (b.level !== a.level) return b.level - a.level;
+
       return a.name.localeCompare(b.name, "ko");
     });
   }, [filteredItems]);
 
   return (
-    <div style={styles.page}>
-      <div style={styles.shell}>
-        <div style={styles.header}>
-          <div style={styles.subTitle}>ENDFIELD SUPPORT PLATFORM</div>
-
-          <div style={styles.headerTopRow}>
+    <main className="min-h-screen bg-[#050505] px-4 py-5 text-white md:px-6">
+      <div className="mx-auto max-w-[1840px]">
+        <header className="mb-5 rounded-[24px] border border-yellow-500/15 bg-[#05070b] p-5 shadow-[0_0_30px_rgba(250,204,21,0.04)]">
+          <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
-              <div style={styles.title}>GEAR</div>
-              <div style={styles.desc}>Gear List</div>
+              <p className="text-[11px] font-semibold tracking-[0.35em] text-yellow-500/70">
+                ENDFIELD SUPPORT PLATFORM
+              </p>
+              <h1 className="mt-2 text-4xl font-black tracking-tight text-yellow-300">
+                GEAR
+              </h1>
+              <p className="mt-1 text-sm text-zinc-500">Gear List</p>
             </div>
 
-            <div style={styles.headerButtonRow}>
-              <Link href="/" style={styles.topLinkButton}>
-                홈으로
-              </Link>
-            </div>
+            <Link
+              href="/"
+              className="rounded-xl border border-yellow-500/20 bg-black px-4 py-2 text-sm font-bold text-zinc-200 transition hover:border-yellow-400/40 hover:bg-[#0b1018] hover:text-yellow-300"
+            >
+              홈으로
+            </Link>
           </div>
-        </div>
+        </header>
 
-        <div style={styles.layout}>
-          <aside style={styles.sidebar}>
-            <div style={{ marginBottom: "18px" }}>
-              <div style={styles.sectionTitle}>검색</div>
-              <div style={styles.inputWrap}>
-                <span style={styles.inputIcon}>⌕</span>
+        <div className="grid gap-5 lg:grid-cols-[280px_minmax(0,1fr)]">
+          <aside className="sticky top-5 flex max-h-[calc(100vh-40px)] flex-col overflow-hidden rounded-[24px] border border-yellow-500/15 bg-[#05070b] shadow-[0_0_30px_rgba(250,204,21,0.04)]">
+            <div className="shrink-0 border-b border-yellow-500/10 bg-[#05070b] p-4">
+              <h2 className="mb-2 text-[11px] font-black tracking-[0.2em] text-yellow-300">
+                검색
+              </h2>
+
+              <div className="relative">
+                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-zinc-500">
+                  ⌕
+                </span>
                 <input
                   value={keyword}
                   onChange={(e) => setKeyword(e.target.value)}
                   placeholder="이름 / 세트 검색"
-                  style={styles.input}
+                  className="h-9 w-full rounded-xl border border-white/20 bg-[#071019] pl-9 pr-3 text-xs text-white outline-none transition placeholder:text-zinc-500 focus:border-yellow-400/50"
                 />
               </div>
             </div>
 
-            <div style={{ marginBottom: "18px" }}>
-              <div style={styles.sectionTitle}>장비 유형</div>
-              <div style={styles.buttonList}>
+            <div className="min-h-0 flex-1 overflow-y-auto p-4">
+              <FilterGroup title="장비 유형">
                 <FilterButton
                   active={category === "all"}
                   label="전체"
@@ -678,12 +395,9 @@ export default function GearPage() {
                   iconSrc={categoryIconMap.kit}
                   onClick={() => setCategory("kit")}
                 />
-              </div>
-            </div>
+              </FilterGroup>
 
-            <div style={{ marginBottom: "18px" }}>
-              <div style={styles.sectionTitle}>세트 유형</div>
-              <div style={styles.buttonList}>
+              <FilterGroup title="세트 유형">
                 <FilterButton
                   active={setName === "all"}
                   label="전체"
@@ -697,12 +411,9 @@ export default function GearPage() {
                     onClick={() => setSetName(value)}
                   />
                 ))}
-              </div>
-            </div>
+              </FilterGroup>
 
-            <div style={{ marginBottom: "18px" }}>
-              <div style={styles.sectionTitle}>속성</div>
-              <div style={styles.buttonList}>
+              <FilterGroup title="속성">
                 <FilterButton
                   active={attributeFilter === "all"}
                   label="전체"
@@ -716,12 +427,9 @@ export default function GearPage() {
                     onClick={() => setAttributeFilter(option.key)}
                   />
                 ))}
-              </div>
-            </div>
+              </FilterGroup>
 
-            <div style={{ marginBottom: "18px" }}>
-              <div style={styles.sectionTitle}>능력치</div>
-              <div style={styles.buttonList}>
+              <FilterGroup title="능력치">
                 <FilterButton
                   active={abilityFilter === "all"}
                   label="전체"
@@ -735,12 +443,9 @@ export default function GearPage() {
                     onClick={() => setAbilityFilter(option.key)}
                   />
                 ))}
-              </div>
-            </div>
+              </FilterGroup>
 
-            <div style={{ marginBottom: "18px" }}>
-              <div style={styles.sectionTitle}>품질</div>
-              <div style={styles.buttonList}>
+              <FilterGroup title="품질">
                 <FilterButton
                   active={quality === "all"}
                   label="전체"
@@ -751,16 +456,14 @@ export default function GearPage() {
                     key={value}
                     active={quality === value}
                     label={qualityLabelMap[value as GearQuality]}
-                    borderColor={qualityColorMap[value as GearQuality]}
+                    colored
+                    color={qualityColorMap[value as GearQuality]}
                     onClick={() => setQuality(value as GearQuality)}
                   />
                 ))}
-              </div>
-            </div>
+              </FilterGroup>
 
-            <div>
-              <div style={styles.sectionTitle}>장비 레벨</div>
-              <div style={styles.buttonList}>
+              <FilterGroup title="장비 레벨" last>
                 <FilterButton
                   active={level === "all"}
                   label="전체"
@@ -774,39 +477,37 @@ export default function GearPage() {
                     onClick={() => setLevel(value)}
                   />
                 ))}
-              </div>
+              </FilterGroup>
             </div>
           </aside>
 
-          <main style={styles.content}>
-            <div style={styles.toolbar}>
-              <div style={styles.resultBar}>
+          <section className="min-w-0 rounded-[24px] border border-yellow-500/15 bg-[#05070b] p-3 shadow-[0_0_30px_rgba(250,204,21,0.04)]">
+            <div className="mb-3 flex items-center justify-between border-b border-yellow-500/10 pb-3">
+              <p className="text-sm text-zinc-400">
                 총{" "}
-                <span style={{ color: "#ffcc4d", fontWeight: 700 }}>
+                <span className="font-black text-yellow-300">
                   {sortedItems.length}
                 </span>
                 개
-              </div>
+              </p>
             </div>
 
             {sortedItems.length > 0 ? (
-              <div style={styles.gridOuter}>
-                <div style={styles.grid}>
-                  {sortedItems.map((item) => (
-                    <GearCard key={item.slug} item={item} />
-                  ))}
-                </div>
+              <div className="grid grid-cols-8 gap-3 overflow-hidden">
+                {sortedItems.map((item) => (
+                  <GearCard key={item.slug} item={item} />
+                ))}
               </div>
             ) : (
-              <div style={styles.emptyState}>
+              <div className="flex min-h-[260px] items-center justify-center rounded-[20px] border border-yellow-500/10 bg-black p-6 text-center text-sm text-zinc-500">
                 등록된 Gear 데이터가 없습니다.
                 <br />
                 gear-detail-data.ts에 Gear를 추가하면 여기에 표시됩니다.
               </div>
             )}
-          </main>
+          </section>
         </div>
       </div>
-    </div>
+    </main>
   );
 }
