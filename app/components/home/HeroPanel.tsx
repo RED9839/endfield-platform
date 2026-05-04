@@ -17,7 +17,7 @@ export default function HeroPanel({
   featured: FeaturedOperator;
 }) {
   return (
-    <section className="relative h-[340px] w-full overflow-hidden rounded-[24px] border border-yellow-500/15 bg-black">
+    <section className="relative h-full min-h-0 w-full overflow-hidden rounded-[24px] border border-yellow-500/15 bg-black">
       <Image
         src={featured.heroImage}
         alt={featured.name}

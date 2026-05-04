@@ -26,7 +26,7 @@ function getLabel(kind: HomeBannerKind) {
   if (kind === "operator") return "특별 허가 헤드헌팅";
   if (kind === "weapon") return "무기 신청";
   if (kind === "event") return "이벤트";
-  if (kind === "version") return "버전 업데이트 설명";
+  if (kind === "version") return "버전 업데이트";
   if (kind === "news") return "뉴스";
   return "공지";
 }
@@ -78,60 +78,50 @@ export default function HomeBannerHubPanel({
   if (!cur) {
     return (
       <section
-        className={`flex h-full min-h-[280px] items-center justify-center rounded-[24px] border ${YELLOW_BORDER} ${PANEL_BG} text-sm text-zinc-400`}
+        className={`flex h-full w-full items-center justify-center rounded-[24px] border ${YELLOW_BORDER} ${PANEL_BG} text-sm text-zinc-400`}
       >
         배너 없음
       </section>
     );
   }
 
-  const canOpenLink =
-    cur.isExternalLinkEnabled &&
-    typeof cur.href === "string" &&
-    cur.href.trim();
-
   const labelText = getLabel(cur.kind);
 
   return (
-    <section className="grid h-full min-h-[280px] w-full grid-rows-[64px_minmax(0,1fr)] gap-3">
+    <section className="grid h-full w-full grid-rows-[52px_minmax(0,1fr)] gap-2 overflow-hidden">
+      {/* 상단 텍스트 */}
       <div
-        className={`flex min-h-0 items-center justify-between rounded-[18px] border ${YELLOW_BORDER} ${PANEL_BG} px-5`}
+        className={`flex min-h-0 items-center justify-between overflow-hidden rounded-[18px] border ${YELLOW_BORDER} ${PANEL_BG} px-4`}
       >
-        <div className="flex min-w-0 items-center gap-3">
-          {canOpenLink ? (
-            <a
-              href={cur.href}
-              target="_blank"
-              rel="noreferrer"
-              className="shrink-0 text-base font-black text-yellow-300 transition hover:text-yellow-100"
-            >
-              {labelText}
-            </a>
-          ) : (
-            <span className="shrink-0 text-base font-black text-yellow-300">
-              {labelText}
-            </span>
-          )}
+        <div className="flex min-w-0 flex-1 items-center gap-3 overflow-hidden">
+          <span
+            title={labelText}
+            className="max-w-[150px] shrink-0 truncate text-sm font-black text-yellow-300"
+          >
+            {labelText}
+          </span>
 
           <span className="h-5 w-px shrink-0 bg-yellow-400/35" />
 
-          <h2 className="truncate text-base font-black text-yellow-300">
+          <h2
+            title={cur.title}
+            className="min-w-0 flex-1 truncate text-sm font-black text-yellow-300"
+          >
             {cur.title}
           </h2>
         </div>
 
         {items.length > 1 ? (
-          <div className="flex shrink-0 items-center gap-3 text-sm font-black">
+          <div className="ml-3 flex shrink-0 items-center gap-2 text-sm font-black">
             <button
               type="button"
               onClick={movePrev}
               className="text-yellow-300 transition hover:text-yellow-100"
-              aria-label="이전 배너"
             >
               &lt;
             </button>
 
-            <span className="min-w-[64px] text-center text-zinc-400">
+            <span className="min-w-[48px] text-center text-zinc-400">
               <span className="text-yellow-300">{safeIndex + 1}</span>
               <span className="mx-1 text-zinc-600">/</span>
               <span>{items.length}</span>
@@ -141,7 +131,6 @@ export default function HomeBannerHubPanel({
               type="button"
               onClick={moveNext}
               className="text-yellow-300 transition hover:text-yellow-100"
-              aria-label="다음 배너"
             >
               &gt;
             </button>
@@ -149,23 +138,29 @@ export default function HomeBannerHubPanel({
         ) : null}
       </div>
 
-      <div className="flex min-h-0 items-center justify-center">
-        <div
-          className={`relative h-full max-h-[210px] w-full overflow-hidden rounded-[20px] border ${YELLOW_BORDER} bg-black`}
-        >
-          {!imageFailed ? (
+      {/* 이미지 영역 */}
+      <div
+        className={`relative flex h-full min-h-0 w-full items-center justify-center overflow-hidden rounded-[20px] border ${YELLOW_BORDER} bg-black`}
+      >
+        {!imageFailed ? (
+          <a
+            href="https://endfield.gryphline.com/ko-kr/news"
+            target="_blank"
+            rel="noreferrer"
+            className="block h-full w-full"
+          >
             <img
               src={cur.image}
               alt={cur.title}
-              className="h-full w-full object-cover object-center"
+              className="block h-full w-full object-cover object-center"
               onError={() => setImageFailed(true)}
             />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center bg-black text-sm text-zinc-500">
-              이미지를 불러오지 못했습니다.
-            </div>
-          )}
-        </div>
+          </a>
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-black text-sm text-zinc-500">
+            이미지를 불러오지 못했습니다.
+          </div>
+        )}
       </div>
     </section>
   );

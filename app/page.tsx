@@ -26,6 +26,9 @@ type SimpleHomeItem = {
 
 const defaultFeaturedOperatorName = "장방이";
 
+const TOP_HERO_HEIGHT = "380px";
+const TOP_GRID_COLUMNS = "minmax(0,1.55fr) minmax(420px,0.9fr)";
+
 const navigationItems = [
   { label: "오퍼레이터", href: "/operators" },
   { label: "무기", href: "/weapons" },
@@ -205,11 +208,11 @@ export default async function HomePage() {
         heroImage: `/operators/${featuredOperator.slug}/full.webp`,
       }
     : {
-        name: "라스트 라이트",
-        enName: "LASTRITE",
-        slug: "lastrite",
-        href: "/operators/lastrite",
-        heroImage: "/operators/lastrite/full.webp",
+        name: "장방이",
+        enName: "Zhuang Fangyi",
+        slug: "zhuang-fangyi",
+        href: "/operators/zhuang-fangyi",
+        heroImage: "/operators/zhuang-fangyi/full.webp",
       };
 
   return (
@@ -219,12 +222,18 @@ export default async function HomePage() {
 
         <section className="min-w-0">
           <div className="flex flex-col gap-6">
-            <div className="flex flex-col gap-6">
-              <div className="h-[340px]">
+            <div
+              className="grid gap-6"
+              style={{
+                height: TOP_HERO_HEIGHT,
+                gridTemplateColumns: TOP_GRID_COLUMNS,
+              }}
+            >
+              <div className="min-h-0 min-w-0 overflow-hidden">
                 <HeroPanel featured={heroFeaturedData} />
               </div>
 
-              <div className="h-[340px]">
+              <div className="min-h-0 min-w-0 overflow-hidden">
                 <BannerSection initialData={homeData} />
               </div>
             </div>

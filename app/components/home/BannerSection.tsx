@@ -75,7 +75,9 @@ function dedupeBannerItems(items: HomeBannerItem[]) {
 
   return items.filter((item) => {
     const key = `${normalizeTitle(item.title)}|${item.kind}|${item.image}`;
+
     if (seen.has(key)) return false;
+
     seen.add(key);
     return true;
   });
@@ -109,21 +111,21 @@ function convert(data: HomeApiResponse | null): HomeBannerItem[] {
 
   const operator: HomeBannerItem[] = all
     .filter(isOperator)
-    .map((item, idx) => ({
-      id: item.id ?? `op-${idx}`,
+    .map<HomeBannerItem>((item, idx) => ({
+      id: item.id ?? `operator-${idx}`,
       title: item.title ?? "특별 허가 헤드헌팅",
       image: normalizeImage(pickBannerImage(item)),
-      kind: "operator" as const,
+      kind: "operator",
       href: item.href,
     }))
     .filter(hasValidImage);
 
   const weapon: HomeBannerItem[] = dedupeSourceItems(data.weaponStack ?? [])
-    .map((item, idx) => ({
-      id: item.id ?? `wp-${idx}`,
+    .map<HomeBannerItem>((item, idx) => ({
+      id: item.id ?? `weapon-${idx}`,
       title: item.title ?? "무기 신청",
       image: normalizeImage(pickBannerImage(item)),
-      kind: "weapon" as const,
+      kind: "weapon",
       href: item.href,
     }))
     .filter(hasValidImage);
@@ -136,11 +138,11 @@ function convert(data: HomeApiResponse | null): HomeBannerItem[] {
         !isWeapon(item) &&
         !isVersion(item),
     )
-    .map((item, idx) => ({
-      id: item.id ?? `ev-${idx}`,
+    .map<HomeBannerItem>((item, idx) => ({
+      id: item.id ?? `event-${idx}`,
       title: item.title ?? "이벤트",
       image: normalizeImage(pickBannerImage(item)),
-      kind: "event" as const,
+      kind: "event",
       href: item.href,
     }))
     .filter(hasValidImage);
@@ -153,11 +155,11 @@ function convert(data: HomeApiResponse | null): HomeBannerItem[] {
         !isWeapon(item) &&
         !isVersion(item),
     )
-    .map((item, idx) => ({
-      id: item.id ?? `nt-${idx}`,
+    .map<HomeBannerItem>((item, idx) => ({
+      id: item.id ?? `notice-${idx}`,
       title: item.title ?? "공지",
       image: normalizeImage(pickBannerImage(item)),
-      kind: "notice" as const,
+      kind: "notice",
       href: item.href,
     }))
     .filter(hasValidImage);
@@ -165,11 +167,11 @@ function convert(data: HomeApiResponse | null): HomeBannerItem[] {
   const version: HomeBannerItem[] = all
     .filter(isVersion)
     .slice(0, 1)
-    .map((item) => ({
-      id: item.id ?? "version",
+    .map<HomeBannerItem>((item) => ({
+      id: item.id ?? "version-update",
       title: item.title ?? "버전 업데이트 설명",
       image: normalizeImage(pickBannerImage(item)),
-      kind: "version" as const,
+      kind: "version",
       href: item.href,
       isExternalLinkEnabled: true,
     }))
@@ -192,13 +194,25 @@ export default function BannerSection({
   const [data, setData] = useState<HomeApiResponse | null>(initialData);
 
   useEffect(() => {
+    let ignore = false;
+
     fetch("/api/home", { cache: "no-store" })
-      .then((r) => r.json())
-      .then((json: HomeApiResponse) => setData(json))
+      .then((response) => response.json())
+      .then((json: HomeApiResponse) => {
+        if (!ignore) setData(json);
+      })
       .catch(() => {});
+
+    return () => {
+      ignore = true;
+    };
   }, []);
 
   const items = useMemo(() => convert(data), [data]);
 
-  return <HomeBannerHubPanel items={items} />;
+  return (
+    <div className="h-full min-h-0 w-full overflow-hidden">
+      <HomeBannerHubPanel items={items} />
+    </div>
+  );
 }
