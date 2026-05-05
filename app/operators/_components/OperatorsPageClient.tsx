@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { CSSProperties, useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import {
   operatorDetails,
   type OperatorDetail,
@@ -11,6 +11,14 @@ import {
   type OperatorClass,
   type WeaponType,
 } from "@/data/operators-detail-data";
+
+const YELLOW_TEXT = "#ffdc70";
+const YELLOW_BORDER = "rgba(255,196,74,0.14)";
+const YELLOW_BORDER_SOFT = "rgba(255,196,74,0.10)";
+const FILTER_BG = "#071019";
+
+const CARD_WIDTH = 170;
+const CARD_HEIGHT = 238;
 
 const elementLabelMap: Record<OperatorElement, string> = {
   physical: "물리",
@@ -35,12 +43,6 @@ const weaponLabelMap: Record<WeaponType, string> = {
   polearm: "장병기",
   handcannon: "권총",
   artsunit: "아츠 유닛",
-};
-
-const rarityBorderMap: Record<OperatorRarity, string> = {
-  6: "#ff8a1f",
-  5: "#f0c94a",
-  4: "#9a63ff",
 };
 
 const rarityIconMap: Record<OperatorRarity, string> = {
@@ -74,6 +76,12 @@ const weaponIconMap: Record<WeaponType, string> = {
   artsunit: "/icons/weapons/artsunit.webp",
 };
 
+const rarityColorMap: Record<OperatorRarity, string> = {
+  6: "#ff8a1f",
+  5: "#f0c94a",
+  4: "#9a63ff",
+};
+
 const elementColorMap: Record<OperatorElement, string> = {
   physical: "#808080",
   cryo: "#20c0c0",
@@ -82,298 +90,13 @@ const elementColorMap: Record<OperatorElement, string> = {
   electric: "#f0b000",
 };
 
-
-const styles: Record<string, CSSProperties> = {
-  page: {
-    minHeight: "100vh",
-    background:
-      "radial-gradient(circle at 20% 20%, rgba(255,212,74,0.05), transparent 25%), radial-gradient(circle at 80% 80%, rgba(255,212,74,0.04), transparent 25%), #050505",
-    color: "#ededed",
-    padding: "24px 28px 40px",
-  },
-  shell: {
-    width: "100%",
-    maxWidth: "1840px",
-    margin: "0 auto",
-  },
-  header: {
-    marginBottom: "24px",
-    background: "#05070b",
-    border: "1px solid rgba(255,196,74,0.14)",
-    borderRadius: "24px",
-    padding: "18px 20px",
-    boxShadow: "0 18px 44px rgba(0,0,0,0.28)",
-    overflow: "hidden",
-  },
-  subTitle: {
-    fontSize: "11px",
-    letterSpacing: "0.28em",
-    color: "rgba(255,220,112,0.78)",
-  },
-  title: {
-    marginTop: "8px",
-    fontSize: "42px",
-    fontWeight: 900,
-    color: "#ffd24a",
-    letterSpacing: "-0.02em",
-  },
-  desc: {
-    marginTop: "8px",
-    fontSize: "13px",
-    color: "#9ca3af",
-  },
-  headerTopRow: {
-    marginTop: "14px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: "12px",
-    flexWrap: "wrap",
-  },
-  headerButtonRow: {
-    display: "flex",
-    alignItems: "center",
-    gap: "8px",
-    flexWrap: "wrap",
-  },
-  topLinkButton: {
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: "38px",
-    padding: "0 14px",
-    background: "rgba(255,212,74,0.08)",
-    color: "#ffdc70",
-    border: "1px solid rgba(255,212,74,0.35)",
-    borderRadius: "14px",
-    textDecoration: "none",
-    fontSize: "13px",
-    fontWeight: 800,
-  },
-  layout: {
-    display: "grid",
-    gridTemplateColumns: "280px minmax(0, 1fr)",
-    gap: "28px",
-    alignItems: "start",
-  },
-  sidebar: {
-    width: "100%",
-    background: "#05070b",
-    border: "1px solid rgba(255,196,74,0.14)",
-    borderRadius: "24px",
-    padding: "16px",
-    position: "sticky",
-    top: "18px",
-    boxShadow: "0 18px 44px rgba(0,0,0,0.28)",
-    overflow: "hidden",
-  },
-  content: {
-    minWidth: 0,
-    paddingRight: "8px",
-  },
-  sectionTitle: {
-    marginBottom: "10px",
-    fontSize: "12px",
-    fontWeight: 800,
-    letterSpacing: "0.14em",
-    color: "#ffd24a",
-  },
-  inputWrap: {
-    position: "relative",
-  },
-  inputIcon: {
-    position: "absolute",
-    left: "12px",
-    top: "50%",
-    transform: "translateY(-50%)",
-    color: "#8b98ad",
-    fontSize: "12px",
-    pointerEvents: "none",
-  },
-  input: {
-    width: "100%",
-    height: "38px",
-    background: "#090d14",
-    color: "#fff",
-    border: "1px solid rgba(255,196,74,0.16)",
-    borderRadius: "14px",
-    padding: "0 12px 0 34px",
-    fontSize: "13px",
-    outline: "none",
-  },
-  buttonList: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "7px",
-  },
-  toolbar: {
-    marginBottom: "14px",
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: "12px",
-    flexWrap: "wrap",
-    padding: "12px 16px",
-    background: "#05070b",
-    border: "1px solid rgba(255,196,74,0.14)",
-    borderRadius: "20px",
-  },
-  resultBar: {
-    fontSize: "13px",
-    color: "#9ca3af",
-  },
-  grid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fill, minmax(168px, 168px))",
-    gap: "14px",
-    alignItems: "start",
-    justifyContent: "start",
-    padding: "2px 4px 0",
-  },
-  cardLink: {
-    textDecoration: "none",
-    color: "inherit",
-    display: "block",
-  },
-  card: {
-    width: "168px",
-    height: "356px",
-    background: "#090d14",
-    overflow: "hidden",
-    display: "flex",
-    flexDirection: "column",
-    borderRadius: "20px",
-    boxShadow: "0 14px 34px rgba(0,0,0,0.32)",
-    transition: "transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease",
-  },
-  imageWrap: {
-    position: "relative",
-    width: "168px",
-    height: "228px",
-    background: "#05070b",
-    overflow: "hidden",
-    flexShrink: 0,
-  },
-  adminLayer: {
-    position: "absolute",
-    inset: 0,
-  },
-  adminLeft: {
-    position: "absolute",
-    inset: 0,
-    clipPath: "polygon(0 0, 62% 0, 42% 100%, 0 100%)",
-  },
-  adminRight: {
-    position: "absolute",
-    inset: 0,
-    clipPath: "polygon(58% 0, 100% 0, 100% 100%, 38% 100%)",
-  },
-  adminDiagonalLine: {
-    position: "absolute",
-    top: "-20%",
-    left: "50%",
-    width: "2px",
-    height: "150%",
-    background: "rgba(255,255,255,0.9)",
-    boxShadow: "0 0 10px rgba(255,255,255,0.5)",
-    transform: "translateX(-50%) rotate(26deg)",
-    transformOrigin: "center",
-    pointerEvents: "none",
-  },
-  adminGlow: {
-    position: "absolute",
-    inset: 0,
-    background:
-      "linear-gradient(120deg, rgba(255,255,255,0.06), rgba(255,255,255,0), rgba(255,255,255,0.04))",
-    pointerEvents: "none",
-  },
-  overlay: {
-    position: "absolute",
-    inset: 0,
-    background:
-      "linear-gradient(to top, rgba(0,0,0,0.94), rgba(0,0,0,0.20), rgba(0,0,0,0))",
-    pointerEvents: "none",
-  },
-  info: {
-    background: "#090d14",
-    padding: "10px 10px 9px",
-    borderTop: "1px solid rgba(255,196,74,0.10)",
-    display: "flex",
-    flexDirection: "column",
-    flex: 1,
-    minHeight: 0,
-  },
-  name: {
-    fontSize: "18px",
-    fontWeight: 900,
-    color: "#ffdc70",
-    lineHeight: 1.15,
-    minHeight: "22px",
-  },
-  enName: {
-    marginTop: "4px",
-    fontSize: "12px",
-    color: "#cbd5e1",
-    lineHeight: 1.2,
-    minHeight: "15px",
-  },
-  badgeRow: {
-    display: "flex",
-    flexWrap: "wrap",
-    gap: "4px",
-    marginTop: "7px",
-    minHeight: "24px",
-    alignContent: "flex-start",
-  },
-  badge: {
-    display: "inline-flex",
-    alignItems: "center",
-    minHeight: "22px",
-    padding: "2px 7px",
-    fontSize: "10px",
-    fontWeight: 700,
-    lineHeight: 1.1,
-    border: "1px solid rgba(255,196,74,0.18)",
-    background: "rgba(255,212,74,0.06)",
-    color: "#fff",
-    gap: "4px",
-    boxSizing: "border-box",
-    maxWidth: "100%",
-    whiteSpace: "normal",
-    wordBreak: "keep-all",
-    borderRadius: "999px",
-  },
-  badgeIconWrap: {
-    position: "relative",
-    width: "11px",
-    height: "11px",
-    flexShrink: 0,
-  },
-  filterButton: {
-    width: "100%",
-    minHeight: "40px",
-    padding: "8px 10px",
-    textAlign: "left",
-    fontSize: "13px",
-    background: "#090d14",
-    color: "#d4d4d8",
-    border: "1px solid rgba(255,196,74,0.14)",
-    borderRadius: "14px",
-    cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-    gap: "8px",
-  },
-  filterIconWrap: {
-    position: "relative",
-    width: "16px",
-    height: "16px",
-    flexShrink: 0,
-  },
-  filterLabel: {
-    flex: 1,
-    minWidth: 0,
-  },
+const classOrderMap: Record<OperatorClass, number> = {
+  vanguard: 0,
+  guard: 1,
+  defender: 2,
+  supporter: 3,
+  caster: 4,
+  striker: 5,
 };
 
 function FilterButton({
@@ -381,83 +104,82 @@ function FilterButton({
   label,
   onClick,
   iconSrc,
-  borderColor,
+  color,
 }: {
   active: boolean;
   label: string;
   onClick: () => void;
   iconSrc?: string;
-  borderColor?: string;
+  color?: string;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
+      className="flex h-9 items-center gap-2 rounded-xl px-3 text-left text-xs font-bold transition hover:bg-[#101923]"
       style={{
-        ...styles.filterButton,
-        border: active
-          ? `1px solid ${borderColor ?? "rgba(255,212,74,0.55)"}`
-          : `1px solid ${borderColor ? `${borderColor}55` : "rgba(255,196,74,0.14)"}`,
-        background: active
-          ? `linear-gradient(90deg, ${borderColor ? `${borderColor}22` : "rgba(255,212,74,0.14)"}, rgba(255,212,74,0.05))`
-          : "#090d14",
-        color: active ? "#ffdc70" : "#d4d4d8",
+        background: active ? "rgba(255,212,74,0.10)" : FILTER_BG,
+        border: `1px solid ${
+          active ? color ?? "rgba(255,212,74,0.45)" : "rgba(255,255,255,0.10)"
+        }`,
+        color: active ? YELLOW_TEXT : "#d4d4d8",
       }}
     >
       {iconSrc ? (
-        <span style={styles.filterIconWrap}>
-          <Image src={iconSrc} alt="" fill sizes="16px" style={{ objectFit: "contain" }} />
+        <span className="relative h-4 w-4 shrink-0">
+          <Image
+            src={iconSrc}
+            alt={label}
+            fill
+            sizes="16px"
+            className="object-contain"
+          />
         </span>
       ) : (
         <span
-          style={{
-            width: "16px",
-            height: "16px",
-            flexShrink: 0,
-            display: "inline-flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: "10px",
-            color: active ? "#ffd873" : "#6b7280",
-          }}
-        >
-          ◆
-        </span>
+          className="h-2 w-2 shrink-0 rounded-full"
+          style={{ background: color ?? "#71717a" }}
+        />
       )}
 
-      <span style={styles.filterLabel}>{label}</span>
+      <span className="truncate">{label}</span>
     </button>
   );
 }
 
-function Badge({
-  label,
-  iconSrc,
-  bg,
-  color = "#fff",
-  borderColor,
+function FilterGroup({
+  title,
+  children,
+  last = false,
 }: {
-  label: string;
-  iconSrc?: string;
-  bg?: string;
-  color?: string;
-  borderColor?: string;
+  title: string;
+  children: ReactNode;
+  last?: boolean;
 }) {
   return (
-    <span
-      style={{
-        ...styles.badge,
-        background: bg ?? "rgba(255,212,74,0.06)",
-        color,
-        border: `1px solid ${borderColor ?? "rgba(255,196,74,0.18)"}`,
-      }}
-    >
-      {iconSrc ? (
-        <span style={styles.badgeIconWrap}>
-          <Image src={iconSrc} alt="" fill sizes="11px" style={{ objectFit: "contain" }} />
-        </span>
-      ) : null}
-      <span>{label}</span>
+    <div className={last ? "" : "mb-5"}>
+      <h2
+        className="mb-2 text-[11px] font-black tracking-[0.2em]"
+        style={{ color: YELLOW_TEXT }}
+      >
+        {title}
+      </h2>
+
+      <div className="flex flex-col gap-2">{children}</div>
+    </div>
+  );
+}
+
+function OperatorInfoIcon({ src, alt }: { src: string; alt: string }) {
+  return (
+    <span className="relative h-5 w-5 shrink-0" title={alt}>
+      <Image
+        src={src}
+        alt={alt}
+        fill
+        sizes="20px"
+        className="object-contain"
+      />
     </span>
   );
 }
@@ -465,98 +187,85 @@ function Badge({
 function OperatorCard({
   operator,
 }: {
-  operator: OperatorDetail & {
-    avatarSecondary?: string;
-  };
+  operator: OperatorDetail & { avatarSecondary?: string };
 }) {
   const isAdminSplit =
     operator.slug === "endministrator" && !!operator.avatarSecondary;
 
-  const elementBorder = elementColorMap[operator.element];
-
   return (
-    <Link href={`/operators/${operator.slug}`} style={styles.cardLink}>
-      <div
-        style={{
-          ...styles.card,
-          border: "1px solid rgba(255,196,74,0.16)",
-          boxShadow: `0 14px 34px rgba(0,0,0,0.32), inset 0 0 0 1px ${rarityBorderMap[operator.rarity]}33`,
-        }}
-      >
-        <div style={styles.imageWrap}>
-          {isAdminSplit ? (
-            <>
-              <div style={styles.adminLeft}>
-                <div style={styles.adminLayer}>
-                  <Image
-                    src={operator.avatar}
-                    alt={`${operator.name} left`}
-                    fill
-                    sizes="168px"
-                    style={{ objectFit: "cover", objectPosition: "left center" }}
-                  />
-                </div>
-              </div>
-
-              <div style={styles.adminRight}>
-                <div style={styles.adminLayer}>
-                  <Image
-                    src={operator.avatarSecondary!}
-                    alt={`${operator.name} right`}
-                    fill
-                    sizes="168px"
-                    style={{ objectFit: "cover", objectPosition: "right center" }}
-                  />
-                </div>
-              </div>
-
-              <div style={styles.adminDiagonalLine} />
-              <div style={styles.adminGlow} />
-            </>
-          ) : (
+    <Link
+      href={`/operators/${operator.slug}`}
+      className="group relative block overflow-hidden rounded-[18px] bg-black transition hover:-translate-y-1"
+      style={{
+        width: `${CARD_WIDTH}px`,
+        height: `${CARD_HEIGHT}px`,
+      }}
+    >
+      {isAdminSplit ? (
+        <>
+          <div className="absolute inset-0 [clip-path:polygon(0_0,62%_0,42%_100%,0_100%)]">
             <Image
               src={operator.avatar}
-              alt={operator.name}
+              alt={`${operator.name} left`}
               fill
-              sizes="168px"
-              style={{ objectFit: "cover" }}
-            />
-          )}
-
-          <div style={styles.overlay} />
-        </div>
-
-        <div style={styles.info}>
-          <div style={styles.name}>{operator.name}</div>
-          <div style={styles.enName}>{operator.enName}</div>
-
-          <div style={styles.badgeRow}>
-            <Badge
-              label={`${operator.rarity}성`}
-              bg="rgba(255,212,74,0.06)"
-              color="#ffffff"
-              borderColor="rgba(255,196,74,0.18)"
-              iconSrc={rarityIconMap[operator.rarity]}
-            />
-            <Badge
-              label={classLabelMap[operator.class]}
-              iconSrc={classIconMap[operator.class]}
+              sizes={`${CARD_WIDTH}px`}
+              className="object-cover object-left"
             />
           </div>
 
-          <div style={styles.badgeRow}>
-            <Badge
-              label={elementLabelMap[operator.element]}
-              iconSrc={elementIconMap[operator.element]}
-              bg="rgba(255,212,74,0.06)"
-              color="#ffffff"
-              borderColor={elementBorder}
-            />
-            <Badge
-              label={weaponLabelMap[operator.weapon]}
-              iconSrc={weaponIconMap[operator.weapon]}
+          <div className="absolute inset-0 [clip-path:polygon(58%_0,100%_0,100%_100%,38%_100%)]">
+            <Image
+              src={operator.avatarSecondary!}
+              alt={`${operator.name} right`}
+              fill
+              sizes={`${CARD_WIDTH}px`}
+              className="object-cover object-right"
             />
           </div>
+
+          <div className="absolute left-1/2 top-[-20%] h-[150%] w-[2px] -translate-x-1/2 rotate-[26deg] bg-white/80 shadow-[0_0_10px_rgba(255,255,255,0.5)]" />
+        </>
+      ) : (
+        <Image
+          src={operator.avatar}
+          alt={operator.name}
+          fill
+          sizes={`${CARD_WIDTH}px`}
+          className="object-cover object-center transition duration-300 group-hover:scale-105"
+        />
+      )}
+
+      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+
+      <div className="absolute bottom-0 left-0 w-full p-3">
+        <h3 className="line-clamp-1 text-[17px] font-black leading-[1.1] text-yellow-300">
+          {operator.name}
+        </h3>
+
+        <p className="mt-[2px] line-clamp-1 text-[11px] tracking-wide text-zinc-300">
+          {operator.enName}
+        </p>
+
+        <div className="mt-2 flex items-center gap-2 overflow-hidden">
+          <OperatorInfoIcon
+            src={rarityIconMap[operator.rarity]}
+            alt={`${operator.rarity}성`}
+          />
+
+          <OperatorInfoIcon
+            src={elementIconMap[operator.element]}
+            alt={elementLabelMap[operator.element]}
+          />
+
+          <OperatorInfoIcon
+            src={classIconMap[operator.class]}
+            alt={classLabelMap[operator.class]}
+          />
+
+          <OperatorInfoIcon
+            src={weaponIconMap[operator.weapon]}
+            alt={weaponLabelMap[operator.weapon]}
+          />
         </div>
       </div>
     </Link>
@@ -567,137 +276,247 @@ export default function OperatorsPageClient() {
   const [keyword, setKeyword] = useState("");
   const [rarity, setRarity] = useState<OperatorRarity | "all">("all");
   const [element, setElement] = useState<OperatorElement | "all">("all");
-  const [operatorClass, setOperatorClass] = useState<OperatorClass | "all">("all");
+  const [operatorClass, setOperatorClass] =
+    useState<OperatorClass | "all">("all");
   const [weapon, setWeapon] = useState<WeaponType | "all">("all");
 
-  const filteredOperators = useMemo(() => {
+  const sortedOperators = useMemo(() => {
     const q = keyword.trim().toLowerCase();
 
-    return operatorDetails.filter((operator) => {
-      const matchesKeyword =
-        q === "" ||
-        operator.name.toLowerCase().includes(q) ||
-        operator.enName.toLowerCase().includes(q);
+    return operatorDetails
+      .filter((operator) => {
+        const matchesKeyword =
+          q === "" ||
+          operator.name.toLowerCase().includes(q) ||
+          operator.enName.toLowerCase().includes(q) ||
+          classLabelMap[operator.class].includes(q) ||
+          elementLabelMap[operator.element].includes(q) ||
+          weaponLabelMap[operator.weapon].includes(q);
 
-      return (
-        matchesKeyword &&
-        (rarity === "all" || operator.rarity === rarity) &&
-        (element === "all" || operator.element === element) &&
-        (operatorClass === "all" || operator.class === operatorClass) &&
-        (weapon === "all" || operator.weapon === weapon)
-      );
-    });
+        return (
+          matchesKeyword &&
+          (rarity === "all" || operator.rarity === rarity) &&
+          (element === "all" || operator.element === element) &&
+          (operatorClass === "all" || operator.class === operatorClass) &&
+          (weapon === "all" || operator.weapon === weapon)
+        );
+      })
+      .sort((a, b) => {
+        if (b.rarity !== a.rarity) return b.rarity - a.rarity;
+
+        const classA = classOrderMap[a.class] ?? 999;
+        const classB = classOrderMap[b.class] ?? 999;
+
+        if (classA !== classB) return classA - classB;
+
+        return a.name.localeCompare(b.name, "ko");
+      });
   }, [keyword, rarity, element, operatorClass, weapon]);
 
-  const sortedOperators = useMemo(() => {
-    return [...filteredOperators].sort((a, b) => {
-      if (b.rarity !== a.rarity) return b.rarity - a.rarity;
-      return a.name.localeCompare(b.name, "ko");
-    });
-  }, [filteredOperators]);
-
   return (
-    <div style={styles.page}>
-      <div style={styles.shell}>
-        <div style={styles.header}>
-          <div style={styles.subTitle}>ENDFIELD SUPPORT PLATFORM</div>
-
-          <div style={styles.headerTopRow}>
+    <main className="min-h-screen bg-[#050505] px-4 py-5 text-white md:px-6">
+      <div className="mx-auto max-w-[1840px]">
+        <header
+          className="mb-5 rounded-[24px] bg-[#05070b] p-5 shadow-[0_0_30px_rgba(250,204,21,0.04)]"
+          style={{ border: `1px solid ${YELLOW_BORDER}` }}
+        >
+          <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
-              <div style={styles.title}>OPERATORS</div>
-              <div style={styles.desc}>오퍼레이터 목록</div>
+              <p
+                className="text-[11px] font-semibold tracking-[0.35em]"
+                style={{ color: YELLOW_TEXT }}
+              >
+                ENDFIELD SUPPORT PLATFORM
+              </p>
+
+              <h1
+                className="mt-2 text-4xl font-black tracking-tight"
+                style={{ color: YELLOW_TEXT }}
+              >
+                OPERATORS
+              </h1>
+
+              <p className="mt-1 text-sm text-zinc-500">Operator List</p>
             </div>
 
-            <div style={styles.headerButtonRow}>
-              <Link href="/" style={styles.topLinkButton}>
-                홈으로
-              </Link>
-            </div>
+            <Link
+              href="/"
+              className="rounded-xl bg-black px-4 py-2 text-sm font-bold text-zinc-200 transition hover:bg-[#0b1018]"
+              style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
+            >
+              홈으로
+            </Link>
           </div>
-        </div>
+        </header>
 
-        <div style={styles.layout}>
-          <aside style={styles.sidebar}>
-            <div style={{ marginBottom: "18px" }}>
-              <div style={styles.sectionTitle}>검색</div>
-              <div style={styles.inputWrap}>
-                <span style={styles.inputIcon}>⌕</span>
+        <div className="grid gap-5 lg:grid-cols-[280px_minmax(0,1fr)]">
+          <aside
+            className="sticky top-5 flex max-h-[calc(100vh-40px)] flex-col overflow-hidden rounded-[24px] bg-[#05070b] shadow-[0_0_30px_rgba(250,204,21,0.04)]"
+            style={{ border: `1px solid ${YELLOW_BORDER}` }}
+          >
+            <div
+              className="shrink-0 bg-[#05070b] p-4"
+              style={{ borderBottom: `1px solid ${YELLOW_BORDER_SOFT}` }}
+            >
+              <h2
+                className="mb-2 text-[11px] font-black tracking-[0.2em]"
+                style={{ color: YELLOW_TEXT }}
+              >
+                검색
+              </h2>
+
+              <div className="relative">
+                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-zinc-500">
+                  ⌕
+                </span>
+
                 <input
                   value={keyword}
                   onChange={(e) => setKeyword(e.target.value)}
-                  placeholder="이름 검색"
-                  autoComplete="off"
-                  style={styles.input}
+                  placeholder="이름 / 클래스 / 속성 / 무기 검색"
+                  className="h-9 w-full rounded-xl border border-white/20 bg-[#071019] pl-9 pr-3 text-xs text-white outline-none transition placeholder:text-zinc-500 focus:border-yellow-400/50"
                 />
               </div>
             </div>
 
-            <div style={{ marginBottom: "18px" }}>
-              <div style={styles.sectionTitle}>레어도</div>
-              <div style={styles.buttonList}>
-                <FilterButton active={rarity === "all"} label="전체" onClick={() => setRarity("all")} />
-                <FilterButton active={rarity === 6} label="6성" onClick={() => setRarity(6)} iconSrc={rarityIconMap[6]} />
-                <FilterButton active={rarity === 5} label="5성" onClick={() => setRarity(5)} iconSrc={rarityIconMap[5]} />
-                <FilterButton active={rarity === 4} label="4성" onClick={() => setRarity(4)} iconSrc={rarityIconMap[4]} />
-              </div>
-            </div>
+            <div className="min-h-0 flex-1 overflow-y-auto p-4">
+              <FilterGroup title="레어도">
+                <FilterButton
+                  active={rarity === "all"}
+                  label="전체"
+                  onClick={() => setRarity("all")}
+                />
+                <FilterButton
+                  active={rarity === 6}
+                  label="6성"
+                  iconSrc={rarityIconMap[6]}
+                  color={rarityColorMap[6]}
+                  onClick={() => setRarity(6)}
+                />
+                <FilterButton
+                  active={rarity === 5}
+                  label="5성"
+                  iconSrc={rarityIconMap[5]}
+                  color={rarityColorMap[5]}
+                  onClick={() => setRarity(5)}
+                />
+                <FilterButton
+                  active={rarity === 4}
+                  label="4성"
+                  iconSrc={rarityIconMap[4]}
+                  color={rarityColorMap[4]}
+                  onClick={() => setRarity(4)}
+                />
+              </FilterGroup>
 
-            <div style={{ marginBottom: "18px" }}>
-              <div style={styles.sectionTitle}>속성</div>
-              <div style={styles.buttonList}>
-                <FilterButton active={element === "all"} label="전체" onClick={() => setElement("all")} />
-                <FilterButton active={element === "physical"} label="물리" onClick={() => setElement("physical")} iconSrc={elementIconMap.physical} borderColor={elementColorMap.physical} />
-                <FilterButton active={element === "cryo"} label="냉기" onClick={() => setElement("cryo")} iconSrc={elementIconMap.cryo} borderColor={elementColorMap.cryo} />
-                <FilterButton active={element === "heat"} label="열기" onClick={() => setElement("heat")} iconSrc={elementIconMap.heat} borderColor={elementColorMap.heat} />
-                <FilterButton active={element === "nature"} label="자연" onClick={() => setElement("nature")} iconSrc={elementIconMap.nature} borderColor={elementColorMap.nature} />
-                <FilterButton active={element === "electric"} label="전기" onClick={() => setElement("electric")} iconSrc={elementIconMap.electric} borderColor={elementColorMap.electric} />
-              </div>
-            </div>
+              <FilterGroup title="속성">
+                <FilterButton
+                  active={element === "all"}
+                  label="전체"
+                  onClick={() => setElement("all")}
+                />
 
-            <div style={{ marginBottom: "18px" }}>
-              <div style={styles.sectionTitle}>클래스</div>
-              <div style={styles.buttonList}>
-                <FilterButton active={operatorClass === "all"} label="전체" onClick={() => setOperatorClass("all")} />
-                <FilterButton active={operatorClass === "vanguard"} label="뱅가드" onClick={() => setOperatorClass("vanguard")} iconSrc={classIconMap.vanguard} />
-                <FilterButton active={operatorClass === "guard"} label="가드" onClick={() => setOperatorClass("guard")} iconSrc={classIconMap.guard} />
-                <FilterButton active={operatorClass === "defender"} label="디펜더" onClick={() => setOperatorClass("defender")} iconSrc={classIconMap.defender} />
-                <FilterButton active={operatorClass === "supporter"} label="서포터" onClick={() => setOperatorClass("supporter")} iconSrc={classIconMap.supporter} />
-                <FilterButton active={operatorClass === "caster"} label="캐스터" onClick={() => setOperatorClass("caster")} iconSrc={classIconMap.caster} />
-                <FilterButton active={operatorClass === "striker"} label="스트라이커" onClick={() => setOperatorClass("striker")} iconSrc={classIconMap.striker} />
-              </div>
-            </div>
+                {Object.entries(elementLabelMap).map(([key, label]) => {
+                  const value = key as OperatorElement;
 
-            <div>
-              <div style={styles.sectionTitle}>무기</div>
-              <div style={styles.buttonList}>
-                <FilterButton active={weapon === "all"} label="전체" onClick={() => setWeapon("all")} />
-                <FilterButton active={weapon === "sword"} label="한손검" onClick={() => setWeapon("sword")} iconSrc={weaponIconMap.sword} />
-                <FilterButton active={weapon === "greatsword"} label="양손검" onClick={() => setWeapon("greatsword")} iconSrc={weaponIconMap.greatsword} />
-                <FilterButton active={weapon === "polearm"} label="장병기" onClick={() => setWeapon("polearm")} iconSrc={weaponIconMap.polearm} />
-                <FilterButton active={weapon === "handcannon"} label="권총" onClick={() => setWeapon("handcannon")} iconSrc={weaponIconMap.handcannon} />
-                <FilterButton active={weapon === "artsunit"} label="아츠 유닛" onClick={() => setWeapon("artsunit")} iconSrc={weaponIconMap.artsunit} />
-              </div>
+                  return (
+                    <FilterButton
+                      key={value}
+                      active={element === value}
+                      label={label}
+                      iconSrc={elementIconMap[value]}
+                      color={elementColorMap[value]}
+                      onClick={() => setElement(value)}
+                    />
+                  );
+                })}
+              </FilterGroup>
+
+              <FilterGroup title="클래스">
+                <FilterButton
+                  active={operatorClass === "all"}
+                  label="전체"
+                  onClick={() => setOperatorClass("all")}
+                />
+
+                {Object.entries(classLabelMap).map(([key, label]) => {
+                  const value = key as OperatorClass;
+
+                  return (
+                    <FilterButton
+                      key={value}
+                      active={operatorClass === value}
+                      label={label}
+                      iconSrc={classIconMap[value]}
+                      onClick={() => setOperatorClass(value)}
+                    />
+                  );
+                })}
+              </FilterGroup>
+
+              <FilterGroup title="무기" last>
+                <FilterButton
+                  active={weapon === "all"}
+                  label="전체"
+                  onClick={() => setWeapon("all")}
+                />
+
+                {Object.entries(weaponLabelMap).map(([key, label]) => {
+                  const value = key as WeaponType;
+
+                  return (
+                    <FilterButton
+                      key={value}
+                      active={weapon === value}
+                      label={label}
+                      iconSrc={weaponIconMap[value]}
+                      onClick={() => setWeapon(value)}
+                    />
+                  );
+                })}
+              </FilterGroup>
             </div>
           </aside>
 
-          <main style={styles.content}>
-            <div style={styles.toolbar}>
-              <div style={styles.resultBar}>
-                총 <span style={{ color: "#ffd24a", fontWeight: 700 }}>{sortedOperators.length}</span>명
-              </div>
+          <section
+            className="min-w-0 rounded-[24px] bg-[#05070b] p-3 shadow-[0_0_30px_rgba(250,204,21,0.04)]"
+            style={{ border: `1px solid ${YELLOW_BORDER}` }}
+          >
+            <div
+              className="mb-3 flex items-center justify-between pb-3"
+              style={{ borderBottom: `1px solid ${YELLOW_BORDER_SOFT}` }}
+            >
+              <p className="text-sm text-zinc-400">
+                총{" "}
+                <span className="font-black" style={{ color: YELLOW_TEXT }}>
+                  {sortedOperators.length}
+                </span>
+                명
+              </p>
             </div>
 
-            <div style={styles.grid}>
-              {sortedOperators.map((operator) => (
-                <OperatorCard
-                  key={operator.slug}
-                  operator={operator as OperatorDetail & { avatarSecondary?: string }}
-                />
-              ))}
-            </div>
-          </main>
+            {sortedOperators.length > 0 ? (
+              <div className="grid grid-cols-[repeat(8,170px)] justify-between gap-y-3 overflow-hidden">
+                {sortedOperators.map((operator) => (
+                  <OperatorCard
+                    key={operator.slug}
+                    operator={
+                      operator as OperatorDetail & { avatarSecondary?: string }
+                    }
+                  />
+                ))}
+              </div>
+            ) : (
+              <div
+                className="flex min-h-[260px] items-center justify-center rounded-[20px] bg-black p-6 text-center text-sm text-zinc-500"
+                style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
+              >
+                등록된 Operator 데이터가 없습니다.
+              </div>
+            )}
+          </section>
         </div>
       </div>
-    </div>
+    </main>
   );
 }
