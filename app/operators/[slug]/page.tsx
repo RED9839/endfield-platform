@@ -1,7 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import type { CSSProperties } from "react";
 import { getOperatorDetailBySlug } from "@/data/operators-detail-data";
 
 import HeroSlider from "./HeroSlider";
@@ -13,124 +12,20 @@ import InfrastructureSkillPanel from "./InfrastructureSkillPanel";
 import TrustBonusPanel from "./TrustBonusPanel";
 import PotentialPanel from "./PotentialPanel";
 
-const PANEL_RADIUS = "24px";
-const BUTTON_RADIUS = "14px";
-
 const YELLOW_MAIN = "#ffd24a";
 const YELLOW_TEXT = "#ffdc70";
 const YELLOW_BORDER = "rgba(255,196,74,0.14)";
-
-const styles: Record<string, CSSProperties> = {
-  page: {
-    minHeight: "100vh",
-    background:
-      "radial-gradient(circle at top, rgba(255,170,40,0.08), transparent 18%), #000",
-    color: "#fff",
-    padding: "24px 28px 40px",
-  },
-  shell: {
-    width: "100%",
-    maxWidth: "1840px",
-    margin: "0 auto",
-  },
-  header: {
-    marginBottom: "24px",
-    borderBottom: `1px solid ${YELLOW_BORDER}`,
-    paddingBottom: "16px",
-  },
-  subTitle: {
-    fontSize: "11px",
-    letterSpacing: "0.28em",
-    color: "rgba(255,210,90,0.75)",
-  },
-  headerTopRow: {
-    marginTop: "14px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: "12px",
-    flexWrap: "wrap",
-  },
-  title: {
-    marginTop: "8px",
-    fontSize: "42px",
-    fontWeight: 900,
-    color: YELLOW_TEXT,
-    letterSpacing: "-0.02em",
-  },
-  desc: {
-    marginTop: "8px",
-    fontSize: "13px",
-    color: "#9ca3af",
-  },
-  headerButtonRow: {
-    display: "flex",
-    alignItems: "center",
-    gap: "8px",
-    flexWrap: "wrap",
-  },
-  topLinkButton: {
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: "38px",
-    padding: "0 14px",
-    background: "#000000",
-    color: "#f3f4f6",
-    border: `1px solid ${YELLOW_BORDER}`,
-    textDecoration: "none",
-    fontSize: "13px",
-    fontWeight: 800,
-    borderRadius: BUTTON_RADIUS,
-  },
-  heroWrap: {
-    position: "relative",
-    height: "min(58vw, 620px)",
-    overflow: "hidden",
-    marginBottom: "18px",
-    background: "#000",
-    borderRadius: PANEL_RADIUS,
-    border: `1px solid ${YELLOW_BORDER}`,
-    boxShadow: "0 10px 28px rgba(0,0,0,0.28)",
-  },
-  heroOverlay: {
-    position: "absolute",
-    inset: 0,
-    background:
-      "linear-gradient(to top, rgba(0,0,0,0.94), rgba(0,0,0,0.28), rgba(0,0,0,0.08))",
-    pointerEvents: "none",
-  },
-  heroTextWrap: {
-    position: "absolute",
-    left: 24,
-    bottom: 24,
-    zIndex: 2,
-  },
-  heroName: {
-    fontSize: "clamp(42px, 5vw, 88px)",
-    fontWeight: 900,
-    color: "#fff",
-    textShadow: "0 8px 20px rgba(0,0,0,0.8)",
-    lineHeight: 0.95,
-  },
-  heroEnName: {
-    marginTop: "8px",
-    fontSize: "20px",
-    color: "#dbe4f0",
-    textShadow: "0 4px 12px rgba(0,0,0,0.7)",
-  },
-  sectionTitle: {
-    marginTop: "18px",
-    marginBottom: "12px",
-    fontSize: "22px",
-    fontWeight: 900,
-    color: YELLOW_TEXT,
-    letterSpacing: "-0.01em",
-  },
-};
+const YELLOW_BORDER_SOFT = "rgba(255,196,74,0.10)";
 
 function PageSectionTitle({ children }: { children: React.ReactNode }) {
-  return <div style={styles.sectionTitle}>{children}</div>;
+  return (
+    <div
+      className="mb-3 mt-5 text-[22px] font-black tracking-tight"
+      style={{ color: YELLOW_TEXT }}
+    >
+      {children}
+    </div>
+  );
 }
 
 export default async function OperatorDetailPage({
@@ -147,30 +42,52 @@ export default async function OperatorDetailPage({
   const heroImage = operator.fullImage || operator.avatar;
 
   const isAdminHeroSlider = operator.name === "관리자";
-
   const adminHeroSlides = [
     operator.fullImage,
     operator.fullImageSecondary,
   ].filter((item): item is string => !!item);
 
   return (
-    <div style={styles.page}>
-      <div style={styles.shell}>
-        <header style={styles.header}>
-          <div style={styles.subTitle}>ENDFIELD SUPPORT PLATFORM</div>
-
-          <div style={styles.headerTopRow}>
+    <main className="min-h-screen bg-[#050505] px-4 py-6 text-white md:px-6">
+      <div className="mx-auto max-w-[1840px]">
+        <header
+          className="mb-6 rounded-[24px] bg-[#05070b] p-5 shadow-[0_0_30px_rgba(250,204,21,0.04)]"
+          style={{ border: `1px solid ${YELLOW_BORDER}` }}
+        >
+          <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
-              <div style={styles.title}>OPERATORS</div>
-              <div style={styles.desc}>{operator.name} 상세 정보</div>
+              <p
+                className="text-[11px] font-semibold tracking-[0.35em]"
+                style={{ color: YELLOW_TEXT }}
+              >
+                ENDFIELD SUPPORT PLATFORM
+              </p>
+
+              <h1
+                className="mt-2 text-4xl font-black tracking-tight"
+                style={{ color: YELLOW_TEXT }}
+              >
+                OPERATORS
+              </h1>
+
+              <p className="mt-1 text-sm text-zinc-500">Operator Detail</p>
             </div>
 
-            <div style={styles.headerButtonRow}>
-              <Link href="/" style={styles.topLinkButton}>
-                홈으로
-              </Link>
-              <Link href="/operators" style={styles.topLinkButton}>
+            <div className="flex flex-wrap gap-2">
+              <Link
+                href="/operators"
+                className="rounded-xl bg-black px-4 py-2 text-sm font-bold text-zinc-200 transition hover:bg-[#0b1018]"
+                style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
+              >
                 목록으로
+              </Link>
+
+              <Link
+                href="/"
+                className="rounded-xl bg-black px-4 py-2 text-sm font-bold text-zinc-200 transition hover:bg-[#0b1018]"
+                style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
+              >
+                홈으로
               </Link>
             </div>
           </div>
@@ -183,43 +100,42 @@ export default async function OperatorDetailPage({
             enName={operator.enName}
           />
         ) : (
-          <section style={styles.heroWrap}>
+          <section
+            className="relative mb-5 overflow-hidden rounded-[24px] bg-black shadow-[0_10px_28px_rgba(0,0,0,0.28)]"
+            style={{
+              height: "min(58vw, 620px)",
+              border: `1px solid ${YELLOW_BORDER}`,
+            }}
+          >
             <Image
               src={heroImage}
               alt={operator.name}
               fill
               priority
               sizes="100vw"
-              style={{
-                objectFit: "cover",
-                filter: "blur(16px) brightness(0.25)",
-              }}
+              className="object-cover blur-[16px] brightness-[0.25]"
             />
 
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
+            <div className="absolute inset-0 flex items-center justify-center">
               <Image
                 src={heroImage}
                 alt={operator.name}
                 fill
                 priority
                 sizes="100vw"
-                style={{ objectFit: "contain" }}
+                className="object-contain"
               />
             </div>
 
-            <div style={styles.heroOverlay} />
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-black/10" />
 
-            <div style={styles.heroTextWrap}>
-              <div style={styles.heroName}>{operator.name}</div>
-              <div style={styles.heroEnName}>{operator.enName}</div>
+            <div className="absolute bottom-6 left-6 z-10">
+              <div className="text-[clamp(42px,5vw,88px)] font-black leading-none text-white drop-shadow-[0_8px_20px_rgba(0,0,0,0.8)]">
+                {operator.name}
+              </div>
+              <div className="mt-2 text-xl text-[#dbe4f0] drop-shadow-[0_4px_12px_rgba(0,0,0,0.7)]">
+                {operator.enName}
+              </div>
             </div>
           </section>
         )}
@@ -265,7 +181,10 @@ export default async function OperatorDetailPage({
         {!!operator.talents.length && (
           <>
             <PageSectionTitle>재능</PageSectionTitle>
-            <TalentPanel items={operator.talents} accentColor={panelAccentColor} />
+            <TalentPanel
+              items={operator.talents}
+              accentColor={panelAccentColor}
+            />
           </>
         )}
 
@@ -293,6 +212,6 @@ export default async function OperatorDetailPage({
           </>
         )}
       </div>
-    </div>
+    </main>
   );
 }

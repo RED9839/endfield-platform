@@ -81,9 +81,9 @@ const rarityIconMap: Record<OperatorRarity, string> = {
 };
 
 const rarityBorderMap: Record<OperatorRarity, string> = {
-  4: "rgba(168,210,255,0.42)",
-  5: "rgba(198,139,255,0.42)",
-  6: "rgba(255,196,74,0.42)",
+  4: "rgba(154,99,255,0.42)",   // 보라 (4성)
+  5: "rgba(240,201,74,0.42)",   // 금색 (5성)
+  6: "rgba(255,138,31,0.42)",   // 주황 (6성)
 };
 
 const elementLabelMap: Record<OperatorElement, string> = {
