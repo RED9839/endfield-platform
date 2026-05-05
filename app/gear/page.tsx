@@ -14,7 +14,10 @@ import type {
   GearSetName,
 } from "@/data/gear-types";
 
-const GEAR_ACCENT = "#ffdc70";
+const YELLOW_MAIN = "#ffd24a";
+const YELLOW_TEXT = "#ffdc70";
+const YELLOW_BORDER = "rgba(255,196,74,0.14)";
+const YELLOW_BORDER_SOFT = "rgba(255,196,74,0.10)";
 const FILTER_BG = "#071019";
 
 const categoryLabelMap: Record<GearCategory, string> = {
@@ -49,6 +52,13 @@ const categoryIconMap: Record<GearCategory, string> = {
   armor: "/icons/gear/armor.webp",
   gloves: "/icons/gear/gloves.webp",
   kit: "/icons/gear/kit.webp",
+};
+
+const abilityIconMap: Record<GearAbilityKey, string> = {
+  strength: "/icons/stats/strength.webp",
+  agility: "/icons/stats/agility.webp",
+  intelligence: "/icons/stats/intelligence.webp",
+  will: "/icons/stats/will.webp",
 };
 
 const setTypeOptions: GearSetName[] = [
@@ -105,22 +115,12 @@ const attributeOptions: Array<{ key: GearAttributeKey; label: string }> = [
   { key: "heatNatureDamage", label: "열기와 자연 피해 보너스" },
 ];
 
-function getPrimaryAttributeText(item: GearDetail) {
-  if (!item.attributeTypes || item.attributeTypes.length === 0) return "";
-
-  const match = attributeOptions.find((option) =>
-    item.attributeTypes.includes(option.key),
-  );
-
-  return match?.label ?? item.attribute?.label ?? "";
-}
-
 function FilterButton({
   active,
   label,
   onClick,
   iconSrc,
-  color = GEAR_ACCENT,
+  color = YELLOW_MAIN,
   colored = false,
 }: {
   active: boolean;
@@ -130,7 +130,7 @@ function FilterButton({
   color?: string;
   colored?: boolean;
 }) {
-  const pointColor = colored ? color : GEAR_ACCENT;
+  const pointColor = colored ? color : YELLOW_MAIN;
 
   return (
     <button
@@ -171,6 +171,29 @@ function FilterButton({
   );
 }
 
+function FilterGroup({
+  title,
+  children,
+  last = false,
+}: {
+  title: string;
+  children: ReactNode;
+  last?: boolean;
+}) {
+  return (
+    <div className={last ? "" : "mb-5"}>
+      <h2
+        className="mb-2 text-[11px] font-black tracking-[0.2em]"
+        style={{ color: YELLOW_TEXT }}
+      >
+        {title}
+      </h2>
+
+      <div className="flex flex-col gap-2">{children}</div>
+    </div>
+  );
+}
+
 function GearChip({
   children,
   color,
@@ -180,11 +203,11 @@ function GearChip({
   color?: string;
   muted?: boolean;
 }) {
-  const chipColor = color ?? GEAR_ACCENT;
+  const chipColor = color ?? YELLOW_MAIN;
 
   return (
     <span
-      className="inline-flex h-[18px] max-w-full shrink-0 items-center gap-1 overflow-hidden whitespace-nowrap rounded-md bg-black px-1.5 text-[10px] font-black leading-none"
+      className="inline-flex h-[20px] max-w-full shrink-0 items-center gap-1 overflow-hidden whitespace-nowrap rounded-md bg-black px-2 text-[11px] font-black leading-none"
       style={{
         border: muted
           ? "1px solid rgba(255,255,255,0.24)"
@@ -197,36 +220,59 @@ function GearChip({
   );
 }
 
+function GearIconOnlyChip({
+  iconSrc,
+  label,
+}: {
+  iconSrc: string;
+  label: string;
+}) {
+  return (
+    <span
+      className="inline-flex h-[20px] w-[20px] shrink-0 items-center justify-center rounded-md bg-black"
+      style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
+      title={label}
+    >
+      <span className="relative h-4 w-4 shrink-0">
+        <Image
+          src={iconSrc}
+          alt={label}
+          fill
+          sizes="16px"
+          className="object-contain"
+        />
+      </span>
+    </span>
+  );
+}
+
 function GearCategoryLevelChip({ item }: { item: GearDetail }) {
   const qualityColor = qualityColorMap[item.quality];
 
   return (
     <GearChip color={qualityColor}>
-      <span className="relative h-3.5 w-3.5 shrink-0">
+      <span className="relative h-4 w-4 shrink-0">
         <Image
           src={categoryIconMap[item.category]}
           alt={categoryLabelMap[item.category]}
           fill
-          sizes="14px"
+          sizes="16px"
           className="object-contain"
         />
       </span>
 
       <span className="opacity-70">·</span>
-
       <span>Lv.{item.level}</span>
     </GearChip>
   );
 }
 
 function GearCard({ item }: { item: GearDetail }) {
-  const qualityColor = qualityColorMap[item.quality];
-  const attributeText = getPrimaryAttributeText(item);
-
   return (
     <Link
       href={`/gear/${item.slug}`}
-      className="group relative block h-[244px] overflow-hidden rounded-[18px] border border-yellow-500/10 bg-black transition hover:-translate-y-1 hover:border-yellow-400/35"
+      className="group relative block h-[244px] overflow-hidden rounded-[18px] bg-black transition hover:-translate-y-1 hover:border-yellow-400/35"
+      style={{ border: `1px solid ${YELLOW_BORDER}` }}
     >
       <Image
         src={item.image}
@@ -248,45 +294,31 @@ function GearCard({ item }: { item: GearDetail }) {
         </p>
 
         <div className="mt-2 flex flex-col gap-1 overflow-hidden">
-          <div className="flex h-[18px] flex-nowrap gap-1 overflow-hidden">
+          <div className="flex h-[20px] flex-nowrap items-center gap-1 overflow-hidden">
             <GearCategoryLevelChip item={item} />
 
-            {item.ability1?.label ? (
-              <GearChip muted>{item.ability1.label}</GearChip>
-            ) : null}
+            {item.abilityTypes.map((type) => {
+              const option = abilityOptions.find((item) => item.key === type);
+              const iconSrc = abilityIconMap[type];
 
-            {item.ability2?.label ? (
-              <GearChip muted>{item.ability2.label}</GearChip>
-            ) : null}
+              return option && iconSrc ? (
+                <GearIconOnlyChip
+                  key={type}
+                  iconSrc={iconSrc}
+                  label={option.label}
+                />
+              ) : null;
+            })}
           </div>
 
-          <div className="flex h-[18px] flex-nowrap gap-1 overflow-hidden">
-            {attributeText ? (
-              <GearChip color={qualityColor}>{attributeText}</GearChip>
-            ) : null}
+          <div className="flex h-[20px] items-center overflow-hidden">
+            <GearChip color={YELLOW_MAIN}>
+              <span className="truncate">{item.attribute?.label ?? "속성"}</span>
+            </GearChip>
           </div>
         </div>
       </div>
     </Link>
-  );
-}
-
-function FilterGroup({
-  title,
-  children,
-  last = false,
-}: {
-  title: string;
-  children: ReactNode;
-  last?: boolean;
-}) {
-  return (
-    <div className={last ? "" : "mb-5"}>
-      <h2 className="mb-2 text-[11px] font-black tracking-[0.2em] text-yellow-300">
-        {title}
-      </h2>
-      <div className="flex flex-col gap-2">{children}</div>
-    </div>
   );
 }
 
@@ -331,7 +363,15 @@ export default function GearPage() {
         matchesLevel
       );
     });
-  }, [keyword, category, setName, attributeFilter, abilityFilter, quality, level]);
+  }, [
+    keyword,
+    category,
+    setName,
+    attributeFilter,
+    abilityFilter,
+    quality,
+    level,
+  ]);
 
   const sortedItems = useMemo(() => {
     return [...filteredItems].sort((a, b) => {
@@ -353,21 +393,33 @@ export default function GearPage() {
   return (
     <main className="min-h-screen bg-[#050505] px-4 py-5 text-white md:px-6">
       <div className="mx-auto max-w-[1840px]">
-        <header className="mb-5 rounded-[24px] border border-yellow-500/15 bg-[#05070b] p-5 shadow-[0_0_30px_rgba(250,204,21,0.04)]">
+        <header
+          className="mb-5 rounded-[24px] bg-[#05070b] p-5 shadow-[0_0_30px_rgba(250,204,21,0.04)]"
+          style={{ border: `1px solid ${YELLOW_BORDER}` }}
+        >
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
-              <p className="text-[11px] font-semibold tracking-[0.35em] text-yellow-500/70">
+              <p
+                className="text-[11px] font-semibold tracking-[0.35em]"
+                style={{ color: YELLOW_TEXT }}
+              >
                 ENDFIELD SUPPORT PLATFORM
               </p>
-              <h1 className="mt-2 text-4xl font-black tracking-tight text-yellow-300">
+
+              <h1
+                className="mt-2 text-4xl font-black tracking-tight"
+                style={{ color: YELLOW_TEXT }}
+              >
                 GEAR
               </h1>
+
               <p className="mt-1 text-sm text-zinc-500">Gear List</p>
             </div>
 
             <Link
               href="/"
-              className="rounded-xl border border-yellow-500/20 bg-black px-4 py-2 text-sm font-bold text-zinc-200 transition hover:border-yellow-400/40 hover:bg-[#0b1018] hover:text-yellow-300"
+              className="rounded-xl bg-black px-4 py-2 text-sm font-bold text-zinc-200 transition hover:bg-[#0b1018] hover:text-yellow-300"
+              style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
             >
               홈으로
             </Link>
@@ -375,9 +427,18 @@ export default function GearPage() {
         </header>
 
         <div className="grid gap-5 lg:grid-cols-[280px_minmax(0,1fr)]">
-          <aside className="sticky top-5 flex max-h-[calc(100vh-40px)] flex-col overflow-hidden rounded-[24px] border border-yellow-500/15 bg-[#05070b] shadow-[0_0_30px_rgba(250,204,21,0.04)]">
-            <div className="shrink-0 border-b border-yellow-500/10 bg-[#05070b] p-4">
-              <h2 className="mb-2 text-[11px] font-black tracking-[0.2em] text-yellow-300">
+          <aside
+            className="sticky top-5 flex max-h-[calc(100vh-40px)] flex-col overflow-hidden rounded-[24px] bg-[#05070b] shadow-[0_0_30px_rgba(250,204,21,0.04)]"
+            style={{ border: `1px solid ${YELLOW_BORDER}` }}
+          >
+            <div
+              className="shrink-0 bg-[#05070b] p-4"
+              style={{ borderBottom: `1px solid ${YELLOW_BORDER_SOFT}` }}
+            >
+              <h2
+                className="mb-2 text-[11px] font-black tracking-[0.2em]"
+                style={{ color: YELLOW_TEXT }}
+              >
                 검색
               </h2>
 
@@ -464,6 +525,7 @@ export default function GearPage() {
                     key={option.key}
                     active={abilityFilter === option.key}
                     label={option.label}
+                    iconSrc={abilityIconMap[option.key]}
                     onClick={() => setAbilityFilter(option.key)}
                   />
                 ))}
@@ -505,11 +567,17 @@ export default function GearPage() {
             </div>
           </aside>
 
-          <section className="min-w-0 rounded-[24px] border border-yellow-500/15 bg-[#05070b] p-3 shadow-[0_0_30px_rgba(250,204,21,0.04)]">
-            <div className="mb-3 flex items-center justify-between border-b border-yellow-500/10 pb-3">
+          <section
+            className="min-w-0 rounded-[24px] bg-[#05070b] p-3 shadow-[0_0_30px_rgba(250,204,21,0.04)]"
+            style={{ border: `1px solid ${YELLOW_BORDER}` }}
+          >
+            <div
+              className="mb-3 flex items-center justify-between pb-3"
+              style={{ borderBottom: `1px solid ${YELLOW_BORDER_SOFT}` }}
+            >
               <p className="text-sm text-zinc-400">
                 총{" "}
-                <span className="font-black text-yellow-300">
+                <span className="font-black" style={{ color: YELLOW_TEXT }}>
                   {sortedItems.length}
                 </span>
                 개
@@ -523,7 +591,10 @@ export default function GearPage() {
                 ))}
               </div>
             ) : (
-              <div className="flex min-h-[260px] items-center justify-center rounded-[20px] border border-yellow-500/10 bg-black p-6 text-center text-sm text-zinc-500">
+              <div
+                className="flex min-h-[260px] items-center justify-center rounded-[20px] bg-black p-6 text-center text-sm text-zinc-500"
+                style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
+              >
                 등록된 Gear 데이터가 없습니다.
                 <br />
                 gear-detail-data.ts에 Gear를 추가하면 여기에 표시됩니다.

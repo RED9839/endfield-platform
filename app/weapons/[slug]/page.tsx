@@ -662,26 +662,48 @@ export default async function WeaponDetailPage({
   return (
     <div style={styles.page}>
       <div style={styles.shell}>
-        <header style={styles.header}>
-          <div style={styles.subTitle}>ENDFIELD SUPPORT PLATFORM</div>
+        <header
+  className="mb-6 rounded-[24px] bg-[#05070b] p-5 shadow-[0_0_30px_rgba(250,204,21,0.04)]"
+  style={{ border: `1px solid ${YELLOW_BORDER}` }}
+>
+  <div className="flex flex-wrap items-end justify-between gap-4">
+    <div>
+      <p
+        className="text-[11px] font-semibold tracking-[0.35em]"
+        style={{ color: YELLOW_TEXT }}
+      >
+        ENDFIELD SUPPORT PLATFORM
+      </p>
 
-          <div style={styles.headerTopRow}>
-            <div>
-              <div style={styles.title}>WEAPONS</div>
-              <div style={styles.desc}>{weapon.name} 상세 정보</div>
-            </div>
+      <h1
+        className="mt-2 text-4xl font-black tracking-tight"
+        style={{ color: YELLOW_TEXT }}
+      >
+        WEAPONS
+      </h1>
 
-            <div style={styles.headerButtonRow}>
-              <Link href="/weapons" style={styles.topLinkButton}>
-                목록으로
-              </Link>
+      <p className="mt-1 text-sm text-zinc-500">Weapon Detail</p>
+    </div>
 
-              <Link href="/" style={styles.topLinkButton}>
-                홈으로
-              </Link>
-            </div>
-          </div>
-        </header>
+    <div className="flex flex-wrap gap-2">
+      <Link
+        href="/weapons"
+        className="rounded-xl bg-black px-4 py-2 text-sm font-bold text-zinc-200 transition hover:bg-[#0b1018]"
+        style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
+      >
+        목록으로
+      </Link>
+
+      <Link
+        href="/"
+        className="rounded-xl bg-black px-4 py-2 text-sm font-bold text-zinc-200 transition hover:bg-[#0b1018]"
+        style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
+      >
+        홈으로
+      </Link>
+    </div>
+  </div>
+</header>
 
         <section
           style={{

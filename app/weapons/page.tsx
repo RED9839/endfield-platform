@@ -72,6 +72,13 @@ const rarityLabelMap: Record<number, string> = {
   3: "3성",
 };
 
+const rarityIconMap: Record<number, string> = {
+  6: "/icons/rarity/6star.webp",
+  5: "/icons/rarity/5star.webp",
+  4: "/icons/rarity/4star.webp",
+  3: "/icons/rarity/3star.webp",
+};
+
 const rarityOptions = [6, 5, 4, 3];
 
 const seriesOptions = [
@@ -323,6 +330,28 @@ function WeaponChip({
   );
 }
 
+function RarityChip({ rarity }: { rarity: number }) {
+  const iconSrc = rarityIconMap[rarity];
+  const color = rarityColorMap[rarity] ?? YELLOW_MAIN;
+
+  return (
+    <WeaponChip color={color}>
+      {iconSrc ? (
+        <span className="relative h-3.5 w-3.5 shrink-0">
+          <Image
+            src={iconSrc}
+            alt={`${rarity}성`}
+            fill
+            sizes="14px"
+            className="object-contain"
+          />
+        </span>
+      ) : null}
+      <span>{rarityLabelMap[rarity] ?? `${rarity}성`}</span>
+    </WeaponChip>
+  );
+}
+
 function WeaponTypeChip({ type }: { type: string }) {
   const iconSrc = weaponTypeIconMap[type];
   const label = weaponTypeLabelMap[type] ?? type;
@@ -347,7 +376,6 @@ function WeaponTypeChip({ type }: { type: string }) {
 
 function WeaponCard({ item }: { item: WeaponLike }) {
   const rarity = getWeaponRarity(item);
-  const rarityColor = rarityColorMap[rarity] ?? YELLOW_MAIN;
   const weaponType = getWeaponType(item);
   const seriesText = getWeaponSeriesText(item);
   const image = getWeaponImage(item);
@@ -378,12 +406,8 @@ function WeaponCard({ item }: { item: WeaponLike }) {
         </p>
 
         <div className="mt-2 flex h-[18px] flex-nowrap gap-1 overflow-hidden">
-          <WeaponChip color={rarityColor}>
-            {rarityLabelMap[rarity] ?? `${rarity}성`}
-          </WeaponChip>
-
+          <RarityChip rarity={rarity} />
           <WeaponTypeChip type={weaponType} />
-
           {seriesText ? <WeaponChip muted>{seriesText}</WeaponChip> : null}
         </div>
       </div>
@@ -520,6 +544,7 @@ export default function WeaponsPage() {
                     key={value}
                     active={rarity === value}
                     label={rarityLabelMap[value]}
+                    iconSrc={rarityIconMap[value]}
                     colored
                     color={rarityColorMap[value]}
                     onClick={() => setRarity(value)}
