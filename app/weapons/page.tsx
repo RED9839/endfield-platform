@@ -29,29 +29,33 @@ type WeaponLike = {
   skill?: unknown;
   weaponSkill?: unknown;
   passive?: unknown;
-  attribute?: {
-    key?: string;
-    label?: string;
-    name?: string;
-  };
 };
 
 const weaponTypeLabelMap: Record<string, string> = {
   sword: "한손검",
+  artsunit: "아츠 유닛",
+  artsUnit: "아츠 유닛",
   greatsword: "양손검",
   polearm: "장병기",
   handcannon: "권총",
-  artsunit: "아츠 유닛",
-  artsUnit: "아츠 유닛",
 };
 
 const weaponTypeIconMap: Record<string, string> = {
   sword: "/icons/weapons/sword.webp",
+  artsunit: "/icons/weapons/artsunit.webp",
+  artsUnit: "/icons/weapons/artsunit.webp",
   greatsword: "/icons/weapons/greatsword.webp",
   polearm: "/icons/weapons/polearm.webp",
   handcannon: "/icons/weapons/handcannon.webp",
-  artsunit: "/icons/weapons/artsunit.webp",
-  artsUnit: "/icons/weapons/artsunit.webp",
+};
+
+const weaponTypeOrderMap: Record<string, number> = {
+  sword: 0,
+  artsunit: 1,
+  artsUnit: 1,
+  greatsword: 2,
+  polearm: 3,
+  handcannon: 4,
 };
 
 const rarityColorMap: Record<number, string> = {
@@ -70,12 +74,33 @@ const rarityLabelMap: Record<number, string> = {
 
 const rarityOptions = [6, 5, 4, 3];
 
+const seriesOptions = [
+  "고통",
+  "골절",
+  "기예",
+  "방출",
+  "분쇄",
+  "사기",
+  "어둠",
+  "억제",
+  "의료",
+  "잔혹",
+  "추격",
+  "효율",
+  "흐름",
+  "강공",
+];
+
 function readText(value: unknown): string {
   if (!value) return "";
-  if (typeof value === "string") return value.trim();
+
+  if (typeof value === "string") {
+    return value.trim();
+  }
 
   if (typeof value === "object") {
     const obj = value as Record<string, unknown>;
+
     const candidates = [
       obj.label,
       obj.name,
@@ -96,7 +121,7 @@ function readText(value: unknown): string {
 }
 
 function getWeaponType(item: WeaponLike) {
-  return item.type ?? item.weaponType ?? "";
+  return item.weaponType ?? item.type ?? "";
 }
 
 function getWeaponTypeLabel(item: WeaponLike) {
@@ -109,7 +134,12 @@ function getWeaponRarity(item: WeaponLike) {
 }
 
 function getWeaponImage(item: WeaponLike) {
-  return item.image ?? item.fullImage ?? item.avatar ?? "";
+  return (
+    item.image ??
+    item.fullImage ??
+    item.avatar ??
+    `/weapons/${item.slug}.webp`
+  );
 }
 
 function getRawSeriesText(item: WeaponLike) {
@@ -136,25 +166,58 @@ function getSeriesShortName(text: string) {
 
   const lower = text.toLowerCase();
 
-  if (text.includes("강공") || lower.includes("heavystrike") || lower.includes("heavy")) return "강공";
-  if (text.includes("제압") || lower.includes("suppression")) return "제압";
-  if (text.includes("추격") || lower.includes("pursuit")) return "추격";
+  if (text.includes("고통") || lower.includes("pain")) return "고통";
+  if (text.includes("골절") || lower.includes("fracture")) return "골절";
+
+  if (
+    text.includes("기예") ||
+    text.includes("기교") ||
+    lower.includes("technique")
+  ) {
+    return "기예";
+  }
+
+  if (text.includes("방출") || lower.includes("release")) return "방출";
   if (text.includes("분쇄") || lower.includes("crush")) return "분쇄";
   if (text.includes("사기") || lower.includes("morale")) return "사기";
-  if (text.includes("기교") || lower.includes("technique")) return "기교";
-  if (text.includes("잔혹") || lower.includes("brutality")) return "잔혹";
-  if (text.includes("고통") || lower.includes("pain")) return "고통";
   if (text.includes("어둠") || lower.includes("dark")) return "어둠";
 
-  return text.slice(0, 2);
+  if (
+    text.includes("억제") ||
+    text.includes("제압") ||
+    lower.includes("suppress") ||
+    lower.includes("suppression")
+  ) {
+    return "억제";
+  }
+
+  if (
+    text.includes("의료") ||
+    text.includes("치유") ||
+    lower.includes("medical") ||
+    lower.includes("heal")
+  ) {
+    return "의료";
+  }
+
+  if (text.includes("잔혹") || lower.includes("brutality")) return "잔혹";
+  if (text.includes("추격") || lower.includes("pursuit")) return "추격";
+  if (text.includes("효율") || lower.includes("efficiency")) return "효율";
+  if (text.includes("흐름") || lower.includes("flow")) return "흐름";
+
+  if (
+    text.includes("강공") ||
+    lower.includes("heavystrike") ||
+    lower.includes("heavy")
+  ) {
+    return "강공";
+  }
+
+  return "";
 }
 
 function getWeaponSeriesText(item: WeaponLike) {
   return getSeriesShortName(getRawSeriesText(item));
-}
-
-function getWeaponAttributeText(item: WeaponLike) {
-  return item.attribute?.label ?? item.attribute?.name ?? "";
 }
 
 function FilterButton({
@@ -191,7 +254,13 @@ function FilterButton({
     >
       {iconSrc ? (
         <span className="relative h-3.5 w-3.5 shrink-0">
-          <Image src={iconSrc} alt="" fill sizes="14px" className="object-contain" />
+          <Image
+            src={iconSrc}
+            alt=""
+            fill
+            sizes="14px"
+            className="object-contain"
+          />
         </span>
       ) : (
         <span
@@ -218,9 +287,13 @@ function FilterGroup({
 }) {
   return (
     <div className={last ? "" : "mb-5"}>
-      <h2 className="mb-2 text-[11px] font-black tracking-[0.2em]" style={{ color: YELLOW_TEXT }}>
+      <h2
+        className="mb-2 text-[11px] font-black tracking-[0.2em]"
+        style={{ color: YELLOW_TEXT }}
+      >
         {title}
       </h2>
+
       <div className="flex flex-col gap-2">{children}</div>
     </div>
   );
@@ -237,9 +310,11 @@ function WeaponChip({
 }) {
   return (
     <span
-      className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-md bg-black px-1.5 py-[1px] text-[10px] font-black leading-4"
+      className="inline-flex h-[18px] shrink-0 items-center gap-1 whitespace-nowrap rounded-md bg-black px-1.5 text-[10px] font-black leading-none"
       style={{
-        border: muted ? "1px solid rgba(255,255,255,0.24)" : `1px solid ${color}`,
+        border: muted
+          ? "1px solid rgba(255,255,255,0.24)"
+          : `1px solid ${color}`,
         color: muted ? "#e5e7eb" : color,
       }}
     >
@@ -259,10 +334,10 @@ function WeaponTypeChip({ type }: { type: string }) {
       <span className="relative h-3.5 w-3.5 shrink-0">
         <Image
           src={iconSrc}
-          alt=""
+          alt={label}
           fill
           sizes="14px"
-          className="object-contain brightness-0 invert"
+          className="object-contain"
         />
       </span>
       <span>{label}</span>
@@ -273,51 +348,43 @@ function WeaponTypeChip({ type }: { type: string }) {
 function WeaponCard({ item }: { item: WeaponLike }) {
   const rarity = getWeaponRarity(item);
   const rarityColor = rarityColorMap[rarity] ?? YELLOW_MAIN;
-  const image = getWeaponImage(item);
-  const type = getWeaponType(item);
+  const weaponType = getWeaponType(item);
   const seriesText = getWeaponSeriesText(item);
-  const attributeText = getWeaponAttributeText(item);
+  const image = getWeaponImage(item);
 
   return (
     <Link
       href={`/weapons/${item.slug}`}
-      className="group relative block h-[244px] overflow-hidden rounded-[18px] border bg-black transition hover:-translate-y-1 hover:border-yellow-400/35"
-      style={{ borderColor: YELLOW_BORDER_SOFT }}
+      className="group relative block h-[244px] overflow-hidden rounded-[18px] bg-black transition hover:-translate-y-1"
+      style={{ border: `1px solid ${YELLOW_BORDER}` }}
     >
-      {image ? (
-        <Image
-          src={image}
-          alt={item.name}
-          fill
-          sizes="(max-width: 1840px) 12.5vw, 180px"
-          className="object-cover object-center transition duration-300 group-hover:scale-105"
-        />
-      ) : (
-        <div className="absolute inset-0 bg-[#071019]" />
-      )}
+      <Image
+        src={image}
+        alt={item.name}
+        fill
+        sizes="(max-width: 1840px) 12.5vw, 180px"
+        className="object-cover object-center transition duration-300 group-hover:scale-105"
+      />
 
       <div className="absolute inset-0 bg-gradient-to-t from-black via-black/55 to-transparent" />
 
       <div className="absolute bottom-0 left-0 w-full p-3">
-        <h3 className="line-clamp-2 text-[14px] font-black" style={{ color: YELLOW_TEXT }}>
+        <h3 className="line-clamp-2 text-[14px] font-black text-yellow-300">
           {item.name}
         </h3>
 
-        {item.enName ? (
-          <p className="mt-1 line-clamp-1 text-[10px] text-zinc-300">
-            {item.enName}
-          </p>
-        ) : null}
+        <p className="mt-1 line-clamp-1 text-[10px] text-zinc-300">
+          {item.enName}
+        </p>
 
-        <div className="mt-2 flex flex-wrap items-center gap-1.5 overflow-hidden">
+        <div className="mt-2 flex h-[18px] flex-nowrap gap-1 overflow-hidden">
           <WeaponChip color={rarityColor}>
             {rarityLabelMap[rarity] ?? `${rarity}성`}
           </WeaponChip>
 
-          <WeaponTypeChip type={type} />
+          <WeaponTypeChip type={weaponType} />
 
           {seriesText ? <WeaponChip muted>{seriesText}</WeaponChip> : null}
-          {attributeText ? <WeaponChip muted>{attributeText}</WeaponChip> : null}
         </div>
       </div>
     </Link>
@@ -326,59 +393,49 @@ function WeaponCard({ item }: { item: WeaponLike }) {
 
 export default function WeaponsPage() {
   const [keyword, setKeyword] = useState("");
-  const [rarity, setRarity] = useState<number | "all">("all");
   const [weaponType, setWeaponType] = useState<string | "all">("all");
+  const [rarity, setRarity] = useState<number | "all">("all");
   const [series, setSeries] = useState<string | "all">("all");
-
-  const items = weaponDetails as unknown as WeaponLike[];
-
-  const weaponTypeOptions = useMemo(() => {
-    return Array.from(new Set(items.map((item) => getWeaponType(item)).filter(Boolean)));
-  }, [items]);
-
-  const seriesOptions = useMemo(() => {
-    return Array.from(new Set(items.map((item) => getWeaponSeriesText(item)).filter(Boolean)));
-  }, [items]);
 
   const filteredItems = useMemo(() => {
     const q = keyword.trim().toLowerCase();
 
-    return items.filter((item) => {
-      const type = getWeaponType(item);
-      const rarityValue = getWeaponRarity(item);
-      const typeLabel = getWeaponTypeLabel(item);
-      const seriesText = getWeaponSeriesText(item);
+    return (weaponDetails as WeaponLike[]).filter((item) => {
+      const itemType = getWeaponType(item);
+      const itemRarity = getWeaponRarity(item);
       const rawSeriesText = getRawSeriesText(item);
-      const attributeText = getWeaponAttributeText(item);
+      const shortSeriesText = getWeaponSeriesText(item);
 
       const matchesKeyword =
         q === "" ||
         item.name.toLowerCase().includes(q) ||
         (item.enName ?? "").toLowerCase().includes(q) ||
-        type.toLowerCase().includes(q) ||
-        typeLabel.toLowerCase().includes(q) ||
-        seriesText.toLowerCase().includes(q) ||
+        getWeaponTypeLabel(item).toLowerCase().includes(q) ||
         rawSeriesText.toLowerCase().includes(q) ||
-        attributeText.toLowerCase().includes(q);
+        shortSeriesText.toLowerCase().includes(q);
 
-      const matchesRarity = rarity === "all" || rarityValue === rarity;
-      const matchesType = weaponType === "all" || type === weaponType;
-      const matchesSeries = series === "all" || seriesText === series;
+      const matchesType = weaponType === "all" || itemType === weaponType;
+      const matchesRarity = rarity === "all" || itemRarity === rarity;
+      const matchesSeries =
+        series === "all" ||
+        rawSeriesText.includes(series) ||
+        shortSeriesText === series;
 
-      return matchesKeyword && matchesRarity && matchesType && matchesSeries;
+      return matchesKeyword && matchesType && matchesRarity && matchesSeries;
     });
-  }, [items, keyword, rarity, weaponType, series]);
+  }, [keyword, weaponType, rarity, series]);
 
   const sortedItems = useMemo(() => {
     return [...filteredItems].sort((a, b) => {
-      const rarityDiff = getWeaponRarity(b) - getWeaponRarity(a);
-      if (rarityDiff !== 0) return rarityDiff;
+      const rarityA = getWeaponRarity(a);
+      const rarityB = getWeaponRarity(b);
 
-      const typeCompare = getWeaponTypeLabel(a).localeCompare(getWeaponTypeLabel(b), "ko");
-      if (typeCompare !== 0) return typeCompare;
+      if (rarityB !== rarityA) return rarityB - rarityA;
 
-      const seriesCompare = getWeaponSeriesText(a).localeCompare(getWeaponSeriesText(b), "ko");
-      if (seriesCompare !== 0) return seriesCompare;
+      const typeA = weaponTypeOrderMap[getWeaponType(a)] ?? 999;
+      const typeB = weaponTypeOrderMap[getWeaponType(b)] ?? 999;
+
+      if (typeA !== typeB) return typeA - typeB;
 
       return a.name.localeCompare(b.name, "ko");
     });
@@ -393,12 +450,18 @@ export default function WeaponsPage() {
         >
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
-              <p className="text-[11px] font-semibold tracking-[0.35em]" style={{ color: YELLOW_TEXT }}>
+              <p
+                className="text-[11px] font-semibold tracking-[0.35em]"
+                style={{ color: YELLOW_TEXT }}
+              >
                 ENDFIELD SUPPORT PLATFORM
               </p>
 
-              <h1 className="mt-2 text-4xl font-black tracking-tight" style={{ color: YELLOW_MAIN }}>
-                WEAPON
+              <h1
+                className="mt-2 text-4xl font-black tracking-tight"
+                style={{ color: YELLOW_TEXT }}
+              >
+                WEAPONS
               </h1>
 
               <p className="mt-1 text-sm text-zinc-500">Weapon List</p>
@@ -419,8 +482,14 @@ export default function WeaponsPage() {
             className="sticky top-5 flex max-h-[calc(100vh-40px)] flex-col overflow-hidden rounded-[24px] bg-[#05070b] shadow-[0_0_30px_rgba(250,204,21,0.04)]"
             style={{ border: `1px solid ${YELLOW_BORDER}` }}
           >
-            <div className="shrink-0 border-b bg-[#05070b] p-4" style={{ borderColor: YELLOW_BORDER_SOFT }}>
-              <h2 className="mb-2 text-[11px] font-black tracking-[0.2em]" style={{ color: YELLOW_TEXT }}>
+            <div
+              className="shrink-0 bg-[#05070b] p-4"
+              style={{ borderBottom: `1px solid ${YELLOW_BORDER_SOFT}` }}
+            >
+              <h2
+                className="mb-2 text-[11px] font-black tracking-[0.2em]"
+                style={{ color: YELLOW_TEXT }}
+              >
                 검색
               </h2>
 
@@ -428,25 +497,29 @@ export default function WeaponsPage() {
                 <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-zinc-500">
                   ⌕
                 </span>
+
                 <input
                   value={keyword}
-                  onChange={(event) => setKeyword(event.target.value)}
+                  onChange={(e) => setKeyword(e.target.value)}
                   placeholder="이름 / 타입 / 시리즈 검색"
-                  className="h-9 w-full rounded-xl border bg-[#071019] pl-9 pr-3 text-xs text-white outline-none transition placeholder:text-zinc-500"
-                  style={{ borderColor: "rgba(255,255,255,0.20)" }}
+                  className="h-9 w-full rounded-xl border border-white/20 bg-[#071019] pl-9 pr-3 text-xs text-white outline-none transition placeholder:text-zinc-500 focus:border-yellow-400/50"
                 />
               </div>
             </div>
 
             <div className="min-h-0 flex-1 overflow-y-auto p-4">
               <FilterGroup title="레어도">
-                <FilterButton active={rarity === "all"} label="전체" onClick={() => setRarity("all")} />
+                <FilterButton
+                  active={rarity === "all"}
+                  label="전체"
+                  onClick={() => setRarity("all")}
+                />
 
                 {rarityOptions.map((value) => (
                   <FilterButton
                     key={value}
                     active={rarity === value}
-                    label={rarityLabelMap[value] ?? `${value}성`}
+                    label={rarityLabelMap[value]}
                     colored
                     color={rarityColorMap[value]}
                     onClick={() => setRarity(value)}
@@ -454,22 +527,55 @@ export default function WeaponsPage() {
                 ))}
               </FilterGroup>
 
-              <FilterGroup title="무기 타입">
-                <FilterButton active={weaponType === "all"} label="전체" onClick={() => setWeaponType("all")} />
+              <FilterGroup title="무기 유형">
+                <FilterButton
+                  active={weaponType === "all"}
+                  label="전체"
+                  onClick={() => setWeaponType("all")}
+                />
 
-                {weaponTypeOptions.map((type) => (
-                  <FilterButton
-                    key={type}
-                    active={weaponType === type}
-                    label={weaponTypeLabelMap[type] ?? type}
-                    iconSrc={weaponTypeIconMap[type]}
-                    onClick={() => setWeaponType(type)}
-                  />
-                ))}
+                <FilterButton
+                  active={weaponType === "sword"}
+                  label="한손검"
+                  iconSrc={weaponTypeIconMap.sword}
+                  onClick={() => setWeaponType("sword")}
+                />
+
+                <FilterButton
+                  active={weaponType === "artsunit"}
+                  label="아츠 유닛"
+                  iconSrc={weaponTypeIconMap.artsunit}
+                  onClick={() => setWeaponType("artsunit")}
+                />
+
+                <FilterButton
+                  active={weaponType === "greatsword"}
+                  label="양손검"
+                  iconSrc={weaponTypeIconMap.greatsword}
+                  onClick={() => setWeaponType("greatsword")}
+                />
+
+                <FilterButton
+                  active={weaponType === "polearm"}
+                  label="장병기"
+                  iconSrc={weaponTypeIconMap.polearm}
+                  onClick={() => setWeaponType("polearm")}
+                />
+
+                <FilterButton
+                  active={weaponType === "handcannon"}
+                  label="권총"
+                  iconSrc={weaponTypeIconMap.handcannon}
+                  onClick={() => setWeaponType("handcannon")}
+                />
               </FilterGroup>
 
               <FilterGroup title="시리즈" last>
-                <FilterButton active={series === "all"} label="전체" onClick={() => setSeries("all")} />
+                <FilterButton
+                  active={series === "all"}
+                  label="전체"
+                  onClick={() => setSeries("all")}
+                />
 
                 {seriesOptions.map((value) => (
                   <FilterButton
@@ -487,7 +593,10 @@ export default function WeaponsPage() {
             className="min-w-0 rounded-[24px] bg-[#05070b] p-3 shadow-[0_0_30px_rgba(250,204,21,0.04)]"
             style={{ border: `1px solid ${YELLOW_BORDER}` }}
           >
-            <div className="mb-3 flex items-center justify-between border-b pb-3" style={{ borderColor: YELLOW_BORDER_SOFT }}>
+            <div
+              className="mb-3 flex items-center justify-between pb-3"
+              style={{ borderBottom: `1px solid ${YELLOW_BORDER_SOFT}` }}
+            >
               <p className="text-sm text-zinc-400">
                 총{" "}
                 <span className="font-black" style={{ color: YELLOW_TEXT }}>
@@ -509,6 +618,8 @@ export default function WeaponsPage() {
                 style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
               >
                 등록된 Weapon 데이터가 없습니다.
+                <br />
+                weapons-detail-data.ts에 Weapon을 추가하면 여기에 표시됩니다.
               </div>
             )}
           </section>

@@ -14,7 +14,7 @@ import type {
   GearSetName,
 } from "@/data/gear-types";
 
-const GEAR_ACCENT = "#ffcc4d";
+const GEAR_ACCENT = "#ffdc70";
 const FILTER_BG = "#071019";
 
 const categoryLabelMap: Record<GearCategory, string> = {
@@ -30,9 +30,9 @@ const categoryOrderMap: Record<GearCategory, number> = {
 };
 
 const qualityColorMap: Record<GearQuality, string> = {
-  5: "#ffcc4d",
-  4: "#a855f7",
-  3: "#38bdf8",
+  5: "#f0c94a",
+  4: "#9a63ff",
+  3: "#4fa3ff",
   2: "#84cc16",
   1: "#9ca3af",
 };
@@ -142,7 +142,7 @@ function FilterButton({
           ? pointColor
           : colored
             ? `${pointColor}88`
-            : "rgba(255, 204, 77, 0.18)",
+            : "rgba(255, 196, 74, 0.18)",
         background: active ? `${pointColor}22` : FILTER_BG,
         color: active ? "#ffffff" : "#d4d4d8",
       }}
@@ -184,7 +184,7 @@ function GearChip({
 
   return (
     <span
-      className="shrink-0 whitespace-nowrap rounded-md bg-black px-1.5 py-[1px] text-[10px] font-black leading-4"
+      className="inline-flex h-[18px] max-w-full shrink-0 items-center gap-1 overflow-hidden whitespace-nowrap rounded-md bg-black px-1.5 text-[10px] font-black leading-none"
       style={{
         border: muted
           ? "1px solid rgba(255,255,255,0.24)"
@@ -194,6 +194,28 @@ function GearChip({
     >
       {children}
     </span>
+  );
+}
+
+function GearCategoryLevelChip({ item }: { item: GearDetail }) {
+  const qualityColor = qualityColorMap[item.quality];
+
+  return (
+    <GearChip color={qualityColor}>
+      <span className="relative h-3.5 w-3.5 shrink-0">
+        <Image
+          src={categoryIconMap[item.category]}
+          alt={categoryLabelMap[item.category]}
+          fill
+          sizes="14px"
+          className="object-contain"
+        />
+      </span>
+
+      <span className="opacity-70">·</span>
+
+      <span>Lv.{item.level}</span>
+    </GearChip>
   );
 }
 
@@ -225,22 +247,24 @@ function GearCard({ item }: { item: GearDetail }) {
           {item.enName}
         </p>
 
-        <div className="mt-2 flex flex-wrap gap-1 overflow-hidden">
-          <GearChip color={qualityColor}>
-            {categoryLabelMap[item.category]} · Lv.{item.level}
-          </GearChip>
+        <div className="mt-2 flex flex-col gap-1 overflow-hidden">
+          <div className="flex h-[18px] flex-nowrap gap-1 overflow-hidden">
+            <GearCategoryLevelChip item={item} />
 
-          {item.ability1?.label ? (
-            <GearChip muted>{item.ability1.label}</GearChip>
-          ) : null}
+            {item.ability1?.label ? (
+              <GearChip muted>{item.ability1.label}</GearChip>
+            ) : null}
 
-          {item.ability2?.label ? (
-            <GearChip muted>{item.ability2.label}</GearChip>
-          ) : null}
+            {item.ability2?.label ? (
+              <GearChip muted>{item.ability2.label}</GearChip>
+            ) : null}
+          </div>
 
-          {attributeText ? (
-            <GearChip color={qualityColor}>{attributeText}</GearChip>
-          ) : null}
+          <div className="flex h-[18px] flex-nowrap gap-1 overflow-hidden">
+            {attributeText ? (
+              <GearChip color={qualityColor}>{attributeText}</GearChip>
+            ) : null}
+          </div>
         </div>
       </div>
     </Link>

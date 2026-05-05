@@ -15,6 +15,7 @@ const YELLOW_TEXT = "#ffdc70";
 const YELLOW_BORDER = "rgba(255,196,74,0.14)";
 const YELLOW_BORDER_SOFT = "rgba(255,196,74,0.10)";
 const YELLOW_BORDER_FAINT = "rgba(255,196,74,0.08)";
+const LABEL_BORDER = "rgba(255,196,74,0.42)";
 
 const rarityColorMap: Record<WeaponRarity, string> = {
   6: "#ff8a1f",
@@ -32,10 +33,11 @@ const rarityLabelMap: Record<WeaponRarity, string> = {
 
 const weaponTypeLabelMap: Record<string, string> = {
   sword: "한손검",
+  artsunit: "아츠 유닛",
+  artsUnit: "아츠 유닛",
   greatsword: "양손검",
   polearm: "장병기",
   handcannon: "권총",
-  artsunit: "아츠 유닛",
 };
 
 const rarityIconMap: Record<WeaponRarity, string> = {
@@ -47,10 +49,11 @@ const rarityIconMap: Record<WeaponRarity, string> = {
 
 const weaponTypeIconMap: Record<string, string> = {
   sword: "/icons/weapons/sword.webp",
+  artsunit: "/icons/weapons/artsunit.webp",
+  artsUnit: "/icons/weapons/artsunit.webp",
   greatsword: "/icons/weapons/greatsword.webp",
   polearm: "/icons/weapons/polearm.webp",
   handcannon: "/icons/weapons/handcannon.webp",
-  artsunit: "/icons/weapons/artsunit.webp",
 };
 
 type WeaponMeta = {
@@ -166,7 +169,7 @@ const styles: Record<string, CSSProperties> = {
   },
 };
 
-function PageSectionTitle({ children }: { children: React.ReactNode }) {
+function PageSectionTitle({ children }: { children: ReactNode }) {
   return <div style={styles.sectionTitle}>{children}</div>;
 }
 
@@ -180,17 +183,17 @@ function escapeRegExp(text: string) {
 
 function findSkillByType(
   weapon: WeaponLike,
-  target: "능력치" | "속성" | "시리즈 스킬"
+  target: "능력치" | "속성" | "시리즈 스킬",
 ) {
   const skills = weapon.skills ?? [];
 
   const exactMeta = skills.find((skill) =>
-    skill.meta?.some((meta) => normalizeText(meta.label) === target)
+    skill.meta?.some((meta) => normalizeText(meta.label) === target),
   );
   if (exactMeta) return exactMeta;
 
   const exactType = skills.find(
-    (skill) => normalizeText(skill.typeLabel) === target
+    (skill) => normalizeText(skill.typeLabel) === target,
   );
   if (exactType) return exactType;
 
@@ -316,16 +319,16 @@ function highlightElementTerms(text: string): ReactNode {
   const colorMap: Array<{ pattern: RegExp; color: string }> = [
     { pattern: /물리 피해/g, color: "#cfd8e3" },
     { pattern: /열기 피해/g, color: "#ff7a59" },
-    { pattern: /전기 피해/g, color: "#FBCB38" },
+    { pattern: /전기 피해/g, color: "#f0c94a" },
     { pattern: /냉기 피해/g, color: "#63b3ff" },
     { pattern: /자연 피해/g, color: "#7ddc6d" },
     { pattern: /물리/g, color: "#cfd8e3" },
     { pattern: /열기/g, color: "#ff7a59" },
-    { pattern: /전기/g, color: "#FBCB38" },
+    { pattern: /전기/g, color: "#f0c94a" },
     { pattern: /냉기/g, color: "#63b3ff" },
     { pattern: /자연/g, color: "#7ddc6d" },
     { pattern: /연소/g, color: "#ff7a59" },
-    { pattern: /감전/g, color: "#FBCB38" },
+    { pattern: /감전/g, color: "#f0c94a" },
     { pattern: /동결/g, color: "#63b3ff" },
     { pattern: /부식/g, color: "#7ddc6d" },
     { pattern: /띄우기/g, color: "#cfd8e3" },
@@ -382,7 +385,7 @@ function highlightElementTerms(text: string): ReactNode {
     result.push(
       <span key={`${match.text}-${match.start}-${index}`} style={match.style}>
         {match.text}
-      </span>
+      </span>,
     );
 
     cursor = match.end;
@@ -397,7 +400,7 @@ function highlightElementTerms(text: string): ReactNode {
 
 function highlightSeriesDescription(
   text: string,
-  seriesSkillName?: string
+  seriesSkillName?: string,
 ): ReactNode {
   const raw = normalizeText(text);
   if (!raw) return "-";
@@ -431,16 +434,16 @@ function highlightSeriesDescription(
   const colorMap: Array<{ pattern: RegExp; color: string }> = [
     { pattern: /물리 피해/g, color: "#cfd8e3" },
     { pattern: /열기 피해/g, color: "#ff7a59" },
-    { pattern: /전기 피해/g, color: "#FBCB38" },
+    { pattern: /전기 피해/g, color: "#f0c94a" },
     { pattern: /냉기 피해/g, color: "#63b3ff" },
     { pattern: /자연 피해/g, color: "#7ddc6d" },
     { pattern: /물리/g, color: "#cfd8e3" },
     { pattern: /열기/g, color: "#ff7a59" },
-    { pattern: /전기/g, color: "#FBCB38" },
+    { pattern: /전기/g, color: "#f0c94a" },
     { pattern: /냉기/g, color: "#63b3ff" },
     { pattern: /자연/g, color: "#7ddc6d" },
     { pattern: /연소/g, color: "#ff7a59" },
-    { pattern: /감전/g, color: "#FBCB38" },
+    { pattern: /감전/g, color: "#f0c94a" },
     { pattern: /동결/g, color: "#63b3ff" },
     { pattern: /부식/g, color: "#7ddc6d" },
     { pattern: /띄우기/g, color: "#cfd8e3" },
@@ -510,7 +513,7 @@ function highlightSeriesDescription(
     result.push(
       <span key={`${match.text}-${match.start}-${index}`} style={match.style}>
         {match.text}
-      </span>
+      </span>,
     );
 
     cursor = match.end;
@@ -557,7 +560,7 @@ function SmallIcon({
 function InfoBadge({
   label,
   iconSrc,
-  borderColor = YELLOW_BORDER_SOFT,
+  borderColor = LABEL_BORDER,
   textColor = YELLOW_TEXT,
   background = "#000000",
 }: {
@@ -669,11 +672,12 @@ export default async function WeaponDetailPage({
             </div>
 
             <div style={styles.headerButtonRow}>
-              <Link href="/" style={styles.topLinkButton}>
-                홈으로
-              </Link>
               <Link href="/weapons" style={styles.topLinkButton}>
                 목록으로
+              </Link>
+
+              <Link href="/" style={styles.topLinkButton}>
+                홈으로
               </Link>
             </div>
           </div>
@@ -849,7 +853,7 @@ export default async function WeaponDetailPage({
                     label={seriesSkillInfo.name}
                     value={highlightSeriesDescription(
                       seriesSkillInfo.rank1Description,
-                      seriesSkillInfo.name
+                      seriesSkillInfo.name,
                     )}
                     noBorder
                   />
