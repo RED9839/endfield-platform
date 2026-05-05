@@ -16,9 +16,13 @@ type BreakthroughStage = {
   bonuses: string[];
 };
 
-const UNIFIED_YELLOW = "#ffd24a";
-const PANEL_BORDER = "rgba(255,196,74,0.14)";
-const PANEL_BORDER_SOFT = "rgba(255,196,74,0.12)";
+const YELLOW_MAIN = "#ffd24a";
+const YELLOW_TEXT = "#ffdc70";
+const YELLOW_BORDER = "rgba(255,196,74,0.14)";
+const YELLOW_BORDER_SOFT = "rgba(255,196,74,0.10)";
+
+const PANEL_BORDER = YELLOW_BORDER;
+const PANEL_BORDER_SOFT = YELLOW_BORDER_SOFT;
 const PANEL_BORDER_FAINT = "rgba(255,196,74,0.08)";
 
 function FoldSection({
@@ -60,7 +64,7 @@ function FoldSection({
         }}
       >
         <span>{title}</span>
-        <span style={{ color: UNIFIED_YELLOW }}>{isOpen ? "−" : "+"}</span>
+        <span style={{ color: YELLOW_TEXT }}>{isOpen ? "−" : "+"}</span>
       </button>
 
       {isOpen ? (
@@ -131,7 +135,7 @@ export default function WeaponBreakthroughPanel({
       <div>
         <div
           style={{
-            color: UNIFIED_YELLOW,
+            color: YELLOW_TEXT,
             fontSize: "30px",
             fontWeight: 900,
           }}
@@ -148,7 +152,7 @@ export default function WeaponBreakthroughPanel({
           }}
         >
           레벨 요구:{" "}
-          <span style={{ color: UNIFIED_YELLOW, fontWeight: 900 }}>
+          <span style={{ color: YELLOW_TEXT, fontWeight: 900 }}>
             {current.requiredLevel}
           </span>
         </div>
@@ -195,7 +199,7 @@ export default function WeaponBreakthroughPanel({
               style={{
                 padding: "6px 12px",
                 border: active
-                  ? `1px solid ${UNIFIED_YELLOW}`
+                  ? `1px solid ${YELLOW_TEXT}`
                   : `1px solid ${PANEL_BORDER_SOFT}`,
                 background: active ? "rgba(255,210,74,0.14)" : "#0c1016",
                 color: "#fff",
@@ -231,7 +235,7 @@ export default function WeaponBreakthroughPanel({
             >
               <div
                 style={{
-                  color: UNIFIED_YELLOW,
+                  color: YELLOW_TEXT,
                   fontSize: "13px",
                   fontWeight: 900,
                   marginBottom: "8px",
@@ -277,7 +281,7 @@ export default function WeaponBreakthroughPanel({
 
                       <div
                         style={{
-                          color: UNIFIED_YELLOW,
+                          color: YELLOW_TEXT,
                           fontSize: "11px",
                           fontWeight: 900,
                           whiteSpace: "nowrap",

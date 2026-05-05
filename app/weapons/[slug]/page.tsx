@@ -11,15 +11,12 @@ import WeaponLevelPanel from "./WeaponLevelPanel";
 import WeaponSkillAtlasPanel from "./WeaponSkillAtlasPanel";
 import WeaponBreakthroughPanel from "./WeaponBreakthroughPanel";
 
-const buttonClip: CSSProperties["clipPath"] =
-  "polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)";
+const YELLOW_TEXT = "#ffdc70";
+const YELLOW_BORDER = "rgba(255,196,74,0.14)";
+const YELLOW_BORDER_SOFT = "rgba(255,196,74,0.10)";
+const YELLOW_BORDER_FAINT = "rgba(255,196,74,0.08)";
 
-const UNIFIED_YELLOW = "#ffd24a";
-const YELLOW_BORDER = "rgba(255,210,74,0.18)";
-const YELLOW_BORDER_SOFT = "rgba(255,210,74,0.12)";
-const YELLOW_BORDER_FAINT = "rgba(255,210,74,0.08)";
-
-const rarityBorderMap: Record<WeaponRarity, string> = {
+const rarityColorMap: Record<WeaponRarity, string> = {
   6: "#ff8a1f",
   5: "#f0c94a",
   4: "#9a63ff",
@@ -96,8 +93,7 @@ type WeaponLike = {
 const styles: Record<string, CSSProperties> = {
   page: {
     minHeight: "100vh",
-    background:
-      "radial-gradient(circle at top, rgba(255,170,40,0.08), transparent 18%), #000",
+    background: "#050505",
     color: "#fff",
     padding: "24px 28px 40px",
   },
@@ -108,18 +104,22 @@ const styles: Record<string, CSSProperties> = {
   },
   header: {
     marginBottom: "24px",
-    borderBottom: `1px solid ${YELLOW_BORDER}`,
-    paddingBottom: "16px",
+    border: `1px solid ${YELLOW_BORDER}`,
+    borderRadius: "24px",
+    background: "#05070b",
+    padding: "20px",
+    boxShadow: "0 0 30px rgba(250,204,21,0.04)",
   },
   subTitle: {
     fontSize: "11px",
-    letterSpacing: "0.28em",
-    color: "rgba(255,210,90,0.75)",
+    letterSpacing: "0.35em",
+    color: YELLOW_TEXT,
+    fontWeight: 700,
   },
   headerTopRow: {
-    marginTop: "14px",
+    marginTop: "10px",
     display: "flex",
-    alignItems: "center",
+    alignItems: "flex-end",
     justifyContent: "space-between",
     gap: "12px",
     flexWrap: "wrap",
@@ -128,13 +128,13 @@ const styles: Record<string, CSSProperties> = {
     marginTop: "8px",
     fontSize: "42px",
     fontWeight: 900,
-    color: "#ffcc4d",
+    color: YELLOW_TEXT,
     letterSpacing: "-0.02em",
   },
   desc: {
-    marginTop: "8px",
+    marginTop: "4px",
     fontSize: "13px",
-    color: "#9ca3af",
+    color: "#71717a",
   },
   headerButtonRow: {
     display: "flex",
@@ -149,8 +149,8 @@ const styles: Record<string, CSSProperties> = {
     minHeight: "38px",
     padding: "0 14px",
     background: "#000000",
-    color: "#f3f4f6",
-    border: `1px solid ${YELLOW_BORDER}`,
+    color: "#e4e4e7",
+    border: `1px solid ${YELLOW_BORDER_SOFT}`,
     borderRadius: "14px",
     textDecoration: "none",
     fontSize: "13px",
@@ -161,7 +161,7 @@ const styles: Record<string, CSSProperties> = {
     marginBottom: "12px",
     fontSize: "22px",
     fontWeight: 900,
-    color: "#ffcc4d",
+    color: YELLOW_TEXT,
     letterSpacing: "-0.01em",
   },
 };
@@ -420,7 +420,7 @@ function highlightSeriesDescription(
         end: index + value.length,
         text: value,
         style: {
-          color: UNIFIED_YELLOW,
+          color: YELLOW_TEXT,
           fontWeight: 900,
         },
         priority: 2000,
@@ -473,7 +473,7 @@ function highlightSeriesDescription(
       end,
       text: value,
       style: {
-        color: UNIFIED_YELLOW,
+        color: YELLOW_TEXT,
         fontWeight: 900,
       },
       priority: 1500,
@@ -557,8 +557,8 @@ function SmallIcon({
 function InfoBadge({
   label,
   iconSrc,
-  borderColor = YELLOW_BORDER_FAINT,
-  textColor = "#ffffff",
+  borderColor = YELLOW_BORDER_SOFT,
+  textColor = YELLOW_TEXT,
   background = "#000000",
 }: {
   label: string;
@@ -617,6 +617,7 @@ function BasicStatRow({
       >
         {label}
       </div>
+
       <div
         style={{
           padding: "12px",
@@ -644,8 +645,7 @@ export default async function WeaponDetailPage({
 
   if (!weapon) notFound();
 
-  const heroBorderColor = rarityBorderMap[weapon.rarity];
-  const accentColor = UNIFIED_YELLOW;
+  const rarityColor = rarityColorMap[weapon.rarity];
   const heroImage = `/weapons/${weapon.slug}.webp`;
   const initialAttack = getInitialAttack(weapon);
 
@@ -695,7 +695,7 @@ export default async function WeaponDetailPage({
               position: "absolute",
               inset: 0,
               background:
-                "linear-gradient(180deg, rgba(255,210,74,0.04), transparent 18%)",
+                "linear-gradient(180deg, rgba(255,196,74,0.035), transparent 18%)",
               pointerEvents: "none",
             }}
           />
@@ -714,7 +714,7 @@ export default async function WeaponDetailPage({
                 position: "relative",
                 minHeight: "540px",
                 background: "#000",
-                border: `1px solid ${heroBorderColor}`,
+                border: `1px solid ${YELLOW_BORDER}`,
                 borderRadius: "20px",
                 overflow: "hidden",
               }}
@@ -727,6 +727,7 @@ export default async function WeaponDetailPage({
                 loading="eager"
                 style={{ objectFit: "contain" }}
               />
+
               <div
                 style={{
                   position: "absolute",
@@ -755,16 +756,19 @@ export default async function WeaponDetailPage({
                 <InfoBadge
                   label={rarityLabelMap[weapon.rarity]}
                   iconSrc={rarityIconMap[weapon.rarity]}
-                  borderColor={heroBorderColor}
-                  textColor={heroBorderColor}
-                  background="#000000"
+                  borderColor={rarityColor}
+                  textColor={rarityColor}
                 />
+
                 <InfoBadge
                   label={weaponTypeLabel}
                   iconSrc={weaponTypeIconMap[weapon.weaponType]}
                 />
+
                 <InfoBadge label={abilityInfo.name} />
+
                 <InfoBadge label={attributeInfo.name} />
+
                 <InfoBadge label={seriesSkillInfo.name} />
               </div>
 
@@ -773,7 +777,7 @@ export default async function WeaponDetailPage({
                   style={{
                     fontSize: "15px",
                     fontWeight: 700,
-                    color: UNIFIED_YELLOW,
+                    color: YELLOW_TEXT,
                     letterSpacing: "0.04em",
                   }}
                 >
@@ -798,8 +802,9 @@ export default async function WeaponDetailPage({
                   style={{
                     fontSize: "11px",
                     letterSpacing: "0.25em",
-                    color: UNIFIED_YELLOW,
+                    color: YELLOW_TEXT,
                     marginBottom: "8px",
+                    fontWeight: 800,
                   }}
                 >
                   BASIC STAT
@@ -807,7 +812,7 @@ export default async function WeaponDetailPage({
 
                 <div
                   style={{
-                    border: `1px solid rgba(255,196,74,0.16)`,
+                    border: `1px solid ${YELLOW_BORDER}`,
                     borderRadius: "20px",
                     background: "#06080c",
                     overflow: "hidden",
@@ -816,27 +821,30 @@ export default async function WeaponDetailPage({
                   <BasicStatRow
                     label={weapon.mainStatLabel ?? "공격력"}
                     value={
-                      <span style={{ color: UNIFIED_YELLOW }}>
+                      <span style={{ color: YELLOW_TEXT }}>
                         {initialAttack}
                       </span>
                     }
                   />
+
                   <BasicStatRow
                     label={abilityInfo.name}
                     value={
-                      <span style={{ color: UNIFIED_YELLOW }}>
+                      <span style={{ color: YELLOW_TEXT }}>
                         {abilityInfo.rank1Value}
                       </span>
                     }
                   />
+
                   <BasicStatRow
                     label={attributeInfo.name}
                     value={
-                      <span style={{ color: UNIFIED_YELLOW }}>
+                      <span style={{ color: YELLOW_TEXT }}>
                         {attributeInfo.rank1Value}
                       </span>
                     }
                   />
+
                   <BasicStatRow
                     label={seriesSkillInfo.name}
                     value={highlightSeriesDescription(
@@ -853,8 +861,9 @@ export default async function WeaponDetailPage({
                   style={{
                     fontSize: "11px",
                     letterSpacing: "0.25em",
-                    color: UNIFIED_YELLOW,
+                    color: YELLOW_TEXT,
                     marginBottom: "6px",
+                    fontWeight: 800,
                   }}
                 >
                   LEVEL PANEL
@@ -879,7 +888,7 @@ export default async function WeaponDetailPage({
               {weapon.skills.map((skill) => (
                 <WeaponSkillAtlasPanel
                   key={skill.key}
-                  accentColor={accentColor}
+                  accentColor={YELLOW_TEXT}
                   skill={skill}
                 />
               ))}
@@ -890,9 +899,10 @@ export default async function WeaponDetailPage({
         {!!weapon.breakthrough?.length && (
           <>
             <PageSectionTitle>돌파</PageSectionTitle>
+
             <WeaponBreakthroughPanel
               breakthrough={weapon.breakthrough}
-              accentColor={accentColor}
+              accentColor={YELLOW_TEXT}
             />
           </>
         )}

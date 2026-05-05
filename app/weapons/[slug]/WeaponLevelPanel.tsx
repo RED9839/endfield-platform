@@ -17,8 +17,10 @@ const BAR_MAX = {
   attack: 520,
 };
 
-const UNIFIED_YELLOW = "#ffd24a";
-const UNIFIED_YELLOW_SOFT = "rgba(255, 210, 74, 0.28)";
+const YELLOW_MAIN = "#ffd24a";
+const YELLOW_TEXT = "#ffdc70";
+const YELLOW_BORDER = "rgba(255,196,74,0.14)";
+const YELLOW_BORDER_SOFT = "rgba(255,196,74,0.10)";
 
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
@@ -59,7 +61,7 @@ function StatBar({
 
       <div
         style={{
-          color: UNIFIED_YELLOW,
+          color: YELLOW_TEXT,
           fontSize: "13px",
           fontWeight: 800,
           whiteSpace: "nowrap",
@@ -81,7 +83,7 @@ function StatBar({
           style={{
             width: `${width}%`,
             height: "100%",
-            background: UNIFIED_YELLOW,
+            background: YELLOW_TEXT,
             borderRadius: "999px",
           }}
         />
@@ -135,8 +137,8 @@ export default function WeaponLevelPanel({
     <section
       style={{
         borderRadius: "20px",
-        border: "1px solid rgba(255,196,74,0.16)",
-        background: "#06080c",
+        border: `1px solid ${YELLOW_BORDER}`,
+        background: "#05070b",
         padding: "12px",
         width: "100%",
         maxWidth: "100%",
@@ -187,7 +189,7 @@ export default function WeaponLevelPanel({
           width: 16px;
           height: 16px;
           border-radius: 999px;
-          background: ${UNIFIED_YELLOW};
+          background: ${YELLOW_TEXT};
           border: none;
           margin-top: -5px;
           cursor: pointer;
@@ -204,7 +206,7 @@ export default function WeaponLevelPanel({
           width: 16px;
           height: 16px;
           border-radius: 999px;
-          background: ${UNIFIED_YELLOW};
+          background: ${YELLOW_TEXT};
           border: none;
           cursor: pointer;
         }
@@ -227,7 +229,7 @@ export default function WeaponLevelPanel({
 
       <div
         style={{
-          color: UNIFIED_YELLOW,
+          color: YELLOW_TEXT,
           fontSize: "17px",
           fontWeight: 900,
           marginBottom: "10px",
@@ -277,8 +279,8 @@ export default function WeaponLevelPanel({
                   width: "100%",
                   height: "34px",
                   background: "#05070b",
-                  color: UNIFIED_YELLOW,
-                  border: `1px solid ${UNIFIED_YELLOW_SOFT}`,
+                  color: YELLOW_TEXT,
+                  border: `1px solid ${YELLOW_BORDER}`,
                   padding: "0 8px",
                   fontSize: "20px",
                   fontWeight: 900,
@@ -296,7 +298,7 @@ export default function WeaponLevelPanel({
                   width: "100%",
                   background: "transparent",
                   border: "none",
-                  color: UNIFIED_YELLOW,
+                  color: YELLOW_TEXT,
                   fontSize: "28px",
                   fontWeight: 900,
                   lineHeight: 1,
@@ -351,7 +353,7 @@ export default function WeaponLevelPanel({
                             : "translateX(-50%)",
                       background: "transparent",
                       border: "none",
-                      color: mark === level ? UNIFIED_YELLOW : "#f3f4f6",
+                      color: mark === level ? YELLOW_TEXT : "#f3f4f6",
                       fontSize: "11px",
                       fontWeight: mark === level ? 800 : 600,
                       cursor: "pointer",

@@ -44,13 +44,16 @@ type TextHighlightMatch = {
   text: string;
 };
 
-const UNIFIED_YELLOW = "#ffd24a";
-const UNIFIED_YELLOW_SOFT = "#ffdc70";
-const PANEL_BG = "#06080c";
-const PANEL_INNER_BG = "#0d1118";
+const YELLOW_MAIN = "#ffd24a";
+const YELLOW_TEXT = "#ffdc70";
+const YELLOW_BORDER = "rgba(255,196,74,0.14)";
+const YELLOW_BORDER_SOFT = "rgba(255,196,74,0.10)";
+
+const PANEL_BG = "#05070b";
+const PANEL_INNER_BG = "#071019";
 const PANEL_BUTTON_BG = "#0c1016";
-const PANEL_BORDER = "rgba(255,196,74,0.14)";
-const PANEL_BORDER_SOFT = "rgba(255,196,74,0.10)";
+const PANEL_BORDER = YELLOW_BORDER;
+const PANEL_BORDER_SOFT = YELLOW_BORDER_SOFT;
 const PANEL_BORDER_FAINT = "rgba(255,196,74,0.08)";
 
 function escapeRegExp(value: string) {
@@ -229,7 +232,7 @@ function renderHighlightedDescription(
       <span
         key={`value-${index}-${match.start}`}
         style={{
-          color: UNIFIED_YELLOW,
+          color: YELLOW_TEXT,
           fontWeight: 900,
         }}
       >
@@ -290,7 +293,7 @@ function FoldSection({
         }}
       >
         <span>{title}</span>
-        <span style={{ color: UNIFIED_YELLOW }}>{isOpen ? "−" : "+"}</span>
+        <span style={{ color: YELLOW_TEXT }}>{isOpen ? "−" : "+"}</span>
       </button>
 
       {isOpen ? (
@@ -428,7 +431,7 @@ export default function WeaponSkillAtlasPanel({ skill }: Props) {
 
         <div
           style={{
-            color: UNIFIED_YELLOW_SOFT,
+            color: YELLOW_TEXT,
             fontSize: "30px",
             fontWeight: 900,
             lineHeight: 1.1,
@@ -460,7 +463,7 @@ export default function WeaponSkillAtlasPanel({ skill }: Props) {
                 height: "34px",
                 padding: "0 10px",
                 border: active
-                  ? `1px solid ${UNIFIED_YELLOW}`
+                  ? `1px solid ${YELLOW_TEXT}`
                   : `1px solid ${PANEL_BORDER}`,
                 background: active ? "rgba(255,210,74,0.14)" : PANEL_BUTTON_BG,
                 color: "#f3f4f6",
@@ -527,7 +530,7 @@ export default function WeaponSkillAtlasPanel({ skill }: Props) {
               </div>
               <div
                 style={{
-                  color: UNIFIED_YELLOW,
+                  color: YELLOW_TEXT,
                   fontSize: "20px",
                   fontWeight: 900,
                 }}
