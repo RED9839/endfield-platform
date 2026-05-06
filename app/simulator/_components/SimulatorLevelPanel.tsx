@@ -43,7 +43,15 @@ export default function SimulatorLevelPanel({
         <select
           value={operatorCurrentLevel}
           onChange={(e) => onChangeOperatorCurrent(Number(e.target.value))}
-          className="h-12 w-full rounded-2xl border border-yellow-500/15 bg-black px-4 text-yellow-300 outline-none"
+          className="
+  h-11 w-full rounded-xl
+  border border-yellow-500/15
+  bg-[#05070b]
+  px-3
+  text-sm font-semibold text-yellow-300
+  outline-none transition
+  focus:border-yellow-400/50
+"
         >
           {operatorCurrentOptions.map((level) => (
             <option key={level} value={level}>
@@ -58,7 +66,15 @@ export default function SimulatorLevelPanel({
         <select
           value={operatorTargetLevel}
           onChange={(e) => onChangeOperatorTarget(Number(e.target.value))}
-          className="h-12 w-full rounded-2xl border border-yellow-500/15 bg-black px-4 text-yellow-300 outline-none"
+          className="
+  h-11 w-full rounded-xl
+  border border-yellow-500/15
+  bg-[#05070b]
+  px-3
+  text-sm font-semibold text-yellow-300
+  outline-none transition
+  focus:border-yellow-400/50
+"
         >
           {operatorTargetOptions.map((level) => (
             <option key={level} value={level}>
@@ -73,7 +89,15 @@ export default function SimulatorLevelPanel({
         <select
           value={weaponCurrentLevel}
           onChange={(e) => onChangeWeaponCurrent(toWeaponCurrentLevel(Number(e.target.value)))}
-          className="h-12 w-full rounded-2xl border border-yellow-500/15 bg-black px-4 text-yellow-300 outline-none"
+          className="
+  h-11 w-full rounded-xl
+  border border-yellow-500/15
+  bg-[#05070b]
+  px-3
+  text-sm font-semibold text-yellow-300
+  outline-none transition
+  focus:border-yellow-400/50
+"
         >
           {weaponCurrentOptions.map((level) => (
             <option key={level} value={level}>
@@ -88,7 +112,15 @@ export default function SimulatorLevelPanel({
         <select
           value={weaponTargetLevel}
           onChange={(e) => onChangeWeaponTarget(toWeaponTargetLevel(Number(e.target.value)))}
-          className="h-12 w-full rounded-2xl border border-yellow-500/15 bg-black px-4 text-yellow-300 outline-none"
+          className="
+  h-11 w-full rounded-xl
+  border border-yellow-500/15
+  bg-[#05070b]
+  px-3
+  text-sm font-semibold text-yellow-300
+  outline-none transition
+  focus:border-yellow-400/50
+"
         >
           {weaponTargetOptions.map((level) => (
             <option key={level} value={level}>

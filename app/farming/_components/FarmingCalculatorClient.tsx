@@ -36,6 +36,8 @@ import {
 
 const FARMING_STATE_KEY = "endfield:farming-page-state";
 
+const YELLOW_TEXT = "#ffdc70";
+
 type ModalMode = "target" | "owned" | null;
 
 type FarmingPageState = {
@@ -153,6 +155,75 @@ function clearState() {
   clearFarmingTransferStorage();
 }
 
+function getStorageValue(storage: Storage | null, key: string) {
+  if (!storage) return null;
+  try {
+    return storage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function setStorageValue(storage: Storage | null, key: string, value: string | null) {
+  if (!storage || value === null) return;
+  try {
+    storage.setItem(key, value);
+  } catch {
+    // ignore storage errors
+  }
+}
+
+function snapshotSimulatorSelection() {
+  if (typeof window === "undefined") return null;
+
+  return {
+    operatorSlug: getStorageValue(
+      window.sessionStorage,
+      "simulator:selectedOperatorSlug"
+    ),
+    weaponSlug: getStorageValue(
+      window.sessionStorage,
+      "simulator:selectedWeaponSlug"
+    ),
+    legacySession: getStorageValue(
+      window.sessionStorage,
+      "endfield:simulator-selection"
+    ),
+    legacyLocal: getStorageValue(
+      window.localStorage,
+      "endfield:simulator-selection"
+    ),
+  };
+}
+
+function restoreSimulatorSelection(
+  snapshot: ReturnType<typeof snapshotSimulatorSelection>
+) {
+  if (typeof window === "undefined" || !snapshot) return;
+
+  setStorageValue(
+    window.sessionStorage,
+    "simulator:selectedOperatorSlug",
+    snapshot.operatorSlug
+  );
+  setStorageValue(
+    window.sessionStorage,
+    "simulator:selectedWeaponSlug",
+    snapshot.weaponSlug
+  );
+  setStorageValue(
+    window.sessionStorage,
+    "endfield:simulator-selection",
+    snapshot.legacySession
+  );
+  setStorageValue(
+    window.localStorage,
+    "endfield:simulator-selection",
+    snapshot.legacyLocal
+  );
+}
+
+
 function PanelTitle({ title }: { title: string }) {
   return (
     <div>
@@ -178,7 +249,7 @@ function SummaryCard({
   return (
     <div
       className="rounded-[22px] border p-4"
-      style={{ borderColor: YELLOW_BORDER_SOFT, background: CARD_BG }}
+      style={{ border: `1px solid ${YELLOW_BORDER_SOFT}`, background: CARD_BG }}
     >
       <div className="text-xs font-bold uppercase tracking-[0.2em] text-zinc-500">
         {label}
@@ -228,80 +299,148 @@ function MaterialBulkModal({
     );
   }, [mode, search, valueMap]);
 
+  const isTarget = mode === "target";
+
   return (
-    <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
       <div
-        className="w-full max-w-[1180px] overflow-hidden rounded-[28px] border shadow-[0_20px_80px_rgba(0,0,0,0.55)]"
-        style={{ borderColor: YELLOW_BORDER, background: PANEL_BG }}
+        className="
+          flex h-[90vh] w-[min(1180px,calc(100vw-2rem))]
+          flex-col overflow-hidden rounded-[32px]
+          bg-[#05070b]
+          shadow-[0_22px_90px_rgba(0,0,0,0.62)]
+        "
+        style={{ border: `1px solid ${YELLOW_BORDER}` }}
       >
-        <div className="flex items-center justify-between border-b border-yellow-500/10 px-5 py-4">
+        <div
+          className="flex shrink-0 items-center justify-between gap-4 px-7 py-5"
+          style={{ borderBottom: `1px solid ${YELLOW_BORDER_SOFT}` }}
+        >
           <div>
-            <h3 className="text-2xl font-black tracking-[-0.05em] text-white">
-              {mode === "target" ? "목표 재화 입력" : "보유 재화 입력"}
+            <p
+              className="text-[11px] font-black tracking-[0.24em]"
+              style={{ color: YELLOW_TEXT }}
+            >
+              {isTarget ? "TARGET MATERIALS" : "MATERIAL INVENTORY"}
+            </p>
+
+            <h3 className="mt-2 text-3xl font-black tracking-[-0.05em] text-white">
+              {isTarget ? "목표 재화 입력" : "보유 재화 입력"}
             </h3>
+
+            <p className="mt-1 text-sm text-zinc-500">
+              {isTarget
+                ? "파밍으로 채울 목표 재화 수량을 입력합니다."
+                : "현재 보유 중인 재화 수량을 입력합니다."}
+            </p>
           </div>
 
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border bg-black text-2xl text-white transition hover:border-yellow-400/40 hover:text-yellow-300"
-            style={{ borderColor: YELLOW_BORDER }}
+            className="
+              inline-flex h-12 w-12 shrink-0 items-center justify-center
+              rounded-full bg-black text-2xl font-black
+              transition hover:bg-[#0b1018]
+            "
+            style={{
+              border: `1px solid ${YELLOW_BORDER}`,
+              color: YELLOW_TEXT,
+            }}
+            aria-label="입력창 닫기"
           >
             ×
           </button>
         </div>
 
-        <div className="border-b border-yellow-500/10 p-4">
-          <input
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="재화 검색"
-            className="h-12 w-full rounded-2xl border bg-black px-4 text-sm font-bold text-white outline-none placeholder:text-zinc-600 focus:border-yellow-400/40"
-            style={{ borderColor: YELLOW_BORDER }}
-          />
+        <div
+          className="shrink-0 px-7 py-5"
+          style={{ borderBottom: `1px solid ${YELLOW_BORDER_SOFT}` }}
+        >
+          <div className="space-y-2">
+            <p
+              className="text-[13px] font-semibold tracking-[0.24em]"
+              style={{ color: YELLOW_TEXT }}
+            >
+              검색
+            </p>
+
+            <input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="재화 검색"
+              className="
+                h-12 w-full rounded-2xl
+                border border-white/10
+                bg-[#071019]
+                px-4
+                text-sm font-semibold text-white
+                outline-none transition
+                placeholder:text-zinc-600
+                focus:border-yellow-400/40
+              "
+            />
+          </div>
         </div>
 
-        <div className="max-h-[70vh] overflow-y-auto p-5">
-          <div className="grid gap-3 lg:grid-cols-3">
-            {list.map((item) => (
-              <div
-                key={item.name}
-                className="grid grid-cols-[minmax(0,1fr)_92px] items-center gap-3 rounded-2xl border px-3 py-3"
-                style={{ borderColor: YELLOW_BORDER_SOFT, background: CARD_BG }}
-              >
-                <div className="flex min-w-0 items-center gap-3">
-                  <div
-                    className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl border bg-black"
-                    style={{ borderColor: YELLOW_BORDER_SOFT }}
-                  >
-                    <Image
-                      src={materialImage(item.name)}
-                      alt={item.name}
-                      fill
-                      sizes="44px"
-                      className="object-contain p-1"
-                    />
+        <div className="min-h-0 flex-1 overflow-y-auto px-7 py-6">
+          {list.length ? (
+            <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(250px,1fr))]">
+              {list.map((item) => (
+                <div
+                  key={item.name}
+                  className="rounded-2xl bg-[#090d14] p-4"
+                  style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
+                >
+                  <div className="flex min-w-0 items-center gap-3">
+                    <div
+                      className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-black/55"
+                      style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
+                    >
+                      <Image
+                        src={materialImage(item.name)}
+                        alt={item.name}
+                        fill
+                        sizes="48px"
+                        className="object-contain p-1"
+                      />
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <div
+                        className="truncate text-sm font-black"
+                        style={{ color: YELLOW_TEXT }}
+                      >
+                        {item.name}
+                      </div>
+                      <div className="mt-0.5 text-xs text-zinc-500">
+                        {isTarget ? "목표 수량" : "현재 보유량"}
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="min-w-0">
-                    <div className="truncate text-sm font-bold text-white">
-                      {item.name}
-                    </div>
-                    <div className="mt-0.5 text-xs text-zinc-500">
-                      {mode === "target" ? "목표 수량" : "현재 보유량"}
-                    </div>
-                  </div>
+                  <NumberInput
+                    value={item.amount}
+                    onChange={(value) => onChange(item.name, value)}
+                    min={0}
+                    className="
+                      mt-4 h-11 rounded-xl
+                      border-yellow-500/15
+                      bg-black
+                      text-yellow-300
+                    "
+                  />
                 </div>
-
-                <NumberInput
-                  value={item.amount}
-                  onChange={(value) => onChange(item.name, value)}
-                  min={0}
-                  className="h-10"
-                />
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div
+              className="flex min-h-[300px] items-center justify-center rounded-[24px] bg-black p-8 text-center text-sm text-zinc-500"
+              style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
+            >
+              조건에 맞는 재화가 없습니다.
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -400,6 +539,16 @@ export default function FarmingCalculatorClient() {
     }));
   }
 
+  function moveToSimulator() {
+    saveState({ targets, ownedMaterials, settings });
+    saveFarmingTransferPayload({
+      requiredMaterials: normalizeFarmableTargets(targets),
+      ownedMaterials,
+    });
+
+    router.push("/simulator");
+  }
+
   function resetAndGoHome() {
     clearState();
     setTargets([]);
@@ -409,51 +558,59 @@ export default function FarmingCalculatorClient() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-[1840px] px-4 py-8 text-white md:px-6 xl:px-8">
-      <section
-        className="rounded-[32px] border p-6 md:p-8"
-        style={{ borderColor: YELLOW_BORDER, background: PANEL_BG }}
-      >
+    <main className="min-h-screen bg-[#03060b] text-white">
+      <div className="mx-auto w-full max-w-[1840px] px-4 py-6 md:px-6 xl:px-8 xl:py-8">
+        <div className="grid gap-3">
+          <section
+            className="rounded-[24px] bg-[#05070b] p-6"
+            style={{ border: `1px solid ${YELLOW_BORDER}` }}
+          >
         <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
           <div>
             <p
-              className="text-[11px] font-black uppercase tracking-[0.34em]"
-              style={{ color: YELLOW_MAIN }}
+              className="text-[11px] font-black tracking-[0.24em]"
+              style={{ color: YELLOW_TEXT }}
             >
-              Endfield Data Hub
+              ENDFIELD SUPPORT PLATFORM
             </p>
-            <h1 className="mt-2 text-3xl font-black tracking-[-0.05em] md:text-5xl">
-              재화 파밍 계산기
+            <h1
+              className="mt-2 text-4xl font-black tracking-tight"
+              style={{ color: YELLOW_TEXT }}
+            >
+              RESOURCE FARMING CALCULATOR
             </h1>
+            <p className="mt-1 text-sm text-zinc-500">
+              Farming Route Planner
+            </p>
           </div>
 
           <div className="flex flex-wrap gap-3">
             <button
               type="button"
-              onClick={() => router.push("/simulator")}
-              className="h-12 rounded-2xl border bg-black px-5 text-sm font-black text-white transition hover:border-yellow-400/40 hover:text-yellow-300"
-              style={{ borderColor: YELLOW_BORDER }}
+              onClick={moveToSimulator}
+              className="rounded-xl bg-black px-4 py-2 text-sm font-bold text-zinc-200 transition hover:bg-[#0b1018] hover:text-yellow-200"
+              style={{ border: `1px solid ${YELLOW_BORDER}` }}
             >
-              성장 시뮬레이션으로 이동
+              성장 시뮬레이션 이동
             </button>
 
             <button
               type="button"
               onClick={resetAndGoHome}
-              className="h-12 rounded-2xl border bg-black px-5 text-sm font-black text-white transition hover:border-yellow-400/40 hover:text-yellow-300"
-              style={{ borderColor: YELLOW_BORDER }}
+              className="rounded-xl bg-black px-4 py-2 text-sm font-bold text-zinc-200 transition hover:bg-[#0b1018] hover:text-yellow-200"
+              style={{ border: `1px solid ${YELLOW_BORDER}` }}
             >
-              홈으로 이동
+              홈으로
             </button>
           </div>
         </div>
       </section>
 
-      <section className="mt-6 grid gap-6 xl:grid-cols-[420px_minmax(0,1fr)]">
+          <section className="grid items-start gap-5 xl:grid-cols-[560px_minmax(0,1fr)]">
         <aside className="space-y-6">
           <section
-            className="rounded-[28px] border p-5"
-            style={{ borderColor: YELLOW_BORDER, background: PANEL_BG }}
+            className="rounded-[24px] bg-[#05070b] p-5"
+            style={{ border: `1px solid ${YELLOW_BORDER}` }}
           >
             <PanelTitle title="재화 입력" />
 
@@ -461,8 +618,8 @@ export default function FarmingCalculatorClient() {
               <button
                 type="button"
                 onClick={() => setModalMode("target")}
-                className="h-12 rounded-2xl border bg-black px-4 text-sm font-black text-white transition hover:border-yellow-400/40 hover:text-yellow-300"
-                style={{ borderColor: YELLOW_BORDER }}
+                className="h-12 rounded-2xl border bg-black px-4 text-sm font-black text-zinc-200 transition hover:border-yellow-400/40 hover:text-yellow-200"
+                style={{ border: `1px solid ${YELLOW_BORDER}` }}
               >
                 목표 재화 입력
               </button>
@@ -470,8 +627,8 @@ export default function FarmingCalculatorClient() {
               <button
                 type="button"
                 onClick={() => setModalMode("owned")}
-                className="h-12 rounded-2xl border bg-black px-4 text-sm font-black text-white transition hover:border-yellow-400/40 hover:text-yellow-300"
-                style={{ borderColor: YELLOW_BORDER }}
+                className="h-12 rounded-2xl border bg-black px-4 text-sm font-black text-zinc-200 transition hover:border-yellow-400/40 hover:text-yellow-200"
+                style={{ border: `1px solid ${YELLOW_BORDER}` }}
               >
                 보유 재화 입력
               </button>
@@ -479,19 +636,19 @@ export default function FarmingCalculatorClient() {
           </section>
 
           <section
-            className="rounded-[28px] border p-5"
-            style={{ borderColor: YELLOW_BORDER, background: PANEL_BG }}
+            className="rounded-[24px] bg-[#05070b] p-5"
+            style={{ border: `1px solid ${YELLOW_BORDER}` }}
           >
             <PanelTitle title="통합 징표 설정" />
 
             <div className="mt-4 space-y-3">
               <div
                 className="flex items-center gap-3 rounded-2xl border p-3"
-                style={{ borderColor: YELLOW_BORDER_SOFT, background: CARD_BG }}
+                style={{ border: `1px solid ${YELLOW_BORDER_SOFT}`, background: CARD_BG }}
               >
                 <div
                   className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl border bg-black"
-                  style={{ borderColor: YELLOW_BORDER_SOFT }}
+                  style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
                 >
                   <Image
                     src={materialImage(ADVANCED_BOX_NAME)}
@@ -544,11 +701,11 @@ export default function FarmingCalculatorClient() {
 
               <div
                 className="flex items-center gap-3 rounded-2xl border p-3"
-                style={{ borderColor: YELLOW_BORDER_SOFT, background: CARD_BG }}
+                style={{ border: `1px solid ${YELLOW_BORDER_SOFT}`, background: CARD_BG }}
               >
                 <div
                   className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl border bg-black"
-                  style={{ borderColor: YELLOW_BORDER_SOFT }}
+                  style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
                 >
                   <Image
                     src={materialImage("통합 징표")}
@@ -574,7 +731,7 @@ export default function FarmingCalculatorClient() {
 
               <div
                 className="rounded-2xl border"
-                style={{ borderColor: YELLOW_BORDER_SOFT, background: CARD_BG }}
+                style={{ border: `1px solid ${YELLOW_BORDER_SOFT}`, background: CARD_BG }}
               >
                 <button
                   type="button"
@@ -603,7 +760,7 @@ export default function FarmingCalculatorClient() {
                         <div className="flex min-w-0 items-center gap-3">
                           <div
                             className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl border bg-black"
-                            style={{ borderColor: YELLOW_BORDER_SOFT }}
+                            style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
                           >
                             <Image
                               src={materialImage(discount.name)}
@@ -658,8 +815,8 @@ export default function FarmingCalculatorClient() {
           </section>
 
           <section
-            className="rounded-[28px] border p-5"
-            style={{ borderColor: YELLOW_BORDER, background: PANEL_BG }}
+            className="rounded-[24px] bg-[#05070b] p-5"
+            style={{ border: `1px solid ${YELLOW_BORDER}` }}
           >
             <PanelTitle title="이성 회복 설정" />
 
@@ -682,11 +839,11 @@ export default function FarmingCalculatorClient() {
 
               <div
                 className="flex items-center gap-3 rounded-2xl border p-3"
-                style={{ borderColor: YELLOW_BORDER_SOFT, background: CARD_BG }}
+                style={{ border: `1px solid ${YELLOW_BORDER_SOFT}`, background: CARD_BG }}
               >
                 <div
                   className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl border bg-black"
-                  style={{ borderColor: YELLOW_BORDER_SOFT }}
+                  style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
                 >
                   <Image
                     src={materialImage("파생 오리지늄")}
@@ -737,7 +894,7 @@ export default function FarmingCalculatorClient() {
                 >
                   <div
                     className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl border bg-black"
-                    style={{ borderColor: YELLOW_BORDER_SOFT }}
+                    style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
                   >
                     <Image
                       src={materialImage(item.name)}
@@ -777,8 +934,8 @@ export default function FarmingCalculatorClient() {
 
         <section className="space-y-6">
           <section
-            className="rounded-[28px] border p-5"
-            style={{ borderColor: YELLOW_BORDER, background: PANEL_BG }}
+            className="rounded-[24px] bg-[#05070b] p-5"
+            style={{ border: `1px solid ${YELLOW_BORDER}` }}
           >
             <PanelTitle title="계산 결과" />
 
@@ -795,8 +952,8 @@ export default function FarmingCalculatorClient() {
           </section>
 
           <section
-            className="rounded-[28px] border p-5"
-            style={{ borderColor: YELLOW_BORDER, background: PANEL_BG }}
+            className="rounded-[24px] bg-[#05070b] p-5"
+            style={{ border: `1px solid ${YELLOW_BORDER}` }}
           >
             <PanelTitle title="추천 이성 소모처" />
 
@@ -824,7 +981,7 @@ export default function FarmingCalculatorClient() {
                     <div className="flex items-start gap-3">
                       <div
                         className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border bg-black"
-                        style={{ borderColor: YELLOW_BORDER_SOFT }}
+                        style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
                       >
                         <Image
                           src={materialImage(plan.material)}
@@ -898,8 +1055,8 @@ export default function FarmingCalculatorClient() {
           </section>
 
           <section
-            className="rounded-[28px] border p-5"
-            style={{ borderColor: YELLOW_BORDER, background: PANEL_BG }}
+            className="rounded-[24px] bg-[#05070b] p-5"
+            style={{ border: `1px solid ${YELLOW_BORDER}` }}
           >
             <PanelTitle title="통합 징표 사용" />
 
@@ -929,7 +1086,7 @@ export default function FarmingCalculatorClient() {
                       <div className="flex items-start gap-3">
                         <div
                           className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl border bg-black"
-                          style={{ borderColor: YELLOW_BORDER_SOFT }}
+                          style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
                         >
                           <Image
                             src={materialImage(use.material)}
@@ -975,7 +1132,7 @@ export default function FarmingCalculatorClient() {
                       <div className="flex items-start gap-3">
                         <div
                           className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl border bg-black"
-                          style={{ borderColor: YELLOW_BORDER_SOFT }}
+                          style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
                         >
                           <Image
                             src={materialImage(use.material)}
@@ -1012,8 +1169,8 @@ export default function FarmingCalculatorClient() {
           </section>
 
           <section
-            className="rounded-[28px] border p-5"
-            style={{ borderColor: YELLOW_BORDER, background: PANEL_BG }}
+            className="rounded-[24px] bg-[#05070b] p-5"
+            style={{ border: `1px solid ${YELLOW_BORDER}` }}
           >
             <button
               type="button"
@@ -1058,7 +1215,7 @@ export default function FarmingCalculatorClient() {
                         >
                           <div
                             className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl border bg-black"
-                            style={{ borderColor: YELLOW_BORDER_SOFT }}
+                            style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
                           >
                             <Image
                               src={materialImage(item.name)}
@@ -1084,7 +1241,7 @@ export default function FarmingCalculatorClient() {
                             onClick={() =>
                               setMaterialValue(setTargets, item.name, 0)
                             }
-                            className="text-zinc-500 transition hover:text-white"
+                            className="text-zinc-500 transition hover:text-yellow-200"
                           >
                             ×
                           </button>
@@ -1098,8 +1255,8 @@ export default function FarmingCalculatorClient() {
         </section>
       </section>
 
-      {modalMode ? (
-        <MaterialBulkModal
+          {modalMode ? (
+            <MaterialBulkModal
           mode={modalMode}
           values={modalMode === "target" ? targets : ownedMaterials}
           onClose={() => setModalMode(null)}
@@ -1113,8 +1270,10 @@ export default function FarmingCalculatorClient() {
                 : amount
             )
           }
-        />
-      ) : null}
+            />
+          ) : null}
+        </div>
+      </div>
     </main>
   );
 }

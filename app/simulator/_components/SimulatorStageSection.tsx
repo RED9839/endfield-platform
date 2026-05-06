@@ -96,14 +96,9 @@ export default function SimulatorStageSection({
             <div className="mt-4 grid gap-3 md:grid-cols-2">
               <div className="grid gap-2">
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-xs font-semibold text-zinc-400">
+                  <span className="text-xs font-semibold text-yellow-300">
                     현재
                   </span>
-                  {item.currentRightLabel ? (
-                    <span className="text-xs text-yellow-300">
-                      {item.currentRightLabel}
-                    </span>
-                  ) : null}
                 </div>
 
                 <StageSelect
@@ -116,14 +111,9 @@ export default function SimulatorStageSection({
 
               <div className="grid gap-2">
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-xs font-semibold text-zinc-400">
+                  <span className="text-xs font-semibold text-yellow-300">
                     목표
                   </span>
-                  {item.targetRightLabel ? (
-                    <span className="text-xs text-yellow-300">
-                      {item.targetRightLabel}
-                    </span>
-                  ) : null}
                 </div>
 
                 <StageSelect

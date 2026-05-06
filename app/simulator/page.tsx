@@ -2,7 +2,7 @@
 
 import { buildFarmingHref, saveFarmingTransferPayload } from "@/lib/farming/farming-transfer";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import {
   operatorDetails,
@@ -64,9 +64,101 @@ import {
 const operators = operatorDetails as OperatorDetail[];
 const weapons = weaponDetails as SourceWeaponDetail[];
 
+const YELLOW_TEXT = "#ffdc70";
+const YELLOW_BORDER = "rgba(255,196,74,0.14)";
+const YELLOW_BORDER_SOFT = "rgba(255,196,74,0.10)";
+
 const SIMULATOR_OPERATOR_STORAGE_KEY = "simulator:selectedOperatorSlug";
 const SIMULATOR_WEAPON_STORAGE_KEY = "simulator:selectedWeaponSlug";
 const LEGACY_SIMULATOR_SELECTION_KEY = "endfield:simulator-selection";
+
+const SIMULATOR_FORM_STORAGE_KEY = "simulator:formState";
+
+type SimulatorFormState = {
+  operatorSlug: string;
+  weaponSlug: string;
+  operatorCurrentLevel: number;
+  operatorTargetLevel: number;
+  weaponCurrentLevel: WeaponCurrentLevel;
+  weaponTargetLevel: WeaponTargetLevel;
+  eliteRange: RangeState;
+  weaponBreakthroughRange: RangeState;
+  trustRange: RangeState;
+  combatSkillState: CombatSkillState;
+  talentRanges: Record<number, RangeState>;
+  infrastructureRanges: Record<number, RangeState>;
+  ownedMaterials: Record<string, number>;
+};
+
+function readSimulatorFormState(): Partial<SimulatorFormState> | null {
+  if (typeof window === "undefined") return null;
+
+  const raw =
+    window.sessionStorage.getItem(SIMULATOR_FORM_STORAGE_KEY) ??
+    window.localStorage.getItem(SIMULATOR_FORM_STORAGE_KEY) ??
+    "";
+
+  if (!raw) return null;
+
+  try {
+    return JSON.parse(raw) as Partial<SimulatorFormState>;
+  } catch {
+    return null;
+  }
+}
+
+function saveSimulatorFormState(state: SimulatorFormState) {
+  if (typeof window === "undefined") return;
+
+  const raw = JSON.stringify(state);
+  window.sessionStorage.setItem(SIMULATOR_FORM_STORAGE_KEY, raw);
+  window.localStorage.setItem(SIMULATOR_FORM_STORAGE_KEY, raw);
+}
+function clearSimulatorFormState() {
+  if (typeof window === "undefined") return;
+
+  window.sessionStorage.removeItem(SIMULATOR_OPERATOR_STORAGE_KEY);
+  window.sessionStorage.removeItem(SIMULATOR_WEAPON_STORAGE_KEY);
+  window.sessionStorage.removeItem(LEGACY_SIMULATOR_SELECTION_KEY);
+  window.sessionStorage.removeItem(SIMULATOR_FORM_STORAGE_KEY);
+
+  window.localStorage.removeItem(LEGACY_SIMULATOR_SELECTION_KEY);
+  window.localStorage.removeItem(SIMULATOR_FORM_STORAGE_KEY);
+  window.localStorage.removeItem("endfield:farming-transfer");
+  window.localStorage.removeItem("endfield:farming-page-state");
+}
+
+
+function isRangeState(value: unknown): value is RangeState {
+  if (!value || typeof value !== "object") return false;
+  const range = value as RangeState;
+  return Number.isFinite(Number(range.current)) && Number.isFinite(Number(range.target));
+}
+
+function normalizeRangeState(value: unknown, fallback: RangeState): RangeState {
+  if (!isRangeState(value)) return fallback;
+  return {
+    current: Number(value.current),
+    target: Number(value.target),
+  };
+}
+
+function normalizeRangeMap(
+  value: unknown,
+  fallback: Record<number, RangeState>
+): Record<number, RangeState> {
+  if (!value || typeof value !== "object") return fallback;
+
+  return Object.entries(value as Record<string, unknown>).reduce<
+    Record<number, RangeState>
+  >((acc, [key, range]) => {
+    const id = Number(key);
+    if (!Number.isFinite(id)) return acc;
+    acc[id] = normalizeRangeState(range, fallback[id] ?? { current: 0, target: 0 });
+    return acc;
+  }, {});
+}
+
 
 function getStoredSimulatorSlug(kind: "operator" | "weapon") {
   if (typeof window === "undefined") return "";
@@ -126,15 +218,66 @@ function toOperatorTargetLevel(level: number): OperatorTargetLevel {
   return (levels.includes(level) ? level : 90) as OperatorTargetLevel;
 }
 
+function normalizeMaterialName(name: unknown) {
+  const text = String(name ?? "").trim();
+
+  if (
+    text === "T-크레딧" ||
+    text === "티 크레딧" ||
+    text.toLowerCase() === "t-credit" ||
+    text.toLowerCase() === "t-credits"
+  ) {
+    return "탈로시안 화폐";
+  }
+
+  return text;
+}
+
+function parseSimulatorAmount(value: unknown) {
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : 0;
+  }
+
+  const raw = String(value ?? "")
+    .trim()
+    .replace(/,/g, "")
+    .toLowerCase();
+
+  if (!raw) return 0;
+
+  const match = raw.match(/^(-?\d+(?:\.\d+)?)(k|m)?$/);
+  if (!match) {
+    const fallback = Number(raw.replace(/[^0-9.-]/g, ""));
+    return Number.isFinite(fallback) ? fallback : 0;
+  }
+
+  const base = Number(match[1]);
+  const unit = match[2];
+  const multiplier = unit === "m" ? 1_000_000 : unit === "k" ? 1_000 : 1;
+
+  return Math.round(base * multiplier);
+}
+
+function cleanInfrastructureLabel(label: unknown) {
+  return String(label ?? "")
+    .replace(/^[\s·:：\-–—|/]+/, "")
+    .replace(/[\s·:：\-–—|/]+$/, "")
+    .trim();
+}
+
 function toSimMaterials(items: any[] = []) {
   return items
-    .map((item) => ({
-      name: String(item?.name ?? ""),
-      count: Number(item?.count ?? 0),
-      icon:
-        item?.icon ??
-        (item?.name ? `/materials/${String(item.name)}.webp` : undefined),
-    }))
+    .map((item) => {
+      const name = normalizeMaterialName(item?.name);
+
+      return {
+        name,
+        count: parseSimulatorAmount(item?.count ?? item?.amount ?? item?.quantity ?? 0),
+        icon:
+          item?.icon ??
+          (name ? `/materials/${name}.webp` : undefined),
+      };
+    })
     .filter((item) => item.name && item.count > 0);
 }
 
@@ -145,6 +288,132 @@ function buildStageTokens(prefix: string, current: number, target: number) {
     (_, index) => `${prefix}-${current + index + 1}`
   );
 } 
+
+function getMaxRangeStage(stages: number[]) {
+  return stages.length ? Math.max(...stages) : 0;
+}
+
+function buildMaxRangeMap<T extends { id: number; maxStage: number }>(groups: T[]) {
+  return groups.reduce<Record<number, RangeState>>((acc, group) => {
+    acc[group.id] = { current: 0, target: Math.max(0, Number(group.maxStage ?? 0)) };
+    return acc;
+  }, {});
+}
+
+function getExtraMaterialCandidates(source: any) {
+  return [
+    source?.materials,
+    source?.costs,
+    source?.items,
+    source?.requiredMaterials,
+    source?.costMaterials,
+    source?.material,
+    source?.cost,
+    source?.require,
+    source?.requirements,
+  ].find((value) => Array.isArray(value)) ?? [];
+}
+
+function getRawWeaponBreakthroughSources(weapon: any) {
+  const candidates = [
+    weapon?.breakthrough,
+    weapon?.breakthroughs,
+    weapon?.breakthroughItems,
+    weapon?.breakthroughMaterials,
+    weapon?.weaponBreakthrough,
+    weapon?.weaponBreakthroughs,
+    weapon?.ascensions,
+    weapon?.promotions,
+    weapon?.limitBreaks,
+    weapon?.rankUps,
+    weapon?.upgrades,
+  ];
+
+  return candidates.flatMap((candidate) => {
+    if (Array.isArray(candidate)) return candidate;
+    if (candidate && typeof candidate === "object") {
+      return Object.values(candidate).filter(
+        (value) => value && typeof value === "object"
+      );
+    }
+    return [];
+  });
+}
+
+function getRawWeaponBreakthroughSource(weapon: any, stage: number) {
+  return getRawWeaponBreakthroughSources(weapon).find((item: any) => {
+    const itemStage = Number(
+      item?.stage ??
+        item?.level ??
+        item?.phase ??
+        item?.rank ??
+        item?.breakthrough ??
+        item?.breakthroughStage
+    );
+
+    return itemStage === stage;
+  });
+}
+
+function getStageCurrencyMaterial(source: any) {
+  const directCurrency = parseSimulatorAmount(
+    source?.currency ??
+      source?.credit ??
+      source?.credits ??
+      source?.coin ??
+      source?.cost ??
+      source?.tCredit ??
+      source?.tCredits ??
+      source?.tCreditCost ??
+      source?.tCreditsCost ??
+      source?.talosianCurrency ??
+      source?.talosianCredits ??
+      source?.upgradeCurrency ??
+      source?.breakthroughCurrency ??
+      source?.talosianCurrencyCost ??
+      source?.talosianCost ??
+      source?.tCurrency ??
+      source?.money ??
+      source?.gold ??
+      source?.lmd ??
+      0
+  );
+
+  const nestedCurrency = [
+    source?.costInfo,
+    source?.currencyCost,
+    source?.breakthroughCost,
+    source?.upgradeCost,
+  ].reduce((total, item) => {
+    if (!item || typeof item !== "object") return total;
+    return (
+      total +
+      parseSimulatorAmount(
+        item.currency ??
+          item.credit ??
+          item.credits ??
+          item.cost ??
+          item.tCredit ??
+          item.tCredits ??
+          item.tCreditCost ??
+          item.tCreditsCost ??
+          0
+      )
+    );
+  }, 0);
+
+  const currency = directCurrency + nestedCurrency;
+
+  if (!Number.isFinite(currency) || currency <= 0) return [];
+
+  return [
+    {
+      name: "탈로시안 화폐",
+      count: currency,
+      icon: "/materials/탈로시안 화폐.webp",
+    },
+  ];
+}
 
 function RangeSelect({
   value,
@@ -161,7 +430,7 @@ function RangeSelect({
     <select
       value={value}
       onChange={(e) => onChange(Number(e.target.value))}
-      className="h-11 rounded-xl border border-yellow-500/15 bg-black px-3 text-sm text-white outline-none"
+      className="h-11 rounded-xl border border-yellow-500/15 bg-black px-3 text-sm font-semibold text-yellow-300 outline-none transition focus:border-yellow-400/50"
     >
       {options.map((stage) => (
         <option key={stage} value={stage}>
@@ -310,6 +579,9 @@ export default function SimulatorPage() {
   const [ownedMaterials, setOwnedMaterials] = useState<Record<string, number>>(
     {}
   );
+  const [simulatorStorageReady, setSimulatorStorageReady] = useState(false);
+  const operatorRestoreAppliedRef = useRef(false);
+  const weaponRestoreAppliedRef = useRef(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -319,22 +591,64 @@ export default function SimulatorPage() {
     const queryWeaponSlug =
       searchParams.get("weapon") ?? searchParams.get("weaponSlug") ?? "";
 
-    const storedOperatorSlug = queryOperatorSlug || getStoredSimulatorSlug("operator");
-    const storedWeaponSlug = queryWeaponSlug || getStoredSimulatorSlug("weapon");
+    const storedFormState = readSimulatorFormState();
 
-    setSelectedOperatorSlug(
+    const storedOperatorSlug =
+      queryOperatorSlug ||
+      (typeof storedFormState?.operatorSlug === "string"
+        ? storedFormState.operatorSlug
+        : "") ||
+      getStoredSimulatorSlug("operator");
+    const storedWeaponSlug =
+      queryWeaponSlug ||
+      (typeof storedFormState?.weaponSlug === "string"
+        ? storedFormState.weaponSlug
+        : "") ||
+      getStoredSimulatorSlug("weapon");
+
+    const nextOperatorSlug =
       storedOperatorSlug &&
-        operators.some((item: OperatorDetail) => item.slug === storedOperatorSlug)
+      operators.some((item: OperatorDetail) => item.slug === storedOperatorSlug)
         ? storedOperatorSlug
-        : ""
-    );
-
-    setSelectedWeaponSlug(
+        : "";
+    const nextWeaponSlug =
       storedWeaponSlug &&
-        weapons.some((item: SourceWeaponDetail) => item.slug === storedWeaponSlug)
+      weapons.some((item: SourceWeaponDetail) => item.slug === storedWeaponSlug)
         ? storedWeaponSlug
-        : ""
-    );
+        : "";
+
+    setSelectedOperatorSlug(nextOperatorSlug);
+    setSelectedWeaponSlug(nextWeaponSlug);
+
+    if (storedFormState?.operatorSlug === nextOperatorSlug) {
+      if (Number.isFinite(Number(storedFormState.operatorCurrentLevel))) {
+        setOperatorCurrentLevel(Number(storedFormState.operatorCurrentLevel));
+      }
+      if (Number.isFinite(Number(storedFormState.operatorTargetLevel))) {
+        setOperatorTargetLevel(
+          toOperatorTargetLevel(Number(storedFormState.operatorTargetLevel))
+        );
+      }
+    }
+
+    if (storedFormState?.weaponSlug === nextWeaponSlug) {
+      if (Number.isFinite(Number(storedFormState.weaponCurrentLevel))) {
+        setWeaponCurrentLevel(
+          Number(storedFormState.weaponCurrentLevel) as WeaponCurrentLevel
+        );
+      }
+      if (Number.isFinite(Number(storedFormState.weaponTargetLevel))) {
+        setWeaponTargetLevel(
+          toWeaponTargetLevel(Number(storedFormState.weaponTargetLevel))
+        );
+      }
+    }
+
+    if (storedFormState?.ownedMaterials && typeof storedFormState.ownedMaterials === "object") {
+      setOwnedMaterials(storedFormState.ownedMaterials);
+    }
+
+    setSimulatorStorageReady(true);
   }, [searchParams, syncKey]);
 
   useEffect(() => {
@@ -363,6 +677,42 @@ export default function SimulatorPage() {
     }
   }, [selectedWeaponSlug]);
 
+  useEffect(() => {
+    if (!simulatorStorageReady) return;
+
+    saveSimulatorFormState({
+      operatorSlug: selectedOperatorSlug,
+      weaponSlug: selectedWeaponSlug,
+      operatorCurrentLevel,
+      operatorTargetLevel,
+      weaponCurrentLevel,
+      weaponTargetLevel,
+      eliteRange,
+      weaponBreakthroughRange,
+      trustRange,
+      combatSkillState,
+      talentRanges,
+      infrastructureRanges,
+      ownedMaterials,
+    });
+  }, [
+    simulatorStorageReady,
+    selectedOperatorSlug,
+    selectedWeaponSlug,
+    operatorCurrentLevel,
+    operatorTargetLevel,
+    weaponCurrentLevel,
+    weaponTargetLevel,
+    eliteRange,
+    weaponBreakthroughRange,
+    trustRange,
+    combatSkillState,
+    talentRanges,
+    infrastructureRanges,
+    ownedMaterials,
+  ]);
+
+
   const selectedOperator = useMemo(
     () =>
       operators.find((item: OperatorDetail) => item.slug === selectedOperatorSlug) ??
@@ -378,6 +728,7 @@ export default function SimulatorPage() {
   );
 
   const handleOperatorSelect = (slug: string) => {
+    operatorRestoreAppliedRef.current = true;
     setSelectedOperatorSlug(slug);
     setOperatorCurrentLevel(1);
     setOperatorTargetLevel(90);
@@ -394,6 +745,7 @@ export default function SimulatorPage() {
   };
 
   const handleWeaponSelect = (slug: string) => {
+    weaponRestoreAppliedRef.current = true;
     setSelectedWeaponSlug(slug);
     setWeaponCurrentLevel(1);
     setWeaponTargetLevel(90);
@@ -445,21 +797,92 @@ export default function SimulatorPage() {
   }, [selectedWeapon, safeWeaponCurrentLevel, safeWeaponTargetLevel]);
 
   useEffect(() => {
-    setEliteRange({ current: 0, target: 0 });
-    setTrustRange({ current: 0, target: 0 });
-    setTalentRanges({});
-    setInfrastructureRanges({});
+    if (!selectedOperator) {
+      setEliteRange({ current: 0, target: 0 });
+      setTrustRange({ current: 0, target: 0 });
+      setTalentRanges({});
+      setInfrastructureRanges({});
+      return;
+    }
+
+    const nextEliteMax = ((selectedOperator as any)?.elite?.length ?? 0);
+    const nextTrustMax = isEndministrator ? 0 : getMaxRangeStage(
+      getTrustStageInfos(selectedOperator).map((item: TrustStageInfo) => item.stage)
+    );
+    const nextTalentRanges = buildMaxRangeMap(getTalentGroups(selectedOperator));
+    const nextInfrastructureRanges = isEndministrator
+      ? {}
+      : buildMaxRangeMap(getInfrastructureGroups(selectedOperator));
+
+    const storedFormState = readSimulatorFormState();
+    if (
+      !operatorRestoreAppliedRef.current &&
+      storedFormState?.operatorSlug === selectedOperatorSlug
+    ) {
+      setEliteRange(
+        normalizeRangeState(storedFormState.eliteRange, {
+          current: 0,
+          target: nextEliteMax,
+        })
+      );
+      setTrustRange(
+        normalizeRangeState(storedFormState.trustRange, {
+          current: 0,
+          target: nextTrustMax,
+        })
+      );
+      setTalentRanges(normalizeRangeMap(storedFormState.talentRanges, nextTalentRanges));
+      setInfrastructureRanges(
+        normalizeRangeMap(storedFormState.infrastructureRanges, nextInfrastructureRanges)
+      );
+      if (storedFormState.combatSkillState) {
+        setCombatSkillState(storedFormState.combatSkillState);
+      }
+      operatorRestoreAppliedRef.current = true;
+      return;
+    }
+
+    setEliteRange({ current: 0, target: nextEliteMax });
+    setTrustRange({ current: 0, target: nextTrustMax });
+    setTalentRanges(nextTalentRanges);
+    setInfrastructureRanges(nextInfrastructureRanges);
     setCombatSkillState({
       normal: { current: "1", target: "M3" },
       combo: { current: "1", target: "M3" },
       battle: { current: "1", target: "M3" },
       ultimate: { current: "1", target: "M3" },
     });
-  }, [selectedOperatorSlug]);
+  }, [selectedOperator, selectedOperatorSlug, isEndministrator]);
 
   useEffect(() => {
-    setWeaponBreakthroughRange({ current: 0, target: 0 });
-  }, [selectedWeaponSlug]);
+    if (!selectedWeapon) {
+      setWeaponBreakthroughRange({ current: 0, target: 0 });
+      return;
+    }
+
+    const nextBreakthroughMax = getMaxRangeStage(
+      getWeaponBreakthroughItems(selectedWeapon).map(
+        (item: WeaponBreakthroughItem) => item.stage
+      )
+    );
+
+    const storedFormState = readSimulatorFormState();
+    if (
+      !weaponRestoreAppliedRef.current &&
+      storedFormState?.weaponSlug === selectedWeaponSlug
+    ) {
+      setWeaponBreakthroughRange(
+        normalizeRangeState(storedFormState.weaponBreakthroughRange, {
+          current: 0,
+          target: nextBreakthroughMax,
+        })
+      );
+      weaponRestoreAppliedRef.current = true;
+      return;
+    }
+
+    setWeaponBreakthroughRange({ current: 0, target: nextBreakthroughMax });
+  }, [selectedWeapon, selectedWeaponSlug]);
 
   const combatSkillMetas = useMemo(
     () => (selectedOperator ? getCombatSkillMeta(selectedOperator) : []),
@@ -708,10 +1131,33 @@ export default function SimulatorPage() {
           item.stage > weaponBreakthroughRange.current &&
           item.stage <= weaponBreakthroughRange.target
       )
-      .map((item) => ({
-        label: `무기 돌파 ${item.stage}단계`,
-        materials: toSimMaterials(item.materials ?? []),
-      }))
+      .map((item) => {
+        const rawItem = item as any;
+        const rawSource = getRawWeaponBreakthroughSource(selectedWeapon, item.stage);
+        const materialCandidates = [
+          ...getExtraMaterialCandidates(rawSource),
+          ...getExtraMaterialCandidates(rawItem),
+        ];
+
+        const materials = mergeMaterials([
+          {
+            label: "무기 돌파 화폐",
+            materials: [
+              ...getStageCurrencyMaterial(rawSource),
+              ...getStageCurrencyMaterial(rawItem),
+            ],
+          },
+          {
+            label: "무기 돌파 재화",
+            materials: toSimMaterials(materialCandidates),
+          },
+        ]);
+
+        return {
+          label: `무기 돌파 ${item.stage}단계`,
+          materials,
+        };
+      })
       .filter((step) => step.materials.length > 0);
   }, [selectedWeapon, weaponBreakthroughItems, weaponBreakthroughRange]);
 
@@ -894,12 +1340,35 @@ export default function SimulatorPage() {
     }));
   };
 
-  const handleGoHome = () => {
-    if (typeof window === "undefined") return;
-    window.sessionStorage.removeItem(SIMULATOR_OPERATOR_STORAGE_KEY);
-    window.sessionStorage.removeItem(SIMULATOR_WEAPON_STORAGE_KEY);
-    window.sessionStorage.removeItem(LEGACY_SIMULATOR_SELECTION_KEY);
-    window.localStorage.removeItem(LEGACY_SIMULATOR_SELECTION_KEY);
+  const handleGoHome = (event?: MouseEvent<HTMLAnchorElement>) => {
+    event?.preventDefault();
+
+    setSimulatorStorageReady(false);
+    operatorRestoreAppliedRef.current = true;
+    weaponRestoreAppliedRef.current = true;
+
+    clearSimulatorFormState();
+
+    setSelectedOperatorSlug("");
+    setSelectedWeaponSlug("");
+    setOperatorCurrentLevel(1);
+    setOperatorTargetLevel(90);
+    setWeaponCurrentLevel(1);
+    setWeaponTargetLevel(90);
+    setEliteRange({ current: 0, target: 0 });
+    setWeaponBreakthroughRange({ current: 0, target: 0 });
+    setTrustRange({ current: 0, target: 0 });
+    setCombatSkillState({
+      normal: { current: "1", target: "M3" },
+      combo: { current: "1", target: "M3" },
+      battle: { current: "1", target: "M3" },
+      ultimate: { current: "1", target: "M3" },
+    });
+    setTalentRanges({});
+    setInfrastructureRanges({});
+    setOwnedMaterials({});
+
+    router.push("/");
   };
 
   const eliteStages = Array.from(
@@ -1009,6 +1478,22 @@ export default function SimulatorPage() {
 
 
   function handleGoFarmingCalculator() {
+    saveSimulatorFormState({
+      operatorSlug: selectedOperatorSlug,
+      weaponSlug: selectedWeaponSlug,
+      operatorCurrentLevel,
+      operatorTargetLevel,
+      weaponCurrentLevel,
+      weaponTargetLevel,
+      eliteRange,
+      weaponBreakthroughRange,
+      trustRange,
+      combatSkillState,
+      talentRanges,
+      infrastructureRanges,
+      ownedMaterials,
+    });
+
     const requiredMaterials = combinedMaterialDeficitItems
       .filter((item) => Number(item.lacking ?? 0) > 0)
       .map((item) => ({
@@ -1034,27 +1519,40 @@ export default function SimulatorPage() {
   return (
     <main className="min-h-screen bg-[#03060b] text-white">
       <div className="mx-auto max-w-[1840px] px-4 py-6 md:px-6 xl:px-8 xl:py-8">
-        <div className="grid gap-6">
-          <section className="rounded-[24px] border border-yellow-500/15 bg-[#05070b] p-6">
-            <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="grid gap-3">
+          <header
+            className="rounded-[24px] bg-[#05070b] p-5 shadow-[0_0_30px_rgba(250,204,21,0.04)]"
+            style={{ border: `1px solid ${YELLOW_BORDER}` }}
+          >
+            <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
-                <div className="text-[11px] tracking-[0.28em] text-yellow-400/70">
-                  시뮬레이션
-                </div>
-                <h1 className="mt-2 text-4xl font-black tracking-[-0.04em] text-white">
-                  성장 시뮬레이션
+                <p
+                  className="text-[11px] font-semibold tracking-[0.35em]"
+                  style={{ color: YELLOW_TEXT }}
+                >
+                  ENDFIELD SUPPORT PLATFORM
+                </p>
+
+                <h1
+                  className="mt-2 text-4xl font-black tracking-tight"
+                  style={{ color: YELLOW_TEXT }}
+                >
+                  SIMULATOR
                 </h1>
+
+                <p className="mt-1 text-sm text-zinc-500">Growth Simulator</p>
               </div>
 
               <Link
                 href="/"
                 onClick={handleGoHome}
-                className="inline-flex h-12 items-center justify-center rounded-2xl border border-yellow-500/20 bg-black px-4 text-sm font-semibold text-white transition hover:border-yellow-400/40 hover:text-yellow-300"
+                className="rounded-xl bg-black px-4 py-2 text-sm font-bold text-zinc-200 transition hover:bg-[#0b1018]"
+                style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
               >
-                홈으로 이동
+                홈으로
               </Link>
             </div>
-          </section>
+          </header>
 
           <SimulatorShowcaseHero
             operator={selectedOperator}
@@ -1074,7 +1572,7 @@ export default function SimulatorPage() {
             onMoveToFarming={handleGoFarmingCalculator}
           />
 
-          <div className="grid items-start gap-6 xl:grid-cols-[560px_minmax(0,1fr)]">
+          <div className="grid items-start gap-5 xl:grid-cols-[560px_minmax(0,1fr)]">
             <div className="grid auto-rows-max content-start gap-6 self-start">
               <InfoPanel title="레벨" summary={levelSummary}>
                 {selectedOperator || selectedWeapon ? (
@@ -1237,27 +1735,33 @@ export default function SimulatorPage() {
                           maxStage: group.maxStage,
                           currentRightLabel:
                             currentStage > 0
-                              ? getInfrastructureTierLabel(
-                                  selectedOperator,
-                                  group.id,
-                                  currentStage
+                              ? cleanInfrastructureLabel(
+                                  getInfrastructureTierLabel(
+                                    selectedOperator,
+                                    group.id,
+                                    currentStage
+                                  )
                                 )
                               : undefined,
                           targetRightLabel:
                             targetStage > 0
-                              ? getInfrastructureTierLabel(
-                                  selectedOperator,
-                                  group.id,
-                                  targetStage
+                              ? cleanInfrastructureLabel(
+                                  getInfrastructureTierLabel(
+                                    selectedOperator,
+                                    group.id,
+                                    targetStage
+                                  )
                                 )
                               : undefined,
                           getStageLabel: (stage: number) =>
                             stage === 0
                               ? "0단계"
-                              : getInfrastructureTierLabel(
-                                  selectedOperator,
-                                  group.id,
-                                  stage
+                              : cleanInfrastructureLabel(
+                                  getInfrastructureTierLabel(
+                                    selectedOperator,
+                                    group.id,
+                                    stage
+                                  )
                                 ),
                           onChangeCurrent: (stage: number) =>
                             handleInfrastructureCurrentChange(group.id, stage),
