@@ -12,6 +12,7 @@ import {
   type WeaponType,
 } from "@/data/operators-detail-data";
 
+const YELLOW_MAIN = "#ffd24a";
 const YELLOW_TEXT = "#ffdc70";
 const YELLOW_BORDER = "rgba(255,196,74,0.14)";
 const YELLOW_BORDER_SOFT = "rgba(255,196,74,0.10)";
@@ -104,45 +105,53 @@ function FilterButton({
   label,
   onClick,
   iconSrc,
-  color,
+  color = YELLOW_MAIN,
+  colored = false,
 }: {
   active: boolean;
   label: string;
   onClick: () => void;
   iconSrc?: string;
   color?: string;
+  colored?: boolean;
 }) {
+  const pointColor = colored ? color : YELLOW_MAIN;
+
   return (
     <button
       type="button"
       onClick={onClick}
-      className="flex h-9 items-center gap-2 rounded-xl px-3 text-left text-xs font-bold transition hover:bg-[#101923]"
+      className="group flex h-[38px] w-full items-center gap-2 rounded-xl border px-3 text-left text-[12px] font-bold transition hover:bg-[#101923]"
       style={{
-        background: active ? "rgba(255,212,74,0.10)" : FILTER_BG,
-        border: `1px solid ${
-          active ? color ?? "rgba(255,212,74,0.45)" : "rgba(255,255,255,0.10)"
-        }`,
-        color: active ? YELLOW_TEXT : "#d4d4d8",
+        borderColor: active
+          ? pointColor
+          : colored
+            ? `${pointColor}88`
+            : "rgba(255, 204, 77, 0.18)",
+        background: active ? `${pointColor}22` : FILTER_BG,
+        color: active ? "#ffffff" : "#d4d4d8",
       }}
     >
       {iconSrc ? (
-        <span className="relative h-4 w-4 shrink-0">
+        <span className="relative h-3.5 w-3.5 shrink-0">
           <Image
             src={iconSrc}
-            alt={label}
+            alt=""
             fill
-            sizes="16px"
+            sizes="14px"
             className="object-contain"
           />
         </span>
       ) : (
         <span
-          className="h-2 w-2 shrink-0 rounded-full"
-          style={{ background: color ?? "#71717a" }}
-        />
+          className="flex h-3.5 w-3.5 shrink-0 items-center justify-center text-[9px]"
+          style={{ color: pointColor }}
+        >
+          ◆
+        </span>
       )}
 
-      <span className="truncate">{label}</span>
+      <span className="min-w-0 flex-1 truncate leading-none">{label}</span>
     </button>
   );
 }
@@ -173,13 +182,7 @@ function FilterGroup({
 function OperatorInfoIcon({ src, alt }: { src: string; alt: string }) {
   return (
     <span className="relative h-5 w-5 shrink-0" title={alt}>
-      <Image
-        src={src}
-        alt={alt}
-        fill
-        sizes="20px"
-        className="object-contain"
-      />
+      <Image src={src} alt={alt} fill sizes="20px" className="object-contain" />
     </span>
   );
 }
@@ -386,25 +389,31 @@ export default function OperatorsPageClient() {
                   label="전체"
                   onClick={() => setRarity("all")}
                 />
+
                 <FilterButton
                   active={rarity === 6}
                   label="6성"
                   iconSrc={rarityIconMap[6]}
                   color={rarityColorMap[6]}
+                  colored
                   onClick={() => setRarity(6)}
                 />
+
                 <FilterButton
                   active={rarity === 5}
                   label="5성"
                   iconSrc={rarityIconMap[5]}
                   color={rarityColorMap[5]}
+                  colored
                   onClick={() => setRarity(5)}
                 />
+
                 <FilterButton
                   active={rarity === 4}
                   label="4성"
                   iconSrc={rarityIconMap[4]}
                   color={rarityColorMap[4]}
+                  colored
                   onClick={() => setRarity(4)}
                 />
               </FilterGroup>
@@ -426,6 +435,7 @@ export default function OperatorsPageClient() {
                       label={label}
                       iconSrc={elementIconMap[value]}
                       color={elementColorMap[value]}
+                      colored
                       onClick={() => setElement(value)}
                     />
                   );
