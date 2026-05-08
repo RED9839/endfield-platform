@@ -33,9 +33,9 @@ const navigationItems = [
   { label: "오퍼레이터", href: "/operators" },
   { label: "무기", href: "/weapons" },
   { label: "장비", href: "/gear" },
-  { label: "재료", href: "/materials" },
   { label: "성장 시뮬레이션", href: "/simulator" },
   { label: "재화 파밍 계산기", href: "/farming" },
+  { label: "오퍼레이터 세팅", href: "/settings" },
 ];
 
 const quickAccessItems: QuickAccessItem[] = [
@@ -55,11 +55,6 @@ const quickAccessItems: QuickAccessItem[] = [
     description: "장비 및 세트 데이터를 확인합니다.",
   },
   {
-    label: "재료",
-    href: "/materials",
-    description: "재료와 성장 자원 구조를 정리합니다.",
-  },
-  {
     label: "성장 시뮬레이션",
     href: "/simulator",
     description: "오퍼레이터와 무기의 성장 재화를 계산합니다.",
@@ -68,6 +63,11 @@ const quickAccessItems: QuickAccessItem[] = [
     label: "재화 파밍 계산기",
     href: "/farming",
     description: "부족 재화를 기준으로 추천 파밍 경로를 계산합니다.",
+  },
+  {
+    label: "오퍼레이터 세팅",
+    href: "/settings",
+    description: "오퍼레이터별 무기, 스킬, 장비 세팅을 저장합니다.",
   },
 ];
 
@@ -82,7 +82,7 @@ function SideNav() {
           데이터 허브
         </h1>
         <p className="mt-2 text-sm leading-6 text-zinc-500">
-          오퍼레이터, 무기, 장비, 재료, 시뮬레이션을 한곳에서 확인하는 메인 화면
+          오퍼레이터, 무기, 장비, 시뮬레이션, 세팅 기능을 한곳에서 확인하는 메인 화면
         </p>
       </div>
 
