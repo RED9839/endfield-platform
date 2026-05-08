@@ -66,7 +66,9 @@ const setTypeOptions: GearSetName[] = [
   "응룡 50식",
   "본 크러셔",
   "조류의 물결",
+  "청파",
   "M. I. 경찰용",
+  "식양의 흐름",
   "열 작업용",
   "생체 보조",
   "검술사",
@@ -381,8 +383,14 @@ export default function GearPage() {
         return categoryOrderMap[a.category] - categoryOrderMap[b.category];
       }
 
-      const setCompare = a.setName.localeCompare(b.setName, "ko");
-      if (setCompare !== 0) return setCompare;
+      const aSetOrder = setTypeOptions.indexOf(a.setName);
+      const bSetOrder = setTypeOptions.indexOf(b.setName);
+
+      if (aSetOrder !== bSetOrder) {
+        if (aSetOrder === -1) return 1;
+        if (bSetOrder === -1) return -1;
+        return aSetOrder - bSetOrder;
+      }
 
       if (b.level !== a.level) return b.level - a.level;
 

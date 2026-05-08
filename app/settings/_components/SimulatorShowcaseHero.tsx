@@ -3,6 +3,10 @@
 import Image from "next/image";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import NumberInput from "@/app/components/common/NumberInput";
+import { operatorDetails } from "@/data/operators-detail-data";
+import { weaponDetails } from "@/data/weapons-detail-data";
+import { sortOperatorSelectList } from "@/data/operator-sort";
+import { sortWeaponSelectList } from "@/data/weapons-sort";
 import type {
   OperatorClass,
   OperatorDetail,
@@ -676,10 +680,8 @@ function WeaponCard({
 }
 
 export default function SimulatorShowcaseHero({
-  operator,
-  weapon,
-  operators,
-  weapons,
+  operator: externalOperator,
+  weapon: externalWeapon,
   selectedOperatorSlug,
   selectedWeaponSlug,
   onSelectOperator,
@@ -691,10 +693,8 @@ export default function SimulatorShowcaseHero({
   onChangeOwned,
   onMoveToFarming,
 }: {
-  operator: OperatorDetail | null;
-  weapon: SourceWeaponDetail | null;
-  operators: OperatorDetail[];
-  weapons: SourceWeaponDetail[];
+  operator?: OperatorDetail | null;
+  weapon?: SourceWeaponDetail | null;
   selectedOperatorSlug: string;
   selectedWeaponSlug: string;
   onSelectOperator: (slug: string) => void;
@@ -729,6 +729,32 @@ export default function SimulatorShowcaseHero({
   const [weaponRarity, setWeaponRarity] = useState<number | "all">("all");
   const [weaponType, setWeaponType] = useState<string | "all">("all");
   const [weaponSeries, setWeaponSeries] = useState<string | "all">("all");
+
+  const operators = useMemo(
+    () => sortOperatorSelectList(operatorDetails) as OperatorDetail[],
+    [],
+  );
+
+  const weapons = useMemo(
+    () => sortWeaponSelectList(weaponDetails) as SourceWeaponDetail[],
+    [],
+  );
+
+  const operator = useMemo(
+    () =>
+      externalOperator ??
+      operators.find((item) => item.slug === selectedOperatorSlug) ??
+      null,
+    [externalOperator, operators, selectedOperatorSlug],
+  );
+
+  const weapon = useMemo(
+    () =>
+      externalWeapon ??
+      weapons.find((item) => item.slug === selectedWeaponSlug) ??
+      null,
+    [externalWeapon, weapons, selectedWeaponSlug],
+  );
 
   useEffect(() => setMounted(true), []);
 

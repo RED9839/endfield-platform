@@ -22,6 +22,37 @@ type WeaponLike = SourceWeaponDetail & {
   avatar?: string;
 };
 
+const weaponTypeOrderMap: Record<string, number> = {
+  sword: 0,
+  artsunit: 1,
+  artsUnit: 1,
+  greatsword: 2,
+  polearm: 3,
+  handcannon: 4,
+};
+
+export function sortWeaponSelectList<T extends {
+  name: string;
+  type?: string;
+  weaponType?: string;
+  rarity?: number;
+  quality?: number;
+}>(items: T[]) {
+  return [...items].sort((a, b) => {
+    const rarityA = Number(a.rarity ?? a.quality ?? 3);
+    const rarityB = Number(b.rarity ?? b.quality ?? 3);
+
+    if (rarityB !== rarityA) return rarityB - rarityA;
+
+    const typeA = weaponTypeOrderMap[a.weaponType ?? a.type ?? ""] ?? 999;
+    const typeB = weaponTypeOrderMap[b.weaponType ?? b.type ?? ""] ?? 999;
+
+    if (typeA !== typeB) return typeA - typeB;
+
+    return a.name.localeCompare(b.name, "ko");
+  });
+}
+
 const rarityIconMap: Record<number, string> = {
   6: "/icons/rarity/6star.webp",
   5: "/icons/rarity/5star.webp",

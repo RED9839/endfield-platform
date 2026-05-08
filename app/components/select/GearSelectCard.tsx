@@ -1,7 +1,11 @@
 "use client";
 
 import Image from "next/image";
-import type { GearDetail } from "@/data/gear-types";
+import type {
+  GearCategory,
+  GearDetail,
+  GearSetName,
+} from "@/data/gear-types";
 
 const YELLOW_MAIN = "#ffd24a";
 
@@ -12,6 +16,60 @@ const qualityColorMap: Record<number, string> = {
   2: "#84cc16",
   1: "#9ca3af",
 };
+
+const gearCategoryOrder: Record<GearCategory, number> = {
+  armor: 0,
+  gloves: 1,
+  kit: 2,
+};
+
+const gearSetOrder: GearSetName[] = [
+  "개척",
+  "응룡 50식",
+  "본 크러셔",
+  "조류의 물결",
+  "청파",
+  "M. I. 경찰용",
+  "식양의 흐름",
+  "열 작업용",
+  "생체 보조",
+  "검술사",
+  "경량 초자연",
+  "펄스식",
+  "식양의 숨결",
+  "순행 전달자",
+  "아부레이의 메아리",
+  "중장갑 전달자",
+  "재앙 방호",
+  "침식 방호",
+  "침식 차단",
+  "통합 중량형 모델",
+  "통합 경량형 모델",
+  "세트 없음",
+];
+
+export function sortGearSelectList(items: GearDetail[]) {
+  return [...items].sort((a, b) => {
+    if (b.quality !== a.quality) return b.quality - a.quality;
+
+    if (gearCategoryOrder[a.category] !== gearCategoryOrder[b.category]) {
+      return gearCategoryOrder[a.category] - gearCategoryOrder[b.category];
+    }
+
+    const aSetOrder = gearSetOrder.indexOf(a.setName);
+    const bSetOrder = gearSetOrder.indexOf(b.setName);
+
+    if (aSetOrder !== bSetOrder) {
+      if (aSetOrder === -1) return 1;
+      if (bSetOrder === -1) return -1;
+      return aSetOrder - bSetOrder;
+    }
+
+    if (b.level !== a.level) return b.level - a.level;
+
+    return a.name.localeCompare(b.name, "ko");
+  });
+}
 
 const statIconMap: Record<string, string> = {
   strength: "/icons/stats/strength.webp",
@@ -64,21 +122,11 @@ export default function GearSelectCard({
   active: boolean;
   onClick: () => void;
 }) {
-  const borderColor = active
-    ? YELLOW_MAIN
-    : "rgba(255,255,255,0.08)";
-
-  const qualityColor =
-    qualityColorMap[gear.quality] ?? "#f0c94a";
-
+  const borderColor = active ? YELLOW_MAIN : "rgba(255,255,255,0.08)";
+  const qualityColor = qualityColorMap[gear.quality] ?? "#f0c94a";
   const statKeys = (gear.abilityTypes ?? []).slice(0, 2);
-
-  const attributeKey =
-    gear.attributeTypes?.[0] ?? "";
-
-  const attributeLabel =
-    gearAttributeLabelMap[attributeKey] ??
-    "속성";
+  const attributeKey = gear.attributeTypes?.[0] ?? "";
+  const attributeLabel = gearAttributeLabelMap[attributeKey] ?? "속성";
 
   return (
     <button
@@ -90,9 +138,7 @@ export default function GearSelectCard({
         minWidth: "170px",
         height: "222px",
         border: `1px solid ${borderColor}`,
-        boxShadow: active
-          ? "0 0 20px rgba(255,210,74,0.32)"
-          : "none",
+        boxShadow: active ? "0 0 20px rgba(255,210,74,0.32)" : "none",
       }}
     >
       <div className="absolute inset-x-0 top-0 h-[138px] bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.10),transparent_62%)]">
@@ -132,11 +178,8 @@ export default function GearSelectCard({
 
             <div className="flex items-center gap-1">
               {statKeys.map((key) => {
-                const statLabel =
-                  statLabelMap[key] ?? "능력치";
-
-                const statIcon =
-                  statIconMap[key];
+                const statLabel = statLabelMap[key] ?? "능력치";
+                const statIcon = statIconMap[key];
 
                 return (
                   <span
@@ -153,9 +196,7 @@ export default function GearSelectCard({
                         className="object-contain"
                       />
                     ) : (
-                      <span className="text-[10px] text-white">
-                        ?
-                      </span>
+                      <span className="text-[10px] text-white">?</span>
                     )}
                   </span>
                 );

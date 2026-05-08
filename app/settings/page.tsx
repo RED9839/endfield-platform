@@ -8,6 +8,9 @@ import { operatorDetails } from "@/data/operators-detail-data";
 import { weaponDetails } from "@/data/weapons-detail-data";
 import { gearDetails } from "@/data/gear-detail-data";
 import type { GearDetail } from "@/data/gear-types";
+import { sortOperatorSelectList } from "@/data/operator-sort";
+import { sortWeaponSelectList } from "@/data/weapons-sort";
+import { gearSetOrder, sortGearSelectList } from "@/data/gear-sort";
 
 import PickerShell from "@/app/components/select/PickerShell";
 import SelectFilterButton from "@/app/components/select/FilterButton";
@@ -211,15 +214,6 @@ const weaponTypeLabelMap: Record<string, string> = {
   handcannon: "권총",
 };
 
-const operatorClassOrder = [
-  "vanguard",
-  "guard",
-  "defender",
-  "supporter",
-  "caster",
-  "striker",
-];
-
 const weaponTypeOrder = [
   "sword",
   "artsunit",
@@ -229,84 +223,17 @@ const weaponTypeOrder = [
   "handcannon",
 ];
 
-const gearSetOrder = [
-  "개척",
-  "응룡 50식",
-  "본 크러셔",
-  "조류의 물결",
-  "M. I. 경찰용",
-  "열 작업용",
-  "생체 보조",
-  "검술사",
-  "경량 초자연",
-  "펄스식",
-  "식양의 숨결",
-  "순행 전달자",
-  "아부레이의 메아리",
-  "중장갑 전달자",
-  "재앙 방호",
-  "침식 방호",
-  "침식 차단",
-  "통합 중량형 모델",
-  "통합 경량형 모델",
-  "세트 없음",
-];
-
 function orderIndex(list: string[], value: unknown) {
   const text = String(value ?? "");
   const index = list.indexOf(text);
   return index >= 0 ? index : 999;
 }
 
-function compareKoName(a: SelectableItem, b: SelectableItem) {
-  return (
-    a.name.localeCompare(b.name, "ko-KR") ||
-    a.enName.localeCompare(b.enName, "en-US")
-  );
-}
 
 function getWeaponTypeKey(item: SelectableItem) {
   return String(item.raw?.weaponType ?? item.raw?.type ?? "");
 }
 
-function comparePickerItems(
-  kind: PickerState["kind"],
-  a: SelectableItem,
-  b: SelectableItem,
-) {
-  if (kind === "operator") {
-    const rarityCompare = Number(b.rarity ?? 0) - Number(a.rarity ?? 0);
-    if (rarityCompare !== 0) return rarityCompare;
-
-    const classCompare =
-      orderIndex(operatorClassOrder, a.raw?.class) -
-      orderIndex(operatorClassOrder, b.raw?.class);
-    if (classCompare !== 0) return classCompare;
-
-    return compareKoName(a, b);
-  }
-
-  if (kind === "weapon") {
-    const rarityCompare = Number(b.rarity ?? 0) - Number(a.rarity ?? 0);
-    if (rarityCompare !== 0) return rarityCompare;
-
-    const typeCompare =
-      orderIndex(weaponTypeOrder, getWeaponTypeKey(a)) -
-      orderIndex(weaponTypeOrder, getWeaponTypeKey(b));
-    if (typeCompare !== 0) return typeCompare;
-
-    return compareKoName(a, b);
-  }
-
-  const qualityCompare = Number(b.quality ?? 0) - Number(a.quality ?? 0);
-  if (qualityCompare !== 0) return qualityCompare;
-
-  const setCompare =
-    orderIndex(gearSetOrder, a.setName) - orderIndex(gearSetOrder, b.setName);
-  if (setCompare !== 0) return setCompare;
-
-  return compareKoName(a, b);
-}
 
 const qualityColorMap: Record<number, string> = {
   5: "#f0c94a",
@@ -433,9 +360,9 @@ function toGearItem(gear: GearDetail): SelectableItem {
   };
 }
 
-const operatorItems = operatorDetails.map(toOperatorItem);
-const weaponItems = weaponDetails.map(toWeaponItem);
-const gearItems = gearDetails.map(toGearItem);
+const operatorItems = sortOperatorSelectList(operatorDetails).map(toOperatorItem);
+const weaponItems = sortWeaponSelectList(weaponDetails).map(toWeaponItem);
+const gearItems = sortGearSelectList(gearDetails).map(toGearItem);
 
 const armorItems = gearItems.filter((item) => item.category === "armor");
 const glovesItems = gearItems.filter((item) => item.category === "gloves");
@@ -1520,8 +1447,7 @@ export default function SettingsPage() {
           gearAttributeOk &&
           gearLevelOk
         );
-      })
-      .sort((a, b) => comparePickerItems(picker.kind, a, b));
+      });
   }, [
     picker,
     keyword,
@@ -2969,7 +2895,7 @@ function PickerModal({
                 onClick={() => onRarityChange("all")}
               />
 
-              {[6, 5, 4, 3].map((value) => (
+              {(isOperator ? [6, 5, 4] : [6, 5, 4, 3]).map((value) => (
                 <SelectFilterButton
                   key={value}
                   active={rarityFilter === String(value)}

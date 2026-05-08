@@ -11,7 +11,6 @@ const rarityIconMap: Record<number, string> = {
   6: "/icons/rarity/6star.webp",
   5: "/icons/rarity/5star.webp",
   4: "/icons/rarity/4star.webp",
-  3: "/icons/rarity/3star.webp",
 };
 
 const elementIconMap: Record<string, string> = {
@@ -40,9 +39,35 @@ const weaponIconMap: Record<string, string> = {
   handcannon: "/icons/weapons/handcannon.webp",
 };
 
+const classOrderMap: Record<string, number> = {
+  vanguard: 0,
+  guard: 1,
+  defender: 2,
+  supporter: 3,
+  caster: 4,
+  striker: 5,
+};
+
 type OperatorSelectCardOperator = OperatorDetail & {
   avatarSecondary?: string;
 };
+
+export function sortOperatorSelectList<T extends {
+  rarity: number;
+  class: string;
+  name: string;
+}>(items: T[]) {
+  return [...items].sort((a, b) => {
+    if (b.rarity !== a.rarity) return b.rarity - a.rarity;
+
+    const classA = classOrderMap[a.class] ?? 999;
+    const classB = classOrderMap[b.class] ?? 999;
+
+    if (classA !== classB) return classA - classB;
+
+    return a.name.localeCompare(b.name, "ko");
+  });
+}
 
 function getOperatorCardImage(operator: OperatorSelectCardOperator): string {
   return (
@@ -63,7 +88,8 @@ export default function OperatorSelectCard({
 }) {
   const mainImage = getOperatorCardImage(operator);
   const adminRightImage = operator.avatarSecondary ?? "";
-  const isAdminSplit = operator.slug === "endministrator" && adminRightImage.length > 0;
+  const isAdminSplit =
+    operator.slug === "endministrator" && adminRightImage.length > 0;
 
   const borderColor = active ? YELLOW_MAIN : "rgba(255,255,255,0.08)";
 

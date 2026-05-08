@@ -195,6 +195,23 @@ import { minercompressioncore } from "./gear-source/minercompressioncore";
 import { minercomm } from "./gear-source/minercomm";
 import { emergencycomm } from "./gear-source/emergencycomm";
 import { emergencycompressioncore } from "./gear-source/emergencycompressioncore";
+import { frontiersfiberglovest1 } from "./gear-source/frontiersfiberglovest1";
+import { frontiersextrao2tubet1 } from "./gear-source/frontiersextrao2tubet1";
+import { bonekrushagloves } from "./gear-source/bonekrushagloves";
+import { bonekrushafigurinet2 } from "./gear-source/bonekrushafigurinet2";
+import { qingboheavyarmor } from "./gear-source/qingboheavyarmor";
+import { qingbolightarmor } from "./gear-source/qingbolightarmor";
+import { qingbogauntlets } from "./gear-source/qingbogauntlets";
+import { qingbogloves } from "./gear-source/qingbogloves";
+import { qingbocask } from "./gear-source/qingbocask";
+import { qingbopositioningkit } from "./gear-source/qingbopositioningkit";
+import { qingbobamboocutter } from "./gear-source/qingbobamboocutter";
+import { xiranflowlightarmor } from "./gear-source/xiranflowlightarmor";
+import { xiranflowgloves } from "./gear-source/xiranflowgloves";
+import { xiranflowbaton } from "./gear-source/xiranflowbaton";
+import { swordmancerheavyarmort1 } from "./gear-source/swordmancerheavyarmort1";
+import { swordmancertacgauntletst1 } from "./gear-source/swordmancertacgauntletst1";
+import { swordmancerdagger } from "./gear-source/swordmancerdagger";
 
 export const gearDetails: GearDetail[] = [
   frontiersarmor,
@@ -392,6 +409,23 @@ export const gearDetails: GearDetail[] = [
   minercomm,
   emergencycomm,
   emergencycompressioncore,
+  frontiersfiberglovest1,
+  frontiersextrao2tubet1,
+  bonekrushagloves,
+  bonekrushafigurinet2,
+  qingboheavyarmor,
+  qingbolightarmor,
+  qingbogauntlets,
+  qingbogloves,
+  qingbocask,
+  qingbopositioningkit,
+  qingbobamboocutter,
+  xiranflowlightarmor,
+  xiranflowgloves,
+  xiranflowbaton,
+  swordmancerheavyarmort1,
+  swordmancertacgauntletst1,
+  swordmancerdagger,
 ];
 
 export function getGearDetailBySlug(slug: string) {
