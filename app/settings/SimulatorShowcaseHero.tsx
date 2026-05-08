@@ -2,11 +2,8 @@
 
 import Image from "next/image";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import NumberInput from "@/app/components/common/NumberInput";
+
 import { operatorDetails } from "@/data/operators-detail-data";
-import { weaponDetails } from "@/data/weapons-detail-data";
-import { sortOperatorSelectList } from "@/data/operator-sort";
-import { sortWeaponSelectList } from "@/data/weapons-sort";
 import type {
   OperatorClass,
   OperatorDetail,
@@ -14,13 +11,13 @@ import type {
   OperatorRarity,
   WeaponType,
 } from "@/data/operators-detail-data";
+import { weaponDetails } from "@/data/weapons-detail-data";
 import type { SourceWeaponDetail } from "@/data/weapons-detail-data";
-
-export type OwnedMaterialItem = {
-  name: string;
-  icon?: string;
-  owned: number;
-};
+import { gearDetails } from "@/data/gear-detail-data";
+import type { GearDetail } from "@/data/gear-types";
+import { sortOperatorSelectList } from "@/data/operator-sort";
+import { sortWeaponSelectList } from "@/data/weapons-sort";
+import { gearSetOrder, sortGearSelectList } from "@/data/gear-sort";
 
 const YELLOW_MAIN = "#ffd24a";
 const YELLOW_TEXT = "#ffdc70";
@@ -32,6 +29,8 @@ const OPERATOR_CARD_WIDTH = 170;
 const OPERATOR_CARD_HEIGHT = 238;
 const WEAPON_CARD_WIDTH = 170;
 const WEAPON_CARD_HEIGHT = 222;
+const GEAR_CARD_WIDTH = 170;
+const GEAR_CARD_HEIGHT = 222;
 
 type WeaponLike = SourceWeaponDetail & {
   type?: string;
@@ -312,6 +311,66 @@ function getSeriesShortName(text: string) {
 
 function getWeaponSeriesText(item: WeaponLike) {
   return getSeriesShortName(getRawSeriesText(item));
+}
+
+
+const qualityColorMap: Record<number, string> = {
+  5: "#f0c94a",
+  4: "#9a63ff",
+  3: "#4fa3ff",
+  2: "#84cc16",
+  1: "#9ca3af",
+};
+
+const gearAbilityOptions = [
+  { label: "전체", value: "all" },
+  { label: "힘", value: "strength" },
+  { label: "민첩", value: "agility" },
+  { label: "지능", value: "intelligence" },
+  { label: "의지", value: "will" },
+];
+
+const gearAttributeOptions = [
+  { label: "전체", value: "all" },
+  { label: "공격력", value: "attack" },
+  { label: "생명력", value: "hp" },
+  { label: "치명타 확률", value: "critRate" },
+  { label: "오리지늄 아츠 강도", value: "originiumArts" },
+  { label: "치유 효율 보너스", value: "healEfficiency" },
+  { label: "물리 피해 보너스", value: "physicalDamage" },
+  { label: "궁극기 충전 효율", value: "ultimateEfficiency" },
+  { label: "일반 공격 피해 보너스", value: "normalAttack" },
+  { label: "배틀 스킬 피해 보너스", value: "skillDamage" },
+  { label: "연계 스킬 피해 보너스", value: "comboSkillDamage" },
+  { label: "궁극기 피해 보너스", value: "ultimateDamage" },
+  { label: "불균형 목표에 주는 피해 보너스", value: "unbalancedTargetDamage" },
+  { label: "주요 능력치", value: "mainStat" },
+  { label: "아츠 피해 보너스", value: "artsDamage" },
+  { label: "냉기와 전기 피해 보너스", value: "cryoElectricDamage" },
+  { label: "모든 피해 감소", value: "damageReduction" },
+  { label: "보조 능력치", value: "subStat" },
+  { label: "모든 스킬 피해 보너스", value: "allSkillDamage" },
+  { label: "열기와 자연 피해 보너스", value: "heatNatureDamage" },
+];
+
+type GearSlot = "armor" | "gloves" | "kit1" | "kit2";
+type PickerMode = "operator" | "weapon" | GearSlot;
+
+function orderIndex(list: readonly string[], value: unknown) {
+  const index = list.indexOf(String(value ?? ""));
+  return index >= 0 ? index : 999;
+}
+
+function getGearCategoryLabel(slot: GearSlot) {
+  if (slot === "armor") return "방어구";
+  if (slot === "gloves") return "보호 장갑";
+  if (slot === "kit1") return "부품 1";
+  return "부품 2";
+}
+
+function getGearImage(gear: GearDetail | null) {
+  if (!gear) return "";
+  return gear.image || `/gear/${gear.slug}.webp`;
 }
 
 function EmptyImage({ label }: { label: string }) {
@@ -679,39 +738,112 @@ function WeaponCard({
   );
 }
 
+
+function GearCard({
+  gear,
+  active,
+  onClick,
+}: {
+  gear: GearDetail;
+  active: boolean;
+  onClick: () => void;
+}) {
+  const borderColor = active ? YELLOW_MAIN : "rgba(255,255,255,0.08)";
+  const quality = Number(gear.quality ?? 1);
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="group relative block overflow-hidden rounded-[18px] bg-black text-left transition hover:-translate-y-1"
+      style={{
+        width: "100%",
+        minWidth: `${GEAR_CARD_WIDTH}px`,
+        height: `${GEAR_CARD_HEIGHT}px`,
+        border: `1px solid ${borderColor}`,
+        boxShadow: active ? "0 0 20px rgba(255,210,74,0.32)" : "none",
+      }}
+    >
+      <div className="absolute inset-x-0 top-0 h-[138px] bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.10),transparent_62%)]">
+        <Image
+          src={getGearImage(gear)}
+          alt={gear.name}
+          fill
+          sizes={`${GEAR_CARD_WIDTH}px`}
+          className="object-contain p-5 transition duration-300 group-hover:scale-105"
+        />
+      </div>
+
+      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/45 to-transparent" />
+
+      <div className="absolute bottom-0 left-0 w-full p-3">
+        <h3 className="line-clamp-1 text-[16px] font-black leading-[1.1] text-yellow-300">
+          {gear.name}
+        </h3>
+        <p className="mt-[2px] line-clamp-1 text-[11px] tracking-wide text-zinc-300">
+          {gear.enName}
+        </p>
+        <div className="mt-2 flex items-center gap-2 overflow-hidden">
+          <span
+            className="rounded-full border px-2 py-[2px] text-[10px] font-black"
+            style={{
+              borderColor: qualityColorMap[quality] ?? "rgba(255,255,255,0.18)",
+              color: qualityColorMap[quality] ?? "#d4d4d8",
+              background: "rgba(255,255,255,0.04)",
+            }}
+          >
+            {quality}품질
+          </span>
+          <span className="min-w-0 truncate rounded-full border border-yellow-500/20 bg-yellow-500/10 px-2 py-[2px] text-[10px] font-black text-yellow-200">
+            Lv.{gear.level}
+          </span>
+        </div>
+        <p className="mt-1 truncate text-[11px] font-bold text-zinc-400">
+          {gear.setName}
+        </p>
+      </div>
+    </button>
+  );
+}
+
 export default function SimulatorShowcaseHero({
-  operator: externalOperator,
-  weapon: externalWeapon,
+  operator,
+  weapon,
+  armor,
+  gloves,
+  kit1,
+  kit2,
   selectedOperatorSlug,
   selectedWeaponSlug,
+  selectedArmorSlug,
+  selectedGlovesSlug,
+  selectedKit1Slug,
+  selectedKit2Slug,
   onSelectOperator,
   onSelectWeapon,
-  ownedItems,
-  isOwnedPanelOpen,
-  onOpenOwnedPanel,
-  onCloseOwnedPanel,
-  onChangeOwned,
-  onMoveToFarming,
+  onSelectGear,
 }: {
-  operator?: OperatorDetail | null;
-  weapon?: SourceWeaponDetail | null;
+  operator: OperatorDetail | null;
+  weapon: SourceWeaponDetail | null;
+  armor: GearDetail | null;
+  gloves: GearDetail | null;
+  kit1: GearDetail | null;
+  kit2: GearDetail | null;
   selectedOperatorSlug: string;
   selectedWeaponSlug: string;
+  selectedArmorSlug: string;
+  selectedGlovesSlug: string;
+  selectedKit1Slug: string;
+  selectedKit2Slug: string;
   onSelectOperator: (slug: string) => void;
   onSelectWeapon: (slug: string) => void;
-  ownedItems: OwnedMaterialItem[];
-  isOwnedPanelOpen: boolean;
-  onOpenOwnedPanel: () => void;
-  onCloseOwnedPanel: () => void;
-  onChangeOwned: (name: string, value: number) => void;
-  farmingHref?: string;
-  onMoveToFarming?: () => void;
+  onSelectGear: (slot: GearSlot, slug: string) => void;
 }) {
   const [mounted, setMounted] = useState(false);
   const [adminAlt, setAdminAlt] = useState(false);
-  const [ownedSearch, setOwnedSearch] = useState("");
   const [isOperatorPickerOpen, setIsOperatorPickerOpen] = useState(false);
   const [isWeaponPickerOpen, setIsWeaponPickerOpen] = useState(false);
+  const [gearPickerSlot, setGearPickerSlot] = useState<GearSlot | null>(null);
   const [operatorSearch, setOperatorSearch] = useState("");
   const [weaponSearch, setWeaponSearch] = useState("");
   const [operatorRarity, setOperatorRarity] = useState<OperatorRarity | "all">(
@@ -729,34 +861,58 @@ export default function SimulatorShowcaseHero({
   const [weaponRarity, setWeaponRarity] = useState<number | "all">("all");
   const [weaponType, setWeaponType] = useState<string | "all">("all");
   const [weaponSeries, setWeaponSeries] = useState<string | "all">("all");
+  const [gearSearch, setGearSearch] = useState("");
+  const [gearSetFilter, setGearSetFilter] = useState("all");
+  const [gearAbilityFilter, setGearAbilityFilter] = useState("all");
+  const [gearAttributeFilter, setGearAttributeFilter] = useState("all");
+  const [gearQualityFilter, setGearQualityFilter] = useState("all");
+  const [gearLevelFilter, setGearLevelFilter] = useState("all");
+
+  useEffect(() => setMounted(true), []);
 
   const operators = useMemo(
     () => sortOperatorSelectList(operatorDetails) as OperatorDetail[],
     [],
   );
-
   const weapons = useMemo(
     () => sortWeaponSelectList(weaponDetails) as SourceWeaponDetail[],
     [],
   );
-
-  const operator = useMemo(
-    () =>
-      externalOperator ??
-      operators.find((item) => item.slug === selectedOperatorSlug) ??
-      null,
-    [externalOperator, operators, selectedOperatorSlug],
+  const gearList = useMemo(() => sortGearSelectList(gearDetails) as GearDetail[], []);
+  const armorItems = useMemo(
+    () => gearList.filter((item) => item.category === "armor"),
+    [gearList],
+  );
+  const glovesItems = useMemo(
+    () => gearList.filter((item) => item.category === "gloves"),
+    [gearList],
+  );
+  const kitItems = useMemo(
+    () => gearList.filter((item) => item.category === "kit"),
+    [gearList],
   );
 
-  const weapon = useMemo(
-    () =>
-      externalWeapon ??
-      weapons.find((item) => item.slug === selectedWeaponSlug) ??
-      null,
-    [externalWeapon, weapons, selectedWeaponSlug],
-  );
+  const selectedGearMap = {
+    armor,
+    gloves,
+    kit1,
+    kit2,
+  } satisfies Record<GearSlot, GearDetail | null>;
 
-  useEffect(() => setMounted(true), []);
+  const selectedGearSlugMap = {
+    armor: selectedArmorSlug,
+    gloves: selectedGlovesSlug,
+    kit1: selectedKit1Slug,
+    kit2: selectedKit2Slug,
+  } satisfies Record<GearSlot, string>;
+
+  const gearSets = useMemo(
+    () =>
+      Array.from(new Set(gearList.map((item) => item.setName).filter(Boolean))).sort(
+        (a, b) => orderIndex(gearSetOrder, a) - orderIndex(gearSetOrder, b),
+      ),
+    [gearList],
+  );
 
   const operatorImage = getOperatorImage(operator);
   const operatorImageSecondary = getOperatorImageSecondary(operator);
@@ -766,11 +922,6 @@ export default function SimulatorShowcaseHero({
     operator && operatorImage && operatorImageSecondary,
   );
 
-  const filteredOwnedItems = useMemo(() => {
-    const q = ownedSearch.trim().toLowerCase();
-    if (!q) return ownedItems;
-    return ownedItems.filter((item) => item.name.toLowerCase().includes(q));
-  }, [ownedItems, ownedSearch]);
 
   const sortedOperators = useMemo(() => {
     const q = operatorSearch.trim().toLowerCase();
@@ -852,6 +1003,64 @@ export default function SimulatorShowcaseHero({
       });
   }, [weaponSearch, weapons, weaponRarity, weaponType, weaponSeries]);
 
+
+  const sortedGear = useMemo(() => {
+    if (!gearPickerSlot) return [];
+
+    const source =
+      gearPickerSlot === "armor"
+        ? armorItems
+        : gearPickerSlot === "gloves"
+          ? glovesItems
+          : kitItems;
+
+    const q = gearSearch.trim().toLowerCase();
+
+    return source.filter((item) => {
+      const keywordOk =
+        !q ||
+        item.name.toLowerCase().includes(q) ||
+        String(item.enName ?? "").toLowerCase().includes(q) ||
+        item.slug.toLowerCase().includes(q) ||
+        String(item.setName ?? "").toLowerCase().includes(q);
+
+      const setOk = gearSetFilter === "all" || item.setName === gearSetFilter;
+      const abilityOk =
+        gearAbilityFilter === "all" ||
+        (item as any).abilityTypes?.includes(gearAbilityFilter);
+      const attributeOk =
+        gearAttributeFilter === "all" ||
+        (item as any).attributeTypes?.includes(gearAttributeFilter);
+      const qualityOk =
+        gearQualityFilter === "all" || String(item.quality) === gearQualityFilter;
+      const levelOk =
+        gearLevelFilter === "all" || String(item.level) === gearLevelFilter;
+
+      return keywordOk && setOk && abilityOk && attributeOk && qualityOk && levelOk;
+    });
+  }, [
+    gearPickerSlot,
+    armorItems,
+    glovesItems,
+    kitItems,
+    gearSearch,
+    gearSetFilter,
+    gearAbilityFilter,
+    gearAttributeFilter,
+    gearQualityFilter,
+    gearLevelFilter,
+  ]);
+
+  function openGearPicker(slot: GearSlot) {
+    setGearPickerSlot(slot);
+    setGearSearch("");
+    setGearSetFilter("all");
+    setGearAbilityFilter("all");
+    setGearAttributeFilter("all");
+    setGearQualityFilter("all");
+    setGearLevelFilter("all");
+  }
+
   if (!mounted) return null;
 
   return (
@@ -909,21 +1118,38 @@ export default function SimulatorShowcaseHero({
           </button>
         </div>
 
-        <div className="absolute right-4 top-4 z-20 flex flex-wrap justify-end gap-2 md:right-6 md:top-6">
-          <button
-            type="button"
-            onClick={onOpenOwnedPanel}
-            className="inline-flex h-11 items-center justify-center rounded-2xl border border-yellow-500/20 bg-black/65 px-4 text-sm font-bold text-yellow-200 backdrop-blur transition hover:border-yellow-400/45 hover:bg-black/80"
-          >
-            보유 재화 입력
-          </button>
-          <button
-            type="button"
-            onClick={onMoveToFarming}
-            className="inline-flex h-11 items-center justify-center rounded-2xl border border-yellow-500/20 bg-black/65 px-4 text-sm font-bold text-yellow-200 backdrop-blur transition hover:border-yellow-400/45 hover:bg-black/80"
-          >
-            재화 파밍 시뮬레이터 이동
-          </button>
+        <div className="absolute right-4 top-4 z-20 grid grid-cols-2 gap-2 md:right-6 md:top-6">
+          {(["armor", "gloves", "kit1", "kit2"] as GearSlot[]).map((slot) => {
+            const gear = selectedGearMap[slot];
+            return (
+              <button
+                key={slot}
+                type="button"
+                onClick={() => openGearPicker(slot)}
+                className="grid w-[132px] grid-cols-[38px_1fr] items-center gap-2 rounded-2xl border border-yellow-500/20 bg-black/65 p-2 text-left backdrop-blur transition hover:border-yellow-400/45 hover:bg-black/80"
+              >
+                <span className="relative h-9 w-9 overflow-hidden rounded-xl bg-black/70">
+                  {gear ? (
+                    <Image
+                      src={getGearImage(gear)}
+                      alt={gear.name}
+                      fill
+                      sizes="36px"
+                      className="object-contain p-1"
+                    />
+                  ) : null}
+                </span>
+                <span className="min-w-0">
+                  <span className="block truncate text-[10px] font-black text-yellow-300/70">
+                    {getGearCategoryLabel(slot)}
+                  </span>
+                  <span className="block truncate text-xs font-black text-white">
+                    {gear?.name ?? "장비 선택"}
+                  </span>
+                </span>
+              </button>
+            );
+          })}
         </div>
 
         <div className="absolute bottom-6 right-6 z-20">
@@ -1185,126 +1411,114 @@ export default function SimulatorShowcaseHero({
         </PickerShell>
       ) : null}
 
-      {isOwnedPanelOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/72 p-4 backdrop-blur-sm">
-          <div
-            className="flex h-[90vh] w-[min(1180px,calc(100vw-2rem))] flex-col overflow-hidden rounded-[32px] bg-[#05070b] shadow-[0_22px_90px_rgba(0,0,0,0.62)]"
-            style={{ border: `1px solid ${YELLOW_BORDER}` }}
-          >
-            <div
-              className="flex shrink-0 items-center justify-between gap-4 px-7 py-5"
-              style={{ borderBottom: `1px solid ${YELLOW_BORDER_SOFT}` }}
-            >
-              <div>
-                <p
-                  className="text-[11px] font-black tracking-[0.24em]"
-                  style={{ color: YELLOW_TEXT }}
-                >
-                  MATERIAL INVENTORY
-                </p>
-                <h3 className="mt-2 text-3xl font-black tracking-[-0.04em] text-white">
-                  보유 재화 입력
-                </h3>
-              </div>
-
-              <button
-                type="button"
-                onClick={onCloseOwnedPanel}
-                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-black text-xl font-black transition hover:bg-[#0b1018]"
-                style={{
-                  border: `1px solid ${YELLOW_BORDER}`,
-                  color: YELLOW_TEXT,
-                }}
-                aria-label="보유 재화 입력 닫기"
-              >
-                ×
-              </button>
-            </div>
-
-            <div
-              className="shrink-0 px-7 py-5"
-              style={{ borderBottom: `1px solid ${YELLOW_BORDER_SOFT}` }}
-            >
-              <div className="space-y-2">
-                <p
-                  className="text-[13px] font-semibold tracking-[0.24em]"
-                  style={{ color: YELLOW_TEXT }}
-                >
-                  검색
-                </p>
-
-                <input
-                  value={ownedSearch}
-                  onChange={(event) => setOwnedSearch(event.target.value)}
-                  placeholder="재화 검색"
-                  className="h-12 w-full rounded-2xl border border-yellow-500/15 bg-black px-4 text-sm font-semibold text-yellow-300 outline-none transition placeholder:text-zinc-600 focus:border-yellow-400/50"
+      {gearPickerSlot ? (
+        <PickerShell
+          title={`${getGearCategoryLabel(gearPickerSlot)} 선택`}
+          count={sortedGear.length}
+          searchValue={gearSearch}
+          searchPlaceholder="이름 / 세트 / 코드 검색"
+          onSearch={setGearSearch}
+          onClose={() => setGearPickerSlot(null)}
+          aside={
+            <>
+              <FilterGroup title="세트 유형">
+                <FilterButton
+                  active={gearSetFilter === "all"}
+                  label="전체"
+                  onClick={() => setGearSetFilter("all")}
                 />
-              </div>
+                {gearSets.map((setName) => (
+                  <FilterButton
+                    key={setName}
+                    active={gearSetFilter === setName}
+                    label={setName}
+                    onClick={() => setGearSetFilter(setName)}
+                  />
+                ))}
+              </FilterGroup>
+
+              <FilterGroup title="속성">
+                {gearAttributeOptions.map((option) => (
+                  <FilterButton
+                    key={option.value}
+                    active={gearAttributeFilter === option.value}
+                    label={option.label}
+                    onClick={() => setGearAttributeFilter(option.value)}
+                  />
+                ))}
+              </FilterGroup>
+
+              <FilterGroup title="능력치">
+                {gearAbilityOptions.map((option) => (
+                  <FilterButton
+                    key={option.value}
+                    active={gearAbilityFilter === option.value}
+                    label={option.label}
+                    onClick={() => setGearAbilityFilter(option.value)}
+                  />
+                ))}
+              </FilterGroup>
+
+              <FilterGroup title="품질">
+                <FilterButton
+                  active={gearQualityFilter === "all"}
+                  label="전체"
+                  onClick={() => setGearQualityFilter("all")}
+                />
+                {[5, 4, 3, 2, 1].map((value) => (
+                  <FilterButton
+                    key={value}
+                    active={gearQualityFilter === String(value)}
+                    label={`${value}품질`}
+                    color={qualityColorMap[value]}
+                    onClick={() => setGearQualityFilter(String(value))}
+                  />
+                ))}
+              </FilterGroup>
+
+              <FilterGroup title="장비 레벨" last>
+                <FilterButton
+                  active={gearLevelFilter === "all"}
+                  label="전체"
+                  onClick={() => setGearLevelFilter("all")}
+                />
+                {[70, 50, 36, 28, 20, 10].map((level) => (
+                  <FilterButton
+                    key={level}
+                    active={gearLevelFilter === String(level)}
+                    label={`Lv. ${level}`}
+                    onClick={() => setGearLevelFilter(String(level))}
+                  />
+                ))}
+              </FilterGroup>
+            </>
+          }
+        >
+          {sortedGear.length > 0 ? (
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(170px,1fr))] gap-3 overflow-y-auto pr-1">
+              {sortedGear.map((item) => (
+                <GearCard
+                  key={item.slug}
+                  gear={item}
+                  active={item.slug === selectedGearSlugMap[gearPickerSlot]}
+                  onClick={() => {
+                    onSelectGear(gearPickerSlot, item.slug);
+                    setGearPickerSlot(null);
+                  }}
+                />
+              ))}
             </div>
-
-            <div className="min-h-0 flex-1 overflow-y-auto px-7 py-6">
-              {filteredOwnedItems.length ? (
-                <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(250px,1fr))]">
-                  {filteredOwnedItems.map((item) => (
-                    <div
-                      key={item.name}
-                      className="rounded-2xl bg-[#090d14] p-4"
-                      style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
-                    >
-                      <div className="flex min-w-0 items-center gap-3">
-                        {item.icon ? (
-                          <div
-                            className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-black/55"
-                            style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
-                          >
-                            <Image
-                              src={item.icon}
-                              alt={item.name}
-                              fill
-                              sizes="48px"
-                              className="object-contain p-1"
-                            />
-                          </div>
-                        ) : (
-                          <div
-                            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-black/55 text-xs font-black text-zinc-600"
-                            style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
-                          >
-                            ITEM
-                          </div>
-                        )}
-
-                        <div className="min-w-0 flex-1">
-                          <div
-                            className="truncate text-sm font-black"
-                            style={{ color: YELLOW_TEXT }}
-                          >
-                            {item.name}
-                          </div>
-                        </div>
-                      </div>
-
-                      <NumberInput
-                        value={item.owned}
-                        onChange={(value) => onChangeOwned(item.name, value)}
-                        min={0}
-                        className="mt-4 h-11 rounded-xl border-yellow-500/15 bg-black text-yellow-300"
-                      />
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div
-                  className="flex min-h-[300px] items-center justify-center rounded-[24px] bg-black p-8 text-center text-sm text-zinc-500"
-                  style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
-                >
-                  조건에 맞는 재화가 없습니다.
-                </div>
-              )}
+          ) : (
+            <div
+              className="flex min-h-[260px] items-center justify-center rounded-[20px] bg-black p-6 text-center text-sm text-zinc-500"
+              style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
+            >
+              조건에 맞는 장비가 없습니다.
             </div>
-          </div>
-        </div>
+          )}
+        </PickerShell>
       ) : null}
+
     </section>
   );
 }
