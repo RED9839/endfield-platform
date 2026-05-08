@@ -52,7 +52,7 @@ const gearAttributeLabelMap: Record<string, string> = {
 };
 
 function getGearImage(gear: GearDetail) {
-  return gear.image || gear.fullImage || `/gear/${gear.slug}.webp`;
+  return gear.image || `/gear/${gear.slug}.webp`;
 }
 
 export default function GearSelectCard({
@@ -64,15 +64,20 @@ export default function GearSelectCard({
   active: boolean;
   onClick: () => void;
 }) {
-  const borderColor = active ? YELLOW_MAIN : "rgba(255,255,255,0.08)";
-  const qualityColor = qualityColorMap[gear.quality] ?? "#f0c94a";
+  const borderColor = active
+    ? YELLOW_MAIN
+    : "rgba(255,255,255,0.08)";
+
+  const qualityColor =
+    qualityColorMap[gear.quality] ?? "#f0c94a";
+
   const statKeys = (gear.abilityTypes ?? []).slice(0, 2);
 
-  const attributeKey = gear.attributeTypes?.[0] ?? gear.attribute?.key ?? "";
+  const attributeKey =
+    gear.attributeTypes?.[0] ?? "";
+
   const attributeLabel =
     gearAttributeLabelMap[attributeKey] ??
-    gear.attribute?.name ??
-    gear.attribute?.label ??
     "속성";
 
   return (
@@ -85,7 +90,9 @@ export default function GearSelectCard({
         minWidth: "170px",
         height: "222px",
         border: `1px solid ${borderColor}`,
-        boxShadow: active ? "0 0 20px rgba(255,210,74,0.32)" : "none",
+        boxShadow: active
+          ? "0 0 20px rgba(255,210,74,0.32)"
+          : "none",
       }}
     >
       <div className="absolute inset-x-0 top-0 h-[138px] bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.10),transparent_62%)]">
@@ -125,35 +132,42 @@ export default function GearSelectCard({
 
             <div className="flex items-center gap-1">
               {statKeys.map((key) => {
-                const statLabel = statLabelMap[key] ?? "능력치";
-                const statIcon = statIconMap[key];
+                const statLabel =
+                  statLabelMap[key] ?? "능력치";
+
+                const statIcon =
+                  statIconMap[key];
 
                 return (
                   <span
                     key={key}
-                    className="flex items-center justify-center rounded-full border border-white/10 bg-white/5 px-2 py-[4px]"
+                    className="flex items-center justify-center rounded-full border border-white/10 bg-black/45 px-[6px] py-[3px]"
                     title={statLabel}
                   >
                     {statIcon ? (
-                      <span className="relative h-4 w-4 shrink-0">
-                        <Image
-                          src={statIcon}
-                          alt={statLabel}
-                          fill
-                          sizes="16px"
-                          className="object-contain"
-                        />
+                      <Image
+                        src={statIcon}
+                        alt={statLabel}
+                        width={14}
+                        height={14}
+                        className="object-contain"
+                      />
+                    ) : (
+                      <span className="text-[10px] text-white">
+                        ?
                       </span>
-                    ) : null}
+                    )}
                   </span>
                 );
               })}
             </div>
           </div>
 
-          <span className="w-fit max-w-full truncate rounded-full border border-yellow-500/20 bg-yellow-500/10 px-2 py-[2px] text-[10px] font-black text-yellow-200">
-            {attributeLabel}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="rounded-full border border-yellow-500/15 bg-yellow-500/5 px-2 py-[3px] text-[10px] font-black text-yellow-100">
+              {attributeLabel}
+            </span>
+          </div>
         </div>
       </div>
     </button>

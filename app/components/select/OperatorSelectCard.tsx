@@ -40,8 +40,16 @@ const weaponIconMap: Record<string, string> = {
   handcannon: "/icons/weapons/handcannon.webp",
 };
 
-function getOperatorCardImage(operator: OperatorDetail & { avatarSecondary?: string }) {
-  return operator.avatar || operator.fullImage || `/operators/${operator.slug}/avatar.webp`;
+type OperatorSelectCardOperator = OperatorDetail & {
+  avatarSecondary?: string;
+};
+
+function getOperatorCardImage(operator: OperatorSelectCardOperator): string {
+  return (
+    operator.avatar ||
+    operator.fullImage ||
+    `/operators/${operator.slug}/avatar.webp`
+  );
 }
 
 export default function OperatorSelectCard({
@@ -49,12 +57,22 @@ export default function OperatorSelectCard({
   active,
   onClick,
 }: {
-  operator: OperatorDetail & { avatarSecondary?: string };
+  operator: OperatorSelectCardOperator;
   active: boolean;
   onClick: () => void;
 }) {
-  const isAdminSplit = operator.slug === "endministrator" && !!operator.avatarSecondary;
+  const mainImage = getOperatorCardImage(operator);
+  const adminRightImage = operator.avatarSecondary ?? "";
+  const isAdminSplit = operator.slug === "endministrator" && adminRightImage.length > 0;
+
   const borderColor = active ? YELLOW_MAIN : "rgba(255,255,255,0.08)";
+
+  const iconSources = [
+    rarityIconMap[operator.rarity],
+    elementIconMap[operator.element],
+    classIconMap[operator.class],
+    weaponIconMap[operator.weapon],
+  ].filter((src): src is string => Boolean(src));
 
   return (
     <button
@@ -73,7 +91,7 @@ export default function OperatorSelectCard({
         <>
           <div className="absolute inset-0 [clip-path:polygon(0_0,62%_0,42%_100%,0_100%)]">
             <Image
-              src={getOperatorCardImage(operator)}
+              src={mainImage}
               alt={`${operator.name} left`}
               fill
               sizes={`${OPERATOR_CARD_WIDTH}px`}
@@ -83,7 +101,7 @@ export default function OperatorSelectCard({
 
           <div className="absolute inset-0 [clip-path:polygon(58%_0,100%_0,100%_100%,38%_100%)]">
             <Image
-              src={operator.avatarSecondary}
+              src={adminRightImage}
               alt={`${operator.name} right`}
               fill
               sizes={`${OPERATOR_CARD_WIDTH}px`}
@@ -95,7 +113,7 @@ export default function OperatorSelectCard({
         </>
       ) : (
         <Image
-          src={getOperatorCardImage(operator)}
+          src={mainImage}
           alt={operator.name}
           fill
           sizes={`${OPERATOR_CARD_WIDTH}px`}
@@ -115,18 +133,17 @@ export default function OperatorSelectCard({
         </p>
 
         <div className="mt-2 flex items-center gap-2 overflow-hidden">
-          {[
-            rarityIconMap[operator.rarity],
-            elementIconMap[operator.element],
-            classIconMap[operator.class],
-            weaponIconMap[operator.weapon],
-          ]
-            .filter(Boolean)
-            .map((src) => (
-              <span key={src} className="relative h-5 w-5 shrink-0">
-                <Image src={src} alt="" fill sizes="20px" className="object-contain" />
-              </span>
-            ))}
+          {iconSources.map((src) => (
+            <span key={src} className="relative h-5 w-5 shrink-0">
+              <Image
+                src={src}
+                alt=""
+                fill
+                sizes="20px"
+                className="object-contain"
+              />
+            </span>
+          ))}
         </div>
       </div>
     </button>
