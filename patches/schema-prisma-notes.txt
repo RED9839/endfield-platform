@@ -1,0 +1,18 @@
+// prisma/schema.prisma 교체용입니다.
+// 기존 User 모델에 createdAt/updatedAt을 유지한 상태로 아래 관계를 추가합니다.
+//
+// User 모델 안에 추가:
+// simulatorState    SimulatorState?
+// materialInventory UserMaterialInventory?
+//
+// 파일 하단에 추가:
+// model SimulatorState { ... }
+// model UserMaterialInventory { ... }
+//
+// 전체 교체본은 prisma/schema.prisma 파일로 같이 넣어뒀습니다.
+//
+// 적용 명령:
+//
+// $env:DATABASE_URL="file:./dev.db"
+// npx prisma migrate dev --name add-user-simulator-and-materials
+// npx prisma generate

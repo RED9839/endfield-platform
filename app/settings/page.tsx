@@ -11,13 +11,10 @@ import type { GearDetail } from "@/data/gear-types";
 import { sortOperatorSelectList } from "@/data/operator-sort";
 import { sortWeaponSelectList } from "@/data/weapons-sort";
 import { gearSetOrder, sortGearSelectList } from "@/data/gear-sort";
+import CommonSelectPanel, {
+  type CommonGearSlot,
+} from "@/app/components/select/CommonSelectPanel";
 
-import PickerShell from "@/app/components/select/PickerShell";
-import SelectFilterButton from "@/app/components/select/FilterButton";
-import SelectFilterGroup from "@/app/components/select/FilterGroup";
-import OperatorSelectCard from "@/app/components/select/OperatorSelectCard";
-import WeaponSelectCard from "@/app/components/select/WeaponSelectCard";
-import GearSelectCard from "@/app/components/select/GearSelectCard";
 
 type OperatorDetail = (typeof operatorDetails)[number];
 type WeaponDetail = (typeof weaponDetails)[number];
@@ -39,10 +36,6 @@ type SkillLevel =
 type GearLevelKey = "base" | "level1" | "level2" | "level3";
 type GearSlot = "armor" | "gloves" | "kit1" | "kit2";
 
-type PickerState =
-  | { kind: "operator"; title: string }
-  | { kind: "weapon"; title: string }
-  | { kind: "gear"; slot: GearSlot; title: string };
 
 type GearSlotLevels = {
   ability1: GearLevelKey;
@@ -1305,18 +1298,12 @@ function getActiveSetEffect(gears: Array<SelectableItem | undefined>) {
 
 export default function SettingsPage() {
   const [form, setForm] = useState<FormState>(createDefaultForm);
-  const [picker, setPicker] = useState<PickerState | null>(null);
-  const [operatorWeaponFilter, setOperatorWeaponFilter] = useState("all");
-  const [keyword, setKeyword] = useState("");
-  const [rarityFilter, setRarityFilter] = useState("all");
-  const [elementFilter, setElementFilter] = useState("all");
-  const [classFilter, setClassFilter] = useState("all");
-  const [weaponTypeFilter, setWeaponTypeFilter] = useState("all");
-  const [seriesFilter, setSeriesFilter] = useState("all");
-  const [gearSetFilter, setGearSetFilter] = useState("all");
-  const [gearAbilityFilter, setGearAbilityFilter] = useState("all");
-  const [gearAttributeFilter, setGearAttributeFilter] = useState("all");
-  const [gearLevelFilter, setGearLevelFilter] = useState("all");
+  const [selectPanel, setSelectPanel] = useState<
+    | { kind: "operator"; title: string; selectedSlug: string }
+    | { kind: "weapon"; title: string; selectedSlug: string }
+    | { kind: "gear"; slot: CommonGearSlot; title: string; selectedSlug: string }
+    | null
+  >(null);
 
   const selectedOperator = operatorItems.find(
     (item) => item.slug === form.operatorSlug,
@@ -1348,164 +1335,6 @@ export default function SettingsPage() {
     selectedKit2,
   ]);
 
-  const pickerItems = useMemo(() => {
-    if (!picker) return [];
-
-    let source: SelectableItem[] = [];
-
-    if (picker.kind === "operator") source = operatorItems;
-    if (picker.kind === "weapon") source = weaponItems;
-
-    if (picker.kind === "gear") {
-      if (picker.slot === "armor") source = armorItems;
-      if (picker.slot === "gloves") source = glovesItems;
-      if (picker.slot === "kit1" || picker.slot === "kit2") source = kitItems;
-    }
-
-    const q = keyword.trim().toLowerCase();
-
-    return source
-      .filter((item) => {
-        const raw = item.raw;
-
-        const keywordOk =
-          !q ||
-          item.name.toLowerCase().includes(q) ||
-          item.enName.toLowerCase().includes(q) ||
-          item.slug.toLowerCase().includes(q) ||
-          String(raw?.weaponType ?? "")
-            .toLowerCase()
-            .includes(q) ||
-          String(raw?.series ?? "")
-            .toLowerCase()
-            .includes(q) ||
-          String(raw?.setName ?? "")
-            .toLowerCase()
-            .includes(q);
-
-        const raritySource =
-          picker.kind === "gear" ? item.quality : item.rarity;
-        const rarityOk =
-          rarityFilter === "all" || String(raritySource) === rarityFilter;
-
-        const elementOk =
-          picker.kind !== "operator" ||
-          elementFilter === "all" ||
-          String(raw?.element) === elementFilter;
-
-        const classOk =
-          picker.kind !== "operator" ||
-          classFilter === "all" ||
-          String(raw?.class) === classFilter;
-
-        const operatorWeaponOk =
-          picker.kind !== "operator" ||
-          operatorWeaponFilter === "all" ||
-          String(raw?.weapon) === operatorWeaponFilter ||
-          String(raw?.weaponType) === operatorWeaponFilter;
-
-        const weaponTypeOk =
-          picker.kind !== "weapon" ||
-          weaponTypeFilter === "all" ||
-          getWeaponTypeKey(item) === weaponTypeFilter;
-
-        const seriesOk =
-          picker.kind !== "weapon" ||
-          seriesFilter === "all" ||
-          String(raw?.series) === seriesFilter;
-
-        const gearSetOk =
-          picker.kind !== "gear" ||
-          gearSetFilter === "all" ||
-          item.setName === gearSetFilter;
-
-        const gearAbilityOk =
-          picker.kind !== "gear" ||
-          gearAbilityFilter === "all" ||
-          raw?.abilityTypes?.includes(gearAbilityFilter);
-
-        const gearAttributeOk =
-          picker.kind !== "gear" ||
-          gearAttributeFilter === "all" ||
-          raw?.attributeTypes?.includes(gearAttributeFilter);
-
-        const gearLevelOk =
-          picker.kind !== "gear" ||
-          gearLevelFilter === "all" ||
-          String(raw?.level) === gearLevelFilter;
-
-        return (
-          keywordOk &&
-          rarityOk &&
-          elementOk &&
-          classOk &&
-          operatorWeaponOk &&
-          weaponTypeOk &&
-          seriesOk &&
-          gearSetOk &&
-          gearAbilityOk &&
-          gearAttributeOk &&
-          gearLevelOk
-        );
-      });
-  }, [
-    picker,
-    keyword,
-    rarityFilter,
-    elementFilter,
-    classFilter,
-    operatorWeaponFilter,
-    weaponTypeFilter,
-    seriesFilter,
-    gearSetFilter,
-    gearAbilityFilter,
-    gearAttributeFilter,
-    gearLevelFilter,
-  ]);
-
-  function openPicker(next: PickerState) {
-    setPicker(next);
-    setKeyword("");
-    setRarityFilter("all");
-    setElementFilter("all");
-    setClassFilter("all");
-    setWeaponTypeFilter("all");
-    setSeriesFilter("all");
-    setGearSetFilter("all");
-    setGearAbilityFilter("all");
-    setGearAttributeFilter("all");
-    setGearLevelFilter("all");
-    setOperatorWeaponFilter("all");
-  }
-
-  function handlePick(item: SelectableItem) {
-    if (!picker) return;
-
-    if (picker.kind === "operator") {
-      setForm((prev) => ({ ...prev, operatorSlug: item.slug }));
-    }
-
-    if (picker.kind === "weapon") {
-      setForm((prev) => ({ ...prev, weaponSlug: item.slug }));
-    }
-
-    if (picker.kind === "gear") {
-      if (picker.slot === "armor") {
-        setForm((prev) => ({ ...prev, armorSlug: item.slug }));
-      }
-      if (picker.slot === "gloves") {
-        setForm((prev) => ({ ...prev, glovesSlug: item.slug }));
-      }
-      if (picker.slot === "kit1") {
-        setForm((prev) => ({ ...prev, kit1Slug: item.slug }));
-      }
-      if (picker.slot === "kit2") {
-        setForm((prev) => ({ ...prev, kit2Slug: item.slug }));
-      }
-    }
-
-    setPicker(null);
-  }
 
   function updateGearLevel(
     slot: GearSlot,
@@ -1532,18 +1361,6 @@ export default function SettingsPage() {
 
   function resetSettings() {
     setForm(createDefaultForm());
-    setPicker(null);
-    setKeyword("");
-    setRarityFilter("all");
-    setElementFilter("all");
-    setClassFilter("all");
-    setWeaponTypeFilter("all");
-    setSeriesFilter("all");
-    setGearSetFilter("all");
-    setGearAbilityFilter("all");
-    setGearAttributeFilter("all");
-    setGearLevelFilter("all");
-    setOperatorWeaponFilter("all");
   }
 
   return (
@@ -1581,7 +1398,6 @@ export default function SettingsPage() {
             </button>
             <Link
               href="/"
-              onClick={resetSettings}
               className="rounded-lg border border-white/10 bg-black px-5 py-2 text-sm font-bold text-zinc-200 hover:border-yellow-400/40 hover:text-yellow-300"
             >
               홈으로
@@ -1589,13 +1405,17 @@ export default function SettingsPage() {
           </div>
         </header>
 
-        <section className="grid gap-4 xl:grid-cols-[0.95fr_0.85fr_1.55fr]">
+        <section className="mt-4 grid gap-4 xl:grid-cols-[0.95fr_0.85fr_1.55fr]">
           <OperatorPanel
             operator={selectedOperator}
             form={form}
             finalStats={finalStats}
             onOpen={() =>
-              openPicker({ kind: "operator", title: "오퍼레이터 선택" })
+              setSelectPanel({
+                kind: "operator",
+                title: "오퍼레이터 선택",
+                selectedSlug: form.operatorSlug,
+              })
             }
             onLevelChange={(value) =>
               setForm((prev) => ({ ...prev, operatorLevel: value }))
@@ -1616,7 +1436,13 @@ export default function SettingsPage() {
               weapon={selectedWeapon}
               form={form}
               finalStats={finalStats}
-              onOpen={() => openPicker({ kind: "weapon", title: "무기 선택" })}
+              onOpen={() =>
+                setSelectPanel({
+                  kind: "weapon",
+                  title: "무기 선택",
+                  selectedSlug: form.weaponSlug,
+                })
+              }
               onLevelChange={(value) =>
                 setForm((prev) => ({ ...prev, weaponLevel: value }))
               }
@@ -1636,7 +1462,23 @@ export default function SettingsPage() {
               kit2={selectedKit2}
               form={form}
               finalStats={finalStats}
-              onOpen={openPicker}
+              onOpen={(picker) => {
+                const selectedSlug =
+                  picker.slot === "armor"
+                    ? form.armorSlug
+                    : picker.slot === "gloves"
+                      ? form.glovesSlug
+                      : picker.slot === "kit1"
+                        ? form.kit1Slug
+                        : form.kit2Slug;
+
+                setSelectPanel({
+                  kind: "gear",
+                  slot: picker.slot,
+                  title: picker.title,
+                  selectedSlug,
+                });
+              }}
               onGearLevelChange={updateGearLevel}
             />
 
@@ -1645,36 +1487,34 @@ export default function SettingsPage() {
         </section>
       </div>
 
-      {picker ? (
-        <PickerModal
-          picker={picker}
-          items={pickerItems}
-          keyword={keyword}
-          rarityFilter={rarityFilter}
-          elementFilter={elementFilter}
-          classFilter={classFilter}
-          operatorWeaponFilter={operatorWeaponFilter}
-          weaponTypeFilter={weaponTypeFilter}
-          seriesFilter={seriesFilter}
-          gearSetFilter={gearSetFilter}
-          gearAbilityFilter={gearAbilityFilter}
-          gearAttributeFilter={gearAttributeFilter}
-          gearLevelFilter={gearLevelFilter}
-          onKeywordChange={setKeyword}
-          onRarityChange={setRarityFilter}
-          onElementChange={setElementFilter}
-          onClassChange={setClassFilter}
-          onOperatorWeaponChange={setOperatorWeaponFilter}
-          onWeaponTypeChange={setWeaponTypeFilter}
-          onSeriesChange={setSeriesFilter}
-          onGearSetChange={setGearSetFilter}
-          onGearAbilityChange={setGearAbilityFilter}
-          onGearAttributeChange={setGearAttributeFilter}
-          onGearLevelChange={setGearLevelFilter}
-          onClose={() => setPicker(null)}
-          onPick={handlePick}
+
+      {selectPanel ? (
+        <CommonSelectPanel
+          kind={selectPanel.kind}
+          gearSlot={selectPanel.kind === "gear" ? selectPanel.slot : undefined}
+          title={selectPanel.title}
+          selectedSlug={selectPanel.selectedSlug}
+          onClose={() => setSelectPanel(null)}
+          onSelectOperator={(slug: string) => {
+            setForm((prev) => ({ ...prev, operatorSlug: slug }));
+            setSelectPanel(null);
+          }}
+          onSelectWeapon={(slug: string) => {
+            setForm((prev) => ({ ...prev, weaponSlug: slug }));
+            setSelectPanel(null);
+          }}
+          onSelectGear={(slot: CommonGearSlot, slug: string) => {
+            setForm((prev) => {
+              if (slot === "armor") return { ...prev, armorSlug: slug };
+              if (slot === "gloves") return { ...prev, glovesSlug: slug };
+              if (slot === "kit1") return { ...prev, kit1Slug: slug };
+              return { ...prev, kit2Slug: slug };
+            });
+            setSelectPanel(null);
+          }}
         />
       ) : null}
+
     </main>
   );
 }
@@ -1909,7 +1749,7 @@ function GearPanel({
   kit2?: SelectableItem;
   form: FormState;
   finalStats: ReturnType<typeof calculateFinalStats>;
-  onOpen: (picker: PickerState) => void;
+  onOpen: (picker: { slot: GearSlot; title: string }) => void;
   onGearLevelChange: (
     slot: GearSlot,
     key: keyof GearSlotLevels,
@@ -1949,7 +1789,7 @@ function GearPanel({
           item={armor}
           levels={form.armorLevels}
           onSelect={() =>
-            onOpen({ kind: "gear", slot: "armor", title: "방어구 선택" })
+            onOpen({ slot: "armor", title: "방어구 선택" })
           }
           onLevelChange={(key, value) => onGearLevelChange("armor", key, value)}
         />
@@ -1959,7 +1799,7 @@ function GearPanel({
           item={gloves}
           levels={form.glovesLevels}
           onSelect={() =>
-            onOpen({ kind: "gear", slot: "gloves", title: "보호 장갑 선택" })
+            onOpen({ slot: "gloves", title: "보호 장갑 선택" })
           }
           onLevelChange={(key, value) =>
             onGearLevelChange("gloves", key, value)
@@ -1971,7 +1811,7 @@ function GearPanel({
           item={kit1}
           levels={form.kit1Levels}
           onSelect={() =>
-            onOpen({ kind: "gear", slot: "kit1", title: "부품 1 선택" })
+            onOpen({ slot: "kit1", title: "부품 1 선택" })
           }
           onLevelChange={(key, value) => onGearLevelChange("kit1", key, value)}
         />
@@ -1981,7 +1821,7 @@ function GearPanel({
           item={kit2}
           levels={form.kit2Levels}
           onSelect={() =>
-            onOpen({ kind: "gear", slot: "kit2", title: "부품 2 선택" })
+            onOpen({ slot: "kit2", title: "부품 2 선택" })
           }
           onLevelChange={(key, value) => onGearLevelChange("kit2", key, value)}
         />
@@ -2786,342 +2626,3 @@ function OptionSelectBox({
   );
 }
 
-function PickerModal({
-  picker,
-  items,
-  keyword,
-  rarityFilter,
-  elementFilter,
-  classFilter,
-  operatorWeaponFilter,
-  weaponTypeFilter,
-  seriesFilter,
-  gearSetFilter,
-  gearAbilityFilter,
-  gearAttributeFilter,
-  gearLevelFilter,
-  onKeywordChange,
-  onRarityChange,
-  onElementChange,
-  onClassChange,
-  onOperatorWeaponChange,
-  onWeaponTypeChange,
-  onSeriesChange,
-  onGearSetChange,
-  onGearAbilityChange,
-  onGearAttributeChange,
-  onGearLevelChange,
-  onClose,
-  onPick,
-}: {
-  picker: PickerState;
-  items: SelectableItem[];
-  keyword: string;
-  rarityFilter: string;
-  elementFilter: string;
-  classFilter: string;
-  operatorWeaponFilter: string;
-  weaponTypeFilter: string;
-  seriesFilter: string;
-  gearSetFilter: string;
-  gearAbilityFilter: string;
-  gearAttributeFilter: string;
-  gearLevelFilter: string;
-  onKeywordChange: (value: string) => void;
-  onRarityChange: (value: string) => void;
-  onElementChange: (value: string) => void;
-  onClassChange: (value: string) => void;
-  onOperatorWeaponChange: (value: string) => void;
-  onWeaponTypeChange: (value: string) => void;
-  onSeriesChange: (value: string) => void;
-  onGearSetChange: (value: string) => void;
-  onGearAbilityChange: (value: string) => void;
-  onGearAttributeChange: (value: string) => void;
-  onGearLevelChange: (value: string) => void;
-  onClose: () => void;
-  onPick: (item: SelectableItem) => void;
-}) {
-  const isOperator = picker.kind === "operator";
-  const isWeapon = picker.kind === "weapon";
-  const isGear = picker.kind === "gear";
-
-  const operatorWeaponTypes: string[] = Array.from(
-    new Set(
-      operatorItems
-        .map((item) => String(item.raw?.weapon ?? item.raw?.weaponType ?? ""))
-        .filter(Boolean),
-    ),
-  ).sort(
-    (a, b) => orderIndex(weaponTypeOrder, a) - orderIndex(weaponTypeOrder, b),
-  );
-
-  const weaponTypes: string[] = Array.from(
-    new Set(weaponItems.map(getWeaponTypeKey).filter(Boolean)),
-  ).sort(
-    (a, b) => orderIndex(weaponTypeOrder, a) - orderIndex(weaponTypeOrder, b),
-  );
-
-  const weaponSeries: string[] = Array.from(
-    new Set(
-      weaponItems
-        .map((item) => String(item.raw?.series ?? item.raw?.seriesName ?? ""))
-        .filter(Boolean),
-    ),
-  );
-
-  const gearSets: string[] = Array.from(
-    new Set(
-      gearItems
-        .map((item) => item.setName)
-        .filter((setName): setName is string => Boolean(setName)),
-    ),
-  ).sort((a, b) => orderIndex(gearSetOrder, a) - orderIndex(gearSetOrder, b));
-
-  return (
-    <PickerShell
-      title={picker.title}
-      count={items.length}
-      searchValue={keyword}
-      searchPlaceholder="이름 / 코드 검색"
-      onSearch={onKeywordChange}
-      onClose={onClose}
-      aside={
-        <>
-          {!isGear ? (
-            <SelectFilterGroup title="레어도">
-              <SelectFilterButton
-                active={rarityFilter === "all"}
-                label="전체"
-                onClick={() => onRarityChange("all")}
-              />
-
-              {(isOperator ? [6, 5, 4] : [6, 5, 4, 3]).map((value) => (
-                <SelectFilterButton
-                  key={value}
-                  active={rarityFilter === String(value)}
-                  label={`${value}성`}
-                  iconSrc={rarityIconMap[value]}
-                  onClick={() => onRarityChange(String(value))}
-                />
-              ))}
-            </SelectFilterGroup>
-          ) : null}
-
-          {isOperator ? (
-            <>
-              <SelectFilterGroup title="속성">
-                <SelectFilterButton
-                  active={elementFilter === "all"}
-                  label="전체"
-                  onClick={() => onElementChange("all")}
-                />
-
-                {Object.entries(elementLabelMap).map(([key, label]) => (
-                  <SelectFilterButton
-                    key={key}
-                    active={elementFilter === key}
-                    label={label}
-                    iconSrc={elementIconMap[key]}
-                    onClick={() => onElementChange(key)}
-                  />
-                ))}
-              </SelectFilterGroup>
-
-              <SelectFilterGroup title="클래스">
-                <SelectFilterButton
-                  active={classFilter === "all"}
-                  label="전체"
-                  onClick={() => onClassChange("all")}
-                />
-
-                {Object.entries(classLabelMap).map(([key, label]) => (
-                  <SelectFilterButton
-                    key={key}
-                    active={classFilter === key}
-                    label={label}
-                    iconSrc={classIconMap[key]}
-                    onClick={() => onClassChange(key)}
-                  />
-                ))}
-              </SelectFilterGroup>
-
-              <SelectFilterGroup title="무기" last>
-                <SelectFilterButton
-                  active={operatorWeaponFilter === "all"}
-                  label="전체"
-                  onClick={() => onOperatorWeaponChange("all")}
-                />
-
-                {operatorWeaponTypes.map((type) => (
-                  <SelectFilterButton
-                    key={type}
-                    active={operatorWeaponFilter === type}
-                    label={weaponTypeLabelMap[type] ?? type}
-                    iconSrc={weaponIconMap[type]}
-                    onClick={() => onOperatorWeaponChange(type)}
-                  />
-                ))}
-              </SelectFilterGroup>
-            </>
-          ) : null}
-
-          {isWeapon ? (
-            <>
-              <SelectFilterGroup title="무기 타입">
-                <SelectFilterButton
-                  active={weaponTypeFilter === "all"}
-                  label="전체"
-                  onClick={() => onWeaponTypeChange("all")}
-                />
-
-                {weaponTypes.map((type) => (
-                  <SelectFilterButton
-                    key={type}
-                    active={weaponTypeFilter === type}
-                    label={weaponTypeLabelMap[type] ?? type}
-                    iconSrc={weaponIconMap[type]}
-                    onClick={() => onWeaponTypeChange(type)}
-                  />
-                ))}
-              </SelectFilterGroup>
-
-              <SelectFilterGroup title="시리즈" last>
-                <SelectFilterButton
-                  active={seriesFilter === "all"}
-                  label="전체"
-                  onClick={() => onSeriesChange("all")}
-                />
-
-                {weaponSeries.map((series) => (
-                  <SelectFilterButton
-                    key={series}
-                    active={seriesFilter === series}
-                    label={series}
-                    onClick={() => onSeriesChange(series)}
-                  />
-                ))}
-              </SelectFilterGroup>
-            </>
-          ) : null}
-
-          {isGear ? (
-            <>
-              <SelectFilterGroup title="세트 유형">
-                <SelectFilterButton
-                  active={gearSetFilter === "all"}
-                  label="전체"
-                  onClick={() => onGearSetChange("all")}
-                />
-
-                {gearSets.map((setName) => (
-                  <SelectFilterButton
-                    key={setName}
-                    active={gearSetFilter === setName}
-                    label={setName}
-                    onClick={() => onGearSetChange(setName)}
-                  />
-                ))}
-              </SelectFilterGroup>
-
-              <SelectFilterGroup title="속성">
-                {gearAttributeOptions.map((option) => (
-                  <SelectFilterButton
-                    key={option.value}
-                    active={gearAttributeFilter === option.value}
-                    label={option.label}
-                    onClick={() => onGearAttributeChange(option.value)}
-                  />
-                ))}
-              </SelectFilterGroup>
-
-              <SelectFilterGroup title="능력치">
-                {gearAbilityOptions.map((option) => (
-                  <SelectFilterButton
-                    key={option.value}
-                    active={gearAbilityFilter === option.value}
-                    label={option.label}
-                    onClick={() => onGearAbilityChange(option.value)}
-                  />
-                ))}
-              </SelectFilterGroup>
-
-              <SelectFilterGroup title="품질">
-                <SelectFilterButton
-                  active={rarityFilter === "all"}
-                  label="전체"
-                  onClick={() => onRarityChange("all")}
-                />
-                {[5, 4, 3, 2, 1].map((value) => (
-                  <SelectFilterButton
-                    key={value}
-                    active={rarityFilter === String(value)}
-                    label={`${value}품질`}
-                    color={qualityColorMap[value]}
-                    onClick={() => onRarityChange(String(value))}
-                  />
-                ))}
-              </SelectFilterGroup>
-
-              <SelectFilterGroup title="장비 레벨" last>
-                <SelectFilterButton
-                  active={gearLevelFilter === "all"}
-                  label="전체"
-                  onClick={() => onGearLevelChange("all")}
-                />
-                {[70, 50, 36, 28, 20, 10].map((level) => (
-                  <SelectFilterButton
-                    key={level}
-                    active={gearLevelFilter === String(level)}
-                    label={`Lv. ${level}`}
-                    onClick={() => onGearLevelChange(String(level))}
-                  />
-                ))}
-              </SelectFilterGroup>
-            </>
-          ) : null}
-        </>
-      }
-    >
-      {items.length > 0 ? (
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(170px,1fr))] gap-3 overflow-y-auto pr-1">
-          {items.map((item) => {
-            if (picker.kind === "operator") {
-              return (
-                <OperatorSelectCard
-                  key={item.slug}
-                  operator={item.raw}
-                  active={false}
-                  onClick={() => onPick(item)}
-                />
-              );
-            }
-
-            if (picker.kind === "weapon") {
-              return (
-                <WeaponSelectCard
-                  key={item.slug}
-                  weapon={item.raw}
-                  active={false}
-                  onClick={() => onPick(item)}
-                />
-              );
-            }
-
-            return (
-              <GearSelectCard
-                key={item.slug}
-                gear={item.raw}
-                active={false}
-                onClick={() => onPick(item)}
-              />
-            );
-          })}
-        </div>
-      ) : (
-        <div className="flex min-h-[260px] items-center justify-center rounded-[20px] border border-yellow-500/10 bg-black p-6 text-center text-sm text-zinc-500">
-          조건에 맞는 항목이 없습니다.
-        </div>
-      )}
-    </PickerShell>
-  );
-}

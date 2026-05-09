@@ -1,0 +1,35 @@
+// 성장 목표 / 재화 파밍 계산기 공통 보유 재화 연동용
+//
+// 같은 API를 사용하면 성장 시뮬레이터에서 입력한 보유 재화가
+// 성장 목표/파밍 계산기에서도 그대로 보입니다.
+
+const USER_MATERIAL_INVENTORY_API = "/api/user/material-inventory";
+
+async function loadUserMaterialInventory() {
+  try {
+    const response = await fetch(USER_MATERIAL_INVENTORY_API, {
+      method: "GET",
+      cache: "no-store",
+    });
+
+    if (!response.ok) return null;
+
+    const payload = await response.json();
+
+    return payload.materials ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function saveUserMaterialInventory(materials: Record<string, number>) {
+  fetch(USER_MATERIAL_INVENTORY_API, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      materials,
+    }),
+  }).catch(() => {});
+}

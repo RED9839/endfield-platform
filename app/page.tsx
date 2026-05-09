@@ -1,5 +1,8 @@
 import Link from "next/link";
 import { headers } from "next/headers";
+import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
+import { SignOutButton } from "@/app/components/auth/AuthButtons";
 import type { ReactNode } from "react";
 import HeroPanel from "@/app/components/home/HeroPanel";
 import QuickAccessPanel, {
@@ -71,7 +74,13 @@ const quickAccessItems: QuickAccessItem[] = [
   },
 ];
 
-function SideNav() {
+type AccountUser = {
+  name?: string | null;
+  email?: string | null;
+  nickname?: string | null;
+} | null;
+
+function SideNav({ user }: { user?: AccountUser }) {
   return (
     <aside className="sticky top-0 flex h-screen flex-col border-r border-yellow-500/15 bg-black px-5 py-6">
       <div className="mb-8">
@@ -84,6 +93,49 @@ function SideNav() {
         <p className="mt-2 text-sm leading-6 text-zinc-500">
           오퍼레이터, 무기, 장비, 시뮬레이션, 세팅 기능을 한곳에서 확인하는 메인 화면
         </p>
+
+        <div className="mt-5 rounded-2xl border border-yellow-500/15 bg-[#05070b] p-4">
+          {user ? (
+            <div className="grid gap-3">
+              <div>
+                <p className="text-[11px] font-black tracking-[0.28em] text-yellow-400">
+                  ACCOUNT
+                </p>
+                <p className="mt-2 truncate text-sm font-black text-white">
+                  {user.nickname ?? user.name ?? "로그인 사용자"}
+                </p>
+                <p className="mt-1 truncate text-xs text-zinc-500">
+                  {user.email}
+                </p>
+              </div>
+
+              <div className="grid gap-2">
+                <Link
+                  href="/account"
+                  className="rounded-lg bg-[#ffd24a] px-4 py-2 text-center text-sm font-black text-black transition hover:brightness-110"
+                >
+                  프로필 수정
+                </Link>
+                <SignOutButton />
+              </div>
+            </div>
+          ) : (
+            <div>
+              <p className="text-[11px] font-black tracking-[0.28em] text-yellow-400">
+                ACCOUNT
+              </p>
+              <p className="mt-2 text-sm leading-5 text-zinc-400">
+                Google 계정으로 로그인하고 세팅을 저장합니다.
+              </p>
+              <Link
+                href="/login"
+                className="mt-3 block rounded-lg bg-[#ffd24a] px-4 py-2 text-center text-sm font-black text-black transition hover:brightness-110"
+              >
+                로그인 / 회원가입
+              </Link>
+            </div>
+          )}
+        </div>
       </div>
 
       <nav className="flex flex-col gap-2">
@@ -188,6 +240,21 @@ async function getHomeData(): Promise<HomeApiResponse | null> {
 }
 
 export default async function HomePage() {
+  const session = await auth();
+
+  const accountUser = session?.user?.id
+    ? await prisma.user.findUnique({
+        where: {
+          id: session.user.id,
+        },
+        select: {
+          name: true,
+          email: true,
+          nickname: true,
+        },
+      })
+    : null;
+
   const homeData = await getHomeData();
 
   const featuredOperatorName = resolveFeaturedOperatorName(homeData);
@@ -218,7 +285,17 @@ export default async function HomePage() {
   return (
     <main className="min-h-screen bg-[#050505] text-white">
       <div className="mx-auto grid max-w-[1820px] grid-cols-[260px_minmax(0,1fr)] gap-6 px-4 py-6 md:px-6">
-        <SideNav />
+        <SideNav
+          user={
+            session?.user
+              ? {
+                  name: accountUser?.name ?? session.user.name,
+                  email: accountUser?.email ?? session.user.email,
+                  nickname: accountUser?.nickname ?? null,
+                }
+              : null
+          }
+        />
 
         <section className="min-w-0">
           <div className="flex flex-col gap-6">

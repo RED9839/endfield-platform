@@ -35,6 +35,7 @@ import {
 } from "@/lib/farming/farming-transfer";
 
 const FARMING_STATE_KEY = "endfield:farming-page-state";
+const USER_MATERIAL_INVENTORY_API = "/api/user/material-inventory";
 
 const YELLOW_TEXT = "#ffdc70";
 
@@ -153,6 +154,56 @@ function clearState() {
   if (typeof window === "undefined") return;
   window.localStorage.removeItem(FARMING_STATE_KEY);
   clearFarmingTransferStorage();
+}
+
+function materialAmountsToRecord(items: MaterialAmount[]) {
+  return normalizeItems(items).reduce<Record<string, number>>((acc, item) => {
+    acc[item.name] = item.amount;
+    return acc;
+  }, {});
+}
+
+function recordToMaterialAmounts(materials: Record<string, number>) {
+  return normalizeItems(
+    Object.entries(materials).map(([name, amount]) => ({
+      name,
+      amount: Number(amount ?? 0),
+    }))
+  );
+}
+
+async function readUserMaterialInventory() {
+  try {
+    const response = await fetch(USER_MATERIAL_INVENTORY_API, {
+      method: "GET",
+      cache: "no-store",
+    });
+
+    if (!response.ok) return null;
+
+    const payload = (await response.json()) as {
+      ok?: boolean;
+      materials?: Record<string, number> | null;
+    };
+
+    return payload.materials ? recordToMaterialAmounts(payload.materials) : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveUserMaterialInventory(items: MaterialAmount[]) {
+  fetch(USER_MATERIAL_INVENTORY_API, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      materials: materialAmountsToRecord(items),
+    }),
+  }).catch(() => {
+    // 비로그인 또는 네트워크 오류는 로컬 저장값으로 유지합니다.
+  });
 }
 
 function getStorageValue(storage: Storage | null, key: string) {
@@ -457,14 +508,20 @@ export default function FarmingCalculatorClient() {
   const [modalMode, setModalMode] = useState<ModalMode>(null);
   const [discountOpen, setDiscountOpen] = useState(false);
   const [targetPanelOpen, setTargetPanelOpen] = useState(false);
+  const [storageReady, setStorageReady] = useState(false);
 
   useEffect(() => {
-    const sync = () => {
+    let cancelled = false;
+
+    const sync = async () => {
       const fromUrl = readFarmingTransferFromUrl(
         new URLSearchParams(window.location.search)
       );
       const fromStorage = readFarmingTransferFromStorage();
       const saved = readState();
+      const userOwnedMaterials = await readUserMaterialInventory();
+
+      if (cancelled) return;
 
       const requiredRaw =
         fromUrl.requiredMaterials.length > 0
@@ -476,9 +533,11 @@ export default function FarmingCalculatorClient() {
       const owned =
         fromUrl.ownedMaterials.length > 0
           ? fromUrl.ownedMaterials
-          : fromStorage?.ownedMaterials.length
-            ? fromStorage.ownedMaterials
-            : saved?.ownedMaterials ?? [];
+          : userOwnedMaterials?.length
+            ? userOwnedMaterials
+            : fromStorage?.ownedMaterials.length
+              ? fromStorage.ownedMaterials
+              : saved?.ownedMaterials ?? [];
 
       setTargets(normalizeFarmableTargets(requiredRaw));
       setOwnedMaterials(normalizeItems(owned));
@@ -486,6 +545,8 @@ export default function FarmingCalculatorClient() {
       if (saved?.settings) {
         setSettings(saved.settings);
       }
+
+      setStorageReady(true);
     };
 
     sync();
@@ -494,18 +555,22 @@ export default function FarmingCalculatorClient() {
     window.addEventListener("pageshow", sync);
 
     return () => {
+      cancelled = true;
       window.removeEventListener("focus", sync);
       window.removeEventListener("pageshow", sync);
     };
   }, [searchParams]);
 
   useEffect(() => {
+    if (!storageReady) return;
+
     saveState({ targets, ownedMaterials, settings });
     saveFarmingTransferPayload({
       requiredMaterials: normalizeFarmableTargets(targets),
       ownedMaterials,
     });
-  }, [targets, ownedMaterials, settings]);
+    saveUserMaterialInventory(ownedMaterials);
+  }, [storageReady, targets, ownedMaterials, settings]);
 
   const result = useMemo(() => {
     return calculateFarmingPlan({ targets, ownedMaterials, settings });
@@ -550,10 +615,12 @@ export default function FarmingCalculatorClient() {
   }
 
   function resetAndGoHome() {
-    clearState();
-    setTargets([]);
-    setOwnedMaterials([]);
-    setSettings(DEFAULT_SETTINGS);
+    saveState({ targets, ownedMaterials, settings });
+    saveFarmingTransferPayload({
+      requiredMaterials: normalizeFarmableTargets(targets),
+      ownedMaterials,
+    });
+    saveUserMaterialInventory(ownedMaterials);
     router.push("/");
   }
 

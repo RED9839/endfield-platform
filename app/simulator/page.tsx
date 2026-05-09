@@ -1,9 +1,11 @@
 "use client";
 
 import { buildFarmingHref, saveFarmingTransferPayload } from "@/lib/farming/farming-transfer";
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import NumberInput from "@/app/components/common/NumberInput";
 import {
   operatorDetails,
   type OperatorDetail,
@@ -14,10 +16,11 @@ import {
 } from "@/data/weapons-detail-data";
 import InfoPanel from "./_components/InfoPanel";
 import MaterialList from "./_components/MaterialList";
-import SimulatorShowcaseHero from "./_components/SimulatorShowcaseHero";
 import SimulatorStageSection from "./_components/SimulatorStageSection";
 import SimulatorSkillPanel from "./_components/SimulatorSkillPanel";
 import SimulatorLevelPanel from "./_components/SimulatorLevelPanel";
+import CommonSelectPanel from "@/app/components/select/CommonSelectPanel";
+import { MATERIALS as FARMING_MATERIALS } from "@/data/farming/farm-data";
 import { MATERIAL_ORDER, sortSimulatorMaterials } from "./_lib/material-sort";
 import {
   WEAPON_CURRENT_LEVEL_OPTIONS,
@@ -64,6 +67,40 @@ import {
 const operators = operatorDetails as OperatorDetail[];
 const weapons = weaponDetails as SourceWeaponDetail[];
 
+function getOperatorHeroImage(operator: OperatorDetail | null) {
+  if (!operator) return "";
+
+  const raw = operator as any;
+  const slug = String(raw.slug ?? "");
+
+  if (slug === "endministrator") {
+    return "/operators/endministrator/full1.webp";
+  }
+
+  return (
+    raw.fullImage ||
+    raw.full ||
+    raw.image ||
+    raw.avatar ||
+    `/operators/${slug}/full.webp`
+  );
+}
+
+function getWeaponHeroImage(weapon: SourceWeaponDetail | null) {
+  if (!weapon) return "";
+
+  const raw = weapon as any;
+  const slug = String(raw.slug ?? "");
+
+  return (
+    raw.fullImage ||
+    raw.full ||
+    raw.image ||
+    raw.avatar ||
+    `/weapons/${slug}/avatar.webp`
+  );
+}
+
 const YELLOW_TEXT = "#ffdc70";
 const YELLOW_BORDER = "rgba(255,196,74,0.14)";
 const YELLOW_BORDER_SOFT = "rgba(255,196,74,0.10)";
@@ -73,6 +110,8 @@ const SIMULATOR_WEAPON_STORAGE_KEY = "simulator:selectedWeaponSlug";
 const LEGACY_SIMULATOR_SELECTION_KEY = "endfield:simulator-selection";
 
 const SIMULATOR_FORM_STORAGE_KEY = "simulator:formState";
+const USER_SIMULATOR_STATE_API = "/api/user/simulator-state";
+const USER_MATERIAL_INVENTORY_API = "/api/user/material-inventory";
 
 type SimulatorFormState = {
   operatorSlug: string;
@@ -90,7 +129,7 @@ type SimulatorFormState = {
   ownedMaterials: Record<string, number>;
 };
 
-function readSimulatorFormState(): Partial<SimulatorFormState> | null {
+function readLocalSimulatorFormState(): Partial<SimulatorFormState> | null {
   if (typeof window === "undefined") return null;
 
   const raw =
@@ -107,13 +146,117 @@ function readSimulatorFormState(): Partial<SimulatorFormState> | null {
   }
 }
 
-function saveSimulatorFormState(state: SimulatorFormState) {
+function writeLocalSimulatorFormState(state: Partial<SimulatorFormState>) {
   if (typeof window === "undefined") return;
 
   const raw = JSON.stringify(state);
   window.sessionStorage.setItem(SIMULATOR_FORM_STORAGE_KEY, raw);
   window.localStorage.setItem(SIMULATOR_FORM_STORAGE_KEY, raw);
 }
+
+async function readUserSimulatorState(): Promise<Partial<SimulatorFormState> | null> {
+  try {
+    const response = await fetch(USER_SIMULATOR_STATE_API, {
+      method: "GET",
+      cache: "no-store",
+    });
+
+    if (!response.ok) return null;
+
+    const payload = (await response.json()) as {
+      ok?: boolean;
+      state?: Partial<SimulatorFormState> | null;
+    };
+
+    return payload.state ?? null;
+  } catch {
+    return null;
+  }
+}
+
+async function readUserMaterialInventory(): Promise<Record<string, number> | null> {
+  try {
+    const response = await fetch(USER_MATERIAL_INVENTORY_API, {
+      method: "GET",
+      cache: "no-store",
+    });
+
+    if (!response.ok) return null;
+
+    const payload = (await response.json()) as {
+      ok?: boolean;
+      materials?: Record<string, number> | null;
+    };
+
+    return payload.materials ?? null;
+  } catch {
+    return null;
+  }
+}
+
+async function readSimulatorFormState(): Promise<Partial<SimulatorFormState> | null> {
+  if (typeof window === "undefined") return null;
+
+  const [userState, userMaterials] = await Promise.all([
+    readUserSimulatorState(),
+    readUserMaterialInventory(),
+  ]);
+
+  if (userState || userMaterials) {
+    const mergedState = {
+      ...(userState ?? {}),
+      ...(userMaterials ? { ownedMaterials: userMaterials } : {}),
+    } as Partial<SimulatorFormState>;
+
+    writeLocalSimulatorFormState(mergedState);
+    return mergedState;
+  }
+
+  return readLocalSimulatorFormState();
+}
+
+function saveUserSimulatorState(state: SimulatorFormState) {
+  const { ownedMaterials: _ownedMaterials, ...stateWithoutMaterials } = state;
+
+  fetch(USER_SIMULATOR_STATE_API, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      state: stateWithoutMaterials,
+    }),
+  }).catch(() => {
+    // 비로그인 또는 네트워크 오류는 로컬 저장값으로만 유지합니다.
+  });
+}
+
+function saveUserMaterialInventory(materials: Record<string, number>) {
+  fetch(USER_MATERIAL_INVENTORY_API, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      materials,
+    }),
+  }).catch(() => {
+    // 비로그인 또는 네트워크 오류는 로컬 저장값으로만 유지합니다.
+  });
+}
+
+function saveSimulatorFormState(state: SimulatorFormState) {
+  if (typeof window === "undefined") return;
+
+  writeLocalSimulatorFormState(state);
+  window.clearTimeout((window as any).__endfieldSimulatorSaveTimer);
+
+  (window as any).__endfieldSimulatorSaveTimer = window.setTimeout(() => {
+    saveUserSimulatorState(state);
+    saveUserMaterialInventory(state.ownedMaterials);
+  }, 500);
+}
+
 function clearSimulatorFormState() {
   if (typeof window === "undefined") return;
 
@@ -126,8 +269,9 @@ function clearSimulatorFormState() {
   window.localStorage.removeItem(SIMULATOR_FORM_STORAGE_KEY);
   window.localStorage.removeItem("endfield:farming-transfer");
   window.localStorage.removeItem("endfield:farming-page-state");
-}
 
+  fetch(USER_SIMULATOR_STATE_API, { method: "DELETE" }).catch(() => {});
+}
 
 function isRangeState(value: unknown): value is RangeState {
   if (!value || typeof value !== "object") return false;
@@ -491,6 +635,179 @@ function formatRangeSummary(label: string, current: number, target: number) {
   return `${label} ${current} → ${target}`;
 }
 
+
+function materialImage(name: string) {
+  return `/materials/${name}.webp`;
+}
+
+type OwnedMaterialModalItem = {
+  name: string;
+  icon?: string;
+  owned: number;
+};
+
+function OwnedMaterialBulkModal({
+  values,
+  onClose,
+  onChange,
+}: {
+  values: OwnedMaterialModalItem[];
+  onClose: () => void;
+  onChange: (name: string, amount: number) => void;
+}) {
+  const [search, setSearch] = useState("");
+
+  const valueMap = useMemo(() => {
+    const map = new Map<string, number>();
+    values.forEach((item) => map.set(item.name, item.owned));
+    return map;
+  }, [values]);
+
+  const iconMap = useMemo(() => {
+    const map = new Map<string, string | undefined>();
+    values.forEach((item) => map.set(item.name, item.icon));
+    return map;
+  }, [values]);
+
+  const list = useMemo(() => {
+    const baseNames = FARMING_MATERIALS.map((item) => item.name);
+    const knownNameSet = new Set(baseNames);
+    const extraNames = values
+      .map((item) => item.name)
+      .filter((name) => name && !knownNameSet.has(name));
+
+    const q = search.trim().toLowerCase();
+
+    return sortSimulatorMaterials({
+      items: [...baseNames, ...extraNames]
+        .filter((name, index, array) => array.indexOf(name) === index)
+        .filter((name) => (q ? name.toLowerCase().includes(q) : true))
+        .map((name) => ({
+          name,
+          icon: iconMap.get(name) ?? materialImage(name),
+          count: valueMap.get(name) ?? 0,
+        })),
+    });
+  }, [iconMap, search, valueMap, values]);
+
+  return (
+    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+      <div
+        className="flex h-[90vh] w-[min(1180px,calc(100vw-2rem))] flex-col overflow-hidden rounded-[32px] bg-[#05070b] shadow-[0_22px_90px_rgba(0,0,0,0.62)]"
+        style={{ border: `1px solid ${YELLOW_BORDER}` }}
+      >
+        <div
+          className="flex shrink-0 items-center justify-between gap-4 px-7 py-5"
+          style={{ borderBottom: `1px solid ${YELLOW_BORDER_SOFT}` }}
+        >
+          <div>
+            <p
+              className="text-[11px] font-black tracking-[0.24em]"
+              style={{ color: YELLOW_TEXT }}
+            >
+              MATERIAL INVENTORY
+            </p>
+
+            <h3 className="mt-2 text-3xl font-black tracking-[-0.05em] text-white">
+              보유 재화 입력
+            </h3>
+
+            <p className="mt-1 text-sm text-zinc-500">
+              현재 보유 중인 재화 수량을 입력합니다. 이 값은 성장 시뮬레이션과 재화 파밍 계산기에서 같이 사용됩니다.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-black text-2xl font-black transition hover:bg-[#0b1018]"
+            style={{ border: `1px solid ${YELLOW_BORDER}`, color: YELLOW_TEXT }}
+            aria-label="보유 재화 입력창 닫기"
+          >
+            ×
+          </button>
+        </div>
+
+        <div
+          className="shrink-0 px-7 py-5"
+          style={{ borderBottom: `1px solid ${YELLOW_BORDER_SOFT}` }}
+        >
+          <div className="space-y-2">
+            <p
+              className="text-[13px] font-semibold tracking-[0.24em]"
+              style={{ color: YELLOW_TEXT }}
+            >
+              검색
+            </p>
+
+            <input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="재화 검색"
+              className="h-12 w-full rounded-2xl border border-white/10 bg-[#071019] px-4 text-sm font-semibold text-white outline-none transition placeholder:text-zinc-600 focus:border-yellow-400/40"
+            />
+          </div>
+        </div>
+
+        <div className="min-h-0 flex-1 overflow-y-auto px-7 py-6">
+          {list.length ? (
+            <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(250px,1fr))]">
+              {list.map((item) => (
+                <div
+                  key={item.name}
+                  className="rounded-2xl bg-[#090d14] p-4"
+                  style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
+                >
+                  <div className="flex min-w-0 items-center gap-3">
+                    <div
+                      className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-black/55"
+                      style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
+                    >
+                      <Image
+                        src={item.icon ?? materialImage(item.name)}
+                        alt={item.name}
+                        fill
+                        sizes="48px"
+                        className="object-contain p-1"
+                      />
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <div
+                        className="truncate text-sm font-black"
+                        style={{ color: YELLOW_TEXT }}
+                      >
+                        {item.name}
+                      </div>
+                      <div className="mt-0.5 text-xs text-zinc-500">
+                        현재 보유량
+                      </div>
+                    </div>
+                  </div>
+
+                  <NumberInput
+                    value={Number(item.count ?? 0)}
+                    onChange={(value) => onChange(item.name, value)}
+                    min={0}
+                    className="mt-4 h-11 rounded-xl border-yellow-500/15 bg-black text-yellow-300"
+                  />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div
+              className="flex min-h-[300px] items-center justify-center rounded-[24px] bg-black p-8 text-center text-sm text-zinc-500"
+              style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
+            >
+              조건에 맞는 재화가 없습니다.
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function sumMaterialCounts(
   items: Array<{ count: number; lacking?: number }>,
   useLacking = false
@@ -523,13 +840,6 @@ export default function SimulatorPage() {
   }
 
   function resetSimulatorAndGoHome() {
-    if (typeof window !== "undefined") {
-      window.localStorage.removeItem("endfield:simulator-selection");
-      window.sessionStorage.removeItem("endfield:simulator-selection");
-      window.localStorage.removeItem("endfield:farming-transfer");
-      window.localStorage.removeItem("endfield:farming-page-state");
-    }
-
     router.push("/");
   }
 
@@ -539,6 +849,11 @@ export default function SimulatorPage() {
   const [selectedOperatorSlug, setSelectedOperatorSlug] = useState("");
   const [selectedWeaponSlug, setSelectedWeaponSlug] = useState("");
   const [isOwnedPanelOpen, setIsOwnedPanelOpen] = useState(false);
+  const [selectPanel, setSelectPanel] = useState<
+    | { kind: "operator"; title: string; selectedSlug: string }
+    | { kind: "weapon"; title: string; selectedSlug: string }
+    | null
+  >(null);
 
   const [operatorCurrentLevel, setOperatorCurrentLevel] = useState(1);
   const [operatorTargetLevel, setOperatorTargetLevel] =
@@ -586,69 +901,84 @@ export default function SimulatorPage() {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    const queryOperatorSlug =
-      searchParams.get("operator") ?? searchParams.get("operatorSlug") ?? "";
-    const queryWeaponSlug =
-      searchParams.get("weapon") ?? searchParams.get("weaponSlug") ?? "";
+    let cancelled = false;
 
-    const storedFormState = readSimulatorFormState();
+    async function restoreSimulatorState() {
+      const queryOperatorSlug =
+        searchParams.get("operator") ?? searchParams.get("operatorSlug") ?? "";
+      const queryWeaponSlug =
+        searchParams.get("weapon") ?? searchParams.get("weaponSlug") ?? "";
 
-    const storedOperatorSlug =
-      queryOperatorSlug ||
-      (typeof storedFormState?.operatorSlug === "string"
-        ? storedFormState.operatorSlug
-        : "") ||
-      getStoredSimulatorSlug("operator");
-    const storedWeaponSlug =
-      queryWeaponSlug ||
-      (typeof storedFormState?.weaponSlug === "string"
-        ? storedFormState.weaponSlug
-        : "") ||
-      getStoredSimulatorSlug("weapon");
+      const storedFormState = await readSimulatorFormState();
 
-    const nextOperatorSlug =
-      storedOperatorSlug &&
-      operators.some((item: OperatorDetail) => item.slug === storedOperatorSlug)
-        ? storedOperatorSlug
-        : "";
-    const nextWeaponSlug =
-      storedWeaponSlug &&
-      weapons.some((item: SourceWeaponDetail) => item.slug === storedWeaponSlug)
-        ? storedWeaponSlug
-        : "";
+      if (cancelled) return;
 
-    setSelectedOperatorSlug(nextOperatorSlug);
-    setSelectedWeaponSlug(nextWeaponSlug);
+      const storedOperatorSlug =
+        queryOperatorSlug ||
+        (typeof storedFormState?.operatorSlug === "string"
+          ? storedFormState.operatorSlug
+          : "") ||
+        getStoredSimulatorSlug("operator");
+      const storedWeaponSlug =
+        queryWeaponSlug ||
+        (typeof storedFormState?.weaponSlug === "string"
+          ? storedFormState.weaponSlug
+          : "") ||
+        getStoredSimulatorSlug("weapon");
 
-    if (storedFormState?.operatorSlug === nextOperatorSlug) {
-      if (Number.isFinite(Number(storedFormState.operatorCurrentLevel))) {
-        setOperatorCurrentLevel(Number(storedFormState.operatorCurrentLevel));
+      const nextOperatorSlug =
+        storedOperatorSlug &&
+        operators.some((item: OperatorDetail) => item.slug === storedOperatorSlug)
+          ? storedOperatorSlug
+          : "";
+      const nextWeaponSlug =
+        storedWeaponSlug &&
+        weapons.some((item: SourceWeaponDetail) => item.slug === storedWeaponSlug)
+          ? storedWeaponSlug
+          : "";
+
+      setSelectedOperatorSlug(nextOperatorSlug);
+      setSelectedWeaponSlug(nextWeaponSlug);
+
+      if (storedFormState?.operatorSlug === nextOperatorSlug) {
+        if (Number.isFinite(Number(storedFormState.operatorCurrentLevel))) {
+          setOperatorCurrentLevel(Number(storedFormState.operatorCurrentLevel));
+        }
+        if (Number.isFinite(Number(storedFormState.operatorTargetLevel))) {
+          setOperatorTargetLevel(
+            toOperatorTargetLevel(Number(storedFormState.operatorTargetLevel))
+          );
+        }
       }
-      if (Number.isFinite(Number(storedFormState.operatorTargetLevel))) {
-        setOperatorTargetLevel(
-          toOperatorTargetLevel(Number(storedFormState.operatorTargetLevel))
-        );
+
+      if (storedFormState?.weaponSlug === nextWeaponSlug) {
+        if (Number.isFinite(Number(storedFormState.weaponCurrentLevel))) {
+          setWeaponCurrentLevel(
+            Number(storedFormState.weaponCurrentLevel) as WeaponCurrentLevel
+          );
+        }
+        if (Number.isFinite(Number(storedFormState.weaponTargetLevel))) {
+          setWeaponTargetLevel(
+            toWeaponTargetLevel(Number(storedFormState.weaponTargetLevel))
+          );
+        }
       }
+
+      if (
+        storedFormState?.ownedMaterials &&
+        typeof storedFormState.ownedMaterials === "object"
+      ) {
+        setOwnedMaterials(storedFormState.ownedMaterials);
+      }
+
+      setSimulatorStorageReady(true);
     }
 
-    if (storedFormState?.weaponSlug === nextWeaponSlug) {
-      if (Number.isFinite(Number(storedFormState.weaponCurrentLevel))) {
-        setWeaponCurrentLevel(
-          Number(storedFormState.weaponCurrentLevel) as WeaponCurrentLevel
-        );
-      }
-      if (Number.isFinite(Number(storedFormState.weaponTargetLevel))) {
-        setWeaponTargetLevel(
-          toWeaponTargetLevel(Number(storedFormState.weaponTargetLevel))
-        );
-      }
-    }
+    restoreSimulatorState();
 
-    if (storedFormState?.ownedMaterials && typeof storedFormState.ownedMaterials === "object") {
-      setOwnedMaterials(storedFormState.ownedMaterials);
-    }
-
-    setSimulatorStorageReady(true);
+    return () => {
+      cancelled = true;
+    };
   }, [searchParams, syncKey]);
 
   useEffect(() => {
@@ -725,6 +1055,16 @@ export default function SimulatorPage() {
       weapons.find((item: SourceWeaponDetail) => item.slug === selectedWeaponSlug) ??
       null,
     [selectedWeaponSlug]
+  );
+
+  const selectedOperatorImage = useMemo(
+    () => getOperatorHeroImage(selectedOperator),
+    [selectedOperator]
+  );
+
+  const selectedWeaponImage = useMemo(
+    () => getWeaponHeroImage(selectedWeapon),
+    [selectedWeapon]
   );
 
   const handleOperatorSelect = (slug: string) => {
@@ -814,7 +1154,7 @@ export default function SimulatorPage() {
       ? {}
       : buildMaxRangeMap(getInfrastructureGroups(selectedOperator));
 
-    const storedFormState = readSimulatorFormState();
+    const storedFormState = readLocalSimulatorFormState();
     if (
       !operatorRestoreAppliedRef.current &&
       storedFormState?.operatorSlug === selectedOperatorSlug
@@ -866,7 +1206,7 @@ export default function SimulatorPage() {
       )
     );
 
-    const storedFormState = readSimulatorFormState();
+    const storedFormState = readLocalSimulatorFormState();
     if (
       !weaponRestoreAppliedRef.current &&
       storedFormState?.weaponSlug === selectedWeaponSlug
@@ -1334,39 +1674,35 @@ export default function SimulatorPage() {
   };
 
   const handleOwnedMaterialChange = (name: string, value: number) => {
-    setOwnedMaterials((prev: Record<string, number>) => ({
-      ...prev,
-      [name]: Math.max(0, value),
-    }));
+    setOwnedMaterials((prev: Record<string, number>) => {
+      const next = { ...prev };
+      const amount = Math.max(0, value);
+
+      if (amount <= 0) delete next[name];
+      else next[name] = amount;
+
+      return next;
+    });
   };
 
   const handleGoHome = (event?: MouseEvent<HTMLAnchorElement>) => {
     event?.preventDefault();
 
-    setSimulatorStorageReady(false);
-    operatorRestoreAppliedRef.current = true;
-    weaponRestoreAppliedRef.current = true;
-
-    clearSimulatorFormState();
-
-    setSelectedOperatorSlug("");
-    setSelectedWeaponSlug("");
-    setOperatorCurrentLevel(1);
-    setOperatorTargetLevel(90);
-    setWeaponCurrentLevel(1);
-    setWeaponTargetLevel(90);
-    setEliteRange({ current: 0, target: 0 });
-    setWeaponBreakthroughRange({ current: 0, target: 0 });
-    setTrustRange({ current: 0, target: 0 });
-    setCombatSkillState({
-      normal: { current: "1", target: "M3" },
-      combo: { current: "1", target: "M3" },
-      battle: { current: "1", target: "M3" },
-      ultimate: { current: "1", target: "M3" },
+    saveSimulatorFormState({
+      operatorSlug: selectedOperatorSlug,
+      weaponSlug: selectedWeaponSlug,
+      operatorCurrentLevel,
+      operatorTargetLevel,
+      weaponCurrentLevel,
+      weaponTargetLevel,
+      eliteRange,
+      weaponBreakthroughRange,
+      trustRange,
+      combatSkillState,
+      talentRanges,
+      infrastructureRanges,
+      ownedMaterials,
     });
-    setTalentRanges({});
-    setInfrastructureRanges({});
-    setOwnedMaterials({});
 
     router.push("/");
   };
@@ -1553,24 +1889,140 @@ export default function SimulatorPage() {
               </Link>
             </div>
           </header>
+          <section
+            className="relative overflow-hidden rounded-[28px] bg-[#05070b]"
+            style={{ border: `1px solid ${YELLOW_BORDER}` }}
+          >
+            <div className="relative min-h-[500px] overflow-hidden rounded-[28px] bg-[radial-gradient(circle_at_46%_18%,rgba(255,210,74,0.14),transparent_35%),linear-gradient(135deg,#05070b,#020305)] md:min-h-[560px] xl:min-h-[620px]">
+              {selectedOperator && selectedOperatorImage ? (
+                <Image
+                  src={selectedOperatorImage}
+                  alt={selectedOperator.name}
+                  fill
+                  priority
+                  sizes="100vw"
+                  className="object-contain object-center"
+                />
+              ) : (
+                <div className="absolute inset-4 flex items-center justify-center rounded-[22px] border border-yellow-500/10 bg-black/45 text-sm font-semibold text-zinc-500">
+                  오퍼레이터를 선택해 주세요
+                </div>
+              )}
 
-          <SimulatorShowcaseHero
-            operator={selectedOperator}
-            weapon={selectedWeapon}
-            operators={operators}
-            weapons={weapons}
-            selectedOperatorSlug={selectedOperatorSlug}
-            selectedWeaponSlug={selectedWeaponSlug}
-            onSelectOperator={handleOperatorSelect}
-            onSelectWeapon={handleWeaponSelect}
-            ownedItems={ownedMaterialItems}
-            isOwnedPanelOpen={isOwnedPanelOpen}
-            onOpenOwnedPanel={() => setIsOwnedPanelOpen(true)}
-            onCloseOwnedPanel={() => setIsOwnedPanelOpen(false)}
-            onChangeOwned={handleOwnedMaterialChange}
-            farmingHref="/farming"
-            onMoveToFarming={handleGoFarmingCalculator}
-          />
+              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.04),rgba(0,0,0,0.72)),linear-gradient(90deg,rgba(0,0,0,0.72),transparent_55%,rgba(0,0,0,0.42))]" />
+
+              <div className="absolute left-5 top-5 z-20">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setSelectPanel({
+                      kind: "operator",
+                      title: "오퍼레이터 선택",
+                      selectedSlug: selectedOperatorSlug,
+                    })
+                  }
+                  className="inline-flex h-11 items-center justify-center rounded-2xl border border-yellow-500/25 bg-black/65 px-4 text-sm font-black text-yellow-200 backdrop-blur transition hover:border-yellow-400/50 hover:bg-black/80"
+                >
+                  오퍼 선택
+                </button>
+              </div>
+
+              <div className="absolute right-5 top-5 z-20 flex flex-wrap justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsOwnedPanelOpen(true)}
+                  className="inline-flex h-11 items-center justify-center rounded-2xl border border-yellow-500/25 bg-black/65 px-4 text-sm font-black text-yellow-200 backdrop-blur transition hover:border-yellow-400/50 hover:bg-black/80"
+                >
+                  보유 재화 입력
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleGoFarmingCalculator}
+                  className="inline-flex h-11 items-center justify-center rounded-2xl border border-yellow-500/25 bg-black/65 px-4 text-sm font-black text-yellow-200 backdrop-blur transition hover:border-yellow-400/50 hover:bg-black/80"
+                >
+                  재화 파밍 시뮬레이터 이동
+                </button>
+              </div>
+
+              <div className="absolute bottom-5 right-5 z-20">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setSelectPanel({
+                      kind: "weapon",
+                      title: "무기 선택",
+                      selectedSlug: selectedWeaponSlug,
+                    })
+                  }
+                  className="group grid w-[150px] gap-2 rounded-3xl border border-yellow-500/25 bg-black/65 p-3 text-left text-white backdrop-blur transition hover:border-yellow-400/50 hover:bg-black/80 sm:w-[180px]"
+                >
+                  <div className="relative h-[96px] overflow-hidden rounded-2xl bg-black/70 sm:h-[120px]">
+                    {selectedWeapon && selectedWeaponImage ? (
+                      <Image
+                        src={selectedWeaponImage}
+                        alt={selectedWeapon.name}
+                        fill
+                        sizes="180px"
+                        className="object-contain p-3"
+                      />
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-xs font-bold text-zinc-500">
+                        무기 없음
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <p className="text-[11px] font-black tracking-[0.24em] text-yellow-300">
+                      WEAPON
+                    </p>
+                    <h3 className="mt-1 line-clamp-1 text-base font-black text-white">
+                      {selectedWeapon?.name ?? "무기 선택"}
+                    </h3>
+                  </div>
+                </button>
+              </div>
+
+              <div className="absolute bottom-6 left-6 z-20 max-w-[520px]">
+                <p className="text-[11px] font-black tracking-[0.38em] text-yellow-300">
+                  OPERATOR
+                </p>
+                <h1 className="mt-2 text-5xl font-black tracking-[-0.08em] text-white drop-shadow-[0_2px_16px_rgba(0,0,0,0.55)] md:text-6xl">
+                  {selectedOperator?.name ?? "오퍼레이터 미선택"}
+                </h1>
+                <p className="mt-1 text-sm font-black uppercase tracking-[0.18em] text-zinc-400">
+                  {selectedOperator?.enName ?? "SELECT OPERATOR"}
+                </p>
+              </div>
+            </div>
+          </section>
+
+
+          {selectPanel ? (
+            <CommonSelectPanel
+              kind={selectPanel.kind}
+              title={selectPanel.title}
+              selectedSlug={selectPanel.selectedSlug}
+              onClose={() => setSelectPanel(null)}
+              onSelectOperator={(slug) => {
+                handleOperatorSelect(slug);
+                setSelectPanel(null);
+              }}
+              onSelectWeapon={(slug) => {
+                handleWeaponSelect(slug);
+                setSelectPanel(null);
+              }}
+            />
+          ) : null}
+
+          {isOwnedPanelOpen ? (
+            <OwnedMaterialBulkModal
+              values={ownedMaterialItems}
+              onClose={() => setIsOwnedPanelOpen(false)}
+              onChange={handleOwnedMaterialChange}
+            />
+          ) : null}
 
           <div className="grid items-start gap-5 xl:grid-cols-[560px_minmax(0,1fr)]">
             <div className="grid auto-rows-max content-start gap-6 self-start">
