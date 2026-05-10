@@ -1,4 +1,15 @@
-import type { FarmStage } from "@/lib/farming/calculate-farming";
+export type FarmStageCostType = "sanity" | "token";
+
+export type FarmStage = {
+  id: string;
+  name: string;
+  material: string;
+  amount: number;
+  cost: number;
+  costType: FarmStageCostType;
+  stock?: number | "infinite";
+  isDiscount?: boolean;
+};
 
 export const farmStages: FarmStage[] = [
   // 프로토콜 공간 · 오퍼레이터 경험치
@@ -92,9 +103,17 @@ export const farmStages: FarmStage[] = [
 ];
 
 export const farmableMaterialNames = Array.from(
-  new Set(farmStages.filter((stage) => stage.costType === "sanity").map((stage) => stage.material))
+  new Set(
+    farmStages
+      .filter((stage) => stage.costType === "sanity")
+      .map((stage) => stage.material),
+  )
 ).sort((a, b) => a.localeCompare(b, "ko"));
 
 export const tokenShopMaterialNames = Array.from(
-  new Set(farmStages.filter((stage) => stage.costType === "token").map((stage) => stage.material))
+  new Set(
+    farmStages
+      .filter((stage) => stage.costType === "token")
+      .map((stage) => stage.material),
+  )
 ).sort((a, b) => a.localeCompare(b, "ko"));
