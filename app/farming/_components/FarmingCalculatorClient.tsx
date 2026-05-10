@@ -513,7 +513,7 @@ export default function FarmingCalculatorClient() {
   useEffect(() => {
     let cancelled = false;
 
-    const sync = async () => {
+    async function restoreFarmingState() {
       const fromUrl = readFarmingTransferFromUrl(
         new URLSearchParams(window.location.search)
       );
@@ -523,21 +523,25 @@ export default function FarmingCalculatorClient() {
 
       if (cancelled) return;
 
-      const requiredRaw =
-        fromUrl.requiredMaterials.length > 0
-          ? fromUrl.requiredMaterials
-          : fromStorage?.requiredMaterials.length
-            ? fromStorage.requiredMaterials
-            : saved?.targets ?? [];
+      const hasUrlTargets = fromUrl.requiredMaterials.length > 0;
+      const hasStorageTargets = Boolean(fromStorage?.requiredMaterials.length);
+      const hasUrlOwned = fromUrl.ownedMaterials.length > 0;
+      const hasStorageOwned = Boolean(fromStorage?.ownedMaterials.length);
+      const hasSavedOwned = Boolean(saved?.ownedMaterials.length);
 
-      const owned =
-        fromUrl.ownedMaterials.length > 0
-          ? fromUrl.ownedMaterials
-          : userOwnedMaterials?.length
-            ? userOwnedMaterials
-            : fromStorage?.ownedMaterials.length
-              ? fromStorage.ownedMaterials
-              : saved?.ownedMaterials ?? [];
+      const requiredRaw = hasUrlTargets
+        ? fromUrl.requiredMaterials
+        : hasStorageTargets
+          ? fromStorage?.requiredMaterials ?? []
+          : saved?.targets ?? [];
+
+      const owned = hasUrlOwned
+        ? fromUrl.ownedMaterials
+        : hasStorageOwned
+          ? fromStorage?.ownedMaterials ?? []
+          : hasSavedOwned
+            ? saved?.ownedMaterials ?? []
+            : userOwnedMaterials ?? [];
 
       setTargets(normalizeFarmableTargets(requiredRaw));
       setOwnedMaterials(normalizeItems(owned));
@@ -547,19 +551,14 @@ export default function FarmingCalculatorClient() {
       }
 
       setStorageReady(true);
-    };
+    }
 
-    sync();
-
-    window.addEventListener("focus", sync);
-    window.addEventListener("pageshow", sync);
+    restoreFarmingState();
 
     return () => {
       cancelled = true;
-      window.removeEventListener("focus", sync);
-      window.removeEventListener("pageshow", sync);
     };
-  }, [searchParams]);
+  }, []);
 
   useEffect(() => {
     if (!storageReady) return;

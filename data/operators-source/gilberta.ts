@@ -626,7 +626,7 @@ export const gilbertaOperatorDetailData = {
       name: "전달자의 노래",
       unlock: "Promote to E2 to activate the upgraded effect",
       icon: `/operators/${slug}/talents/talent1.webp`,
-      description: "필드에 있을 때, 팀 내 모든 아군 가드, 캐스터, 서포터 오퍼레이터의 궁극기 충전 효율 +4%",
+      description: "필드에 있을 때, 팀 내 모든 아군 가드, 캐스터, 서포터 오퍼레이터의 궁극기 충전 효율 +7%",
     },
     {
       name: "뒤늦은 편지",

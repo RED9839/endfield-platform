@@ -1068,28 +1068,13 @@ export default function SimulatorPage() {
   );
 
   const handleOperatorSelect = (slug: string) => {
-    operatorRestoreAppliedRef.current = true;
+    operatorRestoreAppliedRef.current = false;
     setSelectedOperatorSlug(slug);
-    setOperatorCurrentLevel(1);
-    setOperatorTargetLevel(90);
-    setEliteRange({ current: 0, target: 0 });
-    setTrustRange({ current: 0, target: 0 });
-    setCombatSkillState({
-      normal: { current: "1", target: "M3" },
-      combo: { current: "1", target: "M3" },
-      battle: { current: "1", target: "M3" },
-      ultimate: { current: "1", target: "M3" },
-    });
-    setTalentRanges({});
-    setInfrastructureRanges({});
   };
 
   const handleWeaponSelect = (slug: string) => {
-    weaponRestoreAppliedRef.current = true;
+    weaponRestoreAppliedRef.current = false;
     setSelectedWeaponSlug(slug);
-    setWeaponCurrentLevel(1);
-    setWeaponTargetLevel(90);
-    setWeaponBreakthroughRange({ current: 0, target: 0 });
   };
 
   const isEndministrator = selectedOperator?.slug === "endministrator";
@@ -1182,16 +1167,19 @@ export default function SimulatorPage() {
       return;
     }
 
-    setEliteRange({ current: 0, target: nextEliteMax });
-    setTrustRange({ current: 0, target: nextTrustMax });
-    setTalentRanges(nextTalentRanges);
-    setInfrastructureRanges(nextInfrastructureRanges);
-    setCombatSkillState({
-      normal: { current: "1", target: "M3" },
-      combo: { current: "1", target: "M3" },
-      battle: { current: "1", target: "M3" },
-      ultimate: { current: "1", target: "M3" },
-    });
+    if (!operatorRestoreAppliedRef.current) {
+      setEliteRange({ current: 0, target: nextEliteMax });
+      setTrustRange({ current: 0, target: nextTrustMax });
+      setTalentRanges(nextTalentRanges);
+      setInfrastructureRanges(nextInfrastructureRanges);
+      setCombatSkillState({
+        normal: { current: "1", target: "M3" },
+        combo: { current: "1", target: "M3" },
+        battle: { current: "1", target: "M3" },
+        ultimate: { current: "1", target: "M3" },
+      });
+      operatorRestoreAppliedRef.current = true;
+    }
   }, [selectedOperator, selectedOperatorSlug, isEndministrator]);
 
   useEffect(() => {
@@ -1221,7 +1209,10 @@ export default function SimulatorPage() {
       return;
     }
 
-    setWeaponBreakthroughRange({ current: 0, target: nextBreakthroughMax });
+    if (!weaponRestoreAppliedRef.current) {
+      setWeaponBreakthroughRange({ current: 0, target: nextBreakthroughMax });
+      weaponRestoreAppliedRef.current = true;
+    }
   }, [selectedWeapon, selectedWeaponSlug]);
 
   const combatSkillMetas = useMemo(

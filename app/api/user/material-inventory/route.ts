@@ -7,32 +7,27 @@ export async function GET() {
   const session = await auth();
 
   if (!session?.user?.id) {
-    return NextResponse.json({ ok: false, materials: null }, { status: 401 });
+    return NextResponse.json({ ok: false, materials: {} }, { status: 401 });
   }
 
-  const saved = await prisma.userMaterialInventory.findUnique({
+  const inventory = await prisma.userMaterialInventory.findMany({
     where: {
       userId: session.user.id,
     },
     select: {
-      data: true,
-      updatedAt: true,
+      material: true,
+      quantity: true,
     },
   });
 
-  if (!saved?.data) {
-    return NextResponse.json({ ok: true, materials: null });
-  }
+  const materials = Object.fromEntries(
+    inventory.map((item) => [item.material, item.quantity]),
+  );
 
-  try {
-    return NextResponse.json({
-      ok: true,
-      materials: JSON.parse(saved.data),
-      updatedAt: saved.updatedAt,
-    });
-  } catch {
-    return NextResponse.json({ ok: true, materials: null });
-  }
+  return NextResponse.json({
+    ok: true,
+    materials,
+  });
 }
 
 export async function PUT(request: Request) {
@@ -47,23 +42,30 @@ export async function PUT(request: Request) {
 
   if (!materials || typeof materials !== "object") {
     return NextResponse.json(
-      { ok: false, message: "저장할 보유 재화 값이 없습니다." },
+      { ok: false, message: "저장할 보유 재화 정보가 없습니다." },
       { status: 400 },
     );
   }
 
-  await prisma.userMaterialInventory.upsert({
+  await prisma.userMaterialInventory.deleteMany({
     where: {
       userId: session.user.id,
     },
-    create: {
-      userId: session.user.id,
-      data: JSON.stringify(materials),
-    },
-    update: {
-      data: JSON.stringify(materials),
-    },
   });
+
+  const entries = Object.entries(materials)
+    .map(([material, quantity]) => ({
+      userId: session.user.id,
+      material,
+      quantity: Number(quantity) || 0,
+    }))
+    .filter((item) => item.quantity > 0);
+
+  if (entries.length > 0) {
+    await prisma.userMaterialInventory.createMany({
+      data: entries,
+    });
+  }
 
   return NextResponse.json({ ok: true });
 }

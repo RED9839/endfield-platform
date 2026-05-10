@@ -15,24 +15,20 @@ export async function GET() {
       userId: session.user.id,
     },
     select: {
-      data: true,
+      state: true,
       updatedAt: true,
     },
   });
 
-  if (!saved?.data) {
+  if (!saved?.state) {
     return NextResponse.json({ ok: true, state: null });
   }
 
-  try {
-    return NextResponse.json({
-      ok: true,
-      state: JSON.parse(saved.data),
-      updatedAt: saved.updatedAt,
-    });
-  } catch {
-    return NextResponse.json({ ok: true, state: null });
-  }
+  return NextResponse.json({
+    ok: true,
+    state: saved.state,
+    updatedAt: saved.updatedAt,
+  });
 }
 
 export async function PUT(request: Request) {
@@ -60,10 +56,10 @@ export async function PUT(request: Request) {
     },
     create: {
       userId: session.user.id,
-      data: JSON.stringify(stateWithoutMaterials),
+      state: stateWithoutMaterials,
     },
     update: {
-      data: JSON.stringify(stateWithoutMaterials),
+      state: stateWithoutMaterials,
     },
   });
 
