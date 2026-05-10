@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import Checkbox from "@/app/components/common/Checkbox";
@@ -21,7 +21,7 @@ import {
   type DiscountKey,
 } from "@/data/farming/farm-data";
 import {
-  calculateFarmingPlan,
+  calculateFarming,
   type DiscountStock,
   type FarmingSettings,
   type MaterialAmount,
@@ -206,75 +206,6 @@ function saveUserMaterialInventory(items: MaterialAmount[]) {
   });
 }
 
-function getStorageValue(storage: Storage | null, key: string) {
-  if (!storage) return null;
-  try {
-    return storage.getItem(key);
-  } catch {
-    return null;
-  }
-}
-
-function setStorageValue(storage: Storage | null, key: string, value: string | null) {
-  if (!storage || value === null) return;
-  try {
-    storage.setItem(key, value);
-  } catch {
-    // ignore storage errors
-  }
-}
-
-function snapshotSimulatorSelection() {
-  if (typeof window === "undefined") return null;
-
-  return {
-    operatorSlug: getStorageValue(
-      window.sessionStorage,
-      "simulator:selectedOperatorSlug"
-    ),
-    weaponSlug: getStorageValue(
-      window.sessionStorage,
-      "simulator:selectedWeaponSlug"
-    ),
-    legacySession: getStorageValue(
-      window.sessionStorage,
-      "endfield:simulator-selection"
-    ),
-    legacyLocal: getStorageValue(
-      window.localStorage,
-      "endfield:simulator-selection"
-    ),
-  };
-}
-
-function restoreSimulatorSelection(
-  snapshot: ReturnType<typeof snapshotSimulatorSelection>
-) {
-  if (typeof window === "undefined" || !snapshot) return;
-
-  setStorageValue(
-    window.sessionStorage,
-    "simulator:selectedOperatorSlug",
-    snapshot.operatorSlug
-  );
-  setStorageValue(
-    window.sessionStorage,
-    "simulator:selectedWeaponSlug",
-    snapshot.weaponSlug
-  );
-  setStorageValue(
-    window.sessionStorage,
-    "endfield:simulator-selection",
-    snapshot.legacySession
-  );
-  setStorageValue(
-    window.localStorage,
-    "endfield:simulator-selection",
-    snapshot.legacyLocal
-  );
-}
-
-
 function PanelTitle({ title }: { title: string }) {
   return (
     <div>
@@ -355,12 +286,7 @@ function MaterialBulkModal({
   return (
     <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
       <div
-        className="
-          flex h-[90vh] w-[min(1180px,calc(100vw-2rem))]
-          flex-col overflow-hidden rounded-[32px]
-          bg-[#05070b]
-          shadow-[0_22px_90px_rgba(0,0,0,0.62)]
-        "
+        className="flex h-[90vh] w-[min(1180px,calc(100vw-2rem))] flex-col overflow-hidden rounded-[32px] bg-[#05070b] shadow-[0_22px_90px_rgba(0,0,0,0.62)]"
         style={{ border: `1px solid ${YELLOW_BORDER}` }}
       >
         <div
@@ -389,11 +315,7 @@ function MaterialBulkModal({
           <button
             type="button"
             onClick={onClose}
-            className="
-              inline-flex h-12 w-12 shrink-0 items-center justify-center
-              rounded-full bg-black text-2xl font-black
-              transition hover:bg-[#0b1018]
-            "
+            className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-black text-2xl font-black transition hover:bg-[#0b1018]"
             style={{
               border: `1px solid ${YELLOW_BORDER}`,
               color: YELLOW_TEXT,
@@ -420,16 +342,7 @@ function MaterialBulkModal({
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="재화 검색"
-              className="
-                h-12 w-full rounded-2xl
-                border border-white/10
-                bg-[#071019]
-                px-4
-                text-sm font-semibold text-white
-                outline-none transition
-                placeholder:text-zinc-600
-                focus:border-yellow-400/40
-              "
+              className="h-12 w-full rounded-2xl border border-white/10 bg-[#071019] px-4 text-sm font-semibold text-white outline-none transition placeholder:text-zinc-600 focus:border-yellow-400/40"
             />
           </div>
         </div>
@@ -474,12 +387,7 @@ function MaterialBulkModal({
                     value={item.amount}
                     onChange={(value) => onChange(item.name, value)}
                     min={0}
-                    className="
-                      mt-4 h-11 rounded-xl
-                      border-yellow-500/15
-                      bg-black
-                      text-yellow-300
-                    "
+                    className="mt-4 h-11 rounded-xl border-yellow-500/15 bg-black text-yellow-300"
                   />
                 </div>
               ))}
@@ -558,7 +466,7 @@ export default function FarmingCalculatorClient() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [searchParams]);
 
   useEffect(() => {
     if (!storageReady) return;
@@ -572,16 +480,17 @@ export default function FarmingCalculatorClient() {
   }, [storageReady, targets, ownedMaterials, settings]);
 
   const result = useMemo(() => {
-    return calculateFarmingPlan({ targets, ownedMaterials, settings });
+    return calculateFarming({ targets, ownedMaterials, settings });
   }, [targets, ownedMaterials, settings]);
 
   const setMaterialValue = (
-    setter: React.Dispatch<React.SetStateAction<MaterialAmount[]>>,
+    setter: Dispatch<SetStateAction<MaterialAmount[]>>,
     name: string,
     amount: number
   ) => {
     setter((prev) => {
       const next = new Map(prev.map((item) => [item.name, item.amount]));
+
       if (amount <= 0) next.delete(name);
       else next.set(name, amount);
 
@@ -614,11 +523,7 @@ export default function FarmingCalculatorClient() {
   }
 
   function resetAndGoHome() {
-    saveState({ targets, ownedMaterials, settings });
-    saveFarmingTransferPayload({
-      requiredMaterials: normalizeFarmableTargets(targets),
-      ownedMaterials,
-    });
+    clearState();
     saveUserMaterialInventory(ownedMaterials);
     router.push("/");
   }
@@ -631,711 +536,750 @@ export default function FarmingCalculatorClient() {
             className="rounded-[24px] bg-[#05070b] p-6"
             style={{ border: `1px solid ${YELLOW_BORDER}` }}
           >
-        <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
-          <div>
-            <p
-              className="text-[11px] font-black tracking-[0.24em]"
-              style={{ color: YELLOW_TEXT }}
-            >
-              ENDFIELD SUPPORT PLATFORM
-            </p>
-            <h1
-              className="mt-2 text-4xl font-black tracking-tight"
-              style={{ color: YELLOW_TEXT }}
-            >
-              RESOURCE FARMING CALCULATOR
-            </h1>
-            <p className="mt-1 text-sm text-zinc-500">
-              Farming Route Planner
-            </p>
-          </div>
-
-          <div className="flex flex-wrap gap-3">
-            <button
-              type="button"
-              onClick={moveToSimulator}
-              className="rounded-xl bg-black px-4 py-2 text-sm font-bold text-zinc-200 transition hover:bg-[#0b1018] hover:text-yellow-200"
-              style={{ border: `1px solid ${YELLOW_BORDER}` }}
-            >
-              성장 시뮬레이션 이동
-            </button>
-
-            <button
-              type="button"
-              onClick={resetAndGoHome}
-              className="rounded-xl bg-black px-4 py-2 text-sm font-bold text-zinc-200 transition hover:bg-[#0b1018] hover:text-yellow-200"
-              style={{ border: `1px solid ${YELLOW_BORDER}` }}
-            >
-              홈으로
-            </button>
-          </div>
-        </div>
-      </section>
-
-          <section className="grid items-start gap-5 xl:grid-cols-[560px_minmax(0,1fr)]">
-        <aside className="space-y-6">
-          <section
-            className="rounded-[24px] bg-[#05070b] p-5"
-            style={{ border: `1px solid ${YELLOW_BORDER}` }}
-          >
-            <PanelTitle title="재화 입력" />
-
-            <div className="mt-4 grid gap-3">
-              <button
-                type="button"
-                onClick={() => setModalMode("target")}
-                className="h-12 rounded-2xl border bg-black px-4 text-sm font-black text-zinc-200 transition hover:border-yellow-400/40 hover:text-yellow-200"
-                style={{ border: `1px solid ${YELLOW_BORDER}` }}
-              >
-                목표 재화 입력
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setModalMode("owned")}
-                className="h-12 rounded-2xl border bg-black px-4 text-sm font-black text-zinc-200 transition hover:border-yellow-400/40 hover:text-yellow-200"
-                style={{ border: `1px solid ${YELLOW_BORDER}` }}
-              >
-                보유 재화 입력
-              </button>
-            </div>
-          </section>
-
-          <section
-            className="rounded-[24px] bg-[#05070b] p-5"
-            style={{ border: `1px solid ${YELLOW_BORDER}` }}
-          >
-            <PanelTitle title="통합 징표 설정" />
-
-            <div className="mt-4 space-y-3">
-              <div
-                className="flex items-center gap-3 rounded-2xl border p-3"
-                style={{ border: `1px solid ${YELLOW_BORDER_SOFT}`, background: CARD_BG }}
-              >
-                <div
-                  className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl border bg-black"
-                  style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
+            <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+              <div>
+                <p
+                  className="text-[11px] font-black tracking-[0.24em]"
+                  style={{ color: YELLOW_TEXT }}
                 >
-                  <Image
-                    src={materialImage(ADVANCED_BOX_NAME)}
-                    alt={ADVANCED_BOX_NAME}
-                    fill
-                    sizes="44px"
-                    className="object-contain p-1"
-                  />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-bold text-white">
-                    {ADVANCED_BOX_NAME}
-                  </div>
-                  <div className="text-xs text-zinc-500">
-                    1개당 원하는 고급 육성 재료 2개
-                  </div>
-                </div>
-                <div className="w-[96px]">
-                  <NumberInput
-                    value={settings.advancedBoxCount}
-                    onChange={(value) =>
-                      updateSettings({ advancedBoxCount: value })
-                    }
-                    min={0}
-                  />
-                </div>
+                  ENDFIELD SUPPORT PLATFORM
+                </p>
+                <h1
+                  className="mt-2 text-4xl font-black tracking-tight"
+                  style={{ color: YELLOW_TEXT }}
+                >
+                  RESOURCE FARMING CALCULATOR
+                </h1>
+                <p className="mt-1 text-sm text-zinc-500">
+                  Farming Route Planner
+                </p>
               </div>
 
-              <Checkbox
-                checked={settings.useToken}
-                onChange={(checked) =>
-                  updateSettings({
-                    useToken: checked,
-                    useAllToken: checked ? settings.useAllToken : false,
-                  })
-                }
-                label="통합 징표 사용"
-              />
-
-              <Checkbox
-                checked={settings.useAllToken}
-                onChange={(checked) =>
-                  updateSettings({
-                    useAllToken: checked,
-                    useToken: checked ? true : settings.useToken,
-                  })
-                }
-                label="보유 통합 징표 전부 사용"
-              />
-
-              <div
-                className="flex items-center gap-3 rounded-2xl border p-3"
-                style={{ border: `1px solid ${YELLOW_BORDER_SOFT}`, background: CARD_BG }}
-              >
-                <div
-                  className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl border bg-black"
-                  style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
-                >
-                  <Image
-                    src={materialImage("통합 징표")}
-                    alt="통합 징표"
-                    fill
-                    sizes="44px"
-                    className="object-contain p-1"
-                  />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="text-sm font-bold text-white">
-                    보유 통합 징표
-                  </div>
-                </div>
-                <div className="w-[96px]">
-                  <NumberInput
-                    value={settings.ownedToken}
-                    onChange={(value) => updateSettings({ ownedToken: value })}
-                    min={0}
-                  />
-                </div>
-              </div>
-
-              <div
-                className="rounded-2xl border"
-                style={{ border: `1px solid ${YELLOW_BORDER_SOFT}`, background: CARD_BG }}
-              >
+              <div className="flex flex-wrap gap-3">
                 <button
                   type="button"
-                  onClick={() => setDiscountOpen((prev) => !prev)}
-                  className="flex w-full items-center justify-between px-4 py-3 text-left"
+                  onClick={moveToSimulator}
+                  className="rounded-xl bg-black px-4 py-2 text-sm font-bold text-zinc-200 transition hover:bg-[#0b1018] hover:text-yellow-200"
+                  style={{ border: `1px solid ${YELLOW_BORDER}` }}
                 >
-                  <span className="block text-sm font-black text-white">
-                    할인 품목 설정
-                  </span>
-                  <span style={{ color: YELLOW_MAIN }}>
-                    {discountOpen ? "▲" : "▼"}
-                  </span>
+                  성장 시뮬레이션 이동
                 </button>
 
-                {discountOpen ? (
-                  <div className="grid gap-3 border-t border-yellow-500/10 p-4">
-                    {settings.discounts.map((discount, index) => (
-                      <div
-                        key={discount.name}
-                        className="grid grid-cols-[minmax(0,1fr)_86px] items-center gap-3 rounded-2xl border p-3"
-                        style={{
-                          borderColor: YELLOW_BORDER_SOFT,
-                          background: PANEL_BG,
-                        }}
-                      >
-                        <div className="flex min-w-0 items-center gap-3">
-                          <div
-                            className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl border bg-black"
-                            style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
-                          >
-                            <Image
-                              src={materialImage(discount.name)}
-                              alt={discount.name}
-                              fill
-                              sizes="40px"
-                              className="object-contain p-1"
-                            />
-                          </div>
-                          <Checkbox
-                            checked={discount.enabled}
-                            onChange={(checked) => {
-                              const next = [...settings.discounts];
-                              next[index] = {
-                                ...next[index],
-                                enabled: checked,
-                                stock: checked ? next[index].stock : 0,
-                              };
-                              updateSettings({ discounts: next });
-                            }}
-                            label={discount.name}
-                          />
-                        </div>
-
-                        <NumberInput
-                          value={discount.stock}
-                          onChange={(value) => {
-                            const maxStock =
-                              DISCOUNT_MAX_STOCK[discount.name] ?? 0;
-                            const clampedValue = Math.min(
-                              Math.max(value, 0),
-                              maxStock
-                            );
-                            const next = [...settings.discounts];
-                            next[index] = {
-                              ...next[index],
-                              stock: clampedValue,
-                              enabled:
-                                clampedValue > 0 ? true : next[index].enabled,
-                            };
-                            updateSettings({ discounts: next });
-                          }}
-                          min={0}
-                          max={DISCOUNT_MAX_STOCK[discount.name] ?? 0}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                ) : null}
+                <button
+                  type="button"
+                  onClick={resetAndGoHome}
+                  className="rounded-xl bg-black px-4 py-2 text-sm font-bold text-zinc-200 transition hover:bg-[#0b1018] hover:text-yellow-200"
+                  style={{ border: `1px solid ${YELLOW_BORDER}` }}
+                >
+                  홈으로
+                </button>
               </div>
             </div>
           </section>
 
-          <section
-            className="rounded-[24px] bg-[#05070b] p-5"
-            style={{ border: `1px solid ${YELLOW_BORDER}` }}
-          >
-            <PanelTitle title="이성 회복 설정" />
-
-            <div className="mt-4 space-y-3">
-              <Checkbox
-                checked={settings.useDailyQuest}
-                onChange={(checked) =>
-                  updateSettings({ useDailyQuest: checked })
-                }
-                label="일일 임무 보상 포함"
-              />
-
-              <Checkbox
-                checked={settings.hasMonthlyCard}
-                onChange={(checked) =>
-                  updateSettings({ hasMonthlyCard: checked })
-                }
-                label="월정액 구매 중"
-              />
-
-              <div
-                className="flex items-center gap-3 rounded-2xl border p-3"
-                style={{ border: `1px solid ${YELLOW_BORDER_SOFT}`, background: CARD_BG }}
+          <section className="grid items-start gap-5 xl:grid-cols-[560px_minmax(0,1fr)]">
+            <aside className="space-y-6">
+              <section
+                className="rounded-[24px] bg-[#05070b] p-5"
+                style={{ border: `1px solid ${YELLOW_BORDER}` }}
               >
-                <div
-                  className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl border bg-black"
-                  style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
-                >
-                  <Image
-                    src={materialImage("파생 오리지늄")}
-                    alt="파생 오리지늄"
-                    fill
-                    sizes="44px"
-                    className="object-contain p-1"
-                  />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="text-sm font-bold text-white">
-                    파생 오리지늄 회복
-                  </div>
-                  <div className="text-xs text-zinc-500">
-                    소모{" "}
-                    {ORIGINIUM_COST_TABLE.slice(
-                      0,
-                      settings.dailyOriginiumRefreshCount
-                    ).reduce((sum, value) => sum + value, 0)}
-                    개 / 일
-                  </div>
-                </div>
-                <div className="w-[96px]">
-                  <NumberInput
-                    value={settings.dailyOriginiumRefreshCount}
-                    onChange={(value) =>
-                      updateSettings({
-                        dailyOriginiumRefreshCount: Math.min(
-                          value,
-                          ORIGINIUM_COST_TABLE.length
-                        ),
-                      })
-                    }
-                    min={0}
-                    max={ORIGINIUM_COST_TABLE.length}
-                  />
-                </div>
-              </div>
+                <PanelTitle title="재화 입력" />
 
-              {RECOVERY_ITEMS.map((item) => (
-                <div
-                  key={item.name}
-                  className="flex items-center gap-3 rounded-2xl border p-3"
-                  style={{
-                    borderColor: YELLOW_BORDER_SOFT,
-                    background: CARD_BG,
-                  }}
-                >
-                  <div
-                    className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl border bg-black"
-                    style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
+                <div className="mt-4 grid gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setModalMode("target")}
+                    className="h-12 rounded-2xl border bg-black px-4 text-sm font-black text-zinc-200 transition hover:border-yellow-400/40 hover:text-yellow-200"
+                    style={{ border: `1px solid ${YELLOW_BORDER}` }}
                   >
-                    <Image
-                      src={materialImage(item.name)}
-                      alt={item.name}
-                      fill
-                      sizes="44px"
-                      className="object-contain p-1"
-                    />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="text-sm font-bold text-white">
-                      {item.name}
-                    </div>
-                    <div className="text-xs text-zinc-500">
-                      {item.sanity} 이성 회복
-                    </div>
-                  </div>
-                  <div className="w-[96px]">
-                    <NumberInput
-                      value={settings.recovery[item.name] ?? 0}
-                      onChange={(value) =>
-                        updateSettings({
-                          recovery: {
-                            ...settings.recovery,
-                            [item.name]: value,
-                          },
-                        })
-                      }
-                      min={0}
-                    />
-                  </div>
+                    목표 재화 입력
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setModalMode("owned")}
+                    className="h-12 rounded-2xl border bg-black px-4 text-sm font-black text-zinc-200 transition hover:border-yellow-400/40 hover:text-yellow-200"
+                    style={{ border: `1px solid ${YELLOW_BORDER}` }}
+                  >
+                    보유 재화 입력
+                  </button>
                 </div>
-              ))}
-            </div>
-          </section>
-        </aside>
+              </section>
 
-        <section className="space-y-6">
-          <section
-            className="rounded-[24px] bg-[#05070b] p-5"
-            style={{ border: `1px solid ${YELLOW_BORDER}` }}
-          >
-            <PanelTitle title="계산 결과" />
+              <section
+                className="rounded-[24px] bg-[#05070b] p-5"
+                style={{ border: `1px solid ${YELLOW_BORDER}` }}
+              >
+                <PanelTitle title="통합 징표 설정" />
 
-            <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-              <SummaryCard label="필요 이성" value={result.totalRequiredSanity} />
-              <SummaryCard label="사용 징표" value={result.usedToken} />
-              <SummaryCard label="하루 회복" value={result.dailyTotalSanity} />
-              <SummaryCard
-                label="예상 일수"
-                value={result.estimatedDays}
-                suffix="일"
-              />
-            </div>
-          </section>
-
-          <section
-            className="rounded-[24px] bg-[#05070b] p-5"
-            style={{ border: `1px solid ${YELLOW_BORDER}` }}
-          >
-            <PanelTitle title="추천 이성 소모처" />
-
-            <div className="mt-4 grid gap-3 lg:grid-cols-3">
-              {result.stagePlans.length === 0 ? (
-                <div
-                  className="rounded-2xl border px-4 py-5 text-sm text-zinc-500"
-                  style={{
-                    borderColor: YELLOW_BORDER_SOFT,
-                    background: CARD_BG,
-                  }}
-                >
-                  추가 이성 파밍이 필요 없다.
-                </div>
-              ) : (
-                result.stagePlans.map((plan) => (
-                  <article
-                    key={plan.material}
-                    className="rounded-2xl border p-4"
+                <div className="mt-4 space-y-3">
+                  <div
+                    className="flex items-center gap-3 rounded-2xl border p-3"
                     style={{
-                      borderColor: YELLOW_BORDER_SOFT,
+                      border: `1px solid ${YELLOW_BORDER_SOFT}`,
                       background: CARD_BG,
                     }}
                   >
-                    <div className="flex items-start gap-3">
+                    <div
+                      className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl border bg-black"
+                      style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
+                    >
+                      <Image
+                        src={materialImage(ADVANCED_BOX_NAME)}
+                        alt={ADVANCED_BOX_NAME}
+                        fill
+                        sizes="44px"
+                        className="object-contain p-1"
+                      />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-sm font-bold text-white">
+                        {ADVANCED_BOX_NAME}
+                      </div>
+                      <div className="text-xs text-zinc-500">
+                        1개당 원하는 고급 육성 재료 2개
+                      </div>
+                    </div>
+                    <div className="w-[96px]">
+                      <NumberInput
+                        value={settings.advancedBoxCount}
+                        onChange={(value) =>
+                          updateSettings({ advancedBoxCount: value })
+                        }
+                        min={0}
+                      />
+                    </div>
+                  </div>
+
+                  <Checkbox
+                    checked={settings.useToken}
+                    onChange={(checked) =>
+                      updateSettings({
+                        useToken: checked,
+                        useAllToken: checked ? settings.useAllToken : false,
+                      })
+                    }
+                    label="통합 징표 사용"
+                  />
+
+                  <Checkbox
+                    checked={settings.useAllToken}
+                    onChange={(checked) =>
+                      updateSettings({
+                        useAllToken: checked,
+                        useToken: checked ? true : settings.useToken,
+                      })
+                    }
+                    label="보유 통합 징표 전부 사용"
+                  />
+
+                  <div
+                    className="flex items-center gap-3 rounded-2xl border p-3"
+                    style={{
+                      border: `1px solid ${YELLOW_BORDER_SOFT}`,
+                      background: CARD_BG,
+                    }}
+                  >
+                    <div
+                      className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl border bg-black"
+                      style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
+                    >
+                      <Image
+                        src={materialImage("통합 징표")}
+                        alt="통합 징표"
+                        fill
+                        sizes="44px"
+                        className="object-contain p-1"
+                      />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-bold text-white">
+                        보유 통합 징표
+                      </div>
+                    </div>
+                    <div className="w-[96px]">
+                      <NumberInput
+                        value={settings.ownedToken}
+                        onChange={(value) =>
+                          updateSettings({ ownedToken: value })
+                        }
+                        min={0}
+                      />
+                    </div>
+                  </div>
+
+                  <div
+                    className="rounded-2xl border"
+                    style={{
+                      border: `1px solid ${YELLOW_BORDER_SOFT}`,
+                      background: CARD_BG,
+                    }}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setDiscountOpen((prev) => !prev)}
+                      className="flex w-full items-center justify-between px-4 py-3 text-left"
+                    >
+                      <span className="block text-sm font-black text-white">
+                        할인 품목 설정
+                      </span>
+                      <span style={{ color: YELLOW_MAIN }}>
+                        {discountOpen ? "▲" : "▼"}
+                      </span>
+                    </button>
+
+                    {discountOpen ? (
+                      <div className="grid gap-3 border-t border-yellow-500/10 p-4">
+                        {settings.discounts.map((discount, index) => (
+                          <div
+                            key={discount.name}
+                            className="grid grid-cols-[minmax(0,1fr)_86px] items-center gap-3 rounded-2xl border p-3"
+                            style={{
+                              borderColor: YELLOW_BORDER_SOFT,
+                              background: PANEL_BG,
+                            }}
+                          >
+                            <div className="flex min-w-0 items-center gap-3">
+                              <div
+                                className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl border bg-black"
+                                style={{
+                                  border: `1px solid ${YELLOW_BORDER_SOFT}`,
+                                }}
+                              >
+                                <Image
+                                  src={materialImage(discount.name)}
+                                  alt={discount.name}
+                                  fill
+                                  sizes="40px"
+                                  className="object-contain p-1"
+                                />
+                              </div>
+                              <Checkbox
+                                checked={discount.enabled}
+                                onChange={(checked) => {
+                                  const next = [...settings.discounts];
+                                  next[index] = {
+                                    ...next[index],
+                                    enabled: checked,
+                                    stock: checked ? next[index].stock : 0,
+                                  };
+                                  updateSettings({ discounts: next });
+                                }}
+                                label={discount.name}
+                              />
+                            </div>
+
+                            <NumberInput
+                              value={discount.stock}
+                              onChange={(value) => {
+                                const maxStock =
+                                  DISCOUNT_MAX_STOCK[discount.name] ?? 0;
+                                const clampedValue = Math.min(
+                                  Math.max(value, 0),
+                                  maxStock
+                                );
+                                const next = [...settings.discounts];
+                                next[index] = {
+                                  ...next[index],
+                                  stock: clampedValue,
+                                  enabled:
+                                    clampedValue > 0
+                                      ? true
+                                      : next[index].enabled,
+                                };
+                                updateSettings({ discounts: next });
+                              }}
+                              min={0}
+                              max={DISCOUNT_MAX_STOCK[discount.name] ?? 0}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              </section>
+
+              <section
+                className="rounded-[24px] bg-[#05070b] p-5"
+                style={{ border: `1px solid ${YELLOW_BORDER}` }}
+              >
+                <PanelTitle title="이성 회복 설정" />
+
+                <div className="mt-4 space-y-3">
+                  <Checkbox
+                    checked={settings.useDailyQuest}
+                    onChange={(checked) =>
+                      updateSettings({ useDailyQuest: checked })
+                    }
+                    label="일일 임무 보상 포함"
+                  />
+
+                  <Checkbox
+                    checked={settings.hasMonthlyCard}
+                    onChange={(checked) =>
+                      updateSettings({ hasMonthlyCard: checked })
+                    }
+                    label="월정액 구매 중"
+                  />
+
+                  <div
+                    className="flex items-center gap-3 rounded-2xl border p-3"
+                    style={{
+                      border: `1px solid ${YELLOW_BORDER_SOFT}`,
+                      background: CARD_BG,
+                    }}
+                  >
+                    <div
+                      className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl border bg-black"
+                      style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
+                    >
+                      <Image
+                        src={materialImage("파생 오리지늄")}
+                        alt="파생 오리지늄"
+                        fill
+                        sizes="44px"
+                        className="object-contain p-1"
+                      />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-bold text-white">
+                        파생 오리지늄 회복
+                      </div>
+                      <div className="text-xs text-zinc-500">
+                        소모{" "}
+                        {ORIGINIUM_COST_TABLE.slice(
+                          0,
+                          settings.dailyOriginiumRefreshCount
+                        ).reduce((sum, value) => sum + value, 0)}
+                        개 / 일
+                      </div>
+                    </div>
+                    <div className="w-[96px]">
+                      <NumberInput
+                        value={settings.dailyOriginiumRefreshCount}
+                        onChange={(value) =>
+                          updateSettings({
+                            dailyOriginiumRefreshCount: Math.min(
+                              value,
+                              ORIGINIUM_COST_TABLE.length
+                            ),
+                          })
+                        }
+                        min={0}
+                        max={ORIGINIUM_COST_TABLE.length}
+                      />
+                    </div>
+                  </div>
+
+                  {RECOVERY_ITEMS.map((item) => (
+                    <div
+                      key={item.name}
+                      className="flex items-center gap-3 rounded-2xl border p-3"
+                      style={{
+                        borderColor: YELLOW_BORDER_SOFT,
+                        background: CARD_BG,
+                      }}
+                    >
                       <div
-                        className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border bg-black"
+                        className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl border bg-black"
                         style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
                       >
                         <Image
-                          src={materialImage(plan.material)}
-                          alt={plan.material}
+                          src={materialImage(item.name)}
+                          alt={item.name}
                           fill
-                          sizes="48px"
+                          sizes="44px"
                           className="object-contain p-1"
                         />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <div className="font-black text-white">
-                          {plan.material}
+                        <div className="text-sm font-bold text-white">
+                          {item.name}
                         </div>
-                        <div className="mt-1 text-sm text-zinc-500">
-                          {plan.stageName}
-                        </div>
-
-                        <div className="mt-3 grid gap-2 sm:grid-cols-3">
-                          <div
-                            className="rounded-xl border p-3"
-                            style={{
-                              borderColor: YELLOW_BORDER_SOFT,
-                              background: PANEL_BG,
-                            }}
-                          >
-                            <div className="text-xs text-zinc-500">1회 획득</div>
-                            <div
-                              className="mt-1 font-black"
-                              style={{ color: YELLOW_MAIN }}
-                            >
-                              {plan.rewardPerRun}
-                            </div>
-                          </div>
-                          <div
-                            className="rounded-xl border p-3"
-                            style={{
-                              borderColor: YELLOW_BORDER_SOFT,
-                              background: PANEL_BG,
-                            }}
-                          >
-                            <div className="text-xs text-zinc-500">필요 횟수</div>
-                            <div
-                              className="mt-1 font-black"
-                              style={{ color: YELLOW_MAIN }}
-                            >
-                              {plan.runs}
-                            </div>
-                          </div>
-                          <div
-                            className="rounded-xl border p-3"
-                            style={{
-                              borderColor: YELLOW_BORDER_SOFT,
-                              background: PANEL_BG,
-                            }}
-                          >
-                            <div className="text-xs text-zinc-500">필요 이성</div>
-                            <div
-                              className="mt-1 font-black"
-                              style={{ color: YELLOW_MAIN }}
-                            >
-                              {plan.sanity}
-                            </div>
-                          </div>
+                        <div className="text-xs text-zinc-500">
+                          {item.sanity} 이성 회복
                         </div>
                       </div>
+                      <div className="w-[96px]">
+                        <NumberInput
+                          value={settings.recovery[item.name] ?? 0}
+                          onChange={(value) =>
+                            updateSettings({
+                              recovery: {
+                                ...settings.recovery,
+                                [item.name]: value,
+                              },
+                            })
+                          }
+                          min={0}
+                        />
+                      </div>
                     </div>
-                  </article>
-                ))
-              )}
-            </div>
-          </section>
-
-          <section
-            className="rounded-[24px] bg-[#05070b] p-5"
-            style={{ border: `1px solid ${YELLOW_BORDER}` }}
-          >
-            <PanelTitle title="통합 징표 사용" />
-
-            <div className="mt-4 grid gap-3 lg:grid-cols-3">
-              {result.tokenUses.length === 0 &&
-              result.advancedBoxUses.length === 0 ? (
-                <div
-                  className="rounded-2xl border px-4 py-5 text-sm text-zinc-500"
-                  style={{
-                    borderColor: YELLOW_BORDER_SOFT,
-                    background: CARD_BG,
-                  }}
-                >
-                  사용한 통합 징표 또는 고급 육성 선택 상자가 없다.
+                  ))}
                 </div>
-              ) : (
-                <>
-                  {result.tokenUses.map((use) => (
-                    <div
-                      key={`token-${use.itemName}`}
-                      className="rounded-2xl border p-4"
-                      style={{
-                        borderColor: YELLOW_BORDER_SOFT,
-                        background: CARD_BG,
-                      }}
-                    >
-                      <div className="flex items-start gap-3">
-                        <div
-                          className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl border bg-black"
-                          style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
-                        >
-                          <Image
-                            src={materialImage(use.material)}
-                            alt={use.material}
-                            fill
-                            sizes="44px"
-                            className="object-contain p-1"
-                          />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <div
-                            className="text-xs font-black uppercase tracking-[0.18em]"
-                            style={{ color: YELLOW_MAIN }}
-                          >
-                            증표 교환
-                          </div>
-                          <div className="mt-2 text-sm font-black text-white">
-                            {use.itemName}
-                          </div>
-                          <div className="mt-2 text-sm text-zinc-400">
-                            {use.count}회 구매 / {use.amount.toLocaleString()}개 획득
-                          </div>
-                          <div className="mt-1 text-sm text-zinc-400">
-                            사용 징표{" "}
-                            <span style={{ color: YELLOW_MAIN }}>
-                              {use.totalTokenCost.toLocaleString()}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+              </section>
+            </aside>
 
-                  {result.advancedBoxUses.map((use) => (
-                    <div
-                      key={`box-${use.material}`}
-                      className="rounded-2xl border p-4"
-                      style={{
-                        borderColor: YELLOW_BORDER_SOFT,
-                        background: CARD_BG,
-                      }}
-                    >
-                      <div className="flex items-start gap-3">
-                        <div
-                          className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl border bg-black"
-                          style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
-                        >
-                          <Image
-                            src={materialImage(use.material)}
-                            alt={use.material}
-                            fill
-                            sizes="44px"
-                            className="object-contain p-1"
-                          />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <div
-                            className="text-xs font-black uppercase tracking-[0.18em]"
-                            style={{ color: YELLOW_MAIN }}
-                          >
-                            고급 육성 선택 상자
-                          </div>
-                          <div className="mt-2 text-sm font-black text-white">
-                            {use.material}
-                          </div>
-                          <div className="mt-2 text-sm text-zinc-400">
-                            상자{" "}
-                            <span style={{ color: YELLOW_MAIN }}>
-                              {use.boxes}
-                            </span>
-                            개 사용 / {use.gained}개 획득
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </>
-              )}
-            </div>
-          </section>
-
-          <section
-            className="rounded-[24px] bg-[#05070b] p-5"
-            style={{ border: `1px solid ${YELLOW_BORDER}` }}
-          >
-            <button
-              type="button"
-              onClick={() => setTargetPanelOpen((prev) => !prev)}
-              className="flex w-full items-center justify-between gap-4 text-left"
-            >
-              <PanelTitle title="목표 재화" />
-              <span
-                className="text-sm font-black"
-                style={{ color: YELLOW_MAIN }}
+            <section className="space-y-6">
+              <section
+                className="rounded-[24px] bg-[#05070b] p-5"
+                style={{ border: `1px solid ${YELLOW_BORDER}` }}
               >
-                {targetPanelOpen ? "▲" : "▼"}
-              </span>
-            </button>
+                <PanelTitle title="계산 결과" />
 
-            {targetPanelOpen ? (
-              <div className="mt-4">
-                {targets.length === 0 ? (
-                  <div
-                    className="rounded-2xl border px-4 py-5 text-sm text-zinc-500"
-                    style={{
-                      borderColor: YELLOW_BORDER_SOFT,
-                      background: CARD_BG,
-                    }}
-                  >
-                    목표 재화가 없다.
-                  </div>
-                ) : (
-                  <div className="grid gap-3 lg:grid-cols-3">
-                    {targets
-                      .filter((item) =>
-                        FARMABLE_MATERIAL_NAMES.includes(item.name)
-                      )
-                      .map((item) => (
+                <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                  <SummaryCard
+                    label="필요 이성"
+                    value={result.totalRequiredSanity}
+                  />
+                  <SummaryCard label="사용 징표" value={result.usedToken} />
+                  <SummaryCard
+                    label="하루 회복"
+                    value={result.dailyTotalSanity}
+                  />
+                  <SummaryCard
+                    label="예상 일수"
+                    value={result.estimatedDays}
+                    suffix="일"
+                  />
+                </div>
+              </section>
+
+              <section
+                className="rounded-[24px] bg-[#05070b] p-5"
+                style={{ border: `1px solid ${YELLOW_BORDER}` }}
+              >
+                <PanelTitle title="추천 이성 소모처" />
+
+                <div className="mt-4 grid gap-3 lg:grid-cols-3">
+                  {result.stagePlans.length === 0 ? (
+                    <div
+                      className="rounded-2xl border px-4 py-5 text-sm text-zinc-500"
+                      style={{
+                        borderColor: YELLOW_BORDER_SOFT,
+                        background: CARD_BG,
+                      }}
+                    >
+                      추가 이성 파밍이 필요 없다.
+                    </div>
+                  ) : (
+                    result.stagePlans.map((plan) => (
+                      <article
+                        key={plan.material}
+                        className="rounded-2xl border p-4"
+                        style={{
+                          borderColor: YELLOW_BORDER_SOFT,
+                          background: CARD_BG,
+                        }}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div
+                            className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border bg-black"
+                            style={{
+                              border: `1px solid ${YELLOW_BORDER_SOFT}`,
+                            }}
+                          >
+                            <Image
+                              src={materialImage(plan.material)}
+                              alt={plan.material}
+                              fill
+                              sizes="48px"
+                              className="object-contain p-1"
+                            />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="font-black text-white">
+                              {plan.material}
+                            </div>
+                            <div className="mt-1 text-sm text-zinc-500">
+                              {plan.stageName}
+                            </div>
+
+                            <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                              <div
+                                className="rounded-xl border p-3"
+                                style={{
+                                  borderColor: YELLOW_BORDER_SOFT,
+                                  background: PANEL_BG,
+                                }}
+                              >
+                                <div className="text-xs text-zinc-500">
+                                  1회 획득
+                                </div>
+                                <div
+                                  className="mt-1 font-black"
+                                  style={{ color: YELLOW_MAIN }}
+                                >
+                                  {plan.rewardPerRun}
+                                </div>
+                              </div>
+                              <div
+                                className="rounded-xl border p-3"
+                                style={{
+                                  borderColor: YELLOW_BORDER_SOFT,
+                                  background: PANEL_BG,
+                                }}
+                              >
+                                <div className="text-xs text-zinc-500">
+                                  필요 횟수
+                                </div>
+                                <div
+                                  className="mt-1 font-black"
+                                  style={{ color: YELLOW_MAIN }}
+                                >
+                                  {plan.runs}
+                                </div>
+                              </div>
+                              <div
+                                className="rounded-xl border p-3"
+                                style={{
+                                  borderColor: YELLOW_BORDER_SOFT,
+                                  background: PANEL_BG,
+                                }}
+                              >
+                                <div className="text-xs text-zinc-500">
+                                  필요 이성
+                                </div>
+                                <div
+                                  className="mt-1 font-black"
+                                  style={{ color: YELLOW_MAIN }}
+                                >
+                                  {plan.sanity}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </article>
+                    ))
+                  )}
+                </div>
+              </section>
+
+              <section
+                className="rounded-[24px] bg-[#05070b] p-5"
+                style={{ border: `1px solid ${YELLOW_BORDER}` }}
+              >
+                <PanelTitle title="통합 징표 사용" />
+
+                <div className="mt-4 grid gap-3 lg:grid-cols-3">
+                  {result.tokenUses.length === 0 &&
+                  result.advancedBoxUses.length === 0 ? (
+                    <div
+                      className="rounded-2xl border px-4 py-5 text-sm text-zinc-500"
+                      style={{
+                        borderColor: YELLOW_BORDER_SOFT,
+                        background: CARD_BG,
+                      }}
+                    >
+                      사용한 통합 징표 또는 고급 육성 선택 상자가 없다.
+                    </div>
+                  ) : (
+                    <>
+                      {result.tokenUses.map((use) => (
                         <div
-                          key={item.name}
-                          className="flex items-center gap-3 rounded-2xl border p-3"
+                          key={`token-${use.itemName}`}
+                          className="rounded-2xl border p-4"
                           style={{
                             borderColor: YELLOW_BORDER_SOFT,
                             background: CARD_BG,
                           }}
                         >
-                          <div
-                            className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl border bg-black"
-                            style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
-                          >
-                            <Image
-                              src={materialImage(item.name)}
-                              alt={item.name}
-                              fill
-                              sizes="44px"
-                              className="object-contain p-1"
-                            />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="truncate text-sm font-black text-white">
-                              {item.name}
-                            </div>
+                          <div className="flex items-start gap-3">
                             <div
-                              className="text-xs"
-                              style={{ color: YELLOW_MAIN }}
+                              className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl border bg-black"
+                              style={{
+                                border: `1px solid ${YELLOW_BORDER_SOFT}`,
+                              }}
                             >
-                              {item.amount.toLocaleString()}
+                              <Image
+                                src={materialImage(use.material)}
+                                alt={use.material}
+                                fill
+                                sizes="44px"
+                                className="object-contain p-1"
+                              />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div
+                                className="text-xs font-black uppercase tracking-[0.18em]"
+                                style={{ color: YELLOW_MAIN }}
+                              >
+                                증표 교환
+                              </div>
+                              <div className="mt-2 text-sm font-black text-white">
+                                {use.itemName}
+                              </div>
+                              <div className="mt-2 text-sm text-zinc-400">
+                                {use.count}회 구매 /{" "}
+                                {use.amount.toLocaleString()}개 획득
+                              </div>
+                              <div className="mt-1 text-sm text-zinc-400">
+                                사용 징표{" "}
+                                <span style={{ color: YELLOW_MAIN }}>
+                                  {use.totalTokenCost.toLocaleString()}
+                                </span>
+                              </div>
                             </div>
                           </div>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setMaterialValue(setTargets, item.name, 0)
-                            }
-                            className="text-zinc-500 transition hover:text-yellow-200"
-                          >
-                            ×
-                          </button>
                         </div>
                       ))}
+
+                      {result.advancedBoxUses.map((use) => (
+                        <div
+                          key={`box-${use.material}`}
+                          className="rounded-2xl border p-4"
+                          style={{
+                            borderColor: YELLOW_BORDER_SOFT,
+                            background: CARD_BG,
+                          }}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div
+                              className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl border bg-black"
+                              style={{
+                                border: `1px solid ${YELLOW_BORDER_SOFT}`,
+                              }}
+                            >
+                              <Image
+                                src={materialImage(use.material)}
+                                alt={use.material}
+                                fill
+                                sizes="44px"
+                                className="object-contain p-1"
+                              />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div
+                                className="text-xs font-black uppercase tracking-[0.18em]"
+                                style={{ color: YELLOW_MAIN }}
+                              >
+                                고급 육성 선택 상자
+                              </div>
+                              <div className="mt-2 text-sm font-black text-white">
+                                {use.material}
+                              </div>
+                              <div className="mt-2 text-sm text-zinc-400">
+                                상자{" "}
+                                <span style={{ color: YELLOW_MAIN }}>
+                                  {use.boxes}
+                                </span>
+                                개 사용 / {use.gained}개 획득
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </>
+                  )}
+                </div>
+              </section>
+
+              <section
+                className="rounded-[24px] bg-[#05070b] p-5"
+                style={{ border: `1px solid ${YELLOW_BORDER}` }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setTargetPanelOpen((prev) => !prev)}
+                  className="flex w-full items-center justify-between gap-4 text-left"
+                >
+                  <PanelTitle title="목표 재화" />
+                  <span
+                    className="text-sm font-black"
+                    style={{ color: YELLOW_MAIN }}
+                  >
+                    {targetPanelOpen ? "▲" : "▼"}
+                  </span>
+                </button>
+
+                {targetPanelOpen ? (
+                  <div className="mt-4">
+                    {targets.length === 0 ? (
+                      <div
+                        className="rounded-2xl border px-4 py-5 text-sm text-zinc-500"
+                        style={{
+                          borderColor: YELLOW_BORDER_SOFT,
+                          background: CARD_BG,
+                        }}
+                      >
+                        목표 재화가 없다.
+                      </div>
+                    ) : (
+                      <div className="grid gap-3 lg:grid-cols-3">
+                        {targets
+                          .filter((item) =>
+                            FARMABLE_MATERIAL_NAMES.includes(item.name)
+                          )
+                          .map((item) => (
+                            <div
+                              key={item.name}
+                              className="flex items-center gap-3 rounded-2xl border p-3"
+                              style={{
+                                borderColor: YELLOW_BORDER_SOFT,
+                                background: CARD_BG,
+                              }}
+                            >
+                              <div
+                                className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl border bg-black"
+                                style={{
+                                  border: `1px solid ${YELLOW_BORDER_SOFT}`,
+                                }}
+                              >
+                                <Image
+                                  src={materialImage(item.name)}
+                                  alt={item.name}
+                                  fill
+                                  sizes="44px"
+                                  className="object-contain p-1"
+                                />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <div className="truncate text-sm font-black text-white">
+                                  {item.name}
+                                </div>
+                                <div
+                                  className="text-xs"
+                                  style={{ color: YELLOW_MAIN }}
+                                >
+                                  {item.amount.toLocaleString()}
+                                </div>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setMaterialValue(setTargets, item.name, 0)
+                                }
+                                className="text-zinc-500 transition hover:text-yellow-200"
+                              >
+                                ×
+                              </button>
+                            </div>
+                          ))}
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            ) : null}
+                ) : null}
+              </section>
+            </section>
           </section>
-        </section>
-      </section>
 
           {modalMode ? (
             <MaterialBulkModal
-          mode={modalMode}
-          values={modalMode === "target" ? targets : ownedMaterials}
-          onClose={() => setModalMode(null)}
-          onChange={(name, amount) =>
-            setMaterialValue(
-              modalMode === "target" ? setTargets : setOwnedMaterials,
-              name,
-              modalMode === "target" &&
-                !FARMABLE_MATERIAL_NAMES.includes(name)
-                ? 0
-                : amount
-            )
-          }
+              mode={modalMode}
+              values={modalMode === "target" ? targets : ownedMaterials}
+              onClose={() => setModalMode(null)}
+              onChange={(name, amount) =>
+                setMaterialValue(
+                  modalMode === "target" ? setTargets : setOwnedMaterials,
+                  name,
+                  modalMode === "target" &&
+                    !FARMABLE_MATERIAL_NAMES.includes(name)
+                    ? 0
+                    : amount
+                )
+              }
             />
           ) : null}
         </div>
