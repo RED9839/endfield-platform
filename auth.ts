@@ -26,9 +26,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
 
   callbacks: {
-    async session({ session, user }) {
+    session({ session, user }) {
+      const dbUser = user as typeof user & {
+        nickname?: string | null;
+      };
+
       if (session.user) {
         session.user.id = user.id;
+        session.user.nickname = dbUser.nickname ?? null;
       }
 
       return session;

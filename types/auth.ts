@@ -1,38 +1,29 @@
-import NextAuth from "next-auth";
-import Google from "next-auth/providers/google";
-import { PrismaAdapter } from "@auth/prisma-adapter";
+import type { DefaultSession, DefaultUser } from "next-auth";
 
-import { prisma } from "@/lib/prisma";
+declare module "next-auth" {
+  interface Session {
+    user: {
+      id: string;
+      nickname?: string | null;
+    } & DefaultSession["user"];
+  }
 
-export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: PrismaAdapter(prisma),
+  interface User extends DefaultUser {
+    nickname?: string | null;
+  }
+}
 
-  secret: process.env.AUTH_SECRET,
+declare module "next-auth/adapters" {
+  interface AdapterUser {
+    nickname?: string | null;
+  }
+}
 
-  session: {
-    strategy: "database",
-  },
+declare module "next-auth/jwt" {
+  interface JWT {
+    id?: string;
+    nickname?: string | null;
+  }
+}
 
-  pages: {
-    signIn: "/login",
-  },
-
-  providers: [
-    Google({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      allowDangerousEmailAccountLinking: true,
-    }),
-  ],
-
-  callbacks: {
-    session({ session, user }) {
-      if (session.user) {
-        session.user.id = user.id;
-        session.user.nickname = user.nickname;
-      }
-
-      return session;
-    },
-  },
-});
+export {};
