@@ -248,13 +248,9 @@ function saveUserMaterialInventory(materials: Record<string, number>) {
 function saveSimulatorFormState(state: SimulatorFormState) {
   if (typeof window === "undefined") return;
 
+  // 자동 DB 저장은 하지 않고, 브라우저 로컬 저장만 갱신합니다.
+  // DB 저장은 보유 재화 수치를 사용자가 직접 바꿀 때만 실행합니다.
   writeLocalSimulatorFormState(state);
-  window.clearTimeout((window as any).__endfieldSimulatorSaveTimer);
-
-  (window as any).__endfieldSimulatorSaveTimer = window.setTimeout(() => {
-    saveUserSimulatorState(state);
-    saveUserMaterialInventory(state.ownedMaterials);
-  }, 500);
 }
 
 function clearSimulatorFormState() {
@@ -1068,13 +1064,66 @@ export default function SimulatorPage() {
   );
 
   const handleOperatorSelect = (slug: string) => {
-    operatorRestoreAppliedRef.current = false;
+    const nextOperator = operators.find((item) => item.slug === slug) ?? null;
+
+    operatorRestoreAppliedRef.current = true;
     setSelectedOperatorSlug(slug);
+    setOperatorCurrentLevel(1);
+    setOperatorTargetLevel(90);
+
+    if (!nextOperator) {
+      setEliteRange({ current: 0, target: 0 });
+      setTrustRange({ current: 0, target: 0 });
+      setTalentRanges({});
+      setInfrastructureRanges({});
+      return;
+    }
+
+    const isNextEndministrator = nextOperator.slug === "endministrator";
+    const nextEliteMax = ((nextOperator as any)?.elite?.length ?? 0);
+    const nextTrustMax = isNextEndministrator
+      ? 0
+      : getMaxRangeStage(
+          getTrustStageInfos(nextOperator).map((item) => item.stage)
+        );
+
+    setEliteRange({ current: 0, target: nextEliteMax });
+    setTrustRange({ current: 0, target: nextTrustMax });
+    setTalentRanges(buildMaxRangeMap(getTalentGroups(nextOperator)));
+    setInfrastructureRanges(
+      isNextEndministrator
+        ? {}
+        : buildMaxRangeMap(getInfrastructureGroups(nextOperator))
+    );
+    setCombatSkillState({
+      normal: { current: "1", target: "M3" },
+      combo: { current: "1", target: "M3" },
+      battle: { current: "1", target: "M3" },
+      ultimate: { current: "1", target: "M3" },
+    });
   };
 
   const handleWeaponSelect = (slug: string) => {
-    weaponRestoreAppliedRef.current = false;
+    const nextWeapon = weapons.find((item) => item.slug === slug) ?? null;
+
+    weaponRestoreAppliedRef.current = true;
     setSelectedWeaponSlug(slug);
+    setWeaponCurrentLevel(1);
+    setWeaponTargetLevel(90);
+
+    if (!nextWeapon) {
+      setWeaponBreakthroughRange({ current: 0, target: 0 });
+      return;
+    }
+
+    const nextBreakthroughMax = getMaxRangeStage(
+      getWeaponBreakthroughItems(nextWeapon).map((item) => item.stage)
+    );
+
+    setWeaponBreakthroughRange({
+      current: 0,
+      target: nextBreakthroughMax,
+    });
   };
 
   const isEndministrator = selectedOperator?.slug === "endministrator";
@@ -1671,6 +1720,24 @@ export default function SimulatorPage() {
 
       if (amount <= 0) delete next[name];
       else next[name] = amount;
+
+      writeLocalSimulatorFormState({
+        operatorSlug: selectedOperatorSlug,
+        weaponSlug: selectedWeaponSlug,
+        operatorCurrentLevel,
+        operatorTargetLevel,
+        weaponCurrentLevel,
+        weaponTargetLevel,
+        eliteRange,
+        weaponBreakthroughRange,
+        trustRange,
+        combatSkillState,
+        talentRanges,
+        infrastructureRanges,
+        ownedMaterials: next,
+      });
+
+      saveUserMaterialInventory(next);
 
       return next;
     });

@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 
 import type { OperatorDetail } from "@/data/operators-detail-data";
 import type { SourceWeaponDetail } from "@/data/weapons-detail-data";
-import SharedSimulatorShowcaseHero from "@/app/components/select/SharedSimulatorShowcaseHero";
+import SharedSimulatorShowcaseHero from "@/app/components/select/CommonSelectPanel";
 
 const YELLOW_TEXT = "#ffdc70";
 const YELLOW_BORDER = "rgba(255,196,74,0.14)";
@@ -321,28 +321,24 @@ export default function SimulatorControlPanel({
       </div>
 
       {picker ? (
-        <SharedSimulatorShowcaseHero
-          mode="simulator"
-          title={picker === "operator" ? "오퍼레이터 선택" : "무기 선택"}
-          allowedTabs={[picker]}
-          initialTab={picker}
-          operators={operators}
-          weapons={weapons}
-          selectedOperatorSlug={selectedOperatorSlug}
-          selectedWeaponSlug={selectedWeaponSlug}
-          onSelectOperator={onSelectOperator}
-          onSelectWeapon={onSelectWeapon}
-          onClose={() => setPicker(null)}
-        />
-      ) : null}
-
-      {isOwnedPanelOpen ? (
-        <MaterialOwnedPanel
-          items={ownedItems}
-          onClose={onCloseOwnedPanel}
-          onChangeOwned={onChangeOwned}
-        />
-      ) : null}
+  <SharedSimulatorShowcaseHero
+    kind={picker}
+    title={picker === "operator" ? "오퍼레이터 선택" : "무기 선택"}
+    selectedSlug={
+      picker === "operator" ? selectedOperatorSlug : selectedWeaponSlug
+    }
+    onSelectOperator={(slug: string) => {
+      onSelectOperator(slug);
+      setPicker(null);
+    }}
+    onSelectWeapon={(slug: string) => {
+      onSelectWeapon(slug);
+      setPicker(null);
+    }}
+    onSelectGear={() => {}}
+    onClose={() => setPicker(null)}
+  />
+) : null}
     </section>
   );
 }
