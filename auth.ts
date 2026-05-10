@@ -1,39 +1,39 @@
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
-import { PrismaAdapter } from "@auth/prisma-adapter";
 
-import { prisma } from "@/lib/prisma";
-
-export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: PrismaAdapter(prisma),
-
-  secret: process.env.AUTH_SECRET,
-
-  session: {
-    strategy: "database",
-  },
-
-  pages: {
-    signIn: "/login",
-  },
-
+export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
     Google({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-      allowDangerousEmailAccountLinking: true,
+      clientId: process.env.AUTH_GOOGLE_ID!,
+      clientSecret: process.env.AUTH_GOOGLE_SECRET!,
     }),
   ],
 
-  callbacks: {
-    session({ session, user }) {
-      const dbUser = user as typeof user & {
-        nickname?: string | null;
-      };
+  session: {
+    strategy: "jwt",
+  },
 
+  callbacks: {
+    async jwt({ token, user, profile }) {
+      if (user) {
+        token.id = user.id;
+
+        token.nickname =
+          typeof profile?.name === "string"
+            ? profile.name
+            : typeof user.name === "string"
+              ? user.name
+              : null;
+      }
+
+      return token;
+    },
+
+    async session({ session, token }) {
       if (session.user) {
-        session.user.id = user.id;
-        session.user.nickname = dbUser.nickname ?? null;
+        session.user.id = typeof token.id === "string" ? token.id : "";
+        session.user.nickname =
+          typeof token.nickname === "string" ? token.nickname : null;
       }
 
       return session;
