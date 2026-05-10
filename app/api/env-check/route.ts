@@ -2,20 +2,13 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  const keys = Object.keys(process.env).filter(
-    (key) =>
-      key.includes("DATABASE") ||
-      key.includes("DIRECT") ||
-      key.includes("SUPABASE") ||
-      key.includes("AUTH")
-  );
-
   return Response.json({
-    DATABASE_URL: Boolean(process.env.DATABASE_URL),
-    DIRECT_URL: Boolean(process.env.DIRECT_URL),
     AUTH_SECRET: Boolean(process.env.AUTH_SECRET),
     AUTH_URL: Boolean(process.env.AUTH_URL),
-    matchedKeys: keys,
+    GOOGLE_CLIENT_ID: Boolean(process.env.GOOGLE_CLIENT_ID),
+    GOOGLE_CLIENT_SECRET: Boolean(process.env.GOOGLE_CLIENT_SECRET),
+    SUPABASE_DATABASE_URL: Boolean(process.env.SUPABASE_DATABASE_URL),
+    SUPABASE_DIRECT_URL: Boolean(process.env.SUPABASE_DIRECT_URL),
     NODE_ENV: process.env.NODE_ENV,
     VERCEL_ENV: process.env.VERCEL_ENV,
   });
