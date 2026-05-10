@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react";
+import { Suspense, useEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import Checkbox from "@/app/components/common/Checkbox";
@@ -406,7 +406,7 @@ function MaterialBulkModal({
   );
 }
 
-export default function FarmingCalculatorClient() {
+function FarmingCalculatorClientContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -1285,5 +1285,13 @@ export default function FarmingCalculatorClient() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function FarmingCalculatorClient() {
+  return (
+    <Suspense fallback={null}>
+      <FarmingCalculatorClientContent />
+    </Suspense>
   );
 }
