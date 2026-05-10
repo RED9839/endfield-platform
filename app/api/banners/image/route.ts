@@ -3,11 +3,13 @@ import { NextRequest, NextResponse } from "next/server";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const ALLOWED_HOSTS = new Set([
+const ALLOWED_EXACT_HOSTS = new Set([
   "web-static.hg-cdn.com",
   "endfield.gryphline.com",
   "www.endfield.gryphline.com",
 ]);
+
+const ALLOWED_SUFFIXES = [".hg-cdn.com", ".gryphline.com"];
 
 const IMAGE_HEADERS = {
   "User-Agent":
@@ -17,7 +19,13 @@ const IMAGE_HEADERS = {
 };
 
 function isAllowedUrl(url: URL) {
-  return url.protocol === "https:" && ALLOWED_HOSTS.has(url.hostname);
+  const hostname = url.hostname.toLowerCase();
+
+  return (
+    url.protocol === "https:" &&
+    (ALLOWED_EXACT_HOSTS.has(hostname) ||
+      ALLOWED_SUFFIXES.some((suffix) => hostname.endsWith(suffix)))
+  );
 }
 
 export async function GET(request: NextRequest) {
@@ -52,14 +60,17 @@ export async function GET(request: NextRequest) {
     }
 
     const contentType = response.headers.get("content-type") || "image/jpeg";
+
+    if (!contentType.startsWith("image/")) {
+      return new NextResponse("Invalid image content type", { status: 415 });
+    }
+
     const body = await response.arrayBuffer();
 
     return new NextResponse(body, {
       status: 200,
       headers: {
-        "Content-Type": contentType.startsWith("image/")
-          ? contentType
-          : "image/jpeg",
+        "Content-Type": contentType,
         "Cache-Control": "public, max-age=3600, s-maxage=3600",
       },
     });
