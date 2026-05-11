@@ -1,8 +1,6 @@
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 
-import { prisma } from "@/lib/prisma";
-
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
     Google({
@@ -19,13 +17,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-
-        const dbUser = await prisma.user.findUnique({
-          where: { id: user.id },
-          select: { nickname: true },
-        });
-
-        token.nickname = dbUser?.nickname ?? null;
+        token.nickname = typeof user.nickname === "string" ? user.nickname : null;
       }
 
       return token;
