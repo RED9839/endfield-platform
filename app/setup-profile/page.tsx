@@ -30,7 +30,7 @@ export default async function SetupProfilePage({
     const session = await auth();
 
     if (!session?.user?.id) {
-      redirect("/login");
+      return;
     }
 
     const nickname = String(formData.get("nickname") ?? "").trim();
