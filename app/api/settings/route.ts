@@ -56,8 +56,10 @@ export async function POST(request: Request) {
       );
     }
 
+    const createdSetting = setting as { id: number | string };
+
     const slotRows = slots.map((slot: any) => ({
-      setting_id: setting.id,
+      setting_id: createdSetting.id,
       slot_key: slot.slotKey,
       operator_slug: slot.operatorSlug,
       weapon_slug: slot.weaponSlug,
@@ -83,7 +85,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       ok: true,
-      settingId: setting.id,
+      settingId: createdSetting.id,
     });
   } catch (error) {
     return NextResponse.json(
