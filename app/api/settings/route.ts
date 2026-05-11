@@ -29,7 +29,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const supabaseAdmin = getSupabaseAdmin();
+    const supabaseAdmin = await getSupabaseAdmin();
 
     const settingInsert = {
       type,
