@@ -8,16 +8,29 @@ export type FarmingTransferPayload = {
   ownedMaterials: FarmingTransferMaterial[];
 };
 
+type RawFarmingTransferItem = {
+  name?: unknown;
+  material?: unknown;
+  amount?: unknown;
+  owned?: unknown;
+  value?: unknown;
+  count?: unknown;
+};
+
 export const FARMING_TRANSFER_STORAGE_KEY = "endfield:farming-transfer";
 
 export function safeFarmingMaterials(items: unknown): FarmingTransferMaterial[] {
   if (!Array.isArray(items)) return [];
 
   return items
-    .map((item: any) => ({
-      name: String(item?.name ?? item?.material ?? "").trim(),
-      amount: Number(item?.amount ?? item?.owned ?? item?.value ?? item?.count ?? 0),
-    }))
+    .map((item) => {
+      const raw = item as RawFarmingTransferItem;
+
+      return {
+        name: String(raw.name ?? raw.material ?? "").trim(),
+        amount: Number(raw.amount ?? raw.owned ?? raw.value ?? raw.count ?? 0),
+      };
+    })
     .filter(
       (item) =>
         item.name.length > 0 &&

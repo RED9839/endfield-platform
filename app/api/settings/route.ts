@@ -1,9 +1,28 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
+type SettingSlotInput = {
+  slotKey: string;
+  operatorSlug?: string | null;
+  weaponSlug?: string | null;
+  armorSlug?: string | null;
+  glovesSlug?: string | null;
+  kit1Slug?: string | null;
+  kit2Slug?: string | null;
+  formJson?: unknown;
+};
+
+type CreateSettingRequestBody = {
+  type?: string;
+  title?: string;
+  description?: string;
+  nickname?: string;
+  slots?: SettingSlotInput[];
+};
+
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    const body = (await request.json()) as CreateSettingRequestBody;
 
     const {
       type,
@@ -20,7 +39,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const mainSlot = slots.find((slot: any) => slot.slotKey === "main");
+    const mainSlot = slots.find((slot) => slot.slotKey === "main");
 
     if (!mainSlot) {
       return NextResponse.json(
@@ -51,7 +70,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const slotRows = slots.map((slot: any) => ({
+    const slotRows = slots.map((slot) => ({
       setting_id: setting.id,
       slot_key: slot.slotKey,
 
