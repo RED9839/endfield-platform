@@ -65,14 +65,22 @@ export default async function SetupProfilePage({
       redirect(`/setup-profile?error=duplicate&value=${encodedValue}`);
     }
 
+ codex/add-test-case-2ke9ks
     await prisma.user.createMany({
       data: [
         {
+    try {
+      await prisma.user.upsert({
+        where: { id: session.user.id },
+        update: { nickname },
+        create: {
+fix/my-branch
           id: session.user.id,
           name: session.user.name ?? null,
           email: session.user.email ?? null,
           nickname,
         },
+codex/add-test-case-2ke9ks
       ],
       skipDuplicates: true,
     });
@@ -81,6 +89,27 @@ export default async function SetupProfilePage({
       where: { id: session.user.id },
       data: { nickname },
     });
+      });
+    } catch (error) {
+      const code =
+        typeof error === "object" && error && "code" in error
+          ? String((error as { code?: string }).code ?? "")
+          : "";
+
+      if (code === "P2025") {
+        await prisma.user.create({
+          data: {
+            id: session.user.id,
+            name: session.user.name ?? null,
+            email: session.user.email ?? null,
+            nickname,
+          },
+        });
+      } else {
+        throw error;
+      }
+    }
+fix/my-branch
 
     redirect("/");
   }
