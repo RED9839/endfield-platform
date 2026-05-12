@@ -55,7 +55,10 @@ export default async function SetupProfilePage({
       where: {
         nickname,
         NOT: {
-          id: session.user.id,
+          OR: [
+            { id: session.user.id },
+            ...(session.user.email ? [{ email: session.user.email }] : []),
+          ],
         },
       },
       select: { id: true },
@@ -65,36 +68,22 @@ export default async function SetupProfilePage({
       redirect(`/setup-profile?error=duplicate&value=${encodedValue}`);
     }
 
-    try {
-      await prisma.user.upsert({
-        where: { id: session.user.id },
-        update: { nickname },
-        create: {
+    await prisma.user.createMany({
+      data: [
+        {
           id: session.user.id,
           name: session.user.name ?? null,
           email: session.user.email ?? null,
           nickname,
         },
-      });
-    } catch (error) {
-      const code =
-        typeof error === "object" && error && "code" in error
-          ? String((error as { code?: string }).code ?? "")
-          : "";
+      ],
+      skipDuplicates: true,
+    });
 
-      if (code === "P2025") {
-        await prisma.user.create({
-          data: {
-            id: session.user.id,
-            name: session.user.name ?? null,
-            email: session.user.email ?? null,
-            nickname,
-          },
-        });
-      } else {
-        throw error;
-      }
-    }
+    await prisma.user.updateMany({
+      where: { id: session.user.id },
+      data: { nickname },
+    });
 
     redirect("/");
   }
