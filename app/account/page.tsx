@@ -84,17 +84,23 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
       redirect("/account?error=duplicate");
     }
 
-    await prisma.user.upsert({
+    await prisma.user.createMany({
+      data: [
+        {
+          id: session.user.id,
+          name: session.user.name ?? null,
+          email: session.user.email ?? null,
+          nickname,
+        },
+      ],
+      skipDuplicates: true,
+    });
+
+    await prisma.user.updateMany({
       where: {
         id: session.user.id,
       },
-      update: {
-        nickname,
-      },
-      create: {
-        id: session.user.id,
-        name: session.user.name ?? null,
-        email: session.user.email ?? null,
+      data: {
         nickname,
       },
     });
@@ -117,7 +123,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
       redirect("/account?error=delete-confirm");
     }
 
-    await prisma.user.delete({
+    await prisma.user.deleteMany({
       where: {
         id: session.user.id,
       },
