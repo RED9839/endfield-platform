@@ -84,7 +84,27 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
     });
 
     if (duplicated) {
-      redirect("/account?error=duplicate");
+      const canAdoptLegacyNickname = Boolean(session.user.email && session.user.name);
+
+      if (canAdoptLegacyNickname) {
+        const adopted = await prisma.user.updateMany({
+          where: {
+            id: duplicated.id,
+            email: null,
+            name: session.user.name,
+          },
+          data: {
+            id: session.user.id,
+            email: session.user.email ?? null,
+          },
+        });
+
+        if (adopted.count === 0) {
+          redirect("/account?error=duplicate");
+        }
+      } else {
+        redirect("/account?error=duplicate");
+      }
     }
 
     await prisma.user.createMany({

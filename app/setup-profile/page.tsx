@@ -70,7 +70,27 @@ export default async function SetupProfilePage({
     });
 
     if (exists) {
-      redirect(`/setup-profile?error=duplicate&value=${encodedValue}`);
+      const canAdoptLegacyNickname = Boolean(session.user.email && session.user.name);
+
+      if (canAdoptLegacyNickname) {
+        const adopted = await prisma.user.updateMany({
+          where: {
+            id: exists.id,
+            email: null,
+            name: session.user.name,
+          },
+          data: {
+            id: session.user.id,
+            email: session.user.email ?? null,
+          },
+        });
+
+        if (adopted.count === 0) {
+          redirect(`/setup-profile?error=duplicate&value=${encodedValue}`);
+        }
+      } else {
+        redirect(`/setup-profile?error=duplicate&value=${encodedValue}`);
+      }
     }
 
     await prisma.user.createMany({
