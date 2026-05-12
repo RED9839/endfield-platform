@@ -21,12 +21,6 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
 
 
-  webpack: (config) => {
-    config.resolve = config.resolve ?? {};
-    config.resolve.symlinks = false;
-    return config;
-  },
-
   experimental: {
     optimizePackageImports: ["lucide-react"],
   },

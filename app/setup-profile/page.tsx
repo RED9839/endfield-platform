@@ -65,9 +65,15 @@ export default async function SetupProfilePage({
       redirect(`/setup-profile?error=duplicate&value=${encodedValue}`);
     }
 
-    await prisma.user.update({
+    await prisma.user.upsert({
       where: { id: session.user.id },
-      data: { nickname },
+      update: { nickname },
+      create: {
+        id: session.user.id,
+        name: session.user.name ?? null,
+        email: session.user.email ?? null,
+        nickname,
+      },
     });
 
     redirect("/");
