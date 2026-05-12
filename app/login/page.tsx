@@ -2,26 +2,11 @@ import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
 import { GoogleSignInButton } from "@/app/components/auth/AuthButtons";
-import { prisma } from "@/lib/prisma";
 
 export default async function LoginPage() {
   const session = await auth();
 
   if (session?.user?.id) {
-    const user = await prisma.user.findFirst({
-      where: {
-        OR: [
-          { id: session.user.id },
-          ...(session.user.email ? [{ email: session.user.email }] : []),
-        ],
-      },
-      select: { nickname: true },
-    });
-
-    if (!user?.nickname) {
-      redirect("/setup-profile");
-    }
-
     redirect("/");
   }
 
