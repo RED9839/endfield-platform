@@ -56,12 +56,22 @@ export default async function SetupProfilePage({
       redirect(`/setup-profile?error=format&value=${encodedValue}`);
     }
 
+    const selfUser = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { id: session.user.id },
+          ...(session.user.email ? [{ email: session.user.email }] : []),
+        ],
+      },
+      select: { id: true },
+    });
+
     const exists = await prisma.user.findFirst({
       where: {
         nickname,
         NOT: {
           OR: [
-            { id: session.user.id },
+            { id: selfUser?.id ?? session.user.id },
             ...(session.user.email ? [{ email: session.user.email }] : []),
           ],
         },
