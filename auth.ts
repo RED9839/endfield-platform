@@ -1,6 +1,7 @@
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
     Google({
@@ -16,8 +17,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id;
+        token.id = user.id ?? token.sub ?? token.id;
         token.nickname = typeof user.nickname === "string" ? user.nickname : null;
+        token.email = user.email ?? token.email;
       }
 
       return token;
@@ -25,31 +27,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
     async session({ session, token }) {
       if (session.user) {
-        session.user.id = typeof token.id === "string" ? token.id : "";
+        session.user.id = typeof token.id === "string" ? token.id : typeof token.sub === "string" ? token.sub : "";
         session.user.nickname =
           typeof token.nickname === "string" ? token.nickname : null;
+        session.user.email = typeof token.email === "string" ? token.email : session.user.email;
       }
 
       return session;
     },
 
-    authorized({ auth: session, request }) {
-      const { pathname } = request.nextUrl;
-
-      if (!session?.user) {
-        return true;
-      }
-
-      const hasNickname = Boolean(session.user.nickname?.trim());
-
-      if (!hasNickname && pathname !== "/setup-profile") {
-        return Response.redirect(new URL("/setup-profile", request.nextUrl));
-      }
-
-      if (hasNickname && pathname === "/setup-profile") {
-        return Response.redirect(new URL("/", request.nextUrl));
-      }
-
+    async authorized() {
       return true;
     },
   },
