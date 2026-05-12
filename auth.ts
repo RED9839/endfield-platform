@@ -1,6 +1,8 @@
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 
+import { prisma } from "@/lib/prisma";
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
     Google({
@@ -33,14 +35,24 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       return session;
     },
 
-    authorized({ auth: session, request }) {
+    async authorized({ auth: session, request }) {
       const { pathname } = request.nextUrl;
 
       if (!session?.user) {
         return true;
       }
 
-      const hasNickname = Boolean(session.user.nickname?.trim());
+      const user = await prisma.user.findFirst({
+        where: {
+          OR: [
+            { id: session.user.id },
+            ...(session.user.email ? [{ email: session.user.email }] : []),
+          ],
+        },
+        select: { nickname: true },
+      });
+
+      const hasNickname = Boolean(user?.nickname?.trim());
 
       if (!hasNickname && pathname !== "/setup-profile") {
         return Response.redirect(new URL("/setup-profile", request.nextUrl));
