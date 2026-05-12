@@ -25,7 +25,7 @@ export default async function SetupProfilePage({
   const currentUser = await prisma.user.findFirst({
     where: {
       OR: [
-        { id: selfUser?.id ?? session.user.id },
+        { id: session.user.id },
         ...(session.user.email ? [{ email: session.user.email }] : []),
       ],
     },
