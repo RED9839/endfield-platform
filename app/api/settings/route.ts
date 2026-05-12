@@ -1,5 +1,7 @@
+export const dynamic = "force-dynamic";
+
 import { NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase-admin";
+import { getSupabaseAdmin } from "@/lib/supabase-admin";
 
 export async function POST(request: Request) {
   try {
@@ -29,16 +31,21 @@ export async function POST(request: Request) {
       );
     }
 
-    const { data: setting, error: settingError } = await supabaseAdmin
-      .from("settings")
-      .insert({
-        type,
-        title,
-        description,
-        nickname,
-        main_operator_slug: mainSlot.operatorSlug,
-        main_weapon_slug: mainSlot.weaponSlug,
-      })
+    const supabaseAdmin = await getSupabaseAdmin();
+
+    const settingInsert = {
+      type,
+      title,
+      description,
+      nickname,
+      main_operator_slug: mainSlot.operatorSlug,
+      main_weapon_slug: mainSlot.weaponSlug,
+    } satisfies Record<string, unknown>;
+
+    const {
+      data: setting, error: settingError } = await supabaseAdmin
+      .from("settings" as any)
+      .insert(settingInsert as any)
       .select()
       .single();
 
@@ -51,24 +58,23 @@ export async function POST(request: Request) {
       );
     }
 
-    const slotRows = slots.map((slot: any) => ({
-      setting_id: setting.id,
-      slot_key: slot.slotKey,
+    const createdSetting = setting as { id: number | string };
 
+    const slotRows = slots.map((slot: any) => ({
+      setting_id: createdSetting.id,
+      slot_key: slot.slotKey,
       operator_slug: slot.operatorSlug,
       weapon_slug: slot.weaponSlug,
-
       armor_slug: slot.armorSlug,
       gloves_slug: slot.glovesSlug,
       kit1_slug: slot.kit1Slug,
       kit2_slug: slot.kit2Slug,
-
       form_json: slot.formJson,
-    }));
+    })) satisfies Record<string, unknown>[];
 
     const { error: slotError } = await supabaseAdmin
-      .from("setting_slots")
-      .insert(slotRows);
+      .from("setting_slots" as any)
+      .insert(slotRows as any);
 
     if (slotError) {
       return NextResponse.json(
@@ -81,7 +87,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       ok: true,
-      settingId: setting.id,
+      settingId: createdSetting.id,
     });
   } catch (error) {
     return NextResponse.json(

@@ -11,8 +11,15 @@ export default async function SetupProfilePage({
   const session = await auth();
   const params = await searchParams;
 
+
   if (!session?.user?.id) {
-    redirect("/login");
+    return (
+      <main className="min-h-screen bg-[#050505] px-4 py-20 text-white">
+        <section className="mx-auto max-w-md rounded-3xl border border-yellow-500/15 bg-[#0a0d12] p-8 text-center">
+          <p className="text-sm text-zinc-300">로그인이 필요합니다.</p>
+        </section>
+      </main>
+    );
   }
 
   const currentUser = await prisma.user.findUnique({
@@ -30,7 +37,7 @@ export default async function SetupProfilePage({
     const session = await auth();
 
     if (!session?.user?.id) {
-      redirect("/login");
+      return;
     }
 
     const nickname = String(formData.get("nickname") ?? "").trim();

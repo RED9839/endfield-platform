@@ -3,14 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --webpack",
-    "build": "prisma generate && next build --webpack",
+    "dev": "next dev",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
     "postinstall": "prisma generate",
     "build:operators": "tsx scripts/build-operators-from-excel.ts",
     "watch:operators": "chokidar \"data/excel/*.xlsx\" -c \"npm run build:operators\"",
-    "dev:all": "npm run build:operators && concurrently \"npm run watch:operators\" \"next dev --webpack\""
+    "dev:all": "npm run build:operators && concurrently \"npm run watch:operators\" \"next dev\""
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",
