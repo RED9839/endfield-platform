@@ -19,7 +19,7 @@ function withPgBouncerParams(url?: string) {
   return parsed.toString();
 }
 
-const datasourceUrl = withPgBouncerParams(process.env.SUPABASE_DATABASE_URL);
+const datasourceUrl = withPgBouncerParams(process.env.SUPABASE_DATABASE_URL ?? process.env.DATABASE_URL);
 
 export const prisma =
   globalForPrisma.prisma ??
