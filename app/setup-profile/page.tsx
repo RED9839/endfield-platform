@@ -79,6 +79,20 @@ export default async function SetupProfilePage({
       select: { id: true },
     });
 
+    if (exists && session.user.email) {
+      const ownByEmail = await prisma.user.findFirst({
+        where: {
+          email: session.user.email,
+          nickname,
+        },
+        select: { id: true },
+      });
+
+      if (ownByEmail) {
+        redirect("/");
+      }
+    }
+
     if (exists) {
       const canAdoptLegacyNickname = Boolean(session.user.email && session.user.name);
 
