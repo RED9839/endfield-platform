@@ -22,9 +22,14 @@ export default async function SetupProfilePage({
     );
   }
 
-  const currentUser = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { nickname: true },
+  const currentUser = await prisma.user.findFirst({
+    where: {
+      OR: [
+        { id: session.user.id },
+        ...(session.user.email ? [{ email: session.user.email }] : []),
+      ],
+    },
+    select: { id: true, nickname: true },
   });
 
   if (currentUser?.nickname) {
@@ -81,8 +86,16 @@ export default async function SetupProfilePage({
     });
 
     await prisma.user.updateMany({
-      where: { id: session.user.id },
-      data: { nickname },
+      where: {
+        OR: [
+          { id: session.user.id },
+          ...(session.user.email ? [{ email: session.user.email }] : []),
+        ],
+      },
+      data: {
+        id: session.user.id,
+        nickname,
+      },
     });
 
     redirect("/");

@@ -101,9 +101,13 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
 
     await prisma.user.updateMany({
       where: {
-        id: session.user.id,
+        OR: [
+          { id: session.user.id },
+          ...(session.user.email ? [{ email: session.user.email }] : []),
+        ],
       },
       data: {
+        id: session.user.id,
         nickname,
       },
     });

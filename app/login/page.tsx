@@ -8,8 +8,13 @@ export default async function LoginPage() {
   const session = await auth();
 
   if (session?.user?.id) {
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
+    const user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { id: session.user.id },
+          ...(session.user.email ? [{ email: session.user.email }] : []),
+        ],
+      },
       select: { nickname: true },
     });
 
