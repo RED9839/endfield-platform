@@ -56,6 +56,23 @@ export default async function SetupProfilePage({
       redirect(`/setup-profile?error=format&value=${encodedValue}`);
     }
 
+    if (session.user.email) {
+      const ownEmailUpdate = await prisma.user.updateMany({
+        where: {
+          email: session.user.email,
+        },
+        data: {
+          id: session.user.id,
+          name: session.user.name ?? null,
+          nickname,
+        },
+      });
+
+      if (ownEmailUpdate.count > 0) {
+        redirect("/");
+      }
+    }
+
     const selfUser = await prisma.user.findFirst({
       where: {
         OR: [
