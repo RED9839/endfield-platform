@@ -84,11 +84,17 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
       redirect("/account?error=duplicate");
     }
 
-    await prisma.user.update({
+    await prisma.user.upsert({
       where: {
         id: session.user.id,
       },
-      data: {
+      update: {
+        nickname,
+      },
+      create: {
+        id: session.user.id,
+        name: session.user.name ?? null,
+        email: session.user.email ?? null,
         nickname,
       },
     });
