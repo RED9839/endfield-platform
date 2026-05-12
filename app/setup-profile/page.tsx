@@ -55,7 +55,10 @@ export default async function SetupProfilePage({
       where: {
         nickname,
         NOT: {
-          id: session.user.id,
+          OR: [
+            { id: session.user.id },
+            ...(session.user.email ? [{ email: session.user.email }] : []),
+          ],
         },
       },
       select: { id: true },
@@ -65,15 +68,21 @@ export default async function SetupProfilePage({
       redirect(`/setup-profile?error=duplicate&value=${encodedValue}`);
     }
 
-    await prisma.user.upsert({
+    await prisma.user.createMany({
+      data: [
+        {
+          id: session.user.id,
+          name: session.user.name ?? null,
+          email: session.user.email ?? null,
+          nickname,
+        },
+      ],
+      skipDuplicates: true,
+    });
+
+    await prisma.user.updateMany({
       where: { id: session.user.id },
-      update: { nickname },
-      create: {
-        id: session.user.id,
-        name: session.user.name ?? null,
-        email: session.user.email ?? null,
-        nickname,
-      },
+      data: { nickname },
     });
 
     redirect("/");
