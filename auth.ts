@@ -18,7 +18,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id;
+        token.id = user.id ?? token.sub ?? token.id;
         token.nickname = typeof user.nickname === "string" ? user.nickname : null;
       }
 
@@ -27,7 +27,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
     async session({ session, token }) {
       if (session.user) {
-        session.user.id = typeof token.id === "string" ? token.id : "";
+        session.user.id = typeof token.id === "string" ? token.id : typeof token.sub === "string" ? token.sub : "";
         session.user.nickname =
           typeof token.nickname === "string" ? token.nickname : null;
       }
