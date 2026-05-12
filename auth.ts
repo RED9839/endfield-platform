@@ -14,16 +14,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
 
   callbacks: {
-    async jwt({ token, user, profile }) {
+    async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-
-        token.nickname =
-          typeof profile?.name === "string"
-            ? profile.name
-            : typeof user.name === "string"
-              ? user.name
-              : null;
+        token.nickname = typeof user.nickname === "string" ? user.nickname : null;
       }
 
       return token;
@@ -37,6 +31,26 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       }
 
       return session;
+    },
+
+    authorized({ auth: session, request }) {
+      const { pathname } = request.nextUrl;
+
+      if (!session?.user) {
+        return true;
+      }
+
+      const hasNickname = Boolean(session.user.nickname?.trim());
+
+      if (!hasNickname && pathname !== "/setup-profile") {
+        return Response.redirect(new URL("/setup-profile", request.nextUrl));
+      }
+
+      if (hasNickname && pathname === "/setup-profile") {
+        return Response.redirect(new URL("/", request.nextUrl));
+      }
+
+      return true;
     },
   },
 });
