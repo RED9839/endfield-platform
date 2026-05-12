@@ -22,9 +22,14 @@ export default async function SetupProfilePage({
     );
   }
 
-  const currentUser = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { nickname: true },
+  const currentUser = await prisma.user.findFirst({
+    where: {
+      OR: [
+        { id: session.user.id },
+        ...(session.user.email ? [{ email: session.user.email }] : []),
+      ],
+    },
+    select: { id: true, nickname: true },
   });
 
   if (currentUser?.nickname) {
@@ -55,23 +60,60 @@ export default async function SetupProfilePage({
       where: {
         nickname,
         NOT: {
-          id: session.user.id,
+          OR: [
+            { id: session.user.id },
+            ...(session.user.email ? [{ email: session.user.email }] : []),
+          ],
         },
       },
       select: { id: true },
     });
 
     if (exists) {
-      redirect(`/setup-profile?error=duplicate&value=${encodedValue}`);
+      const canAdoptLegacyNickname = Boolean(session.user.email && session.user.name);
+
+      if (canAdoptLegacyNickname) {
+        const adopted = await prisma.user.updateMany({
+          where: {
+            id: exists.id,
+            email: null,
+            name: session.user.name,
+          },
+          data: {
+            id: session.user.id,
+            email: session.user.email ?? null,
+          },
+        });
+
+        if (adopted.count === 0) {
+          redirect(`/setup-profile?error=duplicate&value=${encodedValue}`);
+        }
+      } else {
+        redirect(`/setup-profile?error=duplicate&value=${encodedValue}`);
+      }
     }
 
-    await prisma.user.upsert({
-      where: { id: session.user.id },
-      update: { nickname },
-      create: {
+    await prisma.user.createMany({
+      data: [
+        {
+          id: session.user.id,
+          name: session.user.name ?? null,
+          email: session.user.email ?? null,
+          nickname,
+        },
+      ],
+      skipDuplicates: true,
+    });
+
+    await prisma.user.updateMany({
+      where: {
+        OR: [
+          { id: session.user.id },
+          ...(session.user.email ? [{ email: session.user.email }] : []),
+        ],
+      },
+      data: {
         id: session.user.id,
-        name: session.user.name ?? null,
-        email: session.user.email ?? null,
         nickname,
       },
     });
