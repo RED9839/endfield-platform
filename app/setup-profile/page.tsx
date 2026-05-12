@@ -65,16 +65,36 @@ export default async function SetupProfilePage({
       redirect(`/setup-profile?error=duplicate&value=${encodedValue}`);
     }
 
-    await prisma.user.upsert({
-      where: { id: session.user.id },
-      update: { nickname },
-      create: {
-        id: session.user.id,
-        name: session.user.name ?? null,
-        email: session.user.email ?? null,
-        nickname,
-      },
-    });
+    try {
+      await prisma.user.upsert({
+        where: { id: session.user.id },
+        update: { nickname },
+        create: {
+          id: session.user.id,
+          name: session.user.name ?? null,
+          email: session.user.email ?? null,
+          nickname,
+        },
+      });
+    } catch (error) {
+      const code =
+        typeof error === "object" && error && "code" in error
+          ? String((error as { code?: string }).code ?? "")
+          : "";
+
+      if (code === "P2025") {
+        await prisma.user.create({
+          data: {
+            id: session.user.id,
+            name: session.user.name ?? null,
+            email: session.user.email ?? null,
+            nickname,
+          },
+        });
+      } else {
+        throw error;
+      }
+    }
 
     redirect("/");
   }
