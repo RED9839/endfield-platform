@@ -26,7 +26,7 @@ export default async function SetupProfilePage({
     where: {
       OR: [
         { id: session.user.id },
-        ...(sessionEmail ? [{ email: { equals: sessionEmail, mode: "insensitive" } }] : []),
+        ...(sessionEmail ? [{ email: { equals: sessionEmail, mode: "insensitive" as const } }] : []),
       ],
     },
     select: { id: true, nickname: true },
@@ -82,7 +82,7 @@ export default async function SetupProfilePage({
     if (sessionEmail) {
       const ownEmailUpdate = await prisma.user.updateMany({
         where: {
-          email: { equals: sessionEmail, mode: "insensitive" },
+          email: { equals: sessionEmail, mode: "insensitive" as const },
         },
         data: {
           id: session.user.id,
@@ -112,7 +112,7 @@ export default async function SetupProfilePage({
       where: {
         OR: [
           { id: session.user.id },
-          ...(sessionEmail ? [{ email: { equals: sessionEmail, mode: "insensitive" } }] : []),
+          ...(sessionEmail ? [{ email: { equals: sessionEmail, mode: "insensitive" as const } }] : []),
         ],
       },
       data: {

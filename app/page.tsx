@@ -250,7 +250,7 @@ export default async function HomePage() {
           OR: [
             { id: session.user.id },
             ...(sessionEmail
-              ? [{ email: { equals: sessionEmail, mode: "insensitive" } }]
+              ? [{ email: { equals: sessionEmail, mode: "insensitive" as const } }]
               : []),
           ],
         },

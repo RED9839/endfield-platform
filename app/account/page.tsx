@@ -38,7 +38,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
     where: {
       OR: [
         { id: session.user.id },
-        ...(sessionEmail ? [{ email: { equals: sessionEmail, mode: "insensitive" } }] : []),
+        ...(sessionEmail ? [{ email: { equals: sessionEmail, mode: "insensitive" as const } }] : []),
       ],
     },
     select: {
@@ -110,7 +110,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
       where: {
         OR: [
           { id: session.user.id },
-          ...(sessionEmail ? [{ email: { equals: sessionEmail, mode: "insensitive" } }] : []),
+          ...(sessionEmail ? [{ email: { equals: sessionEmail, mode: "insensitive" as const } }] : []),
         ],
       },
       data: {
@@ -141,7 +141,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
       where: {
         OR: [
           { id: session.user.id },
-          ...(sessionEmail ? [{ email: { equals: sessionEmail, mode: "insensitive" } }] : []),
+          ...(sessionEmail ? [{ email: { equals: sessionEmail, mode: "insensitive" as const } }] : []),
         ],
       },
     });
