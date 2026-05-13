@@ -8,16 +8,27 @@ export default async function LoginPage() {
   const session = await auth();
 
   if (session?.user?.id) {
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { nickname: true },
+    const sessionEmail = session.user.email?.trim().toLowerCase();
+
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { id: session.user.id },
+          ...(sessionEmail
+            ? [{ email: { equals: sessionEmail, mode: "insensitive" as const } }]
+            : []),
+        ],
+      },
+      select: {
+        nickname: true,
+      },
     });
 
-    if (!user?.nickname) {
-      redirect("/setup-profile");
+    if (existingUser?.nickname) {
+      redirect("/");
     }
 
-    redirect("/");
+    redirect("/setup-profile");
   }
 
   return (

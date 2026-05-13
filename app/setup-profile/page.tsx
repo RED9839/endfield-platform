@@ -10,7 +10,7 @@ export default async function SetupProfilePage({
 }) {
   const session = await auth();
   const params = await searchParams;
-
+  const sessionEmail = session?.user?.email?.trim().toLowerCase();
 
   if (!session?.user?.id) {
     return (
@@ -22,9 +22,14 @@ export default async function SetupProfilePage({
     );
   }
 
-  const currentUser = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { nickname: true },
+  const currentUser = await prisma.user.findFirst({
+    where: {
+      OR: [
+        { id: session.user.id },
+        ...(sessionEmail ? [{ email: { equals: sessionEmail, mode: "insensitive" as const } }] : []),
+      ],
+    },
+    select: { id: true, nickname: true },
   });
 
   if (currentUser?.nickname) {
@@ -40,6 +45,7 @@ export default async function SetupProfilePage({
       return;
     }
 
+    const sessionEmail = session.user.email?.trim().toLowerCase();
     const nickname = String(formData.get("nickname") ?? "").trim();
     const encodedValue = encodeURIComponent(nickname);
 
@@ -51,27 +57,66 @@ export default async function SetupProfilePage({
       redirect(`/setup-profile?error=format&value=${encodedValue}`);
     }
 
-    const exists = await prisma.user.findFirst({
-      where: {
-        nickname,
-        NOT: {
-          id: session.user.id,
+    if (sessionEmail) {
+      const nicknameOwner = await prisma.user.findFirst({
+        where: {
+          nickname,
         },
-      },
-      select: { id: true },
-    });
+        select: {
+          id: true,
+          email: true,
+        },
+      });
 
-    if (exists) {
-      redirect(`/setup-profile?error=duplicate&value=${encodedValue}`);
+      if (nicknameOwner) {
+        const ownerEmail = nicknameOwner.email?.trim().toLowerCase() ?? null;
+
+        if (nicknameOwner.id !== session.user.id) {
+          if (!ownerEmail || ownerEmail !== sessionEmail) {
+            redirect(`/setup-profile?error=duplicate&value=${encodedValue}`);
+          }
+        }
+      }
     }
 
-    await prisma.user.upsert({
-      where: { id: session.user.id },
-      update: { nickname },
-      create: {
+    if (sessionEmail) {
+      const ownEmailUpdate = await prisma.user.updateMany({
+        where: {
+          email: { equals: sessionEmail, mode: "insensitive" as const },
+        },
+        data: {
+          id: session.user.id,
+          name: session.user.name ?? null,
+          nickname,
+        },
+      });
+
+      if (ownEmailUpdate.count > 0) {
+        redirect("/");
+      }
+    }
+
+    await prisma.user.createMany({
+      data: [
+        {
+          id: session.user.id,
+          name: session.user.name ?? null,
+          email: sessionEmail ?? null,
+          nickname,
+        },
+      ],
+      skipDuplicates: true,
+    });
+
+    await prisma.user.updateMany({
+      where: {
+        OR: [
+          { id: session.user.id },
+          ...(sessionEmail ? [{ email: { equals: sessionEmail, mode: "insensitive" as const } }] : []),
+        ],
+      },
+      data: {
         id: session.user.id,
-        name: session.user.name ?? null,
-        email: session.user.email ?? null,
         nickname,
       },
     });
