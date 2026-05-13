@@ -58,6 +58,28 @@ export default async function SetupProfilePage({
     }
 
     if (sessionEmail) {
+      const nicknameOwner = await prisma.user.findFirst({
+        where: {
+          nickname,
+        },
+        select: {
+          id: true,
+          email: true,
+        },
+      });
+
+      if (nicknameOwner) {
+        const ownerEmail = nicknameOwner.email?.trim().toLowerCase() ?? null;
+
+        if (nicknameOwner.id !== session.user.id) {
+          if (!ownerEmail || ownerEmail !== sessionEmail) {
+            redirect(`/setup-profile?error=duplicate&value=${encodedValue}`);
+          }
+        }
+      }
+    }
+
+    if (sessionEmail) {
       const ownEmailUpdate = await prisma.user.updateMany({
         where: {
           email: sessionEmail,
