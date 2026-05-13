@@ -2,7 +2,6 @@ import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
 import { GoogleSignInButton } from "@/app/components/auth/AuthButtons";
-import { prisma } from "@/lib/prisma";
 
 export default async function LoginPage() {
   const session = await auth();
