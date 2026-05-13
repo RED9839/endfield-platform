@@ -72,7 +72,10 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
       where: {
         nickname,
         NOT: {
-          id: session.user.id,
+          OR: [
+            { id: session.user.id },
+            ...(session.user.email ? [{ email: session.user.email }] : []),
+          ],
         },
       },
       select: {
@@ -81,20 +84,50 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
     });
 
     if (duplicated) {
-      redirect("/account?error=duplicate");
+      const canAdoptLegacyNickname = Boolean(session.user.email && session.user.name);
+
+      if (canAdoptLegacyNickname) {
+        const adopted = await prisma.user.updateMany({
+          where: {
+            id: duplicated.id,
+            email: null,
+            name: session.user.name,
+          },
+          data: {
+            id: session.user.id,
+            email: session.user.email ?? null,
+          },
+        });
+
+        if (adopted.count === 0) {
+          redirect("/account?error=duplicate");
+        }
+      } else {
+        redirect("/account?error=duplicate");
+      }
     }
 
-    await prisma.user.upsert({
+    await prisma.user.createMany({
+      data: [
+        {
+          id: session.user.id,
+          name: session.user.name ?? null,
+          email: session.user.email ?? null,
+          nickname,
+        },
+      ],
+      skipDuplicates: true,
+    });
+
+    await prisma.user.updateMany({
       where: {
-        id: session.user.id,
+        OR: [
+          { id: session.user.id },
+          ...(session.user.email ? [{ email: session.user.email }] : []),
+        ],
       },
-      update: {
-        nickname,
-      },
-      create: {
+      data: {
         id: session.user.id,
-        name: session.user.name ?? null,
-        email: session.user.email ?? null,
         nickname,
       },
     });
@@ -117,7 +150,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
       redirect("/account?error=delete-confirm");
     }
 
-    await prisma.user.delete({
+    await prisma.user.deleteMany({
       where: {
         id: session.user.id,
       },
