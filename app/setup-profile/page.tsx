@@ -10,7 +10,7 @@ export default async function SetupProfilePage({
 }) {
   const session = await auth();
   const params = await searchParams;
-
+  const sessionEmail = session?.user?.email?.trim().toLowerCase();
 
   if (!session?.user?.id) {
     return (
@@ -26,7 +26,7 @@ export default async function SetupProfilePage({
     where: {
       OR: [
         { id: session.user.id },
-        ...(session.user.email ? [{ email: session.user.email }] : []),
+        ...(sessionEmail ? [{ email: sessionEmail }] : []),
       ],
     },
     select: { id: true, nickname: true },
@@ -45,6 +45,7 @@ export default async function SetupProfilePage({
       return;
     }
 
+    const sessionEmail = session.user.email?.trim().toLowerCase();
     const nickname = String(formData.get("nickname") ?? "").trim();
     const encodedValue = encodeURIComponent(nickname);
 
@@ -56,10 +57,10 @@ export default async function SetupProfilePage({
       redirect(`/setup-profile?error=format&value=${encodedValue}`);
     }
 
-    if (session.user.email) {
+    if (sessionEmail) {
       const ownEmailUpdate = await prisma.user.updateMany({
         where: {
-          email: session.user.email,
+          email: sessionEmail,
         },
         data: {
           id: session.user.id,
@@ -73,73 +74,12 @@ export default async function SetupProfilePage({
       }
     }
 
-    const selfUser = await prisma.user.findFirst({
-      where: {
-        OR: [
-          { id: session.user.id },
-          ...(session.user.email ? [{ email: session.user.email }] : []),
-        ],
-      },
-      select: { id: true },
-    });
-
-    const exists = await prisma.user.findFirst({
-      where: {
-        nickname,
-        NOT: {
-          OR: [
-            { id: selfUser?.id ?? session.user.id },
-            ...(session.user.email ? [{ email: session.user.email }] : []),
-          ],
-        },
-      },
-      select: { id: true },
-    });
-
-    if (exists && session.user.email) {
-      const ownByEmail = await prisma.user.findFirst({
-        where: {
-          email: session.user.email,
-          nickname,
-        },
-        select: { id: true },
-      });
-
-      if (ownByEmail) {
-        redirect("/");
-      }
-    }
-
-    if (exists) {
-      const canAdoptLegacyNickname = Boolean(session.user.email && session.user.name);
-
-      if (canAdoptLegacyNickname) {
-        const adopted = await prisma.user.updateMany({
-          where: {
-            id: exists.id,
-            email: null,
-            name: session.user.name,
-          },
-          data: {
-            id: session.user.id,
-            email: session.user.email ?? null,
-          },
-        });
-
-        if (adopted.count === 0) {
-          redirect(`/setup-profile?error=duplicate&value=${encodedValue}`);
-        }
-      } else {
-        redirect(`/setup-profile?error=duplicate&value=${encodedValue}`);
-      }
-    }
-
     await prisma.user.createMany({
       data: [
         {
           id: session.user.id,
           name: session.user.name ?? null,
-          email: session.user.email ?? null,
+          email: sessionEmail ?? null,
           nickname,
         },
       ],
@@ -150,7 +90,7 @@ export default async function SetupProfilePage({
       where: {
         OR: [
           { id: session.user.id },
-          ...(session.user.email ? [{ email: session.user.email }] : []),
+          ...(sessionEmail ? [{ email: sessionEmail }] : []),
         ],
       },
       data: {
