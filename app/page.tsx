@@ -91,7 +91,7 @@ function SideNav({ user }: { user?: AccountUser }) {
           데이터 허브
         </h1>
         <p className="mt-2 text-sm leading-6 text-zinc-500">
-          오퍼레이터, 무기, 장비, 시뮬레이션, 세팅 기능을 한곳에서 확인하는 메인 화면
+          오퍼레이터, 무기, 장비, 성장 시뮬레이션, 세팅 기능을 한곳에서 확인하는 허브 화면
         </p>
 
         <div className="mt-5 rounded-2xl border border-yellow-500/15 bg-[#05070b] p-4">
@@ -125,7 +125,7 @@ function SideNav({ user }: { user?: AccountUser }) {
                 ACCOUNT
               </p>
               <p className="mt-2 text-sm leading-5 text-zinc-400">
-                Google 계정으로 로그인하고 세팅을 저장합니다.
+                Google 계정으로 로그인하면 세팅을 저장하고 동기화할 수 있습니다.
               </p>
               <Link
                 href="/login"
@@ -242,10 +242,17 @@ async function getHomeData(): Promise<HomeApiResponse | null> {
 export default async function HomePage() {
   const session = await auth();
 
+  const sessionEmail = session?.user?.email?.trim().toLowerCase();
+
   const accountUser = session?.user?.id
-    ? await prisma.user.findUnique({
+    ? await prisma.user.findFirst({
         where: {
-          id: session.user.id,
+          OR: [
+            { id: session.user.id },
+            ...(sessionEmail
+              ? [{ email: { equals: sessionEmail, mode: "insensitive" } }]
+              : []),
+          ],
         },
         select: {
           name: true,

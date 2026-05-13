@@ -32,9 +32,14 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
     redirect("/login");
   }
 
-  const user = await prisma.user.findUnique({
+  const sessionEmail = session.user.email?.trim().toLowerCase();
+
+  const user = await prisma.user.findFirst({
     where: {
-      id: session.user.id,
+      OR: [
+        { id: session.user.id },
+        ...(sessionEmail ? [{ email: { equals: sessionEmail, mode: "insensitive" } }] : []),
+      ],
     },
     select: {
       id: true,
@@ -59,6 +64,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
     }
 
     const nickname = String(formData.get("nickname") ?? "").trim();
+    const sessionEmail = session.user.email?.trim().toLowerCase();
 
     if (!nickname) {
       redirect("/account?error=required");
@@ -68,33 +74,47 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
       redirect("/account?error=length");
     }
 
-    const duplicated = await prisma.user.findFirst({
+    const nicknameOwner = await prisma.user.findFirst({
       where: {
         nickname,
-        NOT: {
-          id: session.user.id,
-        },
       },
       select: {
         id: true,
+        email: true,
       },
     });
 
-    if (duplicated) {
-      redirect("/account?error=duplicate");
+    if (nicknameOwner) {
+      const ownerEmail = nicknameOwner.email?.trim().toLowerCase() ?? null;
+
+      if (nicknameOwner.id !== session.user.id) {
+        if (!sessionEmail || !ownerEmail || ownerEmail !== sessionEmail) {
+          redirect("/account?error=duplicate");
+        }
+      }
     }
 
-    await prisma.user.upsert({
+    await prisma.user.createMany({
+      data: [
+        {
+          id: session.user.id,
+          name: session.user.name ?? null,
+          email: sessionEmail ?? null,
+          nickname,
+        },
+      ],
+      skipDuplicates: true,
+    });
+
+    await prisma.user.updateMany({
       where: {
-        id: session.user.id,
+        OR: [
+          { id: session.user.id },
+          ...(sessionEmail ? [{ email: { equals: sessionEmail, mode: "insensitive" } }] : []),
+        ],
       },
-      update: {
-        nickname,
-      },
-      create: {
+      data: {
         id: session.user.id,
-        name: session.user.name ?? null,
-        email: session.user.email ?? null,
         nickname,
       },
     });
@@ -117,9 +137,12 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
       redirect("/account?error=delete-confirm");
     }
 
-    await prisma.user.delete({
+    await prisma.user.deleteMany({
       where: {
-        id: session.user.id,
+        OR: [
+          { id: session.user.id },
+          ...(sessionEmail ? [{ email: { equals: sessionEmail, mode: "insensitive" } }] : []),
+        ],
       },
     });
 
