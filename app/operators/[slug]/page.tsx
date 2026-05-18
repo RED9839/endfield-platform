@@ -11,6 +11,7 @@ import TalentPanel from "./TalentPanel";
 import InfrastructureSkillPanel from "./InfrastructureSkillPanel";
 import TrustBonusPanel from "./TrustBonusPanel";
 import PotentialPanel from "./PotentialPanel";
+import QuickSectionNav from "./QuickSectionNav";
 
 const YELLOW_MAIN = "#ffd24a";
 const YELLOW_TEXT = "#ffdc70";
@@ -186,19 +187,7 @@ export default async function OperatorDetailPage({
           </section>
         )}
 
-        <nav className="sticky top-2 z-30 mb-3 rounded-[18px] border border-yellow-500/15 bg-black/90 p-2 backdrop-blur lg:top-5 lg:mb-5">
-          <div className="flex gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {sectionLinks.map((item) => (
-              <a
-                key={item.href}
-                href={item.href}
-                className="shrink-0 rounded-xl border border-yellow-500/15 bg-[#05070b] px-3 py-2 text-xs font-black text-zinc-300 transition hover:border-yellow-400/40 hover:text-yellow-200 sm:text-sm"
-              >
-                {item.label}
-              </a>
-            ))}
-          </div>
-        </nav>
+        <QuickSectionNav links={sectionLinks} />
 
         <div className="grid gap-3 lg:gap-5">
           <DetailSection id="level" title="기본 정보 / 스탯" defaultOpen>

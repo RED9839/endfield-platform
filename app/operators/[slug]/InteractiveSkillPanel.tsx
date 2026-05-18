@@ -89,7 +89,9 @@ function detectDamageElement(
     for (const element of elementOrder) {
       const keywords = elementKeywordMap[element];
 
-      if (keywords.some((keyword) => keyword.includes("피해") && text.includes(keyword))) {
+      if (
+        keywords.some((keyword) => keyword.includes("피해") && text.includes(keyword))
+      ) {
         return element;
       }
     }
@@ -262,6 +264,7 @@ function FoldSection({
         border: "1px solid rgba(255,196,74,0.12)",
         background: "#0a0d12",
         borderRadius: "20px",
+        overflow: "hidden",
       }}
     >
       <button
@@ -295,13 +298,7 @@ function FoldSection({
   );
 }
 
-function MaterialIcon({
-  src,
-  alt,
-}: {
-  src?: string;
-  alt: string;
-}) {
+function MaterialIcon({ src, alt }: { src?: string; alt: string }) {
   if (!src) {
     return (
       <div
@@ -400,9 +397,11 @@ function UpgradeColumn({ item }: { item: SkillUpgradeMaterial }) {
   return (
     <div
       style={{
-        borderLeft: "1px solid rgba(255,196,74,0.12)",
-        paddingLeft: "10px",
+        border: "1px solid rgba(255,196,74,0.10)",
+        background: "#0d1118",
+        padding: "10px",
         minHeight: "100%",
+        borderRadius: "18px",
       }}
     >
       <div
@@ -432,10 +431,10 @@ function UpgradeColumn({ item }: { item: SkillUpgradeMaterial }) {
                 background: "#0e131b",
                 padding: "6px 8px",
                 display: "grid",
-                gridTemplateColumns: "26px 1fr auto",
+                gridTemplateColumns: "26px minmax(0, 1fr) auto",
                 gap: "8px",
                 alignItems: "center",
-                borderRadius: "20px",
+                borderRadius: "16px",
               }}
             >
               <MaterialIcon src={material.icon} alt={material.name} />
@@ -446,6 +445,7 @@ function UpgradeColumn({ item }: { item: SkillUpgradeMaterial }) {
                   fontSize: "11px",
                   lineHeight: 1.3,
                   wordBreak: "keep-all",
+                  minWidth: 0,
                 }}
               >
                 {material.name}
@@ -466,7 +466,9 @@ function UpgradeColumn({ item }: { item: SkillUpgradeMaterial }) {
           ))}
         </div>
       ) : (
-        <div style={{ color: "#94a3b8", fontSize: "12px" }}>재료 데이터 없음</div>
+        <div style={{ color: "#94a3b8", fontSize: "12px" }}>
+          재료 데이터 없음
+        </div>
       )}
     </div>
   );
@@ -483,9 +485,11 @@ function findCompareRowValue(
 
 function formatMetaValue(value: string | number) {
   if (typeof value === "number") return value;
+
   if (/^\d+(?:\.\d+)?s$/i.test(value)) {
     return `${value.slice(0, -1)}초`;
   }
+
   return value;
 }
 
@@ -514,6 +518,10 @@ function resolveMetaItems(
     .filter((item): item is { label: string; value: string | number } => item !== null);
 }
 
+function isNormalAttackSkill(skill: SkillDetail) {
+  return skill.typeLabel.includes("일반 공격") || skill.name.includes("일반 공격");
+}
+
 export default function InteractiveSkillPanel({ skill, accentColor }: Props) {
   const levels = useMemo(() => skill.levelValues ?? [], [skill.levelValues]);
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -529,6 +537,11 @@ export default function InteractiveSkillPanel({ skill, accentColor }: Props) {
     () => resolveMetaItems(skill, selectedIndex),
     [selectedIndex, skill]
   );
+
+  const visibleMetaItems = useMemo(() => {
+    if (isNormalAttackSkill(skill)) return [];
+    return resolvedMetaItems;
+  }, [skill, resolvedMetaItems]);
 
   const upgradeRows = useMemo(
     () => buildUpgradeRows(upgradeMaterialList),
@@ -557,12 +570,13 @@ export default function InteractiveSkillPanel({ skill, accentColor }: Props) {
         border: "1px solid rgba(255,196,74,0.14)",
         padding: "16px",
         boxShadow: "0 12px 28px rgba(0,0,0,0.28)",
+        minWidth: 0,
       }}
     >
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "72px 1fr",
+          gridTemplateColumns: "72px minmax(0, 1fr)",
           gap: "14px",
           alignItems: "start",
         }}
@@ -605,7 +619,7 @@ export default function InteractiveSkillPanel({ skill, accentColor }: Props) {
           )}
         </div>
 
-        <div>
+        <div style={{ minWidth: 0 }}>
           <div
             style={{
               color: "#aeb8c7",
@@ -623,6 +637,7 @@ export default function InteractiveSkillPanel({ skill, accentColor }: Props) {
               alignItems: "center",
               gap: "10px",
               flexWrap: "wrap",
+              minWidth: 0,
             }}
           >
             <div
@@ -631,12 +646,13 @@ export default function InteractiveSkillPanel({ skill, accentColor }: Props) {
                 fontSize: "30px",
                 fontWeight: 900,
                 lineHeight: 1.1,
+                wordBreak: "keep-all",
               }}
             >
               {skill.name}
             </div>
 
-            {resolvedMetaItems.map((item) => (
+            {visibleMetaItems.map((item) => (
               <MetaChip
                 key={`${skill.name}-${item.label}`}
                 label={item.label}
@@ -648,7 +664,14 @@ export default function InteractiveSkillPanel({ skill, accentColor }: Props) {
         </div>
       </div>
 
-      <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginTop: "16px" }}>
+      <div
+        style={{
+          display: "flex",
+          gap: "6px",
+          flexWrap: "wrap",
+          marginTop: "16px",
+        }}
+      >
         {levels.map((level, index) => {
           const active = selectedIndex === index;
 
@@ -661,7 +684,9 @@ export default function InteractiveSkillPanel({ skill, accentColor }: Props) {
                 minWidth: "58px",
                 height: "34px",
                 padding: "0 10px",
-                border: active ? `1px solid ${accentColor}` : "1px solid rgba(255,196,74,0.14)",
+                border: active
+                  ? `1px solid ${accentColor}`
+                  : "1px solid rgba(255,196,74,0.14)",
                 background: active ? "rgba(247,166,0,0.14)" : "#0c1016",
                 color: active ? "#fff" : "#e5e7eb",
                 fontWeight: 800,
@@ -741,7 +766,14 @@ export default function InteractiveSkillPanel({ skill, accentColor }: Props) {
                 >
                   {renderHighlightedText(stat.label)}
                 </div>
-                <div style={{ color: "#ffd24a", fontSize: "20px", fontWeight: 900 }}>
+
+                <div
+                  style={{
+                    color: "#ffd24a",
+                    fontSize: "20px",
+                    fontWeight: 900,
+                  }}
+                >
                   {stat.value}
                 </div>
               </div>
@@ -752,12 +784,18 @@ export default function InteractiveSkillPanel({ skill, accentColor }: Props) {
 
       {!!skill.compareRows?.length && (
         <FoldSection title="레벨 비교" defaultOpen={false}>
-          <div style={{ overflowX: "auto" }}>
+          <div
+            style={{
+              overflowX: "auto",
+              maxWidth: "100%",
+              WebkitOverflowScrolling: "touch",
+            }}
+          >
             <table
               style={{
-                width: "100%",
+                width: "max-content",
+                minWidth: "100%",
                 borderCollapse: "collapse",
-                minWidth: "720px",
               }}
             >
               <thead>
@@ -769,10 +807,16 @@ export default function InteractiveSkillPanel({ skill, accentColor }: Props) {
                       fontSize: "12px",
                       padding: "12px",
                       borderBottom: "1px solid rgba(255,196,74,0.10)",
+                      position: "sticky",
+                      left: 0,
+                      background: "#0a0d12",
+                      zIndex: 2,
+                      minWidth: "160px",
                     }}
                   >
                     항목
                   </th>
+
                   {levels.map((level) => (
                     <th
                       key={`${skill.name}-thead-${level.level}`}
@@ -782,6 +826,8 @@ export default function InteractiveSkillPanel({ skill, accentColor }: Props) {
                         fontSize: "12px",
                         padding: "12px",
                         borderBottom: "1px solid rgba(255,196,74,0.10)",
+                        minWidth: "110px",
+                        whiteSpace: "nowrap",
                       }}
                     >
                       {level.level}
@@ -804,6 +850,11 @@ export default function InteractiveSkillPanel({ skill, accentColor }: Props) {
                           color: rowColor,
                           fontSize: "14px",
                           fontWeight: 700,
+                          position: "sticky",
+                          left: 0,
+                          background: "#0a0d12",
+                          zIndex: 1,
+                          minWidth: "160px",
                         }}
                       >
                         {renderHighlightedText(row.label)}
@@ -818,6 +869,8 @@ export default function InteractiveSkillPanel({ skill, accentColor }: Props) {
                             color: "#d1d5db",
                             fontSize: "14px",
                             textAlign: "center",
+                            whiteSpace: "nowrap",
+                            minWidth: "110px",
                           }}
                         >
                           {value}
@@ -838,7 +891,7 @@ export default function InteractiveSkillPanel({ skill, accentColor }: Props) {
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(8, minmax(0, 1fr))",
+                gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
                 gap: "10px",
                 alignItems: "start",
               }}
@@ -853,7 +906,7 @@ export default function InteractiveSkillPanel({ skill, accentColor }: Props) {
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(8, minmax(0, 1fr))",
+                gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
                 gap: "10px",
                 alignItems: "start",
                 marginTop: upgradeRows.normal.length ? "12px" : 0,
@@ -862,15 +915,13 @@ export default function InteractiveSkillPanel({ skill, accentColor }: Props) {
               {upgradeRows.mastery.map((item) => (
                 <UpgradeColumn key={item.level} item={item} />
               ))}
-
-              {Array.from({ length: Math.max(0, 8 - upgradeRows.mastery.length) }).map((_, index) => (
-                <div key={`empty-${index}`} />
-              ))}
             </div>
           )}
 
           {!upgradeRows.normal.length && !upgradeRows.mastery.length ? (
-            <div style={{ color: "#94a3b8", fontSize: "12px" }}>재료 데이터 없음</div>
+            <div style={{ color: "#94a3b8", fontSize: "12px" }}>
+              재료 데이터 없음
+            </div>
           ) : null}
         </div>
       </FoldSection>

@@ -121,7 +121,7 @@ function FilterButton({
     <button
       type="button"
       onClick={onClick}
-      className="group flex h-[36px] shrink-0 items-center gap-2 rounded-xl border px-3 text-left text-[12px] font-bold transition hover:bg-[#101923] lg:h-[38px] lg:w-full"
+      className="group flex h-[32px] items-center gap-1.5 rounded-lg border px-2.5 text-left text-[11px] font-bold transition hover:bg-[#101923] lg:h-[38px] lg:w-full lg:gap-2 lg:rounded-xl lg:px-3 lg:text-[12px]"
       style={{
         borderColor: active
           ? pointColor
@@ -166,15 +166,15 @@ function FilterGroup({
   last?: boolean;
 }) {
   return (
-    <div className={last ? "" : "mb-4 lg:mb-5"}>
+    <div className={last ? "min-w-0 max-w-full overflow-hidden" : "mb-3 min-w-0 max-w-full overflow-hidden lg:mb-5"}>
       <h2
-        className="mb-2 text-[11px] font-black tracking-[0.2em]"
+        className="mb-1.5 text-[10px] font-black tracking-[0.16em] lg:mb-2 lg:text-[11px] lg:tracking-[0.2em]"
         style={{ color: YELLOW_TEXT }}
       >
         {title}
       </h2>
 
-      <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:flex-col lg:overflow-visible lg:pb-0">
+      <div className="flex w-full min-w-0 max-w-full flex-wrap gap-1.5 pb-1 lg:flex-col lg:flex-nowrap lg:gap-2 lg:pb-0">
         {children}
       </div>
     </div>
@@ -329,8 +329,8 @@ export default function OperatorsPageClient() {
   ].reduce((sum, value) => sum + value, 0);
 
   return (
-    <main className="min-h-screen bg-[#050505] px-3 py-3 text-white sm:px-4 md:px-6 md:py-5">
-      <div className="mx-auto max-w-[1840px]">
+    <main className="min-h-screen overflow-x-clip bg-[#050505] px-3 py-3 text-white sm:px-4 md:px-6 md:py-5">
+      <div className="mx-auto max-w-[1840px] overflow-x-clip">
         <header
           className="mb-3 rounded-[20px] bg-[#05070b] p-4 shadow-[0_0_30px_rgba(250,204,21,0.04)] sm:mb-5 sm:rounded-[24px] sm:p-5"
           style={{ border: `1px solid ${YELLOW_BORDER}` }}
@@ -366,26 +366,26 @@ export default function OperatorsPageClient() {
           </div>
         </header>
 
-        <div className="grid gap-3 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-5">
+        <div className="grid min-w-0 gap-3 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-5">
           <aside
-            className="sticky top-3 z-30 rounded-[20px] bg-[#05070b] shadow-[0_0_30px_rgba(250,204,21,0.04)] lg:top-5 lg:flex lg:max-h-[calc(100vh-40px)] lg:flex-col lg:overflow-hidden lg:rounded-[24px]"
+            className="sticky top-2 z-40 flex max-h-[calc(100dvh-16px)] min-w-0 max-w-full self-start flex-col overflow-hidden rounded-[16px] bg-[#05070b] shadow-[0_0_30px_rgba(250,204,21,0.04)] lg:top-5 lg:max-h-[calc(100vh-40px)] lg:rounded-[24px]"
             style={{ border: `1px solid ${YELLOW_BORDER}` }}
           >
             <button
               type="button"
               onClick={() => setIsFilterOpen((prev) => !prev)}
-              className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left lg:hidden"
+              className="flex w-full min-w-0 items-center justify-between gap-2 px-3 py-2 text-left lg:hidden"
               style={{ borderBottom: `1px solid ${YELLOW_BORDER_SOFT}` }}
             >
               <span className="min-w-0">
                 <span
-                  className="block text-[11px] font-black tracking-[0.2em]"
+                  className="block text-[10px] font-black tracking-[0.16em]"
                   style={{ color: YELLOW_TEXT }}
                 >
                   검색 / 필터
                 </span>
 
-                <span className="mt-1 block truncate text-xs text-zinc-500">
+                <span className="mt-0.5 block truncate text-[11px] text-zinc-500">
                   이름, 등급, 속성, 클래스, 무기 필터
                   {activeFilterCount > 0 ? ` · 적용 ${activeFilterCount}` : ""}
                 </span>
@@ -401,13 +401,16 @@ export default function OperatorsPageClient() {
               </span>
             </button>
 
-            <div className={isFilterOpen ? "block lg:block" : "hidden lg:block"}>
+            <div className={[
+              "min-w-0 max-w-full overflow-hidden lg:block",
+              isFilterOpen ? "block min-h-0 flex-1" : "hidden",
+            ].join(" ")}>
               <div
-                className="bg-[#05070b] p-3 sm:p-4 lg:shrink-0"
+                className="min-w-0 bg-[#05070b] p-2.5 sm:p-4 lg:shrink-0"
                 style={{ borderBottom: `1px solid ${YELLOW_BORDER_SOFT}` }}
               >
                 <h2
-                  className="mb-2 text-[11px] font-black tracking-[0.2em]"
+                  className="mb-1.5 text-[10px] font-black tracking-[0.16em] lg:mb-2 lg:text-[11px] lg:tracking-[0.2em]"
                   style={{ color: YELLOW_TEXT }}
                 >
                   검색
@@ -427,7 +430,7 @@ export default function OperatorsPageClient() {
                 </div>
               </div>
 
-              <div className="p-3 sm:p-4 lg:min-h-0 lg:flex-1 lg:overflow-y-auto">
+              <div className="min-h-0 min-w-0 overflow-y-auto p-2.5 sm:p-4 lg:flex-1">
                 <FilterGroup title="등급">
                   <FilterButton
                     active={rarity === "all"}
@@ -532,7 +535,7 @@ export default function OperatorsPageClient() {
           </aside>
 
           <section
-            className="min-w-0 rounded-[20px] bg-[#05070b] p-3 shadow-[0_0_30px_rgba(250,204,21,0.04)] lg:rounded-[24px]"
+            className="min-w-0 overflow-hidden rounded-[20px] bg-[#05070b] p-3 shadow-[0_0_30px_rgba(250,204,21,0.04)] lg:rounded-[24px]"
             style={{ border: `1px solid ${YELLOW_BORDER}` }}
           >
             <div

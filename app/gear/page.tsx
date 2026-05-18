@@ -150,7 +150,7 @@ function FilterButton({
     <button
       type="button"
       onClick={onClick}
-      className="group flex h-[36px] min-w-0 items-center justify-start gap-2 rounded-xl border px-2.5 text-left text-[11px] font-bold transition hover:bg-[#101923] lg:h-[38px] lg:w-full lg:px-3 lg:text-[12px]"
+      className="group flex h-[34px] max-w-full items-center justify-start gap-1.5 rounded-lg border px-2.5 text-left text-[11px] font-bold transition hover:bg-[#101923] lg:h-[38px] lg:w-full lg:gap-2 lg:rounded-xl lg:px-3 lg:text-[12px]"
       style={{
         borderColor: active
           ? pointColor
@@ -162,19 +162,19 @@ function FilterButton({
       }}
     >
       {iconSrc ? (
-        <span className="relative h-3.5 w-3.5 shrink-0">
+        <span className="relative h-3.5 w-3.5">
           <Image src={iconSrc} alt="" fill sizes="14px" className="object-contain" />
         </span>
       ) : (
         <span
-          className="flex h-3.5 w-3.5 shrink-0 items-center justify-center text-[9px]"
+          className="flex h-3.5 w-3.5 items-center justify-center text-[9px]"
           style={{ color: pointColor }}
         >
           ◆
         </span>
       )}
 
-      <span className="min-w-0 flex-1 truncate leading-none">{label}</span>
+      <span className="min-w-0 truncate leading-none">{label}</span>
     </button>
   );
 }
@@ -199,13 +199,7 @@ function FilterGroup({
         {title}
       </h2>
 
-      <div
-        className={
-          grid
-            ? "grid grid-cols-[repeat(auto-fit,minmax(92px,1fr))] gap-2 lg:grid-cols-1"
-            : "flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:flex-col lg:overflow-visible lg:pb-0"
-        }
-      >
+      <div className="flex min-w-0 max-w-full flex-wrap gap-2 pb-1 lg:flex-col lg:flex-nowrap lg:pb-0">
         {children}
       </div>
     </div>
@@ -225,7 +219,7 @@ function GearChip({
 
   return (
     <span
-      className="inline-flex h-[20px] max-w-full shrink-0 items-center gap-1 overflow-hidden whitespace-nowrap rounded-md bg-black px-2 text-[11px] font-black leading-none"
+      className="inline-flex h-[20px] max-w-full items-center gap-1 rounded-md bg-black px-2 text-[11px] font-black leading-none"
       style={{
         border: muted
           ? "1px solid rgba(255,255,255,0.24)"
@@ -247,11 +241,11 @@ function GearIconOnlyChip({
 }) {
   return (
     <span
-      className="inline-flex h-[20px] w-[20px] shrink-0 items-center justify-center rounded-md bg-black"
+      className="inline-flex h-[20px] w-[20px] items-center justify-center rounded-md bg-black"
       style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
       title={label}
     >
-      <span className="relative h-4 w-4 shrink-0">
+      <span className="relative h-4 w-4">
         <Image src={iconSrc} alt={label} fill sizes="16px" className="object-contain" />
       </span>
     </span>
@@ -263,7 +257,7 @@ function GearCategoryLevelChip({ gear }: { gear: GearDetail }) {
 
   return (
     <GearChip color={qualityColor}>
-      <span className="relative h-4 w-4 shrink-0">
+      <span className="relative h-4 w-4">
         <Image
           src={categoryIconMap[gear.category]}
           alt={categoryLabelMap[gear.category]}
@@ -283,7 +277,7 @@ function GearCard({ gear }: { gear: GearDetail }) {
   return (
     <Link
       href={`/gear/${gear.slug}`}
-      className="group relative block overflow-hidden rounded-[16px] bg-black transition hover:-translate-y-1 hover:border-yellow-400/35 sm:rounded-[18px]"
+      className="group relative block rounded-[16px] bg-black transition hover:-translate-y-1 hover:border-yellow-400/35 sm:rounded-[18px]"
       style={{
         border: `1px solid ${YELLOW_BORDER}`,
         width: "100%",
@@ -307,8 +301,8 @@ function GearCard({ gear }: { gear: GearDetail }) {
 
         <p className="mt-1 line-clamp-1 text-[10px] text-zinc-300">{gear.enName}</p>
 
-        <div className="mt-2 flex flex-col gap-1 overflow-hidden">
-          <div className="flex h-[20px] flex-nowrap items-center gap-1 overflow-hidden">
+        <div className="mt-2 flex flex-col gap-1">
+          <div className="flex h-[20px] flex-nowrap items-center gap-1">
             <GearCategoryLevelChip gear={gear} />
 
             {gear.abilityTypes.map((abilityType) => {
@@ -327,7 +321,7 @@ function GearCard({ gear }: { gear: GearDetail }) {
             })}
           </div>
 
-          <div className="flex h-[20px] items-center overflow-hidden">
+          <div className="flex h-[20px] items-center">
             <GearChip color={YELLOW_MAIN}>
               <span className="truncate">{gear.attribute?.label ?? "속성"}</span>
             </GearChip>
@@ -462,9 +456,9 @@ export default function GearPage() {
           </div>
         </header>
 
-        <div className="grid gap-3 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-5">
+        <div className="grid min-w-0 max-w-full gap-3 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-5">
           <aside
-            className="sticky top-3 z-30 rounded-[20px] bg-[#05070b] shadow-[0_0_30px_rgba(250,204,21,0.04)] lg:top-5 lg:flex lg:max-h-[calc(100vh-40px)] lg:flex-col lg:overflow-hidden lg:rounded-[24px]"
+            className="sticky top-2 z-40 min-w-0 max-w-full rounded-[20px] bg-[#05070b] shadow-[0_0_30px_rgba(250,204,21,0.04)] lg:top-5 lg:flex lg:max-h-[calc(100vh-40px)] lg:flex-col lg:overflow-hidden lg:rounded-[24px]"
             style={{ border: `1px solid ${YELLOW_BORDER}` }}
           >
             <button
@@ -497,7 +491,7 @@ export default function GearPage() {
               </span>
             </button>
 
-            <div className={isFilterOpen ? "block lg:block" : "hidden lg:block"}>
+            <div className={isFilterOpen ? "block lg:flex lg:min-h-0 lg:flex-1 lg:flex-col" : "hidden lg:flex lg:min-h-0 lg:flex-1 lg:flex-col"}>
               <div
                 className="bg-[#05070b] p-3 sm:p-4 lg:shrink-0"
                 style={{ borderBottom: `1px solid ${YELLOW_BORDER_SOFT}` }}
@@ -518,12 +512,12 @@ export default function GearPage() {
                     value={keyword}
                     onChange={(event) => setKeyword(event.target.value)}
                     placeholder="이름 / 세트 검색"
-                    className="h-10 w-full rounded-xl border border-white/20 bg-[#071019] pl-9 pr-3 text-xs text-white outline-none transition placeholder:text-zinc-500 focus:border-yellow-400/50 sm:h-9"
+                    className="h-10 w-full max-w-full rounded-xl border border-white/20 bg-[#071019] pl-9 pr-3 text-xs text-white outline-none transition placeholder:text-zinc-500 focus:border-yellow-400/50 sm:h-9"
                   />
                 </div>
               </div>
 
-              <div className="p-3 sm:p-4 lg:min-h-0 lg:flex-1 lg:overflow-y-auto">
+              <div className="max-h-[70vh] overflow-y-auto p-3 sm:p-4 lg:min-h-0 lg:max-h-none lg:flex-1 lg:overflow-y-auto">
                 <FilterGroup title="장비 유형">
                   <FilterButton
                     active={category === "all"}

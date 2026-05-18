@@ -111,7 +111,7 @@ const SIMULATOR_WEAPON_STORAGE_KEY = "simulator:selectedWeaponSlug";
 const LEGACY_SIMULATOR_SELECTION_KEY = "endfield:simulator-selection";
 
 const SIMULATOR_FORM_STORAGE_KEY = "simulator:formState";
-const SETTINGS_FORM_STORAGE_KEY = "endfield-operator-setting-form-v1";
+const SIMULATOR_SELECT_CONTEXT_KEY = "endfield-simulator-select-context-v1";
 const USER_SIMULATOR_STATE_API = "/api/user/simulator-state";
 const USER_MATERIAL_INVENTORY_API = "/api/user/material-inventory";
 
@@ -156,25 +156,28 @@ function writeLocalSimulatorFormState(state: Partial<SimulatorFormState>) {
   window.localStorage.setItem(SIMULATOR_FORM_STORAGE_KEY, raw);
 }
 
-function writeCommonSelectOperatorContext(operatorSlug: string) {
+function writeSimulatorSelectOperatorContext(operatorSlug: string) {
   if (typeof window === "undefined") return;
 
-  try {
-    const raw = window.localStorage.getItem(SETTINGS_FORM_STORAGE_KEY);
-    const previous = raw ? JSON.parse(raw) : {};
-    window.localStorage.setItem(
-      SETTINGS_FORM_STORAGE_KEY,
-      JSON.stringify({
-        ...previous,
-        operatorSlug,
-      }),
-    );
-  } catch {
-    window.localStorage.setItem(
-      SETTINGS_FORM_STORAGE_KEY,
-      JSON.stringify({ operatorSlug }),
-    );
-  }
+  window.localStorage.setItem(
+    SIMULATOR_SELECT_CONTEXT_KEY,
+    JSON.stringify({ operatorSlug }),
+  );
+}
+
+function getSelectedOperatorWeaponType(operator: OperatorDetail | null) {
+  if (!operator) return "";
+
+  const raw = operator as any;
+
+  return String(
+    raw.weaponType ??
+      raw.weapon ??
+      raw.weaponKey ??
+      raw.weaponClass ??
+      raw.weaponCategory ??
+      "",
+  );
 }
 
 async function readUserSimulatorState(): Promise<Partial<SimulatorFormState> | null> {
@@ -286,6 +289,7 @@ function clearSimulatorFormState() {
 
   window.localStorage.removeItem(LEGACY_SIMULATOR_SELECTION_KEY);
   window.localStorage.removeItem(SIMULATOR_FORM_STORAGE_KEY);
+  window.localStorage.removeItem(SIMULATOR_SELECT_CONTEXT_KEY);
   window.localStorage.removeItem("endfield:farming-transfer");
   window.localStorage.removeItem("endfield:farming-page-state");
 
@@ -1150,7 +1154,7 @@ export default function SimulatorPage() {
 
     operatorRestoreAppliedRef.current = true;
     setSelectedOperatorSlug(slug);
-    writeCommonSelectOperatorContext(slug);
+    writeSimulatorSelectOperatorContext(slug);
     setOperatorCurrentLevel(1);
     setOperatorTargetLevel(90);
     setCombatSkillState(resetCombatSkillState);
@@ -2156,7 +2160,7 @@ export default function SimulatorPage() {
                   type="button"
                   onClick={() => {
                     if (selectedOperatorSlug) {
-                      writeCommonSelectOperatorContext(selectedOperatorSlug);
+                      writeSimulatorSelectOperatorContext(selectedOperatorSlug);
                     }
 
                     setSelectPanel({
@@ -2217,6 +2221,11 @@ export default function SimulatorPage() {
                 selectPanel.kind === "operator"
                   ? selectedOperatorSlug
                   : selectedWeaponSlug
+              }
+              requiredWeaponType={
+                selectPanel.kind === "weapon"
+                  ? getSelectedOperatorWeaponType(selectedOperator)
+                  : undefined
               }
               onClose={() => setSelectPanel(null)}
               onSelectOperator={(slug) => {

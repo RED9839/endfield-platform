@@ -95,63 +95,59 @@ export default function GearUpgradeComparePanel({
   ];
 
   return (
-    <details
-      className="overflow-hidden rounded-[24px] bg-[#05070b] p-5 shadow-[0_0_30px_rgba(250,204,21,0.04)]"
+    <section
+      className="overflow-hidden rounded-[24px] bg-[#05070b] p-4 shadow-[0_0_30px_rgba(250,204,21,0.04)] sm:p-5"
       style={{ border: `1px solid ${YELLOW_BORDER}` }}
     >
-      <summary className="cursor-pointer list-none outline-none">
-        <div
-          className="flex items-center justify-between gap-3 border-b pb-3"
-          style={{ borderColor: YELLOW_BORDER_SOFT }}
+      <div
+        className="mb-4 border-b pb-3"
+        style={{ borderColor: YELLOW_BORDER_SOFT }}
+      >
+        <p
+          className="text-[11px] font-bold tracking-[0.28em]"
+          style={{ color: YELLOW_TEXT }}
         >
-          <div>
-            <p
-              className="text-[11px] font-bold tracking-[0.28em]"
-              style={{ color: YELLOW_TEXT }}
-            >
-              LEVEL COMPARISON
-            </p>
-            <h2 className="mt-1 text-xl font-black text-white">레벨 비교표</h2>
-          </div>
-
-          <p className="text-sm font-bold text-zinc-400">펼쳐서 보기</p>
-        </div>
-      </summary>
+          UPGRADE COMPARISON
+        </p>
+        <h2 className="mt-1 text-xl font-black text-white">강화 비교표</h2>
+      </div>
 
       <div
-        className="mt-4 overflow-hidden rounded-[18px]"
+        className="overflow-x-auto rounded-[18px]"
         style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
       >
-        <div
-          className="grid bg-[#0b1018]"
-          style={{
-            gridTemplateColumns: `180px repeat(${headers.length}, minmax(0, 1fr))`,
-          }}
-        >
-          <div className="border-r border-white/10 px-4 py-3 text-sm font-black text-zinc-400">
-            항목
+        <div className="min-w-[720px]">
+          <div
+            className="grid bg-[#0b1018]"
+            style={{
+              gridTemplateColumns: `180px repeat(${headers.length}, minmax(0, 1fr))`,
+            }}
+          >
+            <div className="border-r border-white/10 px-4 py-3 text-sm font-black text-zinc-400">
+              항목
+            </div>
+
+            {headers.map((label) => (
+              <div
+                key={label}
+                className="border-r border-white/10 px-4 py-3 text-sm font-black last:border-r-0"
+                style={{ color: YELLOW_TEXT }}
+              >
+                {label}
+              </div>
+            ))}
           </div>
 
-          {headers.map((label) => (
-            <div
-              key={label}
-              className="border-r border-white/10 px-4 py-3 text-sm font-black last:border-r-0"
-              style={{ color: YELLOW_TEXT }}
-            >
-              {label}
-            </div>
+          {compareRows.map((row, index) => (
+            <CompareRow
+              key={`${row.label}-${index}`}
+              label={row.label}
+              values={row.values}
+              highlight={row.highlight}
+            />
           ))}
         </div>
-
-        {compareRows.map((row, index) => (
-          <CompareRow
-            key={`${row.label}-${index}`}
-            label={row.label}
-            values={row.values}
-            highlight={row.highlight}
-          />
-        ))}
       </div>
-    </details>
+    </section>
   );
 }

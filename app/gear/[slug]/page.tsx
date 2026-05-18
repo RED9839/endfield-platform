@@ -57,6 +57,39 @@ function DetailSection({
   );
 }
 
+function StaticDetailSection({
+  id,
+  title,
+  children,
+}: {
+  id: string;
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section
+      id={id}
+      className="scroll-mt-24 overflow-hidden rounded-[20px] border border-yellow-500/15 bg-[#05070b] shadow-[0_0_30px_rgba(250,204,21,0.035)] lg:rounded-[24px]"
+    >
+      <div className="px-4 py-3 lg:px-5 lg:py-4">
+        <h2
+          className="text-base font-black tracking-tight lg:text-[22px]"
+          style={{ color: YELLOW_TEXT }}
+        >
+          {title}
+        </h2>
+      </div>
+
+      <div
+        className="px-3 pb-4 lg:px-5 lg:pb-5"
+        style={{ borderTop: `1px solid ${YELLOW_BORDER_SOFT}` }}
+      >
+        {children}
+      </div>
+    </section>
+  );
+}
+
 export default async function GearDetailPage({
   params,
 }: {
@@ -161,9 +194,9 @@ export default async function GearDetailPage({
             </div>
           </DetailSection>
 
-          <DetailSection id="upgrade" title="강화 비교">
+          <StaticDetailSection id="upgrade" title="강화 비교">
             <GearUpgradeComparePanel gear={gear} />
-          </DetailSection>
+          </StaticDetailSection>
         </div>
       </div>
     </main>

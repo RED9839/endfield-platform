@@ -244,7 +244,7 @@ function FilterButton({
     <button
       type="button"
       onClick={onClick}
-      className="group flex h-[36px] min-w-fit shrink-0 items-center justify-center gap-2 rounded-xl border px-3 text-left text-[12px] font-bold transition hover:bg-[#101923] lg:h-[38px] lg:w-full lg:justify-start"
+      className="group flex h-[32px] items-center justify-center gap-1.5 rounded-lg border px-2.5 text-left text-[11px] font-bold transition hover:bg-[#101923] lg:h-[38px] lg:w-full lg:justify-start lg:gap-2 lg:rounded-xl lg:px-3 lg:text-[12px]"
       style={{
         borderColor: active
           ? pointColor
@@ -303,7 +303,7 @@ function FilterGroup({
         className={
           grid
             ? "grid grid-cols-[repeat(auto-fit,minmax(72px,1fr))] gap-2 lg:grid-cols-1"
-            : "flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:flex-col lg:overflow-visible lg:pb-0"
+            : "flex flex-wrap gap-2 pb-1 lg:flex-col lg:flex-nowrap lg:pb-0"
         }
       >
         {children}
@@ -530,7 +530,7 @@ export default function WeaponsPage() {
 
         <div className="grid gap-3 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-5">
           <aside
-            className="sticky top-3 z-30 rounded-[20px] bg-[#05070b] shadow-[0_0_30px_rgba(250,204,21,0.04)] lg:top-5 lg:flex lg:max-h-[calc(100vh-40px)] lg:flex-col lg:overflow-hidden lg:rounded-[24px]"
+            className="sticky top-3 z-30 min-w-0 max-w-full overflow-hidden rounded-[20px] bg-[#05070b] shadow-[0_0_30px_rgba(250,204,21,0.04)] lg:top-5 lg:flex lg:max-h-[calc(100vh-40px)] lg:flex-col lg:rounded-[24px]"
             style={{ border: `1px solid ${YELLOW_BORDER}` }}
           >
             <button

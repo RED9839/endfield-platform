@@ -229,8 +229,26 @@ function getOperatorWeaponType(operator: any) {
   );
 }
 
+function getCurrentPathname() {
+  if (typeof window === "undefined") return "";
+  return window.location.pathname;
+}
+
+function isSettingsListPage() {
+  return getCurrentPathname() === "/settings";
+}
+
+function isSettingsEditorPage() {
+  const pathname = getCurrentPathname();
+  return pathname.startsWith("/settings/");
+}
+
 function readSelectedOperatorWeaponType() {
   if (typeof window === "undefined") return "";
+
+  // 세팅 등록/수정 페이지에서만 세팅 폼 저장값을 읽습니다.
+  // /settings 목록 검색이나 /simulator 선택값이 섞이면 무기 선택이 한손검 등으로 고정될 수 있습니다.
+  if (!isSettingsEditorPage()) return "";
 
   try {
     const raw = window.localStorage.getItem(SETTINGS_FORM_STORAGE_KEY);
@@ -242,11 +260,6 @@ function readSelectedOperatorWeaponType() {
   } catch {
     return "";
   }
-}
-
-function isSettingsListPage() {
-  if (typeof window === "undefined") return false;
-  return window.location.pathname === "/settings";
 }
 
 function getWeaponRarity(weapon: WeaponLike) {
@@ -349,7 +362,7 @@ export default function CommonSelectPanel({
         : readSelectedOperatorWeaponType();
 
     setRequiredWeaponType(nextRequiredWeaponType);
-    setAllowAllWeaponList(Boolean(allowAllWeapons) || (!nextRequiredWeaponType && isSettingsListPage()));
+    setAllowAllWeaponList(Boolean(allowAllWeapons) || isSettingsListPage());
     setWeaponTypeFilter("all");
   }, [kind, requiredWeaponTypeProp, allowAllWeapons]);
 

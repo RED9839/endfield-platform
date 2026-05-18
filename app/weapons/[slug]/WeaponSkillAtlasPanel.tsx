@@ -544,77 +544,82 @@ export default function WeaponSkillAtlasPanel({ skill }: Props) {
 
       {showCompareRows && (
         <FoldSection title="Rank 비교" defaultOpen={false}>
-          <div style={{ overflowX: "auto" }}>
-            <table
-              style={{
-                width: "100%",
-                borderCollapse: "collapse",
-                minWidth: "860px",
-              }}
-            >
-              <thead>
-                <tr>
-                  <th
-                    style={{
-                      textAlign: "left",
-                      color: "#9fb3c8",
-                      fontSize: "12px",
-                      padding: "12px",
-                      borderBottom: `1px solid ${PANEL_BORDER_SOFT}`,
-                    }}
-                  >
-                    항목
-                  </th>
-                  {levels.map((level) => (
-                    <th
-                      key={`${skill.name}-thead-${level.rank}`}
-                      style={{
-                        textAlign: "center",
-                        color: "#9fb3c8",
-                        fontSize: "12px",
-                        padding: "12px",
-                        borderBottom: `1px solid ${PANEL_BORDER_SOFT}`,
-                      }}
-                    >
-                      Rank {level.rank}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
+          <div
+            style={{
+              display: "grid",
+              gap: "10px",
+              padding: "12px",
+            }}
+          >
+            {skill.compareRows!.map((row) => (
+              <div
+                key={`${skill.name}-${row.label}`}
+                style={{
+                  border: `1px solid ${PANEL_BORDER_SOFT}`,
+                  background: PANEL_INNER_BG,
+                  borderRadius: "14px",
+                  overflow: "hidden",
+                }}
+              >
+                <div
+                  style={{
+                    padding: "10px 12px",
+                    borderBottom: `1px solid ${PANEL_BORDER_FAINT}`,
+                    color: YELLOW_TEXT,
+                    fontSize: "13px",
+                    fontWeight: 900,
+                  }}
+                >
+                  {row.label}
+                </div>
 
-              <tbody>
-                {skill.compareRows!.map((row) => (
-                  <tr key={`${skill.name}-${row.label}`}>
-                    <td
-                      style={{
-                        padding: "12px",
-                        borderBottom: `1px solid ${PANEL_BORDER_FAINT}`,
-                        color: "#e5e7eb",
-                        fontSize: "14px",
-                        fontWeight: 700,
-                      }}
-                    >
-                      {row.label}
-                    </td>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(92px, 1fr))",
+                    gap: "1px",
+                    background: PANEL_BORDER_FAINT,
+                  }}
+                >
+                  {row.values.map((value, index) => {
+                    const rank = levels[index]?.rank ?? index + 1;
 
-                    {row.values.map((value, index) => (
-                      <td
+                    return (
+                      <div
                         key={`${skill.name}-${row.label}-${index}`}
                         style={{
-                          padding: "12px",
-                          borderBottom: `1px solid ${PANEL_BORDER_FAINT}`,
-                          color: "#d1d5db",
-                          fontSize: "14px",
+                          background: PANEL_INNER_BG,
+                          padding: "10px",
                           textAlign: "center",
                         }}
                       >
-                        {value}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                        <div
+                          style={{
+                            marginBottom: "4px",
+                            color: "#9fb3c8",
+                            fontSize: "11px",
+                            fontWeight: 800,
+                          }}
+                        >
+                          Rank {rank}
+                        </div>
+
+                        <div
+                          style={{
+                            color: "#d1d5db",
+                            fontSize: "13px",
+                            fontWeight: 800,
+                            wordBreak: "keep-all",
+                          }}
+                        >
+                          {value}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </div>
         </FoldSection>
       )}
