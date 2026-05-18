@@ -61,7 +61,7 @@ export const RECOVERY_ITEMS = [
 ] as const;
 
 export const DAILY_QUEST_RECOVERY_NAME = "응급 이성 강화제";
-export const DAILY_NATURAL_SANITY = 240;
+export const DAILY_NATURAL_SANITY = 200;
 export const MONTHLY_CARD_SANITY = 40;
 export const ORIGINIUM_REFRESH_SANITY = 40;
 export const ORIGINIUM_COST_TABLE = [1, 1, 2, 2, 2, 4, 4, 4, 4, 4];
