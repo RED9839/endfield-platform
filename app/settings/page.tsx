@@ -13,6 +13,7 @@ const YELLOW_TEXT = "#ffdc70";
 const YELLOW_BORDER = "rgba(255,196,74,0.14)";
 const YELLOW_BORDER_SOFT = "rgba(255,196,74,0.10)";
 const FILTER_BG = "#071019";
+const MAX_OPERATOR_FILTERS = 4;
 
 type SettingType = "solo" | "party";
 type SortType = "latest" | "popular" | "views";
@@ -88,7 +89,8 @@ function getOperatorImage(operator: any) {
 }
 
 function getOperatorElementIcon(operator: any) {
-  const element = operator?.element ?? operator?.elementKey ?? operator?.attribute;
+  const element =
+    operator?.element ?? operator?.elementKey ?? operator?.attribute;
   return element ? `/icons/elements/${element}.webp` : "";
 }
 
@@ -131,7 +133,6 @@ function toSettingItem(setting: ApiSetting): SettingItem {
       const operator = operatorDetails.find(
         (item: any) => item.slug === slot?.operatorSlug,
       ) as any;
-
       if (!operator) return null;
 
       return {
@@ -168,8 +169,12 @@ function toSettingItem(setting: ApiSetting): SettingItem {
     likes: Number(setting.likeCount ?? setting.likes ?? 0),
     views: Number(setting.viewCount ?? setting.views ?? 0),
     createdAt: setting.createdAt,
-    image: mainOperator ? getOperatorImage(mainOperator) : "/operators/rossi/avatar.webp",
-    elementIcon: mainOperator ? getOperatorElementIcon(mainOperator) : undefined,
+    image: mainOperator
+      ? getOperatorImage(mainOperator)
+      : "/operators/rossi/avatar.webp",
+    elementIcon: mainOperator
+      ? getOperatorElementIcon(mainOperator)
+      : undefined,
     partyMembers,
   };
 }
@@ -183,8 +188,10 @@ export default function Page() {
   const [loading, setLoading] = useState(true);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-  const [operatorFilter, setOperatorFilter] = useState("");
-  const [operatorFilterName, setOperatorFilterName] = useState("");
+  const [operatorFilters, setOperatorFilters] = useState<string[]>([]);
+  const [operatorFilterNames, setOperatorFilterNames] = useState<
+    Record<string, string>
+  >({});
 
   const [weaponFilter, setWeaponFilter] = useState("");
   const [weaponFilterName, setWeaponFilterName] = useState("");
@@ -273,34 +280,62 @@ export default function Page() {
         const matchesKeyword =
           queries.length === 0 ||
           queries.every((query) => searchableText.includes(query));
-
-        const matchesType = settingType === "all" || setting.type === settingType;
+        const matchesType =
+          settingType === "all" || setting.type === settingType;
         const matchesOperator =
-          !operatorFilter || setting.operatorSlugs.includes(operatorFilter);
-        const matchesWeapon = !weaponFilter || setting.weaponSlug === weaponFilter;
+          operatorFilters.length === 0 ||
+          operatorFilters.some((operatorSlug) =>
+            setting.operatorSlugs.includes(operatorSlug),
+          );
+        const matchesWeapon =
+          !weaponFilter || setting.weaponSlug === weaponFilter;
 
-        return matchesKeyword && matchesType && matchesOperator && matchesWeapon;
+        return (
+          matchesKeyword && matchesType && matchesOperator && matchesWeapon
+        );
       })
       .sort((a, b) => {
-        if (sortType === "popular") {
+        if (sortType === "popular")
           return b.likes - a.likes || b.createdAt.localeCompare(a.createdAt);
-        }
-
-        if (sortType === "views") {
+        if (sortType === "views")
           return b.views - a.views || b.createdAt.localeCompare(a.createdAt);
-        }
-
         return b.createdAt.localeCompare(a.createdAt);
       });
-  }, [settings, keyword, settingType, sortType, operatorFilter, weaponFilter]);
+  }, [settings, keyword, settingType, sortType, operatorFilters, weaponFilter]);
 
   const activeFilterCount = [
     keyword.trim() ? 1 : 0,
     settingType !== "all" ? 1 : 0,
     sortType !== "latest" ? 1 : 0,
-    operatorFilter ? 1 : 0,
+    operatorFilters.length,
     weaponFilter ? 1 : 0,
   ].reduce((sum, value) => sum + value, 0);
+
+  function addOperatorFilter(slug: string) {
+    const matched = operatorDetails.find(
+      (operator) => operator.slug === slug,
+    ) as any;
+
+    setOperatorFilters((prev) => {
+      if (prev.includes(slug)) return prev;
+      if (prev.length >= MAX_OPERATOR_FILTERS) return prev;
+      return [...prev, slug];
+    });
+
+    setOperatorFilterNames((prev) => ({
+      ...prev,
+      [slug]: matched?.name ?? slug,
+    }));
+  }
+
+  function removeOperatorFilter(slug: string) {
+    setOperatorFilters((prev) => prev.filter((item) => item !== slug));
+    setOperatorFilterNames((prev) => {
+      const next = { ...prev };
+      delete next[slug];
+      return next;
+    });
+  }
 
   return (
     <main className="min-h-screen bg-[#050505] px-3 py-3 text-white sm:px-4 md:px-6 md:py-5">
@@ -396,7 +431,9 @@ export default function Page() {
               </span>
             </button>
 
-            <div className={isFilterOpen ? "block lg:block" : "hidden lg:block"}>
+            <div
+              className={isFilterOpen ? "block lg:block" : "hidden lg:block"}
+            >
               <div
                 className="shrink-0 bg-[#05070b] p-3 sm:p-4"
                 style={{ borderBottom: `1px solid ${YELLOW_BORDER_SOFT}` }}
@@ -417,34 +454,62 @@ export default function Page() {
               </div>
 
               <div className="p-3 sm:p-4 lg:min-h-0 lg:flex-1 lg:overflow-y-auto">
-                <FilterGroup title="오퍼레이터">
-                  {operatorFilter ? (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setOperatorFilter("");
-                        setOperatorFilterName("");
-                      }}
-                      className="h-[36px] min-w-0 rounded-xl border border-white/10 bg-black px-3 text-left text-[11px] font-bold text-zinc-400 transition hover:border-yellow-400/40 hover:text-yellow-300 lg:h-[38px]"
-                    >
-                      선택 취소
-                    </button>
+                <FilterGroup
+                  title={`오퍼레이터 (${operatorFilters.length}/${MAX_OPERATOR_FILTERS})`}
+                >
+                  {operatorFilters.length ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setOperatorFilters([]);
+                          setOperatorFilterNames({});
+                        }}
+                        className="h-[36px] min-w-0 rounded-xl border border-white/10 bg-black px-3 text-left text-[11px] font-bold text-zinc-400 transition hover:border-yellow-400/40 hover:text-yellow-300 lg:h-[38px]"
+                      >
+                        전체 선택 취소
+                      </button>
+
+                      {operatorFilters.map((slug) => (
+                        <button
+                          key={slug}
+                          type="button"
+                          onClick={() => removeOperatorFilter(slug)}
+                          className="h-[36px] min-w-0 rounded-xl border px-3 text-left text-[11px] font-black transition hover:bg-[#101923] lg:h-[38px] lg:w-full"
+                          style={{
+                            borderColor: YELLOW_MAIN,
+                            background: `${YELLOW_MAIN}22`,
+                            color: "#ffffff",
+                          }}
+                          title="클릭하면 선택 취소"
+                        >
+                          <span className="block truncate">
+                            × {operatorFilterNames[slug] ?? slug}
+                          </span>
+                        </button>
+                      ))}
+                    </>
                   ) : null}
 
                   <button
                     type="button"
                     onClick={() => setSelectPanel("operator")}
-                    className="h-[36px] min-w-0 rounded-xl border px-3 text-left text-[12px] font-black transition hover:bg-[#101923] lg:h-[38px] lg:w-full"
+                    disabled={operatorFilters.length >= MAX_OPERATOR_FILTERS}
+                    className="h-[36px] min-w-0 rounded-xl border px-3 text-left text-[12px] font-black transition hover:bg-[#101923] disabled:cursor-not-allowed disabled:opacity-45 lg:h-[38px] lg:w-full"
                     style={{
-                      borderColor: operatorFilter
+                      borderColor: operatorFilters.length
                         ? YELLOW_MAIN
                         : "rgba(255, 204, 77, 0.18)",
-                      background: operatorFilter ? `${YELLOW_MAIN}22` : FILTER_BG,
-                      color: operatorFilter ? "#ffffff" : "#d4d4d8",
+                      background: operatorFilters.length
+                        ? `${YELLOW_MAIN}22`
+                        : FILTER_BG,
+                      color: operatorFilters.length ? "#ffffff" : "#d4d4d8",
                     }}
                   >
                     <span className="block truncate">
-                      {operatorFilterName || "오퍼레이터 선택"}
+                      {operatorFilters.length >= MAX_OPERATOR_FILTERS
+                        ? "최대 4명 선택됨"
+                        : "오퍼레이터 추가"}
                     </span>
                   </button>
                 </FilterGroup>
@@ -560,18 +625,22 @@ export default function Page() {
         <CommonSelectPanel
           kind={selectPanel}
           title={selectPanel === "operator" ? "오퍼레이터 선택" : "무기 선택"}
-          selectedSlug={selectPanel === "operator" ? operatorFilter : weaponFilter}
+          selectedSlug={
+            selectPanel === "operator"
+              ? (operatorFilters[operatorFilters.length - 1] ?? "")
+              : weaponFilter
+          }
+          requiredWeaponType={selectPanel === "weapon" ? "" : undefined}
+          allowAllWeapons={selectPanel === "weapon"}
           onClose={() => setSelectPanel(null)}
           onSelectOperator={(slug: string) => {
-            const matched = operatorDetails.find(
-              (operator) => operator.slug === slug,
-            );
-            setOperatorFilter(slug);
-            setOperatorFilterName(matched?.name ?? slug);
+            addOperatorFilter(slug);
             setSelectPanel(null);
           }}
           onSelectWeapon={(slug: string) => {
-            const matched = weaponDetails.find((weapon) => weapon.slug === slug);
+            const matched = weaponDetails.find(
+              (weapon) => weapon.slug === slug,
+            );
             setWeaponFilter(slug);
             setWeaponFilterName(matched?.name ?? slug);
             setSelectPanel(null);
@@ -684,7 +753,9 @@ function SettingCard({ setting }: { setting: SettingItem }) {
         </p>
 
         <div className="mt-auto flex flex-wrap items-center gap-1 pt-2 text-[9px] font-black sm:text-[10px]">
-          <span className="max-w-full truncate text-white">{setting.nickname}</span>
+          <span className="max-w-full truncate text-white">
+            {setting.nickname}
+          </span>
           <span className="text-zinc-600">|</span>
           <span className="text-[#ffdc70]">추천 {setting.likes}</span>
           <span className="text-zinc-600">|</span>
