@@ -505,13 +505,15 @@ function CycleViewPanel({ cycle }: { cycle: any[] }) {
         운용 사이클
       </h2>
 
-      <div className="flex items-center gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:flex-wrap">
+      <div className="flex max-w-full flex-wrap items-center gap-2 overflow-hidden sm:gap-3">
         {cycle.map((step: any, index: number) => (
-          <div key={step.id ?? index} className="flex shrink-0 items-center gap-2">
+          <div key={step.id ?? index} className="flex min-w-0 items-center gap-2">
             <CycleViewIcon step={step} />
 
             {index < cycle.length - 1 ? (
-              <span className="text-sm font-black text-yellow-300">→</span>
+              <span className="text-sm font-black text-yellow-300 sm:text-base">
+                →
+              </span>
             ) : null}
           </div>
         ))}
@@ -551,7 +553,7 @@ function CycleViewIcon({ step }: { step: any }) {
 
   return (
     <span
-      className={`relative block h-12 w-12 overflow-hidden rounded-xl border-2 bg-black sm:h-14 sm:w-14 ${getElementBorderClass(
+      className={`relative block h-12 w-12 shrink-0 overflow-hidden rounded-xl border-2 bg-black sm:h-14 sm:w-14 ${getElementBorderClass(
         element,
       )}`}
       title={`${step?.operatorName ?? "오퍼레이터"} - ${step?.skillName ?? "스킬"}`}
