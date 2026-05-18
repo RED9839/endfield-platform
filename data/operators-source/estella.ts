@@ -1,0 +1,693 @@
+const slug = "estella";
+
+// 규칙:
+// 앞 재료 = 기본공격 + 연계스킬
+// 뒤 재료 = 배틀스킬 + 궁극기
+// 이번 데이터 기준:
+// 앞 핵심 재료 = D96강 시제품 4번
+// 뒤 핵심 재료 = 타키온 차폐 구조체
+
+const normalAndComboSkillUpgradeMaterials = [
+  {
+    level: "2",
+    materials: [
+      { name: "프로토콜 프리즘", count: 6, icon: "/materials/프로토콜 프리즘.webp" },
+      { name: "칼코덴드라", count: 1, icon: "/materials/칼코덴드라.webp" },
+      { name: "탈로시안 화폐", count: 1000, icon: "/materials/탈로시안 화폐.webp" },
+    ],
+  },
+  {
+    level: "3",
+    materials: [
+      { name: "프로토콜 프리즘", count: 12, icon: "/materials/프로토콜 프리즘.webp" },
+      { name: "칼코덴드라", count: 2, icon: "/materials/칼코덴드라.webp" },
+      { name: "탈로시안 화폐", count: 2700, icon: "/materials/탈로시안 화폐.webp" },
+    ],
+  },
+  {
+    level: "4",
+    materials: [
+      { name: "프로토콜 프리즘", count: 16, icon: "/materials/프로토콜 프리즘.webp" },
+      { name: "크리소덴드라", count: 1, icon: "/materials/크리소덴드라.webp" },
+      { name: "탈로시안 화폐", count: 3200, icon: "/materials/탈로시안 화폐.webp" },
+    ],
+  },
+  {
+    level: "5",
+    materials: [
+      { name: "프로토콜 프리즘", count: 21, icon: "/materials/프로토콜 프리즘.webp" },
+      { name: "크리소덴드라", count: 1, icon: "/materials/크리소덴드라.webp" },
+      { name: "탈로시안 화폐", count: 4200, icon: "/materials/탈로시안 화폐.webp" },
+    ],
+  },
+  {
+    level: "6",
+    materials: [
+      { name: "프로토콜 프리즘", count: 27, icon: "/materials/프로토콜 프리즘.webp" },
+      { name: "크리소덴드라", count: 2, icon: "/materials/크리소덴드라.webp" },
+      { name: "탈로시안 화폐", count: 5400, icon: "/materials/탈로시안 화폐.webp" },
+    ],
+  },
+  {
+    level: "7",
+    materials: [
+      { name: "프로토콜 프리즘 세트", count: 6, icon: "/materials/프로토콜 프리즘 세트.webp" },
+      { name: "비트로덴드라", count: 1, icon: "/materials/비트로덴드라.webp" },
+      { name: "탈로시안 화폐", count: 8200, icon: "/materials/탈로시안 화폐.webp" },
+    ],
+  },
+  {
+    level: "8",
+    materials: [
+      { name: "프로토콜 프리즘 세트", count: 8, icon: "/materials/프로토콜 프리즘 세트.webp" },
+      { name: "비트로덴드라", count: 1, icon: "/materials/비트로덴드라.webp" },
+      { name: "탈로시안 화폐", count: 10500, icon: "/materials/탈로시안 화폐.webp" },
+    ],
+  },
+  {
+    level: "9",
+    materials: [
+      { name: "프로토콜 프리즘 세트", count: 15, icon: "/materials/프로토콜 프리즘 세트.webp" },
+      { name: "비트로덴드라", count: 2, icon: "/materials/비트로덴드라.webp" },
+      { name: "탈로시안 화폐", count: 18000, icon: "/materials/탈로시안 화폐.webp" },
+    ],
+  },
+  {
+    level: "M1",
+    materials: [
+      { name: "존속의 흔적", count: 1, icon: "/materials/존속의 흔적.webp" },
+      { name: "프로토콜 프리즘 세트", count: 15, icon: "/materials/프로토콜 프리즘 세트.webp" },
+      { name: "D96강 시제품 4번", count: 6, icon: "/materials/D96강 시제품 4번.webp" },
+      { name: "바위아겔로스 잎", count: 3, icon: "/materials/바위아겔로스 잎.webp" },
+      { name: "탈로시안 화폐", count: 24000, icon: "/materials/탈로시안 화폐.webp" },
+    ],
+  },
+  {
+    level: "M2",
+    materials: [
+      { name: "존속의 흔적", count: 2, icon: "/materials/존속의 흔적.webp" },
+      { name: "프로토콜 프리즘 세트", count: 24, icon: "/materials/프로토콜 프리즘 세트.webp" },
+      { name: "D96강 시제품 4번", count: 16, icon: "/materials/D96강 시제품 4번.webp" },
+      { name: "바위아겔로스 잎", count: 6, icon: "/materials/바위아겔로스 잎.webp" },
+      { name: "탈로시안 화폐", count: 30000, icon: "/materials/탈로시안 화폐.webp" },
+    ],
+  },
+  {
+    level: "M3",
+    materials: [
+      { name: "존속의 흔적", count: 3, icon: "/materials/존속의 흔적.webp" },
+      { name: "프로토콜 프리즘 세트", count: 50, icon: "/materials/프로토콜 프리즘 세트.webp" },
+      { name: "D96강 시제품 4번", count: 36, icon: "/materials/D96강 시제품 4번.webp" },
+      { name: "바위아겔로스 잎", count: 12, icon: "/materials/바위아겔로스 잎.webp" },
+      { name: "탈로시안 화폐", count: 65000, icon: "/materials/탈로시안 화폐.webp" },
+    ],
+  },
+] as const;
+
+const battleAndUltimateSkillUpgradeMaterials = [
+  {
+    level: "2",
+    materials: [
+      { name: "프로토콜 프리즘", count: 6, icon: "/materials/프로토콜 프리즘.webp" },
+      { name: "칼코덴드라", count: 1, icon: "/materials/칼코덴드라.webp" },
+      { name: "탈로시안 화폐", count: 1000, icon: "/materials/탈로시안 화폐.webp" },
+    ],
+  },
+  {
+    level: "3",
+    materials: [
+      { name: "프로토콜 프리즘", count: 12, icon: "/materials/프로토콜 프리즘.webp" },
+      { name: "칼코덴드라", count: 2, icon: "/materials/칼코덴드라.webp" },
+      { name: "탈로시안 화폐", count: 2700, icon: "/materials/탈로시안 화폐.webp" },
+    ],
+  },
+  {
+    level: "4",
+    materials: [
+      { name: "프로토콜 프리즘", count: 16, icon: "/materials/프로토콜 프리즘.webp" },
+      { name: "크리소덴드라", count: 1, icon: "/materials/크리소덴드라.webp" },
+      { name: "탈로시안 화폐", count: 3200, icon: "/materials/탈로시안 화폐.webp" },
+    ],
+  },
+  {
+    level: "5",
+    materials: [
+      { name: "프로토콜 프리즘", count: 21, icon: "/materials/프로토콜 프리즘.webp" },
+      { name: "크리소덴드라", count: 1, icon: "/materials/크리소덴드라.webp" },
+      { name: "탈로시안 화폐", count: 4200, icon: "/materials/탈로시안 화폐.webp" },
+    ],
+  },
+  {
+    level: "6",
+    materials: [
+      { name: "프로토콜 프리즘", count: 27, icon: "/materials/프로토콜 프리즘.webp" },
+      { name: "크리소덴드라", count: 2, icon: "/materials/크리소덴드라.webp" },
+      { name: "탈로시안 화폐", count: 5400, icon: "/materials/탈로시안 화폐.webp" },
+    ],
+  },
+  {
+    level: "7",
+    materials: [
+      { name: "프로토콜 프리즘 세트", count: 6, icon: "/materials/프로토콜 프리즘 세트.webp" },
+      { name: "비트로덴드라", count: 1, icon: "/materials/비트로덴드라.webp" },
+      { name: "탈로시안 화폐", count: 8200, icon: "/materials/탈로시안 화폐.webp" },
+    ],
+  },
+  {
+    level: "8",
+    materials: [
+      { name: "프로토콜 프리즘 세트", count: 8, icon: "/materials/프로토콜 프리즘 세트.webp" },
+      { name: "비트로덴드라", count: 1, icon: "/materials/비트로덴드라.webp" },
+      { name: "탈로시안 화폐", count: 10500, icon: "/materials/탈로시안 화폐.webp" },
+    ],
+  },
+  {
+    level: "9",
+    materials: [
+      { name: "프로토콜 프리즘 세트", count: 15, icon: "/materials/프로토콜 프리즘 세트.webp" },
+      { name: "비트로덴드라", count: 2, icon: "/materials/비트로덴드라.webp" },
+      { name: "탈로시안 화폐", count: 18000, icon: "/materials/탈로시안 화폐.webp" },
+    ],
+  },
+  {
+    level: "M1",
+    materials: [
+      { name: "존속의 흔적", count: 1, icon: "/materials/존속의 흔적.webp" },
+      { name: "프로토콜 프리즘 세트", count: 15, icon: "/materials/프로토콜 프리즘 세트.webp" },
+      { name: "타키온 차폐 구조체", count: 6, icon: "/materials/타키온 차폐 구조체.webp" },
+      { name: "바위아겔로스 잎", count: 3, icon: "/materials/바위아겔로스 잎.webp" },
+      { name: "탈로시안 화폐", count: 24000, icon: "/materials/탈로시안 화폐.webp" },
+    ],
+  },
+  {
+    level: "M2",
+    materials: [
+      { name: "존속의 흔적", count: 2, icon: "/materials/존속의 흔적.webp" },
+      { name: "프로토콜 프리즘 세트", count: 24, icon: "/materials/프로토콜 프리즘 세트.webp" },
+      { name: "타키온 차폐 구조체", count: 16, icon: "/materials/타키온 차폐 구조체.webp" },
+      { name: "바위아겔로스 잎", count: 6, icon: "/materials/바위아겔로스 잎.webp" },
+      { name: "탈로시안 화폐", count: 30000, icon: "/materials/탈로시안 화폐.webp" },
+    ],
+  },
+  {
+    level: "M3",
+    materials: [
+      { name: "존속의 흔적", count: 3, icon: "/materials/존속의 흔적.webp" },
+      { name: "프로토콜 프리즘 세트", count: 50, icon: "/materials/프로토콜 프리즘 세트.webp" },
+      { name: "타키온 차폐 구조체", count: 36, icon: "/materials/타키온 차폐 구조체.webp" },
+      { name: "바위아겔로스 잎", count: 12, icon: "/materials/바위아겔로스 잎.webp" },
+      { name: "탈로시안 화폐", count: 65000, icon: "/materials/탈로시안 화폐.webp" },
+    ],
+  },
+] as const;
+
+const COMMON_LEVEL_UP_COSTS = [
+  {
+    to: 20,
+    materials: [
+      { name: "초급 작전 기록", count: 5, icon: "/materials/초급 작전 기록.webp" },
+      { name: "중급 작전 기록", count: 2, icon: "/materials/중급 작전 기록.webp" },
+      { name: "고급 작전 기록", count: 2, icon: "/materials/고급 작전 기록.webp" },
+      { name: "탈로시안 화폐", count: 820, icon: "/materials/탈로시안 화폐.webp" },
+    ],
+  },
+  {
+    to: 40,
+    materials: [
+      { name: "초급 작전 기록", count: 3, icon: "/materials/초급 작전 기록.webp" },
+      { name: "중급 작전 기록", count: 8, icon: "/materials/중급 작전 기록.webp" },
+      { name: "고급 작전 기록", count: 24, icon: "/materials/고급 작전 기록.webp" },
+      { name: "탈로시안 화폐", count: 12540, icon: "/materials/탈로시안 화폐.webp" },
+    ],
+  },
+  {
+    to: 60,
+    materials: [
+      { name: "초급 작전 기록", count: 4, icon: "/materials/초급 작전 기록.webp" },
+      { name: "중급 작전 기록", count: 5, icon: "/materials/중급 작전 기록.webp" },
+      { name: "고급 작전 기록", count: 47, icon: "/materials/고급 작전 기록.webp" },
+      { name: "탈로시안 화폐", count: 23900, icon: "/materials/탈로시안 화폐.webp" },
+    ],
+  },
+  {
+    to: 80,
+    materials: [
+      { name: "초급 인지 매개체", count: 6, icon: "/materials/초급 인지 매개체.webp" },
+      { name: "고급 인지 매개체", count: 46, icon: "/materials/고급 인지 매개체.webp" },
+      { name: "탈로시안 화폐", count: 109180, icon: "/materials/탈로시안 화폐.webp" },
+    ],
+  },
+  {
+    to: 90,
+    materials: [
+      { name: "고급 인지 매개체", count: 58, icon: "/materials/고급 인지 매개체.webp" },
+      { name: "탈로시안 화폐", count: 238980, icon: "/materials/탈로시안 화폐.webp" },
+    ],
+  },
+] as const;
+
+const COMMON_TRUST_BONUS_COSTS = [
+  {
+    stage: 1,
+    trust: 20,
+    elite: 1,
+    materials: [
+      { name: "프로토콜 프리즘", count: 5, icon: "/materials/프로토콜 프리즘.webp" },
+      { name: "탈로시안 화폐", count: 1000, icon: "/materials/탈로시안 화폐.webp" },
+    ],
+  },
+  {
+    stage: 2,
+    trust: 50,
+    elite: 2,
+    materials: [
+      { name: "프로토콜 프리즘", count: 10, icon: "/materials/프로토콜 프리즘.webp" },
+      { name: "탈로시안 화폐", count: 1800, icon: "/materials/탈로시안 화폐.webp" },
+    ],
+  },
+  {
+    stage: 3,
+    trust: 100,
+    elite: 3,
+    materials: [
+      { name: "프로토콜 프리즘 세트", count: 10, icon: "/materials/프로토콜 프리즘 세트.webp" },
+      { name: "탈로시안 화폐", count: 6000, icon: "/materials/탈로시안 화폐.webp" },
+    ],
+  },
+  {
+    stage: 4,
+    trust: 100,
+    elite: 4,
+    materials: [
+      { name: "프로토콜 프리즘 세트", count: 20, icon: "/materials/프로토콜 프리즘 세트.webp" },
+      { name: "탈로시안 화폐", count: 12000, icon: "/materials/탈로시안 화폐.webp" },
+    ],
+  },
+] as const;
+
+const COMMON_INFRASTRUCTURE_COSTS = [
+  {
+    slot: 1,
+    stage: 1,
+    elite: 1,
+    materials: [
+      { name: "프로토콜 프리즘", count: 6, icon: "/materials/프로토콜 프리즘.webp" },
+      { name: "탈로시안 화폐", count: 1600, icon: "/materials/탈로시안 화폐.webp" },
+    ],
+  },
+  {
+    slot: 1,
+    stage: 2,
+    elite: 3,
+    materials: [
+      { name: "프로토콜 프리즘 세트", count: 12, icon: "/materials/프로토콜 프리즘 세트.webp" },
+      { name: "탈로시안 화폐", count: 8000, icon: "/materials/탈로시안 화폐.webp" },
+    ],
+  },
+  {
+    slot: 2,
+    stage: 1,
+    elite: 2,
+    materials: [
+      { name: "프로토콜 프리즘", count: 12, icon: "/materials/프로토콜 프리즘.webp" },
+      { name: "탈로시안 화폐", count: 3000, icon: "/materials/탈로시안 화폐.webp" },
+    ],
+  },
+  {
+    slot: 2,
+    stage: 2,
+    elite: 4,
+    materials: [
+      { name: "프로토콜 프리즘 세트", count: 20, icon: "/materials/프로토콜 프리즘 세트.webp" },
+      { name: "탈로시안 화폐", count: 20000, icon: "/materials/탈로시안 화폐.webp" },
+    ],
+  },
+] as const;
+
+const ESTELLA_TALENT_COSTS = [
+  {
+    talent: 1,
+    stage: 1,
+    elite: 1,
+    materials: [
+      { name: "프로토콜 프리즘", count: 12, icon: "/materials/프로토콜 프리즘.webp" },
+      { name: "탈로시안 화폐", count: 2400, icon: "/materials/탈로시안 화폐.webp" },
+    ],
+  },
+  {
+    talent: 1,
+    stage: 2,
+    elite: 2,
+    materials: [
+      { name: "프로토콜 프리즘", count: 40, icon: "/materials/프로토콜 프리즘.webp" },
+      { name: "탈로시안 화폐", count: 8600, icon: "/materials/탈로시안 화폐.webp" },
+    ],
+  },
+  {
+    talent: 2,
+    stage: 1,
+    elite: 2,
+    materials: [
+      { name: "프로토콜 프리즘", count: 48, icon: "/materials/프로토콜 프리즘.webp" },
+      { name: "탈로시안 화폐", count: 10000, icon: "/materials/탈로시안 화폐.webp" },
+    ],
+  },
+  {
+    talent: 2,
+    stage: 2,
+    elite: 3,
+    materials: [
+      { name: "프로토콜 프리즘 세트", count: 28, icon: "/materials/프로토콜 프리즘 세트.webp" },
+      { name: "탈로시안 화폐", count: 24000, icon: "/materials/탈로시안 화폐.webp" },
+    ],
+  },
+] as const;
+
+export const estellaOperatorDetailData = {
+  slug,
+  name: "에스텔라",
+  enName: "Estella",
+  rarity: 4 as const,
+
+  element: "cryo" as const,
+  class: "guard" as const,
+  weaponType: "장병기",
+
+  mainStatLabel: "의지",
+  subStatLabel: "힘",
+
+  avatar: `/operators/${slug}/avatar.webp`,
+  fullImage: `/operators/${slug}/full.webp`,
+
+  levelStats: {
+    summary: {
+      levels: [1, 20, 40, 60, 80, 90],
+      str: [13, 32, 53, 73, 94, 104],
+      dex: [8, 27, 47, 67, 87, 97],
+      int: [14, 34, 56, 78, 99, 110],
+      will: [15, 44, 74, 105, 136, 151],
+      atk: [30, 90, 153, 217, 280, 312],
+      hp: [500, 1566, 2689, 3811, 4934, 5495],
+    },
+
+    detail: {
+      levels: Array.from({ length: 90 }, (_, i) => i + 1),
+
+      str: [
+        13, 14, 15, 16, 17, 18, 19, 20, 21, 22,
+        23, 24, 25, 26, 27, 28, 29, 30, 31, 32,
+        33, 34, 35, 36, 37, 38, 39, 40, 41, 42,
+        43, 44, 45, 47, 48, 49, 50, 51, 52, 53,
+        54, 55, 56, 57, 58, 59, 60, 61, 62, 63,
+        64, 65, 66, 67, 68, 69, 70, 71, 72, 73,
+        74, 75, 76, 77, 78, 79, 80, 81, 83, 84,
+        85, 86, 87, 88, 89, 90, 91, 92, 93, 94,
+        95, 96, 97, 98, 99, 100, 101, 102, 103, 104,
+      ],
+
+      dex: [
+        8, 9, 10, 11, 12, 13, 14, 15, 16, 17,
+        18, 19, 20, 21, 22, 23, 24, 25, 26, 27,
+        28, 29, 30, 31, 32, 33, 34, 35, 36, 37,
+        38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
+        48, 49, 50, 51, 52, 53, 54, 55, 56, 57,
+        58, 59, 60, 61, 62, 63, 64, 65, 66, 67,
+        68, 69, 70, 71, 72, 73, 74, 75, 76, 77,
+        78, 79, 80, 81, 82, 83, 84, 85, 86, 87,
+        88, 89, 90, 91, 92, 93, 94, 95, 96, 97,
+      ],
+
+      int: [
+        14, 15, 16, 17, 18, 19, 20, 21, 22, 23,
+        24, 26, 27, 28, 29, 30, 31, 32, 33, 34,
+        35, 36, 37, 39, 40, 41, 42, 43, 44, 45,
+        46, 47, 48, 49, 50, 52, 53, 54, 55, 56,
+        57, 58, 59, 60, 61, 62, 63, 65, 66, 67,
+        68, 69, 70, 71, 72, 73, 74, 75, 76, 78,
+        79, 80, 81, 82, 83, 84, 85, 86, 87, 88,
+        89, 91, 92, 93, 94, 95, 96, 97, 98, 99,
+        100, 101, 102, 104, 105, 106, 107, 108, 109, 110,
+      ],
+
+      will: [
+        15, 16, 18, 19, 21, 22, 24, 25, 27, 28,
+        30, 31, 33, 34, 36, 38, 39, 41, 42, 44,
+        45, 47, 48, 50, 51, 53, 54, 56, 57, 59,
+        61, 62, 64, 65, 67, 68, 70, 71, 73, 74,
+        76, 77, 79, 80, 82, 84, 85, 87, 88, 90,
+        91, 93, 94, 96, 97, 99, 100, 102, 103, 105,
+        107, 108, 110, 111, 113, 114, 116, 117, 119, 120,
+        122, 123, 125, 126, 128, 130, 131, 133, 134, 136,
+        137, 139, 140, 142, 143, 145, 146, 148, 149, 151,
+      ],
+
+      atk: [
+        30, 33, 36, 39, 43, 46, 49, 52, 55, 58,
+        62, 65, 68, 71, 74, 77, 81, 84, 87, 90,
+        93, 96, 100, 103, 106, 109, 112, 115, 119, 122,
+        125, 128, 131, 134, 138, 141, 144, 147, 150, 153,
+        157, 160, 163, 166, 169, 172, 176, 179, 182, 185,
+        188, 191, 195, 198, 201, 204, 207, 210, 214, 217,
+        220, 223, 226, 229, 233, 236, 239, 242, 245, 248,
+        252, 255, 258, 261, 264, 267, 271, 274, 277, 280,
+        283, 286, 290, 293, 296, 299, 302, 305, 309, 312,
+      ],
+
+      hp: [
+        500, 556, 612, 668, 724, 781, 837, 893, 949, 1005,
+        1061, 1117, 1173, 1230, 1286, 1342, 1398, 1454, 1510, 1566,
+        1622, 1679, 1735, 1791, 1847, 1903, 1959, 2015, 2071, 2128,
+        2184, 2240, 2296, 2352, 2408, 2464, 2520, 2577, 2633, 2689,
+        2745, 2801, 2857, 2913, 2969, 3026, 3082, 3138, 3194, 3250,
+        3306, 3362, 3418, 3474, 3531, 3587, 3643, 3699, 3755, 3811,
+        3867, 3923, 3980, 4036, 4092, 4148, 4204, 4260, 4316, 4372,
+        4429, 4485, 4541, 4597, 4653, 4709, 4765, 4821, 4878, 4934,
+        4990, 5046, 5102, 5158, 5214, 5270, 5327, 5383, 5439, 5495,
+      ],
+    },
+  },
+
+  elite: [
+    {
+      phase: "정예화 I",
+      unlockText: "활성화 후, 오퍼레이터 레벨 최대치 40레벨까지 증가",
+      materials: [
+        { name: "프로토콜 디스크", count: 8, icon: "/materials/프로토콜 디스크.webp" },
+        { name: "연한 붉은 기둥 버섯", count: 3, icon: "/materials/연한 붉은 기둥 버섯.webp" },
+        { name: "탈로시안 화폐", count: 1600, icon: "/materials/탈로시안 화폐.webp" },
+      ],
+    },
+    {
+      phase: "정예화 II",
+      unlockText: "활성화 후, 오퍼레이터 레벨 최대치 60레벨까지 증가",
+      materials: [
+        { name: "프로토콜 디스크", count: 25, icon: "/materials/프로토콜 디스크.webp" },
+        { name: "보통 붉은 기둥 버섯", count: 5, icon: "/materials/보통 붉은 기둥 버섯.webp" },
+        { name: "탈로시안 화폐", count: 6500, icon: "/materials/탈로시안 화폐.webp" },
+      ],
+    },
+    {
+      phase: "정예화 III",
+      unlockText: "활성화 후, 오퍼레이터 레벨 최대치 80레벨까지 증가",
+      materials: [
+        { name: "프로토콜 디스크 세트", count: 24, icon: "/materials/프로토콜 디스크 세트.webp" },
+        { name: "진한 붉은 기둥 버섯", count: 5, icon: "/materials/진한 붉은 기둥 버섯.webp" },
+        { name: "탈로시안 화폐", count: 18000, icon: "/materials/탈로시안 화폐.webp" },
+      ],
+    },
+    {
+      phase: "정예화 IV",
+      unlockText: "활성화 후, 오퍼레이터 레벨 최대치 90레벨까지 증가",
+      materials: [
+        { name: "프로토콜 디스크 세트", count: 36, icon: "/materials/프로토콜 디스크 세트.webp" },
+        { name: "정합용 유체", count: 20, icon: "/materials/정합용 유체.webp" },
+        { name: "스타게이트 버섯", count: 8, icon: "/materials/스타게이트 버섯.webp" },
+        { name: "탈로시안 화폐", count: 100000, icon: "/materials/탈로시안 화폐.webp" },
+      ],
+    },
+  ],
+
+  talents: [
+    {
+      name: "공감",
+      unlock: "Promote to E1 to unlock",
+      icon: `/operators/${slug}/talents/talent1.webp`,
+      description: "매번 쇄빙 효과를 발동한 후, 다음에 사용한 배틀 스킬 서스테인이 스킬 게이지를 7.5포인트 반환합니다. 해당 효과는 중첩되지 않습니다.",
+    },
+    {
+      name: "공감",
+      unlock: "Promote to E2 to activate the upgraded effect",
+      icon: `/operators/${slug}/talents/talent1.webp`,
+      description: "매번 쇄빙 효과를 발동한 후, 다음에 사용한 배틀 스킬 서스테인이 스킬 게이지를 15포인트 반환합니다. 해당 효과는 중첩되지 않습니다.",
+    },
+    {
+      name: "이유 있는 게으름",
+      unlock: "Promote to E2 to unlock",
+      icon: `/operators/${slug}/talents/talent2.webp`,
+      description: "냉기 부착 상태에 면역되며 받는 냉기 피해 -10%",
+    },
+    {
+      name: "이유 있는 게으름",
+      unlock: "Promote to E3 to activate the upgraded effect",
+      icon: `/operators/${slug}/talents/talent2.webp`,
+      description: "냉기 부착 상태에 면역되며 받는 냉기 피해 -20%",
+    },
+  ],
+
+  potential: [
+    {
+      title: "1",
+      subtitle: "습관성 지각",
+      description: "연계 스킬 디스토션이 부여하는 물리 취약 지속 시간 +3초",
+    },
+    {
+      title: "2",
+      subtitle: "낮은 기대치",
+      description: "궁극기 트레몰로의 사용에 필요한 궁극기 에너지 -10%",
+    },
+    {
+      title: "3",
+      subtitle: "작업 연기",
+      description: "배틀 스킬 서스테인이 방출하는 냉기 음파의 비행 거리 +50%, 첫 번째로 명중한 적에게 주는 피해 +40%",
+    },
+    {
+      title: "4",
+      subtitle: "임무보다는 목숨을",
+      description: "의지 +10, 힘 +10",
+    },
+    {
+      title: "5",
+      subtitle: "생존이 승리다",
+      description: "적에게 매번 동결을 부여한 후, 획득하는 궁극기 에너지 5포인트, 해당 효과는 1초마다 최대 1회만 발동합니다.",
+    },
+  ],
+
+  skills: {
+    normalAttack: {
+      name: "노이즈",
+      typeLabel: "일반 공격",
+      icon: `/operators/${slug}/skills/normal.webp`,
+      description: [
+        "일반 공격: 적에게 최대 4단 공격을 하여 물리 피해를 줍니다. 메인 컨트롤 오퍼레이터라면 강력한 일격이 17포인트의 불균형 피해를 줍니다.",
+        "낙하 공격: 공중에 떴을 때, 일반 공격을 사용하면 낙하하며 주변의 적을 공격하고 물리 피해를 줍니다.",
+        "처형 공격: 주변에 불균형 상태의 적이 있을 때, 일반 공격을 사용하면 해당 적을 처형하여 대량의 물리 피해를 주고 일정량의 스킬 게이지를 회복합니다.",
+      ],
+      levels: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "M1", "M2", "M3"],
+      upgradeMaterials: normalAndComboSkillUpgradeMaterials,
+      rows: [
+        { label: "일반 공격 제1단계 배율", values: ["25%", "28%", "30%", "33%", "35%", "38%", "40%", "43%", "45%", "48%", "52%", "56%"] },
+        { label: "일반 공격 제2단계 배율", values: ["30%", "33%", "36%", "39%", "42%", "45%", "48%", "51%", "54%", "58%", "62%", "68%"] },
+        { label: "일반 공격 제3단계 배율", values: ["35%", "39%", "42%", "46%", "49%", "53%", "56%", "60%", "63%", "67%", "73%", "79%"] },
+        { label: "일반 공격 제4단계 배율", values: ["40%", "44%", "48%", "52%", "56%", "60%", "64%", "68%", "72%", "77%", "83%", "90%"] },
+        { label: "처형 공격 배율", values: ["400%", "440%", "480%", "520%", "560%", "600%", "640%", "680%", "720%", "770%", "830%", "900%"] },
+        { label: "낙하 공격 배율", values: ["80%", "88%", "96%", "104%", "112%", "120%", "128%", "136%", "144%", "154%", "166%", "180%"] },
+      ],
+    },
+
+    battleSkill: {
+      name: "서스테인",
+      typeLabel: "배틀 스킬",
+      icon: `/operators/${slug}/skills/battle.webp`,
+      meta: [{ label: "스킬 게이지 소모", value: 100 }],
+      description: [
+        "전방으로 장창을 찔러 냉기 음파를 방출합니다. 일직선상의 적에게 냉기 피해를 주고 냉기 부착 상태를 부여합니다.",
+      ],
+      levels: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "M1", "M2", "M3"],
+      upgradeMaterials: battleAndUltimateSkillUpgradeMaterials,
+      rows: [
+        { label: "피해 배율", values: ["156%", "171%", "187%", "202%", "218%", "234%", "249%", "265%", "280%", "300%", "323%", "350%"] },
+        { label: "불균형치", values: ["10", "10", "10", "10", "10", "10", "10", "10", "10", "10", "10", "10"] },
+      ],
+    },
+
+    comboSkill: {
+      name: "디스토션",
+      typeLabel: "연계 스킬",
+      icon: `/operators/${slug}/skills/combo.webp`,
+      meta: [{ label: "쿨타임", valueRowLabel: "쿨타임" }],
+      description: [
+        "적이 동결 상태일 때 사용할 수 있습니다.",
+        "빠르게 적에게 접근하여 좁은 범위 내의 적에게 물리 피해와 강제 띄우기 피해를 줍니다. 동결 상태의 적에게 명중했을 경우, 추가 피해를 주고 물리 취약을 부여합니다.",
+      ],
+      levels: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "M1", "M2", "M3"],
+      upgradeMaterials: normalAndComboSkillUpgradeMaterials,
+      rows: [
+        { label: "쿨타임", values: ["18s", "18s", "18s", "18s", "18s", "18s", "18s", "18s", "18s", "18s", "18s", "17s"] },
+        { label: "동결 상태가 아닌 적에 대한 피해 배율", values: ["160%", "176%", "192%", "208%", "224%", "240%", "256%", "272%", "288%", "308%", "332%", "360%"] },
+        { label: "동결 상태의 적에 대한 피해 배율", values: ["280%", "308%", "336%", "364%", "392%", "420%", "448%", "476%", "504%", "539%", "581%", "630%"] },
+        { label: "불균형치", values: ["10", "10", "10", "10", "10", "10", "10", "10", "10", "10", "10", "10"] },
+        { label: "물리 취약 배율", values: ["10%", "10%", "10%", "10%", "10%", "10%", "10%", "10%", "10%", "15%", "15%", "15%"] },
+        { label: "물리 취약 지속 시간", values: ["6", "6", "6", "6", "6", "6", "6", "6", "6", "6", "6", "6"] },
+      ],
+    },
+
+    ultimate: {
+      name: "트레몰로",
+      typeLabel: "궁극기",
+      icon: `/operators/${slug}/skills/ultimate.webp`,
+      meta: [
+        { label: "필요한 궁극기 에너지", valueRowLabel: "필요한 궁극기 에너지" },
+        { label: "쿨타임", value: "10초" },
+      ],
+      description: [
+        "모든 힘을 쏟아 창을 힘껏 내려찍어 주변 원형 범위 내의 적에게 물리 피해를 줍니다. 적이 물리 취약 상태라면, 대상에게 강제 띄우기 피해를 줍니다.",
+      ],
+      levels: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "M1", "M2", "M3"],
+      upgradeMaterials: battleAndUltimateSkillUpgradeMaterials,
+      rows: [
+        { label: "필요한 궁극기 에너지", values: ["70", "70", "70", "70", "70", "70", "70", "70", "70", "70", "70", "70"] },
+        { label: "피해 배율", values: ["489%", "538%", "586%", "635%", "684%", "733%", "782%", "831%", "880%", "941%", "1014%", "1100%"] },
+        { label: "불균형치", values: ["15", "15", "15", "15", "15", "15", "15", "15", "15", "20", "20", "20"] },
+      ],
+    },
+  },
+
+  infrastructureSkills: [
+    {
+      name: "조각화 휴식",
+      icon: `/operators/${slug}/infrastructure/skill1.webp`,
+      levels: [
+        {
+          tier: "α",
+          unlockText: "정예화 단계 1 달성 시 해제 가능",
+          description: "핵심 제어 중추에 배치 시, 모든 오퍼레이터의 컨디션 회복 속도 8% 증가",
+        },
+        {
+          tier: "β",
+          unlockText: "정예화 단계 3 달성 시 활성화 가능",
+          description: "핵심 제어 중추에 배치 시, 모든 오퍼레이터의 컨디션 회복 속도 12% 증가",
+        },
+      ],
+    },
+    {
+      name: "감청 주파수",
+      icon: `/operators/${slug}/infrastructure/skill2.webp`,
+      levels: [
+        {
+          tier: "β",
+          unlockText: "정예화 단계 2 달성 시 해제 가능",
+          description: "응접실에 배치 시, 오퍼레이터의 단서 수집 기본 효율 20% 증가",
+        },
+        {
+          tier: "γ",
+          unlockText: "정예화 단계 4 달성 시 활성화 가능",
+          description: "응접실에 배치 시, 오퍼레이터의 단서 수집 기본 효율 30% 증가",
+        },
+      ],
+    },
+  ],
+
+  trustBonus: [
+    { level: 1, label: "의지 +10" },
+    { level: 2, label: "의지 +15" },
+    { level: 3, label: "의지 +15" },
+    { level: 4, label: "의지 +20" },
+  ],
+
+  requiredMaterials: {
+    levelUp: COMMON_LEVEL_UP_COSTS,
+    trustBonus: COMMON_TRUST_BONUS_COSTS,
+    infrastructure: COMMON_INFRASTRUCTURE_COSTS,
+    talents: ESTELLA_TALENT_COSTS,
+  },
+} as const;

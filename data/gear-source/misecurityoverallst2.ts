@@ -1,0 +1,66 @@
+import type { GearDetail } from "../gear-types";
+
+export const misecurityoverallst2: GearDetail = {
+  slug: "misecurityoverallst2",
+
+  name: "M. I. 경찰용 망토 II",
+  enName: "MI Security Overalls T2",
+
+  category: "armor",
+  level: 70,
+  quality: 5,
+  setName: "M. I. 경찰용",
+
+  image: "/gear/misecurityoverallst2.webp",
+
+  summary:
+    "이 장비는 미에슈코 공업에서 설계하고, 통합 공업 시스템을 사용해 제작한 것으로, 사용자의 작전 능력을 올릴 수 있습니다.",
+  description:
+    "M. I. 경찰용 시리즈 장비. 전쟁이 끝난 후, 미에슈코 공업은 생산 라인을 전환, 뛰어난 경량화 기술력을 인정받아 도시 경찰 장비 납품업체로 선정되었습니다.",
+
+  baseStat: {
+    label: "방어력",
+    value: "+56",
+  },
+
+  ability1: {
+    label: "의지",
+    values: {
+      base: "+87",
+      level1: "+95",
+      level2: "+104",
+      level3: "+113",
+    },
+  },
+
+  ability2: {
+    label: "민첩",
+    values: {
+      base: "+58",
+      level1: "+63",
+      level2: "+69",
+      level3: "+75",
+    },
+  },
+
+  attribute: {
+    label: "배틀 스킬 피해 보너스",
+    values: {
+      base: "+20.7%",
+      level1: "+22.8%",
+      level2: "+24.8%",
+      level3: "+26.9%",
+    },
+  },
+
+  abilityTypes: ["will", "agility"],
+  attributeTypes: ["skillDamage"],
+
+  setEffects: [
+    {
+      pieces: 3,
+      description:
+        "장착자의 치명타 확률 +5%. 장착자가 적에게 치명타를 준 후, 5초 동안 공격력 +5%, 최대 중첩 5스택. 최대 중첩 시, 치명타 확률 추가 +5%, 해당 효과는 중첩되지 않습니다.",
+    },
+  ],
+};

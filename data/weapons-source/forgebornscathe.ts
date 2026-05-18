@@ -1,0 +1,327 @@
+import type { SourceWeaponDetail } from "../weapons-detail-data";
+
+export const forgebornscathe = {
+  slug: "forgebornscathe",
+  name: "용조의 불꽃",
+  enName: "Forgeborn Scathe",
+  rarity: 6,
+  weaponType: "sword",
+  image: "/weapons/forgebornscathe.webp",
+  series: "어둠",
+  mainStatLabel: "지능",
+  subStatLabel: "공격력",
+
+  levelStats: [
+    { level: 1, attack: 52 },
+    { level: 2, attack: 57 },
+    { level: 3, attack: 62 },
+    { level: 4, attack: 67 },
+    { level: 5, attack: 72 },
+    { level: 6, attack: 77 },
+    { level: 7, attack: 82 },
+    { level: 8, attack: 88 },
+    { level: 9, attack: 93 },
+    { level: 10, attack: 98 },
+    { level: 11, attack: 103 },
+    { level: 12, attack: 108 },
+    { level: 13, attack: 113 },
+    { level: 14, attack: 118 },
+    { level: 15, attack: 124 },
+    { level: 16, attack: 129 },
+    { level: 17, attack: 134 },
+    { level: 18, attack: 139 },
+    { level: 19, attack: 144 },
+    { level: 20, attack: 149 },
+    { level: 21, attack: 155 },
+    { level: 22, attack: 160 },
+    { level: 23, attack: 165 },
+    { level: 24, attack: 170 },
+    { level: 25, attack: 175 },
+    { level: 26, attack: 180 },
+    { level: 27, attack: 185 },
+    { level: 28, attack: 191 },
+    { level: 29, attack: 196 },
+    { level: 30, attack: 201 },
+    { level: 31, attack: 206 },
+    { level: 32, attack: 211 },
+    { level: 33, attack: 216 },
+    { level: 34, attack: 221 },
+    { level: 35, attack: 227 },
+    { level: 36, attack: 232 },
+    { level: 37, attack: 237 },
+    { level: 38, attack: 242 },
+    { level: 39, attack: 247 },
+    { level: 40, attack: 252 },
+    { level: 41, attack: 258 },
+    { level: 42, attack: 263 },
+    { level: 43, attack: 268 },
+    { level: 44, attack: 273 },
+    { level: 45, attack: 278 },
+    { level: 46, attack: 283 },
+    { level: 47, attack: 288 },
+    { level: 48, attack: 294 },
+    { level: 49, attack: 299 },
+    { level: 50, attack: 304 },
+    { level: 51, attack: 309 },
+    { level: 52, attack: 314 },
+    { level: 53, attack: 319 },
+    { level: 54, attack: 324 },
+    { level: 55, attack: 330 },
+    { level: 56, attack: 335 },
+    { level: 57, attack: 340 },
+    { level: 58, attack: 345 },
+    { level: 59, attack: 350 },
+    { level: 60, attack: 355 },
+    { level: 61, attack: 361 },
+    { level: 62, attack: 366 },
+    { level: 63, attack: 371 },
+    { level: 64, attack: 376 },
+    { level: 65, attack: 381 },
+    { level: 66, attack: 386 },
+    { level: 67, attack: 391 },
+    { level: 68, attack: 397 },
+    { level: 69, attack: 402 },
+    { level: 70, attack: 407 },
+    { level: 71, attack: 412 },
+    { level: 72, attack: 417 },
+    { level: 73, attack: 422 },
+    { level: 74, attack: 427 },
+    { level: 75, attack: 433 },
+    { level: 76, attack: 438 },
+    { level: 77, attack: 443 },
+    { level: 78, attack: 448 },
+    { level: 79, attack: 453 },
+    { level: 80, attack: 458 },
+    { level: 81, attack: 464 },
+    { level: 82, attack: 469 },
+    { level: 83, attack: 474 },
+    { level: 84, attack: 479 },
+    { level: 85, attack: 484 },
+    { level: 86, attack: 489 },
+    { level: 87, attack: 494 },
+    { level: 88, attack: 500 },
+    { level: 89, attack: 505 },
+    { level: 90, attack: 510 },
+  ],
+
+  breakthrough: [
+    {
+      stage: 0,
+      requiredLevel: 1,
+      materials: [],
+      bonuses: [
+        "지능 증가 · 대: 1/3",
+        "공격력 증가 · 대: 1/3",
+        "어둠 · 울부짖는 불길: 1/4",
+      ],
+    },
+    {
+      stage: 1,
+      requiredLevel: 20,
+      materials: [
+        { name: "탈로시안 화폐", count: "2.2k" },
+        { name: "모형 틀", count: 5 },
+        { name: "연한 흑암석", count: 3 },
+      ],
+      bonuses: [
+        "지능 증가 · 대: 2/5",
+        "공격력 증가 · 대: 1/4",
+        "어둠 · 울부짖는 불길: 1/4",
+      ],
+    },
+    {
+      stage: 2,
+      requiredLevel: 40,
+      materials: [
+        { name: "탈로시안 화폐", count: "8.5k" },
+        { name: "모형 틀", count: 18 },
+        { name: "일반 흑암석", count: 5 },
+      ],
+      bonuses: [
+        "지능 증가 · 대: 2/6",
+        "공격력 증가 · 대: 2/6",
+        "어둠 · 울부짖는 불길: 1/4",
+      ],
+    },
+    {
+      stage: 3,
+      requiredLevel: 60,
+      materials: [
+        { name: "탈로시안 화폐", count: "25k" },
+        { name: "중형 모형 틀", count: 20 },
+        { name: "진한 흑암석", count: 5 },
+      ],
+      bonuses: [
+        "지능 증가 · 대: 3/8",
+        "공격력 증가 · 대: 2/7",
+        "어둠 · 울부짖는 불길: 1/4",
+      ],
+    },
+    {
+      stage: 4,
+      requiredLevel: 80,
+      materials: [
+        { name: "탈로시안 화폐", count: "90k" },
+        { name: "중형 모형 틀", count: 30 },
+        { name: "D96강 시제품 4번", count: 16 },
+        { name: "무릉석", count: 8 },
+      ],
+      bonuses: [
+        "지능 증가 · 대: 3/9",
+        "공격력 증가 · 대: 3/9",
+        "어둠 · 울부짖는 불길: 1/4",
+      ],
+    },
+  ],
+
+  skills: [
+    {
+      key: "intelligence-large",
+      typeLabel: "무기 스킬",
+      name: "지능 증가 · 대",
+      icon: "/icons/weapons/skills/intelligence-large.webp",
+      meta: [{ label: "능력치", value: "지능" }],
+      levelValues: [
+        { rank: "1", description: "지능 +20", stats: [{ label: "지능", value: "+20" }] },
+        { rank: "2", description: "지능 +36", stats: [{ label: "지능", value: "+36" }] },
+        { rank: "3", description: "지능 +52", stats: [{ label: "지능", value: "+52" }] },
+        { rank: "4", description: "지능 +68", stats: [{ label: "지능", value: "+68" }] },
+        { rank: "5", description: "지능 +84", stats: [{ label: "지능", value: "+84" }] },
+        { rank: "6", description: "지능 +100", stats: [{ label: "지능", value: "+100" }] },
+        { rank: "7", description: "지능 +116", stats: [{ label: "지능", value: "+116" }] },
+        { rank: "8", description: "지능 +132", stats: [{ label: "지능", value: "+132" }] },
+        { rank: "9", description: "지능 +156", stats: [{ label: "지능", value: "+156" }] },
+      ],
+      compareRows: [
+        {
+          label: "지능",
+          values: ["+20", "+36", "+52", "+68", "+84", "+100", "+116", "+132", "+156"],
+        },
+      ],
+    },
+    {
+      key: "attack-large",
+      typeLabel: "무기 스킬",
+      name: "공격력 증가 · 대",
+      icon: "/icons/weapons/skills/attack-large.webp",
+      meta: [{ label: "속성", value: "공격력" }],
+      levelValues: [
+        { rank: "1", description: "공격력 +5.0%", stats: [{ label: "공격력", value: "+5.0%" }] },
+        { rank: "2", description: "공격력 +9.0%", stats: [{ label: "공격력", value: "+9.0%" }] },
+        { rank: "3", description: "공격력 +13.0%", stats: [{ label: "공격력", value: "+13.0%" }] },
+        { rank: "4", description: "공격력 +17.0%", stats: [{ label: "공격력", value: "+17.0%" }] },
+        { rank: "5", description: "공격력 +21.0%", stats: [{ label: "공격력", value: "+21.0%" }] },
+        { rank: "6", description: "공격력 +25.0%", stats: [{ label: "공격력", value: "+25.0%" }] },
+        { rank: "7", description: "공격력 +29.0%", stats: [{ label: "공격력", value: "+29.0%" }] },
+        { rank: "8", description: "공격력 +33.0%", stats: [{ label: "공격력", value: "+33.0%" }] },
+        { rank: "9", description: "공격력 +39.0%", stats: [{ label: "공격력", value: "+39.0%" }] },
+      ],
+      compareRows: [
+        {
+          label: "공격력",
+          values: ["+5.0%", "+9.0%", "+13.0%", "+17.0%", "+21.0%", "+25.0%", "+29.0%", "+33.0%", "+39.0%"],
+        },
+      ],
+    },
+    {
+      key: "dark-howling-flame",
+      typeLabel: "무기 스킬",
+      name: "어둠 · 울부짖는 불길",
+      icon: "/icons/weapons/skills/dark.webp",
+      meta: [{ label: "시리즈 스킬", value: "어둠" }],
+      levelValues: [
+        {
+          rank: "1",
+          description:
+            "열기 피해 +16.0%\n장착자가 궁극기를 사용했을 때, 일반 공격 피해 +75.0%, 20초 동안 지속.\n같은 이름의 효과는 중첩되지 않습니다.",
+          stats: [
+            { label: "열기 피해", value: "+16.0%" },
+            { label: "일반 공격 피해", value: "+75.0%" },
+          ],
+        },
+        {
+          rank: "2",
+          description:
+            "열기 피해 +19.2%\n장착자가 궁극기를 사용했을 때, 일반 공격 피해 +90.0%, 20초 동안 지속.\n같은 이름의 효과는 중첩되지 않습니다.",
+          stats: [
+            { label: "열기 피해", value: "+19.2%" },
+            { label: "일반 공격 피해", value: "+90.0%" },
+          ],
+        },
+        {
+          rank: "3",
+          description:
+            "열기 피해 +22.4%\n장착자가 궁극기를 사용했을 때, 일반 공격 피해 +105.0%, 20초 동안 지속.\n같은 이름의 효과는 중첩되지 않습니다.",
+          stats: [
+            { label: "열기 피해", value: "+22.4%" },
+            { label: "일반 공격 피해", value: "+105.0%" },
+          ],
+        },
+        {
+          rank: "4",
+          description:
+            "열기 피해 +25.6%\n장착자가 궁극기를 사용했을 때, 일반 공격 피해 +120.0%, 20초 동안 지속.\n같은 이름의 효과는 중첩되지 않습니다.",
+          stats: [
+            { label: "열기 피해", value: "+25.6%" },
+            { label: "일반 공격 피해", value: "+120.0%" },
+          ],
+        },
+        {
+          rank: "5",
+          description:
+            "열기 피해 +28.8%\n장착자가 궁극기를 사용했을 때, 일반 공격 피해 +135.0%, 20초 동안 지속.\n같은 이름의 효과는 중첩되지 않습니다.",
+          stats: [
+            { label: "열기 피해", value: "+28.8%" },
+            { label: "일반 공격 피해", value: "+135.0%" },
+          ],
+        },
+        {
+          rank: "6",
+          description:
+            "열기 피해 +32.0%\n장착자가 궁극기를 사용했을 때, 일반 공격 피해 +150.0%, 20초 동안 지속.\n같은 이름의 효과는 중첩되지 않습니다.",
+          stats: [
+            { label: "열기 피해", value: "+32.0%" },
+            { label: "일반 공격 피해", value: "+150.0%" },
+          ],
+        },
+        {
+          rank: "7",
+          description:
+            "열기 피해 +35.2%\n장착자가 궁극기를 사용했을 때, 일반 공격 피해 +165.0%, 20초 동안 지속.\n같은 이름의 효과는 중첩되지 않습니다.",
+          stats: [
+            { label: "열기 피해", value: "+35.2%" },
+            { label: "일반 공격 피해", value: "+165.0%" },
+          ],
+        },
+        {
+          rank: "8",
+          description:
+            "열기 피해 +38.4%\n장착자가 궁극기를 사용했을 때, 일반 공격 피해 +180.0%, 20초 동안 지속.\n같은 이름의 효과는 중첩되지 않습니다.",
+          stats: [
+            { label: "열기 피해", value: "+38.4%" },
+            { label: "일반 공격 피해", value: "+180.0%" },
+          ],
+        },
+        {
+          rank: "9",
+          description:
+            "열기 피해 +44.8%\n장착자가 궁극기를 사용했을 때, 일반 공격 피해 +210.0%, 20초 동안 지속.\n같은 이름의 효과는 중첩되지 않습니다.",
+          stats: [
+            { label: "열기 피해", value: "+44.8%" },
+            { label: "일반 공격 피해", value: "+210.0%" },
+          ],
+        },
+      ],
+      compareRows: [
+        {
+          label: "열기 피해",
+          values: ["+16.0%", "+19.2%", "+22.4%", "+25.6%", "+28.8%", "+32.0%", "+35.2%", "+38.4%", "+44.8%"],
+        },
+        {
+          label: "일반 공격 피해",
+          values: ["+75.0%", "+90.0%", "+105.0%", "+120.0%", "+135.0%", "+150.0%", "+165.0%", "+180.0%", "+210.0%"],
+        },
+      ],
+    },
+  ],
+} satisfies SourceWeaponDetail;

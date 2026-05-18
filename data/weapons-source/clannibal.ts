@@ -1,0 +1,327 @@
+import type { SourceWeaponDetail } from "../weapons-detail-data";
+
+export const clannibal = {
+  slug: "clannibal",
+  name: "클래니벌",
+  enName: "Clannibal",
+  rarity: 6,
+  weaponType: "handcannon",
+  image: "/weapons/clannibal.webp",
+  series: "고통",
+  mainStatLabel: "공격력",
+  subStatLabel: "주요 능력치",
+
+  levelStats: [
+    { level: 1, attack: 50 },
+    { level: 2, attack: 54 },
+    { level: 3, attack: 59 },
+    { level: 4, attack: 64 },
+    { level: 5, attack: 69 },
+    { level: 6, attack: 74 },
+    { level: 7, attack: 79 },
+    { level: 8, attack: 84 },
+    { level: 9, attack: 89 },
+    { level: 10, attack: 94 },
+    { level: 11, attack: 99 },
+    { level: 12, attack: 104 },
+    { level: 13, attack: 109 },
+    { level: 14, attack: 114 },
+    { level: 15, attack: 119 },
+    { level: 16, attack: 124 },
+    { level: 17, attack: 129 },
+    { level: 18, attack: 134 },
+    { level: 19, attack: 139 },
+    { level: 20, attack: 144 },
+    { level: 21, attack: 149 },
+    { level: 22, attack: 153 },
+    { level: 23, attack: 158 },
+    { level: 24, attack: 163 },
+    { level: 25, attack: 168 },
+    { level: 26, attack: 173 },
+    { level: 27, attack: 178 },
+    { level: 28, attack: 183 },
+    { level: 29, attack: 188 },
+    { level: 30, attack: 193 },
+    { level: 31, attack: 198 },
+    { level: 32, attack: 203 },
+    { level: 33, attack: 208 },
+    { level: 34, attack: 213 },
+    { level: 35, attack: 218 },
+    { level: 36, attack: 223 },
+    { level: 37, attack: 228 },
+    { level: 38, attack: 233 },
+    { level: 39, attack: 238 },
+    { level: 40, attack: 243 },
+    { level: 41, attack: 248 },
+    { level: 42, attack: 252 },
+    { level: 43, attack: 257 },
+    { level: 44, attack: 262 },
+    { level: 45, attack: 267 },
+    { level: 46, attack: 272 },
+    { level: 47, attack: 277 },
+    { level: 48, attack: 282 },
+    { level: 49, attack: 287 },
+    { level: 50, attack: 292 },
+    { level: 51, attack: 297 },
+    { level: 52, attack: 302 },
+    { level: 53, attack: 307 },
+    { level: 54, attack: 312 },
+    { level: 55, attack: 317 },
+    { level: 56, attack: 322 },
+    { level: 57, attack: 327 },
+    { level: 58, attack: 332 },
+    { level: 59, attack: 337 },
+    { level: 60, attack: 342 },
+    { level: 61, attack: 347 },
+    { level: 62, attack: 351 },
+    { level: 63, attack: 356 },
+    { level: 64, attack: 361 },
+    { level: 65, attack: 366 },
+    { level: 66, attack: 371 },
+    { level: 67, attack: 376 },
+    { level: 68, attack: 381 },
+    { level: 69, attack: 386 },
+    { level: 70, attack: 391 },
+    { level: 71, attack: 396 },
+    { level: 72, attack: 401 },
+    { level: 73, attack: 406 },
+    { level: 74, attack: 411 },
+    { level: 75, attack: 416 },
+    { level: 76, attack: 421 },
+    { level: 77, attack: 426 },
+    { level: 78, attack: 431 },
+    { level: 79, attack: 436 },
+    { level: 80, attack: 441 },
+    { level: 81, attack: 446 },
+    { level: 82, attack: 450 },
+    { level: 83, attack: 455 },
+    { level: 84, attack: 460 },
+    { level: 85, attack: 465 },
+    { level: 86, attack: 470 },
+    { level: 87, attack: 475 },
+    { level: 88, attack: 480 },
+    { level: 89, attack: 485 },
+    { level: 90, attack: 490 },
+  ],
+
+  breakthrough: [
+    {
+      stage: 0,
+      requiredLevel: 1,
+      materials: [],
+      bonuses: [
+        "주요 능력치 증가 · 대: 1/3",
+        "아츠 피해 증가 · 대: 1/3",
+        "고통 · 가차 없는 숙청: 1/4",
+      ],
+    },
+    {
+      stage: 1,
+      requiredLevel: 20,
+      materials: [
+        { name: "탈로시안 화폐", count: "2.2k" },
+        { name: "모형 틀", count: 5 },
+        { name: "연한 흑암석", count: 3 },
+      ],
+      bonuses: [
+        "주요 능력치 증가 · 대: 2/5",
+        "아츠 피해 증가 · 대: 1/4",
+        "고통 · 가차 없는 숙청: 1/4",
+      ],
+    },
+    {
+      stage: 2,
+      requiredLevel: 40,
+      materials: [
+        { name: "탈로시안 화폐", count: "8.5k" },
+        { name: "모형 틀", count: 18 },
+        { name: "일반 흑암석", count: 5 },
+      ],
+      bonuses: [
+        "주요 능력치 증가 · 대: 2/6",
+        "아츠 피해 증가 · 대: 2/6",
+        "고통 · 가차 없는 숙청: 1/4",
+      ],
+    },
+    {
+      stage: 3,
+      requiredLevel: 60,
+      materials: [
+        { name: "탈로시안 화폐", count: "25k" },
+        { name: "중형 모형 틀", count: 20 },
+        { name: "진한 흑암석", count: 5 },
+      ],
+      bonuses: [
+        "주요 능력치 증가 · 대: 3/8",
+        "아츠 피해 증가 · 대: 2/7",
+        "고통 · 가차 없는 숙청: 1/4",
+      ],
+    },
+    {
+      stage: 4,
+      requiredLevel: 80,
+      materials: [
+        { name: "탈로시안 화폐", count: "90k" },
+        { name: "중형 모형 틀", count: 30 },
+        { name: "정합용 유체", count: 16 },
+        { name: "무릉석", count: 8 },
+      ],
+      bonuses: [
+        "주요 능력치 증가 · 대: 3/9",
+        "아츠 피해 증가 · 대: 3/9",
+        "고통 · 가차 없는 숙청: 1/4",
+      ],
+    },
+  ],
+
+  skills: [
+    {
+      key: "main-stat-large",
+      typeLabel: "무기 스킬",
+      name: "주요 능력치 증가 · 대",
+      icon: "/icons/weapons/skills/main-stat-large.webp",
+      meta: [{ label: "능력치", value: "주요 능력치" }],
+      levelValues: [
+        { rank: "1", description: "주요 능력치 +17", stats: [{ label: "주요 능력치", value: "+17" }] },
+        { rank: "2", description: "주요 능력치 +30", stats: [{ label: "주요 능력치", value: "+30" }] },
+        { rank: "3", description: "주요 능력치 +44", stats: [{ label: "주요 능력치", value: "+44" }] },
+        { rank: "4", description: "주요 능력치 +57", stats: [{ label: "주요 능력치", value: "+57" }] },
+        { rank: "5", description: "주요 능력치 +71", stats: [{ label: "주요 능력치", value: "+71" }] },
+        { rank: "6", description: "주요 능력치 +85", stats: [{ label: "주요 능력치", value: "+85" }] },
+        { rank: "7", description: "주요 능력치 +98", stats: [{ label: "주요 능력치", value: "+98" }] },
+        { rank: "8", description: "주요 능력치 +112", stats: [{ label: "주요 능력치", value: "+112" }] },
+        { rank: "9", description: "주요 능력치 +132", stats: [{ label: "주요 능력치", value: "+132" }] },
+      ],
+      compareRows: [
+        {
+          label: "주요 능력치",
+          values: ["+17", "+30", "+44", "+57", "+71", "+85", "+98", "+112", "+132"],
+        },
+      ],
+    },
+    {
+      key: "arts-dmg-large",
+      typeLabel: "무기 스킬",
+      name: "아츠 피해 증가 · 대",
+      icon: "/icons/weapons/skills/arts-dmg-large.webp",
+      meta: [{ label: "속성", value: "아츠 피해" }],
+      levelValues: [
+        { rank: "1", description: "아츠 피해 +5.6%", stats: [{ label: "아츠 피해", value: "+5.6%" }] },
+        { rank: "2", description: "아츠 피해 +10.0%", stats: [{ label: "아츠 피해", value: "+10.0%" }] },
+        { rank: "3", description: "아츠 피해 +14.4%", stats: [{ label: "아츠 피해", value: "+14.4%" }] },
+        { rank: "4", description: "아츠 피해 +18.9%", stats: [{ label: "아츠 피해", value: "+18.9%" }] },
+        { rank: "5", description: "아츠 피해 +23.3%", stats: [{ label: "아츠 피해", value: "+23.3%" }] },
+        { rank: "6", description: "아츠 피해 +27.8%", stats: [{ label: "아츠 피해", value: "+27.8%" }] },
+        { rank: "7", description: "아츠 피해 +32.2%", stats: [{ label: "아츠 피해", value: "+32.2%" }] },
+        { rank: "8", description: "아츠 피해 +36.7%", stats: [{ label: "아츠 피해", value: "+36.7%" }] },
+        { rank: "9", description: "아츠 피해 +43.3%", stats: [{ label: "아츠 피해", value: "+43.3%" }] },
+      ],
+      compareRows: [
+        {
+          label: "아츠 피해",
+          values: ["+5.6%", "+10.0%", "+14.4%", "+18.9%", "+23.3%", "+27.8%", "+32.2%", "+36.7%", "+43.3%"],
+        },
+      ],
+    },
+    {
+      key: "pain-ruthless-purge",
+      typeLabel: "무기 스킬",
+      name: "고통 · 가차 없는 숙청",
+      icon: "/icons/weapons/skills/pain.webp",
+      meta: [{ label: "시리즈 스킬", value: "고통" }],
+      levelValues: [
+        {
+          rank: "1",
+          description:
+            "아츠 피해 +12.0%\n장착자가 아츠 이상 효과를 소모한 후, 목표가 받는 해당 속성 피해 +10.0%, 15초 동안 지속.\n각 효과는 서로 독립적으로 적용되고, 중첩되지 않으며, 25초마다 최대 1회만 발동합니다.",
+          stats: [
+            { label: "아츠 피해", value: "+12.0%" },
+            { label: "해당 속성 피해 증가", value: "+10.0%" },
+          ],
+        },
+        {
+          rank: "2",
+          description:
+            "아츠 피해 +14.4%\n장착자가 아츠 이상 효과를 소모한 후, 목표가 받는 해당 속성 피해 +12.0%, 15초 동안 지속.\n각 효과는 서로 독립적으로 적용되고, 중첩되지 않으며, 25초마다 최대 1회만 발동합니다.",
+          stats: [
+            { label: "아츠 피해", value: "+14.4%" },
+            { label: "해당 속성 피해 증가", value: "+12.0%" },
+          ],
+        },
+        {
+          rank: "3",
+          description:
+            "아츠 피해 +16.8%\n장착자가 아츠 이상 효과를 소모한 후, 목표가 받는 해당 속성 피해 +14.0%, 15초 동안 지속.\n각 효과는 서로 독립적으로 적용되고, 중첩되지 않으며, 25초마다 최대 1회만 발동합니다.",
+          stats: [
+            { label: "아츠 피해", value: "+16.8%" },
+            { label: "해당 속성 피해 증가", value: "+14.0%" },
+          ],
+        },
+        {
+          rank: "4",
+          description:
+            "아츠 피해 +19.2%\n장착자가 아츠 이상 효과를 소모한 후, 목표가 받는 해당 속성 피해 +16.0%, 15초 동안 지속.\n각 효과는 서로 독립적으로 적용되고, 중첩되지 않으며, 25초마다 최대 1회만 발동합니다.",
+          stats: [
+            { label: "아츠 피해", value: "+19.2%" },
+            { label: "해당 속성 피해 증가", value: "+16.0%" },
+          ],
+        },
+        {
+          rank: "5",
+          description:
+            "아츠 피해 +21.6%\n장착자가 아츠 이상 효과를 소모한 후, 목표가 받는 해당 속성 피해 +18.0%, 15초 동안 지속.\n각 효과는 서로 독립적으로 적용되고, 중첩되지 않으며, 25초마다 최대 1회만 발동합니다.",
+          stats: [
+            { label: "아츠 피해", value: "+21.6%" },
+            { label: "해당 속성 피해 증가", value: "+18.0%" },
+          ],
+        },
+        {
+          rank: "6",
+          description:
+            "아츠 피해 +24.0%\n장착자가 아츠 이상 효과를 소모한 후, 목표가 받는 해당 속성 피해 +20.0%, 15초 동안 지속.\n각 효과는 서로 독립적으로 적용되고, 중첩되지 않으며, 25초마다 최대 1회만 발동합니다.",
+          stats: [
+            { label: "아츠 피해", value: "+24.0%" },
+            { label: "해당 속성 피해 증가", value: "+20.0%" },
+          ],
+        },
+        {
+          rank: "7",
+          description:
+            "아츠 피해 +26.4%\n장착자가 아츠 이상 효과를 소모한 후, 목표가 받는 해당 속성 피해 +22.0%, 15초 동안 지속.\n각 효과는 서로 독립적으로 적용되고, 중첩되지 않으며, 25초마다 최대 1회만 발동합니다.",
+          stats: [
+            { label: "아츠 피해", value: "+26.4%" },
+            { label: "해당 속성 피해 증가", value: "+22.0%" },
+          ],
+        },
+        {
+          rank: "8",
+          description:
+            "아츠 피해 +28.8%\n장착자가 아츠 이상 효과를 소모한 후, 목표가 받는 해당 속성 피해 +24.0%, 15초 동안 지속.\n각 효과는 서로 독립적으로 적용되고, 중첩되지 않으며, 25초마다 최대 1회만 발동합니다.",
+          stats: [
+            { label: "아츠 피해", value: "+28.8%" },
+            { label: "해당 속성 피해 증가", value: "+24.0%" },
+          ],
+        },
+        {
+          rank: "9",
+          description:
+            "아츠 피해 +33.6%\n장착자가 아츠 이상 효과를 소모한 후, 목표가 받는 해당 속성 피해 +28.0%, 15초 동안 지속.\n각 효과는 서로 독립적으로 적용되고, 중첩되지 않으며, 25초마다 최대 1회만 발동합니다.",
+          stats: [
+            { label: "아츠 피해", value: "+33.6%" },
+            { label: "해당 속성 피해 증가", value: "+28.0%" },
+          ],
+        },
+      ],
+      compareRows: [
+        {
+          label: "아츠 피해",
+          values: ["+12.0%", "+14.4%", "+16.8%", "+19.2%", "+21.6%", "+24.0%", "+26.4%", "+28.8%", "+33.6%"],
+        },
+        {
+          label: "해당 속성 피해 증가",
+          values: ["+10.0%", "+12.0%", "+14.0%", "+16.0%", "+18.0%", "+20.0%", "+22.0%", "+24.0%", "+28.0%"],
+        },
+      ],
+    },
+  ],
+} satisfies SourceWeaponDetail;

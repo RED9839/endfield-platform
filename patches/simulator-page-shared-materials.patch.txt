@@ -1,0 +1,197 @@
+// app/simulator/page.tsx 적용용 메모
+//
+// 목표:
+// 1. 성장 시뮬레이터 선택값은 /api/user/simulator-state 에 저장
+// 2. 보유 재화 값은 /api/user/material-inventory 에 저장
+// 3. ownedMaterials는 SimulatorState에서 제거
+// 4. 성장 목표/파밍 계산기도 /api/user/material-inventory 를 같이 사용
+//
+// ------------------------------------------------------------
+// 1) 상수 추가
+// ------------------------------------------------------------
+
+const USER_SIMULATOR_STATE_API = "/api/user/simulator-state";
+const USER_MATERIAL_INVENTORY_API = "/api/user/material-inventory";
+
+
+// ------------------------------------------------------------
+// 2) 시뮬레이터 상태에서 ownedMaterials 제거해서 저장
+// ------------------------------------------------------------
+
+function createSimulatorStateForUserSave(state: SimulatorFormState) {
+  const { ownedMaterials: _ownedMaterials, ...stateWithoutMaterials } = state as any;
+  return stateWithoutMaterials;
+}
+
+
+// ------------------------------------------------------------
+// 3) 유저 시뮬레이터 상태 불러오기
+// ------------------------------------------------------------
+
+async function readUserSimulatorState(): Promise<Partial<SimulatorFormState> | null> {
+  try {
+    const response = await fetch(USER_SIMULATOR_STATE_API, {
+      method: "GET",
+      cache: "no-store",
+    });
+
+    if (!response.ok) return null;
+
+    const payload = (await response.json()) as {
+      ok?: boolean;
+      state?: Partial<SimulatorFormState> | null;
+    };
+
+    return payload.state ?? null;
+  } catch {
+    return null;
+  }
+}
+
+
+// ------------------------------------------------------------
+// 4) 유저 시뮬레이터 상태 저장
+// ------------------------------------------------------------
+
+function saveUserSimulatorState(state: SimulatorFormState) {
+  const stateWithoutMaterials = createSimulatorStateForUserSave(state);
+
+  fetch(USER_SIMULATOR_STATE_API, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      state: stateWithoutMaterials,
+    }),
+  }).catch(() => {});
+}
+
+
+// ------------------------------------------------------------
+// 5) 공통 보유 재화 불러오기
+// ------------------------------------------------------------
+
+async function readUserMaterialInventory(): Promise<Record<string, number> | null> {
+  try {
+    const response = await fetch(USER_MATERIAL_INVENTORY_API, {
+      method: "GET",
+      cache: "no-store",
+    });
+
+    if (!response.ok) return null;
+
+    const payload = (await response.json()) as {
+      ok?: boolean;
+      materials?: Record<string, number> | null;
+    };
+
+    return payload.materials ?? null;
+  } catch {
+    return null;
+  }
+}
+
+
+// ------------------------------------------------------------
+// 6) 공통 보유 재화 저장
+// ------------------------------------------------------------
+
+function saveUserMaterialInventory(materials: Record<string, number>) {
+  fetch(USER_MATERIAL_INVENTORY_API, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      materials,
+    }),
+  }).catch(() => {});
+}
+
+
+// ------------------------------------------------------------
+// 7) 기존 saveSimulatorFormState 교체 방향
+// ------------------------------------------------------------
+//
+// 기존에는 state 전체에 ownedMaterials가 들어갔습니다.
+// 이제 로컬 저장은 기존처럼 전체를 저장해도 되고,
+// DB 저장만 분리하면 됩니다.
+
+function saveSimulatorFormState(state: SimulatorFormState) {
+  if (typeof window === "undefined") return;
+
+  const raw = JSON.stringify(state);
+
+  window.sessionStorage.setItem(SIMULATOR_FORM_STORAGE_KEY, raw);
+  window.localStorage.setItem(SIMULATOR_FORM_STORAGE_KEY, raw);
+
+  window.clearTimeout((window as any).__endfieldSimulatorSaveTimer);
+
+  (window as any).__endfieldSimulatorSaveTimer = window.setTimeout(() => {
+    saveUserSimulatorState(state);
+
+    if (state.ownedMaterials && typeof state.ownedMaterials === "object") {
+      saveUserMaterialInventory(state.ownedMaterials as Record<string, number>);
+    }
+  }, 500);
+}
+
+
+// ------------------------------------------------------------
+// 8) 기존 readSimulatorFormState 교체 방향
+// ------------------------------------------------------------
+//
+// 유저 DB 시뮬레이터 상태 + 유저 공통 보유 재화를 합쳐서 반환합니다.
+// 비로그인/실패 시 기존 localStorage 값을 사용합니다.
+
+async function readSimulatorFormState(): Promise<Partial<SimulatorFormState> | null> {
+  if (typeof window === "undefined") return null;
+
+  const [userState, userMaterials] = await Promise.all([
+    readUserSimulatorState(),
+    readUserMaterialInventory(),
+  ]);
+
+  if (userState || userMaterials) {
+    const mergedState = {
+      ...(userState ?? {}),
+      ...(userMaterials ? { ownedMaterials: userMaterials } : {}),
+    } as Partial<SimulatorFormState>;
+
+    const raw = JSON.stringify(mergedState);
+
+    window.sessionStorage.setItem(SIMULATOR_FORM_STORAGE_KEY, raw);
+    window.localStorage.setItem(SIMULATOR_FORM_STORAGE_KEY, raw);
+
+    return mergedState;
+  }
+
+  const raw =
+    window.sessionStorage.getItem(SIMULATOR_FORM_STORAGE_KEY) ??
+    window.localStorage.getItem(SIMULATOR_FORM_STORAGE_KEY) ??
+    "";
+
+  if (!raw) return null;
+
+  try {
+    return JSON.parse(raw) as Partial<SimulatorFormState>;
+  } catch {
+    return null;
+  }
+}
+
+
+// ------------------------------------------------------------
+// 9) 파밍 계산기/성장 목표 페이지에서도 같은 API 사용
+// ------------------------------------------------------------
+//
+// 보유 재화 가져오기:
+// const materials = await fetch("/api/user/material-inventory", { cache: "no-store" }).then(r => r.json())
+//
+// 보유 재화 저장:
+// await fetch("/api/user/material-inventory", {
+//   method: "PUT",
+//   headers: { "Content-Type": "application/json" },
+//   body: JSON.stringify({ materials: ownedMaterials }),
+// })

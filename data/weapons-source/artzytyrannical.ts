@@ -1,0 +1,327 @@
+import type { SourceWeaponDetail } from "../weapons-detail-data";
+
+export const artzytyrannical = {
+  slug: "artzytyrannical",
+  name: "예술의 폭군",
+  enName: "Artzy Tyrannical",
+  rarity: 6,
+  weaponType: "handcannon",
+  image: "/weapons/artzytyrannical.webp",
+  series: "골절",
+  mainStatLabel: "공격력",
+  subStatLabel: "지능",
+
+  levelStats: [
+    { level: 1, attack: 51 },
+    { level: 2, attack: 56 },
+    { level: 3, attack: 61 },
+    { level: 4, attack: 66 },
+    { level: 5, attack: 71 },
+    { level: 6, attack: 77 },
+    { level: 7, attack: 82 },
+    { level: 8, attack: 87 },
+    { level: 9, attack: 92 },
+    { level: 10, attack: 97 },
+    { level: 11, attack: 102 },
+    { level: 12, attack: 107 },
+    { level: 13, attack: 112 },
+    { level: 14, attack: 117 },
+    { level: 15, attack: 122 },
+    { level: 16, attack: 128 },
+    { level: 17, attack: 133 },
+    { level: 18, attack: 138 },
+    { level: 19, attack: 143 },
+    { level: 20, attack: 148 },
+    { level: 21, attack: 153 },
+    { level: 22, attack: 158 },
+    { level: 23, attack: 163 },
+    { level: 24, attack: 168 },
+    { level: 25, attack: 173 },
+    { level: 26, attack: 179 },
+    { level: 27, attack: 184 },
+    { level: 28, attack: 189 },
+    { level: 29, attack: 194 },
+    { level: 30, attack: 199 },
+    { level: 31, attack: 204 },
+    { level: 32, attack: 209 },
+    { level: 33, attack: 214 },
+    { level: 34, attack: 219 },
+    { level: 35, attack: 224 },
+    { level: 36, attack: 230 },
+    { level: 37, attack: 235 },
+    { level: 38, attack: 240 },
+    { level: 39, attack: 245 },
+    { level: 40, attack: 250 },
+    { level: 41, attack: 255 },
+    { level: 42, attack: 260 },
+    { level: 43, attack: 265 },
+    { level: 44, attack: 270 },
+    { level: 45, attack: 275 },
+    { level: 46, attack: 281 },
+    { level: 47, attack: 286 },
+    { level: 48, attack: 291 },
+    { level: 49, attack: 296 },
+    { level: 50, attack: 301 },
+    { level: 51, attack: 306 },
+    { level: 52, attack: 311 },
+    { level: 53, attack: 316 },
+    { level: 54, attack: 321 },
+    { level: 55, attack: 326 },
+    { level: 56, attack: 332 },
+    { level: 57, attack: 337 },
+    { level: 58, attack: 342 },
+    { level: 59, attack: 347 },
+    { level: 60, attack: 352 },
+    { level: 61, attack: 357 },
+    { level: 62, attack: 362 },
+    { level: 63, attack: 367 },
+    { level: 64, attack: 372 },
+    { level: 65, attack: 377 },
+    { level: 66, attack: 383 },
+    { level: 67, attack: 388 },
+    { level: 68, attack: 393 },
+    { level: 69, attack: 398 },
+    { level: 70, attack: 403 },
+    { level: 71, attack: 408 },
+    { level: 72, attack: 413 },
+    { level: 73, attack: 418 },
+    { level: 74, attack: 423 },
+    { level: 75, attack: 428 },
+    { level: 76, attack: 434 },
+    { level: 77, attack: 439 },
+    { level: 78, attack: 444 },
+    { level: 79, attack: 449 },
+    { level: 80, attack: 454 },
+    { level: 81, attack: 459 },
+    { level: 82, attack: 464 },
+    { level: 83, attack: 469 },
+    { level: 84, attack: 474 },
+    { level: 85, attack: 479 },
+    { level: 86, attack: 485 },
+    { level: 87, attack: 490 },
+    { level: 88, attack: 495 },
+    { level: 89, attack: 500 },
+    { level: 90, attack: 505 },
+  ],
+
+  breakthrough: [
+    {
+      stage: 0,
+      requiredLevel: 1,
+      materials: [],
+      bonuses: [
+        "지능 증가 · 대: 1/3",
+        "치명타 확률 증가 · 대: 1/3",
+        "골절 · 예술적 폭론: 1/4",
+      ],
+    },
+    {
+      stage: 1,
+      requiredLevel: 20,
+      materials: [
+        { name: "탈로시안 화폐", count: "2.2k" },
+        { name: "모형 틀", count: 5 },
+        { name: "연한 흑암석", count: 3 },
+      ],
+      bonuses: [
+        "지능 증가 · 대: 2/5",
+        "치명타 확률 증가 · 대: 1/4",
+        "골절 · 예술적 폭론: 1/4",
+      ],
+    },
+    {
+      stage: 2,
+      requiredLevel: 40,
+      materials: [
+        { name: "탈로시안 화폐", count: "8.5k" },
+        { name: "모형 틀", count: 18 },
+        { name: "일반 흑암석", count: 5 },
+      ],
+      bonuses: [
+        "지능 증가 · 대: 2/6",
+        "치명타 확률 증가 · 대: 2/6",
+        "골절 · 예술적 폭론: 1/4",
+      ],
+    },
+    {
+      stage: 3,
+      requiredLevel: 60,
+      materials: [
+        { name: "탈로시안 화폐", count: "25k" },
+        { name: "중형 모형 틀", count: 20 },
+        { name: "진한 흑암석", count: 5 },
+      ],
+      bonuses: [
+        "지능 증가 · 대: 3/8",
+        "치명타 확률 증가 · 대: 2/7",
+        "골절 · 예술적 폭론: 1/4",
+      ],
+    },
+    {
+      stage: 4,
+      requiredLevel: 80,
+      materials: [
+        { name: "탈로시안 화폐", count: "90k" },
+        { name: "중형 모형 틀", count: 30 },
+        { name: "타키온 차폐 구조체", count: 16 },
+        { name: "무릉석", count: 8 },
+      ],
+      bonuses: [
+        "지능 증가 · 대: 3/9",
+        "치명타 확률 증가 · 대: 3/9",
+        "골절 · 예술적 폭론: 1/4",
+      ],
+    },
+  ],
+
+  skills: [
+    {
+      key: "intellect-large",
+      typeLabel: "무기 스킬",
+      name: "지능 증가 · 대",
+      icon: "/icons/weapons/skills/intellect-large.webp",
+      meta: [{ label: "능력치", value: "지능" }],
+      levelValues: [
+        { rank: "1", description: "지능 +20", stats: [{ label: "지능", value: "+20" }] },
+        { rank: "2", description: "지능 +36", stats: [{ label: "지능", value: "+36" }] },
+        { rank: "3", description: "지능 +52", stats: [{ label: "지능", value: "+52" }] },
+        { rank: "4", description: "지능 +68", stats: [{ label: "지능", value: "+68" }] },
+        { rank: "5", description: "지능 +84", stats: [{ label: "지능", value: "+84" }] },
+        { rank: "6", description: "지능 +100", stats: [{ label: "지능", value: "+100" }] },
+        { rank: "7", description: "지능 +116", stats: [{ label: "지능", value: "+116" }] },
+        { rank: "8", description: "지능 +132", stats: [{ label: "지능", value: "+132" }] },
+        { rank: "9", description: "지능 +156", stats: [{ label: "지능", value: "+156" }] },
+      ],
+      compareRows: [
+        {
+          label: "지능",
+          values: ["+20", "+36", "+52", "+68", "+84", "+100", "+116", "+132", "+156"],
+        },
+      ],
+    },
+    {
+      key: "crit-rate-large",
+      typeLabel: "무기 스킬",
+      name: "치명타 확률 증가 · 대",
+      icon: "/icons/weapons/skills/critical-rate-large.webp",
+      meta: [{ label: "능력치", value: "치명타 확률" }],
+      levelValues: [
+        { rank: "1", description: "치명타 확률 +2.5%", stats: [{ label: "치명타 확률", value: "+2.5%" }] },
+        { rank: "2", description: "치명타 확률 +4.5%", stats: [{ label: "치명타 확률", value: "+4.5%" }] },
+        { rank: "3", description: "치명타 확률 +6.5%", stats: [{ label: "치명타 확률", value: "+6.5%" }] },
+        { rank: "4", description: "치명타 확률 +8.5%", stats: [{ label: "치명타 확률", value: "+8.5%" }] },
+        { rank: "5", description: "치명타 확률 +10.5%", stats: [{ label: "치명타 확률", value: "+10.5%" }] },
+        { rank: "6", description: "치명타 확률 +12.5%", stats: [{ label: "치명타 확률", value: "+12.5%" }] },
+        { rank: "7", description: "치명타 확률 +14.5%", stats: [{ label: "치명타 확률", value: "+14.5%" }] },
+        { rank: "8", description: "치명타 확률 +16.5%", stats: [{ label: "치명타 확률", value: "+16.5%" }] },
+        { rank: "9", description: "치명타 확률 +19.5%", stats: [{ label: "치명타 확률", value: "+19.5%" }] },
+      ],
+      compareRows: [
+        {
+          label: "치명타 확률",
+          values: ["+2.5%", "+4.5%", "+6.5%", "+8.5%", "+10.5%", "+12.5%", "+14.5%", "+16.5%", "+19.5%"],
+        },
+      ],
+    },
+    {
+      key: "fracture-artistic-tyranny",
+      typeLabel: "무기 스킬",
+      name: "골절 · 예술적 폭론",
+      icon: "/icons/weapons/skills/fracture.webp",
+      meta: [{ label: "시리즈 스킬", value: "골절" }],
+      levelValues: [
+        {
+          rank: "1",
+          description:
+            "냉기 피해 +16.0%\n장착자의 배틀 스킬 혹은 연계 스킬이 적에게 치명타 피해를 준 후, 냉기 피해 +14.0%, 30초 동안 지속.\n같은 이름의 효과는 최대 3스택까지 중첩되며, 중첩될 때마다 지속 시간은 따로 계산됩니다. 0.1초마다 최대 1회만 발동합니다.",
+          stats: [
+            { label: "냉기 피해", value: "+16.0%" },
+            { label: "효과 발동 후 냉기 피해", value: "+14.0%" },
+          ],
+        },
+        {
+          rank: "2",
+          description:
+            "냉기 피해 +19.2%\n장착자의 배틀 스킬 혹은 연계 스킬이 적에게 치명타 피해를 준 후, 냉기 피해 +16.8%, 30초 동안 지속.\n같은 이름의 효과는 최대 3스택까지 중첩되며, 중첩될 때마다 지속 시간은 따로 계산됩니다. 0.1초마다 최대 1회만 발동합니다.",
+          stats: [
+            { label: "냉기 피해", value: "+19.2%" },
+            { label: "효과 발동 후 냉기 피해", value: "+16.8%" },
+          ],
+        },
+        {
+          rank: "3",
+          description:
+            "냉기 피해 +22.4%\n장착자의 배틀 스킬 혹은 연계 스킬이 적에게 치명타 피해를 준 후, 냉기 피해 +19.6%, 30초 동안 지속.\n같은 이름의 효과는 최대 3스택까지 중첩되며, 중첩될 때마다 지속 시간은 따로 계산됩니다. 0.1초마다 최대 1회만 발동합니다.",
+          stats: [
+            { label: "냉기 피해", value: "+22.4%" },
+            { label: "효과 발동 후 냉기 피해", value: "+19.6%" },
+          ],
+        },
+        {
+          rank: "4",
+          description:
+            "냉기 피해 +25.6%\n장착자의 배틀 스킬 혹은 연계 스킬이 적에게 치명타 피해를 준 후, 냉기 피해 +22.4%, 30초 동안 지속.\n같은 이름의 효과는 최대 3스택까지 중첩되며, 중첩될 때마다 지속 시간은 따로 계산됩니다. 0.1초마다 최대 1회만 발동합니다.",
+          stats: [
+            { label: "냉기 피해", value: "+25.6%" },
+            { label: "효과 발동 후 냉기 피해", value: "+22.4%" },
+          ],
+        },
+        {
+          rank: "5",
+          description:
+            "냉기 피해 +28.8%\n장착자의 배틀 스킬 혹은 연계 스킬이 적에게 치명타 피해를 준 후, 냉기 피해 +25.2%, 30초 동안 지속.\n같은 이름의 효과는 최대 3스택까지 중첩되며, 중첩될 때마다 지속 시간은 따로 계산됩니다. 0.1초마다 최대 1회만 발동합니다.",
+          stats: [
+            { label: "냉기 피해", value: "+28.8%" },
+            { label: "효과 발동 후 냉기 피해", value: "+25.2%" },
+          ],
+        },
+        {
+          rank: "6",
+          description:
+            "냉기 피해 +32.0%\n장착자의 배틀 스킬 혹은 연계 스킬이 적에게 치명타 피해를 준 후, 냉기 피해 +28.0%, 30초 동안 지속.\n같은 이름의 효과는 최대 3스택까지 중첩되며, 중첩될 때마다 지속 시간은 따로 계산됩니다. 0.1초마다 최대 1회만 발동합니다.",
+          stats: [
+            { label: "냉기 피해", value: "+32.0%" },
+            { label: "효과 발동 후 냉기 피해", value: "+28.0%" },
+          ],
+        },
+        {
+          rank: "7",
+          description:
+            "냉기 피해 +35.2%\n장착자의 배틀 스킬 혹은 연계 스킬이 적에게 치명타 피해를 준 후, 냉기 피해 +30.8%, 30초 동안 지속.\n같은 이름의 효과는 최대 3스택까지 중첩되며, 중첩될 때마다 지속 시간은 따로 계산됩니다. 0.1초마다 최대 1회만 발동합니다.",
+          stats: [
+            { label: "냉기 피해", value: "+35.2%" },
+            { label: "효과 발동 후 냉기 피해", value: "+30.8%" },
+          ],
+        },
+        {
+          rank: "8",
+          description:
+            "냉기 피해 +38.4%\n장착자의 배틀 스킬 혹은 연계 스킬이 적에게 치명타 피해를 준 후, 냉기 피해 +33.6%, 30초 동안 지속.\n같은 이름의 효과는 최대 3스택까지 중첩되며, 중첩될 때마다 지속 시간은 따로 계산됩니다. 0.1초마다 최대 1회만 발동합니다.",
+          stats: [
+            { label: "냉기 피해", value: "+38.4%" },
+            { label: "효과 발동 후 냉기 피해", value: "+33.6%" },
+          ],
+        },
+        {
+          rank: "9",
+          description:
+            "냉기 피해 +44.8%\n장착자의 배틀 스킬 혹은 연계 스킬이 적에게 치명타 피해를 준 후, 냉기 피해 +39.2%, 30초 동안 지속.\n같은 이름의 효과는 최대 3스택까지 중첩되며, 중첩될 때마다 지속 시간은 따로 계산됩니다. 0.1초마다 최대 1회만 발동합니다.",
+          stats: [
+            { label: "냉기 피해", value: "+44.8%" },
+            { label: "효과 발동 후 냉기 피해", value: "+39.2%" },
+          ],
+        },
+      ],
+      compareRows: [
+        {
+          label: "냉기 피해",
+          values: ["+16.0%", "+19.2%", "+22.4%", "+25.6%", "+28.8%", "+32.0%", "+35.2%", "+38.4%", "+44.8%"],
+        },
+        {
+          label: "효과 발동 후 냉기 피해",
+          values: ["+14.0%", "+16.8%", "+19.6%", "+22.4%", "+25.2%", "+28.0%", "+30.8%", "+33.6%", "+39.2%"],
+        },
+      ],
+    },
+  ],
+} satisfies SourceWeaponDetail;

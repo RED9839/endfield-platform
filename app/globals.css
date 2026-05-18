@@ -1,0 +1,218 @@
+@import "tailwindcss";
+
+/* =========================
+   COLOR SYSTEM
+========================= */
+:root {
+  --background: #050505;
+  --foreground: #ededed;
+
+  --yellow-main: #ffd24a;
+  --yellow-text: #ffdc70;
+  --yellow-border: rgba(255, 196, 74, 0.14);
+  --yellow-border-soft: rgba(255, 196, 74, 0.1);
+
+  --panel-bg: #05070b;
+  --card-bg: #090d14;
+
+  --scroll-track: #050505;
+  --scroll-thumb: #c89b2c;
+  --scroll-thumb-hover: #e0b94a;
+  --scroll-thumb-active: #ffd873;
+}
+
+/* =========================
+   BASE
+========================= */
+html {
+  background: var(--background);
+  scrollbar-width: thin;
+  scrollbar-color: var(--yellow-main) var(--scroll-track);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(255, 212, 74, 0.05), transparent 25%),
+    radial-gradient(circle at 80% 80%, rgba(255, 212, 74, 0.04), transparent 25%);
+}
+
+/* =========================
+   TEXT UTILS
+========================= */
+.text-yellow-main {
+  color: var(--yellow-main);
+}
+
+.text-yellow-soft {
+  color: var(--yellow-text);
+}
+
+/* =========================
+   PANEL SYSTEM
+========================= */
+.panel {
+  position: relative;
+  overflow: hidden;
+  background: var(--panel-bg);
+  border: 1px solid var(--yellow-border);
+  border-radius: 20px;
+}
+
+.panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 212, 74, 0.03),
+    transparent 20%
+  );
+}
+
+/* =========================
+   CARD SYSTEM
+========================= */
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--yellow-border-soft);
+  border-radius: 16px;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease;
+}
+
+.card:hover {
+  border-color: rgba(255, 212, 74, 0.3);
+  background: #0c1119;
+}
+
+/* =========================
+   BUTTON SYSTEM
+========================= */
+.btn-yellow {
+  border: 1px solid rgba(255, 212, 74, 0.35);
+  background: rgba(255, 212, 74, 0.12);
+  color: var(--yellow-text);
+  border-radius: 12px;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.btn-yellow:hover {
+  border-color: rgba(255, 212, 74, 0.6);
+  background: rgba(255, 212, 74, 0.2);
+  color: #ffffff;
+}
+
+.btn-outline-yellow {
+  background: transparent;
+  border: 1px solid rgba(255, 196, 74, 0.3);
+  color: var(--yellow-main);
+  border-radius: 14px;
+  font-weight: 700;
+  transition:
+    border-color 0.2s ease,
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.btn-outline-yellow:hover {
+  border-color: rgba(255, 196, 74, 0.6);
+  background: rgba(255, 196, 74, 0.06);
+  color: var(--yellow-text);
+}
+
+/* =========================
+   HERO EFFECT
+========================= */
+.hero-diagonal {
+  clip-path: polygon(58% 0, 100% 0, 100% 100%, 40% 100%);
+}
+
+.hero-divider {
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 212, 74, 0),
+    rgba(255, 212, 74, 0.7),
+    rgba(255, 212, 74, 0)
+  );
+  box-shadow:
+    0 0 12px rgba(255, 212, 74, 0.45),
+    0 0 28px rgba(255, 212, 74, 0.2);
+}
+
+/* =========================
+   SCROLLBAR
+========================= */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--yellow-main) var(--scroll-track);
+}
+
+*::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--scroll-track);
+}
+
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--yellow-main), var(--scroll-thumb-hover));
+  border-radius: 999px;
+  border: 2px solid var(--scroll-track);
+  box-shadow:
+    0 0 6px rgba(255, 212, 74, 0.6),
+    0 0 12px rgba(255, 212, 74, 0.3);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #ffe27a, var(--yellow-main));
+  box-shadow:
+    0 0 10px rgba(255, 212, 74, 0.8),
+    0 0 20px rgba(255, 212, 74, 0.4);
+}
+
+*::-webkit-scrollbar-thumb:active {
+  background: var(--scroll-thumb-active);
+  box-shadow:
+    0 0 14px rgba(255, 212, 74, 1),
+    0 0 30px rgba(255, 212, 74, 0.5);
+}
+
+*::-webkit-scrollbar-corner {
+  background: var(--scroll-track);
+}
+
+/* =========================
+   FORM RESET
+========================= */
+input[type="number"] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  appearance: none;
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="checkbox"] {
+  accent-color: var(--yellow-main);
+}
