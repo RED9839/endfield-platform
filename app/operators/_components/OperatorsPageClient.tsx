@@ -228,7 +228,7 @@ const OperatorCard = memo(function OperatorCard({
   return (
     <Link
       href={`/operators/${operator.slug}`}
-      className="group relative block overflow-y-auto overflow-x-hidden rounded-[16px] bg-black transition hover:-translate-y-1 sm:rounded-[18px]"
+      className="group relative block overflow-hidden rounded-[16px] bg-black transition hover:-translate-y-1 sm:rounded-[18px]"
       style={{
         width: "100%",
         aspectRatio: `${CARD_WIDTH} / ${CARD_HEIGHT}`,
@@ -381,7 +381,7 @@ export default function OperatorsPageClient() {
 
         <div className="grid min-w-0 gap-3 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-5">
           <aside
-            className="sticky top-2 z-40 flex max-h-[calc(100dvh-16px)] min-w-0 max-w-full self-start flex-col overflow-y-auto overflow-x-hidden rounded-[16px] bg-[#05070b] shadow-[0_0_30px_rgba(250,204,21,0.04)] lg:top-5 lg:max-h-[calc(100vh-40px)] lg:rounded-[24px]"
+            className="sticky top-2 z-40 flex max-h-[calc(100dvh-16px)] min-w-0 max-w-full self-start flex-col overflow-hidden rounded-[16px] bg-[#05070b] shadow-[0_0_30px_rgba(250,204,21,0.04)] lg:top-5 lg:max-h-[calc(100vh-40px)] lg:rounded-[24px]"
             style={{ border: `1px solid ${YELLOW_BORDER}` }}
           >
             <button
@@ -414,12 +414,14 @@ export default function OperatorsPageClient() {
               </span>
             </button>
 
-            <div className={[
-              "min-w-0 max-w-full overflow-hidden lg:block",
-              isFilterOpen ? "block min-h-0 flex-1" : "hidden",
-            ].join(" ")}>
+            <div
+              className={[
+                "min-w-0 max-w-full overflow-hidden lg:flex lg:min-h-0 lg:flex-1 lg:flex-col",
+                isFilterOpen ? "block min-h-0 flex-1" : "hidden lg:flex",
+              ].join(" ")}
+            >
               <div
-                className="min-w-0 bg-[#05070b] p-2.5 sm:p-4 lg:shrink-0"
+                className="min-w-0 shrink-0 bg-[#05070b] p-2.5 sm:p-4"
                 style={{ borderBottom: `1px solid ${YELLOW_BORDER_SOFT}` }}
               >
                 <h2
@@ -443,7 +445,7 @@ export default function OperatorsPageClient() {
                 </div>
               </div>
 
-              <div className="min-h-0 min-w-0 overflow-y-auto p-2.5 sm:p-4 lg:flex-1">
+              <div className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain p-2.5 pr-2 sm:p-4 sm:pr-3">
                 <FilterGroup title="등급">
                   <FilterButton
                     active={rarity === "all"}
