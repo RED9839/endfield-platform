@@ -3,6 +3,7 @@
 import { buildFarmingHref, saveFarmingTransferPayload } from "@/lib/farming/farming-transfer";
 import Image from "next/image";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import NumberInput from "@/app/components/common/NumberInput";
@@ -19,7 +20,6 @@ import MaterialList from "./_components/MaterialList";
 import SimulatorStageSection from "./_components/SimulatorStageSection";
 import SimulatorSkillPanel from "./_components/SimulatorSkillPanel";
 import SimulatorLevelPanel from "./_components/SimulatorLevelPanel";
-import CommonSelectPanel from "@/app/components/select/CommonSelectPanel";
 import { MATERIALS as FARMING_MATERIALS } from "@/data/farming/farm-data";
 import { MATERIAL_ORDER, sortSimulatorMaterials } from "./_lib/material-sort";
 import {
@@ -67,6 +67,22 @@ import {
 
 const operators = operatorDetails as OperatorDetail[];
 const weapons = weaponDetails as SourceWeaponDetail[];
+
+const operatorBySlug = new Map(
+  operators.map((operator: OperatorDetail) => [operator.slug, operator] as const),
+);
+
+const weaponBySlug = new Map(
+  weapons.map((weapon: SourceWeaponDetail) => [weapon.slug, weapon] as const),
+);
+
+const CommonSelectPanel = dynamic(
+  () => import("@/app/components/select/CommonSelectPanel"),
+  {
+    ssr: false,
+    loading: () => null,
+  },
+);
 
 function getOperatorHeroImage(operator: OperatorDetail | null) {
   if (!operator) return "";
@@ -1003,13 +1019,11 @@ export default function SimulatorPage() {
         getStoredSimulatorSlug("weapon");
 
       const nextOperatorSlug =
-        storedOperatorSlug &&
-        operators.some((item: OperatorDetail) => item.slug === storedOperatorSlug)
+        storedOperatorSlug && operatorBySlug.has(storedOperatorSlug)
           ? storedOperatorSlug
           : "";
       const nextWeaponSlug =
-        storedWeaponSlug &&
-        weapons.some((item: SourceWeaponDetail) => item.slug === storedWeaponSlug)
+        storedWeaponSlug && weaponBySlug.has(storedWeaponSlug)
           ? storedWeaponSlug
           : "";
 
@@ -1121,15 +1135,13 @@ export default function SimulatorPage() {
 
   const selectedOperator = useMemo(
     () =>
-      operators.find((item: OperatorDetail) => item.slug === selectedOperatorSlug) ??
-      null,
+      operatorBySlug.get(selectedOperatorSlug) ?? null,
     [selectedOperatorSlug]
   );
 
   const selectedWeapon = useMemo(
     () =>
-      weapons.find((item: SourceWeaponDetail) => item.slug === selectedWeaponSlug) ??
-      null,
+      weaponBySlug.get(selectedWeaponSlug) ?? null,
     [selectedWeaponSlug]
   );
 
@@ -1144,7 +1156,7 @@ export default function SimulatorPage() {
   );
 
   const handleOperatorSelect = (slug: string) => {
-    const nextOperator = operators.find((item) => item.slug === slug) ?? null;
+    const nextOperator = operatorBySlug.get(slug) ?? null;
     const resetCombatSkillState: CombatSkillState = {
       normal: { current: "1", target: "M3" },
       combo: { current: "1", target: "M3" },
@@ -1218,7 +1230,7 @@ export default function SimulatorPage() {
   };
 
   const handleWeaponSelect = (slug: string) => {
-    const nextWeapon = weapons.find((item) => item.slug === slug) ?? null;
+    const nextWeapon = weaponBySlug.get(slug) ?? null;
 
     weaponRestoreAppliedRef.current = true;
     setSelectedWeaponSlug(slug);
