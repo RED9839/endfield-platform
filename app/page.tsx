@@ -1,7 +1,5 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { auth } from "@/auth";
-import { prisma } from "@/lib/prisma";
 import { SignOutButton } from "@/app/components/auth/AuthButtons";
 import type { ReactNode } from "react";
 
@@ -16,6 +14,7 @@ import {
   getHomeData,
   type HomeApiResponse,
 } from "@/lib/home/get-home-data";
+import { getCurrentUser } from "@/lib/auth/get-current-user";
 
 import BannerSection from "./components/home/BannerSection";
 
@@ -286,36 +285,7 @@ function resolveFeaturedOperatorName(data: HomeApiResponse | null) {
 }
 
 export default async function HomePage() {
-  const session = await auth();
-
-  const sessionEmail = session?.user?.email?.trim().toLowerCase();
-
-  const accountUser = session?.user?.id
-    ? await prisma.user.findFirst({
-        where: {
-          OR: [
-            { id: session.user.id },
-
-            ...(sessionEmail
-              ? [
-                  {
-                    email: {
-                      equals: sessionEmail,
-                      mode: "insensitive" as const,
-                    },
-                  },
-                ]
-              : []),
-          ],
-        },
-
-        select: {
-          name: true,
-          email: true,
-          nickname: true,
-        },
-      })
-    : null;
+  const accountUser = await getCurrentUser();
 
   if (accountUser && !accountUser.nickname?.trim()) {
     redirect("/setup-profile");
