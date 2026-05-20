@@ -17,6 +17,8 @@ const YELLOW_MAIN = "#ffd24a";
 const YELLOW_TEXT = "#ffdc70";
 const YELLOW_BORDER = "rgba(255,196,74,0.14)";
 const YELLOW_BORDER_SOFT = "rgba(255,196,74,0.10)";
+const HERO_IMAGE_SIZES =
+  "(max-width: 768px) calc(100vw - 24px), (max-width: 1280px) calc(100vw - 48px), 1180px";
 
 function DetailSection({
   id,
@@ -158,7 +160,7 @@ export default async function OperatorDetailPage({
               alt={operator.name}
               fill
               priority
-              sizes="100vw"
+              sizes={HERO_IMAGE_SIZES}
               className="object-cover blur-[16px] brightness-[0.25]"
             />
 
@@ -168,7 +170,7 @@ export default async function OperatorDetailPage({
                 alt={operator.name}
                 fill
                 priority
-                sizes="100vw"
+                sizes={HERO_IMAGE_SIZES}
                 className="object-contain"
               />
             </div>
