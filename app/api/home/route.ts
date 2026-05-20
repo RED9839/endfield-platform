@@ -57,7 +57,9 @@ type CheerioNode = ReturnType<CheerioRoot>;
 
 const SITE = "https://endfield.gryphline.com";
 const NEWS_URL = `${SITE}/ko-kr/news`;
-const CACHE_TTL = 0;
+const CACHE_TTL = 5 * 60 * 1000;
+const EDGE_CACHE_SECONDS = 300;
+const STALE_WHILE_REVALIDATE_SECONDS = 600;
 
 const FETCH_HEADERS = {
   "User-Agent":
@@ -531,7 +533,7 @@ function json(data: HomeApiResponse, status = 200) {
   return NextResponse.json(data, {
     status,
     headers: {
-      "Cache-Control": "no-store",
+      "Cache-Control": `public, s-maxage=${EDGE_CACHE_SECONDS}, stale-while-revalidate=${STALE_WHILE_REVALIDATE_SECONDS}`,
     },
   });
 }
@@ -539,7 +541,7 @@ function json(data: HomeApiResponse, status = 200) {
 export async function GET() {
   const now = Date.now();
 
-  if (CACHE_TTL > 0 && cachedResponse && now - cachedAt < CACHE_TTL) {
+  if (cachedResponse && now - cachedAt < CACHE_TTL) {
     return json({
       ...cachedResponse,
       debug: {
@@ -551,8 +553,8 @@ export async function GET() {
 
   try {
     const response = await fetch(NEWS_URL, {
-      cache: "no-store",
       headers: FETCH_HEADERS,
+      next: { revalidate: EDGE_CACHE_SECONDS },
     });
 
     if (!response.ok) {
