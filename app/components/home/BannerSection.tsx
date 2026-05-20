@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import HomeBannerHubPanel, {
   type HomeBannerItem,
 } from "@/app/components/home/HomeBannerHubPanel";
@@ -191,24 +191,7 @@ export default function BannerSection({
 }: {
   initialData: HomeApiResponse | null;
 }) {
-  const [data, setData] = useState<HomeApiResponse | null>(initialData);
-
-  useEffect(() => {
-    let ignore = false;
-
-    fetch("/api/home", { cache: "no-store" })
-      .then((response) => response.json())
-      .then((json: HomeApiResponse) => {
-        if (!ignore) setData(json);
-      })
-      .catch(() => {});
-
-    return () => {
-      ignore = true;
-    };
-  }, []);
-
-  const items = useMemo(() => convert(data), [data]);
+  const items = useMemo(() => convert(initialData), [initialData]);
 
   return (
     <div className="h-full min-h-0 w-full overflow-hidden">
