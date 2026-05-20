@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useMemo, useState, type ReactNode } from "react";
+import { memo, useDeferredValue, useMemo, useState, type ReactNode } from "react";
 import {
   operatorDetails,
   type OperatorDetail,
@@ -100,6 +100,34 @@ const classOrderMap: Record<OperatorClass, number> = {
   striker: 5,
 };
 
+const indexedOperators = operatorDetails
+  .map((operator) => ({
+    operator,
+    searchText: [
+      operator.name,
+      operator.enName,
+      classLabelMap[operator.class],
+      elementLabelMap[operator.element],
+      weaponLabelMap[operator.weapon],
+    ]
+      .join(" ")
+      .toLowerCase(),
+  }))
+  .sort((left, right) => {
+    if (right.operator.rarity !== left.operator.rarity) {
+      return right.operator.rarity - left.operator.rarity;
+    }
+
+    const leftClassOrder = classOrderMap[left.operator.class] ?? 999;
+    const rightClassOrder = classOrderMap[right.operator.class] ?? 999;
+
+    if (leftClassOrder !== rightClassOrder) {
+      return leftClassOrder - rightClassOrder;
+    }
+
+    return left.operator.name.localeCompare(right.operator.name, "ko");
+  });
+
 function FilterButton({
   active,
   label,
@@ -189,7 +217,7 @@ function OperatorInfoIcon({ src, alt }: { src: string; alt: string }) {
   );
 }
 
-function OperatorCard({
+const OperatorCard = memo(function OperatorCard({
   operator,
 }: {
   operator: OperatorDetail & { avatarSecondary?: string };
@@ -272,7 +300,9 @@ function OperatorCard({
       </div>
     </Link>
   );
-}
+});
+
+OperatorCard.displayName = "OperatorCard";
 
 export default function OperatorsPageClient() {
   const [keyword, setKeyword] = useState("");
@@ -282,19 +312,15 @@ export default function OperatorsPageClient() {
     useState<OperatorClass | "all">("all");
   const [weapon, setWeapon] = useState<WeaponType | "all">("all");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const deferredKeyword = useDeferredValue(keyword);
 
   const sortedOperators = useMemo(() => {
-    const normalizedKeyword = keyword.trim().toLowerCase();
+    const normalizedKeyword = deferredKeyword.trim().toLowerCase();
 
-    return operatorDetails
-      .filter((operator) => {
+    return indexedOperators
+      .filter(({ operator, searchText }) => {
         const matchesKeyword =
-          normalizedKeyword === "" ||
-          operator.name.toLowerCase().includes(normalizedKeyword) ||
-          operator.enName.toLowerCase().includes(normalizedKeyword) ||
-          classLabelMap[operator.class].includes(normalizedKeyword) ||
-          elementLabelMap[operator.element].includes(normalizedKeyword) ||
-          weaponLabelMap[operator.weapon].includes(normalizedKeyword);
+          normalizedKeyword === "" || searchText.includes(normalizedKeyword);
 
         return (
           matchesKeyword &&
@@ -304,21 +330,8 @@ export default function OperatorsPageClient() {
           (weapon === "all" || operator.weapon === weapon)
         );
       })
-      .sort((leftOperator, rightOperator) => {
-        if (rightOperator.rarity !== leftOperator.rarity) {
-          return rightOperator.rarity - leftOperator.rarity;
-        }
-
-        const leftClassOrder = classOrderMap[leftOperator.class] ?? 999;
-        const rightClassOrder = classOrderMap[rightOperator.class] ?? 999;
-
-        if (leftClassOrder !== rightClassOrder) {
-          return leftClassOrder - rightClassOrder;
-        }
-
-        return leftOperator.name.localeCompare(rightOperator.name, "ko");
-      });
-  }, [keyword, rarity, element, operatorClass, weapon]);
+      .map(({ operator }) => operator);
+  }, [deferredKeyword, rarity, element, operatorClass, weapon]);
 
   const activeFilterCount = [
     keyword.trim() ? 1 : 0,
