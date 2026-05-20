@@ -21,7 +21,7 @@ export default function HeroPanel({
         alt={featured.name}
         fill
         priority
-        sizes="(max-width: 1024px) 100vw, calc(100vw - 260px)"
+        sizes="(max-width: 640px) 100vw, (max-width: 1024px) calc(100vw - 32px), (max-width: 1536px) calc((100vw - 320px) * 0.62), 980px"
         className="object-cover object-[50%_35%]"
       />
 
