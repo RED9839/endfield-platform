@@ -35,6 +35,10 @@ function getBannerKey(item: HomeBannerItem, index: number) {
   return `${item.id}-${index}-${item.kind}-${item.title}-${item.image}`;
 }
 
+function getItemsSignature(items: HomeBannerItem[]) {
+  return items.map((item) => `${item.id}:${item.title}:${item.image}`).join("|");
+}
+
 export default function HomeBannerHubPanel({
   items,
 }: {
@@ -43,6 +47,8 @@ export default function HomeBannerHubPanel({
   const [idx, setIdx] = useState(0);
   const [imageFailedKey, setImageFailedKey] = useState("");
   const [loadedKey, setLoadedKey] = useState("");
+
+  const itemsSignature = useMemo(() => getItemsSignature(items), [items]);
 
   const safeIndex = useMemo(() => {
     if (!items.length) return 0;
@@ -60,7 +66,7 @@ export default function HomeBannerHubPanel({
 
   useEffect(() => {
     setIdx(0);
-  }, [items.map((item) => `${item.id}:${item.title}:${item.image}`).join("|")]);
+  }, [itemsSignature]);
 
   useEffect(() => {
     if (items.length <= 1) return;
@@ -76,6 +82,17 @@ export default function HomeBannerHubPanel({
     setImageFailedKey("");
     setLoadedKey("");
   }, [curKey]);
+
+  useEffect(() => {
+    if (items.length <= 1) return;
+
+    const next = items[(safeIndex + 1) % items.length];
+    if (!next?.image) return;
+
+    const image = new window.Image();
+    image.decoding = "async";
+    image.src = next.image;
+  }, [items, safeIndex]);
 
   const movePrev = () => {
     if (!items.length) return;
@@ -102,10 +119,7 @@ export default function HomeBannerHubPanel({
   const isLoaded = loadedKey === curKey;
 
   return (
-    <section
-      key={curKey}
-      className="grid h-full w-full grid-rows-[52px_minmax(0,1fr)] gap-2 overflow-hidden"
-    >
+    <section className="grid h-full w-full grid-rows-[52px_minmax(0,1fr)] gap-2 overflow-hidden">
       <div
         className={`flex min-h-0 items-center justify-between overflow-hidden rounded-[18px] border ${YELLOW_BORDER} ${PANEL_BG} px-4`}
       >
@@ -133,6 +147,7 @@ export default function HomeBannerHubPanel({
               type="button"
               onClick={movePrev}
               className="text-yellow-300 transition hover:text-yellow-100"
+              aria-label="이전 배너"
             >
               &lt;
             </button>
@@ -147,6 +162,7 @@ export default function HomeBannerHubPanel({
               type="button"
               onClick={moveNext}
               className="text-yellow-300 transition hover:text-yellow-100"
+              aria-label="다음 배너"
             >
               &gt;
             </button>
@@ -159,7 +175,6 @@ export default function HomeBannerHubPanel({
       >
         {!imageFailed ? (
           <a
-            key={curKey}
             href={href}
             target="_blank"
             rel="noreferrer"
@@ -176,6 +191,9 @@ export default function HomeBannerHubPanel({
               key={curKey}
               src={cur.image}
               alt={cur.title}
+              loading={safeIndex === 0 ? "eager" : "lazy"}
+              decoding="async"
+              fetchPriority={safeIndex === 0 ? "high" : "auto"}
               className={`block h-full w-full object-cover object-center transition-opacity duration-200 ${
                 isLoaded ? "opacity-100" : "opacity-0"
               }`}
