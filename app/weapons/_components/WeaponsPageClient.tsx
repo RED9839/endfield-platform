@@ -171,18 +171,43 @@ function getSeriesShortName(text: string) {
 
   if (text.includes("고통") || lower.includes("pain")) return "고통";
   if (text.includes("골절") || lower.includes("fracture")) return "골절";
-  if (text.includes("기예") || text.includes("기교") || lower.includes("technique")) return "기예";
+  if (
+    text.includes("기예") ||
+    text.includes("기교") ||
+    lower.includes("technique")
+  ) {
+    return "기예";
+  }
   if (text.includes("방출") || lower.includes("release")) return "방출";
   if (text.includes("분쇄") || lower.includes("crush")) return "분쇄";
   if (text.includes("사기") || lower.includes("morale")) return "사기";
   if (text.includes("어둠") || lower.includes("dark")) return "어둠";
-  if (text.includes("억제") || text.includes("제압") || lower.includes("suppress")) return "억제";
-  if (text.includes("의료") || text.includes("치유") || lower.includes("medical") || lower.includes("heal")) return "의료";
+  if (
+    text.includes("억제") ||
+    text.includes("제압") ||
+    lower.includes("suppress")
+  ) {
+    return "억제";
+  }
+  if (
+    text.includes("의료") ||
+    text.includes("치유") ||
+    lower.includes("medical") ||
+    lower.includes("heal")
+  ) {
+    return "의료";
+  }
   if (text.includes("잔혹") || lower.includes("brutality")) return "잔혹";
   if (text.includes("추격") || lower.includes("pursuit")) return "추격";
   if (text.includes("효율") || lower.includes("efficiency")) return "효율";
   if (text.includes("흐름") || lower.includes("flow")) return "흐름";
-  if (text.includes("강공") || lower.includes("heavystrike") || lower.includes("heavy")) return "강공";
+  if (
+    text.includes("강공") ||
+    lower.includes("heavystrike") ||
+    lower.includes("heavy")
+  ) {
+    return "강공";
+  }
 
   return "";
 }
@@ -223,7 +248,9 @@ const indexedWeapons = (weaponDetails as WeaponLike[])
     const leftTypeOrder = weaponTypeOrderMap[left.currentWeaponType] ?? 999;
     const rightTypeOrder = weaponTypeOrderMap[right.currentWeaponType] ?? 999;
 
-    if (leftTypeOrder !== rightTypeOrder) return leftTypeOrder - rightTypeOrder;
+    if (leftTypeOrder !== rightTypeOrder) {
+      return leftTypeOrder - rightTypeOrder;
+    }
 
     return left.weapon.name.localeCompare(right.weapon.name, "ko");
   });
@@ -324,7 +351,9 @@ function WeaponChip({
     <span
       className="inline-flex h-[18px] shrink-0 items-center gap-1 whitespace-nowrap rounded-md bg-black px-1.5 text-[10px] font-black leading-none"
       style={{
-        border: muted ? "1px solid rgba(255,255,255,0.24)" : `1px solid ${color}`,
+        border: muted
+          ? "1px solid rgba(255,255,255,0.24)"
+          : `1px solid ${color}`,
         color: muted ? "#e5e7eb" : color,
       }}
     >
@@ -341,7 +370,13 @@ function RarityChip({ rarity }: { rarity: number }) {
     <WeaponChip color={color}>
       {iconSrc ? (
         <span className="relative h-3.5 w-3.5 shrink-0">
-          <Image src={iconSrc} alt={`${rarity}성`} fill sizes="14px" className="object-contain" />
+          <Image
+            src={iconSrc}
+            alt={`${rarity}성`}
+            fill
+            sizes="14px"
+            className="object-contain"
+          />
         </span>
       ) : null}
       <span>{rarityLabelMap[rarity] ?? `${rarity}성`}</span>
@@ -378,14 +413,14 @@ const WeaponCard = memo(function WeaponCard({ weapon }: { weapon: WeaponLike }) 
       style={{
         border: `1px solid ${YELLOW_BORDER}`,
         width: "100%",
-        aspectRatio: "170 / 244",
+        aspectRatio: "170 / 238",
       }}
     >
       <Image
         src={weaponImage}
         alt={weapon.name}
         fill
-        sizes="(max-width: 640px) 46vw, 180px"
+        sizes="(max-width: 640px) 46vw, 170px"
         className="object-cover object-center transition duration-300 group-hover:scale-105"
       />
 
@@ -424,16 +459,27 @@ export default function WeaponsPageClient() {
     const normalizedKeyword = deferredKeyword.trim().toLowerCase();
 
     return indexedWeapons
-      .filter(({ currentWeaponType, rawSeriesText, searchText, weaponRarity, weaponSeriesText }) => {
-        const matchesKeyword = normalizedKeyword === "" || searchText.includes(normalizedKeyword);
+      .filter(
+        ({
+          currentWeaponType,
+          rawSeriesText,
+          searchText,
+          weaponRarity,
+          weaponSeriesText,
+        }) => {
+          const matchesKeyword =
+            normalizedKeyword === "" || searchText.includes(normalizedKeyword);
 
-        return (
-          matchesKeyword &&
-          (weaponType === "all" || currentWeaponType === weaponType) &&
-          (rarity === "all" || weaponRarity === rarity) &&
-          (series === "all" || rawSeriesText.includes(series) || weaponSeriesText === series)
-        );
-      })
+          return (
+            matchesKeyword &&
+            (weaponType === "all" || currentWeaponType === weaponType) &&
+            (rarity === "all" || weaponRarity === rarity) &&
+            (series === "all" ||
+              rawSeriesText.includes(series) ||
+              weaponSeriesText === series)
+          );
+        },
+      )
       .map(({ weapon }) => weapon);
   }, [deferredKeyword, weaponType, rarity, series]);
 
@@ -482,7 +528,7 @@ export default function WeaponsPageClient() {
 
         <div className="grid gap-3 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-5">
           <aside
-            className="sticky top-3 z-30 flex min-w-0 max-w-full flex-col overflow-hidden rounded-[20px] bg-[#05070b] shadow-[0_0_30px_rgba(250,204,21,0.04)] lg:top-5 lg:max-h-[calc(100vh-40px)] lg:rounded-[24px]"
+            className="sticky top-3 z-30 flex max-h-[calc(100dvh-24px)] min-w-0 max-w-full self-start flex-col overflow-hidden rounded-[20px] bg-[#05070b] shadow-[0_0_30px_rgba(250,204,21,0.04)] lg:top-5 lg:h-[calc(100vh-40px)] lg:max-h-[calc(100vh-40px)] lg:rounded-[24px]"
             style={{ border: `1px solid ${YELLOW_BORDER}` }}
           >
             <button
@@ -606,7 +652,7 @@ export default function WeaponsPageClient() {
             </div>
 
             {sortedWeapons.length > 0 ? (
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-[repeat(auto-fill,minmax(150px,180px))] sm:justify-between sm:gap-3">
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-[repeat(auto-fill,minmax(150px,170px))] sm:justify-between sm:gap-3">
                 {sortedWeapons.map((weapon) => (
                   <WeaponCard key={weapon.slug} weapon={weapon} />
                 ))}
