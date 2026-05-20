@@ -109,6 +109,11 @@ model UserOperatorSetting {
 
   @@index([userId])
   @@index([userId, type])
+  @@index([updatedAt])
+  @@index([type, updatedAt])
+  @@index([createdAt])
+  @@index([likeCount, createdAt])
+  @@index([viewCount, createdAt])
 }
 
 model UserOperatorSettingLike {
