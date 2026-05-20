@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import GearClientLoader from "./GearClientLoader";
+import "./gear-list-overrides.css";
 
 function GearPageFallback() {
   return <main className="min-h-screen bg-[#050505]" />;
