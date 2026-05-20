@@ -10,7 +10,7 @@ type SortType = "latest" | "popular" | "views";
 
 type OperatorSettingListItem = {
   id: string;
-  type: SettingType;
+  type: string;
   title: string;
   description: string | null;
   slots: any;
@@ -37,6 +37,10 @@ const weaponSearchMap = new Map(
     [weapon.name, weapon.enName, weapon.slug].filter(Boolean).join(" "),
   ]),
 );
+
+function normalizeSettingType(type: string): SettingType {
+  return type === "party" ? "party" : "solo";
+}
 
 function countRegisteredSlots(slots: any) {
   return [slots?.main, slots?.member1, slots?.member2, slots?.member3].filter(
@@ -126,7 +130,7 @@ function toListResponseItem(setting: OperatorSettingListItem) {
 
   return {
     id: setting.id,
-    type: setting.type,
+    type: normalizeSettingType(setting.type),
     title: setting.title,
     description: setting.description,
     slots: setting.slots,
