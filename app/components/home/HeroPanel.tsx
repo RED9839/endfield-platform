@@ -9,6 +9,9 @@ export type FeaturedOperator = {
   heroImage: string;
 };
 
+const HERO_PANEL_SIZES =
+  "(max-width: 640px) calc(100vw - 24px), (max-width: 1024px) calc(100vw - 32px), (max-width: 1536px) 62vw, 980px";
+
 export default function HeroPanel({
   featured,
 }: {
@@ -21,7 +24,7 @@ export default function HeroPanel({
         alt={featured.name}
         fill
         priority
-        sizes="(max-width: 640px) 100vw, (max-width: 1024px) calc(100vw - 32px), (max-width: 1536px) calc((100vw - 320px) * 0.62), 980px"
+        sizes={HERO_PANEL_SIZES}
         className="object-cover object-[50%_35%]"
       />
 
