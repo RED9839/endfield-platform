@@ -27,6 +27,14 @@ const settingTypeLabelMap: Record<SettingType, string> = {
   party: "파티",
 };
 
+const operatorBySlug = new Map(
+  operatorDetails.map((operator: any) => [operator.slug, operator]),
+);
+
+const weaponBySlug = new Map(
+  weaponDetails.map((weapon: any) => [weapon.slug, weapon]),
+);
+
 type PartyMember = {
   name: string;
   image: string;
@@ -117,14 +125,8 @@ function getSettingNickname(setting: ApiSetting) {
 
 function toSettingItem(setting: ApiSetting): SettingItem {
   const mainSlot = setting.slots?.main;
-
-  const mainOperator = operatorDetails.find(
-    (operator: any) => operator.slug === mainSlot?.operatorSlug,
-  ) as any;
-
-  const weapon = weaponDetails.find(
-    (item: any) => item.slug === mainSlot?.form?.weaponSlug,
-  ) as any;
+  const mainOperator = operatorBySlug.get(mainSlot?.operatorSlug) as any;
+  const weapon = weaponBySlug.get(mainSlot?.form?.weaponSlug) as any;
 
   const memberSlots = [
     setting.slots?.member1,
@@ -134,9 +136,7 @@ function toSettingItem(setting: ApiSetting): SettingItem {
 
   const partyMembers = memberSlots
     .map((slot: any) => {
-      const operator = operatorDetails.find(
-        (item: any) => item.slug === slot?.operatorSlug,
-      ) as any;
+      const operator = operatorBySlug.get(slot?.operatorSlug) as any;
       if (!operator) return null;
 
       return {
@@ -326,9 +326,7 @@ export default function Page() {
   ].reduce((sum, value) => sum + value, 0);
 
   function addOperatorFilter(slug: string) {
-    const matched = operatorDetails.find(
-      (operator) => operator.slug === slug,
-    ) as any;
+    const matched = operatorBySlug.get(slug) as any;
 
     setOperatorFilters((prev) => {
       if (prev.includes(slug)) return prev;
@@ -672,9 +670,7 @@ export default function Page() {
             setSelectPanel(null);
           }}
           onSelectWeapon={(slug: string) => {
-            const matched = weaponDetails.find(
-              (weapon) => weapon.slug === slug,
-            );
+            const matched = weaponBySlug.get(slug) as any;
             setWeaponFilter(slug);
             setWeaponFilterName(matched?.name ?? slug);
             setSelectPanel(null);
