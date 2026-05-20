@@ -8,6 +8,36 @@ import { prisma } from "@/lib/prisma";
 type SettingType = "solo" | "party";
 type SortType = "latest" | "popular" | "views";
 
+type OperatorSettingListItem = {
+  id: string;
+  type: SettingType;
+  title: string;
+  description: string | null;
+  slots: any;
+  createdAt: Date;
+  updatedAt: Date;
+  likeCount: number;
+  viewCount: number;
+  nickname: string | null;
+  user: {
+    nickname: string | null;
+  } | null;
+};
+
+const operatorSearchMap = new Map(
+  operatorDetails.map((operator: any) => [
+    operator.slug,
+    [operator.name, operator.enName, operator.slug].filter(Boolean).join(" "),
+  ]),
+);
+
+const weaponSearchMap = new Map(
+  weaponDetails.map((weapon: any) => [
+    weapon.slug,
+    [weapon.name, weapon.enName, weapon.slug].filter(Boolean).join(" "),
+  ]),
+);
+
 function countRegisteredSlots(slots: any) {
   return [slots?.main, slots?.member1, slots?.member2, slots?.member3].filter(
     (slot) => Boolean(slot?.operatorSlug),
@@ -33,7 +63,7 @@ function splitListParam(value: string | null) {
     .filter(Boolean);
 }
 
-function getSettingNickname(setting: any) {
+function getSettingNickname(setting: Pick<OperatorSettingListItem, "nickname" | "user">) {
   return String(setting.nickname ?? setting.user?.nickname ?? "").trim();
 }
 
@@ -56,49 +86,57 @@ function getSettingWeaponSlug(slots: any) {
   return String(slots?.main?.form?.weaponSlug ?? "").trim();
 }
 
-function getSettingSearchText(setting: any) {
+function getSettingSearchText(setting: OperatorSettingListItem) {
   const operatorSlugs = getSettingOperatorSlugs(setting.slots);
-  const operators = operatorSlugs
-    .map((slug) => operatorDetails.find((operator: any) => operator.slug === slug))
-    .filter(Boolean) as any[];
   const weaponSlug = getSettingWeaponSlug(setting.slots);
-  const weapon = weaponDetails.find((item: any) => item.slug === weaponSlug) as any;
 
   return [
     getSettingNickname(setting),
     setting.title,
     setting.description,
     ...operatorSlugs,
-    ...operators.flatMap((operator) => [operator.name, operator.enName, operator.slug]),
-    weapon?.name,
-    weapon?.enName,
-    weapon?.slug,
+    ...operatorSlugs.map((slug) => operatorSearchMap.get(slug)),
+    weaponSlug,
+    weaponSearchMap.get(weaponSlug),
   ]
+    .filter(Boolean)
     .join(" ")
     .toLowerCase();
 }
 
-function sortSettings(settings: any[], sortType: SortType) {
+function sortSettings(settings: OperatorSettingListItem[], sortType: SortType) {
   return [...settings].sort((a, b) => {
-    const aCreatedAt = String(a.createdAt ?? "");
-    const bCreatedAt = String(b.createdAt ?? "");
+    const aCreatedAt = a.createdAt.toISOString();
+    const bCreatedAt = b.createdAt.toISOString();
 
     if (sortType === "popular") {
-      return (
-        Number(b.likeCount ?? b.likes ?? 0) -
-          Number(a.likeCount ?? a.likes ?? 0) || bCreatedAt.localeCompare(aCreatedAt)
-      );
+      return b.likeCount - a.likeCount || bCreatedAt.localeCompare(aCreatedAt);
     }
 
     if (sortType === "views") {
-      return (
-        Number(b.viewCount ?? b.views ?? 0) -
-          Number(a.viewCount ?? a.views ?? 0) || bCreatedAt.localeCompare(aCreatedAt)
-      );
+      return b.viewCount - a.viewCount || bCreatedAt.localeCompare(aCreatedAt);
     }
 
     return bCreatedAt.localeCompare(aCreatedAt);
   });
+}
+
+function toListResponseItem(setting: OperatorSettingListItem) {
+  const nickname = setting.nickname ?? setting.user?.nickname ?? null;
+
+  return {
+    id: setting.id,
+    type: setting.type,
+    title: setting.title,
+    description: setting.description,
+    slots: setting.slots,
+    createdAt: setting.createdAt,
+    updatedAt: setting.updatedAt,
+    likeCount: setting.likeCount,
+    viewCount: setting.viewCount,
+    nickname,
+    userNickname: nickname,
+  };
 }
 
 async function getCurrentUser() {
@@ -146,8 +184,19 @@ export async function GET(request: Request) {
     .filter(Boolean);
 
   const settings = await prisma.userOperatorSetting.findMany({
+    where: settingType === "all" ? undefined : { type: settingType },
     orderBy: { updatedAt: "desc" },
-    include: {
+    select: {
+      id: true,
+      type: true,
+      title: true,
+      description: true,
+      slots: true,
+      createdAt: true,
+      updatedAt: true,
+      likeCount: true,
+      viewCount: true,
+      nickname: true,
       user: {
         select: {
           nickname: true,
@@ -164,23 +213,18 @@ export async function GET(request: Request) {
     const matchesKeyword =
       keywordQueries.length === 0 ||
       keywordQueries.every((query) => searchableText.includes(query));
-    const matchesType = settingType === "all" || setting.type === settingType;
     const matchesOperator =
       operatorFilters.length === 0 ||
       operatorFilters.some((operatorSlug) => operatorSlugs.includes(operatorSlug));
     const matchesWeapon = !weaponFilter || weaponSlug === weaponFilter;
 
-    return matchesKeyword && matchesType && matchesOperator && matchesWeapon;
+    return matchesKeyword && matchesOperator && matchesWeapon;
   });
 
   return NextResponse.json({
     ok: true,
     total: filteredSettings.length,
-    settings: sortSettings(filteredSettings, sortType).map((setting) => ({
-      ...setting,
-      nickname: setting.nickname ?? setting.user?.nickname ?? null,
-      userNickname: setting.nickname ?? setting.user?.nickname ?? null,
-    })),
+    settings: sortSettings(filteredSettings, sortType).map(toListResponseItem),
   });
 }
 
