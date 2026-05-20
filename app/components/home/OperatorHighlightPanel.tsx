@@ -112,7 +112,7 @@ export default function OperatorHighlightPanel({
             src={fullSrc}
             alt={operator.name}
             fill
-            sizes="(max-width: 1280px) 100vw, 70vw"
+            sizes="(max-width: 768px) 100vw, (max-width: 1536px) calc(100vw - 340px), 1280px"
             className="object-cover object-center opacity-25"
           />
         </div>
