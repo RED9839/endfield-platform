@@ -19,6 +19,9 @@ export type OperatorHighlightPanelProps = {
   href: string;
 };
 
+const HIGHLIGHT_IMAGE_SIZES =
+  "(max-width: 768px) calc(100vw - 24px), (max-width: 1536px) calc(100vw - 340px), 1180px";
+
 const rarityLabelMap: Record<number, string> = {
   6: "6★",
   5: "5★",
@@ -112,7 +115,7 @@ export default function OperatorHighlightPanel({
             src={fullSrc}
             alt={operator.name}
             fill
-            sizes="(max-width: 768px) 100vw, (max-width: 1536px) calc(100vw - 340px), 1280px"
+            sizes={HIGHLIGHT_IMAGE_SIZES}
             className="object-cover object-center opacity-25"
           />
         </div>
