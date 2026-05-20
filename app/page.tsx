@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
@@ -13,10 +12,12 @@ import QuickAccessPanel, {
 import OperatorHighlightPanel from "@/app/components/home/OperatorHighlightPanel";
 
 import { getOperatorDetailByName } from "@/data/operators-detail-data";
-
-import BannerSection, {
+import {
+  getHomeData,
   type HomeApiResponse,
-} from "./components/home/BannerSection";
+} from "@/lib/home/get-home-data";
+
+import BannerSection from "./components/home/BannerSection";
 
 type SimpleHomeItem = {
   id?: string;
@@ -284,38 +285,6 @@ function resolveFeaturedOperatorName(data: HomeApiResponse | null) {
   return defaultFeaturedOperatorName;
 }
 
-async function getBaseUrl() {
-  const headersList = await headers();
-
-  const host = headersList.get("host");
-
-  const protocol = headersList.get("x-forwarded-proto") ?? "http";
-
-  if (!host) return "http://localhost:3000";
-
-  return `${protocol}://${host}`;
-}
-
-async function getHomeData(): Promise<HomeApiResponse | null> {
-  try {
-    const baseUrl = await getBaseUrl();
-
-    const response = await fetch(`${baseUrl}/api/home`, {
-      next: { revalidate: 300 },
-    });
-
-    const data = (await response.json()) as HomeApiResponse;
-
-    if (!response.ok || !data?.ok) {
-      return null;
-    }
-
-    return data;
-  } catch {
-    return null;
-  }
-}
-
 export default async function HomePage() {
   const session = await auth();
 
@@ -352,7 +321,8 @@ export default async function HomePage() {
     redirect("/setup-profile");
   }
 
-  const homeData = await getHomeData();
+  const homePayload = await getHomeData();
+  const homeData = homePayload.ok ? homePayload : null;
 
   const featuredOperatorName =
     resolveFeaturedOperatorName(homeData);
