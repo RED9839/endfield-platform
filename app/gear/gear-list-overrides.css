@@ -1,0 +1,13 @@
+@media (min-width: 640px) {
+  main section:has(a[href^="/gear/"]) {
+    overflow: hidden;
+  }
+
+  main section div.grid:has(> a[href^="/gear/"]) {
+    grid-template-columns: repeat(auto-fill, minmax(145px, 160px)) !important;
+  }
+
+  main section div.grid:has(> a[href^="/gear/"]) > a[href^="/gear/"] {
+    max-width: 160px;
+  }
+}
