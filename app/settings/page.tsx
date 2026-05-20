@@ -2,17 +2,20 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import CommonSelectPanel from "@/app/components/select/CommonSelectPanel";
+import {
+  YELLOW_BORDER,
+  YELLOW_BORDER_SOFT,
+  YELLOW_MAIN,
+  YELLOW_TEXT,
+} from "@/app/styles/styles";
 import { operatorDetails } from "@/data/operators-detail-data";
 import { weaponDetails } from "@/data/weapons-detail-data";
 
-const YELLOW_MAIN = "#ffd24a";
-const YELLOW_TEXT = "#ffdc70";
-const YELLOW_BORDER = "rgba(255,196,74,0.14)";
-const YELLOW_BORDER_SOFT = "rgba(255,196,74,0.10)";
 const FILTER_BG = "#071019";
+const FILTER_BORDER = "rgba(255, 204, 77, 0.18)";
 const MAX_OPERATOR_FILTERS = 4;
 
 type SettingType = "solo" | "party";
@@ -179,12 +182,38 @@ function toSettingItem(setting: ApiSetting): SettingItem {
   };
 }
 
+function buildSettingsApiUrl({
+  keyword,
+  settingType,
+  sortType,
+  operatorFilters,
+  weaponFilter,
+}: {
+  keyword: string;
+  settingType: SettingType | "all";
+  sortType: SortType;
+  operatorFilters: string[];
+  weaponFilter: string;
+}) {
+  const params = new URLSearchParams();
+
+  if (keyword.trim()) params.set("keyword", keyword.trim());
+  if (settingType !== "all") params.set("type", settingType);
+  if (sortType !== "latest") params.set("sort", sortType);
+  if (operatorFilters.length) params.set("operators", operatorFilters.join(","));
+  if (weaponFilter) params.set("weapon", weaponFilter);
+
+  const queryString = params.toString();
+  return queryString ? `/api/operator-settings?${queryString}` : "/api/operator-settings";
+}
+
 export default function Page() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [keyword, setKeyword] = useState("");
   const [settingType, setSettingType] = useState<SettingType | "all">("all");
   const [sortType, setSortType] = useState<SortType>("latest");
   const [settings, setSettings] = useState<SettingItem[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
@@ -207,21 +236,34 @@ export default function Page() {
       setLoading(true);
 
       try {
-        const response = await fetch("/api/operator-settings", {
-          cache: "no-store",
-        });
+        const response = await fetch(
+          buildSettingsApiUrl({
+            keyword,
+            settingType,
+            sortType,
+            operatorFilters,
+            weaponFilter,
+          }),
+          { cache: "no-store" },
+        );
         const data = await response.json().catch(() => null);
 
         if (!mounted) return;
 
         if (!response.ok || !data?.ok) {
           setSettings([]);
+          setTotalCount(0);
           return;
         }
 
-        setSettings((data.settings ?? []).map(toSettingItem));
+        const nextSettings = (data.settings ?? []).map(toSettingItem);
+        setSettings(nextSettings);
+        setTotalCount(Number(data.total ?? nextSettings.length));
       } catch {
-        if (mounted) setSettings([]);
+        if (mounted) {
+          setSettings([]);
+          setTotalCount(0);
+        }
       } finally {
         if (mounted) setLoading(false);
       }
@@ -232,7 +274,7 @@ export default function Page() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [keyword, settingType, sortType, operatorFilters, weaponFilter]);
 
   useEffect(() => {
     let mounted = true;
@@ -257,51 +299,6 @@ export default function Page() {
       mounted = false;
     };
   }, []);
-
-  const filteredSettings = useMemo(() => {
-    const queries = keyword
-      .split("/")
-      .map((item) => item.trim().toLowerCase())
-      .filter(Boolean);
-
-    return settings
-      .filter((setting) => {
-        const searchableText = [
-          setting.nickname,
-          setting.operatorName,
-          setting.operatorEnName,
-          ...(setting.partyMembers?.map((member) => member.name) ?? []),
-          setting.title,
-          setting.description,
-        ]
-          .join(" ")
-          .toLowerCase();
-
-        const matchesKeyword =
-          queries.length === 0 ||
-          queries.every((query) => searchableText.includes(query));
-        const matchesType =
-          settingType === "all" || setting.type === settingType;
-        const matchesOperator =
-          operatorFilters.length === 0 ||
-          operatorFilters.some((operatorSlug) =>
-            setting.operatorSlugs.includes(operatorSlug),
-          );
-        const matchesWeapon =
-          !weaponFilter || setting.weaponSlug === weaponFilter;
-
-        return (
-          matchesKeyword && matchesType && matchesOperator && matchesWeapon
-        );
-      })
-      .sort((a, b) => {
-        if (sortType === "popular")
-          return b.likes - a.likes || b.createdAt.localeCompare(a.createdAt);
-        if (sortType === "views")
-          return b.views - a.views || b.createdAt.localeCompare(a.createdAt);
-        return b.createdAt.localeCompare(a.createdAt);
-      });
-  }, [settings, keyword, settingType, sortType, operatorFilters, weaponFilter]);
 
   const activeFilterCount = [
     keyword.trim() ? 1 : 0,
@@ -499,7 +496,7 @@ export default function Page() {
                     style={{
                       borderColor: operatorFilters.length
                         ? YELLOW_MAIN
-                        : "rgba(255, 204, 77, 0.18)",
+                        : FILTER_BORDER,
                       background: operatorFilters.length
                         ? `${YELLOW_MAIN}22`
                         : FILTER_BG,
@@ -533,9 +530,7 @@ export default function Page() {
                     onClick={() => setSelectPanel("weapon")}
                     className="h-[36px] min-w-0 rounded-xl border px-3 text-left text-[12px] font-black transition hover:bg-[#101923] lg:h-[38px] lg:w-full"
                     style={{
-                      borderColor: weaponFilter
-                        ? YELLOW_MAIN
-                        : "rgba(255, 204, 77, 0.18)",
+                      borderColor: weaponFilter ? YELLOW_MAIN : FILTER_BORDER,
                       background: weaponFilter ? `${YELLOW_MAIN}22` : FILTER_BG,
                       color: weaponFilter ? "#ffffff" : "#d4d4d8",
                     }}
@@ -596,7 +591,7 @@ export default function Page() {
               <p className="text-sm text-zinc-400">
                 총{" "}
                 <span className="font-black" style={{ color: YELLOW_TEXT }}>
-                  {filteredSettings.length}
+                  {totalCount}
                 </span>
                 개 세팅
               </p>
@@ -606,9 +601,9 @@ export default function Page() {
               <div className="flex h-[300px] items-center justify-center rounded-[18px] border border-white/10 bg-black text-sm text-zinc-500 sm:h-[420px]">
                 세팅 목록 불러오는 중...
               </div>
-            ) : filteredSettings.length > 0 ? (
+            ) : settings.length > 0 ? (
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-[repeat(auto-fill,minmax(190px,220px))] sm:justify-between sm:gap-3 lg:gap-y-5">
-                {filteredSettings.map((setting) => (
+                {settings.map((setting) => (
                   <SettingCard key={setting.id} setting={setting} />
                 ))}
               </div>
@@ -781,7 +776,7 @@ function FilterButton({
       onClick={onClick}
       className="flex h-[36px] min-w-0 shrink-0 items-center gap-2 rounded-xl border px-3 text-left text-[12px] font-bold transition hover:bg-[#101923] lg:h-[38px] lg:w-full"
       style={{
-        borderColor: active ? YELLOW_MAIN : "rgba(255, 204, 77, 0.18)",
+        borderColor: active ? YELLOW_MAIN : FILTER_BORDER,
         background: active ? `${YELLOW_MAIN}22` : FILTER_BG,
         color: active ? "#ffffff" : "#d4d4d8",
       }}
