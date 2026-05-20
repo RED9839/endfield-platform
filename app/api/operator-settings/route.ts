@@ -24,6 +24,10 @@ type OperatorSettingListItem = {
   } | null;
 };
 
+const DEFAULT_PAGE = 1;
+const DEFAULT_LIMIT = 24;
+const MAX_LIMIT = 60;
+
 const operatorSearchMap = new Map(
   operatorDetails.map((operator: any) => [
     operator.slug,
@@ -65,6 +69,17 @@ function splitListParam(value: string | null) {
     .split(",")
     .map((item) => item.trim())
     .filter(Boolean);
+}
+
+function getPageParam(value: string | null) {
+  const page = Number(value ?? DEFAULT_PAGE);
+  return Number.isFinite(page) && page > 0 ? Math.floor(page) : DEFAULT_PAGE;
+}
+
+function getLimitParam(value: string | null) {
+  const limit = Number(value ?? DEFAULT_LIMIT);
+  if (!Number.isFinite(limit) || limit <= 0) return DEFAULT_LIMIT;
+  return Math.min(Math.floor(limit), MAX_LIMIT);
 }
 
 function getSettingNickname(setting: Pick<OperatorSettingListItem, "nickname" | "user">) {
@@ -177,6 +192,8 @@ export async function GET(request: Request) {
   const sortParam = cleanSearchParam(searchParams.get("sort"));
   const operatorFilters = splitListParam(searchParams.get("operators"));
   const weaponFilter = cleanSearchParam(searchParams.get("weapon"));
+  const page = getPageParam(searchParams.get("page"));
+  const limit = getLimitParam(searchParams.get("limit"));
 
   const settingType: SettingType | "all" =
     typeParam === "solo" || typeParam === "party" ? typeParam : "all";
@@ -225,10 +242,20 @@ export async function GET(request: Request) {
     return matchesKeyword && matchesOperator && matchesWeapon;
   });
 
+  const total = filteredSettings.length;
+  const start = (page - 1) * limit;
+  const pagedSettings = sortSettings(filteredSettings, sortType).slice(
+    start,
+    start + limit,
+  );
+
   return NextResponse.json({
     ok: true,
-    total: filteredSettings.length,
-    settings: sortSettings(filteredSettings, sortType).map(toListResponseItem),
+    page,
+    limit,
+    total,
+    hasMore: start + limit < total,
+    settings: pagedSettings.map(toListResponseItem),
   });
 }
 
