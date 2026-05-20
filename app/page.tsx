@@ -11,7 +11,7 @@ import OperatorHighlightPanel from "@/app/components/home/OperatorHighlightPanel
 
 import {
   defaultHomeFeaturedOperator,
-  getHomeFeaturedOperator,
+  findHomeFeaturedOperatorFromTitle,
 } from "@/lib/home/featured-operators";
 import {
   getHomeData,
@@ -33,8 +33,6 @@ type SimpleHomeItem = {
   articleImage?: string;
   thumbnail?: string;
 };
-
-const defaultFeaturedOperatorName = "장방이";
 
 const navigationItems = [
   { label: "오퍼레이터", shortLabel: "오퍼", href: "/operators" },
@@ -257,16 +255,7 @@ function SectionFrame({
   );
 }
 
-function guessOperatorNameFromTitle(title: string) {
-  if (title.includes("장방이")) return "장방이";
-  if (title.includes("로시")) return "로시";
-  if (title.includes("샤이닝")) return "샤이닝";
-  if (title.includes("라스트 라이트")) return "라스트 라이트";
-
-  return defaultFeaturedOperatorName;
-}
-
-function resolveFeaturedOperatorName(data: HomeApiResponse | null) {
+function resolveFeaturedOperator(data: HomeApiResponse | null) {
   const merged: SimpleHomeItem[] = [
     ...((data?.latest ?? []) as SimpleHomeItem[]),
     ...((data?.notice ?? []) as SimpleHomeItem[]),
@@ -281,10 +270,10 @@ function resolveFeaturedOperatorName(data: HomeApiResponse | null) {
   );
 
   if (pickup?.title) {
-    return guessOperatorNameFromTitle(pickup.title);
+    return findHomeFeaturedOperatorFromTitle(pickup.title) ?? defaultHomeFeaturedOperator;
   }
 
-  return defaultFeaturedOperatorName;
+  return defaultHomeFeaturedOperator;
 }
 
 export default async function HomePage() {
@@ -296,13 +285,7 @@ export default async function HomePage() {
 
   const homePayload = await getHomeData();
   const homeData = homePayload.ok ? homePayload : null;
-
-  const featuredOperatorName =
-    resolveFeaturedOperatorName(homeData);
-
-  const featuredOperator =
-    getHomeFeaturedOperator(featuredOperatorName) ??
-    defaultHomeFeaturedOperator;
+  const featuredOperator = resolveFeaturedOperator(homeData);
 
   const heroFeaturedData = {
     name: featuredOperator.name,
