@@ -1,5 +1,3 @@
-"use client";
-
 import Image from "next/image";
 import Link from "next/link";
 
@@ -23,7 +21,6 @@ export default function HeroPanel({
         alt={featured.name}
         fill
         priority
-        loading="eager"
         sizes="(max-width: 1024px) 100vw, calc(100vw - 260px)"
         className="object-cover object-[50%_35%]"
       />
@@ -43,7 +40,7 @@ export default function HeroPanel({
           <p className="mt-1 text-sm text-zinc-300">{featured.enName}</p>
 
           <Link
-            href={`/operators/${featured.slug}`}
+            href={featured.href}
             className="mt-4 inline-block rounded-xl border border-yellow-500/25 bg-yellow-500/10 px-5 py-2 text-sm font-medium text-yellow-300 transition hover:bg-yellow-500/20"
           >
             상세 보기
