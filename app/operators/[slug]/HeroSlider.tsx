@@ -11,6 +11,8 @@ type Props = {
 
 const PANEL_RADIUS = "24px";
 const BORDER_COLOR = "rgba(255,196,74,0.14)";
+const HERO_IMAGE_SIZES =
+  "(max-width: 768px) calc(100vw - 24px), (max-width: 1280px) calc(100vw - 48px), 1180px";
 
 const navButtonStyle: React.CSSProperties = {
   position: "absolute",
@@ -42,13 +44,13 @@ export default function HeroSlider({ images, alt, enName }: Props) {
 
   const goPrev = () => {
     setCurrentIndex((prev) =>
-      prev === 0 ? validImages.length - 1 : prev - 1
+      prev === 0 ? validImages.length - 1 : prev - 1,
     );
   };
 
   const goNext = () => {
     setCurrentIndex((prev) =>
-      prev === validImages.length - 1 ? 0 : prev + 1
+      prev === validImages.length - 1 ? 0 : prev + 1,
     );
   };
 
@@ -70,7 +72,7 @@ export default function HeroSlider({ images, alt, enName }: Props) {
         alt={alt}
         fill
         priority
-        sizes="100vw"
+        sizes={HERO_IMAGE_SIZES}
         style={{
           objectFit: "cover",
           filter: "blur(16px) brightness(0.25)",
@@ -91,7 +93,7 @@ export default function HeroSlider({ images, alt, enName }: Props) {
           alt={alt}
           fill
           priority
-          sizes="100vw"
+          sizes={HERO_IMAGE_SIZES}
           style={{ objectFit: "contain" }}
         />
       </div>
