@@ -9,7 +9,10 @@ import QuickAccessPanel, {
 } from "@/app/components/home/QuickAccessPanel";
 import OperatorHighlightPanel from "@/app/components/home/OperatorHighlightPanel";
 
-import { getOperatorDetailByName } from "@/data/operators-detail-data";
+import {
+  defaultHomeFeaturedOperator,
+  getHomeFeaturedOperator,
+} from "@/lib/home/featured-operators";
 import {
   getHomeData,
   type HomeApiResponse,
@@ -298,28 +301,16 @@ export default async function HomePage() {
     resolveFeaturedOperatorName(homeData);
 
   const featuredOperator =
-    getOperatorDetailByName(featuredOperatorName) ??
-    getOperatorDetailByName(defaultFeaturedOperatorName) ??
-    getOperatorDetailByName("라스트 라이트") ??
-    getOperatorDetailByName("lastrite") ??
-    null;
+    getHomeFeaturedOperator(featuredOperatorName) ??
+    defaultHomeFeaturedOperator;
 
-  const heroFeaturedData = featuredOperator
-    ? {
-        name: featuredOperator.name,
-        enName:
-          featuredOperator.enName ?? featuredOperator.slug,
-        slug: featuredOperator.slug,
-        href: `/operators/${featuredOperator.slug}`,
-        heroImage: `/operators/${featuredOperator.slug}/full.webp`,
-      }
-    : {
-        name: "장방이",
-        enName: "Zhuang Fangyi",
-        slug: "zhuang-fangyi",
-        href: "/operators/zhuang-fangyi",
-        heroImage: "/operators/zhuang-fangyi/full.webp",
-      };
+  const heroFeaturedData = {
+    name: featuredOperator.name,
+    enName: featuredOperator.enName,
+    slug: featuredOperator.slug,
+    href: featuredOperator.href,
+    heroImage: featuredOperator.heroImage,
+  };
 
   return (
     <main className="min-h-screen bg-[#050505] text-white">
