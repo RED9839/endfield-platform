@@ -13,13 +13,13 @@ export type HomeFeaturedOperator = {
 
 const featuredOperators: HomeFeaturedOperator[] = [
   {
-    slug: "zhuang-fangyi",
+    slug: "zhuangfangyi",
     name: "장방이",
     enName: "Zhuang Fangyi",
-    href: "/operators/zhuang-fangyi",
-    heroImage: "/operators/zhuang-fangyi/full.webp",
-    avatar: "/operators/zhuang-fangyi/avatar.webp",
-    fullImage: "/operators/zhuang-fangyi/full.webp",
+    href: "/operators/zhuangfangyi",
+    heroImage: "/operators/zhuangfangyi/full.webp",
+    avatar: "/operators/zhuangfangyi/avatar.webp",
+    fullImage: "/operators/zhuangfangyi/full.webp",
     rarity: 6,
   },
   {
