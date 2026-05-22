@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { Fragment, useEffect, useMemo, useState, type ReactNode } from "react";
 
 type WeaponLevelStatRow = {
@@ -38,7 +37,7 @@ type SkillTabKey = "ability" | "attribute" | "series";
 type Props = {
   weaponName: string;
   weaponEnName?: string;
-  weaponImage: string;
+  weaponImage?: string;
   weaponTypeLabel: string;
   levelStats?: WeaponLevelStatRow[] | null;
   skills?: WeaponSkillDetail[];
@@ -47,7 +46,6 @@ type Props = {
 const LEVEL_MARKS = [1, 20, 40, 60, 80, 90];
 const TAB_ORDER: SkillTabKey[] = ["ability", "attribute", "series"];
 const YELLOW_TEXT = "#ffdc70";
-const YELLOW_MAIN = "#ffd24a";
 
 const TAB_LABEL_MAP: Record<SkillTabKey, string> = {
   ability: "능력치",
@@ -68,7 +66,9 @@ function getSkillSourceText(skill: WeaponSkillDetail) {
     .map((meta) => `${normalizeText(meta.label)} ${normalizeText(meta.value)}`)
     .join(" ");
 
-  return `${normalizeText(skill.typeLabel)} ${normalizeText(skill.name)} ${normalizeText(skill.key).toLowerCase()} ${metaText}`;
+  return `${normalizeText(skill.typeLabel)} ${normalizeText(skill.name)} ${normalizeText(
+    skill.key,
+  ).toLowerCase()} ${metaText}`;
 }
 
 function getSkillTabKey(skill: WeaponSkillDetail): SkillTabKey {
@@ -375,6 +375,9 @@ export default function WeaponLevelPanel({
   levelStats,
   skills = [],
 }: Props) {
+  const safeWeaponName = normalizeText(weaponName) || "무기";
+  const safeWeaponImage = normalizeText(weaponImage);
+
   const safeStats = useMemo<WeaponLevelStatRow[]>(() => {
     if (!Array.isArray(levelStats)) return [];
 
@@ -406,6 +409,7 @@ export default function WeaponLevelPanel({
     };
 
     for (const skill of skills) {
+      if (!skill) continue;
       const key = getSkillTabKey(skill);
       grouped[key] ??= skill;
     }
@@ -443,19 +447,21 @@ export default function WeaponLevelPanel({
         <div className="relative grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-stretch">
           <div className="flex min-w-0 items-center gap-4 rounded-[24px] border border-yellow-500/10 bg-black/25 p-3">
             <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-[22px] border border-yellow-500/15 bg-black/45 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] sm:h-28 sm:w-28">
-              <Image
-                src={weaponImage}
-                alt={weaponName}
-                fill
-                sizes="112px"
-                className="object-contain p-2 drop-shadow-[0_10px_18px_rgba(0,0,0,0.58)]"
-              />
+              {safeWeaponImage ? (
+                <img
+                  src={safeWeaponImage}
+                  alt={safeWeaponName}
+                  className="h-full w-full object-contain p-2 drop-shadow-[0_10px_18px_rgba(0,0,0,0.58)]"
+                />
+              ) : (
+                <div className="grid h-full w-full place-items-center text-3xl font-black text-yellow-100">?</div>
+              )}
             </div>
 
             <div className="min-w-0">
               <p className="text-[10px] font-black tracking-[0.24em] text-zinc-500">WEAPON STATUS</p>
               <h2 className="mt-1 break-keep text-[clamp(30px,5vw,46px)] font-black leading-none text-white">
-                {weaponName}
+                {safeWeaponName}
               </h2>
               <div className="mt-2 flex flex-wrap items-center gap-2 text-xs font-black text-zinc-400">
                 {weaponEnName ? <span>{weaponEnName}</span> : null}
@@ -551,7 +557,10 @@ export default function WeaponLevelPanel({
           </div>
         </div>
 
-        <SkillHudPanel skill={groupedSkills[activeTab] ?? groupedSkills[firstAvailableTab]} tabKey={groupedSkills[activeTab] ? activeTab : firstAvailableTab} />
+        <SkillHudPanel
+          skill={groupedSkills[activeTab] ?? groupedSkills[firstAvailableTab]}
+          tabKey={groupedSkills[activeTab] ? activeTab : firstAvailableTab}
+        />
       </div>
     </section>
   );
