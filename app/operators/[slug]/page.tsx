@@ -78,6 +78,47 @@ const statIconMap: Record<string, string> = {
   의지: "/icons/stats/will.webp",
 };
 
+function InlineIcon({ src, alt, size = 16 }: { src?: string; alt: string; size?: 14 | 16 | 18 | 20 }) {
+  if (!src) return null;
+
+  const sizeClassMap = {
+    14: "h-3.5 w-3.5",
+    16: "h-4 w-4",
+    18: "h-[18px] w-[18px]",
+    20: "h-5 w-5",
+  };
+
+  return (
+    <span className={`relative inline-block shrink-0 ${sizeClassMap[size]}`}>
+      <Image src={src} alt={alt} fill sizes={`${size}px`} className="object-contain" />
+    </span>
+  );
+}
+
+function InfoBadge({
+  label,
+  icon,
+  highlight = false,
+}: {
+  label: string;
+  icon?: string;
+  highlight?: boolean;
+}) {
+  return (
+    <span
+      className={[
+        "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-black",
+        highlight
+          ? "border border-yellow-400/30 bg-yellow-400/15 text-yellow-100"
+          : "border border-white/10 bg-white/5 text-zinc-200",
+      ].join(" ")}
+    >
+      <span>{label}</span>
+      <InlineIcon src={icon} alt={label} size={16} />
+    </span>
+  );
+}
+
 function DetailSection({
   id,
   title,
@@ -129,27 +170,16 @@ function InfoTile({
 }) {
   return (
     <div className="rounded-2xl border border-yellow-500/10 bg-black/40 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-      <div className="flex items-center gap-2">
-        {icon ? (
-          <div className="relative h-5 w-5 shrink-0">
-            <Image
-              src={icon}
-              alt={label}
-              fill
-              sizes="20px"
-              className="object-contain"
-            />
-          </div>
-        ) : null}
-
-        <p className="text-[10px] font-black tracking-[0.12em] text-zinc-500">
-          {label}
-        </p>
-      </div>
-
-      <p className="mt-2 truncate text-sm font-black text-yellow-100">
-        {value || "-"}
+      <p className="text-[10px] font-black tracking-[0.12em] text-zinc-500">
+        {label}
       </p>
+
+      <div className="mt-2 flex min-w-0 items-center gap-1.5">
+        <p className="min-w-0 truncate text-sm font-black text-yellow-100">
+          {value || "-"}
+        </p>
+        <InlineIcon src={icon} alt={label} size={18} />
+      </div>
     </div>
   );
 }
@@ -176,6 +206,12 @@ export default async function OperatorDetailPage({
   const elementLabel = elementLabelMap[operator.element] ?? operator.element;
   const classLabel = classLabelMap[operator.class] ?? operator.class;
   const weaponLabel = weaponLabelMap[operator.weapon] ?? operator.weapon;
+  const elementIcon = elementIconMap[operator.element];
+  const classIcon = classIconMap[operator.class];
+  const weaponIcon = weaponIconMap[operator.weapon];
+  const rarityIcon = `/icons/rarity/${operator.rarity}star.webp`;
+  const mainStatIcon = statIconMap[operator.mainStatLabel || ""];
+  const subStatIcon = statIconMap[operator.subStatLabel || ""];
 
   const sectionLinks = [
     { href: "#level", label: "스탯" },
@@ -300,55 +336,26 @@ export default async function OperatorDetailPage({
                   </p>
 
                   <div className="mt-5 flex flex-wrap gap-2">
-                    <span className="rounded-full border border-yellow-400/30 bg-yellow-400/15 px-3 py-1.5 text-xs font-black text-yellow-100">
-                      {elementLabel}
-                    </span>
-                    <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-black text-zinc-200">
-                      {classLabel}
-                    </span>
-                    <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-black text-zinc-200">
-                      {weaponLabel}
-                    </span>
-                    <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-black text-zinc-200">
-                      {operator.rarity}성
-                    </span>
+                    <InfoBadge label={elementLabel} icon={elementIcon} highlight />
+                    <InfoBadge label={classLabel} icon={classIcon} />
+                    <InfoBadge label={weaponLabel} icon={weaponIcon} />
+                    <InfoBadge label={`${operator.rarity}성`} icon={rarityIcon} />
                   </div>
 
                   <div className="mt-5 grid grid-cols-2 gap-2">
-                    <InfoTile
-                      label="속성"
-                      value={elementLabel}
-                      icon={elementIconMap[operator.element]}
-                    />
-
-                    <InfoTile
-                      label="클래스"
-                      value={classLabel}
-                      icon={classIconMap[operator.class]}
-                    />
-
-                    <InfoTile
-                      label="무기"
-                      value={weaponLabel}
-                      icon={weaponIconMap[operator.weapon]}
-                    />
-
-                    <InfoTile
-                      label="레어도"
-                      value={`${operator.rarity}성`}
-                      icon={`/icons/rarity/${operator.rarity}star.webp`}
-                    />
-
+                    <InfoTile label="속성" value={elementLabel} icon={elementIcon} />
+                    <InfoTile label="클래스" value={classLabel} icon={classIcon} />
+                    <InfoTile label="무기" value={weaponLabel} icon={weaponIcon} />
+                    <InfoTile label="레어도" value={`${operator.rarity}성`} icon={rarityIcon} />
                     <InfoTile
                       label="주 능력치"
                       value={operator.mainStatLabel || "-"}
-                      icon={statIconMap[operator.mainStatLabel || ""]}
+                      icon={mainStatIcon}
                     />
-
                     <InfoTile
                       label="보조 능력치"
                       value={operator.subStatLabel || "-"}
-                      icon={statIconMap[operator.subStatLabel || ""]}
+                      icon={subStatIcon}
                     />
                   </div>
 
