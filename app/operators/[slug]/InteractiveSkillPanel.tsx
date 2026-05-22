@@ -273,11 +273,11 @@ function FoldSection({
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
-    <div className="min-w-0">
+    <div className="mt-4 min-w-0 overflow-hidden rounded-[18px] border border-white/10 bg-black/20 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]">
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
-        className="flex w-full items-center justify-between gap-3 text-left"
+        className="flex min-h-[58px] w-full items-center justify-between gap-3 px-4 py-3 text-left transition hover:bg-yellow-400/5"
       >
         <div className="min-w-0">
           <span className="text-base font-black text-yellow-200">{title}</span>
@@ -285,12 +285,10 @@ function FoldSection({
             <span className="ml-2 text-sm font-bold text-zinc-500">{subtitle}</span>
           ) : null}
         </div>
-        <span className="text-2xl font-black text-yellow-200 transition-transform">
-          {isOpen ? "⌃" : "⌄"}
-        </span>
+        <span className="text-xl font-black text-zinc-200">{isOpen ? "⌃" : "⌄"}</span>
       </button>
 
-      {isOpen ? <div className="mt-3">{children}</div> : null}
+      {isOpen ? <div className="border-t border-white/10 p-3">{children}</div> : null}
     </div>
   );
 }
@@ -351,25 +349,16 @@ function UpgradeColumn({ item }: { item: SkillUpgradeMaterial }) {
   );
 }
 
-function StatCard({ stat, icon }: { stat: SkillStat; icon?: string }) {
+function StatCard({ stat }: { stat: SkillStat }) {
   const statElement = detectElementFromText(stat.label);
   const statColor = statElement ? getElementColor(statElement) : "#d8e0ec";
 
   return (
-    <div className="grid min-w-0 grid-cols-[38px_minmax(0,1fr)] items-center gap-3 rounded-[14px] border border-white/10 bg-white/[0.025] px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]">
-      <div className="relative flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-black/35">
-        {icon ? (
-          <Image src={icon} alt="skill stat" fill sizes="36px" className="object-contain p-2" />
-        ) : (
-          <span className="text-xs font-black text-zinc-500">S</span>
-        )}
+    <div className="min-w-0 rounded-[14px] border border-white/10 bg-white/[0.025] px-3 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]">
+      <div className="break-keep text-[11px] font-black leading-snug" style={{ color: statColor }}>
+        {renderHighlightedText(stat.label)}
       </div>
-      <div className="min-w-0">
-        <div className="break-keep text-[11px] font-black leading-snug" style={{ color: statColor }}>
-          {renderHighlightedText(stat.label)}
-        </div>
-        <div className="mt-0.5 text-lg font-black leading-none text-yellow-200">{stat.value}</div>
-      </div>
+      <div className="mt-1 text-lg font-black leading-none text-yellow-200">{stat.value}</div>
     </div>
   );
 }
@@ -440,7 +429,7 @@ export default function InteractiveSkillPanel({ skill, accentColor }: Props) {
         </div>
 
         <div className="mt-3 overflow-x-auto overscroll-x-contain border-b border-yellow-500/20 pb-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <div className="flex w-max items-center gap-2">
+          <div className="flex w-max items-center gap-1.5">
             {levels.map((level, index) => {
               const active = selectedIndex === index;
 
@@ -450,23 +439,13 @@ export default function InteractiveSkillPanel({ skill, accentColor }: Props) {
                   type="button"
                   onClick={() => setSelectedIndex(index)}
                   className={[
-                    "relative flex h-10 min-w-12 items-center justify-center border px-3 text-sm font-black transition active:scale-[0.98]",
+                    "min-h-8 min-w-[44px] rounded-md border px-3 text-xs font-black transition active:scale-[0.98]",
                     active
-                      ? "border-yellow-300/90 bg-yellow-400/15 text-yellow-100 shadow-[0_0_18px_rgba(255,210,74,0.22)]"
-                      : "border-white/15 bg-black/35 text-zinc-300 hover:border-yellow-300/40 hover:text-yellow-100",
+                      ? "border-yellow-300/80 bg-yellow-400/20 text-yellow-100 shadow-[0_0_14px_rgba(255,210,74,0.18)]"
+                      : "border-white/12 bg-black/35 text-zinc-300 hover:border-yellow-300/40 hover:text-yellow-100",
                   ].join(" ")}
-                  style={{
-                    borderColor: active ? accentColor : undefined,
-                    clipPath:
-                      "polygon(14px 0, calc(100% - 14px) 0, 100% 14px, 100% calc(100% - 14px), calc(100% - 14px) 100%, 14px 100%, 0 calc(100% - 14px), 0 14px)",
-                  }}
+                  style={active ? { borderColor: accentColor } : undefined}
                 >
-                  {active ? (
-                    <>
-                      <span className="absolute -top-2 left-1/2 h-0 w-0 -translate-x-1/2 border-x-[6px] border-t-0 border-b-[7px] border-x-transparent border-b-yellow-300" />
-                      <span className="absolute -bottom-2 left-1/2 h-0 w-0 -translate-x-1/2 border-x-[6px] border-b-0 border-t-[7px] border-x-transparent border-t-yellow-300" />
-                    </>
-                  ) : null}
                   {level.level}
                 </button>
               );
@@ -488,7 +467,7 @@ export default function InteractiveSkillPanel({ skill, accentColor }: Props) {
           {!!current.stats?.length && (
             <div className="grid min-w-0 auto-rows-min grid-cols-1 gap-2 sm:grid-cols-2">
               {current.stats.map((stat) => (
-                <StatCard key={`${skill.name}-${current.level}-${stat.label}`} stat={stat} icon={skill.icon} />
+                <StatCard key={`${skill.name}-${current.level}-${stat.label}`} stat={stat} />
               ))}
             </div>
           )}
@@ -518,17 +497,19 @@ export default function InteractiveSkillPanel({ skill, accentColor }: Props) {
           </div>
 
           <div className="min-w-0 border-white/10 pt-3 lg:border-l lg:pl-5 lg:pt-0">
-            <FoldSection title="전체 강화 재료" subtitle="최대 M3 기준" defaultOpen>
-              {totalMaterials.length ? (
-                <div className="flex flex-wrap gap-3 sm:gap-4">
-                  {totalMaterials.map((material) => (
-                    <MaterialBadge key={material.name} material={material} />
-                  ))}
-                </div>
-              ) : (
-                <div className="text-sm font-bold text-zinc-500">재료 데이터 없음</div>
-              )}
-            </FoldSection>
+            <div className="mb-3 text-base font-black text-yellow-200">
+              전체 강화 재료
+              <span className="ml-2 text-sm font-bold text-zinc-500">최대 M3 기준</span>
+            </div>
+            {totalMaterials.length ? (
+              <div className="flex flex-wrap gap-3 sm:gap-4">
+                {totalMaterials.map((material) => (
+                  <MaterialBadge key={material.name} material={material} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-sm font-bold text-zinc-500">재료 데이터 없음</div>
+            )}
           </div>
         </div>
 
