@@ -12,10 +12,10 @@ import WeaponSkillAtlasPanel from "./WeaponSkillAtlasPanel";
 import WeaponBreakthroughPanel from "./WeaponBreakthroughPanel";
 
 const YELLOW_TEXT = "#ffdc70";
+const YELLOW_MAIN = "#ffd24a";
 const YELLOW_BORDER = "rgba(255,196,74,0.14)";
 const YELLOW_BORDER_SOFT = "rgba(255,196,74,0.10)";
 const YELLOW_BORDER_FAINT = "rgba(255,196,74,0.08)";
-const LABEL_BORDER = "rgba(255,196,74,0.42)";
 
 const rarityColorMap: Record<WeaponRarity, string> = {
   6: "#ff8a1f",
@@ -54,6 +54,13 @@ const weaponTypeIconMap: Record<string, string> = {
   greatsword: "/icons/weapons/greatsword.webp",
   polearm: "/icons/weapons/polearm.webp",
   handcannon: "/icons/weapons/handcannon.webp",
+};
+
+const statIconMap: Record<string, string> = {
+  힘: "/icons/stats/strength.webp",
+  민첩: "/icons/stats/agility.webp",
+  지능: "/icons/stats/intelligence.webp",
+  의지: "/icons/stats/will.webp",
 };
 
 type WeaponMeta = {
@@ -390,62 +397,82 @@ function highlightSeriesDescription(
   return result;
 }
 
-function SmallIcon({
+function InlineIcon({
   src,
   alt,
   size = 16,
 }: {
   src?: string;
   alt: string;
-  size?: number;
+  size?: 14 | 16 | 18 | 20;
 }) {
   if (!src) return null;
 
+  const sizeClassMap = {
+    14: "h-3.5 w-3.5",
+    16: "h-4 w-4",
+    18: "h-[18px] w-[18px]",
+    20: "h-5 w-5",
+  };
+
   return (
-    <span
-      style={{
-        position: "relative",
-        width: `${size}px`,
-        height: `${size}px`,
-        flexShrink: 0,
-      }}
-    >
-      <Image
-        src={src}
-        alt={alt}
-        fill
-        sizes={`${size}px`}
-        style={{ objectFit: "contain" }}
-      />
+    <span className={`relative inline-block shrink-0 ${sizeClassMap[size]}`}>
+      <Image src={src} alt={alt} fill sizes={`${size}px`} className="object-contain" />
     </span>
   );
 }
 
 function InfoBadge({
   label,
-  iconSrc,
-  borderColor = LABEL_BORDER,
-  textColor = YELLOW_TEXT,
-  background = "#000000",
+  icon,
+  highlight = false,
+  borderColor,
+  textColor,
 }: {
   label: string;
-  iconSrc?: string;
+  icon?: string;
+  highlight?: boolean;
   borderColor?: string;
   textColor?: string;
-  background?: string;
 }) {
   return (
     <span
-      className="inline-flex min-h-[28px] items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-black"
+      className={[
+        "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-black",
+        highlight
+          ? "border bg-yellow-400/15 text-yellow-100"
+          : "border border-white/10 bg-white/5 text-zinc-200",
+      ].join(" ")}
       style={{
-        border: `1px solid ${borderColor}`,
+        borderColor: borderColor ?? (highlight ? "rgba(250,204,21,0.32)" : undefined),
         color: textColor,
-        background,
       }}
     >
-      <SmallIcon src={iconSrc} alt={label} size={16} />
+      <InlineIcon src={icon} alt={label} size={16} />
       <span>{label}</span>
     </span>
+  );
+}
+
+function InfoTile({
+  label,
+  value,
+  icon,
+}: {
+  label: string;
+  value: ReactNode;
+  icon?: string;
+}) {
+  return (
+    <div className="rounded-2xl border border-yellow-500/10 bg-black/40 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+      <p className="text-[10px] font-black tracking-[0.12em] text-zinc-500">
+        {label}
+      </p>
+      <div className="mt-2 flex min-w-0 items-center gap-1.5 text-sm font-black text-yellow-100">
+        <InlineIcon src={icon} alt={label} size={18} />
+        <span className="min-w-0 truncate">{value || "-"}</span>
+      </div>
+    </div>
   );
 }
 
@@ -461,19 +488,14 @@ function BasicStatRow({
   return (
     <div
       className="grid grid-cols-1 sm:grid-cols-[220px_1fr] lg:grid-cols-[260px_1fr]"
-      style={{
-        borderBottom: noBorder ? "none" : `1px solid ${YELLOW_BORDER_FAINT}`,
-      }}
+      style={{ borderBottom: noBorder ? "none" : `1px solid ${YELLOW_BORDER_FAINT}` }}
     >
       <div
         className="px-3 py-2.5 text-sm font-bold text-white sm:border-r sm:py-3"
-        style={{
-          borderRightColor: YELLOW_BORDER_FAINT,
-        }}
+        style={{ borderRightColor: YELLOW_BORDER_FAINT }}
       >
         {label}
       </div>
-
       <div className="px-3 pb-3 text-sm font-black leading-7 text-zinc-100 sm:py-3 sm:text-base">
         {value}
       </div>
@@ -496,23 +518,21 @@ function DetailSection({
     <details
       id={id}
       open={defaultOpen}
-      className="group scroll-mt-24 overflow-hidden rounded-[20px] border border-yellow-500/15 bg-[#05070b] shadow-[0_0_30px_rgba(250,204,21,0.035)] lg:rounded-[24px]"
+      className="group scroll-mt-24 overflow-hidden rounded-[22px] border border-yellow-500/15 bg-[#05070b]/95 shadow-[0_14px_34px_rgba(0,0,0,0.24)] lg:rounded-[26px]"
     >
       <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 lg:px-5 lg:py-4 [&::-webkit-details-marker]:hidden">
         <span
-          className="text-base font-black tracking-tight lg:text-[22px]"
+          className="min-w-0 text-base font-black tracking-tight lg:text-[22px]"
           style={{ color: YELLOW_TEXT }}
         >
           {title}
         </span>
-
         <span className="shrink-0 text-lg font-black text-yellow-300 transition-transform group-open:rotate-180">
           ▼
         </span>
       </summary>
-
       <div
-        className="px-3 pb-4 lg:px-5 lg:pb-5"
+        className="min-w-0 px-2 pb-3 sm:px-3 sm:pb-4 lg:px-5 lg:pb-5"
         style={{ borderTop: `1px solid ${YELLOW_BORDER_SOFT}` }}
       >
         {children}
@@ -537,67 +557,166 @@ export default async function WeaponDetailPage({
   const abilityInfo = getWeaponAbilityInfo(weapon);
   const attributeInfo = getWeaponAttributeInfo(weapon);
   const seriesSkillInfo = getWeaponSeriesSkillInfo(weapon);
-  const weaponTypeLabel =
-    weaponTypeLabelMap[weapon.weaponType] ?? weapon.weaponType;
+  const weaponTypeLabel = weaponTypeLabelMap[weapon.weaponType] ?? weapon.weaponType;
+  const weaponTypeIcon = weaponTypeIconMap[weapon.weaponType];
+  const rarityIcon = rarityIconMap[weapon.rarity];
+  const mainStatIcon = statIconMap[weapon.mainStatLabel ?? ""];
 
   const sectionLinks = [
-    { href: "#summary", label: "요약" },
     { href: "#level", label: "레벨" },
     ...(weapon.skills?.length ? [{ href: "#skills", label: "스킬" }] : []),
-    ...(weapon.breakthrough?.length
-      ? [{ href: "#breakthrough", label: "돌파" }]
-      : []),
+    ...(weapon.breakthrough?.length ? [{ href: "#breakthrough", label: "돌파" }] : []),
   ];
 
   return (
-    <main className="min-h-screen bg-[#050505] px-3 py-3 text-white sm:px-4 md:px-6 md:py-5">
-      <div className="mx-auto max-w-[1840px]">
-        <header
-          className="mb-3 rounded-[20px] bg-[#05070b] p-4 shadow-[0_0_30px_rgba(250,204,21,0.04)] sm:mb-5 sm:rounded-[24px] sm:p-5"
-          style={{ border: `1px solid ${YELLOW_BORDER}` }}
-        >
-          <div className="flex items-end justify-between gap-3">
-            <div className="min-w-0">
-              <p
-                className="text-[10px] font-semibold tracking-[0.28em] sm:text-[11px] sm:tracking-[0.35em]"
-                style={{ color: YELLOW_TEXT }}
-              >
-                엔드필드 지원 플랫폼
-              </p>
+    <main className="min-h-screen overflow-x-hidden bg-[#050505] text-white">
+      <section className="relative min-h-[760px] overflow-hidden border-b border-yellow-500/10 sm:min-h-[820px] lg:min-h-[920px]">
+        <div className="absolute inset-0">
+          <Image
+            src={heroImage}
+            alt={weapon.name}
+            fill
+            priority
+            sizes="100vw"
+            className="scale-110 object-contain blur-[18px] brightness-[0.22]"
+          />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_68%_22%,rgba(255,210,74,0.18),transparent_28%),radial-gradient(circle_at_24%_70%,rgba(255,210,74,0.08),transparent_32%),linear-gradient(180deg,rgba(5,5,5,0.1)_0%,rgba(5,5,5,0.78)_72%,#050505_100%),linear-gradient(90deg,rgba(0,0,0,0.9)_0%,rgba(0,0,0,0.34)_48%,rgba(0,0,0,0.86)_100%)]" />
+        </div>
 
-              <h1
-                className="mt-2 text-2xl font-black tracking-tight sm:text-4xl"
-                style={{ color: YELLOW_TEXT }}
-              >
-                무기
-              </h1>
+        <div className="relative z-10 mx-auto flex min-h-[760px] max-w-[1840px] flex-col px-3 py-3 sm:min-h-[820px] sm:px-4 md:px-6 md:py-5 lg:min-h-[920px]">
+          <header
+            className="mb-4 rounded-[20px] bg-[#05070b]/92 p-4 shadow-[0_0_30px_rgba(250,204,21,0.04)] backdrop-blur-md sm:mb-5 sm:rounded-[24px] sm:p-5"
+            style={{ border: `1px solid ${YELLOW_BORDER}` }}
+          >
+            <div className="flex items-end justify-between gap-3">
+              <div className="min-w-0">
+                <p
+                  className="text-[10px] font-semibold tracking-[0.28em] sm:text-[11px] sm:tracking-[0.35em]"
+                  style={{ color: YELLOW_TEXT }}
+                >
+                  엔드필드 지원 플랫폼
+                </p>
+                <h1
+                  className="mt-2 break-keep text-2xl font-black tracking-tight sm:text-4xl"
+                  style={{ color: YELLOW_TEXT }}
+                >
+                  {weapon.name}
+                </h1>
+                <p className="mt-1 truncate text-xs text-zinc-500 sm:text-sm">
+                  무기 상세 정보
+                </p>
+              </div>
 
-              <p className="mt-1 text-xs text-zinc-500 sm:text-sm">
-                무기 상세 정보
-              </p>
+              <div className="flex shrink-0 items-center gap-2">
+                <Link
+                  href="/weapons"
+                  className="rounded-xl bg-black px-3 py-2 text-xs font-bold text-zinc-200 transition hover:bg-[#0b1018] sm:px-4 sm:text-sm"
+                  style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
+                >
+                  목록으로
+                </Link>
+                <Link
+                  href="/"
+                  className="rounded-xl bg-black px-3 py-2 text-xs font-bold text-zinc-200 transition hover:bg-[#0b1018] sm:px-4 sm:text-sm"
+                  style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
+                >
+                  홈으로
+                </Link>
+              </div>
+            </div>
+          </header>
+
+          <div className="relative grid flex-1 items-center gap-4 lg:grid-cols-[minmax(0,1.12fr)_minmax(360px,0.88fr)] lg:gap-6">
+            <div className="relative order-1 min-h-[420px] lg:order-none lg:min-h-[780px]">
+              <div className="absolute inset-x-[-8%] bottom-0 top-[-3%] lg:inset-x-[-4%]">
+                <Image
+                  src={heroImage}
+                  alt={weapon.name}
+                  fill
+                  priority
+                  loading="eager"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1280px) 62vw, 1120px"
+                  className="object-contain object-center drop-shadow-[0_24px_42px_rgba(0,0,0,0.68)]"
+                />
+              </div>
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#050505] via-[#050505]/55 to-transparent" />
             </div>
 
-            <div className="flex shrink-0 gap-2">
-              <Link
-                href="/weapons"
-                className="rounded-xl bg-black px-3 py-2 text-xs font-bold text-zinc-200 transition hover:bg-[#0b1018] sm:px-4 sm:text-sm"
-                style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
+            <aside className="relative order-2 z-10 min-w-0 lg:order-none">
+              <div
+                className="overflow-hidden rounded-[30px] bg-black/58 p-4 shadow-[0_24px_70px_rgba(0,0,0,0.48)] backdrop-blur-md sm:p-5 lg:p-6"
+                style={{ border: `1px solid ${YELLOW_BORDER}` }}
               >
-                목록
-              </Link>
+                <div className="pointer-events-none absolute inset-0 rounded-[30px] bg-[radial-gradient(circle_at_20%_0%,rgba(255,210,74,0.12),transparent_32%)]" />
+                <div className="relative">
+                  <p
+                    className="text-[10px] font-black tracking-[0.3em] sm:text-[11px]"
+                    style={{ color: YELLOW_TEXT }}
+                  >
+                    WEAPON PROFILE
+                  </p>
 
-              <Link
-                href="/"
-                className="rounded-xl bg-black px-3 py-2 text-xs font-bold text-zinc-200 transition hover:bg-[#0b1018] sm:px-4 sm:text-sm"
-                style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
-              >
-                홈
-              </Link>
-            </div>
+                  {!!weapon.enName && (
+                    <p className="mt-3 break-words text-base font-bold text-zinc-300 sm:text-xl">
+                      {weapon.enName}
+                    </p>
+                  )}
+
+                  <h1 className="mt-2 break-keep text-[clamp(40px,10vw,76px)] font-black leading-none tracking-tight text-white drop-shadow-[0_8px_24px_rgba(0,0,0,0.6)]">
+                    {weapon.name}
+                  </h1>
+
+                  <div className="mt-5 flex flex-wrap gap-2">
+                    <InfoBadge
+                      label={rarityLabelMap[weapon.rarity]}
+                      icon={rarityIcon}
+                      highlight
+                      borderColor={rarityColor}
+                      textColor={rarityColor}
+                    />
+                    <InfoBadge label={weaponTypeLabel} icon={weaponTypeIcon} />
+                    <InfoBadge label={abilityInfo.name} icon={mainStatIcon} />
+                    <InfoBadge label={attributeInfo.name} />
+                    <InfoBadge label={seriesSkillInfo.name} />
+                  </div>
+
+                  <div className="mt-5 grid grid-cols-2 gap-2">
+                    <InfoTile label="무기 종류" value={weaponTypeLabel} icon={weaponTypeIcon} />
+                    <InfoTile label="레어도" value={rarityLabelMap[weapon.rarity]} icon={rarityIcon} />
+                    <InfoTile label="기본 공격력" value={initialAttack} />
+                    <InfoTile label="주 능력치" value={abilityInfo.name} icon={mainStatIcon} />
+                    <InfoTile label="능력치 수치" value={abilityInfo.rank1Value} />
+                    <InfoTile label="속성" value={attributeInfo.name} />
+                  </div>
+
+                  <div className="mt-5 rounded-3xl border border-yellow-500/10 bg-[#080b10]/80 p-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-xs font-black text-zinc-400">빠른 이동</p>
+                      <p className="text-[10px] font-bold text-yellow-200/70">
+                        {sectionLinks.length} SECTIONS
+                      </p>
+                    </div>
+                    <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                      {sectionLinks.map((item) => (
+                        <a
+                          key={item.href}
+                          href={item.href}
+                          className="rounded-2xl border border-yellow-500/10 bg-black/80 px-2 py-2.5 text-center text-xs font-black text-zinc-300 transition hover:border-yellow-400/40 hover:bg-yellow-400/10 hover:text-yellow-100"
+                        >
+                          {item.label}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </aside>
           </div>
-        </header>
+        </div>
+      </section>
 
-        <nav className="sticky top-2 z-30 mb-3 rounded-[18px] border border-yellow-500/15 bg-black/90 p-2 backdrop-blur lg:top-5 lg:hidden">
+      <div className="relative mx-auto max-w-[1840px] px-3 py-3 sm:px-4 md:px-6 md:py-5">
+        <nav className="sticky top-2 z-30 mb-3 rounded-[18px] border border-yellow-500/15 bg-black/90 p-2 backdrop-blur lg:hidden">
           <div className="flex gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {sectionLinks.map((item) => (
               <a
@@ -611,117 +730,37 @@ export default async function WeaponDetailPage({
           </div>
         </nav>
 
-        <section
-          id="summary"
-          className="relative mb-3 scroll-mt-24 overflow-hidden rounded-[20px] bg-[#05070b] p-3 shadow-[0_10px_28px_rgba(0,0,0,0.28)] lg:mb-5 lg:rounded-[24px] lg:p-5"
-          style={{ border: `1px solid ${YELLOW_BORDER}` }}
-        >
-          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,196,74,0.035),transparent_18%)]" />
-
-          <div className="relative grid gap-3 lg:grid-cols-[340px_1fr] lg:gap-5">
-            <div
-              className="relative min-h-[320px] overflow-hidden rounded-[18px] bg-black lg:min-h-[540px] lg:rounded-[20px]"
-              style={{ border: `1px solid ${YELLOW_BORDER}` }}
-            >
-              <Image
-                src={heroImage}
-                alt={weapon.name}
-                fill
-                priority
-                loading="eager"
-                sizes="(max-width: 1024px) 100vw, 340px"
-                className="object-contain"
-              />
-
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
-            </div>
-
-            <div className="min-w-0">
-              <div className="mb-3 flex flex-wrap gap-2">
-                <InfoBadge
-                  label={rarityLabelMap[weapon.rarity]}
-                  iconSrc={rarityIconMap[weapon.rarity]}
-                  borderColor={rarityColor}
-                  textColor={rarityColor}
-                />
-                <InfoBadge
-                  label={weaponTypeLabel}
-                  iconSrc={weaponTypeIconMap[weapon.weaponType]}
-                />
-                <InfoBadge label={abilityInfo.name} />
-                <InfoBadge label={attributeInfo.name} />
-                <InfoBadge label={seriesSkillInfo.name} />
-              </div>
-
-              {!!weapon.enName && (
-                <div
-                  className="text-xs font-bold tracking-[0.04em] sm:text-sm"
-                  style={{ color: YELLOW_TEXT }}
-                >
-                  {weapon.enName}
-                </div>
-              )}
-
-              <h1 className="mt-1 text-3xl font-black leading-tight text-white sm:text-4xl lg:text-[40px]">
-                {weapon.name}
-              </h1>
-
-              <div className="mt-4 lg:mt-5">
-                <div
-                  className="mb-2 text-[11px] font-black tracking-[0.25em]"
-                  style={{ color: YELLOW_TEXT }}
-                >
-                  기본 능력치
-                </div>
-
-                <div
-                  className="overflow-hidden rounded-[18px] bg-[#06080c] lg:rounded-[20px]"
-                  style={{ border: `1px solid ${YELLOW_BORDER}` }}
-                >
-                  <BasicStatRow
-                    label={weapon.mainStatLabel ?? "공격력"}
-                    value={
-                      <span style={{ color: YELLOW_TEXT }}>
-                        {initialAttack}
-                      </span>
-                    }
-                  />
-
-                  <BasicStatRow
-                    label={abilityInfo.name}
-                    value={
-                      <span style={{ color: YELLOW_TEXT }}>
-                        {abilityInfo.rank1Value}
-                      </span>
-                    }
-                  />
-
-                  <BasicStatRow
-                    label={attributeInfo.name}
-                    value={
-                      <span style={{ color: YELLOW_TEXT }}>
-                        {attributeInfo.rank1Value}
-                      </span>
-                    }
-                  />
-
-                  <BasicStatRow
-                    label={seriesSkillInfo.name}
-                    value={highlightSeriesDescription(
-                      seriesSkillInfo.rank1Description,
-                      seriesSkillInfo.name,
-                    )}
-                    noBorder
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <div className="grid gap-3 lg:gap-5">
+        <div className="grid min-w-0 gap-3 lg:gap-5">
           <DetailSection id="level" title="레벨별 능력치" defaultOpen>
             <WeaponLevelPanel levelStats={weapon.levelStats} />
+          </DetailSection>
+
+          <DetailSection id="summary" title="기본 능력치" defaultOpen>
+            <div
+              className="overflow-hidden rounded-[18px] bg-[#06080c] lg:rounded-[20px]"
+              style={{ border: `1px solid ${YELLOW_BORDER}` }}
+            >
+              <BasicStatRow
+                label={weapon.mainStatLabel ?? "공격력"}
+                value={<span style={{ color: YELLOW_TEXT }}>{initialAttack}</span>}
+              />
+              <BasicStatRow
+                label={abilityInfo.name}
+                value={<span style={{ color: YELLOW_TEXT }}>{abilityInfo.rank1Value}</span>}
+              />
+              <BasicStatRow
+                label={attributeInfo.name}
+                value={<span style={{ color: YELLOW_TEXT }}>{attributeInfo.rank1Value}</span>}
+              />
+              <BasicStatRow
+                label={seriesSkillInfo.name}
+                value={highlightSeriesDescription(
+                  seriesSkillInfo.rank1Description,
+                  seriesSkillInfo.name,
+                )}
+                noBorder
+              />
+            </div>
           </DetailSection>
 
           {!!weapon.skills?.length && (
@@ -739,10 +778,10 @@ export default async function WeaponDetailPage({
           )}
 
           {!!weapon.breakthrough?.length && (
-            <DetailSection id="breakthrough" title="돌파">
+            <DetailSection id="breakthrough" title="돌파" defaultOpen>
               <WeaponBreakthroughPanel
                 breakthrough={weapon.breakthrough}
-                accentColor={YELLOW_TEXT}
+                accentColor={YELLOW_MAIN}
               />
             </DetailSection>
           )}
