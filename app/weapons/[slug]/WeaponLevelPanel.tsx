@@ -55,6 +55,7 @@ function getSkillSourceText(skill: WeaponSkillDetail) {
   const metaText = (skill.meta ?? [])
     .map((meta) => `${normalizeText(meta.label)} ${normalizeText(meta.value)}`)
     .join(" ");
+
   return `${normalizeText(skill.typeLabel)} ${normalizeText(skill.name)} ${normalizeText(
     skill.key,
   ).toLowerCase()} ${metaText}`;
@@ -64,6 +65,7 @@ function getSkillTabKey(skill: WeaponSkillDetail): SkillTabKey {
   const source = getSkillSourceText(skill);
 
   if (source.includes("시리즈")) return "series";
+
   if (
     source.includes("속성") ||
     source.includes("물리") ||
@@ -90,7 +92,11 @@ function getSkillTabKey(skill: WeaponSkillDetail): SkillTabKey {
 function getFirstValue(skill?: WeaponSkillDetail) {
   const first = skill?.levelValues?.[0];
   const firstStat = first?.stats?.[0];
-  if (firstStat?.value !== undefined && firstStat?.value !== null) return `${firstStat.label} ${firstStat.value}`;
+
+  if (firstStat?.value !== undefined && firstStat?.value !== null) {
+    return `${firstStat.label} ${firstStat.value}`;
+  }
+
   return first?.description?.match(/[+\-]?\d+(?:\.\d+)?%?/)?.[0] ?? "-";
 }
 
@@ -233,10 +239,10 @@ function ValueGrid({ stats, rank }: { stats: SkillStat[]; rank?: string }) {
       {stats.map((stat) => (
         <div
           key={`${rank ?? "rank"}-${stat.label}`}
-          className="rounded-2xl border border-white/10 bg-[#0b0d12]/90 px-4 py-3.5"
+          className="rounded-2xl border border-white/10 bg-[#0b0d12]/90 px-4 py-3"
         >
-          <p className="text-xs font-black text-zinc-500">{stat.label}</p>
-          <p className="mt-1 break-words text-2xl font-black leading-none" style={{ color: YELLOW_TEXT }}>
+          <p className="text-[11px] font-black text-zinc-500">{stat.label}</p>
+          <p className="mt-1 break-words text-xl font-black leading-none" style={{ color: YELLOW_TEXT }}>
             {stat.value}
           </p>
         </div>
@@ -252,7 +258,7 @@ function WeaponSkillMainPanel({ skill, tabKey }: { skill?: WeaponSkillDetail; ta
 
   if (!skill) {
     return (
-      <div className="rounded-[24px] border border-yellow-500/10 bg-black/35 p-5 text-sm font-bold text-zinc-500">
+      <div className="rounded-[22px] border border-yellow-500/10 bg-black/35 p-4 text-sm font-bold text-zinc-500">
         표시할 데이터가 없습니다.
       </div>
     );
@@ -266,13 +272,13 @@ function WeaponSkillMainPanel({ skill, tabKey }: { skill?: WeaponSkillDetail; ta
   const isSeries = tabKey === "series";
 
   return (
-    <div className="overflow-hidden rounded-[26px] border border-yellow-500/15 bg-[#06080c]/95 shadow-[0_18px_42px_rgba(0,0,0,0.32),inset_0_1px_0_rgba(255,255,255,0.035)]">
-      <div className="relative overflow-hidden border-b border-yellow-500/10 p-4 lg:p-5">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_0%_0%,rgba(255,210,74,0.14),transparent_30%),linear-gradient(135deg,rgba(255,255,255,0.035),transparent_54%)]" />
+    <div className="overflow-hidden rounded-[24px] border border-yellow-500/15 bg-[#06080c]/95 shadow-[0_14px_38px_rgba(0,0,0,0.30),inset_0_1px_0_rgba(255,255,255,0.035)]">
+      <div className="relative overflow-hidden border-b border-yellow-500/10 p-4">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_0%_0%,rgba(255,210,74,0.12),transparent_30%)]" />
         <div className="relative flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0">
-            <p className="text-[10px] font-black tracking-[0.28em] text-zinc-500">WEAPON SKILL</p>
-            <div className="mt-3 flex flex-wrap items-center gap-2">
+            <p className="text-[10px] font-black tracking-[0.26em] text-zinc-500">WEAPON SKILL</p>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
               <span className="rounded-full border border-yellow-400/25 bg-yellow-400/15 px-3 py-1 text-xs font-black text-yellow-100">
                 {TAB_LABEL_MAP[tabKey]}
               </span>
@@ -280,7 +286,7 @@ function WeaponSkillMainPanel({ skill, tabKey }: { skill?: WeaponSkillDetail; ta
                 {current?.rank ?? "Rank 1"}
               </span>
             </div>
-            <h3 className="mt-3 break-keep text-[clamp(30px,4.8vw,46px)] font-black leading-tight text-white">
+            <h3 className="mt-2 break-keep text-[clamp(24px,3.6vw,36px)] font-black leading-tight text-white">
               {skill.name}
             </h3>
           </div>
@@ -295,7 +301,7 @@ function WeaponSkillMainPanel({ skill, tabKey }: { skill?: WeaponSkillDetail; ta
                     type="button"
                     onClick={() => setRankIndex(index)}
                     className={[
-                      "h-9 min-w-11 rounded-lg border px-3 text-xs font-black transition",
+                      "h-8 min-w-10 rounded-lg border px-2.5 text-xs font-black transition",
                       active
                         ? "border-yellow-300/80 bg-yellow-400/25 text-yellow-100 shadow-[0_0_18px_rgba(255,210,74,0.14)]"
                         : "border-white/10 bg-black/55 text-zinc-300 hover:border-yellow-400/35 hover:bg-yellow-400/10 hover:text-yellow-100",
@@ -311,32 +317,32 @@ function WeaponSkillMainPanel({ skill, tabKey }: { skill?: WeaponSkillDetail; ta
       </div>
 
       {isSeries ? (
-        <div className="grid gap-4 p-4 lg:grid-cols-[minmax(0,1.08fr)_minmax(360px,0.92fr)] lg:p-5">
-          <div className="min-h-[190px] rounded-[20px] border border-white/10 bg-[#080b11]/85 p-5 text-sm font-bold leading-8 text-zinc-100">
-            <p className="mb-4 border-l-4 border-yellow-300 pl-3 text-base font-black" style={{ color: YELLOW_TEXT }}>
+        <div className="grid gap-3 p-4 lg:grid-cols-[minmax(0,1.08fr)_minmax(340px,0.92fr)]">
+          <div className="min-h-[160px] rounded-[18px] border border-white/10 bg-[#080b11]/85 p-4 text-sm font-bold leading-7 text-zinc-100">
+            <p className="mb-3 border-l-4 border-yellow-300 pl-3 text-sm font-black" style={{ color: YELLOW_TEXT }}>
               스킬 설명
             </p>
             {description ? renderHighlightedDescription(description, stats.map((stat) => stat.value)) : "-"}
           </div>
 
-          <div className="rounded-[20px] border border-white/10 bg-[#080b11]/85 p-5">
-            <div className="mb-4 flex items-center justify-between gap-3">
-              <p className="text-base font-black" style={{ color: YELLOW_TEXT }}>
+          <div className="rounded-[18px] border border-white/10 bg-[#080b11]/85 p-4">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <p className="text-sm font-black" style={{ color: YELLOW_TEXT }}>
                 수치 정보
               </p>
-              <p className="text-xs font-bold text-yellow-200/70">{current?.rank ?? "Rank 1"} 기준</p>
+              <p className="text-[11px] font-bold text-yellow-200/70">{current?.rank ?? "Rank 1"} 기준</p>
             </div>
             <ValueGrid stats={stats} rank={current?.rank} />
           </div>
         </div>
       ) : (
-        <div className="p-4 lg:p-5">
-          <div className="rounded-[20px] border border-white/10 bg-[#080b11]/85 p-5">
-            <div className="mb-4 flex items-center justify-between gap-3">
-              <p className="text-base font-black" style={{ color: YELLOW_TEXT }}>
+        <div className="p-4">
+          <div className="rounded-[18px] border border-white/10 bg-[#080b11]/85 p-4">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <p className="text-sm font-black" style={{ color: YELLOW_TEXT }}>
                 수치 정보
               </p>
-              <p className="text-xs font-bold text-yellow-200/70">{current?.rank ?? "Rank 1"} 기준</p>
+              <p className="text-[11px] font-bold text-yellow-200/70">{current?.rank ?? "Rank 1"} 기준</p>
             </div>
             <ValueGrid stats={stats} rank={current?.rank} />
           </div>
@@ -409,92 +415,95 @@ export default function WeaponLevelPanel({
 
   if (!currentStats) {
     return (
-      <section className="rounded-[28px] border border-yellow-500/15 bg-[#05070b]/95 p-5 text-sm font-bold text-zinc-500">
+      <section className="rounded-[24px] border border-yellow-500/15 bg-[#05070b]/95 p-4 text-sm font-bold text-zinc-500">
         표시할 무기 레벨 데이터가 없습니다.
       </section>
     );
   }
 
   return (
-    <section className="overflow-hidden rounded-[28px] border border-yellow-500/15 bg-[#05070b]/95 shadow-[0_18px_50px_rgba(0,0,0,0.30)]">
-      <div className="relative overflow-hidden border-b border-yellow-500/10 bg-[radial-gradient(circle_at_8%_0%,rgba(255,210,74,0.14),transparent_34%),linear-gradient(180deg,rgba(255,255,255,0.035),transparent)] p-4 lg:p-5">
-        <div className="relative flex min-w-0 items-center gap-4 rounded-[22px] border border-white/10 bg-black/20 p-3">
-          <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl border border-yellow-500/15 bg-black/45 sm:h-24 sm:w-24">
-            {safeWeaponImage ? (
-              <img
-                src={safeWeaponImage}
-                alt={safeWeaponName}
-                className="h-full w-full object-contain p-2 drop-shadow-[0_10px_18px_rgba(0,0,0,0.58)]"
-              />
-            ) : (
-              <div className="grid h-full w-full place-items-center text-3xl font-black text-yellow-100">?</div>
-            )}
+    <div className="grid gap-5">
+      <section className="overflow-hidden rounded-[24px] border border-yellow-500/15 bg-[#05070b]/95 shadow-[0_14px_38px_rgba(0,0,0,0.28)]">
+        <div className="relative overflow-hidden border-b border-yellow-500/10 bg-[radial-gradient(circle_at_8%_0%,rgba(255,210,74,0.12),transparent_34%)] p-4">
+          <div className="relative flex min-w-0 items-center gap-4 rounded-[20px] border border-white/10 bg-black/20 p-3">
+            <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl border border-yellow-500/15 bg-black/45 sm:h-20 sm:w-20">
+              {safeWeaponImage ? (
+                <img
+                  src={safeWeaponImage}
+                  alt={safeWeaponName}
+                  className="h-full w-full object-contain p-2 drop-shadow-[0_10px_18px_rgba(0,0,0,0.58)]"
+                />
+              ) : (
+                <div className="grid h-full w-full place-items-center text-2xl font-black text-yellow-100">?</div>
+              )}
+            </div>
+            <div className="min-w-0">
+              <h2 className="break-keep text-[clamp(26px,4vw,38px)] font-black leading-none text-white">
+                {safeWeaponName}
+              </h2>
+              {weaponEnName ? (
+                <p className="mt-2 truncate text-xs font-black text-zinc-400 sm:text-sm">{weaponEnName}</p>
+              ) : null}
+            </div>
           </div>
-          <div className="min-w-0">
-            <h2 className="break-keep text-[clamp(32px,5vw,48px)] font-black leading-none text-white">
-              {safeWeaponName}
-            </h2>
-            {weaponEnName ? (
-              <p className="mt-2 truncate text-sm font-black text-zinc-400 sm:text-base">{weaponEnName}</p>
-            ) : null}
+
+          <div className="relative mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.45fr)]">
+            <div className="rounded-[20px] border border-white/10 bg-black/35 p-4">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-[10px] font-black tracking-[0.24em] text-zinc-500">CURRENT LEVEL</p>
+                <span className="rounded-lg border border-yellow-400/25 bg-yellow-400/15 px-2.5 py-1.5 text-[11px] font-black text-yellow-100">
+                  직접 입력
+                </span>
+              </div>
+              <div className="mt-2.5 flex items-end gap-2">
+                <span className="text-4xl font-black leading-none text-white">Lv. {currentStats.level}</span>
+                <span className="pb-1 text-xs font-black text-zinc-500">/ 90</span>
+              </div>
+              <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-6">
+                {selectableLevels.map((mark) => {
+                  const active = currentStats.level === mark;
+                  return (
+                    <button
+                      key={mark}
+                      type="button"
+                      onClick={() => setLevel(mark)}
+                      className={[
+                        "h-10 rounded-xl border px-2 text-xs font-black transition",
+                        active
+                          ? "border-yellow-300/75 bg-yellow-400/20 text-yellow-100"
+                          : "border-white/10 bg-black/45 text-zinc-300 hover:border-yellow-400/35 hover:bg-yellow-400/10",
+                      ].join(" ")}
+                    >
+                      {mark}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="rounded-[20px] border border-yellow-500/20 bg-black/35 p-4">
+              <p className="text-[10px] font-black tracking-[0.18em] text-zinc-500">무기 공격력</p>
+              <p className="mt-3 text-4xl font-black leading-none" style={{ color: YELLOW_TEXT }}>
+                {currentStats.attack}
+              </p>
+              <div className="mt-4 h-1.5 rounded-full bg-zinc-800">
+                <div className="h-full w-[16%] rounded-full bg-yellow-300" />
+              </div>
+            </div>
           </div>
         </div>
+      </section>
 
-        <div className="relative mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(360px,0.55fr)]">
-          <div className="rounded-[22px] border border-white/10 bg-black/35 p-4">
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-[10px] font-black tracking-[0.24em] text-zinc-500">CURRENT LEVEL</p>
-              <span className="rounded-xl border border-yellow-400/25 bg-yellow-400/15 px-3 py-2 text-xs font-black text-yellow-100">
-                직접 입력
-              </span>
-            </div>
-            <div className="mt-3 flex items-end gap-2">
-              <span className="text-5xl font-black leading-none text-white">Lv. {currentStats.level}</span>
-              <span className="pb-1 text-sm font-black text-zinc-500">/ 90</span>
-            </div>
-            <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-6">
-              {selectableLevels.map((mark) => {
-                const active = currentStats.level === mark;
-                return (
-                  <button
-                    key={mark}
-                    type="button"
-                    onClick={() => setLevel(mark)}
-                    className={[
-                      "h-11 rounded-xl border px-3 text-sm font-black transition",
-                      active
-                        ? "border-yellow-300/75 bg-yellow-400/20 text-yellow-100"
-                        : "border-white/10 bg-black/45 text-zinc-300 hover:border-yellow-400/35 hover:bg-yellow-400/10",
-                    ].join(" ")}
-                  >
-                    {mark}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="rounded-[22px] border border-yellow-500/20 bg-black/35 p-4">
-            <p className="text-[10px] font-black tracking-[0.18em] text-zinc-500">무기 공격력</p>
-            <p className="mt-4 text-5xl font-black leading-none" style={{ color: YELLOW_TEXT }}>
-              {currentStats.attack}
-            </p>
-            <div className="mt-4 h-1.5 rounded-full bg-zinc-800">
-              <div className="h-full w-[16%] rounded-full bg-yellow-300" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="p-4 lg:p-5">
-        <div className="mb-4 rounded-[24px] border border-yellow-500/10 bg-black/30 p-4 lg:p-5">
-          <div className="grid gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(520px,1.1fr)] lg:items-center">
+      <section className="overflow-hidden rounded-[24px] border border-yellow-500/15 bg-[#05070b]/95 shadow-[0_14px_38px_rgba(0,0,0,0.28)]">
+        <div className="relative overflow-hidden border-b border-yellow-500/10 p-4">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_0%_0%,rgba(255,210,74,0.12),transparent_34%)]" />
+          <div className="relative grid gap-4 lg:grid-cols-[minmax(0,0.85fr)_minmax(480px,1.15fr)] lg:items-center">
             <div>
-              <p className="text-[10px] font-black tracking-[0.32em]" style={{ color: YELLOW_TEXT }}>
+              <p className="text-[10px] font-black tracking-[0.3em]" style={{ color: YELLOW_TEXT }}>
                 WEAPON SKILL DECK
               </p>
-              <h3 className="mt-2 text-3xl font-black text-white">무기 스킬 덱</h3>
-              <p className="mt-2 text-sm font-bold text-zinc-500">스킬을 선택해서 상세 수치와 Rank 정보를 확인합니다.</p>
+              <h3 className="mt-1 text-2xl font-black text-white">무기 스킬 덱</h3>
+              <p className="mt-1.5 text-xs font-bold text-zinc-500">스킬을 선택해서 상세 수치와 Rank 정보를 확인합니다.</p>
             </div>
             <div className="grid gap-2 sm:grid-cols-3">
               {TAB_ORDER.map((key) => {
@@ -507,14 +516,14 @@ export default function WeaponLevelPanel({
                     disabled={!skill}
                     onClick={() => setActiveTab(key)}
                     className={[
-                      "rounded-[18px] border px-4 py-3 text-left transition disabled:cursor-not-allowed disabled:opacity-45",
+                      "rounded-[16px] border px-3 py-2.5 text-left transition disabled:cursor-not-allowed disabled:opacity-45",
                       active
                         ? "border-yellow-300/70 bg-yellow-400/20 text-yellow-100"
                         : "border-white/10 bg-[#05070b]/85 text-zinc-300 hover:border-yellow-400/35 hover:bg-yellow-400/10",
                     ].join(" ")}
                   >
-                    <p className="text-[10px] font-black tracking-[0.18em] text-zinc-500">{TAB_SUB_LABEL_MAP[key]}</p>
-                    <p className="mt-1 truncate text-base font-black">{skill?.name ?? "-"}</p>
+                    <p className="text-[9px] font-black tracking-[0.16em] text-zinc-500">{TAB_SUB_LABEL_MAP[key]}</p>
+                    <p className="mt-1 truncate text-sm font-black">{skill?.name ?? "-"}</p>
                   </button>
                 );
               })}
@@ -522,11 +531,13 @@ export default function WeaponLevelPanel({
           </div>
         </div>
 
-        <WeaponSkillMainPanel
-          skill={groupedSkills[activeTab] ?? groupedSkills[firstAvailableTab]}
-          tabKey={groupedSkills[activeTab] ? activeTab : firstAvailableTab}
-        />
-      </div>
-    </section>
+        <div className="p-4">
+          <WeaponSkillMainPanel
+            skill={groupedSkills[activeTab] ?? groupedSkills[firstAvailableTab]}
+            tabKey={groupedSkills[activeTab] ? activeTab : firstAvailableTab}
+          />
+        </div>
+      </section>
+    </div>
   );
 }
