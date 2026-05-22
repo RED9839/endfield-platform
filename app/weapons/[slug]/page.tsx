@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import type { CSSProperties, ReactNode } from "react";
+import type { ReactNode } from "react";
 import {
   getWeaponDetailBySlug,
   type WeaponRarity,
@@ -522,7 +522,14 @@ export default async function WeaponDetailPage({
 
         <div className="grid min-w-0 gap-3 lg:gap-5">
           <DetailSection id="level" title="레벨별 능력치 & 무기 스킬" defaultOpen>
-            <WeaponLevelPanel levelStats={weapon.levelStats} skills={weapon.skills ?? []} />
+            <WeaponLevelPanel
+              weaponName={weapon.name}
+              weaponEnName={weapon.enName}
+              weaponImage={heroImage}
+              weaponTypeLabel={weaponTypeLabel}
+              levelStats={weapon.levelStats}
+              skills={weapon.skills ?? []}
+            />
           </DetailSection>
 
           {!!weapon.breakthrough?.length && (
