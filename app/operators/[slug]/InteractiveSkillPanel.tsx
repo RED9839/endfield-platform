@@ -51,6 +51,12 @@ type Props = {
   accentColor: string;
 };
 
+type AggregatedMaterial = {
+  name: string;
+  icon?: string;
+  count: string | number;
+};
+
 const elementTextColorMap: Record<string, string> = {
   물리: "#cfd8e3",
   열기: "#ff7a59",
@@ -215,37 +221,6 @@ function renderHighlightedText(text: string) {
   });
 }
 
-function findCompareRowValue(compareRows: SkillCompareRow[], label: string, index: number) {
-  const row = compareRows.find((item) => item.label === label);
-  return row?.values[index];
-}
-
-function formatMetaValue(value: string | number) {
-  if (typeof value === "number") return value;
-  if (/^\d+(?:\.\d+)?s$/i.test(value)) return `${value.slice(0, -1)}초`;
-  return value;
-}
-
-function resolveMetaItems(skill: SkillDetail, selectedIndex: number) {
-  const rawMeta = skill.meta ?? [];
-
-  return rawMeta
-    .map((item) => {
-      const resolvedValue =
-        item.valueRowLabel != null
-          ? findCompareRowValue(skill.compareRows, item.valueRowLabel, selectedIndex)
-          : item.value;
-
-      if (resolvedValue === undefined || resolvedValue === null || resolvedValue === "") return null;
-      return { label: item.label, value: formatMetaValue(resolvedValue) };
-    })
-    .filter((item): item is { label: string; value: string | number } => item !== null);
-}
-
-function isNormalAttackSkill(skill: SkillDetail) {
-  return skill.typeLabel.includes("일반 공격") || skill.name.includes("일반 공격");
-}
-
 function buildUpgradeRows(upgradeMaterialList: SkillUpgradeMaterial[]) {
   const normalOrder = ["2", "3", "4", "5", "6", "7", "8", "9"];
   const masteryOrder = ["M1", "M2", "M3"];
@@ -260,35 +235,68 @@ function buildUpgradeRows(upgradeMaterialList: SkillUpgradeMaterial[]) {
   };
 }
 
+function aggregateMaterials(upgradeMaterialList: SkillUpgradeMaterial[]) {
+  const materialMap = new Map<string, AggregatedMaterial>();
+
+  upgradeMaterialList.forEach((upgrade) => {
+    upgrade.materials.forEach((material) => {
+      const key = material.name;
+      const prev = materialMap.get(key);
+      const prevCount = Number(prev?.count ?? 0);
+      const nextCount = Number(material.count);
+      const count = Number.isFinite(prevCount) && Number.isFinite(nextCount)
+        ? prevCount + nextCount
+        : material.count;
+
+      materialMap.set(key, {
+        name: material.name,
+        icon: prev?.icon ?? material.icon,
+        count,
+      });
+    });
+  });
+
+  return Array.from(materialMap.values());
+}
+
 function FoldSection({
   title,
+  subtitle,
   defaultOpen = false,
   children,
 }: {
   title: string;
+  subtitle?: string;
   defaultOpen?: boolean;
   children: ReactNode;
 }) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
-    <div className="mt-3 overflow-hidden rounded-[18px] border border-yellow-500/10 bg-[#070a0f]">
+    <div className="min-w-0">
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
-        className="flex min-h-11 w-full items-center justify-between gap-3 px-4 py-2.5 text-left text-xs font-black tracking-[0.12em] text-zinc-300 transition hover:bg-yellow-400/5"
+        className="flex w-full items-center justify-between gap-3 text-left"
       >
-        <span>{title}</span>
-        <span className="text-base text-yellow-200">{isOpen ? "−" : "+"}</span>
+        <div className="min-w-0">
+          <span className="text-base font-black text-yellow-200">{title}</span>
+          {subtitle ? (
+            <span className="ml-2 text-sm font-bold text-zinc-500">{subtitle}</span>
+          ) : null}
+        </div>
+        <span className="text-2xl font-black text-yellow-200 transition-transform">
+          {isOpen ? "⌃" : "⌄"}
+        </span>
       </button>
 
-      {isOpen ? <div className="border-t border-yellow-500/10">{children}</div> : null}
+      {isOpen ? <div className="mt-3">{children}</div> : null}
     </div>
   );
 }
 
 function MaterialIcon({ src, alt, size = "normal" }: { src?: string; alt: string; size?: "normal" | "large" }) {
-  const boxClass = size === "large" ? "h-14 w-14 sm:h-16 sm:w-16" : "h-7 w-7";
+  const boxClass = size === "large" ? "h-12 w-12 sm:h-14 sm:w-14" : "h-7 w-7";
 
   if (!src) {
     return (
@@ -300,16 +308,16 @@ function MaterialIcon({ src, alt, size = "normal" }: { src?: string; alt: string
 
   return (
     <div className={`relative ${boxClass} shrink-0`}>
-      <Image src={src} alt={alt} fill sizes={size === "large" ? "64px" : "28px"} className="object-contain" />
+      <Image src={src} alt={alt} fill sizes={size === "large" ? "56px" : "28px"} className="object-contain" />
     </div>
   );
 }
 
-function MetaLine({ label, value }: { label: string; value: string | number }) {
+function MaterialBadge({ material }: { material: AggregatedMaterial }) {
   return (
-    <div className="min-w-[92px]">
-      <div className="text-[11px] font-black text-zinc-500">{label}</div>
-      <div className="mt-0.5 text-sm font-black text-zinc-200">{value}</div>
+    <div className="flex min-w-[64px] flex-col items-center gap-1.5 rounded-2xl border border-white/10 bg-white/[0.025] px-2 py-2">
+      <MaterialIcon src={material.icon} alt={material.name} size="large" />
+      <div className="text-sm font-black leading-none text-zinc-200">{material.count}</div>
     </div>
   );
 }
@@ -348,19 +356,19 @@ function StatCard({ stat, icon }: { stat: SkillStat; icon?: string }) {
   const statColor = statElement ? getElementColor(statElement) : "#d8e0ec";
 
   return (
-    <div className="grid min-w-0 grid-cols-[42px_minmax(0,1fr)] items-center gap-3 rounded-[16px] border border-white/10 bg-white/[0.025] px-3 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]">
-      <div className="relative flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-black/35">
+    <div className="grid min-w-0 grid-cols-[38px_minmax(0,1fr)] items-center gap-3 rounded-[14px] border border-white/10 bg-white/[0.025] px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]">
+      <div className="relative flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-black/35">
         {icon ? (
-          <Image src={icon} alt="skill stat" fill sizes="40px" className="object-contain p-2" />
+          <Image src={icon} alt="skill stat" fill sizes="36px" className="object-contain p-2" />
         ) : (
           <span className="text-xs font-black text-zinc-500">S</span>
         )}
       </div>
       <div className="min-w-0">
-        <div className="break-keep text-xs font-black leading-snug" style={{ color: statColor }}>
+        <div className="break-keep text-[11px] font-black leading-snug" style={{ color: statColor }}>
           {renderHighlightedText(stat.label)}
         </div>
-        <div className="mt-1 text-xl font-black leading-none text-yellow-200">{stat.value}</div>
+        <div className="mt-0.5 text-lg font-black leading-none text-yellow-200">{stat.value}</div>
       </div>
     </div>
   );
@@ -376,13 +384,13 @@ export default function InteractiveSkillPanel({ skill, accentColor }: Props) {
     [skill.upgradeMaterials, skill.upgradeCosts]
   );
 
-  const visibleMetaItems = useMemo(() => {
-    if (isNormalAttackSkill(skill)) return [];
-    return resolveMetaItems(skill, selectedIndex);
-  }, [skill, selectedIndex]);
-
   const upgradeRows = useMemo(
     () => buildUpgradeRows(upgradeMaterialList),
+    [upgradeMaterialList]
+  );
+
+  const totalMaterials = useMemo(
+    () => aggregateMaterials(upgradeMaterialList),
     [upgradeMaterialList]
   );
 
@@ -401,19 +409,19 @@ export default function InteractiveSkillPanel({ skill, accentColor }: Props) {
   if (!current) return null;
 
   return (
-    <section className="relative min-w-0 overflow-hidden rounded-[24px] border border-yellow-500/15 bg-[#05070b] shadow-[0_18px_44px_rgba(0,0,0,0.34)]">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_0%,rgba(255,210,74,0.11),transparent_30%),linear-gradient(135deg,rgba(255,255,255,0.035),rgba(255,255,255,0.005))]" />
-      <div className="pointer-events-none absolute right-0 top-0 h-32 w-32 bg-[repeating-linear-gradient(135deg,rgba(255,210,74,0.08)_0px,rgba(255,210,74,0.08)_2px,transparent_2px,transparent_8px)] opacity-25" />
+    <section className="relative min-w-0 overflow-hidden rounded-[22px] border border-yellow-500/15 bg-[#05070b] shadow-[0_14px_34px_rgba(0,0,0,0.28)]">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_0%,rgba(255,210,74,0.10),transparent_30%),linear-gradient(135deg,rgba(255,255,255,0.03),rgba(255,255,255,0.004))]" />
+      <div className="pointer-events-none absolute right-0 top-0 h-28 w-28 bg-[repeating-linear-gradient(135deg,rgba(255,210,74,0.07)_0px,rgba(255,210,74,0.07)_2px,transparent_2px,transparent_8px)] opacity-25" />
 
-      <div className="relative p-3 sm:p-4 lg:p-5">
-        <div className="grid min-w-0 grid-cols-[72px_minmax(0,1fr)] gap-3 sm:grid-cols-[88px_minmax(0,1fr)] sm:gap-4">
+      <div className="relative p-3 sm:p-4">
+        <div className="grid min-w-0 grid-cols-[64px_minmax(0,1fr)] gap-3 sm:grid-cols-[78px_minmax(0,1fr)] sm:gap-4">
           <div
-            className="relative flex h-[72px] w-[72px] items-center justify-center rounded-[22px] border bg-[#0b0f16] sm:h-[88px] sm:w-[88px]"
-            style={{ borderColor: iconBorderColor, boxShadow: `0 0 22px ${iconGlowColor}` }}
+            className="relative flex h-16 w-16 items-center justify-center rounded-[20px] border bg-[#0b0f16] sm:h-[78px] sm:w-[78px]"
+            style={{ borderColor: iconBorderColor, boxShadow: `0 0 20px ${iconGlowColor}` }}
           >
             {skill.icon ? (
-              <div className="relative h-16 w-16 sm:h-[78px] sm:w-[78px]">
-                <Image src={skill.icon} alt={skill.name} fill sizes="78px" className="object-contain" />
+              <div className="relative h-14 w-14 sm:h-[68px] sm:w-[68px]">
+                <Image src={skill.icon} alt={skill.name} fill sizes="68px" className="object-contain" />
               </div>
             ) : (
               <div className="text-xs font-black text-zinc-500">ICON</div>
@@ -425,29 +433,14 @@ export default function InteractiveSkillPanel({ skill, accentColor }: Props) {
               {skill.typeLabel}
             </div>
 
-            <h3 className="mt-2 break-keep text-[clamp(26px,5vw,42px)] font-black leading-tight text-white drop-shadow-[0_6px_18px_rgba(0,0,0,0.45)]">
+            <h3 className="mt-2 break-keep text-[clamp(24px,4.6vw,38px)] font-black leading-tight text-white drop-shadow-[0_6px_18px_rgba(0,0,0,0.45)]">
               {skill.name}
             </h3>
-
-            <div className="mt-3 flex min-w-0 flex-wrap gap-x-8 gap-y-2">
-              {visibleMetaItems.length ? (
-                visibleMetaItems.map((item) => (
-                  <MetaLine key={`${skill.name}-${item.label}`} label={item.label} value={item.value} />
-                ))
-              ) : (
-                <>
-                  <MetaLine label="공격 타입" value={detectedElement ?? "물리"} />
-                  <MetaLine label="공격 범위" value="단일" />
-                  <MetaLine label="재사용 대기" value="-" />
-                  <MetaLine label="원소 타입" value={detectedElement ?? "-"} />
-                </>
-              )}
-            </div>
           </div>
         </div>
 
-        <div className="mt-4 overflow-x-auto overscroll-x-contain border-b border-yellow-500/20 pb-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <div className="flex w-max gap-2">
+        <div className="mt-3 overflow-x-auto overscroll-x-contain border-b border-yellow-500/20 pb-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="flex w-max items-center gap-2">
             {levels.map((level, index) => {
               const active = selectedIndex === index;
 
@@ -457,13 +450,23 @@ export default function InteractiveSkillPanel({ skill, accentColor }: Props) {
                   type="button"
                   onClick={() => setSelectedIndex(index)}
                   className={[
-                    "min-h-9 min-w-[58px] rounded-full border px-3 text-sm font-black transition active:scale-[0.98]",
+                    "relative flex h-10 min-w-12 items-center justify-center border px-3 text-sm font-black transition active:scale-[0.98]",
                     active
-                      ? "border-yellow-300/80 bg-yellow-400/20 text-yellow-100 shadow-[0_0_16px_rgba(255,210,74,0.16)]"
-                      : "border-yellow-500/15 bg-black/45 text-zinc-300 hover:border-yellow-300/40 hover:text-yellow-100",
+                      ? "border-yellow-300/90 bg-yellow-400/15 text-yellow-100 shadow-[0_0_18px_rgba(255,210,74,0.22)]"
+                      : "border-white/15 bg-black/35 text-zinc-300 hover:border-yellow-300/40 hover:text-yellow-100",
                   ].join(" ")}
-                  style={active ? { borderColor: accentColor } : undefined}
+                  style={{
+                    borderColor: active ? accentColor : undefined,
+                    clipPath:
+                      "polygon(14px 0, calc(100% - 14px) 0, 100% 14px, 100% calc(100% - 14px), calc(100% - 14px) 100%, 14px 100%, 0 calc(100% - 14px), 0 14px)",
+                  }}
                 >
+                  {active ? (
+                    <>
+                      <span className="absolute -top-2 left-1/2 h-0 w-0 -translate-x-1/2 border-x-[6px] border-t-0 border-b-[7px] border-x-transparent border-b-yellow-300" />
+                      <span className="absolute -bottom-2 left-1/2 h-0 w-0 -translate-x-1/2 border-x-[6px] border-b-0 border-t-[7px] border-x-transparent border-t-yellow-300" />
+                    </>
+                  ) : null}
                   {level.level}
                 </button>
               );
@@ -471,13 +474,13 @@ export default function InteractiveSkillPanel({ skill, accentColor }: Props) {
           </div>
         </div>
 
-        <div className="mt-3 grid gap-3 xl:grid-cols-[minmax(0,1.12fr)_minmax(360px,0.88fr)]">
+        <div className="mt-3 grid gap-3 xl:grid-cols-[minmax(0,1.05fr)_minmax(360px,0.95fr)]">
           <div className="min-w-0 rounded-[18px] border border-white/10 bg-black/20 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]">
             <div className="mb-4 flex items-center gap-2 text-base font-black text-yellow-200">
               <span className="h-4 w-0.5 rounded-full bg-yellow-300" />
               스킬 설명
             </div>
-            <div className="break-keep text-sm font-semibold leading-[1.95] text-zinc-100 sm:text-base">
+            <div className="break-keep text-sm font-semibold leading-[1.86] text-zinc-100 sm:text-[15px]">
               {renderHighlightedText(current.description)}
             </div>
           </div>
@@ -491,16 +494,20 @@ export default function InteractiveSkillPanel({ skill, accentColor }: Props) {
           )}
         </div>
 
-        <div className="mt-3 grid gap-3 rounded-[18px] border border-white/10 bg-black/20 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)] lg:grid-cols-[minmax(0,1fr)_minmax(260px,0.7fr)]">
+        <div className="mt-3 grid gap-3 rounded-[18px] border border-white/10 bg-black/20 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)] lg:grid-cols-[minmax(0,0.85fr)_minmax(320px,1fr)]">
           <div className="min-w-0">
-            <div className="mb-3 text-base font-black text-yellow-200">강화 재료</div>
+            <div className="mb-3 text-base font-black text-yellow-200">
+              강화 재료
+              <span className="ml-2 text-sm font-bold text-zinc-500">현재 레벨 {current.level} 기준</span>
+            </div>
+
             {currentUpgrade?.materials?.length ? (
-              <div className="flex flex-wrap gap-4 sm:gap-6">
+              <div className="flex flex-wrap gap-3 sm:gap-5">
                 {currentUpgrade.materials.map((material, index) => (
-                  <div key={`${current.level}-${material.name}-${index}`} className="flex min-w-[70px] flex-col items-center gap-2">
-                    <MaterialIcon src={material.icon} alt={material.name} size="large" />
-                    <div className="text-sm font-black text-zinc-200">{material.count}</div>
-                  </div>
+                  <MaterialBadge
+                    key={`${current.level}-${material.name}-${index}`}
+                    material={material}
+                  />
                 ))}
               </div>
             ) : (
@@ -511,17 +518,23 @@ export default function InteractiveSkillPanel({ skill, accentColor }: Props) {
           </div>
 
           <div className="min-w-0 border-white/10 pt-3 lg:border-l lg:pl-5 lg:pt-0">
-            <div className="mb-3 text-base font-black text-yellow-200">스킬 안내</div>
-            <div className="space-y-2 text-sm font-semibold leading-relaxed text-zinc-400">
-              <p>· 오퍼레이터 레벨과 스킬 레벨이 함께 상승합니다.</p>
-              <p>· 최대 레벨 도달 시 추가 강화가 가능합니다.</p>
-            </div>
+            <FoldSection title="전체 강화 재료" subtitle="최대 M3 기준" defaultOpen>
+              {totalMaterials.length ? (
+                <div className="flex flex-wrap gap-3 sm:gap-4">
+                  {totalMaterials.map((material) => (
+                    <MaterialBadge key={material.name} material={material} />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-sm font-bold text-zinc-500">재료 데이터 없음</div>
+              )}
+            </FoldSection>
           </div>
         </div>
 
         {!!skill.compareRows?.length && (
           <FoldSection title="레벨 비교" defaultOpen={false}>
-            <div className="max-w-full overflow-x-auto overscroll-x-contain">
+            <div className="max-w-full overflow-x-auto overscroll-x-contain rounded-2xl border border-white/10 bg-black/20">
               <table className="w-max min-w-full border-collapse text-sm">
                 <thead>
                   <tr>
@@ -569,8 +582,8 @@ export default function InteractiveSkillPanel({ skill, accentColor }: Props) {
           </FoldSection>
         )}
 
-        <FoldSection title="전체 강화 재료" defaultOpen={false}>
-          <div className="grid gap-3 p-3">
+        <FoldSection title="레벨별 강화 재료" defaultOpen={false}>
+          <div className="grid gap-3 rounded-2xl border border-white/10 bg-black/20 p-3">
             {!!upgradeRows.normal.length && (
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4">
                 {upgradeRows.normal.map((item) => (
