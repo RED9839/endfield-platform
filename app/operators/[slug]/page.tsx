@@ -150,22 +150,49 @@ export default async function OperatorDetailPage({
         </div>
 
         <div className="relative z-10 mx-auto flex min-h-[760px] max-w-[1840px] flex-col px-3 py-3 sm:min-h-[820px] sm:px-4 md:px-6 md:py-5 lg:min-h-[920px]">
-          <header className="mb-4 flex items-center justify-between gap-3">
-            <Link
-              href="/operators"
-              className="rounded-xl bg-black/55 px-3 py-2 text-xs font-black text-zinc-200 shadow-[0_10px_22px_rgba(0,0,0,0.28)] transition hover:bg-[#0b1018] sm:px-4 sm:text-sm"
-              style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
-            >
-              ← 목록
-            </Link>
+          <header
+            className="mb-4 rounded-[20px] bg-[#05070b]/92 p-4 shadow-[0_0_30px_rgba(250,204,21,0.04)] backdrop-blur-md sm:mb-5 sm:rounded-[24px] sm:p-5"
+            style={{ border: `1px solid ${YELLOW_BORDER}` }}
+          >
+            <div className="flex items-end justify-between gap-3">
+              <div className="min-w-0">
+                <p
+                  className="text-[10px] font-semibold tracking-[0.28em] sm:text-[11px] sm:tracking-[0.35em]"
+                  style={{ color: YELLOW_TEXT }}
+                >
+                  엔드필드 지원 플랫폼
+                </p>
 
-            <Link
-              href="/"
-              className="rounded-xl bg-black/55 px-3 py-2 text-xs font-black text-zinc-200 shadow-[0_10px_22px_rgba(0,0,0,0.28)] transition hover:bg-[#0b1018] sm:px-4 sm:text-sm"
-              style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
-            >
-              홈
-            </Link>
+                <h1
+                  className="mt-2 break-keep text-2xl font-black tracking-tight sm:text-4xl"
+                  style={{ color: YELLOW_TEXT }}
+                >
+                  {operator.name}
+                </h1>
+
+                <p className="mt-1 truncate text-xs text-zinc-500 sm:text-sm">
+                  오퍼레이터 상세 정보
+                </p>
+              </div>
+
+              <div className="flex shrink-0 items-center gap-2">
+                <Link
+                  href="/operators"
+                  className="rounded-xl bg-black px-3 py-2 text-xs font-bold text-zinc-200 transition hover:bg-[#0b1018] sm:px-4 sm:text-sm"
+                  style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
+                >
+                  목록으로
+                </Link>
+
+                <Link
+                  href="/"
+                  className="rounded-xl bg-black px-3 py-2 text-xs font-bold text-zinc-200 transition hover:bg-[#0b1018] sm:px-4 sm:text-sm"
+                  style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
+                >
+                  홈으로
+                </Link>
+              </div>
+            </div>
           </header>
 
           <div className="relative grid flex-1 items-center gap-4 lg:grid-cols-[minmax(0,1.12fr)_minmax(360px,0.88fr)] lg:gap-6">
@@ -302,13 +329,13 @@ export default async function OperatorDetailPage({
           </DetailSection>
 
           {!!operator.elite.length && (
-            <DetailSection id="elite" title="정예화">
+            <DetailSection id="elite" title="정예화" defaultOpen>
               <ElitePanel elite={operator.elite} />
             </DetailSection>
           )}
 
           {!!operator.talents.length && (
-            <DetailSection id="talents" title="재능">
+            <DetailSection id="talents" title="재능" defaultOpen>
               <TalentPanel
                 items={operator.talents}
                 accentColor={panelAccentColor}
@@ -317,7 +344,7 @@ export default async function OperatorDetailPage({
           )}
 
           {!!operator.infrastructureSkills.length && (
-            <DetailSection id="infra" title="인프라 스킬">
+            <DetailSection id="infra" title="인프라 스킬" defaultOpen>
               <InfrastructureSkillPanel
                 groups={operator.infrastructureSkills}
                 accentColor={panelAccentColor}
@@ -326,13 +353,13 @@ export default async function OperatorDetailPage({
           )}
 
           {!!operator.trustBonus.length && (
-            <DetailSection id="trust" title="신뢰도 보너스">
+            <DetailSection id="trust" title="신뢰도 보너스" defaultOpen>
               <TrustBonusPanel items={operator.trustBonus} />
             </DetailSection>
           )}
 
           {!!operator.potential.length && (
-            <DetailSection id="potential" title="잠재능력">
+            <DetailSection id="potential" title="잠재능력" defaultOpen>
               <PotentialPanel items={operator.potential} />
             </DetailSection>
           )}
