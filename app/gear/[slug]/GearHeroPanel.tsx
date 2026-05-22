@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import type { GearDetail } from "@/data/gear-types";
 
+const YELLOW_MAIN = "#ffd24a";
 const YELLOW_TEXT = "#ffdc70";
 const YELLOW_BORDER = "rgba(255,196,74,0.14)";
 const YELLOW_BORDER_SOFT = "rgba(255,196,74,0.10)";
@@ -54,25 +55,29 @@ function highlightTerms(text: string): ReactNode {
 
   filtered.forEach((match, index) => {
     if (cursor < match.start) result.push(text.slice(cursor, match.start));
+
     result.push(
       <span key={`${match.text}-${match.start}-${index}`} style={{ color: match.color, fontWeight: 900 }}>
         {match.text}
       </span>,
     );
+
     cursor = match.end;
   });
 
   if (cursor < text.length) result.push(text.slice(cursor));
+
   return result;
 }
 
-function SmallStatCard({ label, value }: { label: string; value: ReactNode }) {
+function ProfileBlock({ label, value }: { label: string; value: ReactNode }) {
   return (
-    <div className="rounded-[20px] border border-white/10 bg-[#070a10]/90 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]">
+    <div
+      className="rounded-[18px] bg-black/35 px-4 py-3"
+      style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
+    >
       <p className="text-[10px] font-black tracking-[0.18em] text-zinc-500">{label}</p>
-      <div className="mt-2 text-2xl font-black leading-tight" style={{ color: YELLOW_TEXT }}>
-        {value}
-      </div>
+      <div className="mt-2 text-base font-black text-white">{value}</div>
     </div>
   );
 }
@@ -85,104 +90,107 @@ export default function GearHeroPanel({
   categoryLabel: string;
 }) {
   const primarySetEffect = gear.setEffects[0];
-  const baseRows = [
-    { label: gear.baseStat.label, value: gear.baseStat.value },
-    { label: gear.ability1.label, value: gear.ability1.values.base },
-    ...(gear.ability2 ? [{ label: gear.ability2.label, value: gear.ability2.values.base }] : []),
-    { label: gear.attribute.label, value: gear.attribute.values.base },
-  ];
 
   return (
     <section
-      className="overflow-hidden rounded-[28px] bg-[#05070b] shadow-[0_18px_50px_rgba(0,0,0,0.30)]"
+      className="overflow-hidden rounded-[30px] bg-[#05070b] shadow-[0_20px_60px_rgba(0,0,0,0.34)]"
       style={{ border: `1px solid ${YELLOW_BORDER}` }}
     >
-      <div className="relative overflow-hidden border-b border-yellow-500/10 bg-[radial-gradient(circle_at_8%_0%,rgba(255,210,74,0.14),transparent_34%),linear-gradient(180deg,rgba(255,255,255,0.035),transparent)] p-4 lg:p-5">
-        <div className="relative flex min-w-0 items-center gap-4 rounded-[22px] border border-white/10 bg-black/20 p-3">
-          <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl border border-yellow-500/15 bg-black/45 sm:h-24 sm:w-24">
-            <img
-              src={gear.image}
-              alt={gear.name}
-              className="h-full w-full object-contain p-2 drop-shadow-[0_10px_18px_rgba(0,0,0,0.58)]"
-            />
-          </div>
+      <div className="grid lg:grid-cols-[1.1fr_0.9fr]">
+        <div className="relative min-h-[520px] overflow-hidden bg-black">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_0%,rgba(255,210,74,0.16),transparent_32%)]" />
 
-          <div className="min-w-0">
-            <h1 className="break-keep text-[clamp(32px,5vw,48px)] font-black leading-none text-white">
+          <img
+            src={gear.fullImage || gear.image}
+            alt={gear.name}
+            className="absolute inset-0 h-full w-full object-contain p-8 drop-shadow-[0_24px_42px_rgba(0,0,0,0.72)]"
+          />
+        </div>
+
+        <div className="relative p-6 lg:p-8">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_0%_0%,rgba(255,210,74,0.12),transparent_32%)]" />
+
+          <div className="relative">
+            <p
+              className="text-[11px] font-black tracking-[0.32em]"
+              style={{ color: YELLOW_MAIN }}
+            >
+              GEAR PROFILE
+            </p>
+
+            <p className="mt-3 text-xl font-black text-zinc-300">{gear.enName}</p>
+
+            <h1 className="mt-2 break-keep text-[clamp(44px,6vw,72px)] font-black leading-[0.92] text-white">
               {gear.name}
             </h1>
-            <p className="mt-2 truncate text-sm font-black text-zinc-400 sm:text-base">
-              {gear.enName}
-            </p>
-          </div>
-        </div>
 
-        <div className="relative mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(360px,0.55fr)]">
-          <div className="rounded-[22px] border border-white/10 bg-black/35 p-4">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-xl border border-yellow-400/25 bg-yellow-400/15 px-3 py-2 text-xs font-black text-yellow-100">
+            <div className="mt-5 flex flex-wrap gap-2">
+              <span
+                className="rounded-full px-3 py-1 text-xs font-black"
+                style={{
+                  border: `1px solid ${YELLOW_MAIN}`,
+                  background: "rgba(255,210,74,0.14)",
+                  color: "#fff4bf",
+                }}
+              >
                 Lv. {gear.level}
               </span>
-              <span className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-black text-zinc-300">
+
+              <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-black text-zinc-300">
                 {categoryLabel}
               </span>
-              <span className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-black text-zinc-300">
+
+              <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-black text-zinc-300">
                 품질 {gear.quality}
+              </span>
+
+              <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-black text-zinc-300">
+                {gear.setName}
               </span>
             </div>
 
-            <p className="mt-4 text-[10px] font-black tracking-[0.24em] text-zinc-500">SET</p>
-            <h2 className="mt-2 break-keep text-3xl font-black leading-tight text-white">
-              {gear.setName}
-            </h2>
-          </div>
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              <ProfileBlock label="기본 능력치" value={highlightTerms(`${gear.baseStat.label} ${gear.baseStat.value}`)} />
 
-          <div className="rounded-[22px] border border-yellow-500/20 bg-black/35 p-4">
-            <p className="text-[10px] font-black tracking-[0.18em] text-zinc-500">기본 능력치</p>
-            <p className="mt-3 text-base font-black text-zinc-300">{gear.baseStat.label}</p>
-            <p className="mt-1 text-5xl font-black leading-none" style={{ color: YELLOW_TEXT }}>
-              {gear.baseStat.value}
-            </p>
-            <div className="mt-4 h-1.5 rounded-full bg-zinc-800">
-              <div className="h-full w-[18%] rounded-full bg-yellow-300" />
+              <ProfileBlock label="능력치" value={highlightTerms(`${gear.ability1.label} ${gear.ability1.values.base}`)} />
+
+              <ProfileBlock label="속성" value={highlightTerms(`${gear.attribute.label} ${gear.attribute.values.base}`)} />
+
+              <ProfileBlock
+                label="세트 효과"
+                value={primarySetEffect ? highlightTerms(primarySetEffect.description) : "-"}
+              />
+            </div>
+
+            <div
+              className="mt-6 rounded-[22px] bg-[#06090f]/90 p-5"
+              style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
+            >
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <p className="text-sm font-black text-zinc-300">세트 효과</p>
+                <p className="text-xs font-black" style={{ color: YELLOW_TEXT }}>
+                  {gear.setEffects.length} SECTIONS
+                </p>
+              </div>
+
+              <div className="grid gap-2">
+                {gear.setEffects.map((effect) => (
+                  <div
+                    key={`${effect.pieces}-${effect.description}`}
+                    className="rounded-2xl border border-white/10 bg-black/35 p-4"
+                  >
+                    <p className="text-sm font-black" style={{ color: YELLOW_TEXT }}>
+                      {effect.pieces}세트
+                    </p>
+
+                    <div className="mt-2 text-sm font-bold leading-7 text-zinc-200">
+                      {highlightTerms(effect.description)}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-      </div>
-
-      <div className="grid gap-3 p-4 lg:grid-cols-[minmax(0,1fr)_minmax(420px,0.95fr)] lg:p-5">
-        <div className="rounded-[22px] border border-white/10 bg-black/25 p-4">
-          <div className="mb-4 flex items-center justify-between gap-3">
-            <p className="text-[10px] font-black tracking-[0.28em]" style={{ color: YELLOW_TEXT }}>
-              GEAR STATS
-            </p>
-            <p className="text-xs font-bold text-yellow-200/70">기본 기준</p>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            {baseRows.map((row, index) => (
-              <SmallStatCard key={`${row.label}-${index}`} label={row.label} value={row.value} />
-            ))}
-          </div>
-        </div>
-
-        <div className="rounded-[22px] border border-white/10 bg-black/25 p-4">
-          <p className="text-[10px] font-black tracking-[0.28em]" style={{ color: YELLOW_TEXT }}>
-            SET EFFECT
-          </p>
-          <h3 className="mt-2 break-keep text-2xl font-black text-white">
-            {highlightTerms(gear.setName)}
-          </h3>
-
-          {primarySetEffect ? (
-            <div className="mt-4 rounded-[18px] border border-white/10 bg-[#080b11]/85 p-4 text-sm font-bold leading-7 text-zinc-200">
-              <p className="mb-1 font-black" style={{ color: YELLOW_TEXT }}>
-                {primarySetEffect.pieces}개 세트 효과
-              </p>
-              {highlightTerms(primarySetEffect.description)}
-            </div>
-          ) : (
-            <p className="mt-3 text-sm font-bold text-zinc-500">등록된 세트 효과가 없습니다.</p>
-          )}
         </div>
       </div>
     </section>
