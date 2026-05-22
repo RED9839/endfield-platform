@@ -27,6 +27,7 @@ type LevelStatRow = {
 type Props = {
   name: string;
   enName: string;
+  avatar?: string;
   element: OperatorElement;
   operatorClass: OperatorClass;
   weapon: WeaponType;
@@ -65,60 +66,6 @@ const statIconMap: Record<string, string> = {
   의지: "/icons/stats/will.webp",
 };
 
-const weaponLabelMap: Record<WeaponType, string> = {
-  sword: "한손검",
-  greatsword: "양손검",
-  polearm: "장병기",
-  handcannon: "권총",
-  artsunit: "아츠 유닛",
-};
-
-const rarityIconMap: Record<OperatorRarity, string> = {
-  4: "/icons/rarity/4star.webp",
-  5: "/icons/rarity/5star.webp",
-  6: "/icons/rarity/6star.webp",
-};
-
-const rarityBorderMap: Record<OperatorRarity, string> = {
-  4: "rgba(154,99,255,0.42)",
-  5: "rgba(240,201,74,0.42)",
-  6: "rgba(255,138,31,0.42)",
-};
-
-const elementLabelMap: Record<OperatorElement, string> = {
-  physical: "물리",
-  cryo: "냉기",
-  heat: "열기",
-  nature: "자연",
-  electric: "전기",
-};
-
-const elementBorderMap: Record<OperatorElement, string> = {
-  physical: "rgba(160,160,160,0.42)",
-  cryo: "rgba(66,211,255,0.42)",
-  heat: "rgba(255,122,69,0.42)",
-  nature: "rgba(141,224,74,0.42)",
-  electric: "rgba(255,210,61,0.42)",
-};
-
-const classLabelMap: Record<OperatorClass, string> = {
-  vanguard: "뱅가드",
-  guard: "가드",
-  defender: "디펜더",
-  supporter: "서포터",
-  caster: "캐스터",
-  striker: "스트라이커",
-};
-
-const classIconMap: Record<OperatorClass, string> = {
-  vanguard: "/icons/classes/vanguard.webp",
-  guard: "/icons/classes/guard.webp",
-  defender: "/icons/classes/defender.webp",
-  supporter: "/icons/classes/supporter.webp",
-  caster: "/icons/classes/caster.webp",
-  striker: "/icons/classes/striker.webp",
-};
-
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
 }
@@ -133,8 +80,8 @@ function findStatConfig(label: string) {
   return STAT_CONFIGS.find((item) => item.label === label) ?? null;
 }
 
-function formatPercent(value: number, maxValue: number) {
-  return Math.round(Math.max(0, Math.min(100, (value / maxValue) * 100)));
+function getBarPercent(value: number, maxValue: number) {
+  return Math.max(4, Math.min(100, (value / maxValue) * 100));
 }
 
 function IconFallback({ text, size }: { text?: string; size: number }) {
@@ -170,22 +117,12 @@ function SmallIcon({ src, alt, size = 20 }: { src?: string; alt?: string; size?:
   );
 }
 
-function ProfileChip({
-  value,
-  iconSrc,
-  borderColor,
-}: {
-  value: string;
-  iconSrc?: string;
-  borderColor?: string;
-}) {
+function OperatorAvatar({ src, name }: { src?: string; name: string }) {
+  if (!src) return <IconFallback text={name} size={58} />;
+
   return (
-    <div
-      className="inline-flex min-h-10 items-center gap-2 rounded-full border bg-black/25 px-4 text-sm font-black text-zinc-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]"
-      style={{ borderColor: borderColor ?? "rgba(255,255,255,0.12)" }}
-    >
-      <SmallIcon src={iconSrc} alt={value} size={18} />
-      {value}
+    <div className="relative h-[58px] w-[58px] shrink-0 overflow-hidden rounded-[18px] border border-yellow-400/25 bg-black/45 shadow-[0_0_18px_rgba(255,210,74,0.10)] sm:h-16 sm:w-16">
+      <Image src={src} alt={name} fill sizes="64px" className="object-cover object-top" />
     </div>
   );
 }
@@ -205,26 +142,25 @@ function FocusStatCard({
   icon?: string;
   tone?: "yellow" | "blue";
 }) {
-  const percent = formatPercent(value, maxValue);
+  const percent = getBarPercent(value, maxValue);
   const accentClass = tone === "yellow" ? "text-yellow-200" : "text-sky-300";
   const borderClass = tone === "yellow" ? "border-yellow-300/25" : "border-sky-300/25";
   const bgClass = tone === "yellow" ? "bg-yellow-400/10" : "bg-sky-400/10";
   const barClass = tone === "yellow" ? "bg-yellow-300" : "bg-sky-400";
 
   return (
-    <div className={`min-w-0 rounded-[20px] border ${borderClass} bg-black/25 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]`}>
+    <div className={`min-w-0 rounded-[18px] border ${borderClass} bg-black/25 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]`}>
       <div className={`text-sm font-black ${accentClass}`}>{title}</div>
-      <div className="mt-4 grid grid-cols-[52px_minmax(0,1fr)_58px] items-center gap-3">
-        <div className={`flex h-12 w-12 items-center justify-center rounded-full border border-white/10 ${bgClass}`}>
-          <SmallIcon src={icon} alt={label} size={28} />
+      <div className="mt-3 grid grid-cols-[42px_minmax(0,1fr)] items-center gap-3">
+        <div className={`flex h-10 w-10 items-center justify-center rounded-full border border-white/10 ${bgClass}`}>
+          <SmallIcon src={icon} alt={label} size={24} />
         </div>
         <div className="min-w-0">
           <div className="truncate text-sm font-black text-zinc-200">{label}</div>
-          <div className={`mt-0.5 text-4xl font-black leading-none ${accentClass}`}>{value}</div>
+          <div className={`mt-0.5 text-[30px] font-black leading-none ${accentClass}`}>{value}</div>
         </div>
-        <div className="text-right text-lg font-black text-zinc-300">{percent}%</div>
       </div>
-      <div className="mt-4 h-2 overflow-hidden rounded-full bg-[#151b24]">
+      <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[#151b24]">
         <div className={`h-full rounded-full ${barClass} shadow-[0_0_14px_rgba(255,210,74,0.25)]`} style={{ width: `${percent}%` }} />
       </div>
     </div>
@@ -240,28 +176,27 @@ function StatCard({
   value: number;
   variant: "normal" | "mainStat" | "subStat";
 }) {
-  const percent = formatPercent(value, config.maxValue);
+  const percent = getBarPercent(value, config.maxValue);
   const isMain = variant === "mainStat";
   const isSub = variant === "subStat";
 
   return (
     <div
       className={[
-        "min-w-0 rounded-[18px] border bg-black/25 px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]",
+        "min-w-0 rounded-[16px] border bg-black/25 px-3 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]",
         isMain ? "border-yellow-300/25" : isSub ? "border-sky-300/25" : "border-white/10",
       ].join(" ")}
     >
-      <div className="grid min-w-0 grid-cols-[42px_minmax(0,1fr)_auto] items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-black/35">
-          <SmallIcon src={config.icon} alt={config.label} size={23} />
+      <div className="grid min-w-0 grid-cols-[34px_minmax(0,1fr)_auto] items-center gap-2.5">
+        <div className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-black/35">
+          <SmallIcon src={config.icon} alt={config.label} size={20} />
         </div>
         <div className="min-w-0">
-          <div className="truncate text-sm font-black text-zinc-100">{config.label}</div>
-          <div className="mt-0.5 text-2xl font-black leading-none text-white">{value}</div>
+          <div className="truncate text-xs font-black text-zinc-100">{config.label}</div>
+          <div className="mt-0.5 text-xl font-black leading-none text-white">{value}</div>
         </div>
-        <div className="text-sm font-black text-zinc-500">{percent}%</div>
       </div>
-      <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#141a24]">
+      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#141a24]">
         <div
           className={[
             "h-full rounded-full shadow-[0_0_12px_rgba(247,180,35,0.22)]",
@@ -273,13 +208,13 @@ function StatCard({
       {(isMain || isSub) && (
         <div
           className={[
-            "mt-2 inline-flex rounded-full border px-2 py-0.5 text-[10px] font-black",
+            "mt-1.5 inline-flex rounded-full border px-2 py-0.5 text-[10px] font-black",
             isMain
               ? "border-yellow-300/25 bg-yellow-400/10 text-yellow-200"
               : "border-sky-300/25 bg-sky-400/10 text-sky-300",
           ].join(" ")}
         >
-          {isMain ? "주요 능력치" : "보조 능력치"}
+          {isMain ? "주요" : "보조"}
         </div>
       )}
     </div>
@@ -289,10 +224,7 @@ function StatCard({
 export default function OperatorLevelPanel({
   name,
   enName,
-  element,
-  operatorClass,
-  weapon,
-  rarity,
+  avatar,
   mainStatLabel,
   subStatLabel,
   levelStats,
@@ -334,16 +266,6 @@ export default function OperatorLevelPanel({
     setIsEditing(false);
   };
 
-  const elementIcon = `/icons/elements/${element}.webp`;
-  const classIcon = classIconMap[operatorClass];
-  const weaponIcon = `/icons/weapons/${weapon}.webp`;
-  const rarityIcon = rarityIconMap[rarity];
-
-  const elementLabel = elementLabelMap[element] ?? element;
-  const classLabel = classLabelMap[operatorClass] ?? operatorClass;
-  const weaponLabel = weaponLabelMap[weapon] ?? weapon;
-  const rarityLabel = `${rarity}성`;
-
   const getStatVariant = (label: string): "normal" | "mainStat" | "subStat" => {
     if (label === mainStatLabel) return "mainStat";
     if (label === subStatLabel) return "subStat";
@@ -365,42 +287,31 @@ export default function OperatorLevelPanel({
   const subStatValue = subStatConfig ? getStatValue(currentStats, subStatConfig.key) : 0;
 
   return (
-    <section className="relative min-w-0 overflow-hidden rounded-[24px] border border-yellow-500/15 bg-[#05070b] shadow-[0_14px_34px_rgba(0,0,0,0.24)]">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_8%_0%,rgba(255,210,74,0.11),transparent_30%),linear-gradient(135deg,rgba(255,255,255,0.035),rgba(255,255,255,0.004))]" />
-      <div className="pointer-events-none absolute right-0 top-0 h-32 w-32 bg-[repeating-linear-gradient(135deg,rgba(255,210,74,0.07)_0px,rgba(255,210,74,0.07)_2px,transparent_2px,transparent_8px)] opacity-25" />
+    <section className="relative min-w-0 overflow-hidden rounded-[22px] border border-yellow-500/15 bg-[#05070b] shadow-[0_12px_30px_rgba(0,0,0,0.22)]">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_8%_0%,rgba(255,210,74,0.10),transparent_30%),linear-gradient(135deg,rgba(255,255,255,0.03),rgba(255,255,255,0.004))]" />
+      <div className="pointer-events-none absolute right-0 top-0 h-28 w-28 bg-[repeating-linear-gradient(135deg,rgba(255,210,74,0.06)_0px,rgba(255,210,74,0.06)_2px,transparent_2px,transparent_8px)] opacity-25" />
 
       <div className="relative p-3 sm:p-4">
-        <div className="rounded-[20px] border border-white/10 bg-black/25 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div className="grid min-w-0 grid-cols-[54px_minmax(0,1fr)] items-center gap-3">
-              <div className="flex h-[54px] w-[54px] items-center justify-center rounded-[18px] border border-white/10 bg-black/35">
-                <SmallIcon src={classIcon} alt={classLabel} size={34} />
+        <div className="rounded-[18px] border border-white/10 bg-black/25 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]">
+          <div className="grid min-w-0 grid-cols-[58px_minmax(0,1fr)] items-center gap-3 sm:grid-cols-[64px_minmax(0,1fr)]">
+            <OperatorAvatar src={avatar} name={name} />
+            <div className="min-w-0">
+              <h3 className="break-keep text-[clamp(28px,6vw,38px)] font-black leading-none text-white">
+                {name}
+              </h3>
+              <div className="mt-1 text-xs font-bold uppercase tracking-[0.08em] text-zinc-500">
+                {enName}
               </div>
-              <div className="min-w-0">
-                <h3 className="break-keep text-[clamp(28px,7vw,42px)] font-black leading-none text-white">
-                  {name}
-                </h3>
-                <div className="mt-1 text-xs font-bold uppercase tracking-[0.08em] text-zinc-500">
-                  {enName}
-                </div>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              <ProfileChip value={rarityLabel} iconSrc={rarityIcon} borderColor={rarityBorderMap[rarity]} />
-              <ProfileChip value={elementLabel} iconSrc={elementIcon} borderColor={elementBorderMap[element]} />
-              <ProfileChip value={classLabel} iconSrc={classIcon} />
-              <ProfileChip value={weaponLabel} iconSrc={weaponIcon} />
             </div>
           </div>
         </div>
 
-        <div className="mt-3 grid gap-3 xl:grid-cols-[minmax(0,0.95fr)_minmax(360px,1.05fr)]">
-          <section className="min-w-0 rounded-[20px] border border-white/10 bg-black/25 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]">
+        <div className="mt-3 grid gap-3 xl:grid-cols-[minmax(0,0.95fr)_minmax(320px,1.05fr)]">
+          <section className="min-w-0 rounded-[18px] border border-white/10 bg-black/25 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]">
             <div className="text-[10px] font-black tracking-[0.2em] text-zinc-500">
               CURRENT LEVEL
             </div>
-            <div className="mt-2 flex flex-wrap items-end gap-3">
+            <div className="mt-2 flex flex-wrap items-end gap-2">
               {isEditing ? (
                 <input
                   autoFocus
@@ -414,7 +325,7 @@ export default function OperatorLevelPanel({
                       setIsEditing(false);
                     }
                   }}
-                  className="h-12 w-32 rounded-xl border border-yellow-500/25 bg-[#05070b] px-3 text-3xl font-black text-white outline-none"
+                  className="h-11 w-28 rounded-xl border border-yellow-500/25 bg-[#05070b] px-3 text-3xl font-black text-white outline-none"
                 />
               ) : (
                 <button
@@ -423,15 +334,15 @@ export default function OperatorLevelPanel({
                     setInputValue(String(level));
                     setIsEditing(true);
                   }}
-                  className="text-left text-[46px] font-black leading-none text-white transition hover:text-yellow-100"
+                  className="text-left text-[40px] font-black leading-none text-white transition hover:text-yellow-100"
                 >
                   Lv. {level}
                 </button>
               )}
-              <span className="pb-1 text-sm font-black text-zinc-500">/ 90</span>
+              <span className="pb-1 text-xs font-black text-zinc-500">/ 90</span>
             </div>
 
-            <div className="mt-5">
+            <div className="mt-4">
               <input
                 className="operator-level-range w-full"
                 type="range"
@@ -445,7 +356,7 @@ export default function OperatorLevelPanel({
                   setInputValue(String(nextLevel));
                 }}
               />
-              <div className="mt-2 grid grid-cols-6 text-center text-xs font-black text-zinc-500">
+              <div className="mt-1.5 grid grid-cols-6 text-center text-[11px] font-black text-zinc-500">
                 {LEVEL_MARKS.map((mark) => (
                   <button
                     key={mark}
@@ -463,11 +374,6 @@ export default function OperatorLevelPanel({
                   </button>
                 ))}
               </div>
-            </div>
-
-            <div className="mt-5 flex items-center gap-2 text-xs font-bold text-zinc-500">
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/10 text-[11px] text-zinc-300">i</span>
-              레벨을 올리면 스탯이 증가합니다.
             </div>
           </section>
 
@@ -495,15 +401,12 @@ export default function OperatorLevelPanel({
           </section>
         </div>
 
-        <section className="mt-3 rounded-[20px] border border-white/10 bg-black/25 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]">
+        <section className="mt-3 rounded-[18px] border border-white/10 bg-black/25 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <div className="text-lg font-black text-yellow-200">능력치 정보</div>
-            <div className="text-xs font-bold text-zinc-500">
-              능력치는 레벨과 성장 값에 따라 변동됩니다.
-            </div>
+            <div className="text-base font-black text-yellow-200">능력치 정보</div>
           </div>
 
-          <div className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid min-w-0 gap-2 sm:grid-cols-2 xl:grid-cols-3">
             {STAT_CONFIGS.map((config) => (
               <StatCard
                 key={config.key}
@@ -520,46 +423,46 @@ export default function OperatorLevelPanel({
         .operator-level-range {
           -webkit-appearance: none;
           appearance: none;
-          height: 20px;
+          height: 18px;
           background: transparent;
           outline: none;
           display: block;
         }
 
         .operator-level-range::-webkit-slider-runnable-track {
-          height: 7px;
+          height: 6px;
           border-radius: 999px;
-          background: linear-gradient(90deg, rgba(247, 180, 35, 0.95), rgba(247, 180, 35, 0.4)), #141a24;
+          background: linear-gradient(90deg, rgba(247, 180, 35, 0.95), rgba(247, 180, 35, 0.38)), #141a24;
         }
 
         .operator-level-range::-webkit-slider-thumb {
           -webkit-appearance: none;
           appearance: none;
-          width: 18px;
-          height: 18px;
+          width: 16px;
+          height: 16px;
           border-radius: 999px;
           background: #ffd24a;
           border: 2px solid #050505;
-          margin-top: -5.5px;
+          margin-top: -5px;
           cursor: pointer;
-          box-shadow: 0 0 16px rgba(255, 210, 74, 0.45);
+          box-shadow: 0 0 14px rgba(255, 210, 74, 0.42);
         }
 
         .operator-level-range::-moz-range-track {
-          height: 7px;
+          height: 6px;
           border-radius: 999px;
           background: #141a24;
           border: none;
         }
 
         .operator-level-range::-moz-range-thumb {
-          width: 18px;
-          height: 18px;
+          width: 16px;
+          height: 16px;
           border-radius: 999px;
           background: #ffd24a;
           border: 2px solid #050505;
           cursor: pointer;
-          box-shadow: 0 0 16px rgba(255, 210, 74, 0.45);
+          box-shadow: 0 0 14px rgba(255, 210, 74, 0.42);
         }
       `}</style>
     </section>
