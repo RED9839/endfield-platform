@@ -350,8 +350,8 @@ export default function OperatorLevelPanel({
             </div>
 
             <div className="mt-4">
-              <div className="relative h-[18px]">
-                <div className="absolute inset-x-0 top-1/2 h-1.5 -translate-y-1/2 overflow-hidden rounded-full bg-[#141a24]">
+              <div className="relative h-[18px] px-2">
+                <div className="absolute inset-x-2 top-1/2 h-1.5 -translate-y-1/2 overflow-hidden rounded-full bg-[#141a24]">
                   <div
                     className="h-full rounded-full bg-[#f7b423] shadow-[0_0_14px_rgba(255,210,74,0.42)]"
                     style={{ width: `${levelPercent}%` }}
@@ -373,33 +373,35 @@ export default function OperatorLevelPanel({
                 />
               </div>
 
-              <div className="relative mt-2 h-5 text-[11px] font-black text-zinc-500">
-                {LEVEL_MARKS.map((mark) => {
-                  const ratio = getLevelRatio(mark);
+              <div className="relative mt-2 h-5 px-2 text-[11px] font-black text-zinc-500">
+                <div className="relative h-full">
+                  {LEVEL_MARKS.map((mark) => {
+                    const ratio = getLevelRatio(mark);
 
-                  return (
-                    <button
-                      key={mark}
-                      type="button"
-                      onClick={() => {
-                        setLevel(mark);
-                        setInputValue(String(mark));
-                      }}
-                      className={[
-                        "absolute top-0 transition hover:text-yellow-200",
-                        mark === level ? "text-yellow-200" : "text-zinc-500",
-                        mark === LEVEL_MIN
-                          ? "translate-x-0 text-left"
-                          : mark === LEVEL_MAX
-                            ? "-translate-x-full text-right"
-                            : "-translate-x-1/2 text-center",
-                      ].join(" ")}
-                      style={{ left: `${ratio}%` }}
-                    >
-                      {mark}
-                    </button>
-                  );
-                })}
+                    return (
+                      <button
+                        key={mark}
+                        type="button"
+                        onClick={() => {
+                          setLevel(mark);
+                          setInputValue(String(mark));
+                        }}
+                        className={[
+                          "absolute top-0 transition hover:text-yellow-200",
+                          mark === level ? "text-yellow-200" : "text-zinc-500",
+                          mark === LEVEL_MIN
+                            ? "translate-x-0 text-left"
+                            : mark === LEVEL_MAX
+                              ? "-translate-x-full text-right"
+                              : "-translate-x-1/2 text-center",
+                        ].join(" ")}
+                        style={{ left: `${ratio}%` }}
+                      >
+                        {mark}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </section>
