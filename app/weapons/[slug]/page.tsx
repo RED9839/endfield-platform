@@ -8,14 +8,12 @@ import {
 } from "@/data/weapons-detail-data";
 
 import WeaponLevelPanel from "./WeaponLevelPanel";
-import WeaponSkillAtlasPanel from "./WeaponSkillAtlasPanel";
 import WeaponBreakthroughPanel from "./WeaponBreakthroughPanel";
 
 const YELLOW_TEXT = "#ffdc70";
 const YELLOW_MAIN = "#ffd24a";
 const YELLOW_BORDER = "rgba(255,196,74,0.14)";
 const YELLOW_BORDER_SOFT = "rgba(255,196,74,0.10)";
-const YELLOW_BORDER_FAINT = "rgba(255,196,74,0.08)";
 
 const rarityColorMap: Record<WeaponRarity, string> = {
   6: "#ff8a1f",
@@ -104,10 +102,6 @@ function normalizeText(value?: string | number) {
   return String(value ?? "").trim();
 }
 
-function escapeRegExp(text: string) {
-  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
 function findSkillByType(
   weapon: WeaponLike,
   target: "능력치" | "속성" | "시리즈 스킬",
@@ -180,11 +174,6 @@ function getRank1ValueFromSkill(skill?: WeaponSkill) {
   return "-";
 }
 
-function getRank1Description(skill?: WeaponSkill) {
-  if (!skill) return "-";
-  return skill.levelValues?.[0]?.description?.trim() || "-";
-}
-
 function getWeaponAbilityInfo(weapon: WeaponLike) {
   const skill = findSkillByType(weapon, "능력치");
   if (!skill) return { name: "-", rank1Value: "-" };
@@ -212,189 +201,13 @@ function getWeaponSeriesSkillInfo(weapon: WeaponLike) {
     return {
       name: weapon.series ?? "-",
       rank1Value: "-",
-      rank1Description: "-",
     };
   }
 
   return {
     name: normalizeText(skill.name) || weapon.series || "-",
     rank1Value: getRank1ValueFromSkill(skill),
-    rank1Description: getRank1Description(skill),
   };
-}
-
-function getInitialAttack(weapon: WeaponLike) {
-  const stats = Array.isArray(weapon.levelStats) ? weapon.levelStats : [];
-  const level1 = stats.find((row) => row.level === 1);
-
-  return level1?.attack ?? stats[0]?.attack ?? "-";
-}
-
-function highlightElementTerms(text: string): ReactNode {
-  const colorMap: Array<{ pattern: RegExp; color: string }> = [
-    { pattern: /물리 피해/g, color: "#cfd8e3" },
-    { pattern: /열기 피해/g, color: "#ff7a59" },
-    { pattern: /전기 피해/g, color: "#f0c94a" },
-    { pattern: /냉기 피해/g, color: "#63b3ff" },
-    { pattern: /자연 피해/g, color: "#7ddc6d" },
-    { pattern: /물리/g, color: "#cfd8e3" },
-    { pattern: /열기/g, color: "#ff7a59" },
-    { pattern: /전기/g, color: "#f0c94a" },
-    { pattern: /냉기/g, color: "#63b3ff" },
-    { pattern: /자연/g, color: "#7ddc6d" },
-    { pattern: /연소/g, color: "#ff7a59" },
-    { pattern: /감전/g, color: "#f0c94a" },
-    { pattern: /동결/g, color: "#63b3ff" },
-    { pattern: /부식/g, color: "#7ddc6d" },
-    { pattern: /띄우기/g, color: "#cfd8e3" },
-    { pattern: /방어 불능/g, color: "#cfd8e3" },
-  ];
-
-  const matches: Array<{
-    start: number;
-    end: number;
-    text: string;
-    style: CSSProperties;
-    priority: number;
-  }> = [];
-
-  colorMap.forEach(({ pattern, color }) => {
-    for (const match of text.matchAll(pattern)) {
-      const value = match[0];
-      const index = match.index ?? 0;
-
-      matches.push({
-        start: index,
-        end: index + value.length,
-        text: value,
-        style: { color, fontWeight: 800 },
-        priority: value.length,
-      });
-    }
-  });
-
-  matches.sort((a, b) => {
-    if (a.start !== b.start) return a.start - b.start;
-    return b.priority - a.priority;
-  });
-
-  const filtered: typeof matches = [];
-  let lastEnd = -1;
-
-  for (const match of matches) {
-    if (match.start >= lastEnd) {
-      filtered.push(match);
-      lastEnd = match.end;
-    }
-  }
-
-  if (!filtered.length) return text;
-
-  const result: ReactNode[] = [];
-  let cursor = 0;
-
-  filtered.forEach((match, index) => {
-    if (cursor < match.start) result.push(text.slice(cursor, match.start));
-
-    result.push(
-      <span key={`${match.text}-${match.start}-${index}`} style={match.style}>
-        {match.text}
-      </span>,
-    );
-
-    cursor = match.end;
-  });
-
-  if (cursor < text.length) result.push(text.slice(cursor));
-
-  return result;
-}
-
-function highlightSeriesDescription(
-  text: string,
-  seriesSkillName?: string,
-): ReactNode {
-  const raw = normalizeText(text);
-  if (!raw) return "-";
-
-  const matches: Array<{
-    start: number;
-    end: number;
-    text: string;
-    style: CSSProperties;
-    priority: number;
-  }> = [];
-
-  if (seriesSkillName?.trim()) {
-    const pattern = new RegExp(escapeRegExp(seriesSkillName), "g");
-
-    for (const match of raw.matchAll(pattern)) {
-      const value = match[0];
-      const index = match.index ?? 0;
-
-      matches.push({
-        start: index,
-        end: index + value.length,
-        text: value,
-        style: { color: YELLOW_TEXT, fontWeight: 900 },
-        priority: 2000,
-      });
-    }
-  }
-
-  const numberPattern = /(?:[+\-]\d+(?:\.\d+)?%?|\d+(?:\.\d+)?%)/g;
-
-  for (const match of raw.matchAll(numberPattern)) {
-    const value = match[0];
-    const start = match.index ?? 0;
-    const end = start + value.length;
-
-    matches.push({
-      start,
-      end,
-      text: value,
-      style: { color: YELLOW_TEXT, fontWeight: 900 },
-      priority: 1500,
-    });
-  }
-
-  matches.sort((a, b) => {
-    if (a.start !== b.start) return a.start - b.start;
-    return b.priority - a.priority;
-  });
-
-  const filtered: typeof matches = [];
-  let lastEnd = -1;
-
-  for (const match of matches) {
-    if (match.start >= lastEnd) {
-      filtered.push(match);
-      lastEnd = match.end;
-    }
-  }
-
-  if (!filtered.length) return highlightElementTerms(raw);
-
-  const result: ReactNode[] = [];
-  let cursor = 0;
-
-  filtered.forEach((match, index) => {
-    if (cursor < match.start) {
-      result.push(highlightElementTerms(raw.slice(cursor, match.start)));
-    }
-
-    result.push(
-      <span key={`${match.text}-${match.start}-${index}`} style={match.style}>
-        {match.text}
-      </span>,
-    );
-
-    cursor = match.end;
-  });
-
-  if (cursor < raw.length) result.push(highlightElementTerms(raw.slice(cursor)));
-
-  return result;
 }
 
 function InlineIcon({
@@ -458,46 +271,26 @@ function InfoTile({
   label,
   value,
   icon,
+  wide = false,
 }: {
   label: string;
   value: ReactNode;
   icon?: string;
+  wide?: boolean;
 }) {
   return (
-    <div className="rounded-2xl border border-yellow-500/10 bg-black/40 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+    <div
+      className={[
+        "rounded-2xl border border-yellow-500/10 bg-black/40 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]",
+        wide ? "col-span-2" : "",
+      ].join(" ")}
+    >
       <p className="text-[10px] font-black tracking-[0.12em] text-zinc-500">
         {label}
       </p>
       <div className="mt-2 flex min-w-0 items-center gap-1.5 text-sm font-black text-yellow-100">
         <InlineIcon src={icon} alt={label} size={18} />
         <span className="min-w-0 truncate">{value || "-"}</span>
-      </div>
-    </div>
-  );
-}
-
-function BasicStatRow({
-  label,
-  value,
-  noBorder = false,
-}: {
-  label: string;
-  value: ReactNode;
-  noBorder?: boolean;
-}) {
-  return (
-    <div
-      className="grid grid-cols-1 sm:grid-cols-[220px_1fr] lg:grid-cols-[260px_1fr]"
-      style={{ borderBottom: noBorder ? "none" : `1px solid ${YELLOW_BORDER_FAINT}` }}
-    >
-      <div
-        className="px-3 py-2.5 text-sm font-bold text-white sm:border-r sm:py-3"
-        style={{ borderRightColor: YELLOW_BORDER_FAINT }}
-      >
-        {label}
-      </div>
-      <div className="px-3 pb-3 text-sm font-black leading-7 text-zinc-100 sm:py-3 sm:text-base">
-        {value}
       </div>
     </div>
   );
@@ -553,7 +346,6 @@ export default async function WeaponDetailPage({
 
   const rarityColor = rarityColorMap[weapon.rarity];
   const heroImage = `/weapons/${weapon.slug}.webp`;
-  const initialAttack = getInitialAttack(weapon);
   const abilityInfo = getWeaponAbilityInfo(weapon);
   const attributeInfo = getWeaponAttributeInfo(weapon);
   const seriesSkillInfo = getWeaponSeriesSkillInfo(weapon);
@@ -563,8 +355,7 @@ export default async function WeaponDetailPage({
   const mainStatIcon = statIconMap[weapon.mainStatLabel ?? ""];
 
   const sectionLinks = [
-    { href: "#level", label: "레벨" },
-    ...(weapon.skills?.length ? [{ href: "#skills", label: "스킬" }] : []),
+    { href: "#level", label: "레벨/스킬" },
     ...(weapon.breakthrough?.length ? [{ href: "#breakthrough", label: "돌파" }] : []),
   ];
 
@@ -681,12 +472,11 @@ export default async function WeaponDetailPage({
                   </div>
 
                   <div className="mt-5 grid grid-cols-2 gap-2">
-                    <InfoTile label="무기 종류" value={weaponTypeLabel} icon={weaponTypeIcon} />
+                    <InfoTile label="무기 유형" value={weaponTypeLabel} icon={weaponTypeIcon} />
                     <InfoTile label="레어도" value={rarityLabelMap[weapon.rarity]} icon={rarityIcon} />
-                    <InfoTile label="기본 공격력" value={initialAttack} />
-                    <InfoTile label="주 능력치" value={abilityInfo.name} icon={mainStatIcon} />
-                    <InfoTile label="능력치 수치" value={abilityInfo.rank1Value} />
+                    <InfoTile label="능력치" value={abilityInfo.name} icon={mainStatIcon} />
                     <InfoTile label="속성" value={attributeInfo.name} />
+                    <InfoTile label="시리즈 스킬" value={seriesSkillInfo.name} wide />
                   </div>
 
                   <div className="mt-5 rounded-3xl border border-yellow-500/10 bg-[#080b10]/80 p-3">
@@ -731,51 +521,9 @@ export default async function WeaponDetailPage({
         </nav>
 
         <div className="grid min-w-0 gap-3 lg:gap-5">
-          <DetailSection id="level" title="레벨별 능력치" defaultOpen>
-            <WeaponLevelPanel levelStats={weapon.levelStats} />
+          <DetailSection id="level" title="레벨별 능력치 & 무기 스킬" defaultOpen>
+            <WeaponLevelPanel levelStats={weapon.levelStats} skills={weapon.skills ?? []} />
           </DetailSection>
-
-          <DetailSection id="summary" title="기본 능력치" defaultOpen>
-            <div
-              className="overflow-hidden rounded-[18px] bg-[#06080c] lg:rounded-[20px]"
-              style={{ border: `1px solid ${YELLOW_BORDER}` }}
-            >
-              <BasicStatRow
-                label={weapon.mainStatLabel ?? "공격력"}
-                value={<span style={{ color: YELLOW_TEXT }}>{initialAttack}</span>}
-              />
-              <BasicStatRow
-                label={abilityInfo.name}
-                value={<span style={{ color: YELLOW_TEXT }}>{abilityInfo.rank1Value}</span>}
-              />
-              <BasicStatRow
-                label={attributeInfo.name}
-                value={<span style={{ color: YELLOW_TEXT }}>{attributeInfo.rank1Value}</span>}
-              />
-              <BasicStatRow
-                label={seriesSkillInfo.name}
-                value={highlightSeriesDescription(
-                  seriesSkillInfo.rank1Description,
-                  seriesSkillInfo.name,
-                )}
-                noBorder
-              />
-            </div>
-          </DetailSection>
-
-          {!!weapon.skills?.length && (
-            <DetailSection id="skills" title="무기 스킬" defaultOpen>
-              <div className="grid gap-3 lg:gap-4">
-                {weapon.skills.map((skill) => (
-                  <WeaponSkillAtlasPanel
-                    key={skill.key}
-                    accentColor={YELLOW_TEXT}
-                    skill={skill}
-                  />
-                ))}
-              </div>
-            </DetailSection>
-          )}
 
           {!!weapon.breakthrough?.length && (
             <DetailSection id="breakthrough" title="돌파" defaultOpen>
