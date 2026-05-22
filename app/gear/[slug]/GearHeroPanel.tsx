@@ -133,15 +133,11 @@ export default function GearHeroPanel({
                   color: "#fff4bf",
                 }}
               >
-                Lv. {gear.level}
+                ★ {gear.quality}
               </span>
 
               <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-black text-zinc-300">
                 {categoryLabel}
-              </span>
-
-              <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-black text-zinc-300">
-                품질 {gear.quality}
               </span>
 
               <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-black text-zinc-300">
@@ -158,7 +154,7 @@ export default function GearHeroPanel({
 
               <ProfileBlock
                 label="세트 효과"
-                value={primarySetEffect ? highlightTerms(primarySetEffect.description) : "-"}
+                value={highlightTerms(gear.setName)}
               />
             </div>
 
