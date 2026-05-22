@@ -47,6 +47,8 @@ type StatConfig = {
 };
 
 const LEVEL_MARKS = [1, 20, 40, 60, 80, 90];
+const LEVEL_MIN = 1;
+const LEVEL_MAX = 90;
 
 const STAT_CONFIGS: StatConfig[] = [
   { key: "hp", label: "생명력", maxValue: 5500, icon: "/icons/stats/hp.webp" },
@@ -68,6 +70,10 @@ const statIconMap: Record<string, string> = {
 
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
+}
+
+function getLevelRatio(level: number) {
+  return ((level - LEVEL_MIN) / (LEVEL_MAX - LEVEL_MIN)) * 100;
 }
 
 function getStatValue(stats: LevelStatRow, key: StatKey) {
@@ -260,7 +266,7 @@ export default function OperatorLevelPanel({
       return;
     }
 
-    const nextLevel = clamp(Math.floor(parsed), 1, 90);
+    const nextLevel = clamp(Math.floor(parsed), LEVEL_MIN, LEVEL_MAX);
     setLevel(nextLevel);
     setInputValue(String(nextLevel));
     setIsEditing(false);
@@ -285,6 +291,7 @@ export default function OperatorLevelPanel({
 
   const mainStatValue = mainStatConfig ? getStatValue(currentStats, mainStatConfig.key) : 0;
   const subStatValue = subStatConfig ? getStatValue(currentStats, subStatConfig.key) : 0;
+  const levelPercent = getLevelRatio(level);
 
   return (
     <section className="relative min-w-0 overflow-hidden rounded-[22px] border border-yellow-500/15 bg-[#05070b] shadow-[0_12px_30px_rgba(0,0,0,0.22)]">
@@ -343,36 +350,56 @@ export default function OperatorLevelPanel({
             </div>
 
             <div className="mt-4">
-              <input
-                className="operator-level-range w-full"
-                type="range"
-                min={1}
-                max={90}
-                step={1}
-                value={level}
-                onChange={(e) => {
-                  const nextLevel = Number(e.target.value);
-                  setLevel(nextLevel);
-                  setInputValue(String(nextLevel));
-                }}
-              />
-              <div className="mt-1.5 grid grid-cols-6 text-center text-[11px] font-black text-zinc-500">
-                {LEVEL_MARKS.map((mark) => (
-                  <button
-                    key={mark}
-                    type="button"
-                    onClick={() => {
-                      setLevel(mark);
-                      setInputValue(String(mark));
-                    }}
-                    className={[
-                      "transition hover:text-yellow-200",
-                      mark === level ? "text-yellow-200" : "text-zinc-500",
-                    ].join(" ")}
-                  >
-                    {mark}
-                  </button>
-                ))}
+              <div className="relative h-[18px]">
+                <div className="absolute inset-x-0 top-1/2 h-1.5 -translate-y-1/2 overflow-hidden rounded-full bg-[#141a24]">
+                  <div
+                    className="h-full rounded-full bg-[#f7b423] shadow-[0_0_14px_rgba(255,210,74,0.42)]"
+                    style={{ width: `${levelPercent}%` }}
+                  />
+                </div>
+
+                <input
+                  className="operator-level-range absolute inset-0 w-full"
+                  type="range"
+                  min={LEVEL_MIN}
+                  max={LEVEL_MAX}
+                  step={1}
+                  value={level}
+                  onChange={(e) => {
+                    const nextLevel = Number(e.target.value);
+                    setLevel(nextLevel);
+                    setInputValue(String(nextLevel));
+                  }}
+                />
+              </div>
+
+              <div className="relative mt-2 h-5 text-[11px] font-black text-zinc-500">
+                {LEVEL_MARKS.map((mark) => {
+                  const ratio = getLevelRatio(mark);
+
+                  return (
+                    <button
+                      key={mark}
+                      type="button"
+                      onClick={() => {
+                        setLevel(mark);
+                        setInputValue(String(mark));
+                      }}
+                      className={[
+                        "absolute top-0 transition hover:text-yellow-200",
+                        mark === level ? "text-yellow-200" : "text-zinc-500",
+                        mark === LEVEL_MIN
+                          ? "translate-x-0 text-left"
+                          : mark === LEVEL_MAX
+                            ? "-translate-x-full text-right"
+                            : "-translate-x-1/2 text-center",
+                      ].join(" ")}
+                      style={{ left: `${ratio}%` }}
+                    >
+                      {mark}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </section>
@@ -430,9 +457,9 @@ export default function OperatorLevelPanel({
         }
 
         .operator-level-range::-webkit-slider-runnable-track {
-          height: 6px;
+          height: 18px;
           border-radius: 999px;
-          background: linear-gradient(90deg, rgba(247, 180, 35, 0.95), rgba(247, 180, 35, 0.38)), #141a24;
+          background: transparent;
         }
 
         .operator-level-range::-webkit-slider-thumb {
@@ -443,15 +470,14 @@ export default function OperatorLevelPanel({
           border-radius: 999px;
           background: #ffd24a;
           border: 2px solid #050505;
-          margin-top: -5px;
           cursor: pointer;
           box-shadow: 0 0 14px rgba(255, 210, 74, 0.42);
         }
 
         .operator-level-range::-moz-range-track {
-          height: 6px;
+          height: 18px;
           border-radius: 999px;
-          background: #141a24;
+          background: transparent;
           border: none;
         }
 
