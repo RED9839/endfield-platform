@@ -19,7 +19,7 @@ const YELLOW_BORDER = "rgba(255,196,74,0.14)";
 const YELLOW_BORDER_SOFT = "rgba(255,196,74,0.10)";
 
 const HERO_IMAGE_SIZES =
-  "(max-width: 768px) calc(100vw - 24px), (max-width: 1280px) calc(100vw - 48px), 1320px";
+  "(max-width: 768px) 100vw, (max-width: 1280px) 62vw, 1120px";
 
 const elementLabelMap: Record<string, string> = {
   physical: "물리",
@@ -86,6 +86,19 @@ function DetailSection({
   );
 }
 
+function InfoTile({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div className="rounded-2xl border border-yellow-500/10 bg-black/40 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+      <p className="text-[10px] font-black tracking-[0.12em] text-zinc-500">
+        {label}
+      </p>
+      <p className="mt-1 truncate text-sm font-black text-yellow-100">
+        {value || "-"}
+      </p>
+    </div>
+  );
+}
+
 export default async function OperatorDetailPage({
   params,
 }: {
@@ -123,7 +136,7 @@ export default async function OperatorDetailPage({
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#050505] text-white">
-      <section className="relative overflow-hidden border-b border-yellow-500/10">
+      <section className="relative min-h-[760px] overflow-hidden border-b border-yellow-500/10 sm:min-h-[820px] lg:min-h-[920px]">
         <div className="absolute inset-0">
           <Image
             src={heroImage}
@@ -131,16 +144,16 @@ export default async function OperatorDetailPage({
             fill
             priority
             sizes="100vw"
-            className="scale-110 object-cover blur-[12px] brightness-[0.22]"
+            className="scale-110 object-cover blur-[18px] brightness-[0.2]"
           />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_32%_12%,rgba(255,210,74,0.15),transparent_30%),linear-gradient(180deg,rgba(5,5,5,0.18),rgba(5,5,5,0.96)),linear-gradient(90deg,rgba(0,0,0,0.92),rgba(0,0,0,0.42),rgba(0,0,0,0.86))]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_68%_22%,rgba(255,210,74,0.18),transparent_28%),radial-gradient(circle_at_24%_70%,rgba(255,210,74,0.08),transparent_32%),linear-gradient(180deg,rgba(5,5,5,0.1)_0%,rgba(5,5,5,0.78)_72%,#050505_100%),linear-gradient(90deg,rgba(0,0,0,0.9)_0%,rgba(0,0,0,0.34)_48%,rgba(0,0,0,0.86)_100%)]" />
         </div>
 
-        <div className="relative z-10 mx-auto flex min-h-[auto] max-w-[1840px] flex-col px-3 py-3 sm:px-4 md:px-6 md:py-5 lg:min-h-[780px]">
-          <header className="mb-3 flex items-center justify-between gap-3 lg:mb-5">
+        <div className="relative z-10 mx-auto flex min-h-[760px] max-w-[1840px] flex-col px-3 py-3 sm:min-h-[820px] sm:px-4 md:px-6 md:py-5 lg:min-h-[920px]">
+          <header className="mb-4 flex items-center justify-between gap-3">
             <Link
               href="/operators"
-              className="rounded-xl bg-black/60 px-3 py-2 text-xs font-black text-zinc-200 transition hover:bg-[#0b1018] sm:px-4 sm:text-sm"
+              className="rounded-xl bg-black/55 px-3 py-2 text-xs font-black text-zinc-200 shadow-[0_10px_22px_rgba(0,0,0,0.28)] transition hover:bg-[#0b1018] sm:px-4 sm:text-sm"
               style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
             >
               ← 목록
@@ -148,98 +161,106 @@ export default async function OperatorDetailPage({
 
             <Link
               href="/"
-              className="rounded-xl bg-black/60 px-3 py-2 text-xs font-black text-zinc-200 transition hover:bg-[#0b1018] sm:px-4 sm:text-sm"
+              className="rounded-xl bg-black/55 px-3 py-2 text-xs font-black text-zinc-200 shadow-[0_10px_22px_rgba(0,0,0,0.28)] transition hover:bg-[#0b1018] sm:px-4 sm:text-sm"
               style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
             >
               홈
             </Link>
           </header>
 
-          <div className="grid flex-1 items-center gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(360px,520px)] lg:gap-5">
-            <div className="relative min-h-[360px] overflow-hidden rounded-[24px] border border-yellow-500/15 bg-black/20 shadow-[0_16px_42px_rgba(0,0,0,0.42)] sm:min-h-[440px] lg:min-h-[650px] lg:rounded-[30px]">
-              {isAdminHeroSlider && adminHeroSlides.length > 1 ? (
-                <HeroSlider
-                  images={adminHeroSlides}
-                  alt={operator.name}
-                  enName={operator.enName}
-                />
-              ) : (
-                <>
+          <div className="relative grid flex-1 items-center gap-4 lg:grid-cols-[minmax(0,1.12fr)_minmax(360px,0.88fr)] lg:gap-6">
+            <div className="relative order-1 min-h-[420px] lg:order-none lg:min-h-[780px]">
+              <div className="absolute inset-x-[-18%] bottom-0 top-[-3%] sm:inset-x-[-10%] lg:inset-x-[-8%]">
+                {isAdminHeroSlider && adminHeroSlides.length > 1 ? (
+                  <div className="relative h-full overflow-hidden rounded-[30px] border border-yellow-500/10 bg-black/20">
+                    <HeroSlider
+                      images={adminHeroSlides}
+                      alt={operator.name}
+                      enName={operator.enName}
+                    />
+                  </div>
+                ) : (
                   <Image
                     src={heroImage}
                     alt={operator.name}
                     fill
                     priority
                     sizes={HERO_IMAGE_SIZES}
-                    className="object-contain object-center"
+                    className="object-contain object-bottom drop-shadow-[0_24px_42px_rgba(0,0,0,0.68)]"
                   />
-                  <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/75 to-transparent lg:h-44" />
-                </>
-              )}
+                )}
+              </div>
+
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-[#050505] via-[#050505]/55 to-transparent" />
             </div>
 
-            <aside
-              className="min-w-0 rounded-[24px] bg-black/70 p-4 shadow-[0_16px_42px_rgba(0,0,0,0.36)] lg:rounded-[30px] lg:p-6"
-              style={{ border: `1px solid ${YELLOW_BORDER}` }}
-            >
-              <p
-                className="text-[10px] font-bold tracking-[0.28em] sm:text-[11px] sm:tracking-[0.32em]"
-                style={{ color: YELLOW_TEXT }}
+            <aside className="relative order-2 z-10 min-w-0 lg:order-none">
+              <div
+                className="overflow-hidden rounded-[30px] bg-black/58 p-4 shadow-[0_24px_70px_rgba(0,0,0,0.48)] backdrop-blur-md sm:p-5 lg:p-6"
+                style={{ border: `1px solid ${YELLOW_BORDER}` }}
               >
-                엔드필드 오퍼레이터
-              </p>
+                <div className="pointer-events-none absolute inset-0 rounded-[30px] bg-[radial-gradient(circle_at_20%_0%,rgba(255,210,74,0.12),transparent_32%)]" />
 
-              <h1 className="mt-3 break-keep text-[clamp(36px,12vw,76px)] font-black leading-none tracking-tight text-white">
-                {operator.name}
-              </h1>
-
-              <p className="mt-2 break-words text-base font-bold text-zinc-300 sm:text-lg">
-                {operator.enName}
-              </p>
-
-              <div className="mt-4 flex flex-wrap gap-2">
-                <span className="rounded-full border border-yellow-500/20 bg-yellow-500/10 px-3 py-1 text-xs font-black text-yellow-200">
-                  {elementLabel}
-                </span>
-                <span className="rounded-full border border-yellow-500/20 bg-white/5 px-3 py-1 text-xs font-black text-zinc-200">
-                  {classLabel}
-                </span>
-                <span className="rounded-full border border-yellow-500/20 bg-white/5 px-3 py-1 text-xs font-black text-zinc-200">
-                  {weaponLabel}
-                </span>
-                <span className="rounded-full border border-yellow-500/20 bg-white/5 px-3 py-1 text-xs font-black text-zinc-200">
-                  {operator.rarity}성
-                </span>
-              </div>
-
-              <div className="mt-5 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                <div className="rounded-2xl border border-yellow-500/10 bg-[#080b10] p-3">
-                  <p className="text-[10px] font-bold text-zinc-500">주 능력치</p>
-                  <p className="mt-1 text-sm font-black text-yellow-200">
-                    {operator.mainStatLabel || "-"}
+                <div className="relative">
+                  <p
+                    className="text-[10px] font-black tracking-[0.3em] sm:text-[11px]"
+                    style={{ color: YELLOW_TEXT }}
+                  >
+                    OPERATOR PROFILE
                   </p>
-                </div>
 
-                <div className="rounded-2xl border border-yellow-500/10 bg-[#080b10] p-3">
-                  <p className="text-[10px] font-bold text-zinc-500">보조 능력치</p>
-                  <p className="mt-1 text-sm font-black text-yellow-200">
-                    {operator.subStatLabel || "-"}
+                  <h1 className="mt-3 break-keep text-[clamp(42px,13vw,88px)] font-black leading-none tracking-tight text-white drop-shadow-[0_8px_24px_rgba(0,0,0,0.6)]">
+                    {operator.name}
+                  </h1>
+
+                  <p className="mt-2 break-words text-base font-bold text-zinc-300 sm:text-xl">
+                    {operator.enName}
                   </p>
-                </div>
-              </div>
 
-              <div className="mt-5 rounded-2xl border border-yellow-500/10 bg-[#080b10]/95 p-3">
-                <p className="text-xs font-black text-zinc-400">빠른 이동</p>
-                <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
-                  {sectionLinks.map((item) => (
-                    <a
-                      key={item.href}
-                      href={item.href}
-                      className="rounded-xl border border-yellow-500/10 bg-black px-2 py-2 text-center text-xs font-black text-zinc-300 transition hover:border-yellow-400/40 hover:text-yellow-200"
-                    >
-                      {item.label}
-                    </a>
-                  ))}
+                  <div className="mt-5 flex flex-wrap gap-2">
+                    <span className="rounded-full border border-yellow-400/30 bg-yellow-400/15 px-3 py-1.5 text-xs font-black text-yellow-100">
+                      {elementLabel}
+                    </span>
+                    <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-black text-zinc-200">
+                      {classLabel}
+                    </span>
+                    <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-black text-zinc-200">
+                      {weaponLabel}
+                    </span>
+                    <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-black text-zinc-200">
+                      {operator.rarity}성
+                    </span>
+                  </div>
+
+                  <div className="mt-5 grid grid-cols-2 gap-2">
+                    <InfoTile label="속성" value={elementLabel} />
+                    <InfoTile label="클래스" value={classLabel} />
+                    <InfoTile label="무기" value={weaponLabel} />
+                    <InfoTile label="레어도" value={`${operator.rarity}성`} />
+                    <InfoTile label="주 능력치" value={operator.mainStatLabel || "-"} />
+                    <InfoTile label="보조 능력치" value={operator.subStatLabel || "-"} />
+                  </div>
+
+                  <div className="mt-5 rounded-3xl border border-yellow-500/10 bg-[#080b10]/80 p-3">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="text-xs font-black text-zinc-400">빠른 이동</p>
+                      <p className="text-[10px] font-bold text-yellow-200/70">
+                        {sectionLinks.length} SECTIONS
+                      </p>
+                    </div>
+
+                    <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                      {sectionLinks.map((item) => (
+                        <a
+                          key={item.href}
+                          href={item.href}
+                          className="rounded-2xl border border-yellow-500/10 bg-black/80 px-2 py-2.5 text-center text-xs font-black text-zinc-300 transition hover:border-yellow-400/40 hover:bg-yellow-400/10 hover:text-yellow-100"
+                        >
+                          {item.label}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
             </aside>
@@ -247,7 +268,7 @@ export default async function OperatorDetailPage({
         </div>
       </section>
 
-      <div className="mx-auto max-w-[1840px] px-3 py-3 sm:px-4 md:px-6 md:py-5">
+      <div className="relative mx-auto max-w-[1840px] px-3 py-3 sm:px-4 md:px-6 md:py-5">
         <QuickSectionNav links={sectionLinks} />
 
         <div className="grid min-w-0 gap-3 lg:gap-5">
