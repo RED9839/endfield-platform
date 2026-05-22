@@ -72,10 +72,6 @@ function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
 }
 
-function getLevelRatio(level: number) {
-  return ((level - LEVEL_MIN) / (LEVEL_MAX - LEVEL_MIN)) * 100;
-}
-
 function getStatValue(stats: LevelStatRow, key: StatKey) {
   if (key === "hp") return stats.hp;
   if (key === "attack") return stats.attack;
@@ -272,6 +268,12 @@ export default function OperatorLevelPanel({
     setIsEditing(false);
   };
 
+  const selectLevel = (nextLevel: number) => {
+    setLevel(nextLevel);
+    setInputValue(String(nextLevel));
+    setIsEditing(false);
+  };
+
   const getStatVariant = (label: string): "normal" | "mainStat" | "subStat" => {
     if (label === mainStatLabel) return "mainStat";
     if (label === subStatLabel) return "subStat";
@@ -291,7 +293,6 @@ export default function OperatorLevelPanel({
 
   const mainStatValue = mainStatConfig ? getStatValue(currentStats, mainStatConfig.key) : 0;
   const subStatValue = subStatConfig ? getStatValue(currentStats, subStatConfig.key) : 0;
-  const levelPercent = getLevelRatio(level);
 
   return (
     <section className="relative min-w-0 overflow-hidden rounded-[22px] border border-yellow-500/15 bg-[#05070b] shadow-[0_12px_30px_rgba(0,0,0,0.22)]">
@@ -318,91 +319,67 @@ export default function OperatorLevelPanel({
             <div className="text-[10px] font-black tracking-[0.2em] text-zinc-500">
               CURRENT LEVEL
             </div>
-            <div className="mt-2 flex flex-wrap items-end gap-2">
-              {isEditing ? (
-                <input
-                  autoFocus
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value.replace(/[^0-9]/g, ""))}
-                  onBlur={commitInputLevel}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") commitInputLevel();
-                    if (e.key === "Escape") {
+
+            <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+              <div className="flex flex-wrap items-end gap-2">
+                {isEditing ? (
+                  <input
+                    autoFocus
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value.replace(/[^0-9]/g, ""))}
+                    onBlur={commitInputLevel}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") commitInputLevel();
+                      if (e.key === "Escape") {
+                        setInputValue(String(level));
+                        setIsEditing(false);
+                      }
+                    }}
+                    className="h-11 w-28 rounded-xl border border-yellow-500/25 bg-[#05070b] px-3 text-3xl font-black text-white outline-none"
+                  />
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
                       setInputValue(String(level));
-                      setIsEditing(false);
-                    }
-                  }}
-                  className="h-11 w-28 rounded-xl border border-yellow-500/25 bg-[#05070b] px-3 text-3xl font-black text-white outline-none"
-                />
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setInputValue(String(level));
-                    setIsEditing(true);
-                  }}
-                  className="text-left text-[40px] font-black leading-none text-white transition hover:text-yellow-100"
-                >
-                  Lv. {level}
-                </button>
-              )}
-              <span className="pb-1 text-xs font-black text-zinc-500">/ 90</span>
+                      setIsEditing(true);
+                    }}
+                    className="text-left text-[40px] font-black leading-none text-white transition hover:text-yellow-100"
+                  >
+                    Lv. {level}
+                  </button>
+                )}
+                <span className="pb-1 text-xs font-black text-zinc-500">/ 90</span>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setInputValue(String(level));
+                  setIsEditing(true);
+                }}
+                className="h-9 rounded-xl border border-yellow-500/20 bg-yellow-400/10 px-3 text-xs font-black text-yellow-100 transition hover:bg-yellow-400/15"
+              >
+                직접 입력
+              </button>
             </div>
 
-            <div className="mt-4">
-              <div className="relative h-[18px] px-2">
-                <div className="absolute inset-x-2 top-1/2 h-1.5 -translate-y-1/2 overflow-hidden rounded-full bg-[#141a24]">
-                  <div
-                    className="h-full rounded-full bg-[#f7b423] shadow-[0_0_14px_rgba(255,210,74,0.42)]"
-                    style={{ width: `${levelPercent}%` }}
-                  />
-                </div>
-
-                <input
-                  className="operator-level-range absolute inset-y-0 left-2 right-2 w-auto"
-                  type="range"
-                  min={LEVEL_MIN}
-                  max={LEVEL_MAX}
-                  step={1}
-                  value={level}
-                  onChange={(e) => {
-                    const nextLevel = Number(e.target.value);
-                    setLevel(nextLevel);
-                    setInputValue(String(nextLevel));
-                  }}
-                />
-              </div>
-
-              <div className="relative mt-2 h-5 px-2 text-[11px] font-black text-zinc-500">
-                <div className="relative h-full">
-                  {LEVEL_MARKS.map((mark) => {
-                    const ratio = getLevelRatio(mark);
-
-                    return (
-                      <button
-                        key={mark}
-                        type="button"
-                        onClick={() => {
-                          setLevel(mark);
-                          setInputValue(String(mark));
-                        }}
-                        className={[
-                          "absolute top-0 transition hover:text-yellow-200",
-                          mark === level ? "text-yellow-200" : "text-zinc-500",
-                          mark === LEVEL_MIN
-                            ? "translate-x-0 text-left"
-                            : mark === LEVEL_MAX
-                              ? "-translate-x-full text-right"
-                              : "-translate-x-1/2 text-center",
-                        ].join(" ")}
-                        style={{ left: `${ratio}%` }}
-                      >
-                        {mark}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+            <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-6">
+              {LEVEL_MARKS.map((mark) => (
+                <button
+                  key={mark}
+                  type="button"
+                  onClick={() => selectLevel(mark)}
+                  className={[
+                    "h-10 rounded-xl border text-sm font-black transition",
+                    mark === level
+                      ? "border-yellow-300/45 bg-yellow-400/18 text-yellow-100 shadow-[0_0_16px_rgba(255,210,74,0.16)]"
+                      : "border-white/10 bg-black/25 text-zinc-400 hover:border-yellow-300/25 hover:bg-yellow-400/10 hover:text-yellow-100",
+                  ].join(" ")}
+                >
+                  {mark}
+                </button>
+              ))}
             </div>
           </section>
 
@@ -447,52 +424,6 @@ export default function OperatorLevelPanel({
           </div>
         </section>
       </div>
-
-      <style jsx>{`
-        .operator-level-range {
-          -webkit-appearance: none;
-          appearance: none;
-          height: 18px;
-          background: transparent;
-          outline: none;
-          display: block;
-        }
-
-        .operator-level-range::-webkit-slider-runnable-track {
-          height: 18px;
-          border-radius: 999px;
-          background: transparent;
-        }
-
-        .operator-level-range::-webkit-slider-thumb {
-          -webkit-appearance: none;
-          appearance: none;
-          width: 16px;
-          height: 16px;
-          border-radius: 999px;
-          background: #ffd24a;
-          border: 2px solid #050505;
-          cursor: pointer;
-          box-shadow: 0 0 14px rgba(255, 210, 74, 0.42);
-        }
-
-        .operator-level-range::-moz-range-track {
-          height: 18px;
-          border-radius: 999px;
-          background: transparent;
-          border: none;
-        }
-
-        .operator-level-range::-moz-range-thumb {
-          width: 16px;
-          height: 16px;
-          border-radius: 999px;
-          background: #ffd24a;
-          border: 2px solid #050505;
-          cursor: pointer;
-          box-shadow: 0 0 14px rgba(255, 210, 74, 0.42);
-        }
-      `}</style>
     </section>
   );
 }
