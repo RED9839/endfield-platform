@@ -269,7 +269,9 @@ export default async function OperatorDetailPage({
       </section>
 
       <div className="relative mx-auto max-w-[1840px] px-3 py-3 sm:px-4 md:px-6 md:py-5">
-        <QuickSectionNav links={sectionLinks} />
+        <div className="lg:hidden">
+          <QuickSectionNav links={sectionLinks} />
+        </div>
 
         <div className="grid min-w-0 gap-3 lg:gap-5">
           <DetailSection id="level" title="기본 정보 / 스탯" defaultOpen>
