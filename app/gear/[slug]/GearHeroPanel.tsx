@@ -56,7 +56,7 @@ function highlightTerms(text: string): ReactNode {
     { pattern: /냉기 피해|냉기|동결/g, color: "#63b3ff" },
     { pattern: /자연 피해|자연|부식/g, color: "#7ddc6d" },
     { pattern: /힘|민첩|지능|의지|공격력|생명력/g, color: YELLOW_TEXT },
-    { pattern: /[+\-]?\d+(?:\.\d+)?%?/g, color: YELLOW_TEXT },
+    { pattern: /[+\-]\d+(?:\.\d+)?%?|\d+(?:\.\d+)?%/g, color: YELLOW_TEXT },
   ];
 
   const matches: Array<{ start: number; end: number; text: string; color: string; priority: number }> = [];
