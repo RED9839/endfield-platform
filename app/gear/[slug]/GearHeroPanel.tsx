@@ -1,45 +1,11 @@
 "use client";
 
-import Image from "next/image";
 import type { ReactNode } from "react";
 import type { GearDetail } from "@/data/gear-types";
 
-const YELLOW_MAIN = "#ffd24a";
 const YELLOW_TEXT = "#ffdc70";
 const YELLOW_BORDER = "rgba(255,196,74,0.14)";
 const YELLOW_BORDER_SOFT = "rgba(255,196,74,0.10)";
-
-function getQualityColor(quality: GearDetail["quality"]) {
-  switch (quality) {
-    case 5:
-      return "#ffcc4d";
-    case 4:
-      return "#a855f7";
-    case 3:
-      return "#38bdf8";
-    case 2:
-      return "#84cc16";
-    case 1:
-    default:
-      return "#9ca3af";
-  }
-}
-
-function getQualityLabel(quality: GearDetail["quality"]) {
-  switch (quality) {
-    case 5:
-      return "노란색 품질";
-    case 4:
-      return "보라색 품질";
-    case 3:
-      return "파란색 품질";
-    case 2:
-      return "초록색 품질";
-    case 1:
-    default:
-      return "회색 품질";
-  }
-}
 
 function highlightTerms(text: string): ReactNode {
   const patterns: Array<{ pattern: RegExp; color: string }> = [
@@ -48,7 +14,7 @@ function highlightTerms(text: string): ReactNode {
     { pattern: /전기 피해|전기|감전/g, color: "#facc15" },
     { pattern: /냉기 피해|냉기|동결/g, color: "#63b3ff" },
     { pattern: /자연 피해|자연|부식/g, color: "#7ddc6d" },
-    { pattern: /힘|민첩|지능|의지/g, color: YELLOW_TEXT },
+    { pattern: /힘|민첩|지능|의지|공격력|생명력/g, color: YELLOW_TEXT },
     { pattern: /[+\-]?\d+(?:\.\d+)?%?/g, color: YELLOW_TEXT },
   ];
 
@@ -64,14 +30,7 @@ function highlightTerms(text: string): ReactNode {
     for (const match of text.matchAll(pattern)) {
       const value = match[0];
       const start = match.index ?? 0;
-
-      matches.push({
-        start,
-        end: start + value.length,
-        text: value,
-        color,
-        priority,
-      });
+      matches.push({ start, end: start + value.length, text: value, color, priority });
     }
   });
 
@@ -95,54 +54,26 @@ function highlightTerms(text: string): ReactNode {
 
   filtered.forEach((match, index) => {
     if (cursor < match.start) result.push(text.slice(cursor, match.start));
-
     result.push(
-      <span
-        key={`${match.text}-${match.start}-${index}`}
-        style={{ color: match.color, fontWeight: 900 }}
-      >
+      <span key={`${match.text}-${match.start}-${index}`} style={{ color: match.color, fontWeight: 900 }}>
         {match.text}
       </span>,
     );
-
     cursor = match.end;
   });
 
   if (cursor < text.length) result.push(text.slice(cursor));
-
   return result;
 }
 
-function Badge({
-  children,
-  color = YELLOW_TEXT,
-  icon,
-}: {
-  children: ReactNode;
-  color?: string;
-  icon?: string;
-}) {
+function SmallStatCard({ label, value }: { label: string; value: ReactNode }) {
   return (
-    <span
-      className="inline-flex min-h-8 max-w-full items-center gap-1.5 rounded-xl bg-black px-3 py-1 text-xs font-black"
-      style={{
-        border: `1px solid ${color}55`,
-        color,
-      }}
-    >
-      {icon ? (
-        <span className="relative h-4 w-4 shrink-0">
-          <Image
-            src={icon}
-            alt=""
-            fill
-            sizes="16px"
-            className="object-contain"
-          />
-        </span>
-      ) : null}
-      <span className="truncate">{children}</span>
-    </span>
+    <div className="rounded-[20px] border border-white/10 bg-[#070a10]/90 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]">
+      <p className="text-[10px] font-black tracking-[0.18em] text-zinc-500">{label}</p>
+      <div className="mt-2 text-2xl font-black leading-tight" style={{ color: YELLOW_TEXT }}>
+        {value}
+      </div>
+    </div>
   );
 }
 
@@ -153,188 +84,105 @@ export default function GearHeroPanel({
   gear: GearDetail;
   categoryLabel: string;
 }) {
-  const qualityColor = getQualityColor(gear.quality);
-  const qualityLabel = getQualityLabel(gear.quality);
   const primarySetEffect = gear.setEffects[0];
-
-  const iconMap: Record<string, string> = {
-    힘: "/icons/stats/strength.webp",
-    민첩: "/icons/stats/agility.webp",
-    지능: "/icons/stats/intelligence.webp",
-    의지: "/icons/stats/will.webp",
-    공격력: "/icons/stats/attack.webp",
-    생명력: "/icons/stats/hp.webp",
-    방어구: "/icons/Gear/armor.webp",
-    "보호 장갑": "/icons/Gear/gloves.webp",
-    부품: "/icons/Gear/kit.webp",
-  };
-
   const baseRows = [
     { label: gear.baseStat.label, value: gear.baseStat.value },
     { label: gear.ability1.label, value: gear.ability1.values.base },
-    ...(gear.ability2
-      ? [{ label: gear.ability2.label, value: gear.ability2.values.base }]
-      : []),
+    ...(gear.ability2 ? [{ label: gear.ability2.label, value: gear.ability2.values.base }] : []),
     { label: gear.attribute.label, value: gear.attribute.values.base },
   ];
 
   return (
     <section
-      className="overflow-hidden rounded-[26px] bg-[#05070b] p-5 shadow-[0_0_30px_rgba(250,204,21,0.04)]"
+      className="overflow-hidden rounded-[28px] bg-[#05070b] shadow-[0_18px_50px_rgba(0,0,0,0.30)]"
       style={{ border: `1px solid ${YELLOW_BORDER}` }}
     >
-      <div className="grid gap-5 xl:grid-cols-[360px_minmax(0,1fr)]">
-        <div
-          className="relative min-h-[460px] overflow-hidden rounded-[24px] bg-black"
-          style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
-        >
-          <div className="relative mx-auto h-full w-[90%]">
-            <Image
+      <div className="relative overflow-hidden border-b border-yellow-500/10 bg-[radial-gradient(circle_at_8%_0%,rgba(255,210,74,0.14),transparent_34%),linear-gradient(180deg,rgba(255,255,255,0.035),transparent)] p-4 lg:p-5">
+        <div className="relative flex min-w-0 items-center gap-4 rounded-[22px] border border-white/10 bg-black/20 p-3">
+          <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl border border-yellow-500/15 bg-black/45 sm:h-24 sm:w-24">
+            <img
               src={gear.image}
               alt={gear.name}
-              fill
-              priority
-              sizes="360px"
-              className="object-contain object-center"
+              className="h-full w-full object-contain p-2 drop-shadow-[0_10px_18px_rgba(0,0,0,0.58)]"
             />
           </div>
 
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
-
-          <div className="absolute bottom-4 left-4 right-4">
-            <p
-              className="text-xs font-bold tracking-[0.28em]"
-              style={{ color: YELLOW_TEXT }}
-            >
-              장비 이미지
+          <div className="min-w-0">
+            <h1 className="break-keep text-[clamp(32px,5vw,48px)] font-black leading-none text-white">
+              {gear.name}
+            </h1>
+            <p className="mt-2 truncate text-sm font-black text-zinc-400 sm:text-base">
+              {gear.enName}
             </p>
-            <p className="mt-1 text-sm text-zinc-400">{gear.enName}</p>
           </div>
         </div>
 
-        <div
-          className="min-w-0 rounded-[24px] bg-black/30 p-5"
-          style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
-        >
-          <div className="flex flex-wrap gap-2">
-            <Badge color={qualityColor} icon={iconMap[categoryLabel]}>
-              Lv. {gear.level} {categoryLabel}
-            </Badge>
-            <Badge>{gear.setName}</Badge>
-            <Badge color={qualityColor}>{qualityLabel}</Badge>
-            <Badge icon={iconMap[gear.ability1.label]}>
-              {gear.ability1.label}
-            </Badge>
-            {gear.ability2 ? (
-              <Badge icon={iconMap[gear.ability2.label]}>
-                {gear.ability2.label}
-              </Badge>
-            ) : null}
-            <Badge icon={iconMap[gear.attribute.label]}>
-              {gear.attribute.label}
-            </Badge>
+        <div className="relative mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(360px,0.55fr)]">
+          <div className="rounded-[22px] border border-white/10 bg-black/35 p-4">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="rounded-xl border border-yellow-400/25 bg-yellow-400/15 px-3 py-2 text-xs font-black text-yellow-100">
+                Lv. {gear.level}
+              </span>
+              <span className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-black text-zinc-300">
+                {categoryLabel}
+              </span>
+              <span className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-black text-zinc-300">
+                품질 {gear.quality}
+              </span>
+            </div>
+
+            <p className="mt-4 text-[10px] font-black tracking-[0.24em] text-zinc-500">SET</p>
+            <h2 className="mt-2 break-keep text-3xl font-black leading-tight text-white">
+              {gear.setName}
+            </h2>
           </div>
 
-          <p
-            className="mt-6 text-sm font-bold tracking-[0.08em]"
-            style={{ color: YELLOW_TEXT }}
-          >
-            {gear.enName}
+          <div className="rounded-[22px] border border-yellow-500/20 bg-black/35 p-4">
+            <p className="text-[10px] font-black tracking-[0.18em] text-zinc-500">기본 능력치</p>
+            <p className="mt-3 text-base font-black text-zinc-300">{gear.baseStat.label}</p>
+            <p className="mt-1 text-5xl font-black leading-none" style={{ color: YELLOW_TEXT }}>
+              {gear.baseStat.value}
+            </p>
+            <div className="mt-4 h-1.5 rounded-full bg-zinc-800">
+              <div className="h-full w-[18%] rounded-full bg-yellow-300" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid gap-3 p-4 lg:grid-cols-[minmax(0,1fr)_minmax(420px,0.95fr)] lg:p-5">
+        <div className="rounded-[22px] border border-white/10 bg-black/25 p-4">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <p className="text-[10px] font-black tracking-[0.28em]" style={{ color: YELLOW_TEXT }}>
+              GEAR STATS
+            </p>
+            <p className="text-xs font-bold text-yellow-200/70">기본 기준</p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {baseRows.map((row, index) => (
+              <SmallStatCard key={`${row.label}-${index}`} label={row.label} value={row.value} />
+            ))}
+          </div>
+        </div>
+
+        <div className="rounded-[22px] border border-white/10 bg-black/25 p-4">
+          <p className="text-[10px] font-black tracking-[0.28em]" style={{ color: YELLOW_TEXT }}>
+            SET EFFECT
           </p>
+          <h3 className="mt-2 break-keep text-2xl font-black text-white">
+            {highlightTerms(gear.setName)}
+          </h3>
 
-          <h1 className="mt-2 text-4xl font-black leading-tight text-white">
-            {gear.name}
-          </h1>
-
-          <div className="mt-6">
-            <div
-              className="mb-3 flex items-center justify-between border-b pb-2"
-              style={{ borderColor: YELLOW_BORDER_SOFT }}
-            >
-              <h2
-                className="text-sm font-black tracking-[0.24em]"
-                style={{ color: YELLOW_TEXT }}
-              >
-                기본 능력치
-              </h2>
-            </div>
-
-            <div
-              className="overflow-hidden rounded-[18px] bg-[#071019]"
-              style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
-            >
-              {baseRows.map((row, index) => {
-                const iconSrc = iconMap[row.label];
-
-                return (
-                  <div
-                    key={`${row.label}-${index}`}
-                    className="grid grid-cols-[180px_minmax(0,1fr)] border-b border-white/10 last:border-b-0"
-                  >
-                    <div className="flex min-w-0 items-center gap-2 border-r border-white/10 px-4 py-3 text-sm font-bold text-zinc-300">
-                      {iconSrc ? (
-                        <span className="relative h-5 w-5 shrink-0">
-                          <Image
-                            src={iconSrc}
-                            alt=""
-                            fill
-                            sizes="20px"
-                            className="object-contain"
-                          />
-                        </span>
-                      ) : null}
-                      <span className="min-w-0 truncate">{row.label}</span>
-                    </div>
-
-                    <div
-                      className="px-4 py-3 text-lg font-black"
-                      style={{ color: YELLOW_TEXT }}
-                    >
-                      {row.value}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="mt-6">
-            <div
-              className="mb-3 flex items-center justify-between border-b pb-2"
-              style={{ borderColor: YELLOW_BORDER_SOFT }}
-            >
-              <h2
-                className="text-sm font-black tracking-[0.24em]"
-                style={{ color: YELLOW_TEXT }}
-              >
-                세트 효과
-              </h2>
-            </div>
-
-            <div
-              className="rounded-[18px] bg-[#071019] p-4"
-              style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
-            >
-              <p className="text-base font-black text-white">
-                {highlightTerms(gear.setName)}
+          {primarySetEffect ? (
+            <div className="mt-4 rounded-[18px] border border-white/10 bg-[#080b11]/85 p-4 text-sm font-bold leading-7 text-zinc-200">
+              <p className="mb-1 font-black" style={{ color: YELLOW_TEXT }}>
+                {primarySetEffect.pieces}개 세트 효과
               </p>
-
-              {primarySetEffect ? (
-                <div className="mt-3 text-sm leading-7 text-zinc-200">
-                  <p className="font-black" style={{ color: YELLOW_TEXT }}>
-                    {primarySetEffect.pieces}개 세트 효과
-                  </p>
-                  <p className="mt-1">
-                    {highlightTerms(primarySetEffect.description)}
-                  </p>
-                </div>
-              ) : (
-                <p className="mt-2 text-sm text-zinc-500">
-                  등록된 세트 효과가 없습니다.
-                </p>
-              )}
+              {highlightTerms(primarySetEffect.description)}
             </div>
-          </div>
+          ) : (
+            <p className="mt-3 text-sm font-bold text-zinc-500">등록된 세트 효과가 없습니다.</p>
+          )}
         </div>
       </div>
     </section>
