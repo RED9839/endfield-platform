@@ -9,23 +9,20 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: "https",
-        hostname: "*.gryphline.com",
+        hostname: "endfield.gryphline.com",
       },
       {
         protocol: "https",
-        hostname: "*.hg-cdn.com",
+        hostname: "www.gryphline.com",
+      },
+      {
+        protocol: "https",
+        hostname: "hg-cdn.com",
       },
     ],
   },
 
   poweredByHeader: false,
-
-
-  webpack: (config) => {
-    config.resolve = config.resolve ?? {};
-    config.resolve.symlinks = false;
-    return config;
-  },
 
   experimental: {
     optimizePackageImports: ["lucide-react"],
