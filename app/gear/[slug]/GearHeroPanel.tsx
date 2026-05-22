@@ -59,13 +59,7 @@ function highlightTerms(text: string): ReactNode {
     { pattern: /[+\-]?\d+(?:\.\d+)?%?/g, color: YELLOW_TEXT },
   ];
 
-  const matches: Array<{
-    start: number;
-    end: number;
-    text: string;
-    color: string;
-    priority: number;
-  }> = [];
+  const matches: Array<{ start: number; end: number; text: string; color: string; priority: number }> = [];
 
   patterns.forEach(({ pattern, color }, priority) => {
     for (const match of text.matchAll(pattern)) {
@@ -75,9 +69,7 @@ function highlightTerms(text: string): ReactNode {
     }
   });
 
-  matches.sort((a, b) =>
-    a.start !== b.start ? a.start - b.start : b.priority - a.priority,
-  );
+  matches.sort((a, b) => (a.start !== b.start ? a.start - b.start : b.priority - a.priority));
 
   const filtered: typeof matches = [];
   let lastEnd = -1;
@@ -112,49 +104,30 @@ function highlightTerms(text: string): ReactNode {
 
 function ProfileBlock({ label, value }: { label: string; value: ReactNode }) {
   return (
-    <div
-      className="rounded-[18px] bg-black/35 px-4 py-3"
-      style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
-    >
+    <div className="rounded-[18px] bg-black/35 px-4 py-3" style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}>
       <p className="text-[10px] font-black tracking-[0.18em] text-zinc-500">{label}</p>
       <div className="mt-2 text-base font-black text-white">{value}</div>
     </div>
   );
 }
 
-export default function GearHeroPanel({
-  gear,
-  categoryLabel,
-}: {
-  gear: GearDetail;
-  categoryLabel: string;
-}) {
+export default function GearHeroPanel({ gear, categoryLabel }: { gear: GearDetail; categoryLabel: string }) {
   const quality = getQualityBadge(gear.quality);
 
   return (
-    <section
-      className="overflow-hidden rounded-[30px] bg-[#05070b] shadow-[0_20px_60px_rgba(0,0,0,0.34)]"
-      style={{ border: `1px solid ${YELLOW_BORDER}` }}
-    >
+    <section className="overflow-hidden rounded-[30px] bg-[#05070b] shadow-[0_20px_60px_rgba(0,0,0,0.34)]" style={{ border: `1px solid ${YELLOW_BORDER}` }}>
       <div className="grid lg:grid-cols-[1.1fr_0.9fr]">
         <div className="relative min-h-[520px] overflow-hidden bg-black">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_0%,rgba(255,210,74,0.16),transparent_32%)]" />
 
-          <img
-            src={gear.image}
-            alt={gear.name}
-            className="absolute inset-0 h-full w-full object-contain p-8 drop-shadow-[0_24px_42px_rgba(0,0,0,0.72)]"
-          />
+          <img src={gear.image} alt={gear.name} className="absolute inset-0 h-full w-full object-contain p-8 drop-shadow-[0_24px_42px_rgba(0,0,0,0.72)]" />
         </div>
 
         <div className="relative p-6 lg:p-8">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_0%_0%,rgba(255,210,74,0.12),transparent_32%)]" />
 
           <div className="relative">
-            <p
-              className="text-[11px] font-black tracking-[0.32em]"
-              style={{ color: YELLOW_MAIN }}
-            >
+            <p className="text-[11px] font-black tracking-[0.32em]" style={{ color: YELLOW_MAIN }}>
               GEAR PROFILE
             </p>
 
@@ -165,14 +138,7 @@ export default function GearHeroPanel({
             </h1>
 
             <div className="mt-5 flex flex-wrap gap-2">
-              <span
-                className="rounded-full px-3 py-1 text-xs font-black"
-                style={{
-                  border: `1px solid ${quality.border}`,
-                  background: quality.bg,
-                  color: quality.text,
-                }}
-              >
+              <span className="rounded-full px-3 py-1 text-xs font-black" style={{ border: `1px solid ${quality.border}`, background: quality.bg, color: quality.text }}>
                 {quality.label}
               </span>
 
@@ -181,26 +147,39 @@ export default function GearHeroPanel({
               </span>
             </div>
 
-            <div className="mt-6 grid gap-3 sm:grid-cols-2">
-              <ProfileBlock
-                label="기본 능력치"
-                value={highlightTerms(`${gear.baseStat.label} ${gear.baseStat.value}`)}
-              />
+            <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              <ProfileBlock label="방어력" value={highlightTerms(`${gear.baseStat.label} ${gear.baseStat.value}`)} />
 
-              <ProfileBlock
-                label={gear.ability1.label}
-                value={highlightTerms(String(gear.ability1.values.base))}
-              />
+              <ProfileBlock label="능력치1" value={highlightTerms(`${gear.ability1.label} ${gear.ability1.values.base}`)} />
 
-              <ProfileBlock
-                label={gear.attribute.label}
-                value={highlightTerms(String(gear.attribute.values.base))}
-              />
+              <ProfileBlock label="능력치2" value={gear.ability2 ? highlightTerms(`${gear.ability2.label} ${gear.ability2.values.base}`) : "-"} />
 
-              <ProfileBlock
-                label="세트 효과"
-                value={highlightTerms(gear.setName)}
-              />
+              <ProfileBlock label="속성" value={highlightTerms(`${gear.attribute.label} ${gear.attribute.values.base}`)} />
+
+              <ProfileBlock label="세트효과" value={highlightTerms(gear.setName)} />
+            </div>
+
+            <div className="mt-6 rounded-[22px] bg-[#06090f]/90 p-5" style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}>
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <p className="text-sm font-black text-zinc-300">세트효과</p>
+                <p className="text-xs font-black" style={{ color: YELLOW_TEXT }}>
+                  {gear.setName}
+                </p>
+              </div>
+
+              <div className="grid gap-3">
+                {gear.setEffects.map((effect) => (
+                  <div key={`${effect.pieces}-${effect.description}`} className="rounded-2xl border border-white/10 bg-black/35 p-4">
+                    <p className="text-sm font-black" style={{ color: YELLOW_TEXT }}>
+                      {effect.pieces}세트 효과
+                    </p>
+
+                    <div className="mt-2 text-sm font-bold leading-7 text-zinc-200">
+                      {highlightTerms(effect.description)}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
