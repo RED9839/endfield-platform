@@ -36,16 +36,25 @@ type Props = {
   levelStats?: LevelStatRow[] | null;
 };
 
+type StatKey = "hp" | "attack" | "power" | "agility" | "intelligence" | "will";
+
+type StatConfig = {
+  key: StatKey;
+  label: string;
+  maxValue: number;
+  icon: string;
+};
+
 const LEVEL_MARKS = [1, 20, 40, 60, 80, 90];
 
-const BAR_MAX = {
-  hp: 5500,
-  attack: 350,
-  power: 200,
-  agility: 200,
-  intelligence: 200,
-  will: 200,
-};
+const STAT_CONFIGS: StatConfig[] = [
+  { key: "hp", label: "생명력", maxValue: 5500, icon: "/icons/stats/hp.webp" },
+  { key: "attack", label: "공격력", maxValue: 350, icon: "/icons/stats/attack.webp" },
+  { key: "power", label: "힘", maxValue: 200, icon: "/icons/stats/strength.webp" },
+  { key: "agility", label: "민첩", maxValue: 200, icon: "/icons/stats/agility.webp" },
+  { key: "intelligence", label: "지능", maxValue: 200, icon: "/icons/stats/intelligence.webp" },
+  { key: "will", label: "의지", maxValue: 200, icon: "/icons/stats/will.webp" },
+];
 
 const statIconMap: Record<string, string> = {
   생명력: "/icons/stats/hp.webp",
@@ -114,6 +123,20 @@ function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
 }
 
+function getStatValue(stats: LevelStatRow, key: StatKey) {
+  if (key === "hp") return stats.hp;
+  if (key === "attack") return stats.attack;
+  return stats[key] ?? 0;
+}
+
+function findStatConfig(label: string) {
+  return STAT_CONFIGS.find((item) => item.label === label) ?? null;
+}
+
+function formatPercent(value: number, maxValue: number) {
+  return Math.round(Math.max(0, Math.min(100, (value / maxValue) * 100)));
+}
+
 function IconFallback({ text, size }: { text?: string; size: number }) {
   const safeText = text ?? "?";
 
@@ -147,75 +170,115 @@ function SmallIcon({ src, alt, size = 20 }: { src?: string; alt?: string; size?:
   );
 }
 
-function InfoChip({
-  title,
+function ProfileChip({
   value,
   iconSrc,
   borderColor,
-  valueColor = "#f8fafc",
 }: {
-  title: string;
   value: string;
   iconSrc?: string;
   borderColor?: string;
-  valueColor?: string;
 }) {
   return (
     <div
-      className="min-w-0 rounded-[16px] border bg-black/25 px-3 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]"
-      style={{ borderColor: borderColor ?? "rgba(255,255,255,0.10)" }}
+      className="inline-flex min-h-10 items-center gap-2 rounded-full border bg-black/25 px-4 text-sm font-black text-zinc-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]"
+      style={{ borderColor: borderColor ?? "rgba(255,255,255,0.12)" }}
     >
-      <div className="mb-1.5 text-[10px] font-black tracking-[0.13em] text-zinc-500">
-        {title}
-      </div>
-      <div className="flex min-w-0 items-center gap-2">
-        <SmallIcon src={iconSrc} alt={value} size={18} />
-        <div className="min-w-0 truncate text-sm font-black" style={{ color: valueColor }}>
-          {value}
+      <SmallIcon src={iconSrc} alt={value} size={18} />
+      {value}
+    </div>
+  );
+}
+
+function FocusStatCard({
+  title,
+  label,
+  value,
+  maxValue,
+  icon,
+  tone = "yellow",
+}: {
+  title: string;
+  label: string;
+  value: number;
+  maxValue: number;
+  icon?: string;
+  tone?: "yellow" | "blue";
+}) {
+  const percent = formatPercent(value, maxValue);
+  const accentClass = tone === "yellow" ? "text-yellow-200" : "text-sky-300";
+  const borderClass = tone === "yellow" ? "border-yellow-300/25" : "border-sky-300/25";
+  const bgClass = tone === "yellow" ? "bg-yellow-400/10" : "bg-sky-400/10";
+  const barClass = tone === "yellow" ? "bg-yellow-300" : "bg-sky-400";
+
+  return (
+    <div className={`min-w-0 rounded-[20px] border ${borderClass} bg-black/25 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]`}>
+      <div className={`text-sm font-black ${accentClass}`}>{title}</div>
+      <div className="mt-4 grid grid-cols-[52px_minmax(0,1fr)_58px] items-center gap-3">
+        <div className={`flex h-12 w-12 items-center justify-center rounded-full border border-white/10 ${bgClass}`}>
+          <SmallIcon src={icon} alt={label} size={28} />
         </div>
+        <div className="min-w-0">
+          <div className="truncate text-sm font-black text-zinc-200">{label}</div>
+          <div className={`mt-0.5 text-4xl font-black leading-none ${accentClass}`}>{value}</div>
+        </div>
+        <div className="text-right text-lg font-black text-zinc-300">{percent}%</div>
+      </div>
+      <div className="mt-4 h-2 overflow-hidden rounded-full bg-[#151b24]">
+        <div className={`h-full rounded-full ${barClass} shadow-[0_0_14px_rgba(255,210,74,0.25)]`} style={{ width: `${percent}%` }} />
       </div>
     </div>
   );
 }
 
 function StatCard({
-  label,
+  config,
   value,
-  maxValue,
-  variant = "normal",
+  variant,
 }: {
-  label: string;
+  config: StatConfig;
   value: number;
-  maxValue: number;
-  variant?: "normal" | "mainStat" | "subStat";
+  variant: "normal" | "mainStat" | "subStat";
 }) {
-  const width = Math.max(4, Math.min(100, (value / maxValue) * 100));
-  const icon = statIconMap[label];
+  const percent = formatPercent(value, config.maxValue);
   const isMain = variant === "mainStat";
   const isSub = variant === "subStat";
 
   return (
     <div
       className={[
-        "min-w-0 rounded-[16px] border bg-black/25 px-3 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]",
-        isMain ? "border-yellow-300/25" : isSub ? "border-zinc-300/20" : "border-white/10",
+        "min-w-0 rounded-[18px] border bg-black/25 px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]",
+        isMain ? "border-yellow-300/25" : isSub ? "border-sky-300/25" : "border-white/10",
       ].join(" ")}
     >
-      <div className="mb-2 grid min-w-0 grid-cols-[22px_minmax(0,1fr)_auto] items-center gap-2">
-        <SmallIcon src={icon} alt={label} size={18} />
-        <div className="min-w-0 truncate text-sm font-black text-zinc-100">
-          {label}
+      <div className="grid min-w-0 grid-cols-[42px_minmax(0,1fr)_auto] items-center gap-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-black/35">
+          <SmallIcon src={config.icon} alt={config.label} size={23} />
         </div>
-        <div className="text-sm font-black text-yellow-200">{value}</div>
+        <div className="min-w-0">
+          <div className="truncate text-sm font-black text-zinc-100">{config.label}</div>
+          <div className="mt-0.5 text-2xl font-black leading-none text-white">{value}</div>
+        </div>
+        <div className="text-sm font-black text-zinc-500">{percent}%</div>
       </div>
-      <div className="h-2 overflow-hidden rounded-full bg-[#141a24]">
+      <div className="mt-3 h-2 overflow-hidden rounded-full bg-[#141a24]">
         <div
-          className="h-full rounded-full bg-[#f7b423] shadow-[0_0_12px_rgba(247,180,35,0.25)]"
-          style={{ width: `${width}%` }}
+          className={[
+            "h-full rounded-full shadow-[0_0_12px_rgba(247,180,35,0.22)]",
+            isSub ? "bg-sky-400" : "bg-yellow-300",
+          ].join(" ")}
+          style={{ width: `${percent}%` }}
         />
       </div>
       {(isMain || isSub) && (
-        <div className="mt-2 inline-flex rounded-full border border-white/10 bg-white/[0.035] px-2 py-0.5 text-[10px] font-black text-zinc-300">
+        <div
+          className={[
+            "mt-2 inline-flex rounded-full border px-2 py-0.5 text-[10px] font-black",
+            isMain
+              ? "border-yellow-300/25 bg-yellow-400/10 text-yellow-200"
+              : "border-sky-300/25 bg-sky-400/10 text-sky-300",
+          ].join(" ")}
+        >
           {isMain ? "주요 능력치" : "보조 능력치"}
         </div>
       )}
@@ -287,6 +350,9 @@ export default function OperatorLevelPanel({
     return "normal";
   };
 
+  const mainStatConfig = findStatConfig(mainStatLabel);
+  const subStatConfig = findStatConfig(subStatLabel);
+
   if (!currentStats) {
     return (
       <section className="rounded-[22px] border border-yellow-500/15 bg-[#05070b] p-4 text-sm font-bold text-zinc-500">
@@ -295,180 +361,159 @@ export default function OperatorLevelPanel({
     );
   }
 
+  const mainStatValue = mainStatConfig ? getStatValue(currentStats, mainStatConfig.key) : 0;
+  const subStatValue = subStatConfig ? getStatValue(currentStats, subStatConfig.key) : 0;
+
   return (
-    <section className="relative min-w-0 overflow-hidden rounded-[22px] border border-yellow-500/15 bg-[#05070b] shadow-[0_14px_34px_rgba(0,0,0,0.24)]">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_8%_0%,rgba(255,210,74,0.10),transparent_30%),linear-gradient(135deg,rgba(255,255,255,0.03),rgba(255,255,255,0.004))]" />
+    <section className="relative min-w-0 overflow-hidden rounded-[24px] border border-yellow-500/15 bg-[#05070b] shadow-[0_14px_34px_rgba(0,0,0,0.24)]">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_8%_0%,rgba(255,210,74,0.11),transparent_30%),linear-gradient(135deg,rgba(255,255,255,0.035),rgba(255,255,255,0.004))]" />
+      <div className="pointer-events-none absolute right-0 top-0 h-32 w-32 bg-[repeating-linear-gradient(135deg,rgba(255,210,74,0.07)_0px,rgba(255,210,74,0.07)_2px,transparent_2px,transparent_8px)] opacity-25" />
 
       <div className="relative p-3 sm:p-4">
-        <div className="mb-3 flex items-center justify-between gap-3">
-          <div>
-            <div className="text-[10px] font-black tracking-[0.24em] text-yellow-200/80">
-              LEVEL STATUS
+        <div className="rounded-[20px] border border-white/10 bg-black/25 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="grid min-w-0 grid-cols-[54px_minmax(0,1fr)] items-center gap-3">
+              <div className="flex h-[54px] w-[54px] items-center justify-center rounded-[18px] border border-white/10 bg-black/35">
+                <SmallIcon src={classIcon} alt={classLabel} size={34} />
+              </div>
+              <div className="min-w-0">
+                <h3 className="break-keep text-[clamp(28px,7vw,42px)] font-black leading-none text-white">
+                  {name}
+                </h3>
+                <div className="mt-1 text-xs font-bold uppercase tracking-[0.08em] text-zinc-500">
+                  {enName}
+                </div>
+              </div>
             </div>
-            <h3 className="mt-1 text-xl font-black text-yellow-100 sm:text-2xl">
-              레벨 능력치
-            </h3>
-          </div>
-          <div className="hidden rounded-full border border-yellow-500/15 bg-black/35 px-3 py-1 text-xs font-black text-zinc-400 sm:block">
-            1 - 90
+
+            <div className="flex flex-wrap gap-2">
+              <ProfileChip value={rarityLabel} iconSrc={rarityIcon} borderColor={rarityBorderMap[rarity]} />
+              <ProfileChip value={elementLabel} iconSrc={elementIcon} borderColor={elementBorderMap[element]} />
+              <ProfileChip value={classLabel} iconSrc={classIcon} />
+              <ProfileChip value={weaponLabel} iconSrc={weaponIcon} />
+            </div>
           </div>
         </div>
 
-        <div className="grid min-w-0 gap-3 xl:grid-cols-[330px_minmax(0,1fr)]">
-          <aside className="min-w-0 rounded-[18px] border border-white/10 bg-black/25 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]">
-            <div className="mb-4">
-              <div className="break-keep text-[clamp(28px,7vw,40px)] font-black leading-none text-white">
-                {name}
-              </div>
-              <div className="mt-2 break-words text-xs font-bold uppercase tracking-[0.05em] text-zinc-500">
-                {enName}
-              </div>
+        <div className="mt-3 grid gap-3 xl:grid-cols-[minmax(0,0.95fr)_minmax(360px,1.05fr)]">
+          <section className="min-w-0 rounded-[20px] border border-white/10 bg-black/25 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]">
+            <div className="text-[10px] font-black tracking-[0.2em] text-zinc-500">
+              CURRENT LEVEL
+            </div>
+            <div className="mt-2 flex flex-wrap items-end gap-3">
+              {isEditing ? (
+                <input
+                  autoFocus
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value.replace(/[^0-9]/g, ""))}
+                  onBlur={commitInputLevel}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") commitInputLevel();
+                    if (e.key === "Escape") {
+                      setInputValue(String(level));
+                      setIsEditing(false);
+                    }
+                  }}
+                  className="h-12 w-32 rounded-xl border border-yellow-500/25 bg-[#05070b] px-3 text-3xl font-black text-white outline-none"
+                />
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setInputValue(String(level));
+                    setIsEditing(true);
+                  }}
+                  className="text-left text-[46px] font-black leading-none text-white transition hover:text-yellow-100"
+                >
+                  Lv. {level}
+                </button>
+              )}
+              <span className="pb-1 text-sm font-black text-zinc-500">/ 90</span>
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
-              <InfoChip
-                title="레어도"
-                value={rarityLabel}
-                iconSrc={rarityIcon}
-                borderColor={rarityBorderMap[rarity]}
+            <div className="mt-5">
+              <input
+                className="operator-level-range w-full"
+                type="range"
+                min={1}
+                max={90}
+                step={1}
+                value={level}
+                onChange={(e) => {
+                  const nextLevel = Number(e.target.value);
+                  setLevel(nextLevel);
+                  setInputValue(String(nextLevel));
+                }}
               />
-              <InfoChip
-                title="속성"
-                value={elementLabel}
-                iconSrc={elementIcon}
-                borderColor={elementBorderMap[element]}
-              />
-              <InfoChip title="클래스" value={classLabel} iconSrc={classIcon} />
-              <InfoChip title="무기 타입" value={weaponLabel} iconSrc={weaponIcon} />
-              <InfoChip
-                title="주요 능력치"
-                value={mainStatLabel}
-                iconSrc={statIconMap[mainStatLabel]}
-                borderColor="rgba(255,214,92,0.28)"
-                valueColor="#ffd24a"
-              />
-              <InfoChip
-                title="보조 능력치"
-                value={subStatLabel}
-                iconSrc={statIconMap[subStatLabel]}
-                borderColor="rgba(203,213,225,0.24)"
-                valueColor="#d5dde8"
-              />
-            </div>
-          </aside>
-
-          <section className="min-w-0 rounded-[18px] border border-white/10 bg-black/25 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)] sm:p-4">
-            <div className="grid min-w-0 gap-3 lg:grid-cols-[140px_minmax(0,1fr)] lg:items-start">
-              <div className="min-w-0">
-                <div className="text-[10px] font-black tracking-[0.16em] text-zinc-500">
-                  CURRENT LEVEL
-                </div>
-
-                {isEditing ? (
-                  <input
-                    autoFocus
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value.replace(/[^0-9]/g, ""))}
-                    onBlur={commitInputLevel}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") commitInputLevel();
-                      if (e.key === "Escape") {
-                        setInputValue(String(level));
-                        setIsEditing(false);
-                      }
-                    }}
-                    className="mt-1 h-10 w-full rounded-xl border border-yellow-500/25 bg-[#05070b] px-3 text-2xl font-black text-white outline-none"
-                  />
-                ) : (
+              <div className="mt-2 grid grid-cols-6 text-center text-xs font-black text-zinc-500">
+                {LEVEL_MARKS.map((mark) => (
                   <button
+                    key={mark}
                     type="button"
                     onClick={() => {
-                      setInputValue(String(level));
-                      setIsEditing(true);
+                      setLevel(mark);
+                      setInputValue(String(mark));
                     }}
-                    className="mt-1 text-left text-[34px] font-black leading-none text-white transition hover:text-yellow-100"
+                    className={[
+                      "transition hover:text-yellow-200",
+                      mark === level ? "text-yellow-200" : "text-zinc-500",
+                    ].join(" ")}
                   >
-                    Lv. {level}
+                    {mark}
                   </button>
-                )}
-              </div>
-
-              <div className="min-w-0">
-                <input
-                  className="operator-level-range w-full"
-                  type="range"
-                  min={1}
-                  max={90}
-                  step={1}
-                  value={level}
-                  onChange={(e) => {
-                    const nextLevel = Number(e.target.value);
-                    setLevel(nextLevel);
-                    setInputValue(String(nextLevel));
-                  }}
-                />
-
-                <div className="mt-2 grid grid-cols-6 text-center text-[10px] font-black text-zinc-500">
-                  {LEVEL_MARKS.map((mark) => (
-                    <button
-                      key={mark}
-                      type="button"
-                      onClick={() => {
-                        setLevel(mark);
-                        setInputValue(String(mark));
-                      }}
-                      className={[
-                        "transition hover:text-yellow-200",
-                        mark === level ? "text-yellow-200" : "text-zinc-500",
-                      ].join(" ")}
-                    >
-                      {mark}
-                    </button>
-                  ))}
-                </div>
+                ))}
               </div>
             </div>
 
-            <div className="mt-4 grid min-w-0 gap-2 sm:grid-cols-2 xl:grid-cols-3">
-              <StatCard
-                label="생명력"
-                value={currentStats.hp}
-                maxValue={BAR_MAX.hp}
-                variant={getStatVariant("생명력")}
-              />
-              <StatCard
-                label="공격력"
-                value={currentStats.attack}
-                maxValue={BAR_MAX.attack}
-                variant={getStatVariant("공격력")}
-              />
-              <StatCard
-                label="힘"
-                value={currentStats.power ?? 0}
-                maxValue={BAR_MAX.power}
-                variant={getStatVariant("힘")}
-              />
-              <StatCard
-                label="민첩"
-                value={currentStats.agility ?? 0}
-                maxValue={BAR_MAX.agility}
-                variant={getStatVariant("민첩")}
-              />
-              <StatCard
-                label="지능"
-                value={currentStats.intelligence ?? 0}
-                maxValue={BAR_MAX.intelligence}
-                variant={getStatVariant("지능")}
-              />
-              <StatCard
-                label="의지"
-                value={currentStats.will ?? 0}
-                maxValue={BAR_MAX.will}
-                variant={getStatVariant("의지")}
-              />
+            <div className="mt-5 flex items-center gap-2 text-xs font-bold text-zinc-500">
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/10 text-[11px] text-zinc-300">i</span>
+              레벨을 올리면 스탯이 증가합니다.
             </div>
           </section>
+
+          <section className="grid min-w-0 gap-3 sm:grid-cols-2">
+            {mainStatConfig ? (
+              <FocusStatCard
+                title="주요 능력치"
+                label={mainStatLabel}
+                value={mainStatValue}
+                maxValue={mainStatConfig.maxValue}
+                icon={mainStatConfig.icon}
+              />
+            ) : null}
+
+            {subStatConfig ? (
+              <FocusStatCard
+                title="보조 능력치"
+                label={subStatLabel}
+                value={subStatValue}
+                maxValue={subStatConfig.maxValue}
+                icon={subStatConfig.icon}
+                tone="blue"
+              />
+            ) : null}
+          </section>
         </div>
+
+        <section className="mt-3 rounded-[20px] border border-white/10 bg-black/25 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <div className="text-lg font-black text-yellow-200">능력치 정보</div>
+            <div className="text-xs font-bold text-zinc-500">
+              능력치는 레벨과 성장 값에 따라 변동됩니다.
+            </div>
+          </div>
+
+          <div className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {STAT_CONFIGS.map((config) => (
+              <StatCard
+                key={config.key}
+                config={config}
+                value={getStatValue(currentStats, config.key)}
+                variant={getStatVariant(config.label)}
+              />
+            ))}
+          </div>
+        </section>
       </div>
 
       <style jsx>{`
@@ -484,7 +529,7 @@ export default function OperatorLevelPanel({
         .operator-level-range::-webkit-slider-runnable-track {
           height: 7px;
           border-radius: 999px;
-          background: linear-gradient(90deg, rgba(247, 180, 35, 0.95), rgba(247, 180, 35, 0.35)), #141a24;
+          background: linear-gradient(90deg, rgba(247, 180, 35, 0.95), rgba(247, 180, 35, 0.4)), #141a24;
         }
 
         .operator-level-range::-webkit-slider-thumb {
