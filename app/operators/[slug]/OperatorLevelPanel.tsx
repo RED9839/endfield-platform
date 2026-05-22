@@ -76,13 +76,6 @@ function getLevelRatio(level: number) {
   return ((level - LEVEL_MIN) / (LEVEL_MAX - LEVEL_MIN)) * 100;
 }
 
-function getLevelMarkerRatio(level: number) {
-  if (level === LEVEL_MIN) return 1.2;
-  if (level === LEVEL_MAX) return 98.8;
-
-  return getLevelRatio(level);
-}
-
 function getStatValue(stats: LevelStatRow, key: StatKey) {
   if (key === "hp") return stats.hp;
   if (key === "attack") return stats.attack;
@@ -366,7 +359,7 @@ export default function OperatorLevelPanel({
                 </div>
 
                 <input
-                  className="operator-level-range absolute inset-0 w-full"
+                  className="operator-level-range absolute inset-y-0 left-2 right-2 w-auto"
                   type="range"
                   min={LEVEL_MIN}
                   max={LEVEL_MAX}
@@ -383,7 +376,7 @@ export default function OperatorLevelPanel({
               <div className="relative mt-2 h-5 px-2 text-[11px] font-black text-zinc-500">
                 <div className="relative h-full">
                   {LEVEL_MARKS.map((mark) => {
-                    const ratio = getLevelMarkerRatio(mark);
+                    const ratio = getLevelRatio(mark);
 
                     return (
                       <button
