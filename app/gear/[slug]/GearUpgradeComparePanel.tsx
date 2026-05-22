@@ -4,38 +4,52 @@ const YELLOW_TEXT = "#ffdc70";
 const YELLOW_BORDER = "rgba(255,196,74,0.14)";
 const YELLOW_BORDER_SOFT = "rgba(255,196,74,0.10)";
 
-function CompareRow({
-  label,
-  values,
-  highlight,
+function UpgradeCard({
+  title,
+  rows,
+  active,
 }: {
-  label: string;
-  values: string[];
-  highlight?: boolean;
+  title: string;
+  rows: Array<{ label: string; value: string }>;
+  active?: boolean;
 }) {
   return (
     <div
-      className={
-        highlight
-          ? "grid border-t border-white/10 bg-yellow-500/[0.04]"
-          : "grid border-t border-white/10 bg-[#071019]"
-      }
-      style={{
-        gridTemplateColumns: `180px repeat(${values.length}, minmax(0, 1fr))`,
-      }}
+      className={[
+        "rounded-[22px] border p-4 transition",
+        active
+          ? "border-yellow-300/40 bg-yellow-500/[0.06]"
+          : "border-white/10 bg-[#080b11]/90",
+      ].join(" ")}
     >
-      <div className="border-r border-white/10 px-4 py-3 text-sm font-bold text-zinc-400">
-        {label}
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <p
+          className="text-lg font-black"
+          style={{ color: active ? YELLOW_TEXT : "#ffffff" }}
+        >
+          {title}
+        </p>
+
+        {active ? (
+          <span className="rounded-full border border-yellow-300/40 bg-yellow-400/15 px-2 py-1 text-[10px] font-black text-yellow-100">
+            CURRENT
+          </span>
+        ) : null}
       </div>
 
-      {values.map((value, index) => (
-        <div
-          key={`${label}-${index}`}
-          className="border-r border-white/10 px-4 py-3 text-sm font-black text-white last:border-r-0"
-        >
-          {value}
-        </div>
-      ))}
+      <div className="grid gap-2">
+        {rows.map((row) => (
+          <div
+            key={`${title}-${row.label}`}
+            className="rounded-xl border border-white/10 bg-black/30 px-3 py-3"
+          >
+            <p className="text-[10px] font-black tracking-[0.16em] text-zinc-500">
+              {row.label}
+            </p>
+            <p className="mt-2 text-base font-black text-white">{row.value}</p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -45,105 +59,138 @@ export default function GearUpgradeComparePanel({
 }: {
   gear: GearDetail;
 }) {
-  const headers = [
-    "기본",
+  const columns = [
+    {
+      title: "기본",
+      active: true,
+      rows: [
+        {
+          label: gear.baseStat.label,
+          value: gear.baseStat.value,
+        },
+        {
+          label: gear.ability1.label,
+          value: gear.ability1.values.base,
+        },
+        ...(gear.ability2
+          ? [
+              {
+                label: gear.ability2.label,
+                value: gear.ability2.values.base,
+              },
+            ]
+          : []),
+        {
+          label: gear.attribute.label,
+          value: gear.attribute.values.base,
+        },
+      ],
+    },
     ...(gear.ability1.values.level1 || gear.attribute.values.level1
-      ? ["1강"]
-      : []),
-    ...(gear.ability1.values.level2 || gear.attribute.values.level2
-      ? ["2강"]
-      : []),
-    ...(gear.ability1.values.level3 || gear.attribute.values.level3
-      ? ["3강"]
-      : []),
-  ];
-
-  const makeValues = (values: {
-    base: string;
-    level1?: string;
-    level2?: string;
-    level3?: string;
-  }) => [
-    values.base,
-    ...(values.level1 ? [values.level1] : []),
-    ...(values.level2 ? [values.level2] : []),
-    ...(values.level3 ? [values.level3] : []),
-  ];
-
-  const compareRows = [
-    {
-      label: gear.baseStat.label,
-      values: [gear.baseStat.value],
-      highlight: true,
-    },
-    {
-      label: gear.ability1.label,
-      values: makeValues(gear.ability1.values),
-    },
-    ...(gear.ability2
       ? [
           {
-            label: gear.ability2.label,
-            values: makeValues(gear.ability2.values),
+            title: "1강",
+            rows: [
+              {
+                label: gear.ability1.label,
+                value: gear.ability1.values.level1 ?? "-",
+              },
+              ...(gear.ability2
+                ? [
+                    {
+                      label: gear.ability2.label,
+                      value: gear.ability2.values.level1 ?? "-",
+                    },
+                  ]
+                : []),
+              {
+                label: gear.attribute.label,
+                value: gear.attribute.values.level1 ?? "-",
+              },
+            ],
           },
         ]
       : []),
-    {
-      label: gear.attribute.label,
-      values: makeValues(gear.attribute.values),
-    },
+    ...(gear.ability1.values.level2 || gear.attribute.values.level2
+      ? [
+          {
+            title: "2강",
+            rows: [
+              {
+                label: gear.ability1.label,
+                value: gear.ability1.values.level2 ?? "-",
+              },
+              ...(gear.ability2
+                ? [
+                    {
+                      label: gear.ability2.label,
+                      value: gear.ability2.values.level2 ?? "-",
+                    },
+                  ]
+                : []),
+              {
+                label: gear.attribute.label,
+                value: gear.attribute.values.level2 ?? "-",
+              },
+            ],
+          },
+        ]
+      : []),
+    ...(gear.ability1.values.level3 || gear.attribute.values.level3
+      ? [
+          {
+            title: "3강",
+            rows: [
+              {
+                label: gear.ability1.label,
+                value: gear.ability1.values.level3 ?? "-",
+              },
+              ...(gear.ability2
+                ? [
+                    {
+                      label: gear.ability2.label,
+                      value: gear.ability2.values.level3 ?? "-",
+                    },
+                  ]
+                : []),
+              {
+                label: gear.attribute.label,
+                value: gear.attribute.values.level3 ?? "-",
+              },
+            ],
+          },
+        ]
+      : []),
   ];
 
   return (
     <section
-      className="overflow-hidden rounded-[24px] bg-[#05070b] p-4 shadow-[0_0_30px_rgba(250,204,21,0.04)] sm:p-5"
+      className="overflow-hidden rounded-[24px] bg-[#05070b] shadow-[0_18px_42px_rgba(0,0,0,0.28)]"
       style={{ border: `1px solid ${YELLOW_BORDER}` }}
     >
-      <div
-        className="mb-4 border-b pb-3"
-        style={{ borderColor: YELLOW_BORDER_SOFT }}
-      >
-        <p
-          className="text-[11px] font-bold tracking-[0.28em]"
-          style={{ color: YELLOW_TEXT }}
-        >
-          UPGRADE COMPARISON
-        </p>
-        <h2 className="mt-1 text-xl font-black text-white">강화 비교표</h2>
+      <div className="relative overflow-hidden border-b border-yellow-500/10 p-4 lg:p-5">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_0%_0%,rgba(255,210,74,0.12),transparent_34%)]" />
+        <div className="relative">
+          <p
+            className="text-[10px] font-black tracking-[0.28em]"
+            style={{ color: YELLOW_TEXT }}
+          >
+            UPGRADE COMPARISON
+          </p>
+          <h2 className="mt-2 text-2xl font-black text-white">
+            강화 비교표
+          </h2>
+        </div>
       </div>
 
-      <div
-        className="overflow-x-auto rounded-[18px]"
-        style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
-      >
-        <div className="min-w-[720px]">
-          <div
-            className="grid bg-[#0b1018]"
-            style={{
-              gridTemplateColumns: `180px repeat(${headers.length}, minmax(0, 1fr))`,
-            }}
-          >
-            <div className="border-r border-white/10 px-4 py-3 text-sm font-black text-zinc-400">
-              항목
-            </div>
-
-            {headers.map((label) => (
-              <div
-                key={label}
-                className="border-r border-white/10 px-4 py-3 text-sm font-black last:border-r-0"
-                style={{ color: YELLOW_TEXT }}
-              >
-                {label}
-              </div>
-            ))}
-          </div>
-
-          {compareRows.map((row, index) => (
-            <CompareRow
-              key={`${row.label}-${index}`}
-              label={row.label}
-              values={row.values}
-              highlight={row.highlight}
+      <div className="p-4 lg:p-5">
+        <div className="grid gap-4 xl:grid-cols-4 md:grid-cols-2">
+          {columns.map((column, index) => (
+            <UpgradeCard
+              key={`${column.title}-${index}`}
+              title={column.title}
+              rows={column.rows}
+              active={column.active}
             />
           ))}
         </div>
