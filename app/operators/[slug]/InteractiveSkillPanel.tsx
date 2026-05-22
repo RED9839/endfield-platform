@@ -236,10 +236,7 @@ function resolveMetaItems(skill: SkillDetail, selectedIndex: number) {
           ? findCompareRowValue(skill.compareRows, item.valueRowLabel, selectedIndex)
           : item.value;
 
-      if (resolvedValue === undefined || resolvedValue === null || resolvedValue === "") {
-        return null;
-      }
-
+      if (resolvedValue === undefined || resolvedValue === null || resolvedValue === "") return null;
       return { label: item.label, value: formatMetaValue(resolvedValue) };
     })
     .filter((item): item is { label: string; value: string | number } => item !== null);
@@ -275,11 +272,11 @@ function FoldSection({
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
-    <div className="mt-3 overflow-hidden rounded-[22px] border border-yellow-500/10 bg-black/35">
+    <div className="mt-3 overflow-hidden rounded-[18px] border border-yellow-500/10 bg-[#070a0f]">
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
-        className="flex min-h-12 w-full items-center justify-between gap-3 px-4 py-3 text-left text-xs font-black tracking-[0.12em] text-zinc-200 transition hover:bg-yellow-400/5"
+        className="flex min-h-11 w-full items-center justify-between gap-3 px-4 py-2.5 text-left text-xs font-black tracking-[0.12em] text-zinc-300 transition hover:bg-yellow-400/5"
       >
         <span>{title}</span>
         <span className="text-base text-yellow-200">{isOpen ? "−" : "+"}</span>
@@ -308,7 +305,7 @@ function MaterialIcon({ src, alt }: { src?: string; alt: string }) {
 
 function MetaChip({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="inline-flex min-h-8 items-center gap-2 rounded-full border border-yellow-400/20 bg-yellow-400/10 px-3 py-1 text-xs font-bold text-zinc-100">
+    <div className="inline-flex min-h-7 items-center gap-2 rounded-full border border-yellow-400/20 bg-yellow-400/10 px-2.5 py-1 text-[11px] font-bold text-zinc-100">
       <span className="text-zinc-400">{label}</span>
       <span className="font-black text-yellow-200">{value}</span>
     </div>
@@ -317,15 +314,15 @@ function MetaChip({ label, value }: { label: string; value: string | number }) {
 
 function UpgradeColumn({ item }: { item: SkillUpgradeMaterial }) {
   return (
-    <div className="min-w-0 rounded-[20px] border border-yellow-500/10 bg-[#0b0f16] p-3">
+    <div className="min-w-0 rounded-[18px] border border-yellow-500/10 bg-[#0b0f16] p-2.5">
       <div className="mb-2 text-sm font-black text-yellow-200">{item.level}</div>
 
       {item.materials.length ? (
-        <div className="grid gap-2">
+        <div className="grid gap-1.5">
           {item.materials.map((material, index) => (
             <div
               key={`${item.level}-${material.name}-${index}`}
-              className="grid min-w-0 grid-cols-[28px_minmax(0,1fr)_auto] items-center gap-2 rounded-2xl border border-yellow-500/10 bg-black/35 px-2 py-2"
+              className="grid min-w-0 grid-cols-[28px_minmax(0,1fr)_auto] items-center gap-2 rounded-2xl border border-yellow-500/10 bg-black/35 px-2 py-1.5"
             >
               <MaterialIcon src={material.icon} alt={material.name} />
               <div className="min-w-0 break-keep text-xs font-bold leading-snug text-zinc-200">
@@ -369,70 +366,55 @@ export default function InteractiveSkillPanel({ skill, accentColor }: Props) {
     [skill, current]
   );
 
-  const iconBorderColor = detectedElement
-    ? getElementColor(detectedElement)
-    : "rgba(255,196,74,0.28)";
-
-  const iconGlowColor = detectedElement
-    ? `${getElementColor(detectedElement)}66`
-    : "rgba(255,196,74,0.26)";
+  const iconBorderColor = detectedElement ? getElementColor(detectedElement) : "rgba(255,196,74,0.28)";
+  const iconGlowColor = detectedElement ? `${getElementColor(detectedElement)}55` : "rgba(255,196,74,0.22)";
 
   if (!current) return null;
 
   return (
-    <section className="relative min-w-0 overflow-hidden rounded-[26px] border border-yellow-500/15 bg-black/45 shadow-[0_22px_60px_rgba(0,0,0,0.38)]">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,rgba(255,210,74,0.13),transparent_34%),linear-gradient(135deg,rgba(255,255,255,0.045),rgba(255,255,255,0.01))]" />
+    <section className="relative min-w-0 overflow-hidden rounded-[22px] border border-yellow-500/15 bg-[#05070b] shadow-[0_14px_34px_rgba(0,0,0,0.28)]">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_8%_0%,rgba(255,210,74,0.10),transparent_28%)]" />
 
-      <div className="relative p-3 sm:p-4 lg:p-5">
-        <div className="grid min-w-0 gap-3 lg:grid-cols-[88px_minmax(0,1fr)] lg:gap-4">
+      <div className="relative p-3 sm:p-4">
+        <div className="grid min-w-0 grid-cols-[64px_minmax(0,1fr)] gap-3 sm:grid-cols-[72px_minmax(0,1fr)]">
           <div
-            className="relative flex h-[76px] w-[76px] items-center justify-center rounded-[24px] border bg-[#0c1016] shadow-[0_0_24px_rgba(255,210,74,0.10)] lg:h-[88px] lg:w-[88px]"
-            style={{ borderColor: iconBorderColor, boxShadow: `0 0 28px ${iconGlowColor}` }}
+            className="relative flex h-16 w-16 items-center justify-center rounded-[20px] border bg-[#0b0f16] sm:h-[72px] sm:w-[72px]"
+            style={{ borderColor: iconBorderColor, boxShadow: `0 0 20px ${iconGlowColor}` }}
           >
             {skill.icon ? (
-              <div className="relative h-[66px] w-[66px] lg:h-[76px] lg:w-[76px]">
-                <Image
-                  src={skill.icon}
-                  alt={skill.name}
-                  fill
-                  sizes="76px"
-                  className="object-contain"
-                />
+              <div className="relative h-14 w-14 sm:h-16 sm:w-16">
+                <Image src={skill.icon} alt={skill.name} fill sizes="64px" className="object-contain" />
               </div>
             ) : (
               <div className="text-xs font-black text-zinc-500">ICON</div>
             )}
           </div>
 
-          <div className="min-w-0">
-            <div className="text-[10px] font-black tracking-[0.24em] text-zinc-500 sm:text-xs">
+          <div className="min-w-0 self-center">
+            <div className="text-[10px] font-black tracking-[0.22em] text-zinc-500">
               {skill.typeLabel}
             </div>
 
             <div className="mt-1 flex min-w-0 flex-wrap items-center gap-2">
-              <h3 className="break-keep text-[clamp(24px,7vw,40px)] font-black leading-tight text-yellow-100">
+              <h3 className="break-keep text-[clamp(22px,5vw,34px)] font-black leading-tight text-yellow-100">
                 {skill.name}
               </h3>
 
               {visibleMetaItems.map((item) => (
-                <MetaChip
-                  key={`${skill.name}-${item.label}`}
-                  label={item.label}
-                  value={item.value}
-                />
+                <MetaChip key={`${skill.name}-${item.label}`} label={item.label} value={item.value} />
               ))}
             </div>
 
             {!!skill.summary && (
-              <p className="mt-2 line-clamp-2 text-xs font-medium leading-relaxed text-zinc-500 sm:text-sm">
+              <p className="mt-1 line-clamp-1 text-xs font-medium leading-relaxed text-zinc-500 sm:line-clamp-2">
                 {skill.summary}
               </p>
             )}
           </div>
         </div>
 
-        <div className="mt-4 overflow-x-auto overscroll-x-contain pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <div className="flex w-max gap-2">
+        <div className="mt-3 overflow-x-auto overscroll-x-contain pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="flex w-max gap-1.5">
             {levels.map((level, index) => {
               const active = selectedIndex === index;
 
@@ -442,9 +424,9 @@ export default function InteractiveSkillPanel({ skill, accentColor }: Props) {
                   type="button"
                   onClick={() => setSelectedIndex(index)}
                   className={[
-                    "min-h-9 min-w-[54px] rounded-full border px-3 text-xs font-black transition active:scale-[0.98]",
+                    "min-h-8 min-w-[48px] rounded-full border px-2.5 text-xs font-black transition active:scale-[0.98]",
                     active
-                      ? "border-yellow-300/70 bg-yellow-400/15 text-white shadow-[0_0_18px_rgba(255,210,74,0.12)]"
+                      ? "border-yellow-300/70 bg-yellow-400/15 text-white shadow-[0_0_14px_rgba(255,210,74,0.12)]"
                       : "border-yellow-500/15 bg-black/45 text-zinc-400 hover:border-yellow-300/40 hover:text-yellow-100",
                   ].join(" ")}
                   style={active ? { borderColor: accentColor } : undefined}
@@ -456,18 +438,18 @@ export default function InteractiveSkillPanel({ skill, accentColor }: Props) {
           </div>
         </div>
 
-        <div className="mt-4 grid gap-3 xl:grid-cols-[minmax(0,1.08fr)_minmax(260px,0.92fr)]">
-          <div className="min-w-0 rounded-[22px] border border-yellow-500/10 bg-[#080b10]/90 p-3 sm:p-4">
+        <div className="mt-3 grid gap-3 xl:grid-cols-[minmax(0,0.78fr)_minmax(320px,0.22fr)]">
+          <div className="min-w-0 rounded-[18px] border border-yellow-500/10 bg-[#080b10] p-3">
             <div className="mb-2 text-[10px] font-black tracking-[0.18em] text-zinc-500">
               DESCRIPTION
             </div>
-            <div className="break-keep text-sm font-medium leading-[1.9] text-zinc-100 sm:text-[15px]">
+            <div className="break-keep text-sm font-semibold leading-[1.75] text-zinc-100">
               {renderHighlightedText(current.description)}
             </div>
           </div>
 
           {!!current.stats?.length && (
-            <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-1">
+            <div className="grid min-w-0 auto-rows-min grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-1">
               {current.stats.map((stat) => {
                 const statElement = detectElementFromText(stat.label);
                 const statColor = statElement ? getElementColor(statElement) : "#9fb3c8";
@@ -475,15 +457,15 @@ export default function InteractiveSkillPanel({ skill, accentColor }: Props) {
                 return (
                   <div
                     key={`${skill.name}-${current.level}-${stat.label}`}
-                    className="min-w-0 rounded-[20px] border border-yellow-500/10 bg-[#0b0f16] p-3"
+                    className="min-w-0 rounded-[18px] border border-yellow-500/10 bg-[#0b0f16] px-3 py-2.5"
                   >
                     <div
-                      className="mb-1 break-keep text-xs font-black leading-snug"
+                      className="mb-0.5 break-keep text-[11px] font-black leading-snug"
                       style={{ color: statColor }}
                     >
                       {renderHighlightedText(stat.label)}
                     </div>
-                    <div className="text-xl font-black text-yellow-200">
+                    <div className="text-lg font-black leading-tight text-yellow-200">
                       {stat.value}
                     </div>
                   </div>
@@ -499,13 +481,13 @@ export default function InteractiveSkillPanel({ skill, accentColor }: Props) {
               <table className="w-max min-w-full border-collapse text-sm">
                 <thead>
                   <tr>
-                    <th className="sticky left-0 z-20 min-w-[140px] border-b border-yellow-500/10 bg-[#0a0d12] p-3 text-left text-xs font-black text-zinc-400">
+                    <th className="sticky left-0 z-20 min-w-[130px] border-b border-yellow-500/10 bg-[#0a0d12] p-3 text-left text-xs font-black text-zinc-400">
                       항목
                     </th>
                     {levels.map((level) => (
                       <th
                         key={`${skill.name}-thead-${level.level}`}
-                        className="min-w-[92px] border-b border-yellow-500/10 p-3 text-center text-xs font-black text-zinc-400"
+                        className="min-w-[86px] border-b border-yellow-500/10 p-3 text-center text-xs font-black text-zinc-400"
                       >
                         {level.level}
                       </th>
@@ -521,7 +503,7 @@ export default function InteractiveSkillPanel({ skill, accentColor }: Props) {
                     return (
                       <tr key={`${skill.name}-${row.label}`}>
                         <td
-                          className="sticky left-0 z-10 min-w-[140px] border-b border-yellow-500/10 bg-[#0a0d12] p-3 text-xs font-black sm:text-sm"
+                          className="sticky left-0 z-10 min-w-[130px] border-b border-yellow-500/10 bg-[#0a0d12] p-3 text-xs font-black sm:text-sm"
                           style={{ color: rowColor }}
                         >
                           {renderHighlightedText(row.label)}
@@ -529,7 +511,7 @@ export default function InteractiveSkillPanel({ skill, accentColor }: Props) {
                         {row.values.map((value, index) => (
                           <td
                             key={`${skill.name}-${row.label}-${index}`}
-                            className="min-w-[92px] border-b border-yellow-500/10 p-3 text-center text-xs font-bold text-zinc-300 sm:text-sm"
+                            className="min-w-[86px] border-b border-yellow-500/10 p-3 text-center text-xs font-bold text-zinc-300 sm:text-sm"
                           >
                             {value}
                           </td>
