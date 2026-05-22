@@ -276,6 +276,7 @@ export default async function OperatorDetailPage({
             <OperatorLevelPanel
               name={operator.name}
               enName={operator.enName}
+              avatar={operator.avatar}
               element={operator.element}
               operatorClass={operator.class}
               weapon={operator.weapon}
