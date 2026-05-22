@@ -46,6 +46,38 @@ const weaponLabelMap: Record<string, string> = {
   artsunit: "아츠 유닛",
 };
 
+const elementIconMap: Record<string, string> = {
+  physical: "/icons/elements/physical.webp",
+  cryo: "/icons/elements/cryo.webp",
+  heat: "/icons/elements/heat.webp",
+  nature: "/icons/elements/nature.webp",
+  electric: "/icons/elements/electric.webp",
+};
+
+const classIconMap: Record<string, string> = {
+  vanguard: "/icons/classes/vanguard.webp",
+  guard: "/icons/classes/guard.webp",
+  defender: "/icons/classes/defender.webp",
+  supporter: "/icons/classes/supporter.webp",
+  caster: "/icons/classes/caster.webp",
+  striker: "/icons/classes/striker.webp",
+};
+
+const weaponIconMap: Record<string, string> = {
+  sword: "/icons/weapons/sword.webp",
+  greatsword: "/icons/weapons/greatsword.webp",
+  polearm: "/icons/weapons/polearm.webp",
+  handcannon: "/icons/weapons/handcannon.webp",
+  artsunit: "/icons/weapons/artsunit.webp",
+};
+
+const statIconMap: Record<string, string> = {
+  힘: "/icons/stats/strength.webp",
+  민첩: "/icons/stats/agility.webp",
+  지능: "/icons/stats/intelligence.webp",
+  의지: "/icons/stats/will.webp",
+};
+
 function DetailSection({
   id,
   title,
@@ -86,13 +118,36 @@ function DetailSection({
   );
 }
 
-function InfoTile({ label, value }: { label: string; value: string | number }) {
+function InfoTile({
+  label,
+  value,
+  icon,
+}: {
+  label: string;
+  value: string | number;
+  icon?: string;
+}) {
   return (
     <div className="rounded-2xl border border-yellow-500/10 bg-black/40 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-      <p className="text-[10px] font-black tracking-[0.12em] text-zinc-500">
-        {label}
-      </p>
-      <p className="mt-1 truncate text-sm font-black text-yellow-100">
+      <div className="flex items-center gap-2">
+        {icon ? (
+          <div className="relative h-5 w-5 shrink-0">
+            <Image
+              src={icon}
+              alt={label}
+              fill
+              sizes="20px"
+              className="object-contain"
+            />
+          </div>
+        ) : null}
+
+        <p className="text-[10px] font-black tracking-[0.12em] text-zinc-500">
+          {label}
+        </p>
+      </div>
+
+      <p className="mt-2 truncate text-sm font-black text-yellow-100">
         {value || "-"}
       </p>
     </div>
@@ -260,12 +315,41 @@ export default async function OperatorDetailPage({
                   </div>
 
                   <div className="mt-5 grid grid-cols-2 gap-2">
-                    <InfoTile label="속성" value={elementLabel} />
-                    <InfoTile label="클래스" value={classLabel} />
-                    <InfoTile label="무기" value={weaponLabel} />
-                    <InfoTile label="레어도" value={`${operator.rarity}성`} />
-                    <InfoTile label="주 능력치" value={operator.mainStatLabel || "-"} />
-                    <InfoTile label="보조 능력치" value={operator.subStatLabel || "-"} />
+                    <InfoTile
+                      label="속성"
+                      value={elementLabel}
+                      icon={elementIconMap[operator.element]}
+                    />
+
+                    <InfoTile
+                      label="클래스"
+                      value={classLabel}
+                      icon={classIconMap[operator.class]}
+                    />
+
+                    <InfoTile
+                      label="무기"
+                      value={weaponLabel}
+                      icon={weaponIconMap[operator.weapon]}
+                    />
+
+                    <InfoTile
+                      label="레어도"
+                      value={`${operator.rarity}성`}
+                      icon={`/icons/rarity/${operator.rarity}star.webp`}
+                    />
+
+                    <InfoTile
+                      label="주 능력치"
+                      value={operator.mainStatLabel || "-"}
+                      icon={statIconMap[operator.mainStatLabel || ""]}
+                    />
+
+                    <InfoTile
+                      label="보조 능력치"
+                      value={operator.subStatLabel || "-"}
+                      icon={statIconMap[operator.subStatLabel || ""]}
+                    />
                   </div>
 
                   <div className="mt-5 rounded-3xl border border-yellow-500/10 bg-[#080b10]/80 p-3">
