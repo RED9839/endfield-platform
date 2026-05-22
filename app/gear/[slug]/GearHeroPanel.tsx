@@ -8,6 +8,46 @@ const YELLOW_TEXT = "#ffdc70";
 const YELLOW_BORDER = "rgba(255,196,74,0.14)";
 const YELLOW_BORDER_SOFT = "rgba(255,196,74,0.10)";
 
+function getQualityBadge(quality: number) {
+  switch (quality) {
+    case 5:
+      return {
+        label: "노란색 품질",
+        border: "rgba(255,210,74,0.5)",
+        bg: "rgba(255,210,74,0.14)",
+        text: "#fff1a6",
+      };
+    case 4:
+      return {
+        label: "보라색 품질",
+        border: "rgba(168,85,247,0.45)",
+        bg: "rgba(168,85,247,0.14)",
+        text: "#d8b4fe",
+      };
+    case 3:
+      return {
+        label: "파란색 품질",
+        border: "rgba(96,165,250,0.45)",
+        bg: "rgba(96,165,250,0.14)",
+        text: "#93c5fd",
+      };
+    case 2:
+      return {
+        label: "초록색 품질",
+        border: "rgba(74,222,128,0.45)",
+        bg: "rgba(74,222,128,0.14)",
+        text: "#86efac",
+      };
+    default:
+      return {
+        label: "회색 품질",
+        border: "rgba(161,161,170,0.35)",
+        bg: "rgba(161,161,170,0.10)",
+        text: "#d4d4d8",
+      };
+  }
+}
+
 function highlightTerms(text: string): ReactNode {
   const patterns: Array<{ pattern: RegExp; color: string }> = [
     { pattern: /물리 피해|물리/g, color: "#cfd8e3" },
@@ -89,7 +129,7 @@ export default function GearHeroPanel({
   gear: GearDetail;
   categoryLabel: string;
 }) {
-  const primarySetEffect = gear.setEffects[0];
+  const quality = getQualityBadge(gear.quality);
 
   return (
     <section
@@ -128,63 +168,39 @@ export default function GearHeroPanel({
               <span
                 className="rounded-full px-3 py-1 text-xs font-black"
                 style={{
-                  border: `1px solid ${YELLOW_MAIN}`,
-                  background: "rgba(255,210,74,0.14)",
-                  color: "#fff4bf",
+                  border: `1px solid ${quality.border}`,
+                  background: quality.bg,
+                  color: quality.text,
                 }}
               >
-                ★ {gear.quality}
+                {quality.label}
               </span>
 
               <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-black text-zinc-300">
                 {categoryLabel}
               </span>
-
-              <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-black text-zinc-300">
-                {gear.setName}
-              </span>
             </div>
 
             <div className="mt-6 grid gap-3 sm:grid-cols-2">
-              <ProfileBlock label="기본 능력치" value={highlightTerms(`${gear.baseStat.label} ${gear.baseStat.value}`)} />
+              <ProfileBlock
+                label="기본 능력치"
+                value={highlightTerms(`${gear.baseStat.label} ${gear.baseStat.value}`)}
+              />
 
-              <ProfileBlock label="능력치" value={highlightTerms(`${gear.ability1.label} ${gear.ability1.values.base}`)} />
+              <ProfileBlock
+                label={gear.ability1.label}
+                value={highlightTerms(String(gear.ability1.values.base))}
+              />
 
-              <ProfileBlock label="속성" value={highlightTerms(`${gear.attribute.label} ${gear.attribute.values.base}`)} />
+              <ProfileBlock
+                label={gear.attribute.label}
+                value={highlightTerms(String(gear.attribute.values.base))}
+              />
 
               <ProfileBlock
                 label="세트 효과"
                 value={highlightTerms(gear.setName)}
               />
-            </div>
-
-            <div
-              className="mt-6 rounded-[22px] bg-[#06090f]/90 p-5"
-              style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
-            >
-              <div className="mb-4 flex items-center justify-between gap-3">
-                <p className="text-sm font-black text-zinc-300">세트 효과</p>
-                <p className="text-xs font-black" style={{ color: YELLOW_TEXT }}>
-                  {gear.setEffects.length} SECTIONS
-                </p>
-              </div>
-
-              <div className="grid gap-2">
-                {gear.setEffects.map((effect) => (
-                  <div
-                    key={`${effect.pieces}-${effect.description}`}
-                    className="rounded-2xl border border-white/10 bg-black/35 p-4"
-                  >
-                    <p className="text-sm font-black" style={{ color: YELLOW_TEXT }}>
-                      {effect.pieces}세트
-                    </p>
-
-                    <div className="mt-2 text-sm font-bold leading-7 text-zinc-200">
-                      {highlightTerms(effect.description)}
-                    </div>
-                  </div>
-                ))}
-              </div>
             </div>
           </div>
         </div>
