@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, useMemo, useState, type ReactNode } from "react";
 
 type SkillStat = {
   label: string;
@@ -75,10 +75,7 @@ function getElementColor(element: string) {
   return elementTextColorMap[element] ?? "#f3f4f6";
 }
 
-function detectDamageElement(
-  skill: SkillDetail,
-  current?: SkillLevelValue
-): string | null {
+function detectDamageElement(skill: SkillDetail, current?: SkillLevelValue) {
   const texts = [
     current?.description ?? "",
     skill.summary ?? "",
@@ -88,10 +85,7 @@ function detectDamageElement(
   for (const text of texts) {
     for (const element of elementOrder) {
       const keywords = elementKeywordMap[element];
-
-      if (
-        keywords.some((keyword) => keyword.includes("피해") && text.includes(keyword))
-      ) {
+      if (keywords.some((keyword) => keyword.includes("피해") && text.includes(keyword))) {
         return element;
       }
     }
@@ -100,36 +94,27 @@ function detectDamageElement(
   for (const text of texts) {
     for (const element of elementOrder) {
       const keywords = elementKeywordMap[element];
-
-      if (keywords.some((keyword) => text.includes(keyword))) {
-        return element;
-      }
+      if (keywords.some((keyword) => text.includes(keyword))) return element;
     }
   }
 
   for (const text of texts) {
     for (const element of elementOrder) {
-      if (text.includes(element)) {
-        return element;
-      }
+      if (text.includes(element)) return element;
     }
   }
 
   return null;
 }
 
-function detectElementFromText(text: string): string | null {
+function detectElementFromText(text: string) {
   for (const element of elementOrder) {
     const keywords = elementKeywordMap[element];
-    if (keywords.some((keyword) => text.includes(keyword))) {
-      return element;
-    }
+    if (keywords.some((keyword) => text.includes(keyword))) return element;
   }
 
   for (const element of elementOrder) {
-    if (text.includes(element)) {
-      return element;
-    }
+    if (text.includes(element)) return element;
   }
 
   return null;
@@ -151,20 +136,12 @@ function getHighlightTargets(text: string) {
 
   for (const element of elementOrder) {
     const color = getElementColor(element);
-
     for (const keyword of elementKeywordMap[element]) {
       let searchIndex = 0;
-
       while (searchIndex < text.length) {
         const foundIndex = text.indexOf(keyword, searchIndex);
         if (foundIndex === -1) break;
-
-        matches.push({
-          start: foundIndex,
-          end: foundIndex + keyword.length,
-          color,
-        });
-
+        matches.push({ start: foundIndex, end: foundIndex + keyword.length, color });
         searchIndex = foundIndex + keyword.length;
       }
     }
@@ -173,15 +150,11 @@ function getHighlightTargets(text: string) {
   matches.sort((a, b) => a.start - b.start || b.end - a.end);
 
   const filtered: { start: number; end: number; color: string }[] = [];
-
   for (const match of matches) {
     const overlaps = filtered.some(
       (item) => !(match.end <= item.start || match.start >= item.end)
     );
-
-    if (!overlaps) {
-      filtered.push(match);
-    }
+    if (!overlaps) filtered.push(match);
   }
 
   return filtered;
@@ -202,7 +175,7 @@ function renderHighlightedText(text: string) {
       );
     }
 
-    const pieces: React.ReactNode[] = [];
+    const pieces: ReactNode[] = [];
     let cursor = 0;
 
     targets.forEach((target, index) => {
@@ -217,10 +190,8 @@ function renderHighlightedText(text: string) {
       pieces.push(
         <span
           key={`hl-${lineIndex}-${index}`}
-          style={{
-            color: target.color,
-            fontWeight: 800,
-          }}
+          style={{ color: target.color }}
+          className="font-black"
         >
           {line.slice(target.start, target.end)}
         </span>
@@ -231,9 +202,7 @@ function renderHighlightedText(text: string) {
 
     if (cursor < line.length) {
       pieces.push(
-        <Fragment key={`tail-${lineIndex}`}>
-          {line.slice(cursor)}
-        </Fragment>
+        <Fragment key={`tail-${lineIndex}`}>{line.slice(cursor)}</Fragment>
       );
     }
 
@@ -246,257 +215,18 @@ function renderHighlightedText(text: string) {
   });
 }
 
-function FoldSection({
-  title,
-  defaultOpen = false,
-  children,
-}: {
-  title: string;
-  defaultOpen?: boolean;
-  children: React.ReactNode;
-}) {
-  const [isOpen, setIsOpen] = useState(defaultOpen);
-
-  return (
-    <div
-      style={{
-        marginTop: "14px",
-        border: "1px solid rgba(255,196,74,0.12)",
-        background: "#0a0d12",
-        borderRadius: "20px",
-        overflow: "hidden",
-      }}
-    >
-      <button
-        type="button"
-        onClick={() => setIsOpen((prev) => !prev)}
-        style={{
-          width: "100%",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          padding: "13px 14px",
-          background: "transparent",
-          border: "none",
-          color: "#edf2f7",
-          fontSize: "13px",
-          fontWeight: 800,
-          letterSpacing: "0.08em",
-          cursor: "pointer",
-        }}
-      >
-        <span>{title}</span>
-        <span style={{ color: "#ffd968" }}>{isOpen ? "−" : "+"}</span>
-      </button>
-
-      {isOpen ? (
-        <div style={{ borderTop: "1px solid rgba(255,196,74,0.10)" }}>
-          {children}
-        </div>
-      ) : null}
-    </div>
-  );
-}
-
-function MaterialIcon({ src, alt }: { src?: string; alt: string }) {
-  if (!src) {
-    return (
-      <div
-        style={{
-          width: "26px",
-          height: "26px",
-          border: "1px solid rgba(255,196,74,0.10)",
-          background: "#05070b",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          color: "#9ca3af",
-          fontSize: "8px",
-          fontWeight: 800,
-          flexShrink: 0,
-        }}
-      >
-        I
-      </div>
-    );
-  }
-
-  return (
-    <div
-      style={{
-        position: "relative",
-        width: "26px",
-        height: "26px",
-        flexShrink: 0,
-      }}
-    >
-      <Image
-        src={src}
-        alt={alt}
-        fill
-        sizes="26px"
-        style={{ objectFit: "contain" }}
-      />
-    </div>
-  );
-}
-
-function MetaChip({
-  label,
-  value,
-  accent = false,
-}: {
-  label: string;
-  value: string | number;
-  accent?: boolean;
-}) {
-  return (
-    <div
-      style={{
-        height: "30px",
-        padding: "0 10px",
-        display: "inline-flex",
-        alignItems: "center",
-        gap: "8px",
-        border: accent
-          ? "1px solid rgba(255,196,74,0.32)"
-          : "1px solid rgba(255,196,74,0.14)",
-        background: accent ? "rgba(247,166,0,0.12)" : "#0d1118",
-        color: "#f3f4f6",
-        fontSize: "12px",
-        fontWeight: 700,
-        whiteSpace: "nowrap",
-        borderRadius: "20px",
-      }}
-    >
-      <span style={{ color: "#9fb3c8" }}>{label}</span>
-      <span style={{ color: "#ffd24a", fontWeight: 900 }}>{value}</span>
-    </div>
-  );
-}
-
-function buildUpgradeRows(upgradeMaterialList: SkillUpgradeMaterial[]) {
-  const normalOrder = ["2", "3", "4", "5", "6", "7", "8", "9"];
-  const masteryOrder = ["M1", "M2", "M3"];
-
-  const normal = normalOrder
-    .map((level) => upgradeMaterialList.find((item) => item.level === level))
-    .filter((item): item is SkillUpgradeMaterial => !!item);
-
-  const mastery = masteryOrder
-    .map((level) => upgradeMaterialList.find((item) => item.level === level))
-    .filter((item): item is SkillUpgradeMaterial => !!item);
-
-  return {
-    normal,
-    mastery,
-  };
-}
-
-function UpgradeColumn({ item }: { item: SkillUpgradeMaterial }) {
-  return (
-    <div
-      style={{
-        border: "1px solid rgba(255,196,74,0.10)",
-        background: "#0d1118",
-        padding: "10px",
-        minHeight: "100%",
-        borderRadius: "18px",
-      }}
-    >
-      <div
-        style={{
-          color: "#ffea61",
-          fontSize: "13px",
-          fontWeight: 900,
-          marginBottom: "8px",
-        }}
-      >
-        {item.level}
-      </div>
-
-      {item.materials.length ? (
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "6px",
-          }}
-        >
-          {item.materials.map((material, index) => (
-            <div
-              key={`${item.level}-${material.name}-${index}`}
-              style={{
-                border: "1px solid rgba(255,196,74,0.08)",
-                background: "#0e131b",
-                padding: "6px 8px",
-                display: "grid",
-                gridTemplateColumns: "26px minmax(0, 1fr) auto",
-                gap: "8px",
-                alignItems: "center",
-                borderRadius: "16px",
-              }}
-            >
-              <MaterialIcon src={material.icon} alt={material.name} />
-
-              <div
-                style={{
-                  color: "#f3f4f6",
-                  fontSize: "11px",
-                  lineHeight: 1.3,
-                  wordBreak: "keep-all",
-                  minWidth: 0,
-                }}
-              >
-                {material.name}
-              </div>
-
-              <div
-                style={{
-                  color: "#ffd24a",
-                  fontSize: "11px",
-                  fontWeight: 900,
-                  whiteSpace: "nowrap",
-                  paddingLeft: "6px",
-                }}
-              >
-                {material.count}
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div style={{ color: "#94a3b8", fontSize: "12px" }}>
-          재료 데이터 없음
-        </div>
-      )}
-    </div>
-  );
-}
-
-function findCompareRowValue(
-  compareRows: SkillCompareRow[],
-  label: string,
-  index: number
-) {
+function findCompareRowValue(compareRows: SkillCompareRow[], label: string, index: number) {
   const row = compareRows.find((item) => item.label === label);
   return row?.values[index];
 }
 
 function formatMetaValue(value: string | number) {
   if (typeof value === "number") return value;
-
-  if (/^\d+(?:\.\d+)?s$/i.test(value)) {
-    return `${value.slice(0, -1)}초`;
-  }
-
+  if (/^\d+(?:\.\d+)?s$/i.test(value)) return `${value.slice(0, -1)}초`;
   return value;
 }
 
-function resolveMetaItems(
-  skill: SkillDetail,
-  selectedIndex: number
-): { label: string; value: string | number }[] {
+function resolveMetaItems(skill: SkillDetail, selectedIndex: number) {
   const rawMeta = skill.meta ?? [];
 
   return rawMeta
@@ -510,10 +240,7 @@ function resolveMetaItems(
         return null;
       }
 
-      return {
-        label: item.label,
-        value: formatMetaValue(resolvedValue),
-      };
+      return { label: item.label, value: formatMetaValue(resolvedValue) };
     })
     .filter((item): item is { label: string; value: string | number } => item !== null);
 }
@@ -522,10 +249,104 @@ function isNormalAttackSkill(skill: SkillDetail) {
   return skill.typeLabel.includes("일반 공격") || skill.name.includes("일반 공격");
 }
 
+function buildUpgradeRows(upgradeMaterialList: SkillUpgradeMaterial[]) {
+  const normalOrder = ["2", "3", "4", "5", "6", "7", "8", "9"];
+  const masteryOrder = ["M1", "M2", "M3"];
+
+  return {
+    normal: normalOrder
+      .map((level) => upgradeMaterialList.find((item) => item.level === level))
+      .filter((item): item is SkillUpgradeMaterial => !!item),
+    mastery: masteryOrder
+      .map((level) => upgradeMaterialList.find((item) => item.level === level))
+      .filter((item): item is SkillUpgradeMaterial => !!item),
+  };
+}
+
+function FoldSection({
+  title,
+  defaultOpen = false,
+  children,
+}: {
+  title: string;
+  defaultOpen?: boolean;
+  children: ReactNode;
+}) {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+
+  return (
+    <div className="mt-3 overflow-hidden rounded-[22px] border border-yellow-500/10 bg-black/35">
+      <button
+        type="button"
+        onClick={() => setIsOpen((prev) => !prev)}
+        className="flex min-h-12 w-full items-center justify-between gap-3 px-4 py-3 text-left text-xs font-black tracking-[0.12em] text-zinc-200 transition hover:bg-yellow-400/5"
+      >
+        <span>{title}</span>
+        <span className="text-base text-yellow-200">{isOpen ? "−" : "+"}</span>
+      </button>
+
+      {isOpen ? <div className="border-t border-yellow-500/10">{children}</div> : null}
+    </div>
+  );
+}
+
+function MaterialIcon({ src, alt }: { src?: string; alt: string }) {
+  if (!src) {
+    return (
+      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl border border-yellow-500/10 bg-[#05070b] text-[8px] font-black text-zinc-500">
+        I
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative h-7 w-7 shrink-0">
+      <Image src={src} alt={alt} fill sizes="28px" className="object-contain" />
+    </div>
+  );
+}
+
+function MetaChip({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div className="inline-flex min-h-8 items-center gap-2 rounded-full border border-yellow-400/20 bg-yellow-400/10 px-3 py-1 text-xs font-bold text-zinc-100">
+      <span className="text-zinc-400">{label}</span>
+      <span className="font-black text-yellow-200">{value}</span>
+    </div>
+  );
+}
+
+function UpgradeColumn({ item }: { item: SkillUpgradeMaterial }) {
+  return (
+    <div className="min-w-0 rounded-[20px] border border-yellow-500/10 bg-[#0b0f16] p-3">
+      <div className="mb-2 text-sm font-black text-yellow-200">{item.level}</div>
+
+      {item.materials.length ? (
+        <div className="grid gap-2">
+          {item.materials.map((material, index) => (
+            <div
+              key={`${item.level}-${material.name}-${index}`}
+              className="grid min-w-0 grid-cols-[28px_minmax(0,1fr)_auto] items-center gap-2 rounded-2xl border border-yellow-500/10 bg-black/35 px-2 py-2"
+            >
+              <MaterialIcon src={material.icon} alt={material.name} />
+              <div className="min-w-0 break-keep text-xs font-bold leading-snug text-zinc-200">
+                {material.name}
+              </div>
+              <div className="pl-1 text-xs font-black text-yellow-200">
+                {material.count}
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="text-xs font-bold text-zinc-500">재료 데이터 없음</div>
+      )}
+    </div>
+  );
+}
+
 export default function InteractiveSkillPanel({ skill, accentColor }: Props) {
   const levels = useMemo(() => skill.levelValues ?? [], [skill.levelValues]);
   const [selectedIndex, setSelectedIndex] = useState(0);
-
   const current = levels[selectedIndex] ?? levels[0];
 
   const upgradeMaterialList = useMemo(
@@ -533,398 +354,219 @@ export default function InteractiveSkillPanel({ skill, accentColor }: Props) {
     [skill.upgradeMaterials, skill.upgradeCosts]
   );
 
-  const resolvedMetaItems = useMemo(
-    () => resolveMetaItems(skill, selectedIndex),
-    [selectedIndex, skill]
-  );
-
   const visibleMetaItems = useMemo(() => {
     if (isNormalAttackSkill(skill)) return [];
-    return resolvedMetaItems;
-  }, [skill, resolvedMetaItems]);
+    return resolveMetaItems(skill, selectedIndex);
+  }, [skill, selectedIndex]);
 
   const upgradeRows = useMemo(
     () => buildUpgradeRows(upgradeMaterialList),
     [upgradeMaterialList]
   );
 
-  const detectedElement = useMemo(() => {
-    return detectDamageElement(skill, current);
-  }, [skill, current]);
+  const detectedElement = useMemo(
+    () => detectDamageElement(skill, current),
+    [skill, current]
+  );
 
   const iconBorderColor = detectedElement
     ? getElementColor(detectedElement)
-    : "rgba(255,196,74,0.14)";
+    : "rgba(255,196,74,0.28)";
 
   const iconGlowColor = detectedElement
-    ? `${getElementColor(detectedElement)}88`
-    : "rgba(255,196,74,0.18)";
+    ? `${getElementColor(detectedElement)}66`
+    : "rgba(255,196,74,0.26)";
 
   if (!current) return null;
 
   return (
-    <section
-      style={{
-        borderRadius: "20px",
-        background: "#06080c",
-        border: "1px solid rgba(255,196,74,0.14)",
-        padding: "16px",
-        boxShadow: "0 12px 28px rgba(0,0,0,0.28)",
-        minWidth: 0,
-      }}
-    >
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "72px minmax(0, 1fr)",
-          gap: "14px",
-          alignItems: "start",
-        }}
-      >
-        <div
-          style={{
-            width: "72px",
-            height: "72px",
-            border: `1px solid ${iconBorderColor}`,
-            boxShadow: `0 0 0 1px ${iconGlowColor}, 0 0 18px ${iconGlowColor}`,
-            background: "#0c1016",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            overflow: "hidden",
-            borderRadius: "20px",
-            transition: "border-color 0.2s ease, box-shadow 0.2s ease",
-          }}
-        >
-          {skill.icon ? (
-            <div style={{ position: "relative", width: "64px", height: "64px" }}>
-              <Image
-                src={skill.icon}
-                alt={skill.name}
-                fill
-                sizes="64px"
-                style={{ objectFit: "contain" }}
-              />
+    <section className="relative min-w-0 overflow-hidden rounded-[26px] border border-yellow-500/15 bg-black/45 shadow-[0_22px_60px_rgba(0,0,0,0.38)]">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,rgba(255,210,74,0.13),transparent_34%),linear-gradient(135deg,rgba(255,255,255,0.045),rgba(255,255,255,0.01))]" />
+
+      <div className="relative p-3 sm:p-4 lg:p-5">
+        <div className="grid min-w-0 gap-3 lg:grid-cols-[88px_minmax(0,1fr)] lg:gap-4">
+          <div
+            className="relative flex h-[76px] w-[76px] items-center justify-center rounded-[24px] border bg-[#0c1016] shadow-[0_0_24px_rgba(255,210,74,0.10)] lg:h-[88px] lg:w-[88px]"
+            style={{ borderColor: iconBorderColor, boxShadow: `0 0 28px ${iconGlowColor}` }}
+          >
+            {skill.icon ? (
+              <div className="relative h-[66px] w-[66px] lg:h-[76px] lg:w-[76px]">
+                <Image
+                  src={skill.icon}
+                  alt={skill.name}
+                  fill
+                  sizes="76px"
+                  className="object-contain"
+                />
+              </div>
+            ) : (
+              <div className="text-xs font-black text-zinc-500">ICON</div>
+            )}
+          </div>
+
+          <div className="min-w-0">
+            <div className="text-[10px] font-black tracking-[0.24em] text-zinc-500 sm:text-xs">
+              {skill.typeLabel}
             </div>
-          ) : (
-            <div
-              style={{
-                color: "#9ca3af",
-                fontSize: "12px",
-                fontWeight: 800,
-              }}
-            >
-              ICON
+
+            <div className="mt-1 flex min-w-0 flex-wrap items-center gap-2">
+              <h3 className="break-keep text-[clamp(24px,7vw,40px)] font-black leading-tight text-yellow-100">
+                {skill.name}
+              </h3>
+
+              {visibleMetaItems.map((item) => (
+                <MetaChip
+                  key={`${skill.name}-${item.label}`}
+                  label={item.label}
+                  value={item.value}
+                />
+              ))}
+            </div>
+
+            {!!skill.summary && (
+              <p className="mt-2 line-clamp-2 text-xs font-medium leading-relaxed text-zinc-500 sm:text-sm">
+                {skill.summary}
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-4 overflow-x-auto overscroll-x-contain pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="flex w-max gap-2">
+            {levels.map((level, index) => {
+              const active = selectedIndex === index;
+
+              return (
+                <button
+                  key={`${skill.name}-${level.level}`}
+                  type="button"
+                  onClick={() => setSelectedIndex(index)}
+                  className={[
+                    "min-h-9 min-w-[54px] rounded-full border px-3 text-xs font-black transition active:scale-[0.98]",
+                    active
+                      ? "border-yellow-300/70 bg-yellow-400/15 text-white shadow-[0_0_18px_rgba(255,210,74,0.12)]"
+                      : "border-yellow-500/15 bg-black/45 text-zinc-400 hover:border-yellow-300/40 hover:text-yellow-100",
+                  ].join(" ")}
+                  style={active ? { borderColor: accentColor } : undefined}
+                >
+                  {level.level}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="mt-4 grid gap-3 xl:grid-cols-[minmax(0,1.08fr)_minmax(260px,0.92fr)]">
+          <div className="min-w-0 rounded-[22px] border border-yellow-500/10 bg-[#080b10]/90 p-3 sm:p-4">
+            <div className="mb-2 text-[10px] font-black tracking-[0.18em] text-zinc-500">
+              DESCRIPTION
+            </div>
+            <div className="break-keep text-sm font-medium leading-[1.9] text-zinc-100 sm:text-[15px]">
+              {renderHighlightedText(current.description)}
+            </div>
+          </div>
+
+          {!!current.stats?.length && (
+            <div className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-1">
+              {current.stats.map((stat) => {
+                const statElement = detectElementFromText(stat.label);
+                const statColor = statElement ? getElementColor(statElement) : "#9fb3c8";
+
+                return (
+                  <div
+                    key={`${skill.name}-${current.level}-${stat.label}`}
+                    className="min-w-0 rounded-[20px] border border-yellow-500/10 bg-[#0b0f16] p-3"
+                  >
+                    <div
+                      className="mb-1 break-keep text-xs font-black leading-snug"
+                      style={{ color: statColor }}
+                    >
+                      {renderHighlightedText(stat.label)}
+                    </div>
+                    <div className="text-xl font-black text-yellow-200">
+                      {stat.value}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
 
-        <div style={{ minWidth: 0 }}>
-          <div
-            style={{
-              color: "#aeb8c7",
-              fontSize: "12px",
-              letterSpacing: "0.14em",
-              marginBottom: "4px",
-            }}
-          >
-            {skill.typeLabel}
-          </div>
-
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "10px",
-              flexWrap: "wrap",
-              minWidth: 0,
-            }}
-          >
-            <div
-              style={{
-                color: "#ffdc70",
-                fontSize: "30px",
-                fontWeight: 900,
-                lineHeight: 1.1,
-                wordBreak: "keep-all",
-              }}
-            >
-              {skill.name}
-            </div>
-
-            {visibleMetaItems.map((item) => (
-              <MetaChip
-                key={`${skill.name}-${item.label}`}
-                label={item.label}
-                value={item.value}
-                accent
-              />
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div
-        style={{
-          display: "flex",
-          gap: "6px",
-          flexWrap: "wrap",
-          marginTop: "16px",
-        }}
-      >
-        {levels.map((level, index) => {
-          const active = selectedIndex === index;
-
-          return (
-            <button
-              key={`${skill.name}-${level.level}`}
-              type="button"
-              onClick={() => setSelectedIndex(index)}
-              style={{
-                minWidth: "58px",
-                height: "34px",
-                padding: "0 10px",
-                border: active
-                  ? `1px solid ${accentColor}`
-                  : "1px solid rgba(255,196,74,0.14)",
-                background: active ? "rgba(247,166,0,0.14)" : "#0c1016",
-                color: active ? "#fff" : "#e5e7eb",
-                fontWeight: 800,
-                cursor: "pointer",
-                borderRadius: "20px",
-              }}
-            >
-              {level.level}
-            </button>
-          );
-        })}
-      </div>
-
-      <div
-        style={{
-          marginTop: "14px",
-          padding: "14px",
-          background: "#0a0d12",
-          border: "1px solid rgba(255,196,74,0.10)",
-          borderRadius: "20px",
-        }}
-      >
-        <div
-          style={{
-            color: "#9fb3c8",
-            fontSize: "12px",
-            fontWeight: 700,
-            letterSpacing: "0.08em",
-            marginBottom: "8px",
-          }}
-        >
-          설명
-        </div>
-
-        <div
-          style={{
-            color: "#edf2f7",
-            fontSize: "15px",
-            lineHeight: 1.95,
-            whiteSpace: "pre-line",
-          }}
-        >
-          {renderHighlightedText(current.description)}
-        </div>
-      </div>
-
-      {!!current.stats?.length && (
-        <div
-          style={{
-            marginTop: "12px",
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-            gap: "10px",
-          }}
-        >
-          {current.stats.map((stat) => {
-            const statElement = detectElementFromText(stat.label);
-            const statColor = statElement ? getElementColor(statElement) : "#9fb3c8";
-
-            return (
-              <div
-                key={`${skill.name}-${current.level}-${stat.label}`}
-                style={{
-                  border: "1px solid rgba(255,196,74,0.10)",
-                  background: "#0d1118",
-                  padding: "12px",
-                  borderRadius: "20px",
-                }}
-              >
-                <div
-                  style={{
-                    color: statColor,
-                    fontSize: "12px",
-                    marginBottom: "6px",
-                    fontWeight: 800,
-                  }}
-                >
-                  {renderHighlightedText(stat.label)}
-                </div>
-
-                <div
-                  style={{
-                    color: "#ffd24a",
-                    fontSize: "20px",
-                    fontWeight: 900,
-                  }}
-                >
-                  {stat.value}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {!!skill.compareRows?.length && (
-        <FoldSection title="레벨 비교" defaultOpen={false}>
-          <div
-            style={{
-              overflowX: "auto",
-              maxWidth: "100%",
-              WebkitOverflowScrolling: "touch",
-            }}
-          >
-            <table
-              style={{
-                width: "max-content",
-                minWidth: "100%",
-                borderCollapse: "collapse",
-              }}
-            >
-              <thead>
-                <tr>
-                  <th
-                    style={{
-                      textAlign: "left",
-                      color: "#9fb3c8",
-                      fontSize: "12px",
-                      padding: "12px",
-                      borderBottom: "1px solid rgba(255,196,74,0.10)",
-                      position: "sticky",
-                      left: 0,
-                      background: "#0a0d12",
-                      zIndex: 2,
-                      minWidth: "160px",
-                    }}
-                  >
-                    항목
-                  </th>
-
-                  {levels.map((level) => (
-                    <th
-                      key={`${skill.name}-thead-${level.level}`}
-                      style={{
-                        textAlign: "center",
-                        color: "#9fb3c8",
-                        fontSize: "12px",
-                        padding: "12px",
-                        borderBottom: "1px solid rgba(255,196,74,0.10)",
-                        minWidth: "110px",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {level.level}
+        {!!skill.compareRows?.length && (
+          <FoldSection title="레벨 비교" defaultOpen={false}>
+            <div className="max-w-full overflow-x-auto overscroll-x-contain">
+              <table className="w-max min-w-full border-collapse text-sm">
+                <thead>
+                  <tr>
+                    <th className="sticky left-0 z-20 min-w-[140px] border-b border-yellow-500/10 bg-[#0a0d12] p-3 text-left text-xs font-black text-zinc-400">
+                      항목
                     </th>
-                  ))}
-                </tr>
-              </thead>
-
-              <tbody>
-                {skill.compareRows.map((row) => {
-                  const rowElement = detectElementFromText(row.label);
-                  const rowColor = rowElement ? getElementColor(rowElement) : "#e5e7eb";
-
-                  return (
-                    <tr key={`${skill.name}-${row.label}`}>
-                      <td
-                        style={{
-                          padding: "12px",
-                          borderBottom: "1px solid rgba(255,196,74,0.08)",
-                          color: rowColor,
-                          fontSize: "14px",
-                          fontWeight: 700,
-                          position: "sticky",
-                          left: 0,
-                          background: "#0a0d12",
-                          zIndex: 1,
-                          minWidth: "160px",
-                        }}
+                    {levels.map((level) => (
+                      <th
+                        key={`${skill.name}-thead-${level.level}`}
+                        className="min-w-[92px] border-b border-yellow-500/10 p-3 text-center text-xs font-black text-zinc-400"
                       >
-                        {renderHighlightedText(row.label)}
-                      </td>
+                        {level.level}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
 
-                      {row.values.map((value, index) => (
+                <tbody>
+                  {skill.compareRows.map((row) => {
+                    const rowElement = detectElementFromText(row.label);
+                    const rowColor = rowElement ? getElementColor(rowElement) : "#e5e7eb";
+
+                    return (
+                      <tr key={`${skill.name}-${row.label}`}>
                         <td
-                          key={`${skill.name}-${row.label}-${index}`}
-                          style={{
-                            padding: "12px",
-                            borderBottom: "1px solid rgba(255,196,74,0.08)",
-                            color: "#d1d5db",
-                            fontSize: "14px",
-                            textAlign: "center",
-                            whiteSpace: "nowrap",
-                            minWidth: "110px",
-                          }}
+                          className="sticky left-0 z-10 min-w-[140px] border-b border-yellow-500/10 bg-[#0a0d12] p-3 text-xs font-black sm:text-sm"
+                          style={{ color: rowColor }}
                         >
-                          {value}
+                          {renderHighlightedText(row.label)}
                         </td>
-                      ))}
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                        {row.values.map((value, index) => (
+                          <td
+                            key={`${skill.name}-${row.label}-${index}`}
+                            className="min-w-[92px] border-b border-yellow-500/10 p-3 text-center text-xs font-bold text-zinc-300 sm:text-sm"
+                          >
+                            {value}
+                          </td>
+                        ))}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </FoldSection>
+        )}
+
+        <FoldSection title="업그레이드 재료" defaultOpen={false}>
+          <div className="grid gap-3 p-3">
+            {!!upgradeRows.normal.length && (
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4">
+                {upgradeRows.normal.map((item) => (
+                  <UpgradeColumn key={item.level} item={item} />
+                ))}
+              </div>
+            )}
+
+            {!!upgradeRows.mastery.length && (
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                {upgradeRows.mastery.map((item) => (
+                  <UpgradeColumn key={item.level} item={item} />
+                ))}
+              </div>
+            )}
+
+            {!upgradeRows.normal.length && !upgradeRows.mastery.length ? (
+              <div className="text-xs font-bold text-zinc-500">재료 데이터 없음</div>
+            ) : null}
           </div>
         </FoldSection>
-      )}
-
-      <FoldSection title="업그레이드 재료" defaultOpen={false}>
-        <div style={{ padding: "10px" }}>
-          {!!upgradeRows.normal.length && (
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-                gap: "10px",
-                alignItems: "start",
-              }}
-            >
-              {upgradeRows.normal.map((item) => (
-                <UpgradeColumn key={item.level} item={item} />
-              ))}
-            </div>
-          )}
-
-          {!!upgradeRows.mastery.length && (
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-                gap: "10px",
-                alignItems: "start",
-                marginTop: upgradeRows.normal.length ? "12px" : 0,
-              }}
-            >
-              {upgradeRows.mastery.map((item) => (
-                <UpgradeColumn key={item.level} item={item} />
-              ))}
-            </div>
-          )}
-
-          {!upgradeRows.normal.length && !upgradeRows.mastery.length ? (
-            <div style={{ color: "#94a3b8", fontSize: "12px" }}>
-              재료 데이터 없음
-            </div>
-          ) : null}
-        </div>
-      </FoldSection>
+      </div>
     </section>
   );
 }
