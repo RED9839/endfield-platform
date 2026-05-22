@@ -38,12 +38,9 @@ export default function WeaponBreakthroughPanel({
   breakthrough: BreakthroughStage[];
   accentColor?: string;
 }) {
-  const stages = useMemo(
-    () => (breakthrough ?? []).filter((stage) => stage.stage > 0),
-    [breakthrough],
-  );
+  const stages = useMemo(() => breakthrough ?? [], [breakthrough]);
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [showMaterials, setShowMaterials] = useState(true);
+  const [showMaterials, setShowMaterials] = useState(false);
 
   const current = stages[selectedIndex] ?? stages[0];
 
@@ -132,7 +129,7 @@ export default function WeaponBreakthroughPanel({
         {showMaterials ? (
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {stages
-              .filter((stage) => stage.materials.length > 0)
+              .filter((stage) => stage.stage > 0 && stage.materials.length > 0)
               .map((stage) => (
                 <div key={stage.stage} className="rounded-[18px] border border-white/10 bg-[#080b11]/85 p-3.5">
                   <div className="mb-3 flex items-center justify-between gap-3">
