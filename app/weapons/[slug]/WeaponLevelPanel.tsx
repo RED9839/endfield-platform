@@ -55,11 +55,14 @@ function getSkillSourceText(skill: WeaponSkillDetail) {
   const metaText = (skill.meta ?? [])
     .map((meta) => `${normalizeText(meta.label)} ${normalizeText(meta.value)}`)
     .join(" ");
-  return `${normalizeText(skill.typeLabel)} ${normalizeText(skill.name)} ${normalizeText(skill.key).toLowerCase()} ${metaText}`;
+  return `${normalizeText(skill.typeLabel)} ${normalizeText(skill.name)} ${normalizeText(
+    skill.key,
+  ).toLowerCase()} ${metaText}`;
 }
 
 function getSkillTabKey(skill: WeaponSkillDetail): SkillTabKey {
   const source = getSkillSourceText(skill);
+
   if (source.includes("시리즈")) return "series";
   if (
     source.includes("속성") ||
@@ -80,6 +83,7 @@ function getSkillTabKey(skill: WeaponSkillDetail): SkillTabKey {
   ) {
     return "attribute";
   }
+
   return "ability";
 }
 
@@ -109,7 +113,9 @@ function highlightElementTerms(text: string): ReactNode {
     { pattern: /띄우기/g, color: "#cfd8e3" },
     { pattern: /방어 불능/g, color: "#cfd8e3" },
   ];
+
   const matches: Array<{ start: number; end: number; text: string; color: string }> = [];
+
   colorMap.forEach(({ pattern, color }) => {
     for (const match of text.matchAll(pattern)) {
       const start = match.index ?? 0;
@@ -117,31 +123,57 @@ function highlightElementTerms(text: string): ReactNode {
       matches.push({ start, end: start + value.length, text: value, color });
     }
   });
+
   matches.sort((a, b) => (a.start !== b.start ? a.start - b.start : b.end - a.end));
+
   const filtered: typeof matches = [];
   let lastEnd = -1;
+
   for (const match of matches) {
     if (match.start >= lastEnd) {
       filtered.push(match);
       lastEnd = match.end;
     }
   }
+
   if (!filtered.length) return text;
+
   const parts: ReactNode[] = [];
   let cursor = 0;
+
   filtered.forEach((match, index) => {
-    if (match.start > cursor) parts.push(<Fragment key={`plain-${index}-${cursor}`}>{text.slice(cursor, match.start)}</Fragment>);
-    parts.push(<span key={`hl-${index}-${match.start}`} style={{ color: match.color, fontWeight: 900 }}>{match.text}</span>);
+    if (match.start > cursor) {
+      parts.push(<Fragment key={`plain-${index}-${cursor}`}>{text.slice(cursor, match.start)}</Fragment>);
+    }
+
+    parts.push(
+      <span key={`hl-${index}-${match.start}`} style={{ color: match.color, fontWeight: 900 }}>
+        {match.text}
+      </span>,
+    );
+
     cursor = match.end;
   });
+
   if (cursor < text.length) parts.push(<Fragment key={`tail-${cursor}`}>{text.slice(cursor)}</Fragment>);
+
   return parts;
 }
 
 function renderHighlightedDescription(text: string, statValues: Array<string | number>) {
-  const targets = Array.from(new Set(statValues.map((value) => String(value).trim()).filter(Boolean).sort((a, b) => b.length - a.length)));
+  const targets = Array.from(
+    new Set(
+      statValues
+        .map((value) => String(value).trim())
+        .filter(Boolean)
+        .sort((a, b) => b.length - a.length),
+    ),
+  );
+
   if (!targets.length) return highlightElementTerms(text);
+
   const matches: Array<{ start: number; end: number; text: string }> = [];
+
   for (const target of targets) {
     const regex = new RegExp(escapeRegExp(target), "g");
     for (const match of text.matchAll(regex)) {
@@ -150,52 +182,63 @@ function renderHighlightedDescription(text: string, statValues: Array<string | n
       matches.push({ start, end: start + value.length, text: value });
     }
   }
+
   matches.sort((a, b) => (a.start !== b.start ? a.start - b.start : b.end - a.end));
+
   const filtered: typeof matches = [];
   let lastEnd = -1;
+
   for (const match of matches) {
     if (match.start >= lastEnd) {
       filtered.push(match);
       lastEnd = match.end;
     }
   }
+
   if (!filtered.length) return highlightElementTerms(text);
+
   const parts: ReactNode[] = [];
   let cursor = 0;
+
   filtered.forEach((match, index) => {
-    if (match.start > cursor) parts.push(<Fragment key={`text-${index}-${cursor}`}>{highlightElementTerms(text.slice(cursor, match.start))}</Fragment>);
-    parts.push(<span key={`value-${index}-${match.start}`} style={{ color: YELLOW_TEXT, fontWeight: 900 }}>{match.text}</span>);
+    if (match.start > cursor) {
+      parts.push(
+        <Fragment key={`text-${index}-${cursor}`}>
+          {highlightElementTerms(text.slice(cursor, match.start))}
+        </Fragment>,
+      );
+    }
+
+    parts.push(
+      <span key={`value-${index}-${match.start}`} style={{ color: YELLOW_TEXT, fontWeight: 900 }}>
+        {match.text}
+      </span>,
+    );
+
     cursor = match.end;
   });
-  if (cursor < text.length) parts.push(<Fragment key={`tail-${cursor}`}>{highlightElementTerms(text.slice(cursor))}</Fragment>);
-  return parts;
-}
 
-function CompactStatCard({ label, value, tone = "yellow" }: { label: string; value: ReactNode; tone?: "yellow" | "blue" }) {
-  const toneClass = tone === "yellow" ? "border-yellow-500/25" : "border-sky-400/25";
-  const textColor = tone === "yellow" ? YELLOW_TEXT : "#6fd3ff";
-  return (
-    <div className={`relative overflow-hidden rounded-[18px] border ${toneClass} bg-[#06080c]/90 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]`}>
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_0%_0%,rgba(255,210,74,0.10),transparent_42%)]" />
-      <div className="relative">
-        <p className="text-[10px] font-black tracking-[0.18em] text-zinc-500">{label}</p>
-        <div className="mt-2 text-4xl font-black leading-none" style={{ color: textColor }}>{value}</div>
-        <div className="mt-3 h-1.5 rounded-full bg-zinc-800">
-          <div className="h-full w-[16%] rounded-full" style={{ backgroundColor: textColor }} />
-        </div>
-      </div>
-    </div>
-  );
+  if (cursor < text.length) {
+    parts.push(<Fragment key={`tail-${cursor}`}>{highlightElementTerms(text.slice(cursor))}</Fragment>);
+  }
+
+  return parts;
 }
 
 function ValueGrid({ stats, rank }: { stats: SkillStat[]; rank?: string }) {
   if (!stats.length) return <p className="text-sm font-bold text-zinc-500">표시할 수치가 없습니다.</p>;
+
   return (
-    <div className="grid gap-2 sm:grid-cols-2">
+    <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
       {stats.map((stat) => (
-        <div key={`${rank ?? "rank"}-${stat.label}`} className="rounded-2xl border border-white/10 bg-[#0b0d12]/90 px-4 py-3.5">
+        <div
+          key={`${rank ?? "rank"}-${stat.label}`}
+          className="rounded-2xl border border-white/10 bg-[#0b0d12]/90 px-4 py-3.5"
+        >
           <p className="text-xs font-black text-zinc-500">{stat.label}</p>
-          <p className="mt-1 break-words text-2xl font-black leading-none" style={{ color: YELLOW_TEXT }}>{stat.value}</p>
+          <p className="mt-1 break-words text-2xl font-black leading-none" style={{ color: YELLOW_TEXT }}>
+            {stat.value}
+          </p>
         </div>
       ))}
     </div>
@@ -204,10 +247,15 @@ function ValueGrid({ stats, rank }: { stats: SkillStat[]; rank?: string }) {
 
 function WeaponSkillMainPanel({ skill, tabKey }: { skill?: WeaponSkillDetail; tabKey: SkillTabKey }) {
   const [rankIndex, setRankIndex] = useState(0);
+
   useEffect(() => setRankIndex(0), [skill?.key]);
 
   if (!skill) {
-    return <div className="rounded-[26px] border border-yellow-500/10 bg-black/35 p-5 text-sm font-bold text-zinc-500">표시할 데이터가 없습니다.</div>;
+    return (
+      <div className="rounded-[24px] border border-yellow-500/10 bg-black/35 p-5 text-sm font-bold text-zinc-500">
+        표시할 데이터가 없습니다.
+      </div>
+    );
   }
 
   const levels = skill.levelValues ?? [];
@@ -216,25 +264,25 @@ function WeaponSkillMainPanel({ skill, tabKey }: { skill?: WeaponSkillDetail; ta
   const stats = current?.stats ?? [];
   const description = current?.description?.trim();
   const isSeries = tabKey === "series";
-  const summary = isSeries ? "조건, 중첩, 지속시간과 효과 수치를 확인합니다." : `${TAB_LABEL_MAP[tabKey]} 효과는 설명 중복 없이 수치 정보 중심으로 표시합니다.`;
 
   return (
-    <div className="overflow-hidden rounded-[28px] border border-yellow-500/15 bg-[#06080c]/95 shadow-[0_20px_48px_rgba(0,0,0,0.34),inset_0_1px_0_rgba(255,255,255,0.035)]">
-      <div className="relative overflow-hidden border-b border-yellow-500/10 p-5 lg:p-6">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_0%_0%,rgba(255,210,74,0.16),transparent_32%),linear-gradient(135deg,rgba(255,255,255,0.04),transparent_54%)]" />
-        <div className="relative flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-          <div className="flex min-w-0 gap-4">
-            <div className="hidden h-20 w-20 shrink-0 place-items-center rounded-[20px] border border-white/15 bg-[#0b1119] shadow-[0_0_28px_rgba(255,255,255,0.08)] sm:grid">
-              <span className="text-4xl font-black text-white">{TAB_LABEL_MAP[tabKey].slice(0, 1)}</span>
+    <div className="overflow-hidden rounded-[26px] border border-yellow-500/15 bg-[#06080c]/95 shadow-[0_18px_42px_rgba(0,0,0,0.32),inset_0_1px_0_rgba(255,255,255,0.035)]">
+      <div className="relative overflow-hidden border-b border-yellow-500/10 p-4 lg:p-5">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_0%_0%,rgba(255,210,74,0.14),transparent_30%),linear-gradient(135deg,rgba(255,255,255,0.035),transparent_54%)]" />
+        <div className="relative flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="min-w-0">
+            <p className="text-[10px] font-black tracking-[0.28em] text-zinc-500">WEAPON SKILL</p>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <span className="rounded-full border border-yellow-400/25 bg-yellow-400/15 px-3 py-1 text-xs font-black text-yellow-100">
+                {TAB_LABEL_MAP[tabKey]}
+              </span>
+              <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-black text-zinc-400">
+                {current?.rank ?? "Rank 1"}
+              </span>
             </div>
-            <div className="min-w-0">
-              <p className="text-[10px] font-black tracking-[0.28em] text-zinc-500">WEAPON SKILL DECK</p>
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                <span className="rounded-full border border-yellow-400/25 bg-yellow-400/15 px-3 py-1 text-xs font-black text-yellow-100">{TAB_LABEL_MAP[tabKey]}</span>
-                <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-black text-zinc-400">{current?.rank ?? "Rank 1"}</span>
-              </div>
-              <h3 className="mt-3 break-keep text-[clamp(30px,4.8vw,48px)] font-black leading-tight text-white">{skill.name}</h3>
-            </div>
+            <h3 className="mt-3 break-keep text-[clamp(30px,4.8vw,46px)] font-black leading-tight text-white">
+              {skill.name}
+            </h3>
           </div>
 
           {!!levels.length && (
@@ -242,7 +290,19 @@ function WeaponSkillMainPanel({ skill, tabKey }: { skill?: WeaponSkillDetail; ta
               {levels.map((level, index) => {
                 const active = safeRankIndex === index;
                 return (
-                  <button key={`${skill.key}-${level.rank}`} type="button" onClick={() => setRankIndex(index)} className={["h-9 min-w-11 rounded-lg border px-3 text-xs font-black transition", active ? "border-yellow-300/80 bg-yellow-400/25 text-yellow-100 shadow-[0_0_18px_rgba(255,210,74,0.14)]" : "border-white/10 bg-black/55 text-zinc-300 hover:border-yellow-400/35 hover:bg-yellow-400/10 hover:text-yellow-100"].join(" ")}>{level.rank}</button>
+                  <button
+                    key={`${skill.key}-${level.rank}`}
+                    type="button"
+                    onClick={() => setRankIndex(index)}
+                    className={[
+                      "h-9 min-w-11 rounded-lg border px-3 text-xs font-black transition",
+                      active
+                        ? "border-yellow-300/80 bg-yellow-400/25 text-yellow-100 shadow-[0_0_18px_rgba(255,210,74,0.14)]"
+                        : "border-white/10 bg-black/55 text-zinc-300 hover:border-yellow-400/35 hover:bg-yellow-400/10 hover:text-yellow-100",
+                    ].join(" ")}
+                  >
+                    {level.rank}
+                  </button>
                 );
               })}
             </div>
@@ -250,31 +310,57 @@ function WeaponSkillMainPanel({ skill, tabKey }: { skill?: WeaponSkillDetail; ta
         </div>
       </div>
 
-      <div className="grid gap-4 p-5 lg:grid-cols-[minmax(0,1.05fr)_minmax(360px,0.95fr)] lg:p-6">
-        <div className="min-h-[210px] rounded-[22px] border border-white/10 bg-[#080b11]/85 p-5 text-sm font-bold leading-8 text-zinc-100">
-          <p className="mb-4 border-l-4 border-yellow-300 pl-3 text-base font-black" style={{ color: YELLOW_TEXT }}>{isSeries ? "스킬 설명" : "효과 요약"}</p>
-          {isSeries && description ? renderHighlightedDescription(description, stats.map((stat) => stat.value)) : <p className="text-zinc-300">{summary}</p>}
-        </div>
-
-        <div className="rounded-[22px] border border-white/10 bg-[#080b11]/85 p-5">
-          <div className="mb-4 flex items-center justify-between gap-3">
-            <p className="text-base font-black" style={{ color: YELLOW_TEXT }}>수치 정보</p>
-            <p className="text-xs font-bold text-yellow-200/70">{current?.rank ?? "Rank 1"} 기준</p>
+      {isSeries ? (
+        <div className="grid gap-4 p-4 lg:grid-cols-[minmax(0,1.08fr)_minmax(360px,0.92fr)] lg:p-5">
+          <div className="min-h-[190px] rounded-[20px] border border-white/10 bg-[#080b11]/85 p-5 text-sm font-bold leading-8 text-zinc-100">
+            <p className="mb-4 border-l-4 border-yellow-300 pl-3 text-base font-black" style={{ color: YELLOW_TEXT }}>
+              스킬 설명
+            </p>
+            {description ? renderHighlightedDescription(description, stats.map((stat) => stat.value)) : "-"}
           </div>
-          <ValueGrid stats={stats} rank={current?.rank} />
+
+          <div className="rounded-[20px] border border-white/10 bg-[#080b11]/85 p-5">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <p className="text-base font-black" style={{ color: YELLOW_TEXT }}>
+                수치 정보
+              </p>
+              <p className="text-xs font-bold text-yellow-200/70">{current?.rank ?? "Rank 1"} 기준</p>
+            </div>
+            <ValueGrid stats={stats} rank={current?.rank} />
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="p-4 lg:p-5">
+          <div className="rounded-[20px] border border-white/10 bg-[#080b11]/85 p-5">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <p className="text-base font-black" style={{ color: YELLOW_TEXT }}>
+                수치 정보
+              </p>
+              <p className="text-xs font-bold text-yellow-200/70">{current?.rank ?? "Rank 1"} 기준</p>
+            </div>
+            <ValueGrid stats={stats} rank={current?.rank} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-export default function WeaponLevelPanel({ weaponName, weaponEnName, weaponImage, weaponTypeLabel, levelStats, skills = [] }: Props) {
+export default function WeaponLevelPanel({
+  weaponName,
+  weaponEnName,
+  weaponImage,
+  levelStats,
+  skills = [],
+}: Props) {
   const safeWeaponName = normalizeText(weaponName) || "무기";
   const safeWeaponImage = normalizeText(weaponImage);
 
   const safeStats = useMemo<WeaponLevelStatRow[]>(() => {
     if (!Array.isArray(levelStats)) return [];
-    return [...levelStats].filter((row): row is WeaponLevelStatRow => !!row && Number.isFinite(row.level) && Number.isFinite(row.attack)).sort((a, b) => a.level - b.level);
+    return [...levelStats]
+      .filter((row): row is WeaponLevelStatRow => !!row && Number.isFinite(row.level) && Number.isFinite(row.attack))
+      .sort((a, b) => a.level - b.level);
   }, [levelStats]);
 
   const selectableLevels = useMemo(() => {
@@ -291,52 +377,76 @@ export default function WeaponLevelPanel({ weaponName, weaponEnName, weaponImage
   }, [initialLevel, level, safeStats]);
 
   const groupedSkills = useMemo(() => {
-    const grouped: Record<SkillTabKey, WeaponSkillDetail | undefined> = { ability: undefined, attribute: undefined, series: undefined };
+    const grouped: Record<SkillTabKey, WeaponSkillDetail | undefined> = {
+      ability: undefined,
+      attribute: undefined,
+      series: undefined,
+    };
+
     for (const skill of skills) {
       if (!skill) continue;
       const key = getSkillTabKey(skill);
       grouped[key] ??= skill;
     }
+
     return grouped;
   }, [skills]);
 
-  const firstAvailableTab = useMemo<SkillTabKey>(() => TAB_ORDER.find((key) => groupedSkills[key]) ?? "ability", [groupedSkills]);
+  const firstAvailableTab = useMemo<SkillTabKey>(
+    () => TAB_ORDER.find((key) => groupedSkills[key]) ?? "ability",
+    [groupedSkills],
+  );
   const [activeTab, setActiveTab] = useState<SkillTabKey>(firstAvailableTab);
 
   useEffect(() => {
     if (!groupedSkills[activeTab]) setActiveTab(firstAvailableTab);
   }, [activeTab, firstAvailableTab, groupedSkills]);
 
-  const currentStats = useMemo(() => safeStats.find((row) => row.level === level) ?? safeStats[0] ?? null, [level, safeStats]);
-  const abilitySkill = groupedSkills.ability;
-  const attributeSkill = groupedSkills.attribute;
+  const currentStats = useMemo(
+    () => safeStats.find((row) => row.level === level) ?? safeStats[0] ?? null,
+    [level, safeStats],
+  );
 
   if (!currentStats) {
-    return <section className="rounded-[28px] border border-yellow-500/15 bg-[#05070b]/95 p-5 text-sm font-bold text-zinc-500">표시할 무기 레벨 데이터가 없습니다.</section>;
+    return (
+      <section className="rounded-[28px] border border-yellow-500/15 bg-[#05070b]/95 p-5 text-sm font-bold text-zinc-500">
+        표시할 무기 레벨 데이터가 없습니다.
+      </section>
+    );
   }
 
   return (
-    <section className="overflow-hidden rounded-[30px] border border-yellow-500/15 bg-[#05070b]/95 shadow-[0_18px_50px_rgba(0,0,0,0.30)]">
-      <div className="relative overflow-hidden border-b border-yellow-500/10 bg-[radial-gradient(circle_at_8%_0%,rgba(255,210,74,0.16),transparent_34%),linear-gradient(180deg,rgba(255,255,255,0.035),transparent)] p-4 lg:p-5">
-        <div className="relative flex min-w-0 items-center gap-4 rounded-[24px] border border-white/10 bg-black/20 p-3">
+    <section className="overflow-hidden rounded-[28px] border border-yellow-500/15 bg-[#05070b]/95 shadow-[0_18px_50px_rgba(0,0,0,0.30)]">
+      <div className="relative overflow-hidden border-b border-yellow-500/10 bg-[radial-gradient(circle_at_8%_0%,rgba(255,210,74,0.14),transparent_34%),linear-gradient(180deg,rgba(255,255,255,0.035),transparent)] p-4 lg:p-5">
+        <div className="relative flex min-w-0 items-center gap-4 rounded-[22px] border border-white/10 bg-black/20 p-3">
           <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl border border-yellow-500/15 bg-black/45 sm:h-24 sm:w-24">
-            {safeWeaponImage ? <img src={safeWeaponImage} alt={safeWeaponName} className="h-full w-full object-contain p-2 drop-shadow-[0_10px_18px_rgba(0,0,0,0.58)]" /> : <div className="grid h-full w-full place-items-center text-3xl font-black text-yellow-100">?</div>}
+            {safeWeaponImage ? (
+              <img
+                src={safeWeaponImage}
+                alt={safeWeaponName}
+                className="h-full w-full object-contain p-2 drop-shadow-[0_10px_18px_rgba(0,0,0,0.58)]"
+              />
+            ) : (
+              <div className="grid h-full w-full place-items-center text-3xl font-black text-yellow-100">?</div>
+            )}
           </div>
           <div className="min-w-0">
-            <p className="text-[10px] font-black tracking-[0.28em] text-zinc-500">WEAPON STATUS</p>
-            <h2 className="mt-1 break-keep text-[clamp(28px,5vw,44px)] font-black leading-none text-white">{safeWeaponName}</h2>
-            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs font-black text-zinc-400">
-              {weaponEnName ? <span>{weaponEnName}</span> : null}
-              <span className="rounded-full border border-white/10 bg-white/5 px-2 py-1 text-zinc-300">{weaponTypeLabel}</span>
-            </div>
+            <h2 className="break-keep text-[clamp(32px,5vw,48px)] font-black leading-none text-white">
+              {safeWeaponName}
+            </h2>
+            {weaponEnName ? (
+              <p className="mt-2 truncate text-sm font-black text-zinc-400 sm:text-base">{weaponEnName}</p>
+            ) : null}
           </div>
         </div>
 
-        <div className="relative mt-4 grid gap-3 lg:grid-cols-[minmax(0,0.95fr)_minmax(300px,0.5fr)_minmax(300px,0.5fr)]">
+        <div className="relative mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(360px,0.55fr)]">
           <div className="rounded-[22px] border border-white/10 bg-black/35 p-4">
             <div className="flex items-center justify-between gap-3">
               <p className="text-[10px] font-black tracking-[0.24em] text-zinc-500">CURRENT LEVEL</p>
-              <span className="rounded-xl border border-yellow-400/25 bg-yellow-400/15 px-3 py-2 text-xs font-black text-yellow-100">직접 입력</span>
+              <span className="rounded-xl border border-yellow-400/25 bg-yellow-400/15 px-3 py-2 text-xs font-black text-yellow-100">
+                직접 입력
+              </span>
             </div>
             <div className="mt-3 flex items-end gap-2">
               <span className="text-5xl font-black leading-none text-white">Lv. {currentStats.level}</span>
@@ -345,21 +455,44 @@ export default function WeaponLevelPanel({ weaponName, weaponEnName, weaponImage
             <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-6">
               {selectableLevels.map((mark) => {
                 const active = currentStats.level === mark;
-                return <button key={mark} type="button" onClick={() => setLevel(mark)} className={["h-11 rounded-xl border px-3 text-sm font-black transition", active ? "border-yellow-300/75 bg-yellow-400/20 text-yellow-100" : "border-white/10 bg-black/45 text-zinc-300 hover:border-yellow-400/35 hover:bg-yellow-400/10"].join(" ")}>{mark}</button>;
+                return (
+                  <button
+                    key={mark}
+                    type="button"
+                    onClick={() => setLevel(mark)}
+                    className={[
+                      "h-11 rounded-xl border px-3 text-sm font-black transition",
+                      active
+                        ? "border-yellow-300/75 bg-yellow-400/20 text-yellow-100"
+                        : "border-white/10 bg-black/45 text-zinc-300 hover:border-yellow-400/35 hover:bg-yellow-400/10",
+                    ].join(" ")}
+                  >
+                    {mark}
+                  </button>
+                );
               })}
             </div>
           </div>
 
-          <CompactStatCard label="주요 능력치" value={<><span className="text-base text-zinc-300">공격력</span><br />{currentStats.attack}</>} />
-          <CompactStatCard label="보조 능력치" value={<><span className="text-base text-zinc-300">{attributeSkill?.name ?? abilitySkill?.name ?? "효과"}</span><br /><span className="text-2xl">{getFirstValue(attributeSkill ?? abilitySkill)}</span></>} tone="blue" />
+          <div className="rounded-[22px] border border-yellow-500/20 bg-black/35 p-4">
+            <p className="text-[10px] font-black tracking-[0.18em] text-zinc-500">무기 공격력</p>
+            <p className="mt-4 text-5xl font-black leading-none" style={{ color: YELLOW_TEXT }}>
+              {currentStats.attack}
+            </p>
+            <div className="mt-4 h-1.5 rounded-full bg-zinc-800">
+              <div className="h-full w-[16%] rounded-full bg-yellow-300" />
+            </div>
+          </div>
         </div>
       </div>
 
       <div className="p-4 lg:p-5">
-        <div className="mb-4 rounded-[26px] border border-yellow-500/10 bg-black/30 p-4 lg:p-5">
+        <div className="mb-4 rounded-[24px] border border-yellow-500/10 bg-black/30 p-4 lg:p-5">
           <div className="grid gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(520px,1.1fr)] lg:items-center">
             <div>
-              <p className="text-[10px] font-black tracking-[0.32em]" style={{ color: YELLOW_TEXT }}>WEAPON SKILL DECK</p>
+              <p className="text-[10px] font-black tracking-[0.32em]" style={{ color: YELLOW_TEXT }}>
+                WEAPON SKILL DECK
+              </p>
               <h3 className="mt-2 text-3xl font-black text-white">무기 스킬 덱</h3>
               <p className="mt-2 text-sm font-bold text-zinc-500">스킬을 선택해서 상세 수치와 Rank 정보를 확인합니다.</p>
             </div>
@@ -368,7 +501,18 @@ export default function WeaponLevelPanel({ weaponName, weaponEnName, weaponImage
                 const skill = groupedSkills[key];
                 const active = activeTab === key;
                 return (
-                  <button key={key} type="button" disabled={!skill} onClick={() => setActiveTab(key)} className={["rounded-[18px] border px-4 py-3 text-left transition disabled:cursor-not-allowed disabled:opacity-45", active ? "border-yellow-300/70 bg-yellow-400/20 text-yellow-100" : "border-white/10 bg-[#05070b]/85 text-zinc-300 hover:border-yellow-400/35 hover:bg-yellow-400/10"].join(" ")}>
+                  <button
+                    key={key}
+                    type="button"
+                    disabled={!skill}
+                    onClick={() => setActiveTab(key)}
+                    className={[
+                      "rounded-[18px] border px-4 py-3 text-left transition disabled:cursor-not-allowed disabled:opacity-45",
+                      active
+                        ? "border-yellow-300/70 bg-yellow-400/20 text-yellow-100"
+                        : "border-white/10 bg-[#05070b]/85 text-zinc-300 hover:border-yellow-400/35 hover:bg-yellow-400/10",
+                    ].join(" ")}
+                  >
                     <p className="text-[10px] font-black tracking-[0.18em] text-zinc-500">{TAB_SUB_LABEL_MAP[key]}</p>
                     <p className="mt-1 truncate text-base font-black">{skill?.name ?? "-"}</p>
                   </button>
@@ -378,7 +522,10 @@ export default function WeaponLevelPanel({ weaponName, weaponEnName, weaponImage
           </div>
         </div>
 
-        <WeaponSkillMainPanel skill={groupedSkills[activeTab] ?? groupedSkills[firstAvailableTab]} tabKey={groupedSkills[activeTab] ? activeTab : firstAvailableTab} />
+        <WeaponSkillMainPanel
+          skill={groupedSkills[activeTab] ?? groupedSkills[firstAvailableTab]}
+          tabKey={groupedSkills[activeTab] ? activeTab : firstAvailableTab}
+        />
       </div>
     </section>
   );
