@@ -17,8 +17,9 @@ const YELLOW_MAIN = "#ffd24a";
 const YELLOW_TEXT = "#ffdc70";
 const YELLOW_BORDER = "rgba(255,196,74,0.14)";
 const YELLOW_BORDER_SOFT = "rgba(255,196,74,0.10)";
+
 const HERO_IMAGE_SIZES =
-  "(max-width: 768px) calc(100vw - 24px), (max-width: 1280px) calc(100vw - 48px), 1180px";
+  "(max-width: 768px) 100vw, (max-width: 1280px) 100vw, 1840px";
 
 function DetailSection({
   id,
@@ -35,7 +36,7 @@ function DetailSection({
     <details
       id={id}
       open={defaultOpen}
-      className="group scroll-mt-24 overflow-hidden rounded-[20px] border border-yellow-500/15 bg-[#05070b] shadow-[0_0_30px_rgba(250,204,21,0.035)] lg:rounded-[24px]"
+      className="group scroll-mt-24 overflow-hidden rounded-[22px] border border-yellow-500/15 bg-[#05070b]/95 shadow-[0_0_34px_rgba(250,204,21,0.04)] backdrop-blur lg:rounded-[26px]"
     >
       <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 lg:px-5 lg:py-4 [&::-webkit-details-marker]:hidden">
         <span
@@ -70,8 +71,8 @@ export default async function OperatorDetailPage({
 
   if (!operator) notFound();
 
-  const panelAccentColor = YELLOW_MAIN;
   const heroImage = operator.fullImage || operator.avatar;
+  const panelAccentColor = YELLOW_MAIN;
 
   const isAdminHeroSlider = operator.name === "관리자";
   const adminHeroSlides = [
@@ -92,103 +93,134 @@ export default async function OperatorDetailPage({
   ];
 
   return (
-    <main className="min-h-screen bg-[#050505] px-3 py-3 text-white sm:px-4 md:px-6 md:py-5">
-      <div className="mx-auto max-w-[1840px]">
-        <header
-          className="mb-3 rounded-[20px] bg-[#05070b] p-4 shadow-[0_0_30px_rgba(250,204,21,0.04)] sm:mb-5 sm:rounded-[24px] sm:p-5"
-          style={{ border: `1px solid ${YELLOW_BORDER}` }}
-        >
-          <div className="flex items-end justify-between gap-3">
-            <div className="min-w-0">
+    <main className="min-h-screen bg-[#050505] text-white">
+      <section
+        className="relative overflow-hidden border-b border-yellow-500/10"
+        style={{ minHeight: "clamp(560px, 82vh, 860px)" }}
+      >
+        <Image
+          src={heroImage}
+          alt={operator.name}
+          fill
+          priority
+          sizes={HERO_IMAGE_SIZES}
+          className="object-cover blur-[18px] brightness-[0.25] scale-110"
+        />
+
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_35%_20%,rgba(255,210,74,0.16),transparent_32%),linear-gradient(90deg,rgba(0,0,0,0.92),rgba(0,0,0,0.48),rgba(0,0,0,0.88))]" />
+
+        <div className="relative z-10 mx-auto flex min-h-[clamp(560px,82vh,860px)] max-w-[1840px] flex-col px-3 py-3 sm:px-4 md:px-6 md:py-5">
+          <header className="mb-4 flex items-center justify-between gap-3">
+            <Link
+              href="/operators"
+              className="rounded-xl bg-black/60 px-3 py-2 text-xs font-black text-zinc-200 backdrop-blur transition hover:bg-[#0b1018] sm:px-4 sm:text-sm"
+              style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
+            >
+              ← 목록
+            </Link>
+
+            <Link
+              href="/"
+              className="rounded-xl bg-black/60 px-3 py-2 text-xs font-black text-zinc-200 backdrop-blur transition hover:bg-[#0b1018] sm:px-4 sm:text-sm"
+              style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
+            >
+              홈
+            </Link>
+          </header>
+
+          <div className="grid flex-1 items-center gap-5 lg:grid-cols-[minmax(0,1fr)_460px] xl:grid-cols-[minmax(0,1fr)_520px]">
+            <div className="relative min-h-[360px] overflow-hidden rounded-[24px] border border-yellow-500/15 bg-black/20 shadow-[0_18px_50px_rgba(0,0,0,0.45)] lg:min-h-[640px] lg:rounded-[30px]">
+              {isAdminHeroSlider && adminHeroSlides.length > 1 ? (
+                <HeroSlider
+                  images={adminHeroSlides}
+                  alt={operator.name}
+                  enName={operator.enName}
+                />
+              ) : (
+                <>
+                  <Image
+                    src={heroImage}
+                    alt={operator.name}
+                    fill
+                    priority
+                    sizes={HERO_IMAGE_SIZES}
+                    className="object-contain object-center"
+                  />
+                  <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black/75 to-transparent" />
+                </>
+              )}
+            </div>
+
+            <aside
+              className="rounded-[24px] bg-black/68 p-4 shadow-[0_18px_50px_rgba(0,0,0,0.42)] backdrop-blur-xl lg:rounded-[30px] lg:p-6"
+              style={{ border: `1px solid ${YELLOW_BORDER}` }}
+            >
               <p
-                className="text-[10px] font-semibold tracking-[0.28em] sm:text-[11px] sm:tracking-[0.35em]"
+                className="text-[10px] font-bold tracking-[0.32em] sm:text-[11px]"
                 style={{ color: YELLOW_TEXT }}
               >
-                엔드필드 지원 플랫폼
+                엔드필드 오퍼레이터
               </p>
 
-              <h1
-                className="mt-2 text-2xl font-black tracking-tight sm:text-4xl"
-                style={{ color: YELLOW_TEXT }}
-              >
-                오퍼레이터
+              <h1 className="mt-3 text-[clamp(38px,8vw,76px)] font-black leading-none tracking-tight text-white">
+                {operator.name}
               </h1>
 
-              <p className="mt-1 text-xs text-zinc-500 sm:text-sm">
-                오퍼레이터 상세 정보
-              </p>
-            </div>
-
-            <div className="flex shrink-0 gap-2">
-              <Link
-                href="/operators"
-                className="rounded-xl bg-black px-3 py-2 text-xs font-bold text-zinc-200 transition hover:bg-[#0b1018] sm:px-4 sm:text-sm"
-                style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
-              >
-                목록
-              </Link>
-
-              <Link
-                href="/"
-                className="rounded-xl bg-black px-3 py-2 text-xs font-bold text-zinc-200 transition hover:bg-[#0b1018] sm:px-4 sm:text-sm"
-                style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
-              >
-                홈
-              </Link>
-            </div>
-          </div>
-        </header>
-
-        {isAdminHeroSlider && adminHeroSlides.length > 1 ? (
-          <div className="mb-3 overflow-hidden rounded-[20px] lg:mb-5 lg:rounded-[24px]">
-            <HeroSlider
-              images={adminHeroSlides}
-              alt={operator.name}
-              enName={operator.enName}
-            />
-          </div>
-        ) : (
-          <section
-            className="relative mb-3 overflow-hidden rounded-[20px] bg-black shadow-[0_10px_28px_rgba(0,0,0,0.28)] lg:mb-5 lg:rounded-[24px]"
-            style={{
-              height: "clamp(320px, 58vw, 620px)",
-              border: `1px solid ${YELLOW_BORDER}`,
-            }}
-          >
-            <Image
-              src={heroImage}
-              alt={operator.name}
-              fill
-              priority
-              sizes={HERO_IMAGE_SIZES}
-              className="object-cover blur-[16px] brightness-[0.25]"
-            />
-
-            <div className="absolute inset-0 flex items-center justify-center">
-              <Image
-                src={heroImage}
-                alt={operator.name}
-                fill
-                priority
-                sizes={HERO_IMAGE_SIZES}
-                className="object-contain"
-              />
-            </div>
-
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-black/10" />
-
-            <div className="absolute bottom-4 left-4 z-10 lg:bottom-6 lg:left-6">
-              <div className="text-[clamp(34px,10vw,88px)] font-black leading-none text-white drop-shadow-[0_8px_20px_rgba(0,0,0,0.8)]">
-                {operator.name}
-              </div>
-
-              <div className="mt-2 text-sm text-[#dbe4f0] drop-shadow-[0_4px_12px_rgba(0,0,0,0.7)] sm:text-xl">
+              <p className="mt-2 text-lg font-bold text-zinc-300">
                 {operator.enName}
-              </div>
-            </div>
-          </section>
-        )}
+              </p>
 
+              <div className="mt-4 flex flex-wrap gap-2">
+                <span className="rounded-full border border-yellow-500/20 bg-yellow-500/10 px-3 py-1 text-xs font-black text-yellow-200">
+                  {operator.element}
+                </span>
+                <span className="rounded-full border border-yellow-500/20 bg-white/5 px-3 py-1 text-xs font-black text-zinc-200">
+                  {operator.class}
+                </span>
+                <span className="rounded-full border border-yellow-500/20 bg-white/5 px-3 py-1 text-xs font-black text-zinc-200">
+                  {operator.weapon}
+                </span>
+                <span className="rounded-full border border-yellow-500/20 bg-white/5 px-3 py-1 text-xs font-black text-zinc-200">
+                  {operator.rarity}성
+                </span>
+              </div>
+
+              <div className="mt-5 grid grid-cols-2 gap-2">
+                <div className="rounded-2xl border border-yellow-500/10 bg-[#080b10] p-3">
+                  <p className="text-[10px] font-bold text-zinc-500">주 능력치</p>
+                  <p className="mt-1 text-sm font-black text-yellow-200">
+                    {operator.mainStatLabel || "-"}
+                  </p>
+                </div>
+
+                <div className="rounded-2xl border border-yellow-500/10 bg-[#080b10] p-3">
+                  <p className="text-[10px] font-bold text-zinc-500">보조 능력치</p>
+                  <p className="mt-1 text-sm font-black text-yellow-200">
+                    {operator.subStatLabel || "-"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-5 rounded-2xl border border-yellow-500/10 bg-[#080b10]/95 p-3">
+                <p className="text-xs font-black text-zinc-400">빠른 이동</p>
+                <div className="mt-3 grid grid-cols-3 gap-2">
+                  {sectionLinks.map((item) => (
+                    <a
+                      key={item.href}
+                      href={item.href}
+                      className="rounded-xl border border-yellow-500/10 bg-black px-2 py-2 text-center text-xs font-black text-zinc-300 transition hover:border-yellow-400/40 hover:text-yellow-200"
+                    >
+                      {item.label}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <div className="mx-auto max-w-[1840px] px-3 py-3 sm:px-4 md:px-6 md:py-5">
         <QuickSectionNav links={sectionLinks} />
 
         <div className="grid gap-3 lg:gap-5">
