@@ -355,7 +355,8 @@ export default async function WeaponDetailPage({
   const mainStatIcon = statIconMap[weapon.mainStatLabel ?? ""];
 
   const sectionLinks = [
-    { href: "#level", label: "레벨/스킬" },
+    { href: "#level", label: "레벨" },
+    { href: "#skill", label: "무기 스킬" },
     ...(weapon.breakthrough?.length ? [{ href: "#breakthrough", label: "돌파" }] : []),
   ];
 
@@ -521,15 +522,30 @@ export default async function WeaponDetailPage({
         </nav>
 
         <div className="grid min-w-0 gap-3 lg:gap-5">
-          <DetailSection id="level" title="레벨별 능력치 & 무기 스킬" defaultOpen>
-            <WeaponLevelPanel
-              weaponName={weapon.name}
-              weaponEnName={weapon.enName}
-              weaponImage={heroImage}
-              weaponTypeLabel={weaponTypeLabel}
-              levelStats={weapon.levelStats}
-              skills={weapon.skills ?? []}
-            />
+          <DetailSection id="level" title="레벨별 능력치" defaultOpen>
+            <div className="[&>div>section:nth-child(2)]:hidden">
+              <WeaponLevelPanel
+                weaponName={weapon.name}
+                weaponEnName={weapon.enName}
+                weaponImage={heroImage}
+                weaponTypeLabel={weaponTypeLabel}
+                levelStats={weapon.levelStats}
+                skills={weapon.skills ?? []}
+              />
+            </div>
+          </DetailSection>
+
+          <DetailSection id="skill" title="무기 스킬" defaultOpen>
+            <div className="[&>div>section:nth-child(1)]:hidden">
+              <WeaponLevelPanel
+                weaponName={weapon.name}
+                weaponEnName={weapon.enName}
+                weaponImage={heroImage}
+                weaponTypeLabel={weaponTypeLabel}
+                levelStats={weapon.levelStats}
+                skills={weapon.skills ?? []}
+              />
+            </div>
           </DetailSection>
 
           {!!weapon.breakthrough?.length && (
