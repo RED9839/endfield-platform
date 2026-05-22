@@ -101,7 +101,7 @@ export default function GearHeroPanel({
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_0%,rgba(255,210,74,0.16),transparent_32%)]" />
 
           <img
-            src={gear.fullImage || gear.image}
+            src={gear.image}
             alt={gear.name}
             className="absolute inset-0 h-full w-full object-contain p-8 drop-shadow-[0_24px_42px_rgba(0,0,0,0.72)]"
           />
