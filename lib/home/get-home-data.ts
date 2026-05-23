@@ -339,12 +339,21 @@ function isStackCountedOperatorPickup(title: string) {
   return title.includes("특별 허가 헤드헌팅") && !title.includes("특수 헤드헌팅");
 }
 
+function getStackOperatorItems(items: ParsedItem[]) {
+  return items
+    .filter((item) => isStackCountedOperatorPickup(item.title))
+    .sort((a, b) => dateToTime(b.date) - dateToTime(a.date));
+}
+
 function findCurrentStackOperatorTitle(items: ParsedItem[]) {
-  return (
-    items
-      .filter((item) => isStackCountedOperatorPickup(item.title))
-      .sort((a, b) => dateToTime(b.date) - dateToTime(a.date))[0]?.title ?? ""
-  );
+  return getStackOperatorItems(items)[0]?.title ?? "";
+}
+
+function getWeaponStackIndex(weapon: WeaponStackItem, operatorItems: ParsedItem[]) {
+  const weaponTime = dateToTime(weapon.publishedAt);
+  if (!weaponTime || operatorItems.length === 0) return weapon.stack;
+
+  return operatorItems.filter((operator) => dateToTime(operator.date) > weaponTime).length;
 }
 
 function makeNormalWeaponItem(
@@ -403,22 +412,9 @@ function dedupeById(items: WeaponStackItem[]) {
 
 function updateNormalWeaponStack(items: ParsedItem[]) {
   const stackOperatorTitle = findCurrentStackOperatorTitle(items);
+  const operatorItems = getStackOperatorItems(items);
 
-  if (!lastStackOperatorTitle && stackOperatorTitle) lastStackOperatorTitle = stackOperatorTitle;
-
-  const shouldAdvance =
-    Boolean(lastStackOperatorTitle) &&
-    Boolean(stackOperatorTitle) &&
-    lastStackOperatorTitle !== stackOperatorTitle;
-
-  let stack = [...normalWeaponStack];
-
-  if (shouldAdvance) {
-    stack = stack
-      .map((item) => ({ ...item, stack: item.stack + 1 }))
-      .filter((item) => item.stack < 3);
-    lastStackOperatorTitle = stackOperatorTitle;
-  }
+  if (stackOperatorTitle) lastStackOperatorTitle = stackOperatorTitle;
 
   const foundNormalItems = items
     .map((item) => {
@@ -436,26 +432,35 @@ function updateNormalWeaponStack(items: ParsedItem[]) {
     )
     .sort((a, b) => dateToTime(b.item.date) - dateToTime(a.item.date));
 
-  if (shouldAdvance && foundNormalItems.length > 0) {
-    const latest = foundNormalItems[0];
-    const alreadyExists = stack.some((weapon) => weapon.id === latest.meta.id);
-    if (!alreadyExists) stack.unshift(makeNormalWeaponItem(latest.item, latest.meta, 0));
-  }
-
-  stack = stack.map((weapon) => {
+  const stack = dedupeById([
+    ...foundNormalItems.map(({ item, meta }) => makeNormalWeaponItem(item, meta, 0)),
+    ...normalWeaponStack,
+    ...DEFAULT_NORMAL_WEAPON_STACK,
+  ]).map((weapon) => {
     const found = foundNormalItems.find((entry) => entry.meta.id === weapon.id);
-    if (!found) return weapon;
+    const updatedWeapon = found
+      ? {
+          ...weapon,
+          image: found.item.image || weapon.image,
+          detailImage: found.item.image || weapon.detailImage,
+          bannerImage: found.item.image || weapon.bannerImage,
+          articleImage: found.item.image || weapon.articleImage,
+          thumbnail: found.item.image || weapon.thumbnail,
+          href: found.item.href || weapon.href,
+          publishedAt: found.item.date || weapon.publishedAt,
+        }
+      : weapon;
+
     return {
-      ...weapon,
-      href: found.item.href || weapon.href,
-      publishedAt: found.item.date || weapon.publishedAt,
+      ...updatedWeapon,
+      stack: getWeaponStackIndex(updatedWeapon, operatorItems),
     };
   });
 
-  normalWeaponStack = normalizeStack(
-    dedupeById([...stack, ...DEFAULT_NORMAL_WEAPON_STACK]),
-    3,
-  );
+  normalWeaponStack = stack
+    .filter((weapon) => weapon.stack < 3)
+    .sort((a, b) => a.stack - b.stack || dateToTime(b.publishedAt) - dateToTime(a.publishedAt))
+    .slice(0, 3);
 
   return normalWeaponStack;
 }
