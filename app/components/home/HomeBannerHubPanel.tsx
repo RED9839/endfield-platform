@@ -81,7 +81,20 @@ export default function HomeBannerHubPanel({
   useEffect(() => {
     setImageFailedKey("");
     setLoadedKey("");
-  }, [curKey]);
+
+    if (!cur?.image || !curKey) return;
+
+    const preload = new window.Image();
+    preload.src = cur.image;
+
+    if (preload.complete) {
+      setLoadedKey(curKey);
+      return;
+    }
+
+    preload.onload = () => setLoadedKey(curKey);
+    preload.onerror = () => setImageFailedKey(curKey);
+  }, [cur?.image, curKey]);
 
   useEffect(() => {
     if (items.length <= 1) return;
