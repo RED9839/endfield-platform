@@ -4,9 +4,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { operatorDetails } from "@/data/operators-detail-data";
+import { weaponDetails } from "@/data/weapons-detail-data";
+
 const YELLOW_MAIN = "#ffd24a";
 const YELLOW_TEXT = "#ffdc70";
-const YELLOW_BORDER = "rgba(255,196,74,0.14)";
 const YELLOW_BORDER_SOFT = "rgba(255,196,74,0.10)";
 
 const settingTypeLabelMap: Record<string, string> = {
@@ -14,16 +16,51 @@ const settingTypeLabelMap: Record<string, string> = {
   party: "파티",
 };
 
+const operatorBySlug = new Map(
+  operatorDetails.map((operator: any) => [operator.slug, operator]),
+);
+
+const weaponBySlug = new Map(
+  weaponDetails.map((weapon: any) => [weapon.slug, weapon]),
+);
+
+type PartyMember = {
+  name: string;
+  image: string;
+  operatorSlug: string;
+  elementIcon?: string;
+};
+
 type PopularSetting = {
   id: string;
-  type: string;
+  type: "solo" | "party";
   title: string;
   description?: string | null;
+  slots?: any;
   createdAt?: string;
   likeCount?: number | null;
   viewCount?: number | null;
+  likes?: number | null;
+  views?: number | null;
   nickname?: string | null;
   userNickname?: string | null;
+};
+
+type SettingCardItem = {
+  id: string;
+  title: string;
+  description: string;
+  nickname: string;
+  operatorName: string;
+  operatorSlug: string;
+  weaponName: string;
+  weaponImage?: string;
+  type: "solo" | "party";
+  likes: number;
+  views: number;
+  image: string;
+  elementIcon?: string;
+  partyMembers?: PartyMember[];
 };
 
 type ApiResponse = {
@@ -31,18 +68,70 @@ type ApiResponse = {
   settings?: PopularSetting[];
 };
 
+function getOperatorImage(operator: any) {
+  return (
+    operator?.avatar ??
+    operator?.image ??
+    `/operators/${operator?.slug}/avatar.webp`
+  );
+}
+
+function getOperatorElementIcon(operator: any) {
+  const element = operator?.element ?? operator?.elementKey ?? operator?.attribute;
+  return element ? `/icons/elements/${element}.webp` : "";
+}
+
 function getNickname(setting: PopularSetting) {
   return String(setting.nickname ?? setting.userNickname ?? "저장된 세팅").trim();
 }
 
-function formatNumber(value: number | null | undefined) {
-  return Number(value ?? 0).toLocaleString("ko-KR");
+function toSettingCardItem(setting: PopularSetting, fallbackOperatorSlug: string): SettingCardItem {
+  const mainSlot = setting.slots?.main;
+  const mainOperatorSlug = String(mainSlot?.operatorSlug ?? fallbackOperatorSlug ?? "").trim();
+  const mainOperator = operatorBySlug.get(mainOperatorSlug) as any;
+  const weapon = weaponBySlug.get(mainSlot?.form?.weaponSlug) as any;
+
+  const memberSlots = [
+    setting.slots?.member1,
+    setting.slots?.member2,
+    setting.slots?.member3,
+  ].filter(Boolean);
+
+  const partyMembers = memberSlots
+    .map((slot: any) => {
+      const operator = operatorBySlug.get(slot?.operatorSlug) as any;
+      if (!operator) return null;
+
+      return {
+        name: operator.name,
+        operatorSlug: operator.slug,
+        image: getOperatorImage(operator),
+        elementIcon: getOperatorElementIcon(operator),
+      };
+    })
+    .filter(Boolean) as PartyMember[];
+
+  return {
+    id: setting.id,
+    title: setting.title,
+    description: setting.description ?? "",
+    nickname: getNickname(setting),
+    operatorName: mainOperator?.name ?? mainOperatorSlug ?? "오퍼레이터",
+    operatorSlug: mainOperator?.slug ?? mainOperatorSlug,
+    weaponName: weapon?.name ?? "무기 미등록",
+    weaponImage: weapon?.image ?? weapon?.avatar,
+    type: setting.type === "party" ? "party" : "solo",
+    likes: Number(setting.likeCount ?? setting.likes ?? 0),
+    views: Number(setting.viewCount ?? setting.views ?? 0),
+    image: mainOperator ? getOperatorImage(mainOperator) : `/operators/${fallbackOperatorSlug}/avatar.webp`,
+    elementIcon: mainOperator ? getOperatorElementIcon(mainOperator) : undefined,
+    partyMembers,
+  };
 }
 
 export default function PopularOperatorSettingsPanel({
   operatorSlug,
   operatorName,
-  operatorAvatar,
 }: {
   operatorSlug: string;
   operatorName: string;
@@ -140,67 +229,127 @@ export default function PopularOperatorSettingsPanel({
           </div>
         </div>
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          {settings.map((setting, index) => (
-            <Link
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-[repeat(auto-fill,minmax(190px,220px))] sm:justify-between sm:gap-3 lg:gap-y-5">
+          {settings.map((setting) => (
+            <SettingCard
               key={setting.id}
-              href={`/settings/${setting.id}`}
-              className="group min-w-0 overflow-hidden rounded-[20px] bg-black/35 transition hover:-translate-y-0.5 hover:bg-[#0b1018] hover:shadow-[0_16px_34px_rgba(0,0,0,0.35)]"
-              style={{ border: `1px solid ${YELLOW_BORDER}` }}
-            >
-              <div className="relative h-32 overflow-hidden bg-[#050505] sm:h-36">
-                <Image
-                  src={operatorAvatar}
-                  alt={operatorName}
-                  fill
-                  sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 25vw"
-                  className="object-contain object-center p-2 opacity-85 transition duration-300 group-hover:scale-[1.03] group-hover:opacity-100"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/25 to-transparent" />
-
-                <div className="absolute left-3 top-3 rounded-full border border-yellow-400/30 bg-yellow-400/15 px-2 py-1 text-[10px] font-black text-yellow-100">
-                  인기 {index + 1}
-                </div>
-
-                <div className="absolute right-3 top-3 rounded-full border border-white/10 bg-black/60 px-2 py-1 text-[10px] font-black text-zinc-200">
-                  {settingTypeLabelMap[setting.type] ?? "세팅"}
-                </div>
-              </div>
-
-              <div className="p-3">
-                <div className="flex items-center justify-between gap-2 text-[11px] text-zinc-500">
-                  <span className="min-w-0 truncate font-bold">{getNickname(setting)}</span>
-                  <span className="shrink-0" style={{ color: YELLOW_TEXT }}>
-                    ♥ {formatNumber(setting.likeCount)}
-                  </span>
-                </div>
-
-                <h3 className="mt-2 line-clamp-2 min-h-[40px] break-keep text-sm font-black text-zinc-100 transition group-hover:text-yellow-100">
-                  {setting.title || `${operatorName} 세팅`}
-                </h3>
-
-                {setting.description ? (
-                  <p className="mt-2 line-clamp-2 min-h-[34px] text-xs leading-relaxed text-zinc-500">
-                    {setting.description}
-                  </p>
-                ) : (
-                  <p className="mt-2 min-h-[34px] text-xs leading-relaxed text-zinc-600">
-                    설명이 등록되지 않았습니다.
-                  </p>
-                )}
-
-                <div
-                  className="mt-3 flex items-center justify-between border-t pt-3 text-[11px] font-bold text-zinc-500"
-                  style={{ borderColor: YELLOW_BORDER_SOFT }}
-                >
-                  <span>조회 {formatNumber(setting.viewCount)}</span>
-                  <span className="text-yellow-200">상세 보기 →</span>
-                </div>
-              </div>
-            </Link>
+              setting={toSettingCardItem(setting, operatorSlug)}
+            />
           ))}
         </div>
       )}
     </div>
+  );
+}
+
+function SettingCard({ setting }: { setting: SettingCardItem }) {
+  return (
+    <Link
+      href={`/settings/${setting.id}`}
+      className="group block w-full overflow-hidden rounded-[16px] border border-white/10 bg-black transition hover:-translate-y-1 hover:border-yellow-400/40 sm:rounded-[18px]"
+    >
+      <div className="relative aspect-[220/255] overflow-hidden bg-black">
+        <Image
+          src={setting.image}
+          alt={setting.operatorName}
+          fill
+          sizes="(max-width: 640px) 46vw, 220px"
+          className="object-cover object-center transition duration-300 group-hover:scale-105"
+        />
+
+        <div className="absolute inset-0 bg-black/15" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/25 to-transparent" />
+
+        <div className="absolute left-2 top-2 flex items-center gap-1">
+          {setting.elementIcon ? (
+            <div className="flex h-7 w-7 items-center justify-center sm:h-8 sm:w-8">
+              <Image
+                src={setting.elementIcon}
+                alt="속성"
+                width={24}
+                height={24}
+                className="object-contain"
+              />
+            </div>
+          ) : null}
+
+          <span
+            className={[
+              "rounded-md border px-1.5 py-1 text-[9px] font-black backdrop-blur-sm sm:px-2 sm:text-[10px]",
+              setting.type === "solo"
+                ? "border-yellow-300/40 bg-yellow-300/15 text-yellow-200"
+                : "border-sky-300/40 bg-sky-300/15 text-sky-200",
+            ].join(" ")}
+          >
+            {settingTypeLabelMap[setting.type]}
+          </span>
+        </div>
+
+        {setting.type === "party" && setting.partyMembers?.length ? (
+          <div className="absolute right-2 top-2 flex flex-col gap-1">
+            {setting.partyMembers.slice(0, 3).map((member) => (
+              <div
+                key={member.operatorSlug}
+                className="relative h-8 w-8 overflow-hidden rounded-md border border-white/20 bg-black sm:h-10 sm:w-10"
+              >
+                <Image
+                  src={member.image}
+                  alt={member.name}
+                  fill
+                  sizes="40px"
+                  className="object-cover"
+                />
+
+                {member.elementIcon ? (
+                  <Image
+                    src={member.elementIcon}
+                    alt=""
+                    width={13}
+                    height={13}
+                    className="absolute bottom-0 right-0 rounded-sm bg-black/80"
+                  />
+                ) : null}
+              </div>
+            ))}
+          </div>
+        ) : null}
+
+        {setting.weaponImage ? (
+          <div className="absolute bottom-2 right-2 flex h-9 w-9 items-center justify-center rounded-md border border-white/15 bg-black/50 backdrop-blur-sm sm:h-10 sm:w-10">
+            <Image
+              src={setting.weaponImage}
+              alt={setting.weaponName}
+              width={34}
+              height={34}
+              className="object-contain"
+            />
+          </div>
+        ) : null}
+
+        <div className="absolute bottom-0 left-0 right-0 px-2.5 py-2 sm:px-3">
+          <h3 className="line-clamp-1 text-[13px] font-black text-white drop-shadow sm:text-[15px]">
+            {setting.operatorName}
+          </h3>
+        </div>
+      </div>
+
+      <div className="flex min-h-[124px] flex-col border-t border-yellow-500/10 bg-black px-2.5 pb-2 pt-2 sm:min-h-[138px] sm:px-3">
+        <h2 className="line-clamp-2 text-[12px] font-black leading-[17px] text-yellow-300 sm:text-[13px] sm:leading-[18px]">
+          {setting.title}
+        </h2>
+
+        <p className="mt-1 line-clamp-2 text-[10px] leading-[16px] text-zinc-300 sm:text-[11px] sm:leading-[17px]">
+          {setting.description}
+        </p>
+
+        <div className="mt-auto flex flex-wrap items-center gap-1 pt-2 text-[9px] font-black sm:text-[10px]">
+          <span className="max-w-full truncate text-white">{setting.nickname}</span>
+          <span className="text-zinc-600">|</span>
+          <span className="text-[#ffdc70]">추천 {setting.likes}</span>
+          <span className="text-zinc-600">|</span>
+          <span className="text-[#ffdc70]">조회 {setting.views}</span>
+        </div>
+      </div>
+    </Link>
   );
 }
