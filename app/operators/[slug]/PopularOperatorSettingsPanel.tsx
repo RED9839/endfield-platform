@@ -32,9 +32,7 @@ type ApiResponse = {
 };
 
 function getNickname(setting: PopularSetting) {
-  return String(
-    setting.nickname ?? setting.userNickname ?? "저장된 세팅",
-  ).trim();
+  return String(setting.nickname ?? setting.userNickname ?? "저장된 세팅").trim();
 }
 
 function formatNumber(value: number | null | undefined) {
@@ -52,6 +50,7 @@ export default function PopularOperatorSettingsPanel({
 }) {
   const [settings, setSettings] = useState<PopularSetting[]>([]);
   const [loading, setLoading] = useState(true);
+  const settingsListHref = `/settings?operators=${encodeURIComponent(operatorSlug)}&sort=popular`;
 
   useEffect(() => {
     let mounted = true;
@@ -110,11 +109,11 @@ export default function PopularOperatorSettingsPanel({
         </div>
 
         <Link
-          href={`/settings?operators=${encodeURIComponent(operatorSlug)}&sort=popular`}
+          href={settingsListHref}
           className="rounded-xl bg-black px-3 py-2 text-xs font-black text-zinc-200 transition hover:border-yellow-400/40 hover:text-yellow-300 sm:px-4 sm:text-sm"
           style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
         >
-          전체 보기
+          이 오퍼레이터 세팅 목록 보기
         </Link>
       </div>
 
@@ -156,9 +155,9 @@ export default function PopularOperatorSettingsPanel({
                   alt={operatorName}
                   fill
                   sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 25vw"
-                  className="object-cover object-top opacity-70 transition duration-300 group-hover:scale-105 group-hover:opacity-90"
+                  className="object-contain object-center p-2 opacity-85 transition duration-300 group-hover:scale-[1.03] group-hover:opacity-100"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/35 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/25 to-transparent" />
 
                 <div className="absolute left-3 top-3 rounded-full border border-yellow-400/30 bg-yellow-400/15 px-2 py-1 text-[10px] font-black text-yellow-100">
                   인기 {index + 1}
