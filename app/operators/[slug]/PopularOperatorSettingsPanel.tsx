@@ -50,7 +50,6 @@ export default function PopularOperatorSettingsPanel({
 }) {
   const [settings, setSettings] = useState<PopularSetting[]>([]);
   const [loading, setLoading] = useState(true);
-  const settingsListHref = `/settings?operators=${encodeURIComponent(operatorSlug)}&sort=popular`;
 
   useEffect(() => {
     let mounted = true;
@@ -109,11 +108,11 @@ export default function PopularOperatorSettingsPanel({
         </div>
 
         <Link
-          href={settingsListHref}
+          href="/settings"
           className="rounded-xl bg-black px-3 py-2 text-xs font-black text-zinc-200 transition hover:border-yellow-400/40 hover:text-yellow-300 sm:px-4 sm:text-sm"
           style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
         >
-          이 오퍼레이터 세팅 목록 보기
+          전체 오퍼레이터 세팅 보러가기
         </Link>
       </div>
 
