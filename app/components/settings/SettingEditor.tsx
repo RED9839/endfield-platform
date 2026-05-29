@@ -139,6 +139,9 @@ const statIconMap: Record<string, string> = {
   "치명타 확률": "/icons/stats/crit_rate.webp",
   "치명타 피해": "/icons/stats/crit_rate.webp",
   "궁극기 충전 효율": "/icons/stats/ultimate_charge.webp",
+  "치유 효율": "/icons/stats/heal_efficiency.webp",
+  "치유 효율 보너스": "/icons/stats/heal_efficiency.webp",
+  "오리지늄 아츠 강도": "/icons/stats/originium_arts.webp",
   "스킬 피해 보너스": "/icons/stats/skill_damage.webp",
   "일반 공격 피해 보너스": "/icons/stats/normal_attack_damage.webp",
   "배틀 스킬 피해 보너스": "/icons/stats/skill_damage.webp",
@@ -670,6 +673,7 @@ const BONUS_STAT_KEYS = [
   "critDamage",
   "ultimateEfficiency",
   "healEfficiency",
+  "originiumArts",
   "skillDamage",
   "allSkillDamage",
   "normalAttackDamage",
@@ -774,6 +778,7 @@ function createBonusStats() {
     critDamage: 0,
     ultimateEfficiency: 0,
     healEfficiency: 0,
+    originiumArts: 0,
     skillDamage: 0,
     allSkillDamage: 0,
     normalAttackDamage: 0,
@@ -925,6 +930,11 @@ function applyStatByLabel(
     handled = true;
   } else if (normalizedLabel.includes("물리 피해")) {
     target.physicalDamage += value;
+    handled = true;
+  }
+
+  if (normalizedLabel.includes("오리지늄 아츠 강도")) {
+    target.originiumArts += value;
     handled = true;
   }
 
@@ -1100,6 +1110,8 @@ function applyFlatStatsFromObject(
       critDamage: "치명타 피해",
       ultimateEfficiency: "궁극기 충전 효율",
       healEfficiency: "치유 효율",
+      healEfficiencyBonus: "치유 효율",
+      originiumArts: "오리지늄 아츠 강도",
       skillDamage: "스킬 피해 보너스",
       allSkillDamage: "모든 스킬 피해 보너스",
       normalAttackDamage: "일반 공격 피해 보너스",
@@ -1248,6 +1260,9 @@ function applyOperatorBonusByText(
     "치명타 확률",
     "치명타 피해",
     "궁극기 충전 효율",
+    "치유 효율 보너스",
+    "치유 효율",
+    "오리지늄 아츠 강도",
     "물리 피해",
     "아츠 피해",
     "냉기와 전기 피해",
@@ -1722,6 +1737,7 @@ function mergeBonusStats(
   target.critDamage += stat.critDamage;
   target.ultimateEfficiency += stat.ultimateEfficiency;
   target.healEfficiency += stat.healEfficiency;
+  target.originiumArts += stat.originiumArts;
   target.skillDamage += stat.skillDamage;
   target.allSkillDamage += stat.allSkillDamage;
   target.normalAttackDamage += stat.normalAttackDamage;
@@ -2031,6 +2047,10 @@ function calculateFinalStats(params: {
   const baseHp = operator.hp + bonus.hp + str * 5;
   const hp = baseHp * (1 + bonus.hpPercent / 100);
 
+  const totalBattleSkillDamage = bonus.battleSkillDamage + bonus.allSkillDamage;
+  const totalComboSkillDamage = bonus.comboSkillDamage + bonus.allSkillDamage;
+  const totalUltimateDamage = bonus.ultimateDamage + bonus.allSkillDamage;
+
   return {
     hp: Math.floor(hp),
     baseHp: Math.floor(baseHp),
@@ -2051,12 +2071,13 @@ function calculateFinalStats(params: {
     critDamage: Math.floor((50 + bonus.critDamage) * 10) / 10,
     ultimateEfficiency: Math.floor((100 + bonus.ultimateEfficiency) * 10) / 10,
     healEfficiency: Math.floor(bonus.healEfficiency * 10) / 10,
+    originiumArts: Math.floor(bonus.originiumArts * 10) / 10,
     skillDamage: Math.floor(bonus.skillDamage * 10) / 10,
     allSkillDamage: Math.floor(bonus.allSkillDamage * 10) / 10,
     normalAttackDamage: Math.floor(bonus.normalAttackDamage * 10) / 10,
-    battleSkillDamage: Math.floor(bonus.battleSkillDamage * 10) / 10,
-    comboSkillDamage: Math.floor(bonus.comboSkillDamage * 10) / 10,
-    ultimateDamage: Math.floor(bonus.ultimateDamage * 10) / 10,
+    battleSkillDamage: Math.floor(totalBattleSkillDamage * 10) / 10,
+    comboSkillDamage: Math.floor(totalComboSkillDamage * 10) / 10,
+    ultimateDamage: Math.floor(totalUltimateDamage * 10) / 10,
     physicalDamage: Math.floor(bonus.physicalDamage * 10) / 10,
     artsDamage: Math.floor(bonus.artsDamage * 10) / 10,
     cryoDamage: Math.floor(bonus.cryoDamage * 10) / 10,
@@ -2901,6 +2922,12 @@ function FinalStatPanel({
       statKey: "healEfficiency",
       label: "치유 효율 보너스",
       value: finalStats.healEfficiency,
+    },
+    {
+      key: "originiumArts",
+      statKey: "originiumArts",
+      label: "오리지늄 아츠 강도",
+      value: finalStats.originiumArts,
     },
     {
       key: "skillDamage",
