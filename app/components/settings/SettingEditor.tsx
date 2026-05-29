@@ -2071,7 +2071,7 @@ function calculateFinalStats(params: {
     critDamage: Math.floor((50 + bonus.critDamage) * 10) / 10,
     ultimateEfficiency: Math.floor((100 + bonus.ultimateEfficiency) * 10) / 10,
     healEfficiency: Math.floor(bonus.healEfficiency * 10) / 10,
-    originiumArts: Math.floor(bonus.originiumArts * 10) / 10,
+    originiumArts: Math.floor(bonus.originiumArts),
     skillDamage: Math.floor(bonus.skillDamage * 10) / 10,
     allSkillDamage: Math.floor(bonus.allSkillDamage * 10) / 10,
     normalAttackDamage: Math.floor(bonus.normalAttackDamage * 10) / 10,
@@ -2887,6 +2887,34 @@ function FinalStatPanel({
   }
 
 
+  function getIntegerDetailRows(
+    key: NumericBonusStatKey,
+  ) {
+    const breakdown = finalStats.bonusBreakdown;
+    const rows: { label: string; value: string }[] = [];
+    const sources = [
+      { label: "신뢰도 보너스", stat: Number(breakdown.trust[key] ?? 0) },
+      { label: "잠재능력", stat: Number(breakdown.breakthrough[key] ?? 0) },
+      { label: "무기 옵션", stat: Number(breakdown.weapon[key] ?? 0) },
+      { label: "세트 효과", stat: Number(breakdown.setEffect[key] ?? 0) },
+    ];
+
+    rows.push(...getGearDetailRowsForKey(key));
+
+    for (const source of sources) {
+      if (source.stat) {
+        const value = Math.floor(source.stat);
+        rows.push({
+          label: source.label,
+          value: `${value > 0 ? "+" : ""}${value.toLocaleString()}`,
+        });
+      }
+    }
+
+    return rows;
+  }
+
+
   function getDynamicDetailRows(label: string) {
     const breakdown = finalStats.bonusBreakdown;
     const gearRows = getGearDetailRowsForKey(`dynamic:${label}`);
@@ -2924,22 +2952,10 @@ function FinalStatPanel({
       value: finalStats.healEfficiency,
     },
     {
-      key: "originiumArts",
-      statKey: "originiumArts",
-      label: "오리지늄 아츠 강도",
-      value: finalStats.originiumArts,
-    },
-    {
       key: "skillDamage",
       statKey: "skillDamage",
       label: "스킬 피해 보너스",
       value: finalStats.skillDamage,
-    },
-    {
-      key: "allSkillDamage",
-      statKey: "allSkillDamage",
-      label: "모든 스킬 피해 보너스",
-      value: finalStats.allSkillDamage,
     },
     {
       key: "normalAttackDamage",
@@ -3130,6 +3146,15 @@ function FinalStatPanel({
           opened={openedStatKey === "statBonus"}
           onClick={() => toggle("statBonus")}
         />
+        {finalStats.originiumArts !== 0 ? (
+          <StatLine
+            label="오리지늄 아츠 강도"
+            value={Math.floor(finalStats.originiumArts).toLocaleString()}
+            details={getIntegerDetailRows("originiumArts")}
+            opened={openedStatKey === "originiumArts"}
+            onClick={() => toggle("originiumArts")}
+          />
+        ) : null}
         {extraPercentStatRows.map((item) => (
           <StatLine
             key={item.statKey}
