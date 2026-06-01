@@ -80,6 +80,7 @@ type AccountUser = {
   name?: string | null;
   email?: string | null;
   nickname?: string | null;
+  role?: string | null;
 } | null;
 
 function SideNav({ user }: { user?: AccountUser }) {
@@ -118,11 +119,20 @@ function SideNav({ user }: { user?: AccountUser }) {
 
               <div className="grid gap-2">
                 <Link
-                  href="/account"
+                  href="/profile"
                   className="rounded-lg bg-[#ffd24a] px-4 py-2 text-center text-sm font-black text-black transition hover:brightness-110"
                 >
-                  프로필 수정
+                  마이페이지
                 </Link>
+
+                {user.role === "ADMIN" && (
+                  <Link
+                    href="/admin"
+                    className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-2 text-center text-sm font-black text-red-300 transition hover:bg-red-500/20"
+                  >
+                    관리자 페이지
+                  </Link>
+                )}
 
                 <SignOutButton />
               </div>
@@ -186,10 +196,10 @@ function MobileTopBar({ user }: { user?: AccountUser }) {
         <div className="shrink-0">
           {user ? (
             <Link
-              href="/account"
+              href="/profile"
               className="block max-w-[44vw] truncate rounded-xl border border-yellow-500/25 bg-yellow-500/10 px-3 py-2 text-xs font-black text-yellow-200"
             >
-              프로필
+              마이페이지
             </Link>
           ) : (
             <Link
