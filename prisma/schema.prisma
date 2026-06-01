@@ -15,6 +15,7 @@ model User {
   emailVerified DateTime?
   image         String?
   nickname      String?   @unique
+  role          String    @default("USER")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -25,6 +26,8 @@ model User {
   materialInventory    UserMaterialInventory[]
   operatorSettings     UserOperatorSetting[]
   operatorSettingLikes UserOperatorSettingLike[]
+
+  @@index([role])
 }
 
 model Account {
