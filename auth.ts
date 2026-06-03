@@ -23,8 +23,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
   callbacks: {
     async jwt({ token, user }) {
-      if (user) {
+      if (user?.id) {
         token.id = user.id;
+      }
+
+      // 이미 DB 조회가 끝난 토큰이면 재조회하지 않음
+      if (
+        token.hasDbUser === true &&
+        typeof token.id === "string"
+      ) {
+        return token;
       }
 
       if (token.email) {
@@ -47,6 +55,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           token.nickname = dbUser.nickname;
           token.role = dbUser.role;
           token.hasDbUser = true;
+        } else {
+          token.hasDbUser = false;
         }
       }
 
@@ -55,11 +65,22 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
     async session({ session, token }) {
       if (session.user) {
-        const sessionUser = session.user as typeof session.user & SessionUserWithDbState;
+        const sessionUser =
+          session.user as typeof session.user & SessionUserWithDbState;
 
-        sessionUser.id = typeof token.id === "string" ? token.id : "";
-        sessionUser.nickname = typeof token.nickname === "string" ? token.nickname : null;
-        sessionUser.role = typeof token.role === "string" ? token.role : "USER";
+        sessionUser.id =
+          typeof token.id === "string" ? token.id : "";
+
+        sessionUser.nickname =
+          typeof token.nickname === "string"
+            ? token.nickname
+            : null;
+
+        sessionUser.role =
+          typeof token.role === "string"
+            ? token.role
+            : "USER";
+
         sessionUser.hasDbUser = Boolean(token.hasDbUser);
       }
 
