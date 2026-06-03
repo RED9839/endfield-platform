@@ -1537,9 +1537,8 @@ function getPotentialStatStage(operator?: SelectableItem): number | null {
 
   // 아베웨나 / 판 = 3잠
   if (
-    text.includes("아베웨나") ||
-    text.includes("abewena") ||
-    text.includes("avwena") ||
+    text.includes("아비웨나") ||
+    text.includes("avywenna") ||
     text.includes("판") ||
     text.includes("pan")
   ) {
