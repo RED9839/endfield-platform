@@ -24,6 +24,7 @@ import { fluoriteOperatorDetailData } from "./operators-source/fluorite";
 import { akekuriOperatorDetailData } from "./operators-source/akekuri";
 import { endministratorOperatorDetailData } from "./operators-source/endministrator";
 import { zhuangfangyiDetailData } from "./operators-source/zhuangfangyi";
+import { mifuOperatorDetailData } from "./operators-source/mifu";
 
 import {
   buildOperatorDetailFromSource,
@@ -89,6 +90,7 @@ export const operatorDetails: OperatorDetail[] = [
   buildOperatorDetailFromSource(akekuriOperatorDetailData),
   buildOperatorDetailFromSource(endministratorOperatorDetailData),
   buildOperatorDetailFromSource(zhuangfangyiDetailData),
+  buildOperatorDetailFromSource(mifuOperatorDetailData),
 ];
 
 export function getOperatorDetailBySlug(slug: string) {
