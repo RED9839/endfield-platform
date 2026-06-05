@@ -69,54 +69,54 @@ const FETCH_HEADERS = {
   Referer: SITE,
 };
 
-const HANGHAE_IMAGE =
+const WEAPON_A_IMAGE =
   "https://web-static.hg-cdn.com/upload/image/20260415/c08b7435381e80dba80b70453daf22d4.jpg";
 
-const JEOGOK_IMAGE =
+const WEAPON_B_IMAGE =
   "https://web-static.hg-cdn.com/upload/image/20260325/46d8dbd41c064a8d1c469d9f3f8aa49e.png";
 
-const SINA_IMAGE =
+const WEAPON_C_IMAGE =
   "https://web-static.hg-cdn.com/upload/image/20260310/29486c6dc4d5ff64fb685d039d46d6b4.png";
 
 const DEFAULT_NORMAL_WEAPON_STACK: WeaponStackItem[] = [
   {
-    id: "hanghae",
-    title: "항해 신청",
+    id: "weapon-a",
+    title: "무기 배너 A",
     stack: 0,
     group: "normal",
-    image: HANGHAE_IMAGE,
-    detailImage: HANGHAE_IMAGE,
-    bannerImage: HANGHAE_IMAGE,
-    articleImage: HANGHAE_IMAGE,
-    thumbnail: HANGHAE_IMAGE,
+    image: WEAPON_A_IMAGE,
+    detailImage: WEAPON_A_IMAGE,
+    bannerImage: WEAPON_A_IMAGE,
+    articleImage: WEAPON_A_IMAGE,
+    thumbnail: WEAPON_A_IMAGE,
     href: NEWS_URL,
     publishedAt: "2026.04.16",
     createdAt: "2026-04-16T00:00:00.000Z",
   },
   {
-    id: "jeogok",
-    title: "적옥 신청",
+    id: "weapon-b",
+    title: "무기 배너 B",
     stack: 1,
     group: "normal",
-    image: JEOGOK_IMAGE,
-    detailImage: JEOGOK_IMAGE,
-    bannerImage: JEOGOK_IMAGE,
-    articleImage: JEOGOK_IMAGE,
-    thumbnail: JEOGOK_IMAGE,
+    image: WEAPON_B_IMAGE,
+    detailImage: WEAPON_B_IMAGE,
+    bannerImage: WEAPON_B_IMAGE,
+    articleImage: WEAPON_B_IMAGE,
+    thumbnail: WEAPON_B_IMAGE,
     href: NEWS_URL,
     publishedAt: "2026.03.28",
     createdAt: "2026-03-28T00:00:00.000Z",
   },
   {
-    id: "sina",
-    title: "신아 신청",
+    id: "weapon-c",
+    title: "무기 배너 C",
     stack: 2,
     group: "normal",
-    image: SINA_IMAGE,
-    detailImage: SINA_IMAGE,
-    bannerImage: SINA_IMAGE,
-    articleImage: SINA_IMAGE,
-    thumbnail: SINA_IMAGE,
+    image: WEAPON_C_IMAGE,
+    detailImage: WEAPON_C_IMAGE,
+    bannerImage: WEAPON_C_IMAGE,
+    articleImage: WEAPON_C_IMAGE,
+    thumbnail: WEAPON_C_IMAGE,
     href: NEWS_URL,
     publishedAt: "2026.03.11",
     createdAt: "2026-03-11T00:00:00.000Z",
@@ -311,9 +311,17 @@ function getNormalWeaponMeta(title: string) {
 
   const normalized = normalizeWeaponTitle(title);
 
-  if (normalized.includes("항해 신청")) return { id: "hanghae", label: "항해 신청" };
-  if (normalized.includes("적옥 신청")) return { id: "jeogok", label: "적옥 신청" };
-  if (normalized.includes("신아 신청")) return { id: "sina", label: "신아 신청" };
+  if (normalized.includes("무기 배너 A")) {
+    return { id: "weapon-a", label: "무기 배너 A" };
+  }
+
+  if (normalized.includes("무기 배너 B")) {
+    return { id: "weapon-b", label: "무기 배너 B" };
+  }
+
+  if (normalized.includes("무기 배너 C")) {
+    return { id: "weapon-c", label: "무기 배너 C" };
+  }
 
   return null;
 }
@@ -347,13 +355,6 @@ function getStackOperatorItems(items: ParsedItem[]) {
 
 function findCurrentStackOperatorTitle(items: ParsedItem[]) {
   return getStackOperatorItems(items)[0]?.title ?? "";
-}
-
-function getWeaponStackIndex(weapon: WeaponStackItem, operatorItems: ParsedItem[]) {
-  const weaponTime = dateToTime(weapon.publishedAt);
-  if (!weaponTime || operatorItems.length === 0) return weapon.stack;
-
-  return operatorItems.filter((operator) => dateToTime(operator.date) > weaponTime).length;
 }
 
 function makeNormalWeaponItem(
@@ -404,15 +405,35 @@ function normalizeStack(items: WeaponStackItem[], max: number) {
 
 function dedupeById(items: WeaponStackItem[]) {
   const map = new Map<string, WeaponStackItem>();
+
   for (const item of items) {
     if (!map.has(item.id)) map.set(item.id, item);
   }
+
   return [...map.values()];
+}
+
+function applyWeaponStackOrder(items: WeaponStackItem[]) {
+  return dedupeById(items)
+    .sort(
+      (a, b) =>
+        dateToTime(b.publishedAt) - dateToTime(a.publishedAt) ||
+        a.title.localeCompare(b.title, "ko"),
+    )
+    .map((weapon, index) => ({
+      ...weapon,
+      stack: index,
+    }))
+    .filter((weapon) => weapon.stack < 3)
+    .sort(
+      (a, b) =>
+        a.stack - b.stack ||
+        dateToTime(b.publishedAt) - dateToTime(a.publishedAt),
+    );
 }
 
 function updateNormalWeaponStack(items: ParsedItem[]) {
   const stackOperatorTitle = findCurrentStackOperatorTitle(items);
-  const operatorItems = getStackOperatorItems(items);
 
   if (stackOperatorTitle) lastStackOperatorTitle = stackOperatorTitle;
 
@@ -433,33 +454,34 @@ function updateNormalWeaponStack(items: ParsedItem[]) {
     .sort((a, b) => dateToTime(b.item.date) - dateToTime(a.item.date));
 
   const stack = dedupeById([
-    ...foundNormalItems.map(({ item, meta }) => makeNormalWeaponItem(item, meta, 0)),
+    ...foundNormalItems.map(({ item, meta }) =>
+      makeNormalWeaponItem(item, meta, 0),
+    ),
     ...normalWeaponStack,
     ...DEFAULT_NORMAL_WEAPON_STACK,
   ]).map((weapon) => {
     const found = foundNormalItems.find((entry) => entry.meta.id === weapon.id);
-    const updatedWeapon = found
-      ? {
-          ...weapon,
-          image: found.item.image || weapon.image,
-          detailImage: found.item.image || weapon.detailImage,
-          bannerImage: found.item.image || weapon.bannerImage,
-          articleImage: found.item.image || weapon.articleImage,
-          thumbnail: found.item.image || weapon.thumbnail,
-          href: found.item.href || weapon.href,
-          publishedAt: found.item.date || weapon.publishedAt,
-        }
-      : weapon;
+
+    if (!found) return weapon;
 
     return {
-      ...updatedWeapon,
-      stack: getWeaponStackIndex(updatedWeapon, operatorItems),
+      ...weapon,
+      image: found.item.image || weapon.image,
+      detailImage: found.item.image || weapon.detailImage,
+      bannerImage: found.item.image || weapon.bannerImage,
+      articleImage: found.item.image || weapon.articleImage,
+      thumbnail: found.item.image || weapon.thumbnail,
+      href: found.item.href || weapon.href,
+      publishedAt: found.item.date || weapon.publishedAt,
     };
   });
 
   normalWeaponStack = stack
-    .filter((weapon) => weapon.stack < 3)
-    .sort((a, b) => a.stack - b.stack || dateToTime(b.publishedAt) - dateToTime(a.publishedAt))
+    .sort(
+      (a, b) =>
+        dateToTime(b.publishedAt) - dateToTime(a.publishedAt) ||
+        a.title.localeCompare(b.title, "ko"),
+    )
     .slice(0, 3);
 
   return normalWeaponStack;
@@ -490,6 +512,7 @@ function updateSpecialWeaponStack(items: ParsedItem[]) {
   }
 
   const currentSpecialIds = new Set(foundSpecialItems.map(({ meta }) => meta.id));
+
   stack = stack.filter((weapon) => currentSpecialIds.has(weapon.id));
   specialWeaponStack = normalizeStack(dedupeById(stack), 2);
 
@@ -499,10 +522,13 @@ function updateSpecialWeaponStack(items: ParsedItem[]) {
 function updateWeaponStack(items: ParsedItem[]) {
   const normal = updateNormalWeaponStack(items);
   const special = updateSpecialWeaponStack(items);
-  return [...normal, ...special];
+  return applyWeaponStackOrder([...special, ...normal]);
 }
 
-function createErrorPayload(message: string, statusCache: "hit" | "miss" = "miss"): HomeApiResponse {
+function createErrorPayload(
+  message: string,
+  statusCache: "hit" | "miss" = "miss",
+): HomeApiResponse {
   const weaponStack = updateWeaponStack([]);
 
   return {
@@ -545,7 +571,9 @@ export async function getHomeData(): Promise<HomeApiResponse> {
     });
 
     if (!response.ok) {
-      return createErrorPayload(`공식 소식을 불러오지 못했습니다. 상태 코드: ${response.status}`);
+      return createErrorPayload(
+        `공식 소식을 불러오지 못했습니다. 상태 코드: ${response.status}`,
+      );
     }
 
     const html = await response.text();
