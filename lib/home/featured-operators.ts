@@ -14,6 +14,19 @@ export type HomeFeaturedOperator = {
 
 const homeOperatorMetas: HomeFeaturedOperator[] = [
   {
+  slug: "mifu",
+  name: "미브",
+  enName: "Mifu",
+  href: "/operators/mifu",
+  heroImage: "/operators/mifu/full.webp",
+  avatar: "/operators/mifu/avatar.webp",
+  fullImage: "/operators/mifu/full.webp",
+  rarity: 6,
+  element: "physical",
+  class: "guard",
+  aliases: ["Mifu", "mifu", "미브"],
+},
+  {
     slug: "zhuangfangyi",
     name: "장방이",
     enName: "Zhuang Fangyi",
