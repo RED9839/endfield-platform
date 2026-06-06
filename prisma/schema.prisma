@@ -131,3 +131,26 @@ model UserOperatorSettingLike {
   @@unique([userId, settingId])
   @@index([settingId])
 }
+
+model HomeWeaponStack {
+  id           String   @id @default(cuid())
+  weaponId     String   @unique
+  title        String
+  stack        Int
+  group        String   @default("normal")
+  image        String
+  detailImage  String?
+  bannerImage  String?
+  articleImage String?
+  thumbnail    String?
+  href         String
+  publishedAt  String
+  createdAt    String
+  updatedAt    DateTime @updatedAt
+}
+
+model HomeStackState {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
