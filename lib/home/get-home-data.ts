@@ -523,7 +523,7 @@ async function saveNormalWeaponStackToDb() {
   }
 }
 
-async async function updateNormalWeaponStack(items: ParsedItem[]) {
+async function updateNormalWeaponStack(items: ParsedItem[]) {
   await loadNormalWeaponStackFromDb();
 
   const stackOperatorTitle = findCurrentStackOperatorTitle(items);
