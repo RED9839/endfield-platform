@@ -61,6 +61,7 @@ type SettingItem = {
   image: string;
   elementIcon?: string;
   partyMembers?: PartyMember[];
+  isDefaultSetting: boolean;
 };
 
 type ApiSetting = {
@@ -90,6 +91,7 @@ type ApiSetting = {
     email?: string | null;
   } | null;
   profile?: { nickname?: string | null; name?: string | null } | null;
+  isDefaultSetting?: boolean;
 };
 
 function getOperatorImage(operator: any) {
@@ -180,6 +182,7 @@ function toSettingItem(setting: ApiSetting): SettingItem {
       ? getOperatorElementIcon(mainOperator)
       : undefined,
     partyMembers,
+    isDefaultSetting: Boolean(setting.isDefaultSetting),
   };
 }
 
@@ -786,6 +789,11 @@ function SettingCard({ setting }: { setting: SettingItem }) {
           <span className="max-w-full truncate text-white">
             {setting.nickname}
           </span>
+          {setting.isDefaultSetting ? (
+            <span className="rounded border border-yellow-300/30 bg-yellow-300/10 px-1 text-yellow-200">
+              기본 세팅
+            </span>
+          ) : null}
           <span className="text-zinc-600">|</span>
           <span className="text-[#ffdc70]">추천 {setting.likes}</span>
           <span className="text-zinc-600">|</span>

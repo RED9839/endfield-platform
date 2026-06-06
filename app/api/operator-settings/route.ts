@@ -27,6 +27,7 @@ type OperatorSettingListItem = {
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 24;
 const MAX_LIMIT = 60;
+const DEFAULT_SETTING_NICKNAME = "red9839";
 
 const operatorSearchMap = new Map(
   operatorDetails.map((operator: any) => [
@@ -86,6 +87,10 @@ function getSettingNickname(setting: Pick<OperatorSettingListItem, "nickname" | 
   return String(setting.nickname ?? setting.user?.nickname ?? "").trim();
 }
 
+function isDefaultSetting(setting: Pick<OperatorSettingListItem, "nickname" | "user">) {
+  return getSettingNickname(setting).toLowerCase() === DEFAULT_SETTING_NICKNAME;
+}
+
 function getSettingOperatorSlugs(slots: any) {
   return Array.from(
     new Set(
@@ -125,6 +130,9 @@ function getSettingSearchText(setting: OperatorSettingListItem) {
 
 function sortSettings(settings: OperatorSettingListItem[], sortType: SortType) {
   return [...settings].sort((a, b) => {
+    const defaultPriority = Number(isDefaultSetting(a)) - Number(isDefaultSetting(b));
+    if (defaultPriority !== 0) return defaultPriority;
+
     const aCreatedAt = a.createdAt.toISOString();
     const bCreatedAt = b.createdAt.toISOString();
 
@@ -155,6 +163,7 @@ function toListResponseItem(setting: OperatorSettingListItem) {
     viewCount: setting.viewCount,
     nickname,
     userNickname: nickname,
+    isDefaultSetting: isDefaultSetting(setting),
   };
 }
 

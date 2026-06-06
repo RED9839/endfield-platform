@@ -44,6 +44,7 @@ type PopularSetting = {
   views?: number | null;
   nickname?: string | null;
   userNickname?: string | null;
+  isDefaultSetting?: boolean;
 };
 
 type SettingCardItem = {
@@ -61,6 +62,7 @@ type SettingCardItem = {
   image: string;
   elementIcon?: string;
   partyMembers?: PartyMember[];
+  isDefaultSetting: boolean;
 };
 
 type ApiResponse = {
@@ -126,6 +128,7 @@ function toSettingCardItem(setting: PopularSetting, fallbackOperatorSlug: string
     image: mainOperator ? getOperatorImage(mainOperator) : `/operators/${fallbackOperatorSlug}/avatar.webp`,
     elementIcon: mainOperator ? getOperatorElementIcon(mainOperator) : undefined,
     partyMembers,
+    isDefaultSetting: Boolean(setting.isDefaultSetting),
   };
 }
 
@@ -344,6 +347,11 @@ function SettingCard({ setting }: { setting: SettingCardItem }) {
 
         <div className="mt-auto flex flex-wrap items-center gap-1 pt-2 text-[9px] font-black sm:text-[10px]">
           <span className="max-w-full truncate text-white">{setting.nickname}</span>
+          {setting.isDefaultSetting ? (
+            <span className="rounded border border-yellow-300/30 bg-yellow-300/10 px-1 text-yellow-200">
+              기본 세팅
+            </span>
+          ) : null}
           <span className="text-zinc-600">|</span>
           <span className="text-[#ffdc70]">추천 {setting.likes}</span>
           <span className="text-zinc-600">|</span>
