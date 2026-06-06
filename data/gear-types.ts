@@ -5,6 +5,7 @@ export type GearLevel = 70 | 50 | 36 | 28 | 20 | 10;
 export type GearQuality = 1 | 2 | 3 | 4 | 5;
 
 export type GearSetName =
+  | "고검의 잔향"
   | "개척"
   | "응룡 50식"
   | "본 크러셔"

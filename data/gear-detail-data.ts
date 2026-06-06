@@ -212,6 +212,12 @@ import { xiranflowbaton } from "./gear-source/xiranflowbaton";
 import { swordmancerheavyarmort1 } from "./gear-source/swordmancerheavyarmort1";
 import { swordmancertacgauntletst1 } from "./gear-source/swordmancertacgauntletst1";
 import { swordmancerdagger } from "./gear-source/swordmancerdagger";
+import { grizzlededgearmor } from "./gear-source/grizzlededgearmor";
+import { grizzlededgearmort1 } from "./gear-source/grizzlededgearmort1";
+import { grizzlededgegauntlets } from "./gear-source/grizzlededgegauntlets";
+import { grizzlededgegauntletst1 } from "./gear-source/grizzlededgegauntletst1";
+import { grizzlededgepushknife } from "./gear-source/grizzlededgepushknife";
+import { grizzlededgepushknifet1 } from "./gear-source/grizzlededgepushknifet1";
 
 export const gearDetails: GearDetail[] = [
   frontiersarmor,
@@ -426,6 +432,12 @@ export const gearDetails: GearDetail[] = [
   swordmancerheavyarmort1,
   swordmancertacgauntletst1,
   swordmancerdagger,
+  grizzlededgearmor,
+  grizzlededgearmort1,
+  grizzlededgegauntlets,
+  grizzlededgegauntletst1,
+  grizzlededgepushknife,
+  grizzlededgepushknifet1,
 ];
 
 export function getGearDetailBySlug(slug: string) {
