@@ -205,6 +205,7 @@ import { qingbogauntlets } from "./gear-source/qingbogauntlets";
 import { qingbogloves } from "./gear-source/qingbogloves";
 import { qingbocask } from "./gear-source/qingbocask";
 import { qingbopositioningkit } from "./gear-source/qingbopositioningkit";
+import { qingbopositioningkitt1 } from "./gear-source/qingbopositioningkitt1";
 import { qingbobamboocutter } from "./gear-source/qingbobamboocutter";
 import { xiranflowlightarmor } from "./gear-source/xiranflowlightarmor";
 import { xiranflowgloves } from "./gear-source/xiranflowgloves";
@@ -212,6 +213,7 @@ import { xiranflowbaton } from "./gear-source/xiranflowbaton";
 import { swordmancerheavyarmort1 } from "./gear-source/swordmancerheavyarmort1";
 import { swordmancertacgauntletst1 } from "./gear-source/swordmancertacgauntletst1";
 import { swordmancerdagger } from "./gear-source/swordmancerdagger";
+import { swordmancerfiberarmor } from "./gear-source/swordmancerfiberarmor";
 import { grizzlededgearmor } from "./gear-source/grizzlededgearmor";
 import { grizzlededgearmort1 } from "./gear-source/grizzlededgearmort1";
 import { grizzlededgegauntlets } from "./gear-source/grizzlededgegauntlets";
@@ -425,6 +427,7 @@ export const gearDetails: GearDetail[] = [
   qingbogloves,
   qingbocask,
   qingbopositioningkit,
+  qingbopositioningkitt1,
   qingbobamboocutter,
   xiranflowlightarmor,
   xiranflowgloves,
@@ -432,6 +435,7 @@ export const gearDetails: GearDetail[] = [
   swordmancerheavyarmort1,
   swordmancertacgauntletst1,
   swordmancerdagger,
+  swordmancerfiberarmor,
   grizzlededgearmor,
   grizzlededgearmort1,
   grizzlededgegauntlets,
