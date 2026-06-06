@@ -11,10 +11,10 @@ export default function StackArcMarkers({
 }: StackArcMarkersProps) {
   const normalizedStacks = Math.min(4, Math.max(1, Math.trunc(stacks)));
   const svgSize = size === "sm" ? 34 : 42;
-  const strokeWidth = size === "sm" ? 5 : 6;
+  const strokeWidth = size === "sm" ? 4 : 5;
   const radius = size === "sm" ? 14 : 17;
   const circumference = 2 * Math.PI * radius;
-  const arcLength = circumference * 0.2;
+  const arcLength = circumference * 0.16;
   const gapLength = circumference - arcLength;
 
   return (
