@@ -17,6 +17,7 @@ export const gearSetOrder: GearSetName[] = [
   "순행 전달자",
   "아부레이의 메아리",
   "중장갑 전달자",
+  "고검의 잔향",
   "재앙 방호",
   "침식 방호",
   "침식 차단",
