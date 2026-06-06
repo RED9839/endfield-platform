@@ -109,6 +109,13 @@ export const operatorArtsEffects: OperatorArtsEffectData = {
     ],
   },
   ardelia: {
+    battleSkill: [
+      {
+        operation: "consumeReaction",
+        reactions: ["corroded"],
+        condition: "The target is corroded; physical and Arts vulnerability are applied afterward.",
+      },
+    ],
     comboSkill: [
       {
         operation: "applyReaction",
@@ -274,6 +281,13 @@ export const operatorArtsEffects: OperatorArtsEffectData = {
       { operation: "consume", elements: ["cryo"], stacks: "all" },
       { operation: "applyReaction", reaction: "frozen", forced: true },
     ],
+    comboSkill: [
+      {
+        operation: "requireReaction",
+        reactions: ["burning", "frozen", "electrified", "corroded"],
+        condition: "Triggers after a nearby Arts abnormality or Originium Crystal is consumed.",
+      },
+    ],
     ultimate: [
       { operation: "apply", elements: ["cryo"], stacks: 1, inferred: true },
     ],
@@ -351,6 +365,13 @@ export const operatorArtsEffects: OperatorArtsEffectData = {
   },
   endministrator: {},
   zhuangfangyi: {
+    battleSkill: [
+      {
+        operation: "consumeReaction",
+        reactions: ["electrified"],
+        condition: "Consumes electrified to increase battle skill damage and create extra Thunderlances.",
+      },
+    ],
     comboSkill: [
       { operation: "require", elements: ["electric"] },
       { operation: "consume", elements: ["electric"], stacks: "all" },
