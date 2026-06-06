@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import HomeBannerHubPanel, {
   type HomeBannerItem,
 } from "@/app/components/home/HomeBannerHubPanel";
@@ -197,7 +197,23 @@ export default function BannerSection({
 }: {
   initialData: HomeApiResponse | null;
 }) {
-  const items = useMemo(() => convert(initialData), [initialData]);
+  const [data, setData] = useState<HomeApiResponse | null>(initialData);
+  const items = useMemo(() => convert(data), [data]);
+
+  useEffect(() => {
+    if (initialData?.ok) return;
+
+    const controller = new AbortController();
+
+    fetch("/api/home", { signal: controller.signal })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((payload: HomeApiResponse | null) => {
+        if (payload?.ok) setData(payload);
+      })
+      .catch(() => {});
+
+    return () => controller.abort();
+  }, [initialData]);
 
   return (
     <div className="h-full min-h-0 w-full overflow-hidden">

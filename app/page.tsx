@@ -13,10 +13,7 @@ import {
   defaultHomeFeaturedOperator,
   findHomeFeaturedOperatorFromTitle,
 } from "@/lib/home/featured-operators";
-import {
-  getHomeData,
-  type HomeApiResponse,
-} from "@/lib/home/get-home-data";
+import type { HomeApiResponse } from "@/lib/home/get-home-data";
 import { getCurrentUser } from "@/lib/auth/get-current-user";
 
 import BannerSection from "./components/home/BannerSection";
@@ -287,17 +284,13 @@ function resolveFeaturedOperator(data: HomeApiResponse | null) {
 }
 
 export default async function HomePage() {
-  const accountUserPromise = getCurrentUser();
-  const homePayloadPromise = getHomeData();
-  const accountUser = await accountUserPromise;
+  const accountUser = await getCurrentUser();
 
   if (accountUser && !accountUser.nickname?.trim()) {
     redirect("/setup-profile");
   }
 
-  const homePayload = await homePayloadPromise;
-  const homeData = homePayload.ok ? homePayload : null;
-  const featuredOperator = resolveFeaturedOperator(homeData);
+  const featuredOperator = resolveFeaturedOperator(null);
 
   const heroFeaturedData = {
     name: featuredOperator.name,
@@ -322,7 +315,7 @@ export default async function HomePage() {
               </div>
 
               <div className="min-h-[260px] min-w-0 overflow-hidden sm:min-h-[320px] lg:min-h-0">
-                <BannerSection initialData={homeData} />
+                <BannerSection initialData={null} />
               </div>
             </div>
 
