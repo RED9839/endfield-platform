@@ -19,9 +19,6 @@ export type OperatorHighlightPanelProps = {
   href: string;
 };
 
-const HIGHLIGHT_IMAGE_SIZES =
-  "(max-width: 768px) calc(100vw - 24px), (max-width: 1536px) calc(100vw - 340px), 1180px";
-
 const rarityLabelMap: Record<number, string> = {
   6: "6★",
   5: "5★",
@@ -49,12 +46,6 @@ function getOperatorAvatar(operator: OperatorLike | null) {
   if (!operator) return "/operators/lastrite/avatar.webp";
   if (operator.avatar) return operator.avatar;
   return `/operators/${operator.slug}/avatar.webp`;
-}
-
-function getOperatorFull(operator: OperatorLike | null) {
-  if (!operator) return "/operators/lastrite/full.webp";
-  if (operator.fullImage) return operator.fullImage;
-  return `/operators/${operator.slug}/full.webp`;
 }
 
 export default function OperatorHighlightPanel({
@@ -85,7 +76,6 @@ export default function OperatorHighlightPanel({
   }
 
   const avatarSrc = getOperatorAvatar(operator);
-  const fullSrc = getOperatorFull(operator);
   const rarityLabel = operator.rarity
     ? (rarityLabelMap[operator.rarity] ?? `${operator.rarity}★`)
     : null;
@@ -97,7 +87,13 @@ export default function OperatorHighlightPanel({
     : null;
 
   return (
-    <section className="relative overflow-hidden rounded-[22px] border border-yellow-500/12 bg-[#05070b] p-5">
+    <section
+      className="relative overflow-hidden rounded-[22px] border border-yellow-500/12 bg-[#05070b] p-5"
+      style={{
+        contentVisibility: "auto",
+        containIntrinsicSize: "420px",
+      }}
+    >
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(250,204,21,0.03),transparent_20%)]" />
 
       <div className="relative mb-4 border-b border-yellow-500/12 pb-3">
@@ -110,17 +106,7 @@ export default function OperatorHighlightPanel({
       </div>
 
       <div className="relative overflow-hidden rounded-[20px] border border-yellow-500/12 bg-[#090d14]">
-        <div className="absolute inset-0">
-          <Image
-            src={fullSrc}
-            alt={operator.name}
-            fill
-            sizes={HIGHLIGHT_IMAGE_SIZES}
-            className="object-cover object-center opacity-25"
-          />
-        </div>
-
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.82)_0%,rgba(0,0,0,0.60)_40%,rgba(0,0,0,0.28)_100%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_50%,rgba(250,204,21,0.12),transparent_32%),linear-gradient(90deg,rgba(0,0,0,0.82)_0%,rgba(0,0,0,0.60)_40%,rgba(0,0,0,0.28)_100%)]" />
 
         <div className="relative z-10 flex flex-col gap-5 p-5 md:flex-row md:items-center md:justify-between">
           <div className="flex min-w-0 items-center gap-4">
@@ -129,6 +115,7 @@ export default function OperatorHighlightPanel({
                 src={avatarSrc}
                 alt={operator.name}
                 fill
+                quality={70}
                 sizes="96px"
                 className="object-cover object-center"
               />
@@ -168,12 +155,18 @@ export default function OperatorHighlightPanel({
           <div className="max-w-xl">
             <p className="text-sm leading-7 text-zinc-200/80">{description}</p>
 
-            <div className="mt-4">
+            <div className="mt-4 flex flex-wrap gap-2">
               <Link
                 href={`${href}/${operator.slug}`.replace(/\/{2,}/g, "/")}
                 className="inline-flex rounded-xl border border-yellow-500/35 bg-yellow-500/12 px-5 py-3 text-sm font-semibold text-yellow-200 transition hover:border-yellow-400/50 hover:bg-yellow-500/20 hover:text-white"
               >
                 상세 보기
+              </Link>
+              <Link
+                href={`/settings?operators=${encodeURIComponent(operator.slug)}`}
+                className="inline-flex rounded-xl border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-zinc-100 transition hover:border-yellow-400/40 hover:bg-yellow-500/10 hover:text-yellow-100"
+              >
+                추천 세팅 보기
               </Link>
             </div>
           </div>
