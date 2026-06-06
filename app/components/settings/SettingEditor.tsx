@@ -1497,6 +1497,25 @@ function isXaihiOperator(operator?: SelectableItem) {
   );
 }
 
+function usesPhysicalDamagePotentialBonus(operator?: SelectableItem) {
+  const text = getDeepText([
+    operator?.slug,
+    operator?.name,
+    operator?.enName,
+    operator?.raw?.slug,
+    operator?.raw?.name,
+    operator?.raw?.enName,
+  ]).toLowerCase();
+
+  return (
+    text.includes("진천우") ||
+    text.includes("chenqianyu") ||
+    text.includes("chen qianyu") ||
+    text.includes("dapan") ||
+    text.includes("da pan")
+  );
+}
+
 function applyManualSupporterBreakthroughStats(
   target: ReturnType<typeof createBonusStats>,
   operator: SelectableItem | undefined,
@@ -1612,6 +1631,15 @@ function getOperatorBreakthroughBonusStats(
     applyBreakthroughStageStats(target, targetStage, {
       allowDynamicStats: true,
     });
+
+    if (usesPhysicalDamagePotentialBonus(operator)) {
+      for (const [label, stat] of Object.entries(target.dynamicStats)) {
+        if (!label.includes("주는 물리 피해")) continue;
+
+        target.physicalDamage += stat.value;
+        delete target.dynamicStats[label];
+      }
+    }
   }
 
   return target;
@@ -2399,6 +2427,9 @@ export default function SettingsPage({ partyForms = [] }: SettingEditorProps) {
           gearSlot={selectPanel.kind === "gear" ? selectPanel.slot : undefined}
           title={selectPanel.title}
           selectedSlug={selectPanel.selectedSlug}
+          operators={operatorDetails}
+          weapons={weaponDetails}
+          gears={gearDetails}
           onClose={() => setSelectPanel(null)}
           onSelectOperator={(slug: string) => {
             setForm((prev) => ({

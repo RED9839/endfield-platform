@@ -2229,6 +2229,9 @@ export default function SimulatorPage() {
             <CommonSelectPanel
               kind={selectPanel.kind}
               title={selectPanel.title}
+              operators={operators}
+              weapons={weapons}
+              gears={[]}
               selectedSlug={
                 selectPanel.kind === "operator"
                   ? selectedOperatorSlug

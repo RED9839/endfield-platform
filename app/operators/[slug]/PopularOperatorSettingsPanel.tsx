@@ -4,9 +4,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-import { operatorDetails } from "@/data/operators-detail-data";
-import { weaponDetails } from "@/data/weapons-detail-data";
-
 const YELLOW_MAIN = "#ffd24a";
 const YELLOW_TEXT = "#ffdc70";
 const YELLOW_BORDER_SOFT = "rgba(255,196,74,0.10)";
@@ -16,13 +13,23 @@ const settingTypeLabelMap: Record<string, string> = {
   party: "파티",
 };
 
-const operatorBySlug = new Map(
-  operatorDetails.map((operator: any) => [operator.slug, operator]),
-);
+type PopularOperatorItem = {
+  slug: string;
+  name: string;
+  enName: string;
+  avatar?: string;
+  image?: string;
+  element?: string;
+  elementKey?: string;
+  attribute?: string;
+};
 
-const weaponBySlug = new Map(
-  weaponDetails.map((weapon: any) => [weapon.slug, weapon]),
-);
+type PopularWeaponItem = {
+  slug: string;
+  name: string;
+  image?: string;
+  avatar?: string;
+};
 
 type PartyMember = {
   name: string;
@@ -44,6 +51,7 @@ type PopularSetting = {
   views?: number | null;
   nickname?: string | null;
   userNickname?: string | null;
+  isDefaultSetting?: boolean;
 };
 
 type SettingCardItem = {
@@ -61,6 +69,7 @@ type SettingCardItem = {
   image: string;
   elementIcon?: string;
   partyMembers?: PartyMember[];
+  isDefaultSetting: boolean;
 };
 
 type ApiResponse = {
@@ -85,7 +94,12 @@ function getNickname(setting: PopularSetting) {
   return String(setting.nickname ?? setting.userNickname ?? "저장된 세팅").trim();
 }
 
-function toSettingCardItem(setting: PopularSetting, fallbackOperatorSlug: string): SettingCardItem {
+function toSettingCardItem(
+  setting: PopularSetting,
+  fallbackOperatorSlug: string,
+  operatorBySlug: Map<string, PopularOperatorItem>,
+  weaponBySlug: Map<string, PopularWeaponItem>,
+): SettingCardItem {
   const mainSlot = setting.slots?.main;
   const mainOperatorSlug = String(mainSlot?.operatorSlug ?? fallbackOperatorSlug ?? "").trim();
   const mainOperator = operatorBySlug.get(mainOperatorSlug) as any;
@@ -126,19 +140,30 @@ function toSettingCardItem(setting: PopularSetting, fallbackOperatorSlug: string
     image: mainOperator ? getOperatorImage(mainOperator) : `/operators/${fallbackOperatorSlug}/avatar.webp`,
     elementIcon: mainOperator ? getOperatorElementIcon(mainOperator) : undefined,
     partyMembers,
+    isDefaultSetting: Boolean(setting.isDefaultSetting),
   };
 }
 
 export default function PopularOperatorSettingsPanel({
   operatorSlug,
   operatorName,
+  operators,
+  weapons,
 }: {
   operatorSlug: string;
   operatorName: string;
   operatorAvatar: string;
+  operators: PopularOperatorItem[];
+  weapons: PopularWeaponItem[];
 }) {
   const [settings, setSettings] = useState<PopularSetting[]>([]);
   const [loading, setLoading] = useState(true);
+  const operatorBySlug = new Map(
+    operators.map((operator) => [operator.slug, operator]),
+  );
+  const weaponBySlug = new Map(
+    weapons.map((weapon) => [weapon.slug, weapon]),
+  );
 
   useEffect(() => {
     let mounted = true;
@@ -233,7 +258,12 @@ export default function PopularOperatorSettingsPanel({
           {settings.map((setting) => (
             <SettingCard
               key={setting.id}
-              setting={toSettingCardItem(setting, operatorSlug)}
+              setting={toSettingCardItem(
+                setting,
+                operatorSlug,
+                operatorBySlug,
+                weaponBySlug,
+              )}
             />
           ))}
         </div>
@@ -344,6 +374,11 @@ function SettingCard({ setting }: { setting: SettingCardItem }) {
 
         <div className="mt-auto flex flex-wrap items-center gap-1 pt-2 text-[9px] font-black sm:text-[10px]">
           <span className="max-w-full truncate text-white">{setting.nickname}</span>
+          {setting.isDefaultSetting ? (
+            <span className="rounded border border-yellow-300/30 bg-yellow-300/10 px-1 text-yellow-200">
+              기본 세팅
+            </span>
+          ) : null}
           <span className="text-zinc-600">|</span>
           <span className="text-[#ffdc70]">추천 {setting.likes}</span>
           <span className="text-zinc-600">|</span>
