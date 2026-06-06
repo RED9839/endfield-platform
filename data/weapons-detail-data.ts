@@ -68,6 +68,7 @@ import { lonebarge } from "./weapons-source/lonebarge";
 import { flickersinthemist } from "./weapons-source/flickersinthemist";
 import { amaranthinetassel } from "./weapons-source/amaranthinetassel";
 import { beaconofduty } from "./weapons-source/beaconofduty";
+import { phantompain } from "./weapons-source/phantompain";
 import { getWeaponLevelCosts } from "./weapon-level-costs";
 
 export type WeaponRarity = 3 | 4 | 5 | 6;
@@ -415,6 +416,7 @@ function buildWeaponDetail(source: SourceWeaponDetail): WeaponDetail {
 }
 
 const weaponSources: SourceWeaponDetail[] = [
+  phantompain,
   beaconofduty,
   amaranthinetassel,
   grandvision,
