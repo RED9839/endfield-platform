@@ -1,4 +1,8 @@
-import type { ArtsAttachmentIconKey } from "@/data/combat-icon-paths";
+import type {
+  ArtsAttachmentIconKey,
+  ArtsReactionIconKey,
+  PhysicalCombatIconKey,
+} from "@/data/combat-icon-paths";
 import {
   getOperatorSkillArtsEffects,
   type OperatorSkillKey,
@@ -12,11 +16,22 @@ type CycleAttachmentState = {
 
 type CyclePhysicalState = {
   defenseBreakStacks: number;
+  status: PhysicalStatusIconKey | null;
+};
+
+type PhysicalStatusIconKey = Exclude<
+  PhysicalCombatIconKey,
+  "physical" | "defenseBreak"
+>;
+
+type CycleReactionState = {
+  reaction: ArtsReactionIconKey;
 };
 
 export type ResolvedCycleStep<TStep = any> = {
   step: TStep;
   artsState: CycleAttachmentState | null;
+  reactionState: CycleReactionState | null;
   physicalState: CyclePhysicalState | null;
 };
 
@@ -31,7 +46,11 @@ export function resolveCycleStates<
   cycle: TStep[],
 ): ResolvedCycleStep<TStep>[] {
   let artsState: CycleAttachmentState | null = null;
-  let defenseBreakStacks = 0;
+  let reactionState: CycleReactionState | null = null;
+  let physicalState: CyclePhysicalState = {
+    defenseBreakStacks: 0,
+    status: null,
+  };
 
   return cycle.map((step) => {
     const skillKey = toOperatorSkillKey(step.skillKey);
@@ -47,45 +66,82 @@ export function resolveCycleStates<
         : step.operatorSlug && skillKey
           ? getOperatorSkillPhysicalEffects(step.operatorSlug, skillKey)
           : [];
-    artsState = resolveArtsState(artsState, artsEffects);
+    const resolvedArts = resolveArtsState(artsState, reactionState, artsEffects);
+    artsState = resolvedArts.artsState;
+    reactionState = resolvedArts.reactionState;
 
-    defenseBreakStacks = resolveDefenseBreakStacks(
-      defenseBreakStacks,
+    physicalState = resolvePhysicalState(
+      physicalState,
       physicalEffects,
     );
+    if (reactionState?.reaction === "frozen" && triggersShatter(physicalEffects)) {
+      reactionState = { reaction: "shatter" };
+    }
 
     return {
       step,
       artsState,
+      reactionState,
       physicalState:
-        defenseBreakStacks > 0 ? { defenseBreakStacks } : null,
+        physicalState.defenseBreakStacks > 0 || physicalState.status
+          ? physicalState
+          : null,
     };
   });
 }
 
 function resolveArtsState(
   currentState: CycleAttachmentState | null,
+  currentReactionState: CycleReactionState | null,
   effects: unknown,
 ) {
-  if (!Array.isArray(effects)) return currentState;
+  if (!Array.isArray(effects)) {
+    return {
+      artsState: currentState,
+      reactionState: currentReactionState,
+    };
+  }
 
   let nextState = currentState;
+  let nextReactionState = currentReactionState;
 
   for (const effect of effects) {
     if (effect?.operation === "apply" || effect?.operation === "enableAttachment") {
       const element = getFirstArtsElement(effect.elements);
       if (!element) continue;
 
-      nextState =
-        nextState?.element === element
-          ? {
-              element,
-              stacks: Math.min(4, nextState.stacks + normalizeStacks(effect.stacks)),
-            }
-          : {
-              element,
-              stacks: normalizeStacks(effect.stacks),
-            };
+      if (nextState && nextState.element !== element) {
+        nextReactionState = { reaction: getReactionByAppliedElement(element) };
+        nextState = null;
+        continue;
+      }
+
+      const stacks = nextState
+        ? Math.min(4, nextState.stacks + normalizeStacks(effect.stacks))
+        : normalizeStacks(effect.stacks);
+
+      nextState = { element, stacks };
+      if (stacks >= 2) {
+        nextReactionState = { reaction: getBurstByElement(element) };
+      }
+      continue;
+    }
+
+    if (effect?.operation === "applyReaction") {
+      const reaction = getArtsReaction(effect.reaction);
+      if (reaction) {
+        nextReactionState = { reaction };
+        nextState = null;
+      }
+      continue;
+    }
+
+    if (effect?.operation === "consumeReaction") {
+      if (!nextReactionState) continue;
+
+      if (getArtsReactions(effect.reactions).includes(nextReactionState.reaction)) {
+        nextReactionState = null;
+      }
       continue;
     }
 
@@ -116,44 +172,106 @@ function resolveArtsState(
     }
   }
 
-  return nextState;
+  return {
+    artsState: nextState,
+    reactionState: nextReactionState,
+  };
 }
 
-function resolveDefenseBreakStacks(currentStacks: number, effects: unknown) {
-  let nextStacks = currentStacks;
+function resolvePhysicalState(
+  currentState: CyclePhysicalState,
+  effects: unknown,
+) {
+  let nextState: CyclePhysicalState = {
+    ...currentState,
+    status: null,
+  };
 
   for (const effect of getPhysicalEffects(effects)) {
     if (effect.operation === "applyDefenseBreak") {
-      nextStacks = Math.min(4, nextStacks + normalizeStacks(effect.stacks));
+      nextState = {
+        ...nextState,
+        defenseBreakStacks: Math.min(
+          4,
+          nextState.defenseBreakStacks + normalizeStacks(effect.stacks),
+        ),
+      };
       continue;
     }
 
     if (effect.operation === "consumeDefenseBreak") {
-      nextStacks = 0;
+      nextState = {
+        ...nextState,
+        defenseBreakStacks: 0,
+      };
       continue;
     }
 
     if (effect.operation === "reapplyPhysicalStatus") {
-      nextStacks = nextStacks > 0 ? Math.min(4, nextStacks + 1) : 0;
       continue;
     }
 
     if (effect.operation !== "applyPhysicalStatus") continue;
 
-    if (effect.status === "launch" || effect.status === "knockdown") {
-      nextStacks = Math.min(4, nextStacks + 1);
+    if (!isPhysicalStatusIconKey(effect.status)) continue;
+
+    if (effect.forced) {
+      nextState = applyPhysicalAbnormality(nextState, effect.status);
+      continue;
     }
 
-    if (effect.status === "smash" || effect.status === "armorBreak") {
-      nextStacks = nextStacks > 0 ? 0 : 1;
+    if (nextState.defenseBreakStacks <= 0) {
+      nextState = {
+        ...nextState,
+        defenseBreakStacks: 1,
+        status: null,
+      };
+      continue;
     }
+
+    nextState = applyPhysicalAbnormality(nextState, effect.status);
   }
 
-  return nextStacks;
+  return nextState;
+}
+
+function applyPhysicalAbnormality(
+  state: CyclePhysicalState,
+  status: PhysicalStatusIconKey,
+) {
+  if (status === "smash" || status === "armorBreak") {
+    return {
+      defenseBreakStacks: 0,
+      status,
+    };
+  }
+
+  return {
+    ...state,
+    status,
+  };
 }
 
 function getPhysicalEffects(effects: unknown) {
   return Array.isArray(effects) ? (effects as any[]) : [];
+}
+
+function triggersShatter(effects: unknown) {
+  return getPhysicalEffects(effects).some((effect) => {
+    return (
+      effect.operation === "applyDefenseBreak" ||
+      effect.operation === "applyPhysicalStatus"
+    );
+  });
+}
+
+function isPhysicalStatusIconKey(value: unknown): value is PhysicalStatusIconKey {
+  return (
+    value === "launch" ||
+    value === "knockdown" ||
+    value === "smash" ||
+    value === "armorBreak"
+  );
 }
 
 function getFirstArtsElement(elements: unknown) {
@@ -166,6 +284,58 @@ function getArtsElements(elements: unknown) {
   return elements.filter((value): value is ArtsAttachmentIconKey =>
     ["heat", "electric", "cryo", "nature"].includes(String(value)),
   );
+}
+
+function getArtsReaction(reaction: unknown) {
+  return [
+    "burning",
+    "frozen",
+    "electrified",
+    "corroded",
+    "shatter",
+    "heatBurst",
+    "cryoBurst",
+    "electricBurst",
+    "natureBurst",
+  ].includes(String(reaction))
+    ? (reaction as ArtsReactionIconKey)
+    : null;
+}
+
+function getArtsReactions(reactions: unknown) {
+  if (!Array.isArray(reactions)) return [];
+
+  return reactions.filter((reaction): reaction is ArtsReactionIconKey =>
+    ["burning", "frozen", "electrified", "corroded", "shatter"].includes(
+      String(reaction),
+    ),
+  );
+}
+
+function getReactionByAppliedElement(element: ArtsAttachmentIconKey) {
+  switch (element) {
+    case "heat":
+      return "burning";
+    case "electric":
+      return "electrified";
+    case "cryo":
+      return "frozen";
+    case "nature":
+      return "corroded";
+  }
+}
+
+function getBurstByElement(element: ArtsAttachmentIconKey) {
+  switch (element) {
+    case "heat":
+      return "heatBurst";
+    case "electric":
+      return "electricBurst";
+    case "cryo":
+      return "cryoBurst";
+    case "nature":
+      return "natureBurst";
+  }
 }
 
 function normalizeStacks(value: unknown) {
