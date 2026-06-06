@@ -1,10 +1,21 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import SettingEditor from "@/app/components/settings/SettingEditor";
-
 const SETTINGS_FORM_STORAGE_KEY = "endfield-operator-setting-form-v1";
+
+const SettingEditor = dynamic(
+  () => import("@/app/components/settings/SettingEditor"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex min-h-[520px] items-center justify-center rounded-[24px] border border-white/10 bg-[#05070b] text-sm font-bold text-zinc-500">
+        설정 정보를 불러오는 중...
+      </div>
+    ),
+  },
+);
 
 type ReadonlySettingEditorProps = {
   form: any;

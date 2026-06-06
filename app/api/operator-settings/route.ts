@@ -167,6 +167,125 @@ function toListResponseItem(setting: OperatorSettingListItem) {
   };
 }
 
+const listSelect = {
+  id: true,
+  type: true,
+  title: true,
+  description: true,
+  slots: true,
+  createdAt: true,
+  updatedAt: true,
+  likeCount: true,
+  viewCount: true,
+  nickname: true,
+  user: {
+    select: {
+      nickname: true,
+    },
+  },
+} as const;
+
+function getOrderBy(sortType: SortType) {
+  if (sortType === "popular") {
+    return [{ likeCount: "desc" as const }, { createdAt: "desc" as const }];
+  }
+
+  if (sortType === "views") {
+    return [{ viewCount: "desc" as const }, { createdAt: "desc" as const }];
+  }
+
+  return [{ createdAt: "desc" as const }];
+}
+
+function getBaseWhere(settingType: SettingType | "all") {
+  return settingType === "all" ? {} : { type: settingType };
+}
+
+function getNicknameWhere(defaultSetting: boolean) {
+  const nickname = {
+    equals: DEFAULT_SETTING_NICKNAME,
+    mode: "insensitive" as const,
+  };
+  const defaultNicknameWhere = {
+    OR: [
+      { nickname },
+      {
+        user: {
+          is: {
+            nickname,
+          },
+        },
+      },
+    ],
+  };
+
+  return defaultSetting ? defaultNicknameWhere : { NOT: defaultNicknameWhere };
+}
+
+async function getPagedSettingsWithoutClientFilters({
+  settingType,
+  sortType,
+  page,
+  limit,
+}: {
+  settingType: SettingType | "all";
+  sortType: SortType;
+  page: number;
+  limit: number;
+}) {
+  const baseWhere = getBaseWhere(settingType);
+  const nonDefaultWhere = {
+    ...baseWhere,
+    ...getNicknameWhere(false),
+  };
+  const defaultWhere = {
+    ...baseWhere,
+    ...getNicknameWhere(true),
+  };
+  const orderBy = getOrderBy(sortType);
+  const start = (page - 1) * limit;
+
+  const [nonDefaultTotal, defaultTotal] = await Promise.all([
+    prisma.userOperatorSetting.count({ where: nonDefaultWhere }),
+    prisma.userOperatorSetting.count({ where: defaultWhere }),
+  ]);
+
+  const total = nonDefaultTotal + defaultTotal;
+  const nonDefaultTake = Math.max(
+    0,
+    Math.min(limit, nonDefaultTotal - Math.min(start, nonDefaultTotal)),
+  );
+  const defaultTake = limit - nonDefaultTake;
+
+  const nonDefaultSettings =
+    nonDefaultTake > 0
+      ? await prisma.userOperatorSetting.findMany({
+          where: nonDefaultWhere,
+          orderBy,
+          skip: Math.min(start, nonDefaultTotal),
+          take: nonDefaultTake,
+          select: listSelect,
+        })
+      : [];
+
+  const defaultStart = Math.max(0, start - nonDefaultTotal);
+  const defaultSettings =
+    defaultTake > 0
+      ? await prisma.userOperatorSetting.findMany({
+          where: defaultWhere,
+          orderBy,
+          skip: defaultStart,
+          take: defaultTake,
+          select: listSelect,
+        })
+      : [];
+
+  return {
+    total,
+    settings: [...nonDefaultSettings, ...defaultSettings],
+  };
+}
+
 async function getCurrentUser() {
   const session = await auth();
 
@@ -212,27 +331,32 @@ export async function GET(request: Request) {
     .split("/")
     .map((item) => item.trim().toLowerCase())
     .filter(Boolean);
+  const hasClientOnlyFilters =
+    keywordQueries.length > 0 || operatorFilters.length > 0 || Boolean(weaponFilter);
+
+  if (!hasClientOnlyFilters) {
+    const start = (page - 1) * limit;
+    const result = await getPagedSettingsWithoutClientFilters({
+      settingType,
+      sortType,
+      page,
+      limit,
+    });
+
+    return NextResponse.json({
+      ok: true,
+      page,
+      limit,
+      total: result.total,
+      hasMore: start + limit < result.total,
+      settings: result.settings.map(toListResponseItem),
+    });
+  }
 
   const settings = await prisma.userOperatorSetting.findMany({
     where: settingType === "all" ? undefined : { type: settingType },
     orderBy: { updatedAt: "desc" },
-    select: {
-      id: true,
-      type: true,
-      title: true,
-      description: true,
-      slots: true,
-      createdAt: true,
-      updatedAt: true,
-      likeCount: true,
-      viewCount: true,
-      nickname: true,
-      user: {
-        select: {
-          nickname: true,
-        },
-      },
-    },
+    select: listSelect,
   });
 
   const filteredSettings = settings.filter((setting) => {

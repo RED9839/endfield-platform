@@ -1,22 +1,32 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import Image from "next/image";
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 
-import { operatorDetails } from "@/data/operators-detail-data";
-import { weaponDetails } from "@/data/weapons-detail-data";
-import { gearDetails } from "@/data/gear-detail-data";
-import type { GearDetail } from "@/data/gear-types";
 import { sortOperatorSelectList } from "@/data/operator-sort";
 import { sortWeaponSelectList } from "@/data/weapons-sort";
 import { gearSetOrder, sortGearSelectList } from "@/data/gear-sort";
-import CommonSelectPanel, {
-  type CommonGearSlot,
-} from "@/app/components/select/CommonSelectPanel";
+import type { CommonGearSlot } from "@/app/components/select/CommonSelectPanel";
 
 
-type OperatorDetail = (typeof operatorDetails)[number];
-type WeaponDetail = (typeof weaponDetails)[number];
+const CommonSelectPanel = dynamic(
+  () => import("@/app/components/select/CommonSelectPanel"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/80 p-4 text-sm font-bold text-zinc-500 backdrop-blur-sm">
+        선택 패널을 불러오는 중...
+      </div>
+    ),
+  },
+);
+
+type EditorData = {
+  operators: any[];
+  weapons: any[];
+  gears: any[];
+};
 
 type SkillLevel =
   | "1"
@@ -318,7 +328,7 @@ const gearAttributeOptions = [
   { label: "열기와 자연 피해 보너스", value: "heatNatureDamage" },
 ];
 
-function toOperatorItem(operator: OperatorDetail): SelectableItem {
+function toOperatorItem(operator: any): SelectableItem {
   const raw = operator as any;
 
   return {
@@ -336,7 +346,7 @@ function toOperatorItem(operator: OperatorDetail): SelectableItem {
   };
 }
 
-function toWeaponItem(weapon: WeaponDetail): SelectableItem {
+function toWeaponItem(weapon: any): SelectableItem {
   const raw = weapon as any;
 
   return {
@@ -350,7 +360,7 @@ function toWeaponItem(weapon: WeaponDetail): SelectableItem {
   };
 }
 
-function toGearItem(gear: GearDetail): SelectableItem {
+function toGearItem(gear: any): SelectableItem {
   return {
     slug: gear.slug,
     name: gear.name,
@@ -362,14 +372,6 @@ function toGearItem(gear: GearDetail): SelectableItem {
     raw: gear,
   };
 }
-
-const operatorItems = sortOperatorSelectList(operatorDetails).map(toOperatorItem);
-const weaponItems = sortWeaponSelectList(weaponDetails).map(toWeaponItem);
-const gearItems = sortGearSelectList(gearDetails).map(toGearItem);
-
-const armorItems = gearItems.filter((item) => item.category === "armor");
-const glovesItems = gearItems.filter((item) => item.category === "gloves");
-const kitItems = gearItems.filter((item) => item.category === "kit");
 
 function createDefaultForm(): FormState {
   return {
@@ -2186,6 +2188,7 @@ type SettingEditorProps = {
 export default function SettingsPage({ partyForms = [] }: SettingEditorProps) {
   const [form, setForm] = useState<FormState>(createDefaultForm);
   const [hydrated, setHydrated] = useState(false);
+  const [editorData, setEditorData] = useState<EditorData | null>(null);
   const [selectPanel, setSelectPanel] = useState<
     | { kind: "operator"; title: string; selectedSlug: string }
     | { kind: "weapon"; title: string; selectedSlug: string }
@@ -2199,22 +2202,99 @@ export default function SettingsPage({ partyForms = [] }: SettingEditorProps) {
   }, []);
 
   useEffect(() => {
+    let mounted = true;
+
+    async function loadEditorData() {
+      try {
+        const response = await fetch("/api/settings/editor-data", {
+          cache: "force-cache",
+        });
+        const data = await response.json().catch(() => null);
+
+        if (!mounted) return;
+
+        if (!response.ok || !data?.ok) {
+          setEditorData({ operators: [], weapons: [], gears: [] });
+          return;
+        }
+
+        setEditorData({
+          operators: Array.isArray(data.operators) ? data.operators : [],
+          weapons: Array.isArray(data.weapons) ? data.weapons : [],
+          gears: Array.isArray(data.gears) ? data.gears : [],
+        });
+      } catch {
+        if (mounted) {
+          setEditorData({ operators: [], weapons: [], gears: [] });
+        }
+      }
+    }
+
+    loadEditorData();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
     if (!hydrated) return;
     saveFormToStorage(form);
   }, [form, hydrated]);
 
-  const selectedOperator = operatorItems.find(
-    (item) => item.slug === form.operatorSlug,
+  const operatorDetails = editorData?.operators ?? [];
+  const weaponDetails = editorData?.weapons ?? [];
+  const gearDetails = editorData?.gears ?? [];
+
+  const operatorItems = useMemo(
+    () => sortOperatorSelectList(operatorDetails).map(toOperatorItem),
+    [operatorDetails],
   );
-  const selectedWeapon = weaponItems.find(
-    (item) => item.slug === form.weaponSlug,
+  const weaponItems = useMemo(
+    () => sortWeaponSelectList(weaponDetails).map(toWeaponItem),
+    [weaponDetails],
   );
-  const selectedArmor = armorItems.find((item) => item.slug === form.armorSlug);
-  const selectedGloves = glovesItems.find(
-    (item) => item.slug === form.glovesSlug,
+  const gearItems = useMemo(
+    () => sortGearSelectList(gearDetails).map(toGearItem),
+    [gearDetails],
   );
-  const selectedKit1 = kitItems.find((item) => item.slug === form.kit1Slug);
-  const selectedKit2 = kitItems.find((item) => item.slug === form.kit2Slug);
+  const armorItems = useMemo(
+    () => gearItems.filter((item) => item.category === "armor"),
+    [gearItems],
+  );
+  const glovesItems = useMemo(
+    () => gearItems.filter((item) => item.category === "gloves"),
+    [gearItems],
+  );
+  const kitItems = useMemo(
+    () => gearItems.filter((item) => item.category === "kit"),
+    [gearItems],
+  );
+
+  const selectedOperator = useMemo(
+    () => operatorItems.find((item) => item.slug === form.operatorSlug),
+    [form.operatorSlug, operatorItems],
+  );
+  const selectedWeapon = useMemo(
+    () => weaponItems.find((item) => item.slug === form.weaponSlug),
+    [form.weaponSlug, weaponItems],
+  );
+  const selectedArmor = useMemo(
+    () => armorItems.find((item) => item.slug === form.armorSlug),
+    [form.armorSlug, armorItems],
+  );
+  const selectedGloves = useMemo(
+    () => glovesItems.find((item) => item.slug === form.glovesSlug),
+    [form.glovesSlug, glovesItems],
+  );
+  const selectedKit1 = useMemo(
+    () => kitItems.find((item) => item.slug === form.kit1Slug),
+    [form.kit1Slug, kitItems],
+  );
+  const selectedKit2 = useMemo(
+    () => kitItems.find((item) => item.slug === form.kit2Slug),
+    [form.kit2Slug, kitItems],
+  );
 
   const externalPartySlots = useMemo(() => {
     return partyForms
@@ -2231,7 +2311,7 @@ export default function SettingsPage({ partyForms = [] }: SettingEditorProps) {
         };
       })
       .filter(Boolean) as PartyBuffSlot[];
-  }, [partyForms]);
+  }, [operatorItems, partyForms]);
 
   const partySlotsForStats = useMemo(() => {
     const currentSlot = selectedOperator
@@ -2250,23 +2330,40 @@ export default function SettingsPage({ partyForms = [] }: SettingEditorProps) {
     return [...currentSlot, ...otherSlots];
   }, [selectedOperator, form, externalPartySlots]);
 
-  const finalStats = calculateFinalStats({
-    operator: selectedOperator,
-    weapon: selectedWeapon,
-    armor: selectedArmor,
-    gloves: selectedGloves,
-    kit1: selectedKit1,
-    kit2: selectedKit2,
-    form,
-    partySlots: partySlotsForStats,
-  });
+  const finalStats = useMemo(
+    () =>
+      calculateFinalStats({
+        operator: selectedOperator,
+        weapon: selectedWeapon,
+        armor: selectedArmor,
+        gloves: selectedGloves,
+        kit1: selectedKit1,
+        kit2: selectedKit2,
+        form,
+        partySlots: partySlotsForStats,
+      }),
+    [
+      selectedOperator,
+      selectedWeapon,
+      selectedArmor,
+      selectedGloves,
+      selectedKit1,
+      selectedKit2,
+      form,
+      partySlotsForStats,
+    ],
+  );
 
-  const setEffect = getActiveSetEffect([
-    selectedArmor,
-    selectedGloves,
-    selectedKit1,
-    selectedKit2,
-  ]);
+  const setEffect = useMemo(
+    () =>
+      getActiveSetEffect([
+        selectedArmor,
+        selectedGloves,
+        selectedKit1,
+        selectedKit2,
+      ]),
+    [selectedArmor, selectedGloves, selectedKit1, selectedKit2],
+  );
 
   function updateGearLevel(
     slot: GearSlot,
@@ -2296,7 +2393,7 @@ export default function SettingsPage({ partyForms = [] }: SettingEditorProps) {
     setForm(createDefaultForm());
   }
 
-  if (!hydrated) {
+  if (!hydrated || !editorData) {
     return (
       <main className="min-h-screen bg-[#050505] px-3 py-3 text-white sm:px-4 md:px-6 md:py-5">
         <div className="mx-auto flex min-h-[60vh] max-w-[1800px] items-center justify-center">
