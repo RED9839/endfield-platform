@@ -63,7 +63,10 @@ type OperatorSummary = {
   element?: string;
   elementKey?: string;
   attribute?: string;
-  skills?: Record<string, { name?: string; icon?: string } | null>;
+  skills?: Record<
+    string,
+    { name?: string; icon?: string; artsEffects?: unknown[] } | null
+  >;
 };
 
 type WeaponSummary = {
@@ -1017,6 +1020,7 @@ function CycleRegisterPanel({
           skillName: item.skill?.name ?? item.label,
           skillLabel: item.label,
           skillIcon: item.skill?.icon,
+          artsEffects: item.skill?.artsEffects ?? [],
         },
       ],
     }));
