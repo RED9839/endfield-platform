@@ -67,6 +67,7 @@ import { peco5 } from "./weapons-source/peco5";
 import { lonebarge } from "./weapons-source/lonebarge";
 import { flickersinthemist } from "./weapons-source/flickersinthemist";
 import { amaranthinetassel } from "./weapons-source/amaranthinetassel";
+import { getWeaponLevelCosts } from "./weapon-level-costs";
 
 export type WeaponRarity = 3 | 4 | 5 | 6;
 
@@ -86,6 +87,8 @@ export type RawMaterialItem = {
 export type WeaponLevelStat = {
   level: number;
   attack: number;
+  experienceCost?: number;
+  tCreditCost?: number;
 };
 
 /** 소스 파일에서 들어오는 느슨한 타입 */
@@ -385,7 +388,10 @@ function buildWeaponDetail(source: SourceWeaponDetail): WeaponDetail {
     subStatLabel: source.subStatLabel,
     summary: source.summary,
     description: source.description,
-    levelStats: source.levelStats ?? [],
+    levelStats: (source.levelStats ?? []).map((stat) => ({
+      ...getWeaponLevelCosts(stat.level),
+      ...stat,
+    })),
 
     breakthrough: (source.breakthrough ?? []).map((stage, index) => ({
       stage: stage.stage ?? stage.phase ?? index,
