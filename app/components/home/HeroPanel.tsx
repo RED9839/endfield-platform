@@ -24,6 +24,7 @@ export default function HeroPanel({
         alt={featured.name}
         fill
         priority
+        quality={70}
         sizes={HERO_PANEL_SIZES}
         className="object-cover object-[50%_35%]"
       />

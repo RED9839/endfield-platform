@@ -1,9 +1,12 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
-import { SignOutButton } from "@/app/components/auth/AuthButtons";
 import type { ReactNode } from "react";
+import { SignOutButton } from "@/app/components/auth/AuthButtons";
 
 import HeroPanel from "@/app/components/home/HeroPanel";
+import {
+  HomeMobileTopBar,
+  HomeSideNav,
+} from "@/app/components/home/HomeNavigation";
 import QuickAccessPanel, {
   type QuickAccessItem,
 } from "@/app/components/home/QuickAccessPanel";
@@ -13,10 +16,10 @@ import {
   defaultHomeFeaturedOperator,
   findHomeFeaturedOperatorFromTitle,
 } from "@/lib/home/featured-operators";
-import type { HomeApiResponse } from "@/lib/home/get-home-data";
-import { getCurrentUser } from "@/lib/auth/get-current-user";
 
-import BannerSection from "./components/home/BannerSection";
+import BannerSection, {
+  type HomeApiResponse,
+} from "./components/home/BannerSection";
 
 type SimpleHomeItem = {
   id?: string;
@@ -72,6 +75,36 @@ const quickAccessItems: QuickAccessItem[] = [
     description: "오퍼레이터별 무기, 스킬, 장비 세팅을 저장합니다.",
   },
 ];
+
+const initialHomeBannerData = {
+  ok: false,
+  weaponStack: [
+    {
+      id: "red-bond",
+      title: "붉은 결속 신청",
+      stack: 0,
+      image:
+        "https://web-static.hg-cdn.com/upload/image/20260602/67e065febebdb645ba6edfd503e798ba.jpg",
+      href: "https://endfield.gryphline.com/ko-kr/news/4492",
+    },
+    {
+      id: "hanghae",
+      title: "항해 신청",
+      stack: 1,
+      image:
+        "https://web-static.hg-cdn.com/upload/image/20260415/c08b7435381e80dba80b70453daf22d4.jpg",
+      href: "https://endfield.gryphline.com/ko-kr/news/5212",
+    },
+    {
+      id: "jeogok",
+      title: "적옥 신청",
+      stack: 2,
+      image:
+        "https://web-static.hg-cdn.com/upload/image/20260325/46d8dbd41c064a8d1c469d9f3f8aa49e.png",
+      href: "https://endfield.gryphline.com/ko-kr/news/2660",
+    },
+  ],
+} satisfies HomeApiResponse;
 
 type AccountUser = {
   name?: string | null;
@@ -283,13 +316,7 @@ function resolveFeaturedOperator(data: HomeApiResponse | null) {
   return defaultHomeFeaturedOperator;
 }
 
-export default async function HomePage() {
-  const accountUser = await getCurrentUser();
-
-  if (accountUser && !accountUser.nickname?.trim()) {
-    redirect("/setup-profile");
-  }
-
+export default function HomePage() {
   const featuredOperator = resolveFeaturedOperator(null);
 
   const heroFeaturedData = {
@@ -302,10 +329,10 @@ export default async function HomePage() {
 
   return (
     <main className="min-h-screen bg-[#050505] text-white">
-      <MobileTopBar user={accountUser} />
+      <HomeMobileTopBar />
 
       <div className="mx-auto grid max-w-[1820px] grid-cols-1 gap-4 px-3 pb-24 pt-3 sm:px-4 md:px-6 lg:grid-cols-[260px_minmax(0,1fr)] lg:gap-6 lg:py-6">
-        <SideNav user={accountUser} />
+        <HomeSideNav items={navigationItems} />
 
         <section className="min-w-0">
           <div className="flex flex-col gap-4 lg:gap-6">
@@ -315,7 +342,7 @@ export default async function HomePage() {
               </div>
 
               <div className="min-h-[260px] min-w-0 overflow-hidden sm:min-h-[320px] lg:min-h-0">
-                <BannerSection initialData={null} />
+                <BannerSection initialData={initialHomeBannerData} />
               </div>
             </div>
 

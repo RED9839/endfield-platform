@@ -78,7 +78,7 @@ const VOYAGE_IMAGE =
   "https://web-static.hg-cdn.com/upload/image/20260415/c08b7435381e80dba80b70453daf22d4.jpg";
 
 const RED_JADE_IMAGE =
-  "https://web-static.hg-cdn.com/upload/image/20260321/995797e6ffe60b02202749600a8ac9cd.jpg";
+  "https://web-static.hg-cdn.com/upload/image/20260325/46d8dbd41c064a8d1c469d9f3f8aa49e.png";
 
 const DEFAULT_NORMAL_WEAPON_STACK: WeaponStackItem[] = [
   {
@@ -105,7 +105,7 @@ const DEFAULT_NORMAL_WEAPON_STACK: WeaponStackItem[] = [
     bannerImage: VOYAGE_IMAGE,
     articleImage: VOYAGE_IMAGE,
     thumbnail: VOYAGE_IMAGE,
-    href: `${NEWS_URL}/0751`,
+    href: `${NEWS_URL}/5212`,
     publishedAt: "2026.04.16",
     createdAt: "2026-04-22T18:23:35.816Z",
   },
@@ -226,8 +226,26 @@ function makeImageFields(item: {
   };
 }
 
+function getNewsHrefByImage(html: string) {
+  const hrefByImage = new Map<string, string>();
+  const bulletinPattern =
+    /\{\\"cid\\":\\"([^"\\]+)\\"[\s\S]*?\\"cover\\":\\"([^"\\]*)\\"/g;
+
+  for (const match of html.matchAll(bulletinPattern)) {
+    const [, cid, cover] = match;
+    const image = abs(cover);
+
+    if (cid && image && !hrefByImage.has(image)) {
+      hrefByImage.set(image, `${NEWS_URL}/${cid}`);
+    }
+  }
+
+  return hrefByImage;
+}
+
 function parseNewsList(html: string): ParsedItem[] {
   const $ = cheerio.load(html);
+  const newsHrefByImage = getNewsHrefByImage(html);
   const result: ParsedItem[] = [];
   const seenCandidate = new WeakSet<object>();
   const seenItem = new Set<string>();
@@ -282,7 +300,7 @@ function parseNewsList(html: string): ParsedItem[] {
       root.find("a").first().attr("href") ||
       "";
 
-    const href = abs(rawHref || NEWS_URL);
+    const href = newsHrefByImage.get(image) ?? abs(rawHref || NEWS_URL);
     const key = `${title}|${date}|${type}`;
 
     if (seenItem.has(key)) continue;
@@ -468,20 +486,25 @@ const db = prisma;
 
 function toWeaponStackItem(row: HomeWeaponStack): WeaponStackItem {
   const title = String(row.title ?? "");
+  const id =
+    getNormalWeaponMeta(title)?.id ??
+    String(row.weaponId ?? row.id ?? "");
+  const canonicalItem = DEFAULT_NORMAL_WEAPON_STACK.find(
+    (weapon) => weapon.id === id,
+  );
+  const image = canonicalItem?.image ?? String(row.image ?? "");
 
   return {
-    id:
-      getNormalWeaponMeta(title)?.id ??
-      String(row.weaponId ?? row.id ?? ""),
+    id,
     title,
     stack: Number(row.stack ?? 0),
     group: "normal",
-    image: String(row.image ?? ""),
-    detailImage: row.detailImage ?? row.image ?? "",
-    bannerImage: row.bannerImage ?? row.image ?? "",
-    articleImage: row.articleImage ?? row.image ?? "",
-    thumbnail: row.thumbnail ?? row.image ?? "",
-    href: String(row.href ?? NEWS_URL),
+    image,
+    detailImage: canonicalItem?.detailImage ?? row.detailImage ?? image,
+    bannerImage: canonicalItem?.bannerImage ?? row.bannerImage ?? image,
+    articleImage: canonicalItem?.articleImage ?? row.articleImage ?? image,
+    thumbnail: canonicalItem?.thumbnail ?? row.thumbnail ?? image,
+    href: canonicalItem?.href ?? String(row.href ?? NEWS_URL),
     publishedAt: String(row.publishedAt ?? ""),
     createdAt: row.createdAt || new Date().toISOString(),
   };

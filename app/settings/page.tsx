@@ -3,7 +3,15 @@ import SettingsPageClient from "./_components/SettingsPageClient";
 import { operatorDetails } from "@/data/operators-detail-data";
 import { weaponDetails } from "@/data/weapons-detail-data";
 
-export default function SettingsPage() {
+type SettingsPageProps = {
+  searchParams?: Promise<{
+    operators?: string | string[];
+  }>;
+};
+
+export default async function SettingsPage({
+  searchParams,
+}: SettingsPageProps) {
   const operators = operatorDetails.map((operator) => ({
     slug: operator.slug,
     name: operator.name,
@@ -28,5 +36,27 @@ export default function SettingsPage() {
     series: weapon.series,
   }));
 
-  return <SettingsPageClient operators={operators} weapons={weapons} />;
+  const resolvedSearchParams = await searchParams;
+  const operatorParam = Array.isArray(resolvedSearchParams?.operators)
+    ? resolvedSearchParams.operators.join(",")
+    : resolvedSearchParams?.operators ?? "";
+  const validOperatorSlugs = new Set(
+    operators.map((operator) => operator.slug),
+  );
+  const initialOperatorFilters = Array.from(
+    new Set(
+      operatorParam
+        .split(",")
+        .map((slug) => slug.trim())
+        .filter((slug) => validOperatorSlugs.has(slug)),
+    ),
+  ).slice(0, 4);
+
+  return (
+    <SettingsPageClient
+      operators={operators}
+      weapons={weapons}
+      initialOperatorFilters={initialOperatorFilters}
+    />
+  );
 }

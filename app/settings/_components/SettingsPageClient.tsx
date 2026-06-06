@@ -228,11 +228,13 @@ function buildSettingsApiUrl({
 type SettingsPageClientProps = {
   operators: SelectOperatorItem[];
   weapons: SelectWeaponItem[];
+  initialOperatorFilters?: string[];
 };
 
 export default function SettingsPageClient({
   operators,
   weapons,
+  initialOperatorFilters = [],
 }: SettingsPageClientProps) {
   const operatorBySlug = useMemo(
     () => new Map(operators.map((operator) => [operator.slug, operator])),
@@ -255,10 +257,19 @@ export default function SettingsPageClient({
   const [loadingMore, setLoadingMore] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-  const [operatorFilters, setOperatorFilters] = useState<string[]>([]);
+  const [operatorFilters, setOperatorFilters] = useState<string[]>(
+    initialOperatorFilters,
+  );
   const [operatorFilterNames, setOperatorFilterNames] = useState<
     Record<string, string>
-  >({});
+  >(() =>
+    Object.fromEntries(
+      initialOperatorFilters.map((slug) => [
+        slug,
+        operatorBySlug.get(slug)?.name ?? slug,
+      ]),
+    ),
+  );
 
   const [weaponFilter, setWeaponFilter] = useState("");
   const [weaponFilterName, setWeaponFilterName] = useState("");

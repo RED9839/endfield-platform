@@ -1,3 +1,5 @@
+import { cache } from "react";
+
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -9,7 +11,7 @@ export type CurrentUser = {
   role: string | null;
 } | null;
 
-export async function getCurrentUser(): Promise<CurrentUser> {
+export const getCurrentUser = cache(async (): Promise<CurrentUser> => {
   const session = await auth();
 
   if (!session?.user?.id) return null;
@@ -40,4 +42,4 @@ export async function getCurrentUser(): Promise<CurrentUser> {
       role: true,
     },
   });
-}
+});
