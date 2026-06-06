@@ -426,7 +426,7 @@ function buildShortage(targets: MaterialAmount[], ownedMaterials: MaterialAmount
   return Array.from(shortageMap.entries()).map(([name, amount]) => ({ name, amount }));
 }
 
-function useAdvancedBoxes(shortage: MaterialAmount[], settings: FarmingSettings) {
+function applyAdvancedBoxes(shortage: MaterialAmount[], settings: FarmingSettings) {
   const advancedMaterialNames = getAdvancedMaterialNames();
   const advancedBoxUses: AdvancedBoxUse[] = [];
   let remainingPicks = toNumber(settings.advancedBoxCount) * 2;
@@ -457,7 +457,7 @@ function useAdvancedBoxes(shortage: MaterialAmount[], settings: FarmingSettings)
   };
 }
 
-function useTokens(shortage: MaterialAmount[], settings: FarmingSettings) {
+function applyTokens(shortage: MaterialAmount[], settings: FarmingSettings) {
   const tokenUses: TokenUse[] = [];
   let remainingToken = toNumber(settings.ownedToken);
   let usedToken = 0;
@@ -565,8 +565,8 @@ function buildPlan(
     targets,
     mergeMaterials(ownedMaterials, questOwnedMaterials),
   );
-  const boxResult = useAdvancedBoxes(baseShortage, settings);
-  const tokenResult = useTokens(boxResult.shortage, settings);
+  const boxResult = applyAdvancedBoxes(baseShortage, settings);
+  const tokenResult = applyTokens(boxResult.shortage, settings);
   const stagePlans = buildStagePlans(tokenResult.shortage);
   const totalRequiredSanity = stagePlans.reduce((sum, plan) => sum + plan.sanity, 0);
 
