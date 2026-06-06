@@ -4,9 +4,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-import { operatorDetails } from "@/data/operators-detail-data";
-import { weaponDetails } from "@/data/weapons-detail-data";
-
 const YELLOW_MAIN = "#ffd24a";
 const YELLOW_TEXT = "#ffdc70";
 const YELLOW_BORDER_SOFT = "rgba(255,196,74,0.10)";
@@ -16,13 +13,23 @@ const settingTypeLabelMap: Record<string, string> = {
   party: "파티",
 };
 
-const operatorBySlug = new Map(
-  operatorDetails.map((operator: any) => [operator.slug, operator]),
-);
+type PopularOperatorItem = {
+  slug: string;
+  name: string;
+  enName: string;
+  avatar?: string;
+  image?: string;
+  element?: string;
+  elementKey?: string;
+  attribute?: string;
+};
 
-const weaponBySlug = new Map(
-  weaponDetails.map((weapon: any) => [weapon.slug, weapon]),
-);
+type PopularWeaponItem = {
+  slug: string;
+  name: string;
+  image?: string;
+  avatar?: string;
+};
 
 type PartyMember = {
   name: string;
@@ -87,7 +94,12 @@ function getNickname(setting: PopularSetting) {
   return String(setting.nickname ?? setting.userNickname ?? "저장된 세팅").trim();
 }
 
-function toSettingCardItem(setting: PopularSetting, fallbackOperatorSlug: string): SettingCardItem {
+function toSettingCardItem(
+  setting: PopularSetting,
+  fallbackOperatorSlug: string,
+  operatorBySlug: Map<string, PopularOperatorItem>,
+  weaponBySlug: Map<string, PopularWeaponItem>,
+): SettingCardItem {
   const mainSlot = setting.slots?.main;
   const mainOperatorSlug = String(mainSlot?.operatorSlug ?? fallbackOperatorSlug ?? "").trim();
   const mainOperator = operatorBySlug.get(mainOperatorSlug) as any;
@@ -135,13 +147,23 @@ function toSettingCardItem(setting: PopularSetting, fallbackOperatorSlug: string
 export default function PopularOperatorSettingsPanel({
   operatorSlug,
   operatorName,
+  operators,
+  weapons,
 }: {
   operatorSlug: string;
   operatorName: string;
   operatorAvatar: string;
+  operators: PopularOperatorItem[];
+  weapons: PopularWeaponItem[];
 }) {
   const [settings, setSettings] = useState<PopularSetting[]>([]);
   const [loading, setLoading] = useState(true);
+  const operatorBySlug = new Map(
+    operators.map((operator) => [operator.slug, operator]),
+  );
+  const weaponBySlug = new Map(
+    weapons.map((weapon) => [weapon.slug, weapon]),
+  );
 
   useEffect(() => {
     let mounted = true;
@@ -236,7 +258,12 @@ export default function PopularOperatorSettingsPanel({
           {settings.map((setting) => (
             <SettingCard
               key={setting.id}
-              setting={toSettingCardItem(setting, operatorSlug)}
+              setting={toSettingCardItem(
+                setting,
+                operatorSlug,
+                operatorBySlug,
+                weaponBySlug,
+              )}
             />
           ))}
         </div>

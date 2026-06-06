@@ -1,7 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getOperatorDetailBySlug } from "@/data/operators-detail-data";
+import {
+  getOperatorDetailBySlug,
+  operatorDetails,
+} from "@/data/operators-detail-data";
+import { weaponDetails } from "@/data/weapons-detail-data";
 
 import HeroSlider from "./HeroSlider";
 import OperatorLevelPanel from "./OperatorLevelPanel";
@@ -235,7 +239,23 @@ export default async function OperatorDetailPage({ params }: { params: Promise<{
             <OperatorSkillsDeck accentColor={YELLOW_MAIN} skills={[operator.skills.normalAttack, operator.skills.battleSkill, operator.skills.comboSkill, operator.skills.ultimate]} />
           </DetailSection>
           <DetailSection id="popular-settings" title="인기 오퍼레이터 세팅" defaultOpen>
-            <PopularOperatorSettingsPanel operatorSlug={operator.slug} operatorName={operator.name} operatorAvatar={operator.avatar} />
+            <PopularOperatorSettingsPanel
+              operatorSlug={operator.slug}
+              operatorName={operator.name}
+              operatorAvatar={operator.avatar}
+              operators={operatorDetails.map((item) => ({
+                slug: item.slug,
+                name: item.name,
+                enName: item.enName,
+                avatar: item.avatar,
+                element: item.element,
+              }))}
+              weapons={weaponDetails.map((item) => ({
+                slug: item.slug,
+                name: item.name,
+                image: item.image,
+              }))}
+            />
           </DetailSection>
           {!!operator.elite.length && <DetailSection id="elite" title="정예화" defaultOpen><ElitePanel elite={operator.elite} /></DetailSection>}
           {!!operator.talents.length && <DetailSection id="talents" title="재능" defaultOpen><TalentPanel items={operator.talents} accentColor={YELLOW_MAIN} /></DetailSection>}

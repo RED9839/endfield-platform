@@ -2,12 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 
-import { operatorDetails } from "@/data/operators-detail-data";
-import type { OperatorDetail } from "@/data/operators-detail-data";
-import { weaponDetails } from "@/data/weapons-detail-data";
-import type { SourceWeaponDetail } from "@/data/weapons-detail-data";
-import { gearDetails } from "@/data/gear-detail-data";
-import type { GearDetail } from "@/data/gear-types";
 import { sortOperatorSelectList } from "@/data/operator-sort";
 import { sortWeaponSelectList } from "@/data/weapons-sort";
 import { gearSetOrder, sortGearSelectList } from "@/data/gear-sort";
@@ -36,6 +30,57 @@ type WeaponLike = SourceWeaponDetail & {
   passive?: unknown;
 };
 
+export type SelectOperatorItem = {
+  slug: string;
+  name: string;
+  enName: string;
+  rarity: number;
+  element: string;
+  class: string;
+  weapon?: string;
+  weaponType?: string;
+  avatar?: string;
+  avatarSecondary?: string;
+  fullImage?: string;
+  image?: string;
+};
+
+export type SelectWeaponItem = {
+  slug: string;
+  name: string;
+  enName: string;
+  rarity?: number;
+  quality?: number;
+  type?: string;
+  weaponType?: string;
+  image: string;
+  fullImage?: string;
+  avatar?: string;
+  series?: unknown;
+  seriesName?: unknown;
+  seriesSkill?: unknown;
+  weaponSeries?: unknown;
+  skill?: unknown;
+  weaponSkill?: unknown;
+  passive?: unknown;
+};
+
+export type SelectGearItem = {
+  slug: string;
+  name: string;
+  enName: string;
+  image: string;
+  quality: number;
+  level: number;
+  category: "armor" | "gloves" | "kit";
+  setName: string;
+  abilityTypes?: string[];
+  attributeTypes?: string[];
+};
+
+type SourceWeaponDetail = SelectWeaponItem;
+type GearDetail = SelectGearItem;
+
 type CommonSelectPanelProps = {
   kind: CommonSelectKind;
   gearSlot?: CommonGearSlot;
@@ -43,6 +88,9 @@ type CommonSelectPanelProps = {
   selectedSlug?: string;
   requiredWeaponType?: string;
   allowAllWeapons?: boolean;
+  operators: SelectOperatorItem[];
+  weapons: SelectWeaponItem[];
+  gears: SelectGearItem[];
   onClose: () => void;
   onSelectOperator?: (slug: string) => void;
   onSelectWeapon?: (slug: string) => void;
@@ -243,7 +291,7 @@ function isSettingsEditorPage() {
   return pathname.startsWith("/settings/");
 }
 
-function readSelectedOperatorWeaponType() {
+function readSelectedOperatorWeaponType(operators: SelectOperatorItem[]) {
   if (typeof window === "undefined") return "";
 
   // 세팅 등록/수정 페이지에서만 세팅 폼 저장값을 읽습니다.
@@ -254,7 +302,7 @@ function readSelectedOperatorWeaponType() {
     const raw = window.localStorage.getItem(SETTINGS_FORM_STORAGE_KEY);
     const form = raw ? JSON.parse(raw) : null;
     const operatorSlug = String(form?.operatorSlug ?? "");
-    const operator = operatorDetails.find((item: any) => item.slug === operatorSlug);
+    const operator = operators.find((item) => item.slug === operatorSlug);
 
     return operator ? getOperatorWeaponType(operator as any) : "";
   } catch {
@@ -306,8 +354,8 @@ function getGearTitle(slot?: CommonGearSlot) {
   return "장비 선택";
 }
 
-function getGearSource(gearSlot?: CommonGearSlot) {
-  const sortedGears = sortGearSelectList(gearDetails);
+function getGearSource(gears: SelectGearItem[], gearSlot?: CommonGearSlot) {
+  const sortedGears = sortGearSelectList(gears as any) as SelectGearItem[];
   if (gearSlot === "armor") return sortedGears.filter((gear) => gear.category === "armor");
   if (gearSlot === "gloves") return sortedGears.filter((gear) => gear.category === "gloves");
   if (gearSlot === "kit1" || gearSlot === "kit2") {
@@ -334,6 +382,9 @@ export default function CommonSelectPanel({
   selectedSlug,
   requiredWeaponType: requiredWeaponTypeProp,
   allowAllWeapons,
+  operators,
+  weapons,
+  gears,
   onClose,
   onSelectOperator,
   onSelectWeapon,
@@ -359,16 +410,19 @@ export default function CommonSelectPanel({
     const nextRequiredWeaponType =
       requiredWeaponTypeProp !== undefined
         ? normalizeWeaponType(requiredWeaponTypeProp)
-        : readSelectedOperatorWeaponType();
+        : readSelectedOperatorWeaponType(operators);
 
     setRequiredWeaponType(nextRequiredWeaponType);
     setAllowAllWeaponList(Boolean(allowAllWeapons) || isSettingsListPage());
     setWeaponTypeFilter("all");
-  }, [kind, requiredWeaponTypeProp, allowAllWeapons]);
+  }, [kind, requiredWeaponTypeProp, allowAllWeapons, operators]);
 
-  const operatorList = useMemo(() => sortOperatorSelectList(operatorDetails), []);
-  const weaponList = useMemo(() => sortWeaponSelectList(weaponDetails) as WeaponLike[], []);
-  const gearList = useMemo(() => getGearSource(gearSlot), [gearSlot]);
+  const operatorList = useMemo(() => sortOperatorSelectList(operators), [operators]);
+  const weaponList = useMemo(
+    () => sortWeaponSelectList(weapons) as WeaponLike[],
+    [weapons],
+  );
+  const gearList = useMemo(() => getGearSource(gears, gearSlot), [gears, gearSlot]);
 
   const operatorWeaponTypes = useMemo(
     () =>
@@ -408,7 +462,7 @@ export default function CommonSelectPanel({
   const filteredOperators = useMemo(() => {
     const normalizedKeyword = keyword.trim().toLowerCase();
 
-    return operatorList.filter((operator: OperatorDetail) => {
+    return operatorList.filter((operator: SelectOperatorItem) => {
       const rawOperator = operator as any;
       const operatorWeaponType = getOperatorWeaponType(rawOperator);
       const matchesKeyword =
@@ -656,7 +710,7 @@ export default function CommonSelectPanel({
             {filteredOperators.map((operator) => (
               <OperatorSelectCard
                 key={operator.slug}
-                operator={operator}
+                operator={operator as any}
                 active={operator.slug === selectedSlug}
                 onClick={() => {
                   onSelectOperator?.(operator.slug);
@@ -678,7 +732,7 @@ export default function CommonSelectPanel({
             {filteredWeapons.map((weapon) => (
               <WeaponSelectCard
                 key={weapon.slug}
-                weapon={weapon}
+                weapon={weapon as any}
                 active={weapon.slug === selectedSlug}
                 onClick={() => {
                   onSelectWeapon?.(weapon.slug);
@@ -698,7 +752,7 @@ export default function CommonSelectPanel({
             {filteredGears.map((gear) => (
               <GearSelectCard
                 key={gear.slug}
-                gear={gear}
+                gear={gear as any}
                 active={gear.slug === selectedSlug}
                 onClick={() => {
                   if (gearSlot) onSelectGear?.(gearSlot, gear.slug);

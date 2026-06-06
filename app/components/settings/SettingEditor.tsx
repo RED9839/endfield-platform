@@ -2427,6 +2427,9 @@ export default function SettingsPage({ partyForms = [] }: SettingEditorProps) {
           gearSlot={selectPanel.kind === "gear" ? selectPanel.slot : undefined}
           title={selectPanel.title}
           selectedSlug={selectPanel.selectedSlug}
+          operators={operatorDetails}
+          weapons={weaponDetails}
+          gears={gearDetails}
           onClose={() => setSelectPanel(null)}
           onSelectOperator={(slug: string) => {
             setForm((prev) => ({

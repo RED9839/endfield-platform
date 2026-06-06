@@ -324,6 +324,9 @@ export default function SimulatorControlPanel({
   <SharedSimulatorShowcaseHero
     kind={picker}
     title={picker === "operator" ? "오퍼레이터 선택" : "무기 선택"}
+    operators={operators}
+    weapons={weapons}
+    gears={[]}
     selectedSlug={
       picker === "operator" ? selectedOperatorSlug : selectedWeaponSlug
     }
