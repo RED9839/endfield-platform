@@ -52,8 +52,8 @@ export type OperatorPhysicalEffectData = Record<
 >;
 
 // Base skill descriptions only. Potentials and talents are intentionally excluded.
-// Physical abnormal statuses follow the combat rule: launch/knockdown add defense break,
-// while smash/armor break consume existing defense-break stacks or add one if none exists.
+// Non-forced physical abnormalities apply one defense-break stack if none exists.
+// If defense-break is present, the abnormality activates; smash/armor break consume stacks.
 export const operatorPhysicalEffects: OperatorPhysicalEffectData = {
   rossi: {
     battleSkill: [{ operation: "applyPhysicalStatus", status: "launch" }],
@@ -123,9 +123,7 @@ export const operatorPhysicalEffects: OperatorPhysicalEffectData = {
   },
   snowshine: {},
   xaihi: {},
-  perlica: {
-    comboSkill: [{ operation: "applyPhysicalStatus", status: "smash" }],
-  },
+  perlica: {},
   wulfgard: {},
   arclight: {},
   alesh: {},

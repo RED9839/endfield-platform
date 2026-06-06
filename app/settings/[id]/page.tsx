@@ -5,6 +5,8 @@ import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import ArtsAttachmentStackIcon from "@/app/components/combat/ArtsAttachmentStackIcon";
+import ArtsReactionStatusIcon from "@/app/components/combat/ArtsReactionStatusIcon";
+import PhysicalCombatStatusIcon from "@/app/components/combat/PhysicalCombatStatusIcon";
 import PhysicalDefenseBreakStackIcon from "@/app/components/combat/PhysicalDefenseBreakStackIcon";
 import { resolveCycleStates } from "@/lib/combat/cycle-state";
 import { operatorDetails } from "@/data/operators-detail-data";
@@ -508,12 +510,13 @@ function CycleViewPanel({ cycle }: { cycle: any[] }) {
         운용 사이클
       </h2>
 
-      <div className="flex max-w-full flex-wrap items-center gap-2 overflow-visible pb-1 sm:gap-3">
-        {resolveCycleStates(cycle).map(({ step, artsState, physicalState }, index: number) => (
+      <div className="flex max-w-full flex-wrap items-center gap-2 overflow-visible pb-7 sm:gap-3">
+        {resolveCycleStates(cycle).map(({ step, artsState, reactionState, physicalState }, index: number) => (
           <div key={step.id ?? index} className="flex min-w-0 items-center gap-2">
             <CycleViewIcon
               step={step}
               artsState={artsState}
+              reactionState={reactionState}
               physicalState={physicalState}
             />
 
@@ -532,11 +535,13 @@ function CycleViewPanel({ cycle }: { cycle: any[] }) {
 function CycleViewIcon({
   step,
   artsState,
+  reactionState,
   physicalState,
 }: {
   step: any;
   artsState: { element: any; stacks: number } | null;
-  physicalState: { defenseBreakStacks: number } | null;
+  reactionState: { reaction: any } | null;
+  physicalState: { defenseBreakStacks: number; status?: any } | null;
 }) {
   const skillIcon =
     typeof step?.skillIcon === "string" && step.skillIcon.trim()
@@ -588,10 +593,7 @@ function CycleViewIcon({
 
         {skillLabel ? (
           <span
-            className={[
-              "absolute -bottom-1 left-1 z-30 max-w-[calc(100%-2rem)] truncate rounded px-1 py-0.5 text-[9px] font-black leading-none shadow-[0_0_8px_rgba(0,0,0,0.65)] sm:text-[10px]",
-              getElementLabelClass(element),
-            ].join(" ")}
+            className="absolute -bottom-5 left-1/2 z-30 max-w-[calc(100%+0.75rem)] -translate-x-1/2 truncate text-[11px] font-black leading-none text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)] sm:text-xs"
           >
             {skillLabel}
           </span>
@@ -616,31 +618,28 @@ function CycleViewIcon({
             size="sm"
           />
         ) : null}
+        {reactionState ? (
+          <ArtsReactionStatusIcon reaction={reactionState.reaction} size="sm" />
+        ) : null}
         {physicalState ? (
-          <PhysicalDefenseBreakStackIcon
-            stacks={physicalState.defenseBreakStacks}
-            size="sm"
-          />
+          <>
+            {physicalState.defenseBreakStacks > 0 ? (
+              <PhysicalDefenseBreakStackIcon
+                stacks={physicalState.defenseBreakStacks}
+                size="sm"
+              />
+            ) : null}
+            {physicalState.status ? (
+              <PhysicalCombatStatusIcon
+                status={physicalState.status}
+                size="sm"
+              />
+            ) : null}
+          </>
         ) : null}
       </span>
     </span>
   );
-}
-
-function getElementLabelClass(element: string) {
-  switch (element) {
-    case "heat":
-      return "bg-red-500/90 text-white";
-    case "electric":
-      return "bg-yellow-400/90 text-black";
-    case "cryo":
-      return "bg-cyan-500/90 text-white";
-    case "nature":
-      return "bg-green-500/90 text-white";
-    case "physical":
-    default:
-      return "bg-zinc-500/90 text-white";
-  }
 }
 
 function getElementBorderClass(element: string) {

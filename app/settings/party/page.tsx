@@ -4,6 +4,8 @@ import Image from "next/image";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import ArtsAttachmentStackIcon from "@/app/components/combat/ArtsAttachmentStackIcon";
+import ArtsReactionStatusIcon from "@/app/components/combat/ArtsReactionStatusIcon";
+import PhysicalCombatStatusIcon from "@/app/components/combat/PhysicalCombatStatusIcon";
 import PhysicalDefenseBreakStackIcon from "@/app/components/combat/PhysicalDefenseBreakStackIcon";
 import { resolveCycleStates } from "@/lib/combat/cycle-state";
 import {
@@ -1099,7 +1101,7 @@ function CycleRegisterPanel({
                   </span>
                 </div>
 
-                <div className="flex gap-2 overflow-x-auto pb-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:flex-wrap">
+                <div className="flex gap-2 overflow-x-auto pb-7 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:flex-wrap">
                   {slot.skills.map((item) => (
                     <CycleSkillButton
                       key={`${slot.operator.slug}-${item.key}-${item.variant ?? "base"}`}
@@ -1122,13 +1124,14 @@ function CycleRegisterPanel({
           <p className="mb-3 text-sm font-black text-[#ffdc70]">사이클 순서</p>
 
           {draft.cycle?.length ? (
-            <div className="flex items-center gap-2 overflow-x-auto pb-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:flex-wrap">
-              {resolveCycleStates(draft.cycle).map(({ step, artsState, physicalState }, index) => (
+            <div className="flex items-center gap-2 overflow-x-auto pb-7 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:flex-wrap">
+              {resolveCycleStates(draft.cycle).map(({ step, artsState, reactionState, physicalState }, index) => (
                 <div key={step.id ?? index} className="flex shrink-0 items-center gap-2">
                   <button type="button" onClick={() => removeCycleStep(index)} title="삭제">
                     <CycleStepIcon
                       step={step}
                       artsState={artsState}
+                      reactionState={reactionState}
                       physicalState={physicalState}
                     />
                   </button>
@@ -1182,10 +1185,7 @@ function CycleSkillButton({
       </span>
 
       <span
-        className={[
-          "absolute -bottom-1 left-1 z-30 max-w-[calc(100%-2rem)] truncate rounded px-1 py-0.5 text-[9px] font-black leading-none shadow-[0_0_8px_rgba(0,0,0,0.75)] sm:text-[10px]",
-          getElementLabelClass(element),
-        ].join(" ")}
+        className="absolute -bottom-5 left-1/2 z-30 max-w-[calc(100%+0.75rem)] -translate-x-1/2 truncate text-[11px] font-black leading-none text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)] sm:text-xs"
       >
         {item.label}
       </span>
@@ -1218,21 +1218,18 @@ function getCycleSkillLabel(step: any) {
   return fallbackLabel;
 }
 
-function getCycleSkillLabelClass(step: any) {
-  return getElementLabelClass(step?.element);
-}
-
 function CycleStepIcon({
   step,
   artsState,
+  reactionState,
   physicalState,
 }: {
   step: any;
   artsState: { element: any; stacks: number } | null;
-  physicalState: { defenseBreakStacks: number } | null;
+  reactionState: { reaction: any } | null;
+  physicalState: { defenseBreakStacks: number; status?: any } | null;
 }) {
   const skillLabel = getCycleSkillLabel(step);
-  const labelClass = getCycleSkillLabelClass(step);
 
   return (
     <span className="flex items-center gap-1.5">
@@ -1253,10 +1250,7 @@ function CycleStepIcon({
 
         {skillLabel ? (
           <span
-            className={[
-              "absolute -bottom-1 left-1 z-30 max-w-[calc(100%-2rem)] truncate rounded px-1 py-0.5 text-[9px] font-black leading-none text-white shadow-[0_0_8px_rgba(0,0,0,0.75)] sm:text-[10px]",
-              labelClass,
-            ].join(" ")}
+            className="absolute -bottom-5 left-1/2 z-30 max-w-[calc(100%+0.75rem)] -translate-x-1/2 truncate text-[11px] font-black leading-none text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)] sm:text-xs"
           >
             {skillLabel}
           </span>
@@ -1281,11 +1275,24 @@ function CycleStepIcon({
             size="sm"
           />
         ) : null}
+        {reactionState ? (
+          <ArtsReactionStatusIcon reaction={reactionState.reaction} size="sm" />
+        ) : null}
         {physicalState ? (
-          <PhysicalDefenseBreakStackIcon
-            stacks={physicalState.defenseBreakStacks}
-            size="sm"
-          />
+          <>
+            {physicalState.defenseBreakStacks > 0 ? (
+              <PhysicalDefenseBreakStackIcon
+                stacks={physicalState.defenseBreakStacks}
+                size="sm"
+              />
+            ) : null}
+            {physicalState.status ? (
+              <PhysicalCombatStatusIcon
+                status={physicalState.status}
+                size="sm"
+              />
+            ) : null}
+          </>
         ) : null}
       </span>
     </span>
@@ -1550,22 +1557,6 @@ function OperatorSettingSlot({
       </div>
     </div>
   );
-}
-
-function getElementLabelClass(element: any) {
-  switch (String(element ?? "physical")) {
-    case "heat":
-      return "bg-red-500/95 text-white";
-    case "electric":
-      return "bg-yellow-300/95 text-black";
-    case "cryo":
-      return "bg-cyan-300/95 text-black";
-    case "nature":
-      return "bg-green-500/95 text-white";
-    case "physical":
-    default:
-      return "bg-zinc-400/95 text-black";
-  }
 }
 
 function getElementBorderClass(element: string) {
