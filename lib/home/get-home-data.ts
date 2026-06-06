@@ -1,4 +1,5 @@
 import * as cheerio from "cheerio";
+import type { HomeWeaponStack } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
 export type HomeNoticeType = "notice" | "event" | "news";
@@ -463,9 +464,9 @@ function restoreDefaultNormalWeaponStack(items: WeaponStackItem[]) {
   return [...DEFAULT_NORMAL_WEAPON_STACK];
 }
 
-const db = prisma as any;
+const db = prisma;
 
-function toWeaponStackItem(row: any): WeaponStackItem {
+function toWeaponStackItem(row: HomeWeaponStack): WeaponStackItem {
   const title = String(row.title ?? "");
 
   return {
@@ -482,20 +483,28 @@ function toWeaponStackItem(row: any): WeaponStackItem {
     thumbnail: row.thumbnail ?? row.image ?? "",
     href: String(row.href ?? NEWS_URL),
     publishedAt: String(row.publishedAt ?? ""),
-    createdAt:
-      typeof row.createdAt === "string"
-        ? row.createdAt
-        : row.createdAt instanceof Date
-          ? row.createdAt.toISOString()
-          : new Date().toISOString(),
+    createdAt: row.createdAt || new Date().toISOString(),
   };
 }
 
 async function loadNormalWeaponStackFromDb() {
   try {
-    const rows = await db.homeWeaponStack.findMany({
-      orderBy: [{ stack: "asc" }, { publishedAt: "desc" }],
-    });
+    const [rows, states] = await Promise.all([
+      db.homeWeaponStack.findMany({
+        orderBy: [{ stack: "asc" }, { publishedAt: "desc" }],
+      }),
+      db.homeStackState.findMany({
+        where: {
+          key: {
+            in: [
+              "lastStackOperatorKey",
+              "lastStackOperatorTitle",
+              "pendingWeaponStackAdvance",
+            ],
+          },
+        },
+      }),
+    ]);
 
     normalWeaponStack = restoreDefaultNormalWeaponStack(
       rows
@@ -503,26 +512,14 @@ async function loadNormalWeaponStackFromDb() {
         .filter((weapon: WeaponStackItem) => weapon.id && weapon.stack < 3),
     );
 
-    const states = await db.homeStackState.findMany({
-      where: {
-        key: {
-          in: [
-            "lastStackOperatorKey",
-            "lastStackOperatorTitle",
-            "pendingWeaponStackAdvance",
-          ],
-        },
-      },
-    });
-
     const currentState = states.find(
-      (state: { key: string }) => state.key === "lastStackOperatorKey",
+      (state) => state.key === "lastStackOperatorKey",
     );
     const legacyState = states.find(
-      (state: { key: string }) => state.key === "lastStackOperatorTitle",
+      (state) => state.key === "lastStackOperatorTitle",
     );
     const pendingState = states.find(
-      (state: { key: string }) => state.key === "pendingWeaponStackAdvance",
+      (state) => state.key === "pendingWeaponStackAdvance",
     );
 
     lastStackOperatorKey = String(

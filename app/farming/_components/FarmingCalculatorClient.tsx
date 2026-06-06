@@ -921,7 +921,7 @@ function FarmingCalculatorClientContent() {
   );
 }
 
-export default function FarmingCalculatorClientFixed() {
+export default function FarmingCalculatorClient() {
   return (
     <Suspense fallback={<main className="min-h-screen bg-[#03060b] text-white" />}>
       <FarmingCalculatorClientContent />
