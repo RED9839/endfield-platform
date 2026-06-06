@@ -1497,7 +1497,7 @@ function isXaihiOperator(operator?: SelectableItem) {
   );
 }
 
-function isChenQianyuOperator(operator?: SelectableItem) {
+function usesPhysicalDamagePotentialBonus(operator?: SelectableItem) {
   const text = getDeepText([
     operator?.slug,
     operator?.name,
@@ -1510,7 +1510,9 @@ function isChenQianyuOperator(operator?: SelectableItem) {
   return (
     text.includes("진천우") ||
     text.includes("chenqianyu") ||
-    text.includes("chen qianyu")
+    text.includes("chen qianyu") ||
+    text.includes("dapan") ||
+    text.includes("da pan")
   );
 }
 
@@ -1630,7 +1632,7 @@ function getOperatorBreakthroughBonusStats(
       allowDynamicStats: true,
     });
 
-    if (isChenQianyuOperator(operator)) {
+    if (usesPhysicalDamagePotentialBonus(operator)) {
       for (const [label, stat] of Object.entries(target.dynamicStats)) {
         if (!label.includes("주는 물리 피해")) continue;
 
