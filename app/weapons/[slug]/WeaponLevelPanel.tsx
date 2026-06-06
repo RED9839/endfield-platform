@@ -2,7 +2,12 @@
 
 import { Fragment, useEffect, useMemo, useState, type ReactNode } from "react";
 
-type WeaponLevelStatRow = { level: number; attack: number };
+type WeaponLevelStatRow = {
+  level: number;
+  attack: number;
+  experienceCost?: number;
+  tCreditCost?: number;
+};
 type SkillStat = { label: string; value: string | number };
 type SkillLevelValue = { rank: string; description?: string; stats?: SkillStat[] };
 type WeaponSkillMeta = { label: string; value: string | number };
@@ -45,6 +50,10 @@ const TAB_SUB_LABEL_MAP: Record<SkillTabKey, string> = {
 
 function normalizeText(value?: string | number) {
   return String(value ?? "").trim();
+}
+
+function formatCost(value?: number) {
+  return typeof value === "number" ? value.toLocaleString("ko-KR") : "-";
 }
 
 function escapeRegExp(value: string) {
@@ -489,6 +498,20 @@ export default function WeaponLevelPanel({
               <div className="mt-4 h-1.5 rounded-full bg-zinc-800">
                 <div className="h-full w-[16%] rounded-full bg-yellow-300" />
               </div>
+            </div>
+          </div>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <div className="rounded-[18px] border border-white/10 bg-black/30 p-4">
+              <p className="text-[10px] font-black tracking-[0.18em] text-zinc-500">경험치 비용</p>
+              <p className="mt-2 text-2xl font-black text-white">
+                {formatCost(currentStats.experienceCost)}
+              </p>
+            </div>
+            <div className="rounded-[18px] border border-white/10 bg-black/30 p-4">
+              <p className="text-[10px] font-black tracking-[0.18em] text-zinc-500">T-크레딧 비용</p>
+              <p className="mt-2 text-2xl font-black text-white">
+                {formatCost(currentStats.tCreditCost)}
+              </p>
             </div>
           </div>
         </div>
