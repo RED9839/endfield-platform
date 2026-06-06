@@ -3,7 +3,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { memo, useDeferredValue, useMemo, useState, type ReactNode } from "react";
-import { weaponDetails } from "@/data/weapons-detail-data";
 
 const YELLOW_MAIN = "#ffd24a";
 const YELLOW_TEXT = "#ffdc70";
@@ -11,7 +10,7 @@ const YELLOW_BORDER = "rgba(255,196,74,0.14)";
 const YELLOW_BORDER_SOFT = "rgba(255,196,74,0.10)";
 const FILTER_BG = "#071019";
 
-type WeaponLike = {
+export type WeaponListItem = {
   slug: string;
   name: string;
   enName?: string;
@@ -123,20 +122,20 @@ function readText(value: unknown): string {
   return "";
 }
 
-function getWeaponType(weapon: WeaponLike) {
+function getWeaponType(weapon: WeaponListItem) {
   return weapon.weaponType ?? weapon.type ?? "";
 }
 
-function getWeaponTypeLabel(weapon: WeaponLike) {
+function getWeaponTypeLabel(weapon: WeaponListItem) {
   const weaponType = getWeaponType(weapon);
   return weaponTypeLabelMap[weaponType] ?? weaponType ?? "-";
 }
 
-function getWeaponRarity(weapon: WeaponLike) {
+function getWeaponRarity(weapon: WeaponListItem) {
   return weapon.rarity ?? weapon.quality ?? 3;
 }
 
-function getWeaponImage(weapon: WeaponLike) {
+function getWeaponImage(weapon: WeaponListItem) {
   return (
     weapon.image ??
     weapon.fullImage ??
@@ -145,7 +144,7 @@ function getWeaponImage(weapon: WeaponLike) {
   );
 }
 
-function getRawSeriesText(weapon: WeaponLike) {
+function getRawSeriesText(weapon: WeaponListItem) {
   const candidates = [
     weapon.seriesSkill,
     weapon.series,
@@ -212,48 +211,9 @@ function getSeriesShortName(text: string) {
   return "";
 }
 
-function getWeaponSeriesText(weapon: WeaponLike) {
+function getWeaponSeriesText(weapon: WeaponListItem) {
   return getSeriesShortName(getRawSeriesText(weapon));
 }
-
-const indexedWeapons = (weaponDetails as WeaponLike[])
-  .map((weapon) => {
-    const currentWeaponType = getWeaponType(weapon);
-    const weaponRarity = getWeaponRarity(weapon);
-    const rawSeriesText = getRawSeriesText(weapon);
-    const weaponSeriesText = getWeaponSeriesText(weapon);
-
-    return {
-      weapon,
-      currentWeaponType,
-      weaponRarity,
-      rawSeriesText,
-      weaponSeriesText,
-      searchText: [
-        weapon.name,
-        weapon.enName ?? "",
-        getWeaponTypeLabel(weapon),
-        rawSeriesText,
-        weaponSeriesText,
-      ]
-        .join(" ")
-        .toLowerCase(),
-    };
-  })
-  .sort((left, right) => {
-    if (right.weaponRarity !== left.weaponRarity) {
-      return right.weaponRarity - left.weaponRarity;
-    }
-
-    const leftTypeOrder = weaponTypeOrderMap[left.currentWeaponType] ?? 999;
-    const rightTypeOrder = weaponTypeOrderMap[right.currentWeaponType] ?? 999;
-
-    if (leftTypeOrder !== rightTypeOrder) {
-      return leftTypeOrder - rightTypeOrder;
-    }
-
-    return left.weapon.name.localeCompare(right.weapon.name, "ko");
-  });
 
 function FilterButton({
   active,
@@ -400,7 +360,7 @@ function WeaponTypeChip({ type }: { type: string }) {
   );
 }
 
-const WeaponCard = memo(function WeaponCard({ weapon }: { weapon: WeaponLike }) {
+const WeaponCard = memo(function WeaponCard({ weapon }: { weapon: WeaponListItem }) {
   const weaponRarity = getWeaponRarity(weapon);
   const weaponType = getWeaponType(weapon);
   const weaponSeriesText = getWeaponSeriesText(weapon);
@@ -409,7 +369,7 @@ const WeaponCard = memo(function WeaponCard({ weapon }: { weapon: WeaponLike }) 
   return (
     <Link
       href={`/weapons/${weapon.slug}`}
-      className="group relative block overflow-hidden rounded-[16px] bg-black transition hover:-translate-y-1 sm:rounded-[18px]"
+      className="catalog-card group relative block overflow-hidden rounded-[16px] bg-black transition md:hover:-translate-y-1 sm:rounded-[18px]"
       style={{
         border: `1px solid ${YELLOW_BORDER}`,
         width: "100%",
@@ -447,13 +407,59 @@ const WeaponCard = memo(function WeaponCard({ weapon }: { weapon: WeaponLike }) 
 
 WeaponCard.displayName = "WeaponCard";
 
-export default function WeaponsPageClient() {
+export default function WeaponsPageClient({
+  weapons,
+}: {
+  weapons: WeaponListItem[];
+}) {
   const [keyword, setKeyword] = useState("");
   const [weaponType, setWeaponType] = useState<string | "all">("all");
   const [rarity, setRarity] = useState<number | "all">("all");
   const [series, setSeries] = useState<string | "all">("all");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const deferredKeyword = useDeferredValue(keyword);
+  const indexedWeapons = useMemo(
+    () =>
+      weapons
+        .map((weapon) => {
+          const currentWeaponType = getWeaponType(weapon);
+          const weaponRarity = getWeaponRarity(weapon);
+          const rawSeriesText = getRawSeriesText(weapon);
+          const weaponSeriesText = getWeaponSeriesText(weapon);
+
+          return {
+            weapon,
+            currentWeaponType,
+            weaponRarity,
+            rawSeriesText,
+            weaponSeriesText,
+            searchText: [
+              weapon.name,
+              weapon.enName ?? "",
+              getWeaponTypeLabel(weapon),
+              rawSeriesText,
+              weaponSeriesText,
+            ]
+              .join(" ")
+              .toLowerCase(),
+          };
+        })
+        .sort((left, right) => {
+          if (right.weaponRarity !== left.weaponRarity) {
+            return right.weaponRarity - left.weaponRarity;
+          }
+
+          const leftTypeOrder = weaponTypeOrderMap[left.currentWeaponType] ?? 999;
+          const rightTypeOrder = weaponTypeOrderMap[right.currentWeaponType] ?? 999;
+
+          if (leftTypeOrder !== rightTypeOrder) {
+            return leftTypeOrder - rightTypeOrder;
+          }
+
+          return left.weapon.name.localeCompare(right.weapon.name, "ko");
+        }),
+    [weapons],
+  );
 
   const sortedWeapons = useMemo(() => {
     const normalizedKeyword = deferredKeyword.trim().toLowerCase();
@@ -481,7 +487,7 @@ export default function WeaponsPageClient() {
         },
       )
       .map(({ weapon }) => weapon);
-  }, [deferredKeyword, weaponType, rarity, series]);
+  }, [indexedWeapons, deferredKeyword, weaponType, rarity, series]);
 
   const activeFilterCount = [
     keyword.trim() ? 1 : 0,
@@ -528,7 +534,7 @@ export default function WeaponsPageClient() {
 
         <div className="grid gap-3 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-5">
           <aside
-            className="sticky top-3 z-30 flex max-h-[calc(100dvh-24px)] min-w-0 max-w-full self-start flex-col overflow-hidden rounded-[20px] bg-[#05070b] shadow-[0_0_30px_rgba(250,204,21,0.04)] lg:top-5 lg:h-[calc(100vh-40px)] lg:max-h-[calc(100vh-40px)] lg:rounded-[24px]"
+            className="relative z-30 flex min-w-0 max-w-full self-start flex-col overflow-hidden rounded-[20px] bg-[#05070b] shadow-[0_0_30px_rgba(250,204,21,0.04)] lg:sticky lg:top-5 lg:h-[calc(100vh-40px)] lg:max-h-[calc(100vh-40px)] lg:rounded-[24px]"
             style={{ border: `1px solid ${YELLOW_BORDER}` }}
           >
             <button
@@ -564,7 +570,9 @@ export default function WeaponsPageClient() {
             <div
               className={[
                 "min-w-0 max-w-full overflow-hidden lg:flex lg:min-h-0 lg:flex-1 lg:flex-col",
-                isFilterOpen ? "block min-h-0 flex-1" : "hidden lg:flex",
+                isFilterOpen
+                  ? "flex max-h-[70dvh] min-h-0 flex-1 flex-col"
+                  : "hidden lg:flex",
               ].join(" ")}
             >
               <div
@@ -652,7 +660,7 @@ export default function WeaponsPageClient() {
             </div>
 
             {sortedWeapons.length > 0 ? (
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-[repeat(auto-fill,minmax(150px,170px))] sm:justify-between sm:gap-3">
+              <div className="grid grid-cols-[repeat(2,minmax(0,1fr))] gap-2 sm:grid-cols-[repeat(auto-fill,minmax(150px,170px))] sm:justify-between sm:gap-3">
                 {sortedWeapons.map((weapon) => (
                   <WeaponCard key={weapon.slug} weapon={weapon} />
                 ))}

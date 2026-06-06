@@ -1,15 +1,23 @@
-import { Suspense } from "react";
-import GearClientLoader from "./GearClientLoader";
+import { gearDetails } from "@/data/gear-detail-data";
+import GearPageClient, {
+  type GearListItem,
+} from "./_components/GearPageClient";
 import "./gear-list-overrides.css";
 
-function GearPageFallback() {
-  return <main className="min-h-screen bg-[#050505]" />;
-}
-
 export default function GearPage() {
-  return (
-    <Suspense fallback={<GearPageFallback />}>
-      <GearClientLoader />
-    </Suspense>
-  );
+  const gears: GearListItem[] = gearDetails.map((gear) => ({
+    slug: gear.slug,
+    name: gear.name,
+    enName: gear.enName,
+    category: gear.category,
+    level: gear.level,
+    quality: gear.quality,
+    setName: gear.setName,
+    image: gear.image,
+    abilityTypes: gear.abilityTypes,
+    attributeTypes: gear.attributeTypes,
+    attributeLabel: gear.attribute.label,
+  }));
+
+  return <GearPageClient gears={gears} />;
 }

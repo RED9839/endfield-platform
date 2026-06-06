@@ -3,14 +3,24 @@
 import Image from "next/image";
 import Link from "next/link";
 import { memo, useDeferredValue, useMemo, useState, type ReactNode } from "react";
-import {
-  operatorDetails,
-  type OperatorDetail,
-  type OperatorRarity,
-  type OperatorElement,
-  type OperatorClass,
-  type WeaponType,
+import type {
+  OperatorRarity,
+  OperatorElement,
+  OperatorClass,
+  WeaponType,
 } from "@/data/operators-detail-data";
+
+export type OperatorListItem = {
+  slug: string;
+  name: string;
+  enName: string;
+  rarity: OperatorRarity;
+  element: OperatorElement;
+  class: OperatorClass;
+  weapon: WeaponType;
+  avatar: string;
+  avatarSecondary?: string;
+};
 
 const YELLOW_MAIN = "#ffd24a";
 const YELLOW_TEXT = "#ffdc70";
@@ -99,34 +109,6 @@ const classOrderMap: Record<OperatorClass, number> = {
   caster: 4,
   striker: 5,
 };
-
-const indexedOperators = operatorDetails
-  .map((operator) => ({
-    operator,
-    searchText: [
-      operator.name,
-      operator.enName,
-      classLabelMap[operator.class],
-      elementLabelMap[operator.element],
-      weaponLabelMap[operator.weapon],
-    ]
-      .join(" ")
-      .toLowerCase(),
-  }))
-  .sort((left, right) => {
-    if (right.operator.rarity !== left.operator.rarity) {
-      return right.operator.rarity - left.operator.rarity;
-    }
-
-    const leftClassOrder = classOrderMap[left.operator.class] ?? 999;
-    const rightClassOrder = classOrderMap[right.operator.class] ?? 999;
-
-    if (leftClassOrder !== rightClassOrder) {
-      return leftClassOrder - rightClassOrder;
-    }
-
-    return left.operator.name.localeCompare(right.operator.name, "ko");
-  });
 
 function FilterButton({
   active,
@@ -220,7 +202,7 @@ function OperatorInfoIcon({ src, alt }: { src: string; alt: string }) {
 const OperatorCard = memo(function OperatorCard({
   operator,
 }: {
-  operator: OperatorDetail & { avatarSecondary?: string };
+  operator: OperatorListItem;
 }) {
   const isAdminSplit =
     operator.slug === "endministrator" && !!operator.avatarSecondary;
@@ -228,7 +210,7 @@ const OperatorCard = memo(function OperatorCard({
   return (
     <Link
       href={`/operators/${operator.slug}`}
-      className="group relative block overflow-hidden rounded-[16px] bg-black transition hover:-translate-y-1 sm:rounded-[18px]"
+      className="catalog-card group relative block overflow-hidden rounded-[16px] bg-black transition md:hover:-translate-y-1 sm:rounded-[18px]"
       style={{
         width: "100%",
         aspectRatio: `${CARD_WIDTH} / ${CARD_HEIGHT}`,
@@ -304,7 +286,11 @@ const OperatorCard = memo(function OperatorCard({
 
 OperatorCard.displayName = "OperatorCard";
 
-export default function OperatorsPageClient() {
+export default function OperatorsPageClient({
+  operators,
+}: {
+  operators: OperatorListItem[];
+}) {
   const [keyword, setKeyword] = useState("");
   const [rarity, setRarity] = useState<OperatorRarity | "all">("all");
   const [element, setElement] = useState<OperatorElement | "all">("all");
@@ -313,6 +299,37 @@ export default function OperatorsPageClient() {
   const [weapon, setWeapon] = useState<WeaponType | "all">("all");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const deferredKeyword = useDeferredValue(keyword);
+  const indexedOperators = useMemo(
+    () =>
+      operators
+        .map((operator) => ({
+          operator,
+          searchText: [
+            operator.name,
+            operator.enName,
+            classLabelMap[operator.class],
+            elementLabelMap[operator.element],
+            weaponLabelMap[operator.weapon],
+          ]
+            .join(" ")
+            .toLowerCase(),
+        }))
+        .sort((left, right) => {
+          if (right.operator.rarity !== left.operator.rarity) {
+            return right.operator.rarity - left.operator.rarity;
+          }
+
+          const leftClassOrder = classOrderMap[left.operator.class] ?? 999;
+          const rightClassOrder = classOrderMap[right.operator.class] ?? 999;
+
+          if (leftClassOrder !== rightClassOrder) {
+            return leftClassOrder - rightClassOrder;
+          }
+
+          return left.operator.name.localeCompare(right.operator.name, "ko");
+        }),
+    [operators],
+  );
 
   const sortedOperators = useMemo(() => {
     const normalizedKeyword = deferredKeyword.trim().toLowerCase();
@@ -331,7 +348,7 @@ export default function OperatorsPageClient() {
         );
       })
       .map(({ operator }) => operator);
-  }, [deferredKeyword, rarity, element, operatorClass, weapon]);
+  }, [indexedOperators, deferredKeyword, rarity, element, operatorClass, weapon]);
 
   const activeFilterCount = [
     keyword.trim() ? 1 : 0,
@@ -381,7 +398,7 @@ export default function OperatorsPageClient() {
 
         <div className="grid min-w-0 gap-3 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-5">
           <aside
-            className="sticky top-2 z-40 flex max-h-[calc(100dvh-16px)] min-w-0 max-w-full self-start flex-col overflow-hidden rounded-[16px] bg-[#05070b] shadow-[0_0_30px_rgba(250,204,21,0.04)] lg:top-5 lg:max-h-[calc(100vh-40px)] lg:rounded-[24px]"
+            className="relative z-40 flex min-w-0 max-w-full self-start flex-col overflow-hidden rounded-[16px] bg-[#05070b] shadow-[0_0_30px_rgba(250,204,21,0.04)] lg:sticky lg:top-5 lg:max-h-[calc(100vh-40px)] lg:rounded-[24px]"
             style={{ border: `1px solid ${YELLOW_BORDER}` }}
           >
             <button
@@ -417,7 +434,9 @@ export default function OperatorsPageClient() {
             <div
               className={[
                 "min-w-0 max-w-full overflow-hidden lg:flex lg:min-h-0 lg:flex-1 lg:flex-col",
-                isFilterOpen ? "block min-h-0 flex-1" : "hidden lg:flex",
+                isFilterOpen
+                  ? "flex max-h-[70dvh] min-h-0 flex-1 flex-col"
+                  : "hidden lg:flex",
               ].join(" ")}
             >
               <div
@@ -567,13 +586,11 @@ export default function OperatorsPageClient() {
             </div>
 
             {sortedOperators.length > 0 ? (
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-[repeat(auto-fill,minmax(150px,170px))] sm:justify-between sm:gap-3">
+              <div className="grid grid-cols-[repeat(2,minmax(0,1fr))] gap-2 sm:grid-cols-[repeat(auto-fill,minmax(150px,170px))] sm:justify-between sm:gap-3">
                 {sortedOperators.map((operator) => (
                   <OperatorCard
                     key={operator.slug}
-                    operator={
-                      operator as OperatorDetail & { avatarSecondary?: string }
-                    }
+                    operator={operator}
                   />
                 ))}
               </div>

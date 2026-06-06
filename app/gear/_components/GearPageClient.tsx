@@ -3,16 +3,28 @@
 import Image from "next/image";
 import Link from "next/link";
 import { memo, useDeferredValue, useMemo, useState, type ReactNode } from "react";
-import { gearDetails } from "@/data/gear-detail-data";
 import type {
   GearAbilityKey,
   GearAttributeKey,
   GearCategory,
-  GearDetail,
   GearLevel,
   GearQuality,
   GearSetName,
 } from "@/data/gear-types";
+
+export type GearListItem = {
+  slug: string;
+  name: string;
+  enName: string;
+  category: GearCategory;
+  level: GearLevel;
+  quality: GearQuality;
+  setName: GearSetName;
+  image: string;
+  abilityTypes: GearAbilityKey[];
+  attributeTypes: GearAttributeKey[];
+  attributeLabel: string;
+};
 
 const YELLOW_MAIN = "#ffd24a";
 const YELLOW_TEXT = "#ffdc70";
@@ -125,49 +137,6 @@ const abilityLabelMap = Object.fromEntries(
 const attributeLabelMap = Object.fromEntries(
   attributeOptions.map((option) => [option.key, option.label]),
 ) as Record<GearAttributeKey, string>;
-
-const indexedGears = gearDetails
-  .map((gear) => ({
-    gear,
-    searchText: [
-      gear.name,
-      gear.enName,
-      gear.setName,
-      categoryLabelMap[gear.category],
-      gear.attribute?.label ?? "",
-      ...(gear.abilityTypes ?? []).map((key) => abilityLabelMap[key] ?? key),
-      ...(gear.attributeTypes ?? []).map((key) => attributeLabelMap[key] ?? key),
-    ]
-      .join(" ")
-      .toLowerCase(),
-  }))
-  .sort((left, right) => {
-    if (right.gear.quality !== left.gear.quality) {
-      return right.gear.quality - left.gear.quality;
-    }
-
-    const leftCategoryOrder = categoryOrderMap[left.gear.category] ?? 999;
-    const rightCategoryOrder = categoryOrderMap[right.gear.category] ?? 999;
-
-    if (leftCategoryOrder !== rightCategoryOrder) {
-      return leftCategoryOrder - rightCategoryOrder;
-    }
-
-    const leftSetOrder = setTypeOptions.indexOf(left.gear.setName);
-    const rightSetOrder = setTypeOptions.indexOf(right.gear.setName);
-
-    if (leftSetOrder !== rightSetOrder) {
-      if (leftSetOrder === -1) return 1;
-      if (rightSetOrder === -1) return -1;
-      return leftSetOrder - rightSetOrder;
-    }
-
-    if (right.gear.level !== left.gear.level) {
-      return right.gear.level - left.gear.level;
-    }
-
-    return left.gear.name.localeCompare(right.gear.name, "ko");
-  });
 
 function toggleAbilityFilter(
   current: GearAbilityKey[],
@@ -310,7 +279,7 @@ function GearIconOnlyChip({
   );
 }
 
-function GearCategoryLevelChip({ gear }: { gear: GearDetail }) {
+function GearCategoryLevelChip({ gear }: { gear: GearListItem }) {
   const qualityColor = qualityColorMap[gear.quality];
 
   return (
@@ -331,11 +300,11 @@ function GearCategoryLevelChip({ gear }: { gear: GearDetail }) {
   );
 }
 
-const GearCard = memo(function GearCard({ gear }: { gear: GearDetail }) {
+const GearCard = memo(function GearCard({ gear }: { gear: GearListItem }) {
   return (
     <Link
       href={`/gear/${gear.slug}`}
-      className="group relative block overflow-hidden rounded-[16px] bg-black transition hover:-translate-y-1 hover:border-yellow-400/35 sm:rounded-[18px]"
+      className="catalog-card group relative block overflow-hidden rounded-[16px] bg-black transition md:hover:-translate-y-1 md:hover:border-yellow-400/35 sm:rounded-[18px]"
       style={{
         border: `1px solid ${YELLOW_BORDER}`,
         width: "100%",
@@ -383,7 +352,7 @@ const GearCard = memo(function GearCard({ gear }: { gear: GearDetail }) {
 
           <div className="flex h-[20px] items-center overflow-hidden">
             <GearChip color={YELLOW_MAIN}>
-              <span className="truncate">{gear.attribute?.label ?? "속성"}</span>
+              <span className="truncate">{gear.attributeLabel}</span>
             </GearChip>
           </div>
         </div>
@@ -394,7 +363,11 @@ const GearCard = memo(function GearCard({ gear }: { gear: GearDetail }) {
 
 GearCard.displayName = "GearCard";
 
-export default function GearPageClient() {
+export default function GearPageClient({
+  gears,
+}: {
+  gears: GearListItem[];
+}) {
   const [keyword, setKeyword] = useState("");
   const [category, setCategory] = useState<GearCategory | "all">("all");
   const [setName, setSetName] = useState<GearSetName | "all">("all");
@@ -405,6 +378,52 @@ export default function GearPageClient() {
   const [level, setLevel] = useState<GearLevel | "all">("all");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const deferredKeyword = useDeferredValue(keyword);
+  const indexedGears = useMemo(
+    () =>
+      gears
+        .map((gear) => ({
+          gear,
+          searchText: [
+            gear.name,
+            gear.enName,
+            gear.setName,
+            categoryLabelMap[gear.category],
+            gear.attributeLabel,
+            ...gear.abilityTypes.map((key) => abilityLabelMap[key] ?? key),
+            ...gear.attributeTypes.map((key) => attributeLabelMap[key] ?? key),
+          ]
+            .join(" ")
+            .toLowerCase(),
+        }))
+        .sort((left, right) => {
+          if (right.gear.quality !== left.gear.quality) {
+            return right.gear.quality - left.gear.quality;
+          }
+
+          const leftCategoryOrder = categoryOrderMap[left.gear.category] ?? 999;
+          const rightCategoryOrder = categoryOrderMap[right.gear.category] ?? 999;
+
+          if (leftCategoryOrder !== rightCategoryOrder) {
+            return leftCategoryOrder - rightCategoryOrder;
+          }
+
+          const leftSetOrder = setTypeOptions.indexOf(left.gear.setName);
+          const rightSetOrder = setTypeOptions.indexOf(right.gear.setName);
+
+          if (leftSetOrder !== rightSetOrder) {
+            if (leftSetOrder === -1) return 1;
+            if (rightSetOrder === -1) return -1;
+            return leftSetOrder - rightSetOrder;
+          }
+
+          if (right.gear.level !== left.gear.level) {
+            return right.gear.level - left.gear.level;
+          }
+
+          return left.gear.name.localeCompare(right.gear.name, "ko");
+        }),
+    [gears],
+  );
 
   const sortedGears = useMemo(() => {
     const normalizedKeyword = deferredKeyword.trim().toLowerCase();
@@ -436,7 +455,7 @@ export default function GearPageClient() {
         );
       })
       .map(({ gear }) => gear);
-  }, [deferredKeyword, category, setName, attributeFilter, abilityFilters, quality, level]);
+  }, [indexedGears, deferredKeyword, category, setName, attributeFilter, abilityFilters, quality, level]);
 
   const activeFilterCount = [
     keyword.trim() ? 1 : 0,
@@ -486,7 +505,7 @@ export default function GearPageClient() {
 
         <div className="grid min-w-0 max-w-full gap-3 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-5">
           <aside
-            className="sticky top-2 z-40 flex max-h-[calc(100dvh-16px)] min-w-0 max-w-full self-start flex-col overflow-hidden rounded-[20px] bg-[#05070b] shadow-[0_0_30px_rgba(250,204,21,0.04)] lg:top-5 lg:h-[calc(100vh-40px)] lg:max-h-[calc(100vh-40px)] lg:rounded-[24px]"
+            className="relative z-40 flex min-w-0 max-w-full self-start flex-col overflow-hidden rounded-[20px] bg-[#05070b] shadow-[0_0_30px_rgba(250,204,21,0.04)] lg:sticky lg:top-5 lg:h-[calc(100vh-40px)] lg:max-h-[calc(100vh-40px)] lg:rounded-[24px]"
             style={{ border: `1px solid ${YELLOW_BORDER}` }}
           >
             <button
@@ -522,7 +541,9 @@ export default function GearPageClient() {
             <div
               className={[
                 "min-w-0 max-w-full overflow-hidden lg:flex lg:min-h-0 lg:flex-1 lg:flex-col",
-                isFilterOpen ? "block min-h-0 flex-1" : "hidden lg:flex",
+                isFilterOpen
+                  ? "flex max-h-[70dvh] min-h-0 flex-1 flex-col"
+                  : "hidden lg:flex",
               ].join(" ")}
             >
               <div
@@ -646,7 +667,7 @@ export default function GearPageClient() {
             </div>
 
             {sortedGears.length > 0 ? (
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-[repeat(auto-fill,minmax(150px,170px))] sm:justify-between sm:gap-3">
+              <div className="grid grid-cols-[repeat(2,minmax(0,1fr))] gap-2 sm:grid-cols-[repeat(auto-fill,minmax(150px,170px))] sm:justify-between sm:gap-3">
                 {sortedGears.map((gear) => (
                   <GearCard key={gear.slug} gear={gear} />
                 ))}
