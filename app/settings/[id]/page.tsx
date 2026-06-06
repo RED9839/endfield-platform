@@ -4,6 +4,9 @@ import { notFound } from "next/navigation";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import ArtsAttachmentStackIcon from "@/app/components/combat/ArtsAttachmentStackIcon";
+import PhysicalDefenseBreakStackIcon from "@/app/components/combat/PhysicalDefenseBreakStackIcon";
+import { resolveCycleStates } from "@/lib/combat/cycle-state";
 import { operatorDetails } from "@/data/operators-detail-data";
 import { weaponDetails } from "@/data/weapons-detail-data";
 import DeleteOperatorSettingButton from "@/app/components/settings/DeleteOperatorSettingButton";
@@ -506,9 +509,13 @@ function CycleViewPanel({ cycle }: { cycle: any[] }) {
       </h2>
 
       <div className="flex max-w-full flex-wrap items-center gap-2 overflow-hidden sm:gap-3">
-        {cycle.map((step: any, index: number) => (
+        {resolveCycleStates(cycle).map(({ step, artsState, physicalState }, index: number) => (
           <div key={step.id ?? index} className="flex min-w-0 items-center gap-2">
-            <CycleViewIcon step={step} />
+            <CycleViewIcon
+              step={step}
+              artsState={artsState}
+              physicalState={physicalState}
+            />
 
             {index < cycle.length - 1 ? (
               <span className="text-sm font-black text-yellow-300 sm:text-base">
@@ -522,7 +529,15 @@ function CycleViewPanel({ cycle }: { cycle: any[] }) {
   );
 }
 
-function CycleViewIcon({ step }: { step: any }) {
+function CycleViewIcon({
+  step,
+  artsState,
+  physicalState,
+}: {
+  step: any;
+  artsState: { element: any; stacks: number } | null;
+  physicalState: { defenseBreakStacks: number } | null;
+}) {
   const skillIcon =
     typeof step?.skillIcon === "string" && step.skillIcon.trim()
       ? step.skillIcon
@@ -553,38 +568,60 @@ function CycleViewIcon({ step }: { step: any }) {
 
   return (
     <span
-      className={`relative block h-[72px] w-[72px] shrink-0 overflow-hidden rounded-xl border-2 bg-black sm:h-20 sm:w-20 ${getElementBorderClass(
-        element,
-      )}`}
+      className="flex shrink-0 items-center gap-1.5"
       title={`${step?.operatorName ?? "오퍼레이터"} - ${step?.skillName ?? "스킬"}`}
     >
-      <Image
-        src={skillIcon}
-        alt={step?.skillName ?? "스킬"}
-        fill
-        sizes="(min-width: 640px) 80px, 72px"
-        className="object-contain p-2"
-      />
-
-      {skillLabel ? (
-        <span
-          className={[
-            "absolute left-1 top-1 z-20 rounded px-1 py-0.5 text-[9px] font-black shadow-[0_0_8px_rgba(0,0,0,0.65)] sm:text-[10px]",
-            getElementLabelClass(element),
-          ].join(" ")}
-        >
-          {skillLabel}
+      <span
+        className={`relative flex h-[86px] w-[72px] flex-col items-center justify-start overflow-hidden rounded-xl border-2 bg-black pb-1 sm:h-[94px] sm:w-20 ${getElementBorderClass(
+        element,
+      )}`}
+      >
+        <span className="relative block h-[60px] w-full sm:h-[68px]">
+          <Image
+            src={skillIcon}
+            alt={step?.skillName ?? "스킬"}
+            fill
+            sizes="(min-width: 640px) 80px, 72px"
+            className="object-contain p-2"
+          />
         </span>
-      ) : null}
 
-      <span className="absolute bottom-1 right-1 z-20 h-6 w-6 overflow-hidden rounded-full border border-black bg-black sm:h-7 sm:w-7">
-        <Image
-          src={operatorIcon}
-          alt={step?.operatorName ?? "오퍼레이터"}
-          fill
-          sizes="(min-width: 640px) 28px, 24px"
-          className="object-cover"
+        {skillLabel ? (
+          <span
+            className={[
+              "z-20 max-w-[calc(100%-0.5rem)] truncate rounded px-1 py-0.5 text-[9px] font-black shadow-[0_0_8px_rgba(0,0,0,0.65)] sm:text-[10px]",
+              getElementLabelClass(element),
+            ].join(" ")}
+          >
+            {skillLabel}
+          </span>
+        ) : null}
+
+        <span className="absolute bottom-1 right-1 z-20 h-6 w-6 overflow-hidden rounded-full border border-black bg-black sm:h-7 sm:w-7">
+          <Image
+            src={operatorIcon}
+            alt={step?.operatorName ?? "오퍼레이터"}
+            fill
+            sizes="(min-width: 640px) 28px, 24px"
+            className="object-cover"
+          />
+        </span>
+      </span>
+
+      <span className="flex flex-col items-center gap-0.5">
+      {artsState ? (
+        <ArtsAttachmentStackIcon
+          element={artsState.element}
+          stacks={artsState.stacks}
+          size="sm"
         />
+      ) : null}
+      {physicalState ? (
+        <PhysicalDefenseBreakStackIcon
+          stacks={physicalState.defenseBreakStacks}
+          size="sm"
+        />
+      ) : null}
       </span>
     </span>
   );
