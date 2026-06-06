@@ -985,13 +985,13 @@ function CycleRegisterPanel({
           {
             key: "battleSkill",
             variant: "default",
-            label: "배틀",
+            label: "배틀 스킬",
             skill: operator.skills?.battleSkill,
           },
           {
             key: "comboSkill",
             variant: "default",
-            label: "연계",
+            label: "연계 스킬",
             skill: operator.skills?.comboSkill,
           },
           {
@@ -1101,7 +1101,7 @@ function CycleRegisterPanel({
                   </span>
                 </div>
 
-                <div className="flex gap-2 overflow-x-auto pb-7 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:flex-wrap">
+                <div className="flex gap-x-2 gap-y-8 overflow-x-auto pb-9 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:flex-wrap">
                   {slot.skills.map((item) => (
                     <CycleSkillButton
                       key={`${slot.operator.slug}-${item.key}-${item.variant ?? "base"}`}
@@ -1124,7 +1124,7 @@ function CycleRegisterPanel({
           <p className="mb-3 text-sm font-black text-[#ffdc70]">사이클 순서</p>
 
           {draft.cycle?.length ? (
-            <div className="flex items-center gap-2 overflow-x-auto pb-7 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:flex-wrap">
+            <div className="flex items-center gap-x-2 gap-y-8 overflow-x-auto pb-9 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:flex-wrap">
               {resolveCycleStates(draft.cycle).map(({ step, artsState, reactionState, physicalState }, index) => (
                 <div key={step.id ?? index} className="flex shrink-0 items-center gap-2">
                   <button type="button" onClick={() => removeCycleStep(index)} title="삭제">
@@ -1185,7 +1185,7 @@ function CycleSkillButton({
       </span>
 
       <span
-        className="absolute -bottom-5 left-1/2 z-30 max-w-[calc(100%+0.75rem)] -translate-x-1/2 truncate text-[11px] font-black leading-none text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)] sm:text-xs"
+        className="absolute -bottom-6 left-1/2 z-30 w-max max-w-[calc(100%+1.25rem)] -translate-x-1/2 truncate text-[11px] font-black leading-none text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)] sm:text-xs"
       >
         {item.label}
       </span>
@@ -1211,8 +1211,8 @@ function getCycleSkillLabel(step: any) {
   if (skillVariant === "charged") return "강공";
   if (skillVariant === "plunge") return "낙공";
   if (skillKey === "normalAttack") return fallbackLabel || "평타";
-  if (skillKey === "battleSkill") return "배틀";
-  if (skillKey === "comboSkill") return "연계";
+  if (skillKey === "battleSkill") return "배틀 스킬";
+  if (skillKey === "comboSkill") return "연계 스킬";
   if (skillKey === "ultimate") return "궁극기";
 
   return fallbackLabel;
@@ -1250,7 +1250,7 @@ function CycleStepIcon({
 
         {skillLabel ? (
           <span
-            className="absolute -bottom-5 left-1/2 z-30 max-w-[calc(100%+0.75rem)] -translate-x-1/2 truncate text-[11px] font-black leading-none text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)] sm:text-xs"
+            className="absolute -bottom-6 left-1/2 z-30 w-max max-w-[calc(100%+1.25rem)] -translate-x-1/2 truncate text-[11px] font-black leading-none text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)] sm:text-xs"
           >
             {skillLabel}
           </span>

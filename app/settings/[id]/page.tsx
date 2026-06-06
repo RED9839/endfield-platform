@@ -510,7 +510,7 @@ function CycleViewPanel({ cycle }: { cycle: any[] }) {
         운용 사이클
       </h2>
 
-      <div className="flex max-w-full flex-wrap items-center gap-2 overflow-visible pb-7 sm:gap-3">
+      <div className="flex max-w-full flex-wrap items-center gap-x-2 gap-y-8 overflow-visible pb-9 sm:gap-x-3">
         {resolveCycleStates(cycle).map(({ step, artsState, reactionState, physicalState }, index: number) => (
           <div key={step.id ?? index} className="flex min-w-0 items-center gap-2">
             <CycleViewIcon
@@ -564,9 +564,9 @@ function CycleViewIcon({
       : skillVariant === "plunge"
         ? "낙공"
         : skillKey === "battleSkill"
-          ? "배틀"
+          ? "배틀 스킬"
           : skillKey === "comboSkill"
-            ? "연계"
+            ? "연계 스킬"
             : skillKey === "ultimate"
               ? "궁극기"
               : step?.skillLabel ?? "";
@@ -593,7 +593,7 @@ function CycleViewIcon({
 
         {skillLabel ? (
           <span
-            className="absolute -bottom-5 left-1/2 z-30 max-w-[calc(100%+0.75rem)] -translate-x-1/2 truncate text-[11px] font-black leading-none text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)] sm:text-xs"
+            className="absolute -bottom-6 left-1/2 z-30 w-max max-w-[calc(100%+1.25rem)] -translate-x-1/2 truncate text-[11px] font-black leading-none text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)] sm:text-xs"
           >
             {skillLabel}
           </span>
