@@ -73,7 +73,18 @@ export const operatorPhysicalEffects: OperatorPhysicalEffectData = {
     comboSkill: [
       { operation: "requirePhysicalStatus", statuses: ["armorBreak"] },
     ],
-    ultimate: [{ operation: "applyPhysicalStatus", status: "knockdown" }],
+    ultimate: [
+      {
+        operation: "applyPhysicalStatus",
+        status: "knockdown",
+        condition: "initial ground slam",
+      },
+      {
+        operation: "applyPhysicalStatus",
+        status: "knockdown",
+        condition: "delayed second hit while the target remains in range",
+      },
+    ],
   },
   ember: {
     battleSkill: [{ operation: "applyPhysicalStatus", status: "knockdown" }],
