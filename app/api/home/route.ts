@@ -8,7 +8,7 @@ import {
 
 function json(data: Awaited<ReturnType<typeof getHomeData>>) {
   return NextResponse.json(data, {
-    status: data.ok ? 200 : 502,
+    status: 200,
     headers: {
       "Cache-Control": `public, s-maxage=${HOME_EDGE_CACHE_SECONDS}, stale-while-revalidate=${HOME_STALE_WHILE_REVALIDATE_SECONDS}`,
     },
