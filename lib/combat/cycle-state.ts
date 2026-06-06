@@ -53,6 +53,10 @@ export function resolveCycleStates<
   };
 
   return cycle.map((step) => {
+    if (reactionState?.reaction === "shatter") {
+      reactionState = null;
+    }
+
     const skillKey = toOperatorSkillKey(step.skillKey);
     const artsEffects =
       Array.isArray(step.artsEffects) && step.artsEffects.length > 0
@@ -248,6 +252,7 @@ function applyPhysicalAbnormality(
 
   return {
     ...state,
+    defenseBreakStacks: Math.min(4, state.defenseBreakStacks + 1),
     status,
   };
 }

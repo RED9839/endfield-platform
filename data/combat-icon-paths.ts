@@ -10,10 +10,10 @@ export const physicalCombatIconPaths = {
 export type PhysicalCombatIconKey = keyof typeof physicalCombatIconPaths;
 
 export const artsAttachmentIconPaths = {
-  heat: "/icons/elements/heat.webp",
-  electric: "/icons/elements/electric.webp",
-  cryo: "/icons/elements/cryo.webp",
-  nature: "/icons/elements/nature.webp",
+  heat: "/icons/attachments/heat.webp",
+  electric: "/icons/attachments/electric.webp",
+  cryo: "/icons/attachments/cryo.webp",
+  nature: "/icons/attachments/nature.webp",
 } as const;
 
 export type ArtsAttachmentIconKey = keyof typeof artsAttachmentIconPaths;
