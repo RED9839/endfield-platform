@@ -1,13 +1,13 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 
-import CommonSelectPanel, {
-  type SelectGearItem,
-  type SelectOperatorItem,
-  type SelectWeaponItem,
+import type {
+  SelectOperatorItem,
+  SelectWeaponItem,
 } from "@/app/components/select/CommonSelectPanel";
 import {
   YELLOW_BORDER,
@@ -20,6 +20,18 @@ const FILTER_BG = "#071019";
 const FILTER_BORDER = "rgba(255, 204, 77, 0.18)";
 const MAX_OPERATOR_FILTERS = 4;
 const SETTINGS_PAGE_LIMIT = 24;
+
+const CommonSelectPanel = dynamic(
+  () => import("@/app/components/select/CommonSelectPanel"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/80 p-4 text-sm font-bold text-zinc-500 backdrop-blur-sm">
+        선택 패널을 불러오는 중...
+      </div>
+    ),
+  },
+);
 
 type SettingType = "solo" | "party";
 type SortType = "latest" | "popular" | "views";
@@ -216,13 +228,11 @@ function buildSettingsApiUrl({
 type SettingsPageClientProps = {
   operators: SelectOperatorItem[];
   weapons: SelectWeaponItem[];
-  gears: SelectGearItem[];
 };
 
 export default function SettingsPageClient({
   operators,
   weapons,
-  gears,
 }: SettingsPageClientProps) {
   const operatorBySlug = useMemo(
     () => new Map(operators.map((operator) => [operator.slug, operator])),
@@ -234,6 +244,7 @@ export default function SettingsPageClient({
   );
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [keyword, setKeyword] = useState("");
+  const [debouncedKeyword, setDebouncedKeyword] = useState("");
   const [settingType, setSettingType] = useState<SettingType | "all">("all");
   const [sortType, setSortType] = useState<SortType>("latest");
   const [settings, setSettings] = useState<SettingItem[]>([]);
@@ -264,7 +275,7 @@ export default function SettingsPageClient({
       try {
         const response = await fetch(
           buildSettingsApiUrl({
-            keyword,
+            keyword: debouncedKeyword,
             settingType,
             sortType,
             operatorFilters,
@@ -308,7 +319,7 @@ export default function SettingsPageClient({
       }
     },
     [
-      keyword,
+      debouncedKeyword,
       settingType,
       sortType,
       operatorFilters,
@@ -317,6 +328,14 @@ export default function SettingsPageClient({
       weaponBySlug,
     ],
   );
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setDebouncedKeyword(keyword);
+    }, 250);
+
+    return () => window.clearTimeout(timer);
+  }, [keyword]);
 
   useEffect(() => {
     loadSettings(1, "replace");
@@ -688,7 +707,7 @@ export default function SettingsPageClient({
           title={selectPanel === "operator" ? "오퍼레이터 선택" : "무기 선택"}
           operators={operators}
           weapons={weapons}
-          gears={gears}
+          gears={[]}
           selectedSlug={
             selectPanel === "operator"
               ? (operatorFilters[operatorFilters.length - 1] ?? "")

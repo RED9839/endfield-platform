@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import {
   useEffect,
@@ -11,10 +12,6 @@ import {
   type SetStateAction,
 } from "react";
 
-import SettingEditor from "@/app/components/settings/SettingEditor";
-import { operatorDetails } from "@/data/operators-detail-data";
-import { weaponDetails } from "@/data/weapons-detail-data";
-
 const YELLOW_MAIN = "#ffd24a";
 const YELLOW_TEXT = "#ffdc70";
 const YELLOW_BORDER = "rgba(255,196,74,0.14)";
@@ -23,6 +20,18 @@ const YELLOW_BORDER_SOFT = "rgba(255,196,74,0.10)";
 const OPERATOR_SETTING_DRAFT_KEY = "endfield-operator-setting-draft-v2";
 const SOLO_EDITOR_STORAGE_KEY = "endfield-operator-setting-form-v1";
 const EDITING_SETTING_ID_KEY = "endfield-operator-setting-editing-id-v1";
+
+const SettingEditor = dynamic(
+  () => import("@/app/components/settings/SettingEditor"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex min-h-[520px] items-center justify-center rounded-[20px] border border-yellow-500/10 bg-black/30 text-sm font-bold text-zinc-500">
+        설정 에디터를 불러오는 중...
+      </div>
+    ),
+  },
+);
 
 type SlotKey = "main" | "member1" | "member2" | "member3";
 type SettingType = "solo" | "party";
@@ -44,6 +53,24 @@ type CycleSkillItem = {
   variant?: "normal" | "charged" | "plunge" | "default";
   label: string;
   skill: any;
+};
+
+type OperatorSummary = {
+  slug: string;
+  name: string;
+  avatar?: string;
+  image?: string;
+  element?: string;
+  elementKey?: string;
+  attribute?: string;
+  skills?: Record<string, { name?: string; icon?: string } | null>;
+};
+
+type WeaponSummary = {
+  slug: string;
+  name: string;
+  image?: string;
+  avatar?: string;
 };
 
 const defaultDraft: OperatorSettingDraft = {
@@ -195,6 +222,8 @@ export default function OperatorSettingRegisterPage() {
   const [editId, setEditId] = useState("");
   const [userNickname, setUserNickname] = useState("");
   const [mobileModal, setMobileModal] = useState<"cycle" | "preview" | null>(null);
+  const [operatorSummaries, setOperatorSummaries] = useState<OperatorSummary[]>([]);
+  const [weaponSummaries, setWeaponSummaries] = useState<WeaponSummary[]>([]);
 
   useEffect(() => {
     let mounted = true;
@@ -260,6 +289,34 @@ export default function OperatorSettingRegisterPage() {
   useEffect(() => {
     let mounted = true;
 
+    async function loadSettingSummaries() {
+      try {
+        const response = await fetch("/api/settings/summary", {
+          cache: "force-cache",
+        });
+        const data = await response.json().catch(() => null);
+
+        if (!mounted || !data?.ok) return;
+
+        setOperatorSummaries(Array.isArray(data.operators) ? data.operators : []);
+        setWeaponSummaries(Array.isArray(data.weapons) ? data.weapons : []);
+      } catch {
+        if (!mounted) return;
+        setOperatorSummaries([]);
+        setWeaponSummaries([]);
+      }
+    }
+
+    loadSettingSummaries();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+
     async function loadUserNickname() {
       try {
         const response = await fetch("/api/profile", { cache: "no-store" });
@@ -296,22 +353,25 @@ export default function OperatorSettingRegisterPage() {
   }, [draft, hydrated, editId]);
 
   const operatorsBySlug = useMemo(() => {
-    return new Map(operatorDetails.map((operator: any) => [operator.slug, operator]));
-  }, []);
+    return new Map(operatorSummaries.map((operator) => [operator.slug, operator]));
+  }, [operatorSummaries]);
 
   const weaponsBySlug = useMemo(() => {
-    return new Map(weaponDetails.map((weapon: any) => [weapon.slug, weapon]));
-  }, []);
+    return new Map(weaponSummaries.map((weapon) => [weapon.slug, weapon]));
+  }, [weaponSummaries]);
 
-  const mainOperator = operatorsBySlug.get(draft.slots.main?.operatorSlug);
-  const member1 = operatorsBySlug.get(draft.slots.member1?.operatorSlug);
-  const member2 = operatorsBySlug.get(draft.slots.member2?.operatorSlug);
-  const member3 = operatorsBySlug.get(draft.slots.member3?.operatorSlug);
+  const mainOperator = operatorsBySlug.get(draft.slots.main?.operatorSlug ?? "");
+  const member1 = operatorsBySlug.get(draft.slots.member1?.operatorSlug ?? "");
+  const member2 = operatorsBySlug.get(draft.slots.member2?.operatorSlug ?? "");
+  const member3 = operatorsBySlug.get(draft.slots.member3?.operatorSlug ?? "");
 
-  const mainWeapon = weaponsBySlug.get(draft.slots.main?.form?.weaponSlug) ?? null;
-  const member1Weapon = weaponsBySlug.get(draft.slots.member1?.form?.weaponSlug) ?? null;
-  const member2Weapon = weaponsBySlug.get(draft.slots.member2?.form?.weaponSlug) ?? null;
-  const member3Weapon = weaponsBySlug.get(draft.slots.member3?.form?.weaponSlug) ?? null;
+  const mainWeapon = weaponsBySlug.get(draft.slots.main?.form?.weaponSlug ?? "") ?? null;
+  const member1Weapon =
+    weaponsBySlug.get(draft.slots.member1?.form?.weaponSlug ?? "") ?? null;
+  const member2Weapon =
+    weaponsBySlug.get(draft.slots.member2?.form?.weaponSlug ?? "") ?? null;
+  const member3Weapon =
+    weaponsBySlug.get(draft.slots.member3?.form?.weaponSlug ?? "") ?? null;
 
   const filledSlots = [
     draft.slots.main,

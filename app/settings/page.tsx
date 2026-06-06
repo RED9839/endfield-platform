@@ -1,6 +1,5 @@
 import SettingsPageClient from "./_components/SettingsPageClient";
 
-import { gearDetails } from "@/data/gear-detail-data";
 import { operatorDetails } from "@/data/operators-detail-data";
 import { weaponDetails } from "@/data/weapons-detail-data";
 
@@ -29,24 +28,5 @@ export default function SettingsPage() {
     series: weapon.series,
   }));
 
-  const gears = gearDetails.map((gear) => ({
-    slug: gear.slug,
-    name: gear.name,
-    enName: gear.enName,
-    image: gear.image,
-    quality: gear.quality,
-    level: gear.level,
-    category: gear.category,
-    setName: gear.setName,
-    abilityTypes: [...gear.abilityTypes],
-    attributeTypes: [...gear.attributeTypes],
-  }));
-
-  return (
-    <SettingsPageClient
-      operators={operators}
-      weapons={weapons}
-      gears={gears}
-    />
-  );
+  return <SettingsPageClient operators={operators} weapons={weapons} />;
 }
