@@ -157,7 +157,6 @@ export default async function OperatorDetailPage({ params }: { params: Promise<{
   const sectionLinks = [
     { href: "#level", label: "스탯" },
     { href: "#skills", label: "스킬" },
-    { href: "#popular-settings", label: "세팅" },
     ...(operator.elite.length ? [{ href: "#elite", label: "정예화" }] : []),
     ...(operator.talents.length ? [{ href: "#talents", label: "재능" }] : []),
     ...(operator.infrastructureSkills.length ? [{ href: "#infra", label: "인프라" }] : []),
@@ -203,6 +202,23 @@ export default async function OperatorDetailPage({ params }: { params: Promise<{
             </div>
 
             <aside className="relative order-2 z-10 min-w-0 lg:order-none">
+              <PopularOperatorSettingsPanel
+                operatorSlug={operator.slug}
+                operatorName={operator.name}
+                operators={operatorDetails.map((item) => ({
+                  slug: item.slug,
+                  name: item.name,
+                  enName: item.enName,
+                  avatar: item.avatar,
+                  element: item.element,
+                }))}
+                weapons={weaponDetails.map((item) => ({
+                  slug: item.slug,
+                  name: item.name,
+                  image: item.image,
+                }))}
+              />
+
               <div className="overflow-hidden rounded-[30px] bg-black/58 p-4 shadow-[0_24px_70px_rgba(0,0,0,0.48)] backdrop-blur-md sm:p-5 lg:p-6" style={{ border: `1px solid ${YELLOW_BORDER}` }}>
                 <p className="text-[10px] font-black tracking-[0.3em] sm:text-[11px]" style={{ color: YELLOW_TEXT }}>OPERATOR PROFILE</p>
                 <h1 className="mt-3 break-keep text-[clamp(42px,13vw,88px)] font-black leading-none tracking-tight text-white drop-shadow-[0_8px_24px_rgba(0,0,0,0.6)]">{operator.name}</h1>
@@ -237,25 +253,6 @@ export default async function OperatorDetailPage({ params }: { params: Promise<{
           </DetailSection>
           <DetailSection id="skills" title="전투 스킬" defaultOpen>
             <OperatorSkillsDeck accentColor={YELLOW_MAIN} skills={[operator.skills.normalAttack, operator.skills.battleSkill, operator.skills.comboSkill, operator.skills.ultimate]} />
-          </DetailSection>
-          <DetailSection id="popular-settings" title="인기 오퍼레이터 세팅" defaultOpen>
-            <PopularOperatorSettingsPanel
-              operatorSlug={operator.slug}
-              operatorName={operator.name}
-              operatorAvatar={operator.avatar}
-              operators={operatorDetails.map((item) => ({
-                slug: item.slug,
-                name: item.name,
-                enName: item.enName,
-                avatar: item.avatar,
-                element: item.element,
-              }))}
-              weapons={weaponDetails.map((item) => ({
-                slug: item.slug,
-                name: item.name,
-                image: item.image,
-              }))}
-            />
           </DetailSection>
           {!!operator.elite.length && <DetailSection id="elite" title="정예화" defaultOpen><ElitePanel elite={operator.elite} /></DetailSection>}
           {!!operator.talents.length && <DetailSection id="talents" title="재능" defaultOpen><TalentPanel items={operator.talents} accentColor={YELLOW_MAIN} /></DetailSection>}

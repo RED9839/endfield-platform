@@ -152,7 +152,6 @@ export default function PopularOperatorSettingsPanel({
 }: {
   operatorSlug: string;
   operatorName: string;
-  operatorAvatar: string;
   operators: PopularOperatorItem[];
   weapons: PopularWeaponItem[];
 }) {
@@ -175,7 +174,7 @@ export default function PopularOperatorSettingsPanel({
         const params = new URLSearchParams({
           operators: operatorSlug,
           sort: "popular",
-          limit: "4",
+          limit: "3",
           page: "1",
         });
 
@@ -207,8 +206,11 @@ export default function PopularOperatorSettingsPanel({
   }, [operatorSlug]);
 
   return (
-    <div className="min-w-0">
-      <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
+    <section
+      className="mb-3 min-w-0 rounded-[22px] bg-black/58 p-3 shadow-[0_18px_48px_rgba(0,0,0,0.34)] backdrop-blur-md sm:p-4"
+      style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
+    >
+      <div className="mb-3 flex items-end justify-between gap-2">
         <div className="min-w-0">
           <p
             className="text-[10px] font-black tracking-[0.24em] sm:text-[11px]"
@@ -216,37 +218,37 @@ export default function PopularOperatorSettingsPanel({
           >
             POPULAR SETTINGS
           </p>
-          <p className="mt-1 text-xs text-zinc-500 sm:text-sm">
-            유저들이 등록한 {operatorName} 인기 세팅입니다.
+          <p className="mt-1 truncate text-xs text-zinc-400">
+            {operatorName} 인기 세팅 3개
           </p>
         </div>
 
         <Link
-          href="/settings"
-          className="rounded-xl bg-black px-3 py-2 text-xs font-black text-zinc-200 transition hover:border-yellow-400/40 hover:text-yellow-300 sm:px-4 sm:text-sm"
+          href={`/settings?operators=${encodeURIComponent(operatorSlug)}`}
+          className="shrink-0 rounded-xl bg-black px-3 py-2 text-xs font-black text-zinc-200 transition hover:border-yellow-400/40 hover:text-yellow-300"
           style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
         >
-          전체 오퍼레이터 세팅 보러가기
+          전체 보기
         </Link>
       </div>
 
       {loading ? (
         <div
-          className="rounded-2xl bg-black/35 p-4 text-sm font-bold text-zinc-500"
+          className="rounded-2xl bg-black/35 p-3 text-xs font-bold text-zinc-500"
           style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
         >
           인기 세팅을 불러오는 중입니다.
         </div>
       ) : settings.length === 0 ? (
         <div
-          className="rounded-2xl bg-black/35 p-4 text-sm text-zinc-500"
+          className="rounded-2xl bg-black/35 p-3 text-xs text-zinc-500"
           style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
         >
           아직 등록된 {operatorName} 세팅이 없습니다.
-          <div className="mt-3">
+          <div className="mt-2">
             <Link
               href="/settings/party"
-              className="inline-flex rounded-xl px-3 py-2 text-xs font-black text-black transition hover:brightness-110"
+              className="inline-flex rounded-lg px-3 py-1.5 text-xs font-black text-black transition hover:brightness-110"
               style={{ background: YELLOW_MAIN }}
             >
               첫 세팅 등록하기
@@ -254,7 +256,7 @@ export default function PopularOperatorSettingsPanel({
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-[repeat(auto-fill,minmax(190px,220px))] sm:justify-between sm:gap-3 lg:gap-y-5">
+        <div className="grid grid-cols-3 gap-2">
           {settings.map((setting) => (
             <SettingCard
               key={setting.id}
@@ -268,7 +270,7 @@ export default function PopularOperatorSettingsPanel({
           ))}
         </div>
       )}
-    </div>
+    </section>
   );
 }
 
@@ -276,28 +278,28 @@ function SettingCard({ setting }: { setting: SettingCardItem }) {
   return (
     <Link
       href={`/settings/${setting.id}`}
-      className="group block w-full overflow-hidden rounded-[16px] border border-white/10 bg-black transition hover:-translate-y-1 hover:border-yellow-400/40 sm:rounded-[18px]"
+      className="group block min-w-0 overflow-hidden rounded-xl border border-white/10 bg-black transition hover:-translate-y-0.5 hover:border-yellow-400/40"
     >
-      <div className="relative aspect-[220/255] overflow-hidden bg-black">
+      <div className="relative aspect-[4/3] overflow-hidden bg-black">
         <Image
           src={setting.image}
           alt={setting.operatorName}
           fill
-          sizes="(max-width: 640px) 46vw, 220px"
+          sizes="(max-width: 1024px) 30vw, 180px"
           className="object-cover object-center transition duration-300 group-hover:scale-105"
         />
 
         <div className="absolute inset-0 bg-black/15" />
         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/25 to-transparent" />
 
-        <div className="absolute left-2 top-2 flex items-center gap-1">
+        <div className="absolute left-1.5 top-1.5 flex items-center gap-1">
           {setting.elementIcon ? (
-            <div className="flex h-7 w-7 items-center justify-center sm:h-8 sm:w-8">
+            <div className="flex h-5 w-5 items-center justify-center">
               <Image
                 src={setting.elementIcon}
                 alt="속성"
-                width={24}
-                height={24}
+                width={18}
+                height={18}
                 className="object-contain"
               />
             </div>
@@ -305,7 +307,7 @@ function SettingCard({ setting }: { setting: SettingCardItem }) {
 
           <span
             className={[
-              "rounded-md border px-1.5 py-1 text-[9px] font-black backdrop-blur-sm sm:px-2 sm:text-[10px]",
+              "rounded border px-1 py-0.5 text-[8px] font-black backdrop-blur-sm sm:text-[9px]",
               setting.type === "solo"
                 ? "border-yellow-300/40 bg-yellow-300/15 text-yellow-200"
                 : "border-sky-300/40 bg-sky-300/15 text-sky-200",
@@ -316,28 +318,22 @@ function SettingCard({ setting }: { setting: SettingCardItem }) {
         </div>
 
         {setting.type === "party" && setting.partyMembers?.length ? (
-          <div className="absolute right-2 top-2 flex flex-col gap-1">
-            {setting.partyMembers.slice(0, 3).map((member) => (
+          <div className="absolute right-1.5 top-1.5 flex gap-0.5">
+            {setting.partyMembers.slice(0, 2).map((member) => (
               <div
                 key={member.operatorSlug}
-                className="relative h-8 w-8 overflow-hidden rounded-md border border-white/20 bg-black sm:h-10 sm:w-10"
+                className="relative h-6 w-6 overflow-hidden rounded border border-white/20 bg-black sm:h-7 sm:w-7"
               >
                 <Image
                   src={member.image}
                   alt={member.name}
                   fill
-                  sizes="40px"
+                  sizes="28px"
                   className="object-cover"
                 />
 
                 {member.elementIcon ? (
-                  <Image
-                    src={member.elementIcon}
-                    alt=""
-                    width={13}
-                    height={13}
-                    className="absolute bottom-0 right-0 rounded-sm bg-black/80"
-                  />
+                  <Image src={member.elementIcon} alt="" width={10} height={10} className="absolute bottom-0 right-0 rounded-sm bg-black/80" />
                 ) : null}
               </div>
             ))}
@@ -345,44 +341,34 @@ function SettingCard({ setting }: { setting: SettingCardItem }) {
         ) : null}
 
         {setting.weaponImage ? (
-          <div className="absolute bottom-2 right-2 flex h-9 w-9 items-center justify-center rounded-md border border-white/15 bg-black/50 backdrop-blur-sm sm:h-10 sm:w-10">
+          <div className="absolute bottom-1.5 right-1.5 flex h-7 w-7 items-center justify-center rounded border border-white/15 bg-black/50 backdrop-blur-sm">
             <Image
               src={setting.weaponImage}
               alt={setting.weaponName}
-              width={34}
-              height={34}
+              width={24}
+              height={24}
               className="object-contain"
             />
           </div>
         ) : null}
 
-        <div className="absolute bottom-0 left-0 right-0 px-2.5 py-2 sm:px-3">
-          <h3 className="line-clamp-1 text-[13px] font-black text-white drop-shadow sm:text-[15px]">
+        <div className="absolute bottom-0 left-0 right-8 px-2 py-1.5">
+          <h3 className="truncate text-[10px] font-black text-white drop-shadow sm:text-xs">
             {setting.operatorName}
           </h3>
         </div>
       </div>
 
-      <div className="flex min-h-[124px] flex-col border-t border-yellow-500/10 bg-black px-2.5 pb-2 pt-2 sm:min-h-[138px] sm:px-3">
-        <h2 className="line-clamp-2 text-[12px] font-black leading-[17px] text-yellow-300 sm:text-[13px] sm:leading-[18px]">
+      <div className="flex min-h-[68px] flex-col border-t border-yellow-500/10 bg-black p-2">
+        <h2 className="line-clamp-2 text-[10px] font-black leading-[14px] text-yellow-300 sm:text-[11px] sm:leading-[15px]">
           {setting.title}
         </h2>
 
-        <p className="mt-1 line-clamp-2 text-[10px] leading-[16px] text-zinc-300 sm:text-[11px] sm:leading-[17px]">
-          {setting.description}
-        </p>
-
-        <div className="mt-auto flex flex-wrap items-center gap-1 pt-2 text-[9px] font-black sm:text-[10px]">
-          <span className="max-w-full truncate text-white">{setting.nickname}</span>
-          {setting.isDefaultSetting ? (
-            <span className="rounded border border-yellow-300/30 bg-yellow-300/10 px-1 text-yellow-200">
-              기본 세팅
-            </span>
-          ) : null}
-          <span className="text-zinc-600">|</span>
-          <span className="text-[#ffdc70]">추천 {setting.likes}</span>
-          <span className="text-zinc-600">|</span>
-          <span className="text-[#ffdc70]">조회 {setting.views}</span>
+        <div className="mt-auto flex min-w-0 items-center justify-between gap-1 pt-1.5 text-[8px] font-bold sm:text-[9px]">
+          <span className="truncate text-zinc-300">{setting.nickname}</span>
+          <span className="shrink-0 text-[#ffdc70]">
+            추천 {setting.likes} · 조회 {setting.views}
+          </span>
         </div>
       </div>
     </Link>
