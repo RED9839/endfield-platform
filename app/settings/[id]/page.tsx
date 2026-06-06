@@ -553,7 +553,7 @@ function CycleViewIcon({ step }: { step: any }) {
 
   return (
     <span
-      className={`relative block h-12 w-12 shrink-0 overflow-hidden rounded-xl border-2 bg-black sm:h-14 sm:w-14 ${getElementBorderClass(
+      className={`relative block h-[72px] w-[72px] shrink-0 overflow-hidden rounded-xl border-2 bg-black sm:h-20 sm:w-20 ${getElementBorderClass(
         element,
       )}`}
       title={`${step?.operatorName ?? "오퍼레이터"} - ${step?.skillName ?? "스킬"}`}
@@ -562,14 +562,14 @@ function CycleViewIcon({ step }: { step: any }) {
         src={skillIcon}
         alt={step?.skillName ?? "스킬"}
         fill
-        sizes="56px"
-        className="object-contain p-1.5"
+        sizes="(min-width: 640px) 80px, 72px"
+        className="object-contain p-2"
       />
 
       {skillLabel ? (
         <span
           className={[
-            "absolute left-1 top-1 z-20 rounded px-1 py-0.5 text-[8px] font-black shadow-[0_0_8px_rgba(0,0,0,0.65)] sm:text-[9px]",
+            "absolute left-1 top-1 z-20 rounded px-1 py-0.5 text-[9px] font-black shadow-[0_0_8px_rgba(0,0,0,0.65)] sm:text-[10px]",
             getElementLabelClass(element),
           ].join(" ")}
         >
@@ -577,12 +577,12 @@ function CycleViewIcon({ step }: { step: any }) {
         </span>
       ) : null}
 
-      <span className="absolute bottom-0.5 right-0.5 z-20 h-4 w-4 overflow-hidden rounded-full border border-black bg-black sm:h-5 sm:w-5">
+      <span className="absolute bottom-1 right-1 z-20 h-6 w-6 overflow-hidden rounded-full border border-black bg-black sm:h-7 sm:w-7">
         <Image
           src={operatorIcon}
           alt={step?.operatorName ?? "오퍼레이터"}
           fill
-          sizes="20px"
+          sizes="(min-width: 640px) 28px, 24px"
           className="object-cover"
         />
       </span>

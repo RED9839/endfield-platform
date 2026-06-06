@@ -1164,19 +1164,19 @@ function CycleSkillButton({
 
       <span
         className={[
-          "absolute left-1 top-1 z-20 rounded px-1 py-0.5 text-[8px] font-black leading-none shadow-[0_0_8px_rgba(0,0,0,0.75)] sm:text-[9px]",
+          "absolute left-1 top-1 z-20 rounded px-1 py-0.5 text-[9px] font-black leading-none shadow-[0_0_8px_rgba(0,0,0,0.75)] sm:text-[10px]",
           getElementLabelClass(element),
         ].join(" ")}
       >
         {item.label}
       </span>
 
-      <span className="absolute bottom-1 right-1 z-20 h-5 w-5 overflow-hidden rounded-full border border-black bg-black sm:h-6 sm:w-6">
+      <span className="absolute bottom-1 right-1 z-20 h-6 w-6 overflow-hidden rounded-full border border-black bg-black sm:h-7 sm:w-7">
         <Image
           src={getOperatorImage(operator)}
           alt={operator.name}
           fill
-          sizes="24px"
+          sizes="(min-width: 640px) 28px, 24px"
           className="object-cover"
         />
       </span>
@@ -1224,7 +1224,7 @@ function CycleStepIcon({ step }: { step: any }) {
       {skillLabel ? (
         <span
           className={[
-            "absolute left-1 top-1 z-20 rounded px-1 py-0.5 text-[8px] font-black leading-none text-white shadow-[0_0_8px_rgba(0,0,0,0.75)] sm:text-[9px]",
+            "absolute left-1 top-1 z-20 rounded px-1 py-0.5 text-[9px] font-black leading-none text-white shadow-[0_0_8px_rgba(0,0,0,0.75)] sm:text-[10px]",
             labelClass,
           ].join(" ")}
         >
@@ -1232,12 +1232,12 @@ function CycleStepIcon({ step }: { step: any }) {
         </span>
       ) : null}
 
-      <span className="absolute bottom-1 right-1 z-20 h-5 w-5 overflow-hidden rounded-full border border-black bg-black sm:h-6 sm:w-6">
+      <span className="absolute bottom-1 right-1 z-20 h-6 w-6 overflow-hidden rounded-full border border-black bg-black sm:h-7 sm:w-7">
         <Image
           src={step.operatorIcon}
           alt={step.operatorName ?? "오퍼레이터"}
           fill
-          sizes="24px"
+          sizes="(min-width: 640px) 28px, 24px"
           className="object-cover"
         />
       </span>
