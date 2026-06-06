@@ -3,6 +3,9 @@
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import ArtsAttachmentStackIcon from "@/app/components/combat/ArtsAttachmentStackIcon";
+import PhysicalDefenseBreakStackIcon from "@/app/components/combat/PhysicalDefenseBreakStackIcon";
+import { resolveCycleStates } from "@/lib/combat/cycle-state";
 import {
   useEffect,
   useMemo,
@@ -65,7 +68,12 @@ type OperatorSummary = {
   attribute?: string;
   skills?: Record<
     string,
-    { name?: string; icon?: string; artsEffects?: unknown[] } | null
+    {
+      name?: string;
+      icon?: string;
+      artsEffects?: unknown[];
+      physicalEffects?: unknown[];
+    } | null
   >;
 };
 
@@ -1021,6 +1029,7 @@ function CycleRegisterPanel({
           skillLabel: item.label,
           skillIcon: item.skill?.icon,
           artsEffects: item.skill?.artsEffects ?? [],
+          physicalEffects: item.skill?.physicalEffects ?? [],
         },
       ],
     }));
@@ -1114,10 +1123,14 @@ function CycleRegisterPanel({
 
           {draft.cycle?.length ? (
             <div className="flex items-center gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:flex-wrap">
-              {draft.cycle.map((step: any, index: number) => (
+              {resolveCycleStates(draft.cycle).map(({ step, artsState, physicalState }, index) => (
                 <div key={step.id ?? index} className="flex shrink-0 items-center gap-2">
                   <button type="button" onClick={() => removeCycleStep(index)} title="삭제">
-                    <CycleStepIcon step={step} />
+                    <CycleStepIcon
+                      step={step}
+                      artsState={artsState}
+                      physicalState={physicalState}
+                    />
                   </button>
 
                   {index < draft.cycle.length - 1 ? (
@@ -1153,22 +1166,24 @@ function CycleSkillButton({
     <button
       type="button"
       onClick={onClick}
-      className={`relative h-[72px] w-[72px] shrink-0 overflow-hidden rounded-xl border-2 bg-black transition hover:scale-105 sm:h-20 sm:w-20 ${getElementBorderClass(
+      className={`relative flex h-[86px] w-[72px] shrink-0 flex-col items-center justify-start overflow-hidden rounded-xl border-2 bg-black pb-1 transition hover:scale-105 sm:h-[94px] sm:w-20 ${getElementBorderClass(
         element,
       )}`}
       title={`${operator.name} - ${item.label}`}
     >
-      <Image
-        src={item.skill.icon}
-        alt={item.skill.name ?? item.label}
-        fill
-        sizes="(min-width: 640px) 80px, 72px"
-        className="object-contain p-2"
-      />
+      <span className="relative block h-[60px] w-full sm:h-[68px]">
+        <Image
+          src={item.skill.icon}
+          alt={item.skill.name ?? item.label}
+          fill
+          sizes="(min-width: 640px) 80px, 72px"
+          className="object-contain p-2"
+        />
+      </span>
 
       <span
         className={[
-          "absolute left-1 top-1 z-20 rounded px-1 py-0.5 text-[9px] font-black leading-none shadow-[0_0_8px_rgba(0,0,0,0.75)] sm:text-[10px]",
+          "z-20 max-w-[calc(100%-0.5rem)] truncate rounded px-1 py-0.5 text-[9px] font-black leading-none shadow-[0_0_8px_rgba(0,0,0,0.75)] sm:text-[10px]",
           getElementLabelClass(element),
         ].join(" ")}
       >
@@ -1207,43 +1222,73 @@ function getCycleSkillLabelClass(step: any) {
   return getElementLabelClass(step?.element);
 }
 
-function CycleStepIcon({ step }: { step: any }) {
+function CycleStepIcon({
+  step,
+  artsState,
+  physicalState,
+}: {
+  step: any;
+  artsState: { element: any; stacks: number } | null;
+  physicalState: { defenseBreakStacks: number } | null;
+}) {
   const skillLabel = getCycleSkillLabel(step);
   const labelClass = getCycleSkillLabelClass(step);
 
   return (
     <span
-      className={`relative block h-[72px] w-[72px] overflow-hidden rounded-xl border-2 bg-black sm:h-20 sm:w-20 ${getElementBorderClass(
+      className="flex items-center gap-1.5"
+    >
+      <span
+        className={`relative flex h-[86px] w-[72px] flex-col items-center justify-start overflow-hidden rounded-xl border-2 bg-black pb-1 sm:h-[94px] sm:w-20 ${getElementBorderClass(
         step.element,
       )}`}
-    >
-      <Image
-        src={step.skillIcon}
-        alt={step.skillName ?? "스킬"}
-        fill
-        sizes="(min-width: 640px) 80px, 72px"
-        className="object-contain p-2"
-      />
-
-      {skillLabel ? (
-        <span
-          className={[
-            "absolute left-1 top-1 z-20 rounded px-1 py-0.5 text-[9px] font-black leading-none text-white shadow-[0_0_8px_rgba(0,0,0,0.75)] sm:text-[10px]",
-            labelClass,
-          ].join(" ")}
-        >
-          {skillLabel}
+      >
+        <span className="relative block h-[60px] w-full sm:h-[68px]">
+          <Image
+            src={step.skillIcon}
+            alt={step.skillName ?? "스킬"}
+            fill
+            sizes="(min-width: 640px) 80px, 72px"
+            className="object-contain p-2"
+          />
         </span>
-      ) : null}
 
-      <span className="absolute bottom-1 right-1 z-20 h-6 w-6 overflow-hidden rounded-full border border-black bg-black sm:h-7 sm:w-7">
-        <Image
-          src={step.operatorIcon}
-          alt={step.operatorName ?? "오퍼레이터"}
-          fill
-          sizes="(min-width: 640px) 28px, 24px"
-          className="object-cover"
+        {skillLabel ? (
+          <span
+            className={[
+              "z-20 max-w-[calc(100%-0.5rem)] truncate rounded px-1 py-0.5 text-[9px] font-black leading-none text-white shadow-[0_0_8px_rgba(0,0,0,0.75)] sm:text-[10px]",
+              labelClass,
+            ].join(" ")}
+          >
+            {skillLabel}
+          </span>
+        ) : null}
+
+        <span className="absolute bottom-1 right-1 z-20 h-6 w-6 overflow-hidden rounded-full border border-black bg-black sm:h-7 sm:w-7">
+          <Image
+            src={step.operatorIcon}
+            alt={step.operatorName ?? "오퍼레이터"}
+            fill
+            sizes="(min-width: 640px) 28px, 24px"
+            className="object-cover"
+          />
+        </span>
+      </span>
+
+      <span className="flex flex-col items-center gap-0.5">
+      {artsState ? (
+        <ArtsAttachmentStackIcon
+          element={artsState.element}
+          stacks={artsState.stacks}
+          size="sm"
         />
+      ) : null}
+      {physicalState ? (
+        <PhysicalDefenseBreakStackIcon
+          stacks={physicalState.defenseBreakStacks}
+          size="sm"
+        />
+      ) : null}
       </span>
     </span>
   );

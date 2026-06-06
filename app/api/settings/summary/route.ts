@@ -4,6 +4,7 @@ import {
   getOperatorSkillArtsEffects,
   type OperatorSkillKey,
 } from "@/data/operator-arts-effects";
+import { getOperatorSkillPhysicalEffects } from "@/data/operator-physical-effects";
 import { operatorDetails } from "@/data/operators-detail-data";
 import { weaponDetails } from "@/data/weapons-detail-data";
 
@@ -16,6 +17,7 @@ function pickSkill(operatorSlug: string, skillKey: OperatorSkillKey, skill: any)
     name: skill.name ?? "",
     icon: skill.icon,
     artsEffects: getOperatorSkillArtsEffects(operatorSlug, skillKey),
+    physicalEffects: getOperatorSkillPhysicalEffects(operatorSlug, skillKey),
   };
 }
 
