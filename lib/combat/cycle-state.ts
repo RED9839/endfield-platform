@@ -1,4 +1,9 @@
 import type { ArtsAttachmentIconKey } from "@/data/combat-icon-paths";
+import {
+  getOperatorSkillArtsEffects,
+  type OperatorSkillKey,
+} from "@/data/operator-arts-effects";
+import { getOperatorSkillPhysicalEffects } from "@/data/operator-physical-effects";
 
 type CycleAttachmentState = {
   element: ArtsAttachmentIconKey;
@@ -15,49 +20,39 @@ export type ResolvedCycleStep<TStep = any> = {
   physicalState: CyclePhysicalState | null;
 };
 
-export function resolveCycleStates<TStep extends { artsEffects?: unknown; physicalEffects?: unknown }>(
+export function resolveCycleStates<
+  TStep extends {
+    artsEffects?: unknown;
+    physicalEffects?: unknown;
+    operatorSlug?: string;
+    skillKey?: string;
+  },
+>(
   cycle: TStep[],
 ): ResolvedCycleStep<TStep>[] {
   let artsState: CycleAttachmentState | null = null;
   let defenseBreakStacks = 0;
 
   return cycle.map((step) => {
-    const appliedArts = getAppliedArtsAttachment(step.artsEffects);
+    const skillKey = toOperatorSkillKey(step.skillKey);
+    const artsEffects =
+      Array.isArray(step.artsEffects) && step.artsEffects.length > 0
+        ? step.artsEffects
+        : step.operatorSlug && skillKey
+          ? getOperatorSkillArtsEffects(step.operatorSlug, skillKey)
+          : [];
+    const physicalEffects =
+      Array.isArray(step.physicalEffects) && step.physicalEffects.length > 0
+        ? step.physicalEffects
+        : step.operatorSlug && skillKey
+          ? getOperatorSkillPhysicalEffects(step.operatorSlug, skillKey)
+          : [];
+    artsState = resolveArtsState(artsState, artsEffects);
 
-    if (appliedArts) {
-      artsState =
-        artsState?.element === appliedArts.element
-          ? {
-              element: appliedArts.element,
-              stacks: Math.min(4, artsState.stacks + appliedArts.stacks),
-            }
-          : {
-              element: appliedArts.element,
-              stacks: Math.min(4, appliedArts.stacks),
-            };
-    }
-
-    for (const effect of getPhysicalEffects(step.physicalEffects)) {
-      if (effect.operation === "applyDefenseBreak") {
-        defenseBreakStacks = Math.min(4, defenseBreakStacks + normalizeStacks(effect.stacks));
-        continue;
-      }
-
-      if (effect.operation === "consumeDefenseBreak") {
-        defenseBreakStacks = 0;
-        continue;
-      }
-
-      if (effect.operation !== "applyPhysicalStatus") continue;
-
-      if (effect.status === "launch" || effect.status === "knockdown") {
-        defenseBreakStacks = Math.min(4, defenseBreakStacks + 1);
-      }
-
-      if (effect.status === "smash" || effect.status === "armorBreak") {
-        defenseBreakStacks = defenseBreakStacks > 0 ? 0 : 1;
-      }
-    }
+    defenseBreakStacks = resolveDefenseBreakStacks(
+      defenseBreakStacks,
+      physicalEffects,
+    );
 
     return {
       step,
@@ -68,27 +63,109 @@ export function resolveCycleStates<TStep extends { artsEffects?: unknown; physic
   });
 }
 
-function getAppliedArtsAttachment(effects: unknown): CycleAttachmentState | null {
-  if (!Array.isArray(effects)) return null;
+function resolveArtsState(
+  currentState: CycleAttachmentState | null,
+  effects: unknown,
+) {
+  if (!Array.isArray(effects)) return currentState;
 
-  const effect = effects.find((item: any) => {
-    return (
-      (item?.operation === "apply" || item?.operation === "enableAttachment") &&
-      Array.isArray(item?.elements)
-    );
-  }) as any;
+  let nextState = currentState;
 
-  const element = effect?.elements?.find((value: unknown) =>
-    ["heat", "electric", "cryo", "nature"].includes(String(value))
-  ) as ArtsAttachmentIconKey | undefined;
+  for (const effect of effects) {
+    if (effect?.operation === "apply" || effect?.operation === "enableAttachment") {
+      const element = getFirstArtsElement(effect.elements);
+      if (!element) continue;
 
-  if (!element) return null;
+      nextState =
+        nextState?.element === element
+          ? {
+              element,
+              stacks: Math.min(4, nextState.stacks + normalizeStacks(effect.stacks)),
+            }
+          : {
+              element,
+              stacks: normalizeStacks(effect.stacks),
+            };
+      continue;
+    }
 
-  return { element, stacks: normalizeStacks(effect?.stacks) };
+    if (effect?.operation === "consume") {
+      if (!nextState) continue;
+
+      if (
+        effect.elements === "any" ||
+        getArtsElements(effect.elements).includes(nextState.element)
+      ) {
+        nextState = null;
+      }
+      continue;
+    }
+
+    if (effect?.operation === "reapply") {
+      if (!nextState) continue;
+
+      if (
+        effect.elements === "current" ||
+        getArtsElements(effect.elements).includes(nextState.element)
+      ) {
+        nextState = {
+          element: nextState.element,
+          stacks: Math.min(4, nextState.stacks + 1),
+        };
+      }
+    }
+  }
+
+  return nextState;
+}
+
+function resolveDefenseBreakStacks(currentStacks: number, effects: unknown) {
+  let nextStacks = currentStacks;
+
+  for (const effect of getPhysicalEffects(effects)) {
+    if (effect.operation === "applyDefenseBreak") {
+      nextStacks = Math.min(4, nextStacks + normalizeStacks(effect.stacks));
+      continue;
+    }
+
+    if (effect.operation === "consumeDefenseBreak") {
+      nextStacks = 0;
+      continue;
+    }
+
+    if (effect.operation === "reapplyPhysicalStatus") {
+      nextStacks = nextStacks > 0 ? Math.min(4, nextStacks + 1) : 0;
+      continue;
+    }
+
+    if (effect.operation !== "applyPhysicalStatus") continue;
+
+    if (effect.status === "launch" || effect.status === "knockdown") {
+      nextStacks = Math.min(4, nextStacks + 1);
+    }
+
+    if (effect.status === "smash" || effect.status === "armorBreak") {
+      nextStacks = nextStacks > 0 ? 0 : 1;
+    }
+  }
+
+  return nextStacks;
 }
 
 function getPhysicalEffects(effects: unknown) {
   return Array.isArray(effects) ? (effects as any[]) : [];
+}
+
+function getFirstArtsElement(elements: unknown) {
+  return getArtsElements(elements)[0] ?? null;
+}
+
+function getArtsElements(elements: unknown) {
+  if (!Array.isArray(elements)) return [];
+
+  return elements.filter((value): value is ArtsAttachmentIconKey =>
+    ["heat", "electric", "cryo", "nature"].includes(String(value)),
+  );
 }
 
 function normalizeStacks(value: unknown) {
@@ -96,4 +173,13 @@ function normalizeStacks(value: unknown) {
   return Number.isFinite(rawStacks)
     ? Math.min(4, Math.max(1, Math.trunc(rawStacks)))
     : 1;
+}
+
+function toOperatorSkillKey(value: unknown): OperatorSkillKey | null {
+  return value === "normalAttack" ||
+    value === "battleSkill" ||
+    value === "comboSkill" ||
+    value === "ultimate"
+    ? value
+    : null;
 }

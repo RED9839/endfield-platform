@@ -1099,7 +1099,7 @@ function CycleRegisterPanel({
                   </span>
                 </div>
 
-                <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:flex-wrap">
+                <div className="flex gap-2 overflow-x-auto pb-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:flex-wrap">
                   {slot.skills.map((item) => (
                     <CycleSkillButton
                       key={`${slot.operator.slug}-${item.key}-${item.variant ?? "base"}`}
@@ -1122,7 +1122,7 @@ function CycleRegisterPanel({
           <p className="mb-3 text-sm font-black text-[#ffdc70]">사이클 순서</p>
 
           {draft.cycle?.length ? (
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:flex-wrap">
+            <div className="flex items-center gap-2 overflow-x-auto pb-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:flex-wrap">
               {resolveCycleStates(draft.cycle).map(({ step, artsState, physicalState }, index) => (
                 <div key={step.id ?? index} className="flex shrink-0 items-center gap-2">
                   <button type="button" onClick={() => removeCycleStep(index)} title="삭제">
@@ -1166,12 +1166,12 @@ function CycleSkillButton({
     <button
       type="button"
       onClick={onClick}
-      className={`relative flex h-[86px] w-[72px] shrink-0 flex-col items-center justify-start overflow-hidden rounded-xl border-2 bg-black pb-1 transition hover:scale-105 sm:h-[94px] sm:w-20 ${getElementBorderClass(
+      className={`relative h-[72px] w-[72px] shrink-0 overflow-visible rounded-xl border-2 bg-black transition hover:scale-105 sm:h-20 sm:w-20 ${getElementBorderClass(
         element,
       )}`}
       title={`${operator.name} - ${item.label}`}
     >
-      <span className="relative block h-[60px] w-full sm:h-[68px]">
+      <span className="relative block h-full w-full overflow-hidden rounded-[10px]">
         <Image
           src={item.skill.icon}
           alt={item.skill.name ?? item.label}
@@ -1183,7 +1183,7 @@ function CycleSkillButton({
 
       <span
         className={[
-          "z-20 max-w-[calc(100%-0.5rem)] truncate rounded px-1 py-0.5 text-[9px] font-black leading-none shadow-[0_0_8px_rgba(0,0,0,0.75)] sm:text-[10px]",
+          "absolute -bottom-1 left-1 z-30 max-w-[calc(100%-2rem)] truncate rounded px-1 py-0.5 text-[9px] font-black leading-none shadow-[0_0_8px_rgba(0,0,0,0.75)] sm:text-[10px]",
           getElementLabelClass(element),
         ].join(" ")}
       >
@@ -1235,15 +1235,13 @@ function CycleStepIcon({
   const labelClass = getCycleSkillLabelClass(step);
 
   return (
-    <span
-      className="flex items-center gap-1.5"
-    >
+    <span className="flex items-center gap-1.5">
       <span
-        className={`relative flex h-[86px] w-[72px] flex-col items-center justify-start overflow-hidden rounded-xl border-2 bg-black pb-1 sm:h-[94px] sm:w-20 ${getElementBorderClass(
+        className={`relative h-[72px] w-[72px] overflow-visible rounded-xl border-2 bg-black sm:h-20 sm:w-20 ${getElementBorderClass(
         step.element,
       )}`}
       >
-        <span className="relative block h-[60px] w-full sm:h-[68px]">
+        <span className="relative block h-full w-full overflow-hidden rounded-[10px]">
           <Image
             src={step.skillIcon}
             alt={step.skillName ?? "스킬"}
@@ -1256,7 +1254,7 @@ function CycleStepIcon({
         {skillLabel ? (
           <span
             className={[
-              "z-20 max-w-[calc(100%-0.5rem)] truncate rounded px-1 py-0.5 text-[9px] font-black leading-none text-white shadow-[0_0_8px_rgba(0,0,0,0.75)] sm:text-[10px]",
+              "absolute -bottom-1 left-1 z-30 max-w-[calc(100%-2rem)] truncate rounded px-1 py-0.5 text-[9px] font-black leading-none text-white shadow-[0_0_8px_rgba(0,0,0,0.75)] sm:text-[10px]",
               labelClass,
             ].join(" ")}
           >
@@ -1276,19 +1274,19 @@ function CycleStepIcon({
       </span>
 
       <span className="flex flex-col items-center gap-0.5">
-      {artsState ? (
-        <ArtsAttachmentStackIcon
-          element={artsState.element}
-          stacks={artsState.stacks}
-          size="sm"
-        />
-      ) : null}
-      {physicalState ? (
-        <PhysicalDefenseBreakStackIcon
-          stacks={physicalState.defenseBreakStacks}
-          size="sm"
-        />
-      ) : null}
+        {artsState ? (
+          <ArtsAttachmentStackIcon
+            element={artsState.element}
+            stacks={artsState.stacks}
+            size="sm"
+          />
+        ) : null}
+        {physicalState ? (
+          <PhysicalDefenseBreakStackIcon
+            stacks={physicalState.defenseBreakStacks}
+            size="sm"
+          />
+        ) : null}
       </span>
     </span>
   );

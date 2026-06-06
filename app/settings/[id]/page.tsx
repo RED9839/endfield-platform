@@ -508,7 +508,7 @@ function CycleViewPanel({ cycle }: { cycle: any[] }) {
         운용 사이클
       </h2>
 
-      <div className="flex max-w-full flex-wrap items-center gap-2 overflow-hidden sm:gap-3">
+      <div className="flex max-w-full flex-wrap items-center gap-2 overflow-visible pb-1 sm:gap-3">
         {resolveCycleStates(cycle).map(({ step, artsState, physicalState }, index: number) => (
           <div key={step.id ?? index} className="flex min-w-0 items-center gap-2">
             <CycleViewIcon
@@ -572,11 +572,11 @@ function CycleViewIcon({
       title={`${step?.operatorName ?? "오퍼레이터"} - ${step?.skillName ?? "스킬"}`}
     >
       <span
-        className={`relative flex h-[86px] w-[72px] flex-col items-center justify-start overflow-hidden rounded-xl border-2 bg-black pb-1 sm:h-[94px] sm:w-20 ${getElementBorderClass(
+        className={`relative h-[72px] w-[72px] overflow-visible rounded-xl border-2 bg-black sm:h-20 sm:w-20 ${getElementBorderClass(
         element,
       )}`}
       >
-        <span className="relative block h-[60px] w-full sm:h-[68px]">
+        <span className="relative block h-full w-full overflow-hidden rounded-[10px]">
           <Image
             src={skillIcon}
             alt={step?.skillName ?? "스킬"}
@@ -589,7 +589,7 @@ function CycleViewIcon({
         {skillLabel ? (
           <span
             className={[
-              "z-20 max-w-[calc(100%-0.5rem)] truncate rounded px-1 py-0.5 text-[9px] font-black shadow-[0_0_8px_rgba(0,0,0,0.65)] sm:text-[10px]",
+              "absolute -bottom-1 left-1 z-30 max-w-[calc(100%-2rem)] truncate rounded px-1 py-0.5 text-[9px] font-black leading-none shadow-[0_0_8px_rgba(0,0,0,0.65)] sm:text-[10px]",
               getElementLabelClass(element),
             ].join(" ")}
           >
@@ -609,19 +609,19 @@ function CycleViewIcon({
       </span>
 
       <span className="flex flex-col items-center gap-0.5">
-      {artsState ? (
-        <ArtsAttachmentStackIcon
-          element={artsState.element}
-          stacks={artsState.stacks}
-          size="sm"
-        />
-      ) : null}
-      {physicalState ? (
-        <PhysicalDefenseBreakStackIcon
-          stacks={physicalState.defenseBreakStacks}
-          size="sm"
-        />
-      ) : null}
+        {artsState ? (
+          <ArtsAttachmentStackIcon
+            element={artsState.element}
+            stacks={artsState.stacks}
+            size="sm"
+          />
+        ) : null}
+        {physicalState ? (
+          <PhysicalDefenseBreakStackIcon
+            stacks={physicalState.defenseBreakStacks}
+            size="sm"
+          />
+        ) : null}
       </span>
     </span>
   );
