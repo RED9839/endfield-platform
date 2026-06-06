@@ -1,11 +1,20 @@
 {
   "version": 1,
-  "lastUpdated": "2026-04-27T01:53:25.243Z",
+  "lastUpdated": "2026-06-03T00:00:00.000Z",
   "items": [
+    {
+      "id": "red-bond",
+      "title": "붉은 결속 신청",
+      "stack": 0,
+      "image": "https://web-static.hg-cdn.com/upload/image/20260602/67e065febebdb645ba6edfd503e798ba.jpg",
+      "href": "https://endfield.gryphline.com/ko-kr/news/4492",
+      "publishedAt": "2026.06.03",
+      "createdAt": "2026-06-03T00:00:00.000Z"
+    },
     {
       "id": "hanghae",
       "title": "항해 신청",
-      "stack": 0,
+      "stack": 1,
       "image": "https://web-static.hg-cdn.com/upload/image/20260415/c08b7435381e80dba80b70453daf22d4.jpg",
       "href": "https://endfield.gryphline.com/ko-kr/news/0751",
       "publishedAt": "2026.04.16",
@@ -14,19 +23,10 @@
     {
       "id": "jeogok",
       "title": "적옥 신청",
-      "stack": 1,
+      "stack": 2,
       "image": "https://web-static.hg-cdn.com/upload/image/20260321/995797e6ffe60b02202749600a8ac9cd.jpg",
       "href": "https://endfield.gryphline.com/ko-kr/news/2660",
       "publishedAt": "2026.03.28",
-      "createdAt": "2026-04-22T18:23:35.816Z"
-    },
-    {
-      "id": "sina",
-      "title": "신아 신청",
-      "stack": 2,
-      "image": "https://web-static.hg-cdn.com/upload/image/20260309/94336f5ca612a44896b0288d0ea841cc.jpg",
-      "href": "https://endfield.gryphline.com/ko-kr/news/5213",
-      "publishedAt": "2026.03.11",
       "createdAt": "2026-04-22T18:23:35.816Z"
     }
   ]

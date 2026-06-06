@@ -70,57 +70,57 @@ const FETCH_HEADERS = {
   Referer: SITE,
 };
 
-const WEAPON_A_IMAGE =
+const RED_BOND_IMAGE =
+  "https://web-static.hg-cdn.com/upload/image/20260602/67e065febebdb645ba6edfd503e798ba.jpg";
+
+const VOYAGE_IMAGE =
   "https://web-static.hg-cdn.com/upload/image/20260415/c08b7435381e80dba80b70453daf22d4.jpg";
 
-const WEAPON_B_IMAGE =
-  "https://web-static.hg-cdn.com/upload/image/20260325/46d8dbd41c064a8d1c469d9f3f8aa49e.png";
-
-const WEAPON_C_IMAGE =
-  "https://web-static.hg-cdn.com/upload/image/20260310/29486c6dc4d5ff64fb685d039d46d6b4.png";
+const RED_JADE_IMAGE =
+  "https://web-static.hg-cdn.com/upload/image/20260321/995797e6ffe60b02202749600a8ac9cd.jpg";
 
 const DEFAULT_NORMAL_WEAPON_STACK: WeaponStackItem[] = [
   {
-    id: "weapon-a",
-    title: "신아 신청",
+    id: "red-bond",
+    title: "붉은 결속 신청",
     stack: 0,
     group: "normal",
-    image: WEAPON_A_IMAGE,
-    detailImage: WEAPON_A_IMAGE,
-    bannerImage: WEAPON_A_IMAGE,
-    articleImage: WEAPON_A_IMAGE,
-    thumbnail: WEAPON_A_IMAGE,
-    href: NEWS_URL,
-    publishedAt: "2026.04.16",
-    createdAt: "2026-04-16T00:00:00.000Z",
+    image: RED_BOND_IMAGE,
+    detailImage: RED_BOND_IMAGE,
+    bannerImage: RED_BOND_IMAGE,
+    articleImage: RED_BOND_IMAGE,
+    thumbnail: RED_BOND_IMAGE,
+    href: `${NEWS_URL}/4492`,
+    publishedAt: "2026.06.03",
+    createdAt: "2026-06-03T00:00:00.000Z",
   },
   {
-    id: "weapon-b",
-    title: "적옥 신청",
+    id: "hanghae",
+    title: "항해 신청",
     stack: 1,
     group: "normal",
-    image: WEAPON_B_IMAGE,
-    detailImage: WEAPON_B_IMAGE,
-    bannerImage: WEAPON_B_IMAGE,
-    articleImage: WEAPON_B_IMAGE,
-    thumbnail: WEAPON_B_IMAGE,
-    href: NEWS_URL,
-    publishedAt: "2026.03.28",
-    createdAt: "2026-03-28T00:00:00.000Z",
+    image: VOYAGE_IMAGE,
+    detailImage: VOYAGE_IMAGE,
+    bannerImage: VOYAGE_IMAGE,
+    articleImage: VOYAGE_IMAGE,
+    thumbnail: VOYAGE_IMAGE,
+    href: `${NEWS_URL}/0751`,
+    publishedAt: "2026.04.16",
+    createdAt: "2026-04-22T18:23:35.816Z",
   },
   {
-    id: "weapon-c",
-    title: "항해 신청",
+    id: "jeogok",
+    title: "적옥 신청",
     stack: 2,
     group: "normal",
-    image: WEAPON_C_IMAGE,
-    detailImage: WEAPON_C_IMAGE,
-    bannerImage: WEAPON_C_IMAGE,
-    articleImage: WEAPON_C_IMAGE,
-    thumbnail: WEAPON_C_IMAGE,
-    href: NEWS_URL,
-    publishedAt: "2026.03.11",
-    createdAt: "2026-03-11T00:00:00.000Z",
+    image: RED_JADE_IMAGE,
+    detailImage: RED_JADE_IMAGE,
+    bannerImage: RED_JADE_IMAGE,
+    articleImage: RED_JADE_IMAGE,
+    thumbnail: RED_JADE_IMAGE,
+    href: `${NEWS_URL}/2660`,
+    publishedAt: "2026.03.28",
+    createdAt: "2026-04-22T18:23:35.816Z",
   },
 ];
 
@@ -128,7 +128,9 @@ let cachedResponse: HomeApiResponse | null = null;
 let cachedAt = 0;
 let normalWeaponStack: WeaponStackItem[] = [];
 let specialWeaponStack: WeaponStackItem[] = [];
-let lastStackOperatorTitle = "";
+let lastStackOperatorKey = "";
+let currentStackOperatorTitle = "";
+let pendingWeaponStackAdvance = false;
 
 function abs(url?: string | null) {
   if (!url) return "";
@@ -307,6 +309,15 @@ function normalizeWeaponTitle(title: string) {
     .trim();
 }
 
+function getNormalWeaponId(label: string) {
+  if (label.includes("붉은 결속 신청")) return "red-bond";
+  if (label.includes("항해 신청")) return "hanghae";
+  if (label.includes("적옥 신청")) return "jeogok";
+  if (label.includes("신아 신청")) return "sina";
+
+  return label.replace(/[^\w가-힣]/g, "-").toLowerCase();
+}
+
 function getNormalWeaponMeta(title: string) {
   if (title.includes("헤드헌팅")) return null;
   if (!title.includes("신청")) return null;
@@ -318,7 +329,7 @@ function getNormalWeaponMeta(title: string) {
   if (!label.includes("신청")) return null;
 
   return {
-    id: label.replace(/[^\w가-힣]/g, "-").toLowerCase(),
+    id: getNormalWeaponId(label),
     label,
   };
 }
@@ -350,8 +361,24 @@ function getStackOperatorItems(items: ParsedItem[]) {
     .sort((a, b) => dateToTime(b.date) - dateToTime(a.date));
 }
 
-function findCurrentStackOperatorTitle(items: ParsedItem[]) {
-  return getStackOperatorItems(items)[0]?.title ?? "";
+function findCurrentStackOperator(items: ParsedItem[]) {
+  return getStackOperatorItems(items)[0] ?? null;
+}
+
+function makeStackOperatorKey(item: ParsedItem) {
+  return `${item.date}|${item.href}|${item.title}`;
+}
+
+function isSameStackOperator(
+  savedKey: string,
+  currentItem: ParsedItem | null,
+) {
+  if (!savedKey || !currentItem) return false;
+
+  return (
+    savedKey === currentItem.title ||
+    savedKey === makeStackOperatorKey(currentItem)
+  );
 }
 
 function makeNormalWeaponItem(
@@ -420,12 +447,32 @@ function applyWeaponStackOrder(items: WeaponStackItem[]) {
     );
 }
 
+function restoreDefaultNormalWeaponStack(items: WeaponStackItem[]) {
+  const defaultIds = new Set(
+    DEFAULT_NORMAL_WEAPON_STACK.map((weapon) => weapon.id),
+  );
+  const knownHistoricalIds = new Set([...defaultIds, "sina"]);
+
+  if (
+    items.length >= DEFAULT_NORMAL_WEAPON_STACK.length ||
+    items.some((weapon) => !knownHistoricalIds.has(weapon.id))
+  ) {
+    return items;
+  }
+
+  return [...DEFAULT_NORMAL_WEAPON_STACK];
+}
+
 const db = prisma as any;
 
 function toWeaponStackItem(row: any): WeaponStackItem {
+  const title = String(row.title ?? "");
+
   return {
-    id: String(row.weaponId ?? row.id ?? ""),
-    title: String(row.title ?? ""),
+    id:
+      getNormalWeaponMeta(title)?.id ??
+      String(row.weaponId ?? row.id ?? ""),
+    title,
     stack: Number(row.stack ?? 0),
     group: "normal",
     image: String(row.image ?? ""),
@@ -450,15 +497,39 @@ async function loadNormalWeaponStackFromDb() {
       orderBy: [{ stack: "asc" }, { publishedAt: "desc" }],
     });
 
-    normalWeaponStack = rows
-      .map(toWeaponStackItem)
-      .filter((weapon: WeaponStackItem) => weapon.id && weapon.stack < 3);
+    normalWeaponStack = restoreDefaultNormalWeaponStack(
+      rows
+        .map(toWeaponStackItem)
+        .filter((weapon: WeaponStackItem) => weapon.id && weapon.stack < 3),
+    );
 
-    const state = await db.homeStackState.findUnique({
-      where: { key: "lastStackOperatorTitle" },
+    const states = await db.homeStackState.findMany({
+      where: {
+        key: {
+          in: [
+            "lastStackOperatorKey",
+            "lastStackOperatorTitle",
+            "pendingWeaponStackAdvance",
+          ],
+        },
+      },
     });
 
-    lastStackOperatorTitle = String(state?.value ?? lastStackOperatorTitle ?? "");
+    const currentState = states.find(
+      (state: { key: string }) => state.key === "lastStackOperatorKey",
+    );
+    const legacyState = states.find(
+      (state: { key: string }) => state.key === "lastStackOperatorTitle",
+    );
+    const pendingState = states.find(
+      (state: { key: string }) => state.key === "pendingWeaponStackAdvance",
+    );
+
+    lastStackOperatorKey = String(
+      currentState?.value ?? legacyState?.value ?? lastStackOperatorKey ?? "",
+    );
+    pendingWeaponStackAdvance =
+      String(pendingState?.value ?? "") === "true";
   } catch {
     normalWeaponStack = normalWeaponStack.filter((weapon) => weapon.stack < 3);
   }
@@ -510,11 +581,19 @@ async function saveNormalWeaponStackToDb() {
         }),
       ),
       db.homeStackState.upsert({
-        where: { key: "lastStackOperatorTitle" },
-        update: { value: lastStackOperatorTitle },
+        where: { key: "lastStackOperatorKey" },
+        update: { value: lastStackOperatorKey },
         create: {
-          key: "lastStackOperatorTitle",
-          value: lastStackOperatorTitle,
+          key: "lastStackOperatorKey",
+          value: lastStackOperatorKey,
+        },
+      }),
+      db.homeStackState.upsert({
+        where: { key: "pendingWeaponStackAdvance" },
+        update: { value: String(pendingWeaponStackAdvance) },
+        create: {
+          key: "pendingWeaponStackAdvance",
+          value: String(pendingWeaponStackAdvance),
         },
       }),
     ]);
@@ -526,11 +605,12 @@ async function saveNormalWeaponStackToDb() {
 async function updateNormalWeaponStack(items: ParsedItem[]) {
   await loadNormalWeaponStackFromDb();
 
-  const stackOperatorTitle = findCurrentStackOperatorTitle(items);
+  const stackOperator = findCurrentStackOperator(items);
+  currentStackOperatorTitle =
+    stackOperator?.title ?? currentStackOperatorTitle;
   const operatorPickupChanged =
-    Boolean(stackOperatorTitle) &&
-    Boolean(lastStackOperatorTitle) &&
-    stackOperatorTitle !== lastStackOperatorTitle;
+    Boolean(lastStackOperatorKey) &&
+    !isSameStackOperator(lastStackOperatorKey, stackOperator);
 
   const foundNormalItems = items
     .map((item) => {
@@ -548,67 +628,77 @@ async function updateNormalWeaponStack(items: ParsedItem[]) {
     )
     .sort((a, b) => dateToTime(b.item.date) - dateToTime(a.item.date));
 
-  let stack = [...normalWeaponStack];
+  let stack =
+    normalWeaponStack.length > 0
+      ? [...normalWeaponStack]
+      : [...DEFAULT_NORMAL_WEAPON_STACK];
 
-  if (operatorPickupChanged) {
-    stack = stack
-      .map((weapon) => ({
-        ...weapon,
-        stack: weapon.stack + 1,
-      }))
-      .filter((weapon) => weapon.stack < 3);
+  if (operatorPickupChanged && stackOperator) {
+    const currentWeapon = stack.find((weapon) => weapon.stack === 0);
+    pendingWeaponStackAdvance =
+      dateToTime(currentWeapon?.publishedAt ?? "") <
+      dateToTime(stackOperator.date);
   }
 
   if (foundNormalItems.length > 0) {
-    if (stack.length === 0) {
-      stack = foundNormalItems
-        .slice(0, 3)
-        .map(({ item, meta }, index) => makeNormalWeaponItem(item, meta, index));
-    } else {
-      const latest = foundNormalItems[0];
-      const latestExists = stack.some((weapon) => weapon.id === latest.meta.id);
+    const latest = foundNormalItems[0];
+    const existingLatest = stack.find(
+      (weapon) => weapon.id === latest.meta.id,
+    );
+    const latestPublicationChanged =
+      !existingLatest ||
+      existingLatest.publishedAt !== latest.item.date ||
+      (Boolean(existingLatest.image) &&
+        Boolean(latest.item.image) &&
+        existingLatest.image !== latest.item.image);
 
-      if (!latestExists) {
-        if (!operatorPickupChanged) {
-          stack = stack
-            .map((weapon) => ({
-              ...weapon,
-              stack: weapon.stack + 1,
-            }))
-            .filter((weapon) => weapon.stack < 3);
-        }
-
-        stack.unshift(makeNormalWeaponItem(latest.item, latest.meta, 0));
-      }
-
-      stack = stack.map((weapon) => {
-        const found = foundNormalItems.find(
-          (entry) => entry.meta.id === weapon.id,
-        );
-
-        if (!found) return weapon;
-
-        return {
+    if (latestPublicationChanged) {
+      stack = stack
+        .filter((weapon) => weapon.id !== latest.meta.id)
+        .map((weapon) => ({
           ...weapon,
-          title: found.meta.label,
-          image: found.item.image || weapon.image,
-          detailImage: found.item.image || weapon.detailImage,
-          bannerImage: found.item.image || weapon.bannerImage,
-          articleImage: found.item.image || weapon.articleImage,
-          thumbnail: found.item.image || weapon.thumbnail,
-          href: found.item.href || weapon.href,
-          publishedAt: found.item.date || weapon.publishedAt,
-        };
-      });
+          stack: weapon.stack + 1,
+        }))
+        .filter((weapon) => weapon.stack < 3);
+
+      stack.unshift(makeNormalWeaponItem(latest.item, latest.meta, 0));
+      pendingWeaponStackAdvance = false;
     }
-  } else if (stack.length === 0) {
-    stack = [...DEFAULT_NORMAL_WEAPON_STACK];
+
+    stack = stack.map((weapon) => {
+      const found = foundNormalItems.find(
+        (entry) => entry.meta.id === weapon.id,
+      );
+
+      if (!found) return weapon;
+
+      return {
+        ...weapon,
+        title: found.meta.label,
+        image: found.item.image || weapon.image,
+        detailImage: found.item.image || weapon.detailImage,
+        bannerImage: found.item.image || weapon.bannerImage,
+        articleImage: found.item.image || weapon.articleImage,
+        thumbnail: found.item.image || weapon.thumbnail,
+        href:
+          found.item.href && found.item.href !== NEWS_URL
+            ? found.item.href
+            : weapon.href,
+        publishedAt: found.item.date || weapon.publishedAt,
+      };
+    });
   }
 
   normalWeaponStack = applyWeaponStackOrder(stack);
 
-  if (stackOperatorTitle) {
-    lastStackOperatorTitle = stackOperatorTitle;
+  if (
+    stackOperator &&
+    (operatorPickupChanged ||
+      lastStackOperatorKey !== makeStackOperatorKey(stackOperator))
+  ) {
+    // The operator cycle is tracked independently. The weapon publication is
+    // the atomic stack trigger so simultaneous updates never advance twice.
+    lastStackOperatorKey = makeStackOperatorKey(stackOperator);
   }
 
   await saveNormalWeaponStackToDb();
@@ -674,7 +764,7 @@ async function createErrorPayload(
       cache: statusCache,
       normalWeaponCount: normalWeaponStack.length,
       specialWeaponCount: specialWeaponStack.length,
-      stackOperatorTitle: lastStackOperatorTitle,
+      stackOperatorTitle: currentStackOperatorTitle,
     },
     message,
   };
@@ -723,7 +813,7 @@ export async function getHomeData(): Promise<HomeApiResponse> {
         cache: "miss",
         normalWeaponCount: normalWeaponStack.length,
         specialWeaponCount: specialWeaponStack.length,
-        stackOperatorTitle: lastStackOperatorTitle,
+        stackOperatorTitle: currentStackOperatorTitle,
       },
     };
 
