@@ -51,7 +51,7 @@ export const catastrophegauzecartridget1: GearDetail = {
     {
       pieces: 3,
       description:
-        "장착자의 궁극기 충전 효율 +20%. 장착자가 배틀 스킬을 사용할 때, 반환하는 스킬 게이지 50포인트. 해당 효과는 전투마다 최대 1회만 발동합니다.",
+        "장착자의 궁극기 충전 효율 +20%. 전투 시작 시, 즉시 궁극기 게이지 50포인트를 회복합니다.",
     },
   ],
 };
