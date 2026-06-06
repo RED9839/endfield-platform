@@ -74,15 +74,15 @@ const WEAPON_A_IMAGE =
   "https://web-static.hg-cdn.com/upload/image/20260415/c08b7435381e80dba80b70453daf22d4.jpg";
 
 const WEAPON_B_IMAGE =
-  "https://web-static.hg-cdn.com/upload/image/20260325/46d8dbd41c064a8d1c469d9f3f8aa49e.png";
+  "https://web-static.hg-cdn.com/upload/image/20260321/995797e6ffe60b02202749600a8ac9cd.jpg";
 
 const WEAPON_C_IMAGE =
-  "https://web-static.hg-cdn.com/upload/image/20260310/29486c6dc4d5ff64fb685d039d46d6b4.png";
+  "https://web-static.hg-cdn.com/upload/image/20260309/94336f5ca612a44896b0288d0ea841cc.jpg";
 
 const DEFAULT_NORMAL_WEAPON_STACK: WeaponStackItem[] = [
   {
-    id: "weapon-a",
-    title: "신아 신청",
+    id: "hanghae",
+    title: "항해 신청",
     stack: 0,
     group: "normal",
     image: WEAPON_A_IMAGE,
@@ -90,12 +90,12 @@ const DEFAULT_NORMAL_WEAPON_STACK: WeaponStackItem[] = [
     bannerImage: WEAPON_A_IMAGE,
     articleImage: WEAPON_A_IMAGE,
     thumbnail: WEAPON_A_IMAGE,
-    href: NEWS_URL,
+    href: `${NEWS_URL}/0751`,
     publishedAt: "2026.04.16",
-    createdAt: "2026-04-16T00:00:00.000Z",
+    createdAt: "2026-04-22T18:23:35.816Z",
   },
   {
-    id: "weapon-b",
+    id: "jeogok",
     title: "적옥 신청",
     stack: 1,
     group: "normal",
@@ -104,13 +104,13 @@ const DEFAULT_NORMAL_WEAPON_STACK: WeaponStackItem[] = [
     bannerImage: WEAPON_B_IMAGE,
     articleImage: WEAPON_B_IMAGE,
     thumbnail: WEAPON_B_IMAGE,
-    href: NEWS_URL,
+    href: `${NEWS_URL}/2660`,
     publishedAt: "2026.03.28",
-    createdAt: "2026-03-28T00:00:00.000Z",
+    createdAt: "2026-04-22T18:23:35.816Z",
   },
   {
-    id: "weapon-c",
-    title: "항해 신청",
+    id: "sina",
+    title: "신아 신청",
     stack: 2,
     group: "normal",
     image: WEAPON_C_IMAGE,
@@ -118,9 +118,9 @@ const DEFAULT_NORMAL_WEAPON_STACK: WeaponStackItem[] = [
     bannerImage: WEAPON_C_IMAGE,
     articleImage: WEAPON_C_IMAGE,
     thumbnail: WEAPON_C_IMAGE,
-    href: NEWS_URL,
+    href: `${NEWS_URL}/5213`,
     publishedAt: "2026.03.11",
-    createdAt: "2026-03-11T00:00:00.000Z",
+    createdAt: "2026-04-22T18:23:35.816Z",
   },
 ];
 
@@ -307,6 +307,14 @@ function normalizeWeaponTitle(title: string) {
     .trim();
 }
 
+function getNormalWeaponId(label: string) {
+  if (label.includes("항해 신청")) return "hanghae";
+  if (label.includes("적옥 신청")) return "jeogok";
+  if (label.includes("신아 신청")) return "sina";
+
+  return label.replace(/[^\w가-힣]/g, "-").toLowerCase();
+}
+
 function getNormalWeaponMeta(title: string) {
   if (title.includes("헤드헌팅")) return null;
   if (!title.includes("신청")) return null;
@@ -318,7 +326,7 @@ function getNormalWeaponMeta(title: string) {
   if (!label.includes("신청")) return null;
 
   return {
-    id: label.replace(/[^\w가-힣]/g, "-").toLowerCase(),
+    id: getNormalWeaponId(label),
     label,
   };
 }
@@ -420,12 +428,31 @@ function applyWeaponStackOrder(items: WeaponStackItem[]) {
     );
 }
 
+function restoreDefaultNormalWeaponStack(items: WeaponStackItem[]) {
+  const defaultIds = new Set(
+    DEFAULT_NORMAL_WEAPON_STACK.map((weapon) => weapon.id),
+  );
+
+  if (
+    items.length >= DEFAULT_NORMAL_WEAPON_STACK.length ||
+    items.some((weapon) => !defaultIds.has(weapon.id))
+  ) {
+    return items;
+  }
+
+  return applyWeaponStackOrder([...items, ...DEFAULT_NORMAL_WEAPON_STACK]);
+}
+
 const db = prisma as any;
 
 function toWeaponStackItem(row: any): WeaponStackItem {
+  const title = String(row.title ?? "");
+
   return {
-    id: String(row.weaponId ?? row.id ?? ""),
-    title: String(row.title ?? ""),
+    id:
+      getNormalWeaponMeta(title)?.id ??
+      String(row.weaponId ?? row.id ?? ""),
+    title,
     stack: Number(row.stack ?? 0),
     group: "normal",
     image: String(row.image ?? ""),
@@ -450,9 +477,11 @@ async function loadNormalWeaponStackFromDb() {
       orderBy: [{ stack: "asc" }, { publishedAt: "desc" }],
     });
 
-    normalWeaponStack = rows
-      .map(toWeaponStackItem)
-      .filter((weapon: WeaponStackItem) => weapon.id && weapon.stack < 3);
+    normalWeaponStack = restoreDefaultNormalWeaponStack(
+      rows
+        .map(toWeaponStackItem)
+        .filter((weapon: WeaponStackItem) => weapon.id && weapon.stack < 3),
+    );
 
     const state = await db.homeStackState.findUnique({
       where: { key: "lastStackOperatorTitle" },
@@ -548,7 +577,10 @@ async function updateNormalWeaponStack(items: ParsedItem[]) {
     )
     .sort((a, b) => dateToTime(b.item.date) - dateToTime(a.item.date));
 
-  let stack = [...normalWeaponStack];
+  let stack =
+    normalWeaponStack.length > 0
+      ? [...normalWeaponStack]
+      : [...DEFAULT_NORMAL_WEAPON_STACK];
 
   if (operatorPickupChanged) {
     stack = stack
@@ -601,8 +633,6 @@ async function updateNormalWeaponStack(items: ParsedItem[]) {
         };
       });
     }
-  } else if (stack.length === 0) {
-    stack = [...DEFAULT_NORMAL_WEAPON_STACK];
   }
 
   normalWeaponStack = applyWeaponStackOrder(stack);

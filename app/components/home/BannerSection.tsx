@@ -97,15 +97,7 @@ function isVersion(item: BannerSourceItem) {
 }
 
 function isExpiredWeapon(item: BannerSourceItem) {
-  const title = normalizeTitle(item.title);
-
-  if (typeof item.stack === "number" && item.stack >= 3) return true;
-
-  // 2026년 5월 장방이 픽업 종료 이후에는 신아 신청이 3스택 밖으로 밀려야 하므로
-  // 서버 캐시/파싱 실패로 fallback에 남아도 홈 배너에서는 강제로 제외한다.
-  if (item.id === "sina" || title.includes("신아 신청")) return true;
-
-  return false;
+  return typeof item.stack === "number" && item.stack >= 3;
 }
 
 function hasValidImage(item: HomeBannerItem) {
