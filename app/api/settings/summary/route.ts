@@ -1,16 +1,21 @@
 import { NextResponse } from "next/server";
 
+import {
+  getOperatorSkillArtsEffects,
+  type OperatorSkillKey,
+} from "@/data/operator-arts-effects";
 import { operatorDetails } from "@/data/operators-detail-data";
 import { weaponDetails } from "@/data/weapons-detail-data";
 
 export const dynamic = "force-static";
 
-function pickSkill(skill: any) {
+function pickSkill(operatorSlug: string, skillKey: OperatorSkillKey, skill: any) {
   if (!skill?.icon) return null;
 
   return {
     name: skill.name ?? "",
     icon: skill.icon,
+    artsEffects: getOperatorSkillArtsEffects(operatorSlug, skillKey),
   };
 }
 
@@ -26,10 +31,10 @@ export function GET() {
       elementKey: operator.elementKey ?? operator.element ?? operator.attribute ?? "",
       attribute: operator.attribute ?? operator.element ?? operator.elementKey ?? "",
       skills: {
-        normalAttack: pickSkill(operator.skills?.normalAttack),
-        battleSkill: pickSkill(operator.skills?.battleSkill),
-        comboSkill: pickSkill(operator.skills?.comboSkill),
-        ultimate: pickSkill(operator.skills?.ultimate),
+        normalAttack: pickSkill(operator.slug, "normalAttack", operator.skills?.normalAttack),
+        battleSkill: pickSkill(operator.slug, "battleSkill", operator.skills?.battleSkill),
+        comboSkill: pickSkill(operator.slug, "comboSkill", operator.skills?.comboSkill),
+        ultimate: pickSkill(operator.slug, "ultimate", operator.skills?.ultimate),
       },
     })),
     weapons: weaponDetails.map((weapon: any) => ({
