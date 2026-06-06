@@ -7,6 +7,7 @@ export const gearSetOrder: GearSetName[] = [
   "조류의 물결",
   "청파",
   "M. I. 경찰용",
+  "고검의 잔향",
   "식양의 흐름",
   "열 작업용",
   "생체 보조",
