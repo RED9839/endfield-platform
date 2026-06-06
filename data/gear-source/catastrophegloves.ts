@@ -50,7 +50,7 @@ export const catastrophegloves: GearDetail = {
     {
       pieces: 3,
       description:
-        "장착자의 궁극기 피해 보너스 +20%. 궁극기 사용 시, 10초 동안 모든 피해 +15%",
+        "장착자의 궁극기 충전 효율 +20%. 전투 시작 시, 즉시 궁극기 게이지 50포인트를 회복합니다.",
     },
   ],
 };
