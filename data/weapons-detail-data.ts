@@ -66,6 +66,7 @@ import { longroad } from "./weapons-source/longroad";
 import { peco5 } from "./weapons-source/peco5";
 import { lonebarge } from "./weapons-source/lonebarge";
 import { flickersinthemist } from "./weapons-source/flickersinthemist";
+import { amaranthinetassel } from "./weapons-source/amaranthinetassel";
 
 export type WeaponRarity = 3 | 4 | 5 | 6;
 
@@ -407,6 +408,7 @@ function buildWeaponDetail(source: SourceWeaponDetail): WeaponDetail {
 }
 
 const weaponSources: SourceWeaponDetail[] = [
+  amaranthinetassel,
   grandvision,
   whitenightnova,
   forgebornscathe,
