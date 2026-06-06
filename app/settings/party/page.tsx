@@ -1149,7 +1149,7 @@ function CycleSkillButton({
     <button
       type="button"
       onClick={onClick}
-      className={`relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border-2 bg-black transition hover:scale-105 sm:h-14 sm:w-14 ${getElementBorderClass(
+      className={`relative h-[72px] w-[72px] shrink-0 overflow-hidden rounded-xl border-2 bg-black transition hover:scale-105 sm:h-20 sm:w-20 ${getElementBorderClass(
         element,
       )}`}
       title={`${operator.name} - ${item.label}`}
@@ -1158,8 +1158,8 @@ function CycleSkillButton({
         src={item.skill.icon}
         alt={item.skill.name ?? item.label}
         fill
-        sizes="56px"
-        className="object-contain p-1.5"
+        sizes="(min-width: 640px) 80px, 72px"
+        className="object-contain p-2"
       />
 
       <span
@@ -1171,12 +1171,12 @@ function CycleSkillButton({
         {item.label}
       </span>
 
-      <span className="absolute bottom-0.5 right-0.5 z-20 h-4 w-4 overflow-hidden rounded-full border border-black bg-black sm:h-5 sm:w-5">
+      <span className="absolute bottom-1 right-1 z-20 h-5 w-5 overflow-hidden rounded-full border border-black bg-black sm:h-6 sm:w-6">
         <Image
           src={getOperatorImage(operator)}
           alt={operator.name}
           fill
-          sizes="20px"
+          sizes="24px"
           className="object-cover"
         />
       </span>
@@ -1209,7 +1209,7 @@ function CycleStepIcon({ step }: { step: any }) {
 
   return (
     <span
-      className={`relative block h-12 w-12 overflow-hidden rounded-xl border-2 bg-black sm:h-14 sm:w-14 ${getElementBorderClass(
+      className={`relative block h-[72px] w-[72px] overflow-hidden rounded-xl border-2 bg-black sm:h-20 sm:w-20 ${getElementBorderClass(
         step.element,
       )}`}
     >
@@ -1217,8 +1217,8 @@ function CycleStepIcon({ step }: { step: any }) {
         src={step.skillIcon}
         alt={step.skillName ?? "스킬"}
         fill
-        sizes="56px"
-        className="object-contain p-1.5"
+        sizes="(min-width: 640px) 80px, 72px"
+        className="object-contain p-2"
       />
 
       {skillLabel ? (
@@ -1232,12 +1232,12 @@ function CycleStepIcon({ step }: { step: any }) {
         </span>
       ) : null}
 
-      <span className="absolute bottom-0.5 right-0.5 z-20 h-4 w-4 overflow-hidden rounded-full border border-black bg-black sm:h-5 sm:w-5">
+      <span className="absolute bottom-1 right-1 z-20 h-5 w-5 overflow-hidden rounded-full border border-black bg-black sm:h-6 sm:w-6">
         <Image
           src={step.operatorIcon}
           alt={step.operatorName ?? "오퍼레이터"}
           fill
-          sizes="20px"
+          sizes="24px"
           className="object-cover"
         />
       </span>
