@@ -506,6 +506,7 @@ function FarmingCalculatorClientContent() {
   const [settings, setSettings] = useState<FarmingSettings>(DEFAULT_SETTINGS);
   const [modalMode, setModalMode] = useState<ModalMode>(null);
   const [mobileSettingsModal, setMobileSettingsModal] = useState<"token" | "sanity" | null>(null);
+
   const [discountOpen, setDiscountOpen] = useState(false);
   const [storageReady, setStorageReady] = useState(false);
 
@@ -613,7 +614,7 @@ function FarmingCalculatorClientContent() {
   function resetAndGoHome() {
     clearState();
     saveUserMaterialInventory(ownedMaterials);
-    router.push("/");
+    window.location.assign("/");
   }
 
 
@@ -921,7 +922,7 @@ function FarmingCalculatorClientContent() {
   );
 }
 
-export default function FarmingCalculatorClientFixed() {
+export default function FarmingCalculatorClient() {
   return (
     <Suspense fallback={<main className="min-h-screen bg-[#03060b] text-white" />}>
       <FarmingCalculatorClientContent />

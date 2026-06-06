@@ -1,5 +1,5 @@
-import FarmingCalculatorClientFixed from "./_components/FarmingCalculatorClientFixed";
+import FarmingCalculatorClient from "./_components/FarmingCalculatorClient";
 
 export default function FarmingPage() {
-  return <FarmingCalculatorClientFixed />;
+  return <FarmingCalculatorClient />;
 }

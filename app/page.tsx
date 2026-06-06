@@ -287,13 +287,15 @@ function resolveFeaturedOperator(data: HomeApiResponse | null) {
 }
 
 export default async function HomePage() {
-  const accountUser = await getCurrentUser();
+  const accountUserPromise = getCurrentUser();
+  const homePayloadPromise = getHomeData();
+  const accountUser = await accountUserPromise;
 
   if (accountUser && !accountUser.nickname?.trim()) {
     redirect("/setup-profile");
   }
 
-  const homePayload = await getHomeData();
+  const homePayload = await homePayloadPromise;
   const homeData = homePayload.ok ? homePayload : null;
   const featuredOperator = resolveFeaturedOperator(homeData);
 

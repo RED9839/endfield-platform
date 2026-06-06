@@ -17,6 +17,8 @@ const IMAGE_HEADERS = {
   Accept: "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
   Referer: "https://endfield.gryphline.com/ko-kr/news",
 };
+const UPSTREAM_CACHE_SECONDS = 24 * 60 * 60;
+const STALE_WHILE_REVALIDATE_SECONDS = 7 * 24 * 60 * 60;
 
 function isAllowedUrl(url: URL) {
   const hostname = url.hostname.toLowerCase();
@@ -49,8 +51,8 @@ export async function GET(request: NextRequest) {
 
   try {
     const response = await fetch(imageUrl.toString(), {
-      cache: "no-store",
       headers: IMAGE_HEADERS,
+      next: { revalidate: UPSTREAM_CACHE_SECONDS },
     });
 
     if (!response.ok) {
@@ -71,7 +73,7 @@ export async function GET(request: NextRequest) {
       status: 200,
       headers: {
         "Content-Type": contentType,
-        "Cache-Control": "public, max-age=3600, s-maxage=3600",
+        "Cache-Control": `public, max-age=3600, s-maxage=${UPSTREAM_CACHE_SECONDS}, stale-while-revalidate=${STALE_WHILE_REVALIDATE_SECONDS}`,
       },
     });
   } catch {

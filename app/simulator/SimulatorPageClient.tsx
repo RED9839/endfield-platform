@@ -928,7 +928,7 @@ export default function SimulatorPage() {
   }
 
   function resetSimulatorAndGoHome() {
-    router.push("/");
+    window.location.assign("/");
   }
 
   const searchParams = useSearchParams();
@@ -1904,7 +1904,7 @@ export default function SimulatorPage() {
       ownedMaterials,
     });
 
-    router.push("/");
+    window.location.assign("/");
   };
 
   const eliteStages = Array.from(

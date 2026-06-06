@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 
 export type HomeBannerKind =
@@ -44,11 +45,13 @@ export default function HomeBannerHubPanel({
 }: {
   items: HomeBannerItem[];
 }) {
-  const [idx, setIdx] = useState(0);
+  const [selection, setSelection] = useState({ signature: "", index: 0 });
   const [imageFailedKey, setImageFailedKey] = useState("");
   const [loadedKey, setLoadedKey] = useState("");
 
   const itemsSignature = useMemo(() => getItemsSignature(items), [items]);
+  const idx =
+    selection.signature === itemsSignature ? selection.index : 0;
 
   const safeIndex = useMemo(() => {
     if (!items.length) return 0;
@@ -60,61 +63,36 @@ export default function HomeBannerHubPanel({
   const labelText = cur ? getLabel(cur.kind) : "";
 
   useEffect(() => {
-    if (!items.length) return;
-    if (idx >= items.length) setIdx(0);
-  }, [idx, items.length]);
-
-  useEffect(() => {
-    setIdx(0);
-  }, [itemsSignature]);
-
-  useEffect(() => {
     if (items.length <= 1) return;
 
     const timer = window.setInterval(() => {
-      setIdx((prev) => (prev + 1) % items.length);
+      setSelection((prev) => {
+        const currentIndex =
+          prev.signature === itemsSignature ? prev.index : 0;
+        return {
+          signature: itemsSignature,
+          index: (currentIndex + 1) % items.length,
+        };
+      });
     }, 5000);
 
     return () => window.clearInterval(timer);
-  }, [items.length]);
-
-  useEffect(() => {
-    setImageFailedKey("");
-    setLoadedKey("");
-
-    if (!cur?.image || !curKey) return;
-
-    const preload = new window.Image();
-    preload.src = cur.image;
-
-    if (preload.complete) {
-      setLoadedKey(curKey);
-      return;
-    }
-
-    preload.onload = () => setLoadedKey(curKey);
-    preload.onerror = () => setImageFailedKey(curKey);
-  }, [cur?.image, curKey]);
-
-  useEffect(() => {
-    if (items.length <= 1) return;
-
-    const next = items[(safeIndex + 1) % items.length];
-    if (!next?.image) return;
-
-    const image = new window.Image();
-    image.decoding = "async";
-    image.src = next.image;
-  }, [items, safeIndex]);
+  }, [items.length, itemsSignature]);
 
   const movePrev = () => {
     if (!items.length) return;
-    setIdx((prev) => (prev - 1 + items.length) % items.length);
+    setSelection({
+      signature: itemsSignature,
+      index: (safeIndex - 1 + items.length) % items.length,
+    });
   };
 
   const moveNext = () => {
     if (!items.length) return;
-    setIdx((prev) => (prev + 1) % items.length);
+    setSelection({
+      signature: itemsSignature,
+      index: (safeIndex + 1) % items.length,
+    });
   };
 
   if (!cur) {
@@ -200,13 +178,13 @@ export default function HomeBannerHubPanel({
               </div>
             ) : null}
 
-            <img
+            <Image
               key={curKey}
               src={cur.image}
               alt={cur.title}
-              loading={safeIndex === 0 ? "eager" : "lazy"}
-              decoding="async"
-              fetchPriority={safeIndex === 0 ? "high" : "auto"}
+              fill
+              priority={safeIndex === 0}
+              sizes="(min-width: 1024px) 38vw, 100vw"
               className={`block h-full w-full object-cover object-center transition-opacity duration-200 ${
                 isLoaded ? "opacity-100" : "opacity-0"
               }`}
