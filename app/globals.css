@@ -49,6 +49,41 @@ body::before {
     radial-gradient(circle at 80% 80%, rgba(255, 212, 74, 0.04), transparent 25%);
 }
 
+.catalog-card {
+  content-visibility: auto;
+  contain-intrinsic-size: 170px 238px;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  touch-action: manipulation;
+}
+
+@media (max-width: 767px) {
+  body::before {
+    display: none;
+  }
+
+  *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 /* =========================
    TEXT UTILS
 ========================= */
