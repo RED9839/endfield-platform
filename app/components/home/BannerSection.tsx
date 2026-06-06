@@ -105,7 +105,7 @@ function hasValidImage(item: HomeBannerItem) {
 }
 
 function convert(data: HomeApiResponse | null): HomeBannerItem[] {
-  if (!data?.ok) return [];
+  if (!data) return [];
 
   const all = dedupeSourceItems([
     ...(data.latest ?? []),
@@ -206,9 +206,9 @@ export default function BannerSection({
     const controller = new AbortController();
 
     fetch("/api/home", { signal: controller.signal })
-      .then((response) => (response.ok ? response.json() : null))
+      .then((response) => response.json())
       .then((payload: HomeApiResponse | null) => {
-        if (payload?.ok) setData(payload);
+        if (payload) setData(payload);
       })
       .catch(() => {});
 
