@@ -425,12 +425,18 @@ export default function CommonSelectPanel({
     setWeaponTypeFilter("all");
   }, [kind, requiredWeaponTypeProp, allowAllWeapons, operators]);
 
-  const operatorList = useMemo(() => sortOperatorSelectList(operators), [operators]);
-  const weaponList = useMemo(
-    () => sortWeaponSelectList(weapons) as WeaponLike[],
-    [weapons],
+  const operatorList = useMemo(
+    () => (kind === "operator" ? sortOperatorSelectList(operators) : []),
+    [kind, operators],
   );
-  const gearList = useMemo(() => getGearSource(gears, gearSlot), [gears, gearSlot]);
+  const weaponList = useMemo(
+    () => (kind === "weapon" ? (sortWeaponSelectList(weapons) as WeaponLike[]) : []),
+    [kind, weapons],
+  );
+  const gearList = useMemo(
+    () => (kind === "gear" ? getGearSource(gears, gearSlot) : []),
+    [gears, gearSlot, kind],
+  );
 
   const operatorWeaponTypes = useMemo(
     () =>
@@ -468,6 +474,8 @@ export default function CommonSelectPanel({
   );
 
   const filteredOperators = useMemo(() => {
+    if (kind !== "operator") return [];
+
     const normalizedKeyword = keyword.trim().toLowerCase();
 
     return operatorList.filter((operator: SelectOperatorItem) => {
@@ -485,9 +493,11 @@ export default function CommonSelectPanel({
 
       return matchesKeyword && matchesRarity && matchesElement && matchesClass && matchesWeapon;
     });
-  }, [operatorList, keyword, rarityFilter, elementFilter, classFilter, operatorWeaponFilter]);
+  }, [kind, operatorList, keyword, rarityFilter, elementFilter, classFilter, operatorWeaponFilter]);
 
   const filteredWeapons = useMemo(() => {
+    if (kind !== "weapon") return [];
+
     const normalizedKeyword = keyword.trim().toLowerCase();
 
     if (!requiredWeaponType && !allowAllWeaponList) return [];
@@ -509,9 +519,11 @@ export default function CommonSelectPanel({
 
       return matchesRequiredType && matchesKeyword && matchesRarity && matchesType && matchesSeries;
     });
-  }, [weaponList, keyword, rarityFilter, weaponTypeFilter, seriesFilter, requiredWeaponType, allowAllWeaponList]);
+  }, [kind, weaponList, keyword, rarityFilter, weaponTypeFilter, seriesFilter, requiredWeaponType, allowAllWeaponList]);
 
   const filteredGears = useMemo(() => {
+    if (kind !== "gear") return [];
+
     const normalizedKeyword = keyword.trim().toLowerCase();
 
     return gearList.filter((gear: GearDetail) => {
@@ -533,7 +545,7 @@ export default function CommonSelectPanel({
 
       return matchesKeyword && matchesSet && matchesAbility && matchesAttribute && matchesQuality && matchesLevel;
     });
-  }, [gearList, keyword, gearSetFilter, gearAbilityFilters, gearAttributeFilter, rarityFilter, gearLevelFilter]);
+  }, [kind, gearList, keyword, gearSetFilter, gearAbilityFilters, gearAttributeFilter, rarityFilter, gearLevelFilter]);
 
   const resultCount =
     kind === "operator"

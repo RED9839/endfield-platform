@@ -17,8 +17,8 @@ export function GET() {
       class: operator.class,
       weapon: operator.weapon,
       avatar: operator.avatar,
-      avatarSecondary: operator.avatarSecondary,
-      fullImage: operator.fullImage,
+      avatarSecondary:
+        operator.slug === "endministrator" ? operator.avatarSecondary : undefined,
     })),
     weapons: weaponDetails.map((weapon) => ({
       slug: weapon.slug,
@@ -27,7 +27,6 @@ export function GET() {
       rarity: weapon.rarity,
       weaponType: weapon.weaponType,
       image: weapon.image,
-      fullImage: weapon.fullImage,
       series: weapon.series,
     })),
   });
