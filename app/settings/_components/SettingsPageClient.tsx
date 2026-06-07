@@ -3,7 +3,14 @@
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 
 import type {
   SelectOperatorItem,
@@ -203,6 +210,7 @@ function buildSettingsApiUrl({
   operatorFilters,
   weaponFilter,
   page,
+  knownTotals,
 }: {
   keyword: string;
   settingType: SettingType | "all";
@@ -210,6 +218,7 @@ function buildSettingsApiUrl({
   operatorFilters: string[];
   weaponFilter: string;
   page: number;
+  knownTotals?: { nonDefaultTotal: number; defaultTotal: number } | null;
 }) {
   const params = new URLSearchParams();
 
@@ -221,6 +230,10 @@ function buildSettingsApiUrl({
   if (sortType !== "latest") params.set("sort", sortType);
   if (operatorFilters.length) params.set("operators", operatorFilters.join(","));
   if (weaponFilter) params.set("weapon", weaponFilter);
+  if (page > 1 && knownTotals) {
+    params.set("nonDefaultTotal", String(knownTotals.nonDefaultTotal));
+    params.set("defaultTotal", String(knownTotals.defaultTotal));
+  }
 
   return `/api/operator-settings?${params.toString()}`;
 }
@@ -277,11 +290,21 @@ export default function SettingsPageClient({
   const [selectPanel, setSelectPanel] = useState<"operator" | "weapon" | null>(
     null,
   );
+  const paginationTotalsRef = useRef<{
+    nonDefaultTotal: number;
+    defaultTotal: number;
+  } | null>(null);
+  const settingsRequestRef = useRef<AbortController | null>(null);
 
   const loadSettings = useCallback(
     async (targetPage: number, mode: "replace" | "append") => {
+      settingsRequestRef.current?.abort();
+      const controller = new AbortController();
+      settingsRequestRef.current = controller;
+
       if (mode === "replace") setLoading(true);
       else setLoadingMore(true);
+      if (mode === "replace") paginationTotalsRef.current = null;
 
       try {
         const response = await fetch(
@@ -292,8 +315,10 @@ export default function SettingsPageClient({
             operatorFilters,
             weaponFilter,
             page: targetPage,
+            knownTotals:
+              mode === "append" ? paginationTotalsRef.current : null,
           }),
-          { cache: "no-store" },
+          { cache: "no-store", signal: controller.signal },
         );
         const data = await response.json().catch(() => null);
 
@@ -315,9 +340,20 @@ export default function SettingsPageClient({
           mode === "append" ? [...prev, ...nextSettings] : nextSettings,
         );
         setTotalCount(Number(data.total ?? nextSettings.length));
+        if (
+          Number.isInteger(data.nonDefaultTotal) &&
+          Number.isInteger(data.defaultTotal)
+        ) {
+          paginationTotalsRef.current = {
+            nonDefaultTotal: data.nonDefaultTotal,
+            defaultTotal: data.defaultTotal,
+          };
+        }
         setPage(Number(data.page ?? targetPage));
         setHasMore(Boolean(data.hasMore));
       } catch {
+        if (controller.signal.aborted) return;
+
         if (mode === "replace") {
           setSettings([]);
           setTotalCount(0);
@@ -325,6 +361,9 @@ export default function SettingsPageClient({
           setHasMore(false);
         }
       } finally {
+        if (settingsRequestRef.current !== controller) return;
+        settingsRequestRef.current = null;
+
         if (mode === "replace") setLoading(false);
         else setLoadingMore(false);
       }
@@ -350,6 +389,10 @@ export default function SettingsPageClient({
 
   useEffect(() => {
     loadSettings(1, "replace");
+
+    return () => {
+      settingsRequestRef.current?.abort();
+    };
   }, [loadSettings]);
 
   useEffect(() => {

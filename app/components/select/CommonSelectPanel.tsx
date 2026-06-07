@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
 
 import { sortOperatorSelectList } from "@/data/operator-sort";
@@ -9,9 +10,16 @@ import { gearSetOrder, sortGearSelectList } from "@/data/gear-sort";
 import PickerShell from "./PickerShell";
 import SelectFilterButton from "./FilterButton";
 import SelectFilterGroup from "./FilterGroup";
-import OperatorSelectCard from "./OperatorSelectCard";
-import WeaponSelectCard from "./WeaponSelectCard";
-import GearSelectCard from "./GearSelectCard";
+
+const OperatorSelectCard = dynamic(() => import("./OperatorSelectCard"), {
+  ssr: false,
+});
+const WeaponSelectCard = dynamic(() => import("./WeaponSelectCard"), {
+  ssr: false,
+});
+const GearSelectCard = dynamic(() => import("./GearSelectCard"), {
+  ssr: false,
+});
 
 export type CommonSelectKind = "operator" | "weapon" | "gear";
 export type CommonGearSlot = "armor" | "gloves" | "kit1" | "kit2";
