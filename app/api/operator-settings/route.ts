@@ -245,12 +245,16 @@ async function getPagedSettings({
   page,
   limit,
   filters,
+  knownNonDefaultTotal,
+  knownDefaultTotal,
 }: {
   settingType: SettingType | "all";
   sortType: SortType;
   page: number;
   limit: number;
   filters?: Record<string, unknown>;
+  knownNonDefaultTotal?: number;
+  knownDefaultTotal?: number;
 }) {
   const baseWhere = {
     ...getBaseWhere(settingType),
@@ -267,10 +271,17 @@ async function getPagedSettings({
   const orderBy = getOrderBy(sortType);
   const start = (page - 1) * limit;
 
-  const [nonDefaultTotal, defaultTotal] = await Promise.all([
-    prisma.userOperatorSetting.count({ where: nonDefaultWhere }),
-    prisma.userOperatorSetting.count({ where: defaultWhere }),
-  ]);
+  const hasKnownTotals =
+    Number.isInteger(knownNonDefaultTotal) &&
+    Number.isInteger(knownDefaultTotal) &&
+    knownNonDefaultTotal! >= 0 &&
+    knownDefaultTotal! >= 0;
+  const [nonDefaultTotal, defaultTotal] = hasKnownTotals
+    ? [knownNonDefaultTotal!, knownDefaultTotal!]
+    : await Promise.all([
+        prisma.userOperatorSetting.count({ where: nonDefaultWhere }),
+        prisma.userOperatorSetting.count({ where: defaultWhere }),
+      ]);
 
   const total = nonDefaultTotal + defaultTotal;
   const nonDefaultTake = Math.max(
@@ -303,6 +314,8 @@ async function getPagedSettings({
 
   return {
     total,
+    nonDefaultTotal,
+    defaultTotal,
     settings: [...nonDefaultSettings, ...defaultSettings],
   };
 }
@@ -344,6 +357,12 @@ export async function GET(request: Request) {
   const weaponFilter = cleanSearchParam(searchParams.get("weapon"));
   const page = getPageParam(searchParams.get("page"));
   const limit = getLimitParam(searchParams.get("limit"));
+  const knownNonDefaultTotal = Number(
+    searchParams.get("nonDefaultTotal") ?? Number.NaN,
+  );
+  const knownDefaultTotal = Number(
+    searchParams.get("defaultTotal") ?? Number.NaN,
+  );
 
   const settingType: SettingType | "all" =
     typeParam === "solo" || typeParam === "party" ? typeParam : "all";
@@ -370,6 +389,8 @@ export async function GET(request: Request) {
     page,
     limit,
     filters: filterParts.length ? { AND: filterParts } : undefined,
+    knownNonDefaultTotal,
+    knownDefaultTotal,
   });
   const dbFinishedAt = performance.now();
 
@@ -379,6 +400,8 @@ export async function GET(request: Request) {
       page,
       limit,
       total: result.total,
+      nonDefaultTotal: result.nonDefaultTotal,
+      defaultTotal: result.defaultTotal,
       hasMore: start + limit < result.total,
       settings: result.settings.map(toListResponseItem),
     },

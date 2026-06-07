@@ -20,6 +20,7 @@ type BannerSourceItem = {
 
 export type HomeApiResponse = {
   ok: boolean;
+  items?: BannerSourceItem[];
   latest?: BannerSourceItem[];
   notice?: BannerSourceItem[];
   event?: BannerSourceItem[];
@@ -123,12 +124,14 @@ function hasValidImage(item: HomeBannerItem) {
 function convert(data: HomeApiResponse | null): HomeBannerItem[] {
   if (!data) return [];
 
-  const all = dedupeSourceItems([
-    ...(data.latest ?? []),
-    ...(data.notice ?? []),
-    ...(data.event ?? []),
-    ...(data.news ?? []),
-  ]);
+  const all = dedupeSourceItems(
+    data.items ?? [
+      ...(data.latest ?? []),
+      ...(data.notice ?? []),
+      ...(data.event ?? []),
+      ...(data.news ?? []),
+    ],
+  );
 
   const operator: HomeBannerItem[] = all
     .filter(isOperator)
@@ -221,7 +224,7 @@ export default function BannerSection({
 
     const controller = new AbortController();
 
-    fetch("/api/home", { signal: controller.signal })
+    fetch("/api/home?compact=1", { signal: controller.signal })
       .then((response) => response.json())
       .then((payload: HomeApiResponse | null) => {
         if (payload) setData(payload);
