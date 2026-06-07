@@ -16,6 +16,7 @@ const EMPTY_DATA: SettingEditorData = {
 
 let catalogPromise: Promise<SettingEditorData> | null = null;
 const detailPromises = new Map<string, Promise<SettingEditorData>>();
+const MAX_DETAIL_CACHE_ENTRIES = 24;
 
 async function fetchEditorData(url: string) {
   const response = await fetch(url);
@@ -37,10 +38,20 @@ function loadCatalog() {
 
 function loadDetails(key: string, url: string) {
   const cached = detailPromises.get(key);
-  if (cached) return cached;
+  if (cached) {
+    detailPromises.delete(key);
+    detailPromises.set(key, cached);
+    return cached;
+  }
 
   const request = fetchEditorData(url);
   detailPromises.set(key, request);
+
+  if (detailPromises.size > MAX_DETAIL_CACHE_ENTRIES) {
+    const oldestKey = detailPromises.keys().next().value;
+    if (oldestKey) detailPromises.delete(oldestKey);
+  }
+
   return request;
 }
 

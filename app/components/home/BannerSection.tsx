@@ -27,12 +27,28 @@ export type HomeApiResponse = {
   weaponStack?: BannerSourceItem[];
 };
 
+const DIRECT_IMAGE_HOSTS = new Set([
+  "web-static.hg-cdn.com",
+  "endfield.gryphline.com",
+  "www.gryphline.com",
+  "hg-cdn.com",
+]);
+
 function normalizeImage(url?: string) {
   const src = url?.trim();
   if (!src) return "";
 
   if (src.startsWith("/api/banners/image")) return src;
   if (src.startsWith("/")) return src;
+
+  try {
+    const parsed = new URL(src);
+    if (parsed.protocol === "https:" && DIRECT_IMAGE_HOSTS.has(parsed.hostname)) {
+      return parsed.toString();
+    }
+  } catch {
+    return "";
+  }
 
   return `/api/banners/image?url=${encodeURIComponent(src)}`;
 }

@@ -183,7 +183,6 @@ export default function HomeBannerHubPanel({
               src={cur.image}
               alt={cur.title}
               fill
-              priority={safeIndex === 0}
               quality={68}
               sizes="(min-width: 1024px) 38vw, 100vw"
               className={`block h-full w-full object-cover object-center transition-opacity duration-200 ${
