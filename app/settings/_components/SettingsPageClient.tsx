@@ -105,6 +105,11 @@ type ApiSetting = {
   } | null;
   profile?: { nickname?: string | null; name?: string | null } | null;
   isDefaultSetting?: boolean;
+  slotsSummary?: {
+    mainOperatorSlug?: string;
+    memberOperatorSlugs?: string[];
+    mainWeaponSlug?: string;
+  };
 };
 
 function getOperatorImage(operator: any) {
@@ -144,18 +149,28 @@ function toSettingItem(
   weaponBySlug: Map<string, SelectWeaponItem>,
 ): SettingItem {
   const mainSlot = setting.slots?.main;
-  const mainOperator = operatorBySlug.get(mainSlot?.operatorSlug) as any;
-  const weapon = weaponBySlug.get(mainSlot?.form?.weaponSlug) as any;
+  const mainOperatorSlug = String(
+    setting.slotsSummary?.mainOperatorSlug ?? mainSlot?.operatorSlug ?? "",
+  ).trim();
+  const mainWeaponSlug = String(
+    setting.slotsSummary?.mainWeaponSlug ?? mainSlot?.form?.weaponSlug ?? "",
+  ).trim();
+  const mainOperator = operatorBySlug.get(mainOperatorSlug) as any;
+  const weapon = weaponBySlug.get(mainWeaponSlug) as any;
 
-  const memberSlots = [
-    setting.slots?.member1,
-    setting.slots?.member2,
-    setting.slots?.member3,
-  ].filter(Boolean);
+  const memberOperatorSlugs =
+    setting.slotsSummary?.memberOperatorSlugs ??
+    [
+      setting.slots?.member1?.operatorSlug,
+      setting.slots?.member2?.operatorSlug,
+      setting.slots?.member3?.operatorSlug,
+    ];
 
-  const partyMembers = memberSlots
-    .map((slot: any) => {
-      const operator = operatorBySlug.get(slot?.operatorSlug) as any;
+  const partyMembers = memberOperatorSlugs
+    .map((operatorSlug) => String(operatorSlug ?? "").trim())
+    .filter(Boolean)
+    .map((operatorSlug) => {
+      const operator = operatorBySlug.get(operatorSlug) as any;
       if (!operator) return null;
 
       return {
@@ -170,7 +185,7 @@ function toSettingItem(
   const operatorSlugs = Array.from(
     new Set(
       [
-        mainOperator?.slug ?? mainSlot?.operatorSlug ?? "",
+        mainOperator?.slug ?? mainOperatorSlug,
         ...partyMembers.map((member) => member.operatorSlug),
       ].filter(Boolean),
     ),
