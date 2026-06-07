@@ -93,8 +93,12 @@ export const operatorDetails: OperatorDetail[] = [
   buildOperatorDetailFromSource(mifuOperatorDetailData),
 ];
 
+const operatorDetailBySlug = new Map(
+  operatorDetails.map((operator) => [operator.slug, operator]),
+);
+
 export function getOperatorDetailBySlug(slug: string) {
-  return operatorDetails.find((operator) => operator.slug === slug);
+  return operatorDetailBySlug.get(slug);
 }
 
 export function getOperatorDetailByName(name: string) {

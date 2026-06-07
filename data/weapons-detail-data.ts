@@ -491,6 +491,10 @@ const weaponSources: SourceWeaponDetail[] = [
 
 export const weaponDetails: WeaponDetail[] = weaponSources.map(buildWeaponDetail);
 
+const weaponDetailBySlug = new Map(
+  weaponDetails.map((weapon) => [weapon.slug, weapon]),
+);
+
 export function getWeaponDetailBySlug(slug: string) {
-  return weaponDetails.find((weapon) => weapon.slug === slug);
+  return weaponDetailBySlug.get(slug);
 }
