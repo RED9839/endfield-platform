@@ -7,7 +7,7 @@
     "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "tsx --test \"tests/**/*.test.ts\"",
+    "test": "tsx --test",
     "postinstall": "prisma generate",
     "build:operators": "tsx scripts/build-operators-from-excel.ts",
     "watch:operators": "chokidar \"data/excel/*.xlsx\" -c \"npm run build:operators\"",

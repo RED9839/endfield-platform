@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 
 import { auth } from "@/auth";
+import { consumeRateLimit } from "@/lib/http/rate-limit";
+import { validateOperatorSettingInput } from "@/lib/operator-settings/validation";
 import { prisma } from "@/lib/prisma";
 
 type SlotKey = "main" | "member1" | "member2" | "member3";
@@ -128,25 +130,36 @@ export async function PUT(
   }
 
   const body = await request.json().catch(() => null);
+  const validation = validateOperatorSettingInput(body);
 
-  const title = String(body?.title ?? "").trim();
-  const description = String(body?.description ?? "").trim();
-  const cycle = normalizeCycle(body?.cycle);
-  const slots = normalizeSlots(body?.slots);
-
-  if (!title) {
+  if (!validation.ok) {
     return NextResponse.json(
-      { ok: false, message: "세팅 제목을 입력해주세요." },
+      { ok: false, message: validation.message },
       { status: 400 },
     );
   }
 
-  if (!slots.main?.operatorSlug) {
+  const rateLimit = consumeRateLimit({
+    scope: "operator-settings:update",
+    identifier: userId,
+    limit: 20,
+    windowMs: 60_000,
+  });
+
+  if (!rateLimit.allowed) {
     return NextResponse.json(
-      { ok: false, message: "메인 오퍼레이터를 먼저 등록해주세요." },
-      { status: 400 },
+      { ok: false, message: "요청이 너무 많습니다. 잠시 후 다시 시도해주세요." },
+      {
+        status: 429,
+        headers: { "Retry-After": String(rateLimit.retryAfter) },
+      },
     );
   }
+
+  const title = validation.data.title;
+  const description = validation.data.description;
+  const cycle = normalizeCycle(validation.data.cycle);
+  const slots = normalizeSlots(validation.data.slots);
 
   const updated = await prisma.userOperatorSetting.update({
     where: { id },
@@ -202,6 +215,23 @@ export async function DELETE(
     return NextResponse.json(
       { ok: false, message: "본인이 저장한 세팅만 삭제할 수 있습니다." },
       { status: 403 },
+    );
+  }
+
+  const rateLimit = consumeRateLimit({
+    scope: "operator-settings:delete",
+    identifier: userId,
+    limit: 10,
+    windowMs: 60_000,
+  });
+
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { ok: false, message: "요청이 너무 많습니다. 잠시 후 다시 시도해주세요." },
+      {
+        status: 429,
+        headers: { "Retry-After": String(rateLimit.retryAfter) },
+      },
     );
   }
 

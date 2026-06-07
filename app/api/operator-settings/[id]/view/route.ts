@@ -1,12 +1,35 @@
 import { NextResponse } from "next/server";
 
+import {
+  consumeRateLimit,
+  getRequestIdentifier,
+} from "@/lib/http/rate-limit";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
+  const rateLimit = consumeRateLimit({
+    scope: `operator-settings:view:${id}`,
+    identifier: getRequestIdentifier(request),
+    limit: 1,
+    windowMs: 60_000,
+  });
+
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { ok: true, counted: false },
+      {
+        headers: {
+          "Cache-Control": "no-store",
+          "Retry-After": String(rateLimit.retryAfter),
+        },
+      },
+    );
+  }
+
   const result = await prisma.userOperatorSetting.updateMany({
     where: { id },
     data: {
@@ -21,7 +44,7 @@ export async function POST(
   }
 
   return NextResponse.json(
-    { ok: true },
+    { ok: true, counted: true },
     { headers: { "Cache-Control": "no-store" } },
   );
 }

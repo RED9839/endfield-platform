@@ -10,7 +10,6 @@ import {
   useRef,
   useState,
   type MouseEvent,
-  type ReactNode,
 } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import NumberInput from "@/app/components/common/NumberInput";
@@ -21,7 +20,11 @@ import type {
 import type { OperatorDetail } from "@/data/operators-detail-data";
 import type { SourceWeaponDetail } from "@/data/weapons-detail-data";
 import InfoPanel from "./_components/InfoPanel";
-import MaterialList from "./_components/MaterialList";
+import GrowthSection from "./_components/GrowthSection";
+import MaterialTabs, {
+  type MaterialTabKey,
+} from "./_components/MaterialTabs";
+import RangeSelector from "./_components/RangeSelector";
 import SimulatorStageSection from "./_components/SimulatorStageSection";
 import SimulatorSkillPanel from "./_components/SimulatorSkillPanel";
 import SimulatorLevelPanel from "./_components/SimulatorLevelPanel";
@@ -676,102 +679,6 @@ function getDedupedBreakthroughCurrency(rawSource: any, rawItem: any) {
   );
 }
 
-function RangeSelect({
-  value,
-  options,
-  getLabel,
-  onChange,
-}: {
-  value: number;
-  options: number[];
-  getLabel: (stage: number) => string;
-  onChange: (stage: number) => void;
-}) {
-  return (
-    <select
-      value={value}
-      onChange={(e) => onChange(Number(e.target.value))}
-      className="h-11 rounded-xl border border-yellow-500/15 bg-black px-3 text-sm font-semibold text-yellow-300 outline-none transition focus:border-yellow-400/50"
-    >
-      {options.map((stage) => (
-        <option key={stage} value={stage}>
-          {getLabel(stage)}
-        </option>
-      ))}
-    </select>
-  );
-}
-
-function RangeSelector({
-  titleCurrent = "현재",
-  titleTarget = "목표",
-  current,
-  target,
-  stages,
-  getLabel,
-  onChangeCurrent,
-  onChangeTarget,
-}: {
-  titleCurrent?: string;
-  titleTarget?: string;
-  current: number;
-  target: number;
-  stages: number[];
-  getLabel: (stage: number) => string;
-  onChangeCurrent: (stage: number) => void;
-  onChangeTarget: (stage: number) => void;
-}) {
-  const targetStages = stages.filter((stage) => stage >= current);
-
-  return (
-    <div className="grid gap-3 md:grid-cols-2">
-      <div className="grid gap-2">
-        <div className="text-xs font-semibold text-yellow-300">{titleCurrent}</div>
-        <RangeSelect
-          value={current}
-          options={stages}
-          getLabel={getLabel}
-          onChange={onChangeCurrent}
-        />
-      </div>
-
-      <div className="grid gap-2">
-        <div className="text-xs font-semibold text-yellow-300">{titleTarget}</div>
-        <RangeSelect
-          value={target}
-          options={targetStages}
-          getLabel={getLabel}
-          onChange={onChangeTarget}
-        />
-      </div>
-    </div>
-  );
-}
-
-function GrowthSection({
-  title,
-  summary,
-  children,
-}: {
-  title: string;
-  summary?: string;
-  children: ReactNode;
-}) {
-  return (
-    <section className="rounded-2xl border border-yellow-500/10 bg-black/30 p-4">
-      <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-        <h3 className="text-sm font-black text-yellow-200">{title}</h3>
-        {summary ? (
-          <p className="line-clamp-1 text-xs font-semibold text-zinc-500">
-            {summary}
-          </p>
-        ) : null}
-      </div>
-      {children}
-    </section>
-  );
-}
-
 function formatRangeSummary(label: string, current: number, target: number) {
   return `${label} ${current} → ${target}`;
 }
@@ -1002,9 +909,7 @@ export default function SimulatorPage() {
     | { kind: "weapon"; title: string; selectedSlug: string }
     | null
   >(null);
-  const [materialTab, setMaterialTab] = useState<"all" | "operator" | "weapon">(
-    "all",
-  );
+  const [materialTab, setMaterialTab] = useState<MaterialTabKey>("all");
 
   const [operatorCurrentLevel, setOperatorCurrentLevel] = useState(1);
   const [operatorTargetLevel, setOperatorTargetLevel] =
@@ -2042,9 +1947,6 @@ export default function SimulatorPage() {
       emptyText: "무기를 먼저 선택해 주세요.",
     },
   ];
-  const activeMaterialTab =
-    materialTabs.find((item) => item.key === materialTab) ?? materialTabs[0];
-
   function handleGoFarmingCalculator() {
     saveSimulatorFormState({
       operatorSlug: selectedOperatorSlug,
@@ -2615,45 +2517,17 @@ export default function SimulatorPage() {
             </div>
 
             <div id="materials" className="grid scroll-mt-24 gap-3 lg:gap-6">
-              <InfoPanel title="필요 재화" summary={activeMaterialTab.summary}>
-                <div className="mb-4 flex flex-wrap gap-2">
-                  {materialTabs.map((tab) => (
-                    <button
-                      key={tab.key}
-                      type="button"
-                      onClick={() => setMaterialTab(tab.key)}
-                      className={`rounded-xl px-3 py-2 text-xs font-black transition ${
-                        activeMaterialTab.key === tab.key
-                          ? "bg-[#ffd24a] text-black"
-                          : "bg-black text-zinc-300 hover:text-yellow-200"
-                      }`}
-                      style={{
-                        border: `1px solid ${
-                          activeMaterialTab.key === tab.key
-                            ? "rgba(255,210,74,0.55)"
-                            : YELLOW_BORDER_SOFT
-                        }`,
-                      }}
-                    >
-                      {tab.label}
-                      <span className="ml-2 opacity-70">
-                        {tab.items.length.toLocaleString()}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-
-                {!activeMaterialTab.enabled ? (
-                  <div className="rounded-2xl border border-yellow-500/10 bg-[#090d14] p-5 text-sm text-zinc-500">
-                    {activeMaterialTab.emptyText}
-                  </div>
-                ) : activeMaterialTab.items.length ? (
-                  <MaterialList items={activeMaterialTab.items} columns={4} />
-                ) : (
-                  <div className="rounded-2xl border border-yellow-500/10 bg-[#090d14] p-5 text-sm text-zinc-500">
-                    계산된 필요 재화가 없습니다.
-                  </div>
-                )}
+              <InfoPanel
+                title="필요 재화"
+                summary={
+                  materialTabs.find((item) => item.key === materialTab)?.summary
+                }
+              >
+                <MaterialTabs
+                  tabs={materialTabs}
+                  value={materialTab}
+                  onChange={setMaterialTab}
+                />
               </InfoPanel>
             </div>
           </div>

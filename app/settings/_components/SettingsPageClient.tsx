@@ -225,7 +225,6 @@ function buildSettingsApiUrl({
   operatorFilters,
   weaponFilter,
   page,
-  knownTotals,
 }: {
   keyword: string;
   settingType: SettingType | "all";
@@ -233,7 +232,6 @@ function buildSettingsApiUrl({
   operatorFilters: string[];
   weaponFilter: string;
   page: number;
-  knownTotals?: { nonDefaultTotal: number; defaultTotal: number } | null;
 }) {
   const params = new URLSearchParams();
 
@@ -245,11 +243,6 @@ function buildSettingsApiUrl({
   if (sortType !== "latest") params.set("sort", sortType);
   if (operatorFilters.length) params.set("operators", operatorFilters.join(","));
   if (weaponFilter) params.set("weapon", weaponFilter);
-  if (page > 1 && knownTotals) {
-    params.set("nonDefaultTotal", String(knownTotals.nonDefaultTotal));
-    params.set("defaultTotal", String(knownTotals.defaultTotal));
-  }
-
   return `/api/operator-settings?${params.toString()}`;
 }
 
@@ -305,10 +298,6 @@ export default function SettingsPageClient({
   const [selectPanel, setSelectPanel] = useState<"operator" | "weapon" | null>(
     null,
   );
-  const paginationTotalsRef = useRef<{
-    nonDefaultTotal: number;
-    defaultTotal: number;
-  } | null>(null);
   const settingsRequestRef = useRef<AbortController | null>(null);
 
   const loadSettings = useCallback(
@@ -319,8 +308,6 @@ export default function SettingsPageClient({
 
       if (mode === "replace") setLoading(true);
       else setLoadingMore(true);
-      if (mode === "replace") paginationTotalsRef.current = null;
-
       try {
         const response = await fetch(
           buildSettingsApiUrl({
@@ -330,8 +317,6 @@ export default function SettingsPageClient({
             operatorFilters,
             weaponFilter,
             page: targetPage,
-            knownTotals:
-              mode === "append" ? paginationTotalsRef.current : null,
           }),
           { cache: "no-store", signal: controller.signal },
         );
@@ -355,15 +340,6 @@ export default function SettingsPageClient({
           mode === "append" ? [...prev, ...nextSettings] : nextSettings,
         );
         setTotalCount(Number(data.total ?? nextSettings.length));
-        if (
-          Number.isInteger(data.nonDefaultTotal) &&
-          Number.isInteger(data.defaultTotal)
-        ) {
-          paginationTotalsRef.current = {
-            nonDefaultTotal: data.nonDefaultTotal,
-            defaultTotal: data.defaultTotal,
-          };
-        }
         setPage(Number(data.page ?? targetPage));
         setHasMore(Boolean(data.hasMore));
       } catch {
