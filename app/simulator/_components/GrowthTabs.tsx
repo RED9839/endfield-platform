@@ -1,9 +1,7 @@
 import { Children, type ReactNode } from "react";
 
 export type GrowthTabKey =
-  | "level"
-  | "elite"
-  | "weapon"
+  | "progression"
   | "combat"
   | "talent"
   | "infrastructure"
