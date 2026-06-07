@@ -21,8 +21,8 @@ export default async function SettingsPage({
     class: operator.class,
     weapon: operator.weapon,
     avatar: operator.avatar,
-    avatarSecondary: operator.avatarSecondary,
-    fullImage: operator.fullImage,
+    avatarSecondary:
+      operator.slug === "endministrator" ? operator.avatarSecondary : undefined,
   }));
 
   const weapons = weaponDetails.map((weapon) => ({
@@ -32,7 +32,6 @@ export default async function SettingsPage({
     rarity: weapon.rarity,
     weaponType: weapon.weaponType,
     image: weapon.image,
-    fullImage: weapon.fullImage,
     series: weapon.series,
   }));
 
