@@ -119,6 +119,52 @@ const USER_SIMULATOR_STATE_API = "/api/user/simulator-state";
 const USER_MATERIAL_INVENTORY_API = "/api/user/material-inventory";
 const USER_SIMULATOR_DATA_API = "/api/simulator/user-data";
 
+type SimulatorDetailPayload = {
+  ok?: boolean;
+  operator?: OperatorDetail | null;
+  weapon?: SourceWeaponDetail | null;
+};
+
+const simulatorDetailRequests = new Map<
+  string,
+  Promise<SimulatorDetailPayload>
+>();
+const MAX_SIMULATOR_DETAIL_CACHE_ENTRIES = 16;
+
+function loadSimulatorDetails(operatorSlug: string, weaponSlug: string) {
+  const key = `${operatorSlug}|${weaponSlug}`;
+  const cached = simulatorDetailRequests.get(key);
+
+  if (cached) {
+    simulatorDetailRequests.delete(key);
+    simulatorDetailRequests.set(key, cached);
+    return cached;
+  }
+
+  const params = new URLSearchParams();
+  if (operatorSlug) params.set("operator", operatorSlug);
+  if (weaponSlug) params.set("weapon", weaponSlug);
+
+  const request = fetch(`/api/simulator/detail?${params.toString()}`)
+    .then(async (response) => {
+      if (!response.ok) throw new Error("Failed to load simulator details.");
+      return (await response.json()) as SimulatorDetailPayload;
+    })
+    .catch((error) => {
+      simulatorDetailRequests.delete(key);
+      throw error;
+    });
+
+  simulatorDetailRequests.set(key, request);
+
+  if (simulatorDetailRequests.size > MAX_SIMULATOR_DETAIL_CACHE_ENTRIES) {
+    const oldestKey = simulatorDetailRequests.keys().next().value;
+    if (oldestKey) simulatorDetailRequests.delete(oldestKey);
+  }
+
+  return request;
+}
+
 type SimulatorFormState = {
   operatorSlug: string;
   weaponSlug: string;
@@ -993,52 +1039,33 @@ export default function SimulatorPage() {
   }, []);
 
   useEffect(() => {
-    if (!selectedOperatorSlug) {
+    if (!selectedOperatorSlug && !selectedWeaponSlug) {
       setSelectedOperator(null);
-      return;
-    }
-
-    const controller = new AbortController();
-    setSelectedOperator(null);
-
-    fetch(
-      `/api/simulator/detail?operator=${encodeURIComponent(selectedOperatorSlug)}`,
-      { signal: controller.signal },
-    )
-      .then((response) => response.json())
-      .then((data) => {
-        if (data?.ok && data.operator?.slug === selectedOperatorSlug) {
-          setSelectedOperator(data.operator);
-        }
-      })
-      .catch(() => {});
-
-    return () => controller.abort();
-  }, [selectedOperatorSlug]);
-
-  useEffect(() => {
-    if (!selectedWeaponSlug) {
       setSelectedWeapon(null);
       return;
     }
 
-    const controller = new AbortController();
+    let active = true;
+    setSelectedOperator(null);
     setSelectedWeapon(null);
 
-    fetch(
-      `/api/simulator/detail?weapon=${encodeURIComponent(selectedWeaponSlug)}`,
-      { signal: controller.signal },
-    )
-      .then((response) => response.json())
+    loadSimulatorDetails(selectedOperatorSlug, selectedWeaponSlug)
       .then((data) => {
-        if (data?.ok && data.weapon?.slug === selectedWeaponSlug) {
-          setSelectedWeapon(data.weapon);
-        }
+        if (!active || !data?.ok) return;
+
+        setSelectedOperator(
+          data.operator?.slug === selectedOperatorSlug ? data.operator : null,
+        );
+        setSelectedWeapon(
+          data.weapon?.slug === selectedWeaponSlug ? data.weapon : null,
+        );
       })
       .catch(() => {});
 
-    return () => controller.abort();
-  }, [selectedWeaponSlug]);
+    return () => {
+      active = false;
+    };
+  }, [selectedOperatorSlug, selectedWeaponSlug]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -1154,21 +1181,25 @@ export default function SimulatorPage() {
   useEffect(() => {
     if (!simulatorStorageReady) return;
 
-    saveSimulatorFormState({
-      operatorSlug: selectedOperatorSlug,
-      weaponSlug: selectedWeaponSlug,
-      operatorCurrentLevel,
-      operatorTargetLevel,
-      weaponCurrentLevel,
-      weaponTargetLevel,
-      eliteRange,
-      weaponBreakthroughRange,
-      trustRange,
-      combatSkillState,
-      talentRanges,
-      infrastructureRanges,
-      ownedMaterials,
-    });
+    const timeoutId = window.setTimeout(() => {
+      saveSimulatorFormState({
+        operatorSlug: selectedOperatorSlug,
+        weaponSlug: selectedWeaponSlug,
+        operatorCurrentLevel,
+        operatorTargetLevel,
+        weaponCurrentLevel,
+        weaponTargetLevel,
+        eliteRange,
+        weaponBreakthroughRange,
+        trustRange,
+        combatSkillState,
+        talentRanges,
+        infrastructureRanges,
+        ownedMaterials,
+      });
+    }, 250);
+
+    return () => window.clearTimeout(timeoutId);
   }, [
     simulatorStorageReady,
     selectedOperatorSlug,
