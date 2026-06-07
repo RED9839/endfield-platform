@@ -468,13 +468,13 @@ export default function GearPageClient({
   ].reduce((sum, value) => sum + value, 0);
 
   return (
-    <main className="min-h-screen bg-[#050505] px-3 py-3 text-white sm:px-4 md:px-6 md:py-5">
-      <div className="mx-auto max-w-[1840px]">
+    <main className="min-h-screen overflow-x-clip bg-[#050505] px-3 py-3 pb-[calc(1.5rem+env(safe-area-inset-bottom))] text-white sm:px-4 md:px-6 md:py-5">
+      <div className="mx-auto max-w-[1840px] overflow-x-clip">
         <header
           className="mb-3 rounded-[20px] bg-[#05070b] p-4 shadow-[0_0_30px_rgba(250,204,21,0.04)] sm:mb-5 sm:rounded-[24px] sm:p-5"
           style={{ border: `1px solid ${YELLOW_BORDER}` }}
         >
-          <div className="flex items-end justify-between gap-3">
+          <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <p
                 className="text-[10px] font-semibold tracking-[0.28em] sm:text-[11px] sm:tracking-[0.35em]"
@@ -495,7 +495,7 @@ export default function GearPageClient({
 
             <Link
               href="/"
-              className="shrink-0 rounded-xl bg-black px-3 py-2 text-xs font-bold text-zinc-200 transition hover:bg-[#0b1018] hover:text-yellow-300 sm:px-4 sm:text-sm"
+              className="flex min-h-11 shrink-0 items-center rounded-xl bg-black px-3 py-2 text-xs font-bold text-zinc-200 transition hover:bg-[#0b1018] hover:text-yellow-300 sm:px-4 sm:text-sm"
               style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
             >
               홈으로
@@ -505,7 +505,7 @@ export default function GearPageClient({
 
         <div className="grid min-w-0 max-w-full gap-3 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-5">
           <aside
-            className="relative z-40 flex min-w-0 max-w-full self-start flex-col overflow-hidden rounded-[20px] bg-[#05070b] shadow-[0_0_30px_rgba(250,204,21,0.04)] lg:sticky lg:top-5 lg:h-[calc(100vh-40px)] lg:max-h-[calc(100vh-40px)] lg:rounded-[24px]"
+            className="sticky top-2 z-40 flex min-w-0 max-w-full self-start flex-col overflow-hidden rounded-[18px] bg-[#05070b] shadow-[0_0_30px_rgba(250,204,21,0.04)] lg:top-5 lg:h-[calc(100vh-40px)] lg:max-h-[calc(100vh-40px)] lg:rounded-[24px]"
             style={{ border: `1px solid ${YELLOW_BORDER}` }}
           >
             <button
@@ -667,7 +667,7 @@ export default function GearPageClient({
             </div>
 
             {sortedGears.length > 0 ? (
-              <div className="grid grid-cols-[repeat(2,minmax(0,1fr))] gap-2 sm:grid-cols-[repeat(auto-fill,minmax(150px,170px))] sm:justify-between sm:gap-3">
+              <div className="grid grid-cols-1 gap-3 min-[360px]:grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(150px,170px))] sm:justify-between">
                 {sortedGears.map((gear) => (
                   <GearCard key={gear.slug} gear={gear} />
                 ))}

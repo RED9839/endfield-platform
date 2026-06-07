@@ -102,8 +102,8 @@ export default function ProfilePage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#050505] px-4 py-10 text-white">
-      <div className="mx-auto max-w-[520px] rounded-2xl border border-yellow-500/15 bg-[#070a0f] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.35)]">
+    <main className="min-h-screen bg-[#050505] px-3 py-5 pb-[calc(1.5rem+env(safe-area-inset-bottom))] text-white sm:px-4 sm:py-10">
+      <div className="mx-auto max-w-[520px] rounded-2xl border border-yellow-500/15 bg-[#070a0f] p-4 shadow-[0_20px_60px_rgba(0,0,0,0.35)] sm:p-6">
         <div className="flex items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl font-black tracking-[-0.04em] text-[#ffdc70]">

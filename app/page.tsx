@@ -247,13 +247,13 @@ function MobileTopBar({ user }: { user?: AccountUser }) {
 
 function MobileBottomNav() {
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-yellow-500/15 bg-black/90 px-2 pb-[calc(env(safe-area-inset-bottom)+8px)] pt-2 backdrop-blur lg:hidden">
+    <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-yellow-500/15 bg-black/95 px-2 pb-[calc(env(safe-area-inset-bottom)+8px)] pt-2 backdrop-blur lg:hidden">
       <div className="grid grid-cols-6 gap-1">
         {navigationItems.map((item) => (
           <Link
             key={item.href}
             href={item.href}
-            className="rounded-xl border border-yellow-500/10 bg-[#05070b] px-1 py-2 text-center text-[11px] font-black text-zinc-300 active:border-yellow-400/40 active:text-yellow-300"
+            className="flex min-h-11 items-center justify-center rounded-xl border border-yellow-500/10 bg-[#05070b] px-1 py-2 text-center text-[10px] font-black leading-tight text-zinc-300 active:border-yellow-400/40 active:text-yellow-300 min-[390px]:text-[11px]"
           >
             {item.shortLabel}
           </Link>
@@ -331,17 +331,17 @@ export default function HomePage() {
     <main className="min-h-screen bg-[#050505] text-white">
       <HomeMobileTopBar />
 
-      <div className="mx-auto grid max-w-[1820px] grid-cols-1 gap-4 px-3 pb-24 pt-3 sm:px-4 md:px-6 lg:grid-cols-[260px_minmax(0,1fr)] lg:gap-6 lg:py-6">
+      <div className="mx-auto grid max-w-[1820px] grid-cols-1 gap-3 px-3 pb-28 pt-3 sm:gap-4 sm:px-4 md:px-6 lg:grid-cols-[260px_minmax(0,1fr)] lg:gap-6 lg:py-6">
         <HomeSideNav items={navigationItems} />
 
         <section className="min-w-0">
           <div className="flex flex-col gap-4 lg:gap-6">
-            <div className="grid min-w-0 gap-4 lg:h-[380px] lg:grid-cols-[minmax(0,1.55fr)_minmax(420px,0.9fr)] lg:gap-6">
-              <div className="min-h-[330px] min-w-0 overflow-hidden sm:min-h-[380px] lg:min-h-0">
+            <div className="grid min-w-0 gap-3 sm:gap-4 lg:h-[380px] lg:grid-cols-[minmax(0,1.55fr)_minmax(420px,0.9fr)] lg:gap-6">
+              <div className="min-h-[290px] min-w-0 overflow-hidden sm:min-h-[380px] lg:min-h-0">
                 <HeroPanel featured={heroFeaturedData} />
               </div>
 
-              <div className="min-h-[260px] min-w-0 overflow-hidden sm:min-h-[320px] lg:min-h-0">
+              <div className="min-h-[230px] min-w-0 overflow-hidden sm:min-h-[320px] lg:min-h-0">
                 <BannerSection initialData={initialHomeBannerData} />
               </div>
             </div>

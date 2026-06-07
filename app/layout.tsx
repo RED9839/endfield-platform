@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import KoreanSearchBootstrap from "./components/search/KoreanSearchBootstrap";
 import "./globals.css";
 
@@ -8,6 +8,12 @@ export const metadata: Metadata = {
     "엔드필드 오퍼레이터, 무기, 장비, 재화 파밍 및 성장 시뮬레이션을 제공하는 통합 플랫폼",
 };
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -15,7 +21,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko" className="h-full antialiased">
-      <body className="min-h-full flex flex-col bg-[#050505] text-[#ededed]">
+      <body className="flex min-h-full flex-col overflow-x-clip bg-[#050505] text-[#ededed]">
         <KoreanSearchBootstrap />
         {children}
       </body>

@@ -13,8 +13,8 @@ export default async function SetupProfilePage({
 
   if (!session?.user?.id) {
     return (
-      <main className="min-h-screen bg-[#050505] px-4 py-20 text-white">
-        <section className="mx-auto max-w-md rounded-3xl border border-yellow-500/15 bg-[#0a0d12] p-8 text-center">
+      <main className="min-h-screen bg-[#050505] px-3 py-8 text-white sm:px-4 sm:py-20">
+        <section className="mx-auto max-w-md rounded-2xl border border-yellow-500/15 bg-[#0a0d12] p-5 text-center sm:rounded-3xl sm:p-8">
           <p className="text-sm text-zinc-300">로그인이 필요합니다.</p>
         </section>
       </main>
@@ -122,8 +122,8 @@ export default async function SetupProfilePage({
   }
 
   return (
-    <main className="min-h-screen bg-[#050505] px-4 py-20 text-white">
-      <section className="mx-auto max-w-md rounded-3xl border border-yellow-500/15 bg-[#0a0d12] p-8 shadow-[0_20px_80px_rgba(0,0,0,0.45)]">
+    <main className="min-h-screen bg-[#050505] px-3 py-8 pb-[calc(2rem+env(safe-area-inset-bottom))] text-white sm:px-4 sm:py-20">
+      <section className="mx-auto max-w-md rounded-2xl border border-yellow-500/15 bg-[#0a0d12] p-5 shadow-[0_20px_80px_rgba(0,0,0,0.45)] sm:rounded-3xl sm:p-8">
         <p className="text-xs font-black uppercase tracking-[0.28em] text-yellow-300/80">
           프로필 설정
         </p>

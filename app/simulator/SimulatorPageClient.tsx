@@ -2037,8 +2037,8 @@ export default function SimulatorPage() {
   ];
 
   return (
-    <main className="min-h-screen bg-[#03060b] text-white">
-      <div className="mx-auto max-w-[1720px] px-3 py-3 sm:px-4 md:px-6 md:py-5 xl:px-8 xl:py-7">
+    <main className="min-h-screen overflow-x-clip bg-[#03060b] text-white">
+      <div className="mx-auto max-w-[1720px] px-3 py-3 pb-[calc(1.5rem+env(safe-area-inset-bottom))] sm:px-4 md:px-6 md:py-5 xl:px-8 xl:py-7">
         <div className="grid gap-4 lg:gap-5">
           <header
             className="relative overflow-hidden rounded-[22px] bg-[#05070b] p-4 shadow-[0_16px_48px_rgba(0,0,0,0.28)] sm:p-6"
@@ -2064,18 +2064,18 @@ export default function SimulatorPage() {
                 <p className="mt-1 text-xs text-zinc-500 sm:text-sm">성장 시뮬레이션</p>
               </div>
 
-              <div className="flex flex-wrap gap-2">
+              <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
                 <button
                   type="button"
                   onClick={() => setIsOwnedPanelOpen(true)}
-                  className="rounded-xl bg-[#ffd24a] px-4 py-2.5 text-xs font-black text-black transition hover:brightness-110 sm:text-sm"
+                  className="min-h-11 rounded-xl bg-[#ffd24a] px-3 py-2.5 text-xs font-black text-black transition hover:brightness-110 sm:px-4 sm:text-sm"
                 >
                   보유 재화 입력
                 </button>
                 <button
                   type="button"
                   onClick={handleGoFarmingCalculator}
-                  className="rounded-xl bg-black px-4 py-2.5 text-xs font-black text-yellow-200 transition hover:border-yellow-400/35 sm:text-sm"
+                  className="min-h-11 rounded-xl bg-black px-3 py-2.5 text-xs font-black text-yellow-200 transition hover:border-yellow-400/35 sm:px-4 sm:text-sm"
                   style={{ border: `1px solid ${YELLOW_BORDER}` }}
                 >
                   파밍 계산기로 이동
@@ -2083,7 +2083,7 @@ export default function SimulatorPage() {
                 <Link
                   href="/"
                   onClick={handleGoHome}
-                  className="rounded-xl bg-black px-4 py-2.5 text-xs font-bold text-zinc-200 transition hover:border-yellow-400/30 hover:text-yellow-200 sm:text-sm"
+                  className="col-span-2 flex min-h-11 items-center justify-center rounded-xl bg-black px-4 py-2.5 text-xs font-bold text-zinc-200 transition hover:border-yellow-400/30 hover:text-yellow-200 sm:col-auto sm:text-sm"
                   style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
                 >
                   홈으로
@@ -2092,17 +2092,17 @@ export default function SimulatorPage() {
             </div>
           </header>
 
-          <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <section className="grid grid-cols-2 gap-2 sm:gap-3 xl:grid-cols-4">
             {dashboardStats.map((item) => (
               <div
                 key={item.label}
-                className="rounded-2xl bg-[#05070b] p-4 shadow-[0_10px_30px_rgba(0,0,0,0.22)]"
+                className="min-w-0 rounded-2xl bg-[#05070b] p-3 shadow-[0_10px_30px_rgba(0,0,0,0.22)] sm:p-4"
                 style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
               >
                 <p className="text-[10px] font-black tracking-[0.24em] text-zinc-500">
                   {item.label}
                 </p>
-                <p className="mt-2 truncate text-2xl font-black tracking-[-0.05em] text-white">
+                <p className="mt-2 truncate text-xl font-black tracking-[-0.05em] text-white sm:text-2xl">
                   {item.value}
                 </p>
                 <p className="mt-1 line-clamp-1 text-xs font-semibold text-zinc-500">
@@ -2113,12 +2113,12 @@ export default function SimulatorPage() {
           </section>
 
           <nav className="sticky top-2 z-40 rounded-[18px] border border-yellow-500/15 bg-black/90 p-2 backdrop-blur lg:hidden">
-            <div className="flex gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div className="mobile-scroll-row">
               {sectionLinks.map((item) => (
                 <a
                   key={item.href}
                   href={item.href}
-                  className="shrink-0 rounded-xl border border-yellow-500/15 bg-[#05070b] px-3 py-2 text-xs font-black text-zinc-300 transition hover:border-yellow-400/40 hover:text-yellow-200 sm:text-sm"
+                  className="flex min-h-11 shrink-0 items-center rounded-xl border border-yellow-500/15 bg-[#05070b] px-3 py-2 text-xs font-black text-zinc-300 transition hover:border-yellow-400/40 hover:text-yellow-200 sm:text-sm"
                 >
                   {item.label}
                 </a>
@@ -2165,7 +2165,7 @@ export default function SimulatorPage() {
                 </button>
               </div>
 
-              <div className="absolute left-4 right-4 top-[66px] z-20 grid grid-cols-1 gap-2 sm:left-auto sm:right-5 sm:top-5 sm:flex sm:flex-wrap sm:justify-end lg:hidden">
+              <div className="hidden">
                 <button
                   type="button"
                   onClick={() => setIsOwnedPanelOpen(true)}
@@ -2197,7 +2197,7 @@ export default function SimulatorPage() {
                       selectedSlug: selectedWeaponSlug,
                     });
                   }}
-                  className="group grid w-[128px] gap-2 rounded-2xl border border-yellow-500/25 bg-black/65 p-2.5 text-left text-white backdrop-blur transition hover:border-yellow-400/50 hover:bg-black/80 sm:w-[180px] sm:rounded-3xl sm:p-3"
+                  className="group grid w-[112px] gap-2 rounded-2xl border border-yellow-500/25 bg-black/65 p-2.5 text-left text-white backdrop-blur transition hover:border-yellow-400/50 hover:bg-black/80 sm:w-[180px] sm:rounded-3xl sm:p-3"
                 >
                   <div className="relative h-[78px] overflow-hidden rounded-xl bg-black/70 sm:h-[120px] sm:rounded-2xl">
                     {selectedWeapon && selectedWeaponImage ? (

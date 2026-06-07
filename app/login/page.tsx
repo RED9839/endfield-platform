@@ -50,8 +50,8 @@ export default async function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#050505] px-4 py-20 text-white">
-      <section className="mx-auto max-w-md rounded-3xl border border-yellow-500/15 bg-[#0a0d12] p-8 shadow-[0_20px_80px_rgba(0,0,0,0.45)]">
+    <main className="min-h-screen bg-[#050505] px-3 py-8 pb-[calc(2rem+env(safe-area-inset-bottom))] text-white sm:px-4 sm:py-20">
+      <section className="mx-auto max-w-md rounded-2xl border border-yellow-500/15 bg-[#0a0d12] p-5 shadow-[0_20px_80px_rgba(0,0,0,0.45)] sm:rounded-3xl sm:p-8">
         <p className="text-xs font-black uppercase tracking-[0.28em] text-yellow-300/80">
           엔드필드 플랫폼
         </p>

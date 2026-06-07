@@ -24,13 +24,13 @@ export default function InfoPanel({
 
   return (
     <section
-      className="overflow-hidden rounded-[22px] border shadow-[0_12px_36px_rgba(0,0,0,0.22)]"
+      className="overflow-hidden rounded-[18px] border shadow-[0_12px_36px_rgba(0,0,0,0.22)] sm:rounded-[22px]"
       style={{ borderColor: YELLOW_BORDER, background: PANEL_BG }}
     >
       <button
         type="button"
         onClick={() => setCollapsed((prev) => !prev)}
-        className="flex w-full items-center justify-between gap-4 border-b px-4 py-3.5 text-left transition hover:bg-white/[0.02] sm:px-5 sm:py-4"
+        className="flex w-full items-center justify-between gap-3 border-b px-3.5 py-3 text-left transition hover:bg-white/[0.02] sm:gap-4 sm:px-5 sm:py-4"
         style={{ borderBottomColor: YELLOW_BORDER_SOFT }}
       >
         <div className="min-w-0">
@@ -63,7 +63,7 @@ export default function InfoPanel({
           {summary?.trim() ? summary : "설정 내용을 확인해 주세요."}
         </div>
       ) : (
-        <div className="p-4 sm:p-5" style={{ background: "rgba(0,0,0,0.06)" }}>{children}</div>
+        <div className="p-3 sm:p-5" style={{ background: "rgba(0,0,0,0.06)" }}>{children}</div>
       )}
     </section>
   );
