@@ -1,4 +1,4 @@
-import type { GearCategory, GearDetail, GearSetName } from "@/data/gear-types";
+import type { GearCategory, GearLevel, GearQuality, GearSetName } from "@/data/gear-types";
 
 export const gearSetOrder: GearSetName[] = [
   "개척",
@@ -32,7 +32,15 @@ const gearCategoryOrder: Record<GearCategory, number> = {
   kit: 2,
 };
 
-export function sortGearSelectList<T extends GearDetail>(items: T[]): T[] {
+type SortableGearItem = {
+  name: string;
+  category: GearCategory;
+  level: GearLevel;
+  quality: GearQuality;
+  setName: GearSetName;
+};
+
+export function sortGearSelectList<T extends SortableGearItem>(items: T[]): T[] {
   return [...items].sort((a, b) => {
     if (b.quality !== a.quality) return b.quality - a.quality;
 
