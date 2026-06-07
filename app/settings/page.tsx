@@ -1,7 +1,7 @@
 import SettingsPageClient from "./_components/SettingsPageClient";
 
-import { operatorDetails } from "@/data/operators-detail-data";
-import { weaponDetails } from "@/data/weapons-detail-data";
+import { operatorSummaries } from "@/data/operators-summary-data";
+import { weaponSummaries } from "@/data/weapons-summary-data";
 
 type SettingsPageProps = {
   searchParams?: Promise<{
@@ -12,7 +12,7 @@ type SettingsPageProps = {
 export default async function SettingsPage({
   searchParams,
 }: SettingsPageProps) {
-  const operators = operatorDetails.map((operator) => ({
+  const operators = operatorSummaries.map((operator) => ({
     slug: operator.slug,
     name: operator.name,
     enName: operator.enName,
@@ -25,7 +25,7 @@ export default async function SettingsPage({
       operator.slug === "endministrator" ? operator.avatarSecondary : undefined,
   }));
 
-  const weapons = weaponDetails.map((weapon) => ({
+  const weapons = weaponSummaries.map((weapon) => ({
     slug: weapon.slug,
     name: weapon.name,
     enName: weapon.enName,

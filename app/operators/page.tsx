@@ -1,10 +1,10 @@
-import { operatorDetails } from "@/data/operators-detail-data";
+import { operatorSummaries } from "@/data/operators-summary-data";
 import OperatorsPageClient, {
   type OperatorListItem,
 } from "./_components/OperatorsPageClient";
 
 export default function OperatorsPage() {
-  const operators: OperatorListItem[] = operatorDetails.map((operator) => ({
+  const operators: OperatorListItem[] = operatorSummaries.map((operator) => ({
     slug: operator.slug,
     name: operator.name,
     enName: operator.enName,

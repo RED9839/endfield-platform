@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 
 import { auth } from "@/auth";
-import { operatorDetails } from "@/data/operators-detail-data";
-import { weaponDetails } from "@/data/weapons-detail-data";
+import { operatorSummaries } from "@/data/operators-summary-data";
+import { weaponSummaries } from "@/data/weapons-summary-data";
 import { formatServerTiming } from "@/lib/http/server-timing";
 import { prisma } from "@/lib/prisma";
 
@@ -30,14 +30,14 @@ const MAX_LIMIT = 60;
 const DEFAULT_SETTING_NICKNAME = "red9839";
 
 const operatorSearchMap = new Map(
-  operatorDetails.map((operator: any) => [
+  operatorSummaries.map((operator) => [
     operator.slug,
     [operator.name, operator.enName, operator.slug].filter(Boolean).join(" "),
   ]),
 );
 
 const weaponSearchMap = new Map(
-  weaponDetails.map((weapon: any) => [
+  weaponSummaries.map((weapon) => [
     weapon.slug,
     [weapon.name, weapon.enName, weapon.slug].filter(Boolean).join(" "),
   ]),

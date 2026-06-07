@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
 
-import { operatorDetails } from "@/data/operators-detail-data";
-import { weaponDetails } from "@/data/weapons-detail-data";
+import { operatorSummaries } from "@/data/operators-summary-data";
+import { weaponSummaries } from "@/data/weapons-summary-data";
 
 export const dynamic = "force-static";
 
 export function GET() {
   return NextResponse.json({
     ok: true,
-    operators: operatorDetails.map((operator) => ({
+    operators: operatorSummaries.map((operator) => ({
       slug: operator.slug,
       name: operator.name,
       enName: operator.enName,
@@ -20,7 +20,7 @@ export function GET() {
       avatarSecondary:
         operator.slug === "endministrator" ? operator.avatarSecondary : undefined,
     })),
-    weapons: weaponDetails.map((weapon) => ({
+    weapons: weaponSummaries.map((weapon) => ({
       slug: weapon.slug,
       name: weapon.name,
       enName: weapon.enName,
