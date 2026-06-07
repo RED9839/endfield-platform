@@ -2026,15 +2026,39 @@ export default function SimulatorPage() {
     { href: "#materials", label: "필요 재화" },
   ];
 
+  const dashboardStats = [
+    {
+      label: "오퍼레이터",
+      value: selectedOperator?.name ?? "미선택",
+      sub: selectedOperator?.enName ?? "먼저 성장 대상을 골라주세요",
+    },
+    {
+      label: "무기",
+      value: selectedWeapon?.name ?? "미선택",
+      sub: selectedWeapon?.enName ?? "선택 오퍼레이터에 맞춰 필터링됩니다",
+    },
+    {
+      label: "총 필요 재화",
+      value: combinedMaterialDeficitItems.length.toLocaleString(),
+      sub: combinedSummary,
+    },
+    {
+      label: "보유 재화",
+      value: Object.keys(ownedMaterials).length.toLocaleString(),
+      sub: "입력값은 파밍 계산기와 공유됩니다",
+    },
+  ];
+
   return (
-    <main className="min-h-screen bg-[#03060b] text-white">
+    <main className="min-h-screen bg-[#03060b] bg-[radial-gradient(circle_at_top_left,rgba(255,210,74,0.10),transparent_34%),radial-gradient(circle_at_85%_18%,rgba(56,189,248,0.08),transparent_26%),linear-gradient(180deg,#03060b_0%,#05070b_52%,#020305_100%)] text-white">
       <div className="mx-auto max-w-[1840px] px-3 py-3 sm:px-4 md:px-6 md:py-5 xl:px-8 xl:py-8">
-        <div className="grid gap-3">
+        <div className="grid gap-4 lg:gap-5">
           <header
-            className="rounded-[20px] bg-[#05070b] p-4 shadow-[0_0_30px_rgba(250,204,21,0.04)] sm:rounded-[24px] sm:p-5"
+            className="relative overflow-hidden rounded-[24px] bg-[#05070b] p-4 shadow-[0_22px_90px_rgba(0,0,0,0.42)] sm:rounded-[32px] sm:p-6"
             style={{ border: `1px solid ${YELLOW_BORDER}` }}
           >
-            <div className="flex items-end justify-between gap-3">
+            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,rgba(255,210,74,0.12),transparent_34%),radial-gradient(circle_at_88%_0%,rgba(255,255,255,0.08),transparent_28%)]" />
+            <div className="relative flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div className="min-w-0">
                 <p
                   className="text-[10px] font-semibold tracking-[0.28em] sm:text-[11px] sm:tracking-[0.35em]"
@@ -2053,16 +2077,53 @@ export default function SimulatorPage() {
                 <p className="mt-1 text-xs text-zinc-500 sm:text-sm">성장 시뮬레이션</p>
               </div>
 
-              <Link
-                href="/"
-                onClick={handleGoHome}
-                className="shrink-0 rounded-xl bg-black px-3 py-2 text-xs font-bold text-zinc-200 transition hover:bg-[#0b1018] sm:px-4 sm:text-sm"
-                style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
-              >
-                홈으로
-              </Link>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsOwnedPanelOpen(true)}
+                  className="rounded-2xl bg-[#ffd24a] px-4 py-2.5 text-xs font-black text-black shadow-[0_0_24px_rgba(255,210,74,0.18)] transition hover:brightness-110 sm:text-sm"
+                >
+                  보유 재화 입력
+                </button>
+                <button
+                  type="button"
+                  onClick={handleGoFarmingCalculator}
+                  className="rounded-2xl bg-black/70 px-4 py-2.5 text-xs font-black text-yellow-200 transition hover:bg-black sm:text-sm"
+                  style={{ border: `1px solid ${YELLOW_BORDER}` }}
+                >
+                  파밍 계산기로 이동
+                </button>
+                <Link
+                  href="/"
+                  onClick={handleGoHome}
+                  className="rounded-2xl bg-black/70 px-4 py-2.5 text-xs font-bold text-zinc-200 transition hover:bg-black hover:text-yellow-200 sm:text-sm"
+                  style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
+                >
+                  홈으로
+                </Link>
+              </div>
             </div>
           </header>
+
+          <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {dashboardStats.map((item) => (
+              <div
+                key={item.label}
+                className="rounded-[22px] bg-black/45 p-4 shadow-[0_12px_46px_rgba(0,0,0,0.24)] backdrop-blur"
+                style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
+              >
+                <p className="text-[10px] font-black tracking-[0.24em] text-zinc-500">
+                  {item.label}
+                </p>
+                <p className="mt-2 truncate text-2xl font-black tracking-[-0.05em] text-white">
+                  {item.value}
+                </p>
+                <p className="mt-1 line-clamp-1 text-xs font-semibold text-zinc-500">
+                  {item.sub}
+                </p>
+              </div>
+            ))}
+          </section>
 
           <nav className="sticky top-2 z-40 rounded-[18px] border border-yellow-500/15 bg-black/90 p-2 backdrop-blur lg:hidden">
             <div className="flex gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -2080,10 +2141,10 @@ export default function SimulatorPage() {
 
           <section
             id="select"
-            className="relative scroll-mt-24 overflow-hidden rounded-[20px] bg-[#05070b] lg:rounded-[28px]"
+            className="relative scroll-mt-24 overflow-hidden rounded-[24px] bg-[#05070b] shadow-[0_24px_90px_rgba(0,0,0,0.34)] lg:rounded-[32px]"
             style={{ border: `1px solid ${YELLOW_BORDER}` }}
           >
-            <div className="relative min-h-[420px] overflow-hidden rounded-[20px] bg-[radial-gradient(circle_at_46%_18%,rgba(255,210,74,0.14),transparent_35%),linear-gradient(135deg,#05070b,#020305)] sm:min-h-[500px] md:min-h-[560px] xl:min-h-[620px] xl:rounded-[28px]">
+            <div className="relative min-h-[420px] overflow-hidden rounded-[24px] bg-[radial-gradient(circle_at_46%_18%,rgba(255,210,74,0.16),transparent_35%),radial-gradient(circle_at_84%_12%,rgba(255,255,255,0.08),transparent_24%),linear-gradient(135deg,#05070b,#020305)] sm:min-h-[500px] md:min-h-[560px] xl:min-h-[620px] xl:rounded-[32px]">
               {selectedOperator && selectedOperatorImage ? (
                 <Image
                   src={selectedOperatorImage}
@@ -2117,7 +2178,7 @@ export default function SimulatorPage() {
                 </button>
               </div>
 
-              <div className="absolute left-4 right-4 top-[66px] z-20 grid grid-cols-1 gap-2 sm:left-auto sm:right-5 sm:top-5 sm:flex sm:flex-wrap sm:justify-end">
+              <div className="absolute left-4 right-4 top-[66px] z-20 grid grid-cols-1 gap-2 sm:left-auto sm:right-5 sm:top-5 sm:flex sm:flex-wrap sm:justify-end lg:hidden">
                 <button
                   type="button"
                   onClick={() => setIsOwnedPanelOpen(true)}

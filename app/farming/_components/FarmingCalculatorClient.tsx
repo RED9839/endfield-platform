@@ -252,10 +252,11 @@ function Panel({
 }) {
   return (
     <section
-      className="rounded-[24px] bg-[#05070b] p-4 shadow-[0_14px_54px_rgba(0,0,0,0.28)]"
+      className="relative overflow-hidden rounded-[24px] bg-[#05070b] p-4 shadow-[0_18px_64px_rgba(0,0,0,0.30)]"
       style={{ border: `1px solid ${YELLOW_BORDER}` }}
     >
-      <div className="mb-3 flex items-end justify-between gap-3">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_0%,rgba(255,210,74,0.08),transparent_30%)]" />
+      <div className="relative mb-3 flex items-end justify-between gap-3">
         <div>
           <h2
             className="text-lg font-black tracking-[-0.04em]"
@@ -265,7 +266,7 @@ function Panel({
           </h2>
         </div>
       </div>
-      {children}
+      <div className="relative">{children}</div>
     </section>
   );
 }
@@ -281,14 +282,14 @@ function SummaryCard({
 }) {
   return (
     <div
-      className="min-h-[92px] rounded-[18px] border bg-[#090d14] p-3"
+      className="min-h-[104px] rounded-[22px] border bg-[linear-gradient(180deg,rgba(9,13,20,0.96),rgba(0,0,0,0.82))] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
       style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
     >
       <div className="text-[10px] font-black tracking-[0.18em] text-zinc-500">
         {label}
       </div>
       <div
-        className="mt-2 text-2xl font-black leading-none tracking-[-0.04em]"
+        className="mt-3 text-3xl font-black leading-none tracking-[-0.06em]"
         style={{ color: YELLOW_MAIN }}
       >
         {Math.max(0, Math.ceil(value)).toLocaleString()}
@@ -574,6 +575,28 @@ function FarmingCalculatorClientContent() {
   );
   const recoverySanity = Math.max(result.recoverySanity ?? getRecoverySanity(settings), 0);
   const effectiveRequiredSanity = Math.max(result.netRequiredSanity ?? result.totalRequiredSanity - recoverySanity, 0);
+  const farmingDashboardStats = [
+    {
+      label: "목표 재화",
+      value: normalizeFarmableTargets(targets).length.toLocaleString(),
+      sub: "파밍 가능한 재화만 계산에 반영됩니다",
+    },
+    {
+      label: "보유 재화",
+      value: normalizeItems(ownedMaterials).length.toLocaleString(),
+      sub: "성장 시뮬레이션과 공유됩니다",
+    },
+    {
+      label: "추천 스테이지",
+      value: result.stagePlans.length.toLocaleString(),
+      sub: "필요 이성 기준으로 산출됩니다",
+    },
+    {
+      label: "예상 소요일",
+      value: Math.max(0, Math.ceil(result.estimatedDays)).toLocaleString(),
+      sub: "일일 회복량과 설정값을 반영합니다",
+    },
+  ];
 
   function updateSettings(next: Partial<FarmingSettings>) {
     setSettings((prev) => ({
@@ -714,13 +737,14 @@ function FarmingCalculatorClientContent() {
   );
 
   return (
-    <main className="min-h-screen bg-[#03060b] text-white">
+    <main className="min-h-screen bg-[#03060b] bg-[radial-gradient(circle_at_top_left,rgba(255,210,74,0.11),transparent_34%),radial-gradient(circle_at_82%_12%,rgba(56,189,248,0.08),transparent_28%),linear-gradient(180deg,#03060b_0%,#05070b_54%,#020305_100%)] text-white">
       <div className="mx-auto w-full max-w-[1840px] px-3 pb-3 pt-[76px] sm:px-4 md:px-6 md:py-5 xl:px-8 xl:py-8">
         <section
-          className="overflow-hidden rounded-[24px] bg-[#05070b] p-4 shadow-[0_24px_90px_rgba(0,0,0,0.42)] sm:rounded-[32px] sm:p-6"
+          className="relative overflow-hidden rounded-[24px] bg-[#05070b] p-4 shadow-[0_24px_90px_rgba(0,0,0,0.42)] sm:rounded-[32px] sm:p-6"
           style={{ border: `1px solid ${YELLOW_BORDER}` }}
         >
-          <div className="flex items-end justify-between gap-3">
+          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,rgba(255,210,74,0.12),transparent_34%),radial-gradient(circle_at_90%_0%,rgba(255,255,255,0.08),transparent_28%)]" />
+          <div className="relative flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div className="min-w-0">
               <p className="text-[10px] font-black tracking-[0.22em] sm:text-[11px] sm:tracking-[0.24em]" style={{ color: YELLOW_TEXT }}>
                 엔드필드 지원 플랫폼
@@ -729,11 +753,26 @@ function FarmingCalculatorClientContent() {
                 재화 파밍 계산기
               </h1>
             </div>
-            <div className="flex shrink-0 flex-wrap justify-end gap-2 sm:gap-3">
+            <div className="flex shrink-0 flex-wrap gap-2 sm:gap-3 lg:justify-end">
+              <button
+                type="button"
+                onClick={() => setModalMode("target")}
+                className="rounded-2xl bg-[#ffd24a] px-4 py-2.5 text-xs font-black text-black shadow-[0_0_24px_rgba(255,210,74,0.18)] transition hover:brightness-110 sm:text-sm"
+              >
+                목표 재화 입력
+              </button>
+              <button
+                type="button"
+                onClick={() => setModalMode("owned")}
+                className="rounded-2xl bg-black/70 px-4 py-2.5 text-xs font-black text-yellow-200 transition hover:bg-black sm:text-sm"
+                style={{ border: `1px solid ${YELLOW_BORDER}` }}
+              >
+                보유 재화 입력
+              </button>
               <button
                 type="button"
                 onClick={moveToSimulator}
-                className="rounded-xl bg-black px-3 py-2 text-xs font-bold text-zinc-200 transition hover:bg-[#0b1018] hover:text-yellow-200 sm:px-4 sm:text-sm"
+                className="rounded-2xl bg-black/70 px-4 py-2.5 text-xs font-bold text-zinc-200 transition hover:bg-black hover:text-yellow-200 sm:text-sm"
                 style={{ border: `1px solid ${YELLOW_BORDER}` }}
               >
                 성장 시뮬레이션 이동
@@ -741,7 +780,7 @@ function FarmingCalculatorClientContent() {
               <button
                 type="button"
                 onClick={resetAndGoHome}
-                className="rounded-xl bg-black px-3 py-2 text-xs font-bold text-zinc-200 transition hover:bg-[#0b1018] hover:text-yellow-200 sm:px-4 sm:text-sm"
+                className="rounded-2xl bg-black/70 px-4 py-2.5 text-xs font-bold text-zinc-200 transition hover:bg-black hover:text-yellow-200 sm:text-sm"
                 style={{ border: `1px solid ${YELLOW_BORDER}` }}
               >
                 홈으로
@@ -750,8 +789,28 @@ function FarmingCalculatorClientContent() {
           </div>
         </section>
 
+        <section className="mt-3 grid gap-3 sm:grid-cols-2 lg:mt-5 xl:grid-cols-4">
+          {farmingDashboardStats.map((item) => (
+            <div
+              key={item.label}
+              className="rounded-[22px] bg-black/45 p-4 shadow-[0_12px_46px_rgba(0,0,0,0.24)] backdrop-blur"
+              style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
+            >
+              <p className="text-[10px] font-black tracking-[0.24em] text-zinc-500">
+                {item.label}
+              </p>
+              <p className="mt-2 truncate text-2xl font-black tracking-[-0.05em] text-white">
+                {item.value}
+              </p>
+              <p className="mt-1 line-clamp-1 text-xs font-semibold text-zinc-500">
+                {item.sub}
+              </p>
+            </div>
+          ))}
+        </section>
+
         <section className="mt-3 grid items-start gap-3 lg:mt-5 lg:gap-5 xl:grid-cols-[460px_minmax(0,1fr)]">
-          <aside className="space-y-3 lg:space-y-5">
+          <aside className="space-y-3 lg:sticky lg:top-5 lg:space-y-5">
             <section
               className="fixed left-3 right-3 top-3 z-50 rounded-[18px] bg-[#05070b]/95 p-2 shadow-[0_0_24px_rgba(0,0,0,0.45)] backdrop-blur lg:hidden"
               style={{ border: `1px solid ${YELLOW_BORDER}` }}
@@ -834,7 +893,7 @@ function FarmingCalculatorClientContent() {
 
           <section className="space-y-3 lg:space-y-5">
             <Panel title="계산 결과">
-              <div className="grid gap-2 md:grid-cols-3 xl:grid-cols-5">
+              <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-5">
                 <SummaryCard label="필요 이성" value={effectiveRequiredSanity} />
                 <SummaryCard label="회복제 이성" value={recoverySanity} />
                 <SummaryCard label="사용 징표" value={result.usedToken} />
