@@ -2217,19 +2217,34 @@ export default function SettingsPage({ partyForms = [] }: SettingEditorProps) {
     [form.operatorSlug, partyForms],
   );
   const detailWeaponSlugs = useMemo(
-    () => [form.weaponSlug].filter(Boolean),
-    [form.weaponSlug],
+    () =>
+      Array.from(
+        new Set(
+          [form.weaponSlug, ...partyForms.map((item) => item.weaponSlug)]
+            .map((slug) => String(slug ?? "").trim())
+            .filter(Boolean),
+        ),
+      ),
+    [form.weaponSlug, partyForms],
   );
   const detailGearSlugs = useMemo(
     () =>
       Array.from(
         new Set(
-          [form.armorSlug, form.glovesSlug, form.kit1Slug, form.kit2Slug].filter(
-            Boolean,
-          ),
+          [
+            form,
+            ...partyForms,
+          ].flatMap((item) => [
+            item.armorSlug,
+            item.glovesSlug,
+            item.kit1Slug,
+            item.kit2Slug,
+          ])
+            .map((slug) => String(slug ?? "").trim())
+            .filter(Boolean),
         ),
       ),
-    [form.armorSlug, form.glovesSlug, form.kit1Slug, form.kit2Slug],
+    [form, partyForms],
   );
 
   const { editorData, editorDetailData } = useSettingEditorData({
