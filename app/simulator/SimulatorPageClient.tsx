@@ -4,7 +4,14 @@ import { buildFarmingHref, saveFarmingTransferPayload } from "@/lib/farming/farm
 import Image from "next/image";
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type MouseEvent,
+  type ReactNode,
+} from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import NumberInput from "@/app/components/common/NumberInput";
 import type {
@@ -741,6 +748,30 @@ function RangeSelector({
   );
 }
 
+function GrowthSection({
+  title,
+  summary,
+  children,
+}: {
+  title: string;
+  summary?: string;
+  children: ReactNode;
+}) {
+  return (
+    <section className="rounded-2xl border border-yellow-500/10 bg-black/30 p-4">
+      <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+        <h3 className="text-sm font-black text-yellow-200">{title}</h3>
+        {summary ? (
+          <p className="line-clamp-1 text-xs font-semibold text-zinc-500">
+            {summary}
+          </p>
+        ) : null}
+      </div>
+      {children}
+    </section>
+  );
+}
+
 function formatRangeSummary(label: string, current: number, target: number) {
   return `${label} ${current} → ${target}`;
 }
@@ -971,6 +1002,9 @@ export default function SimulatorPage() {
     | { kind: "weapon"; title: string; selectedSlug: string }
     | null
   >(null);
+  const [materialTab, setMaterialTab] = useState<"all" | "operator" | "weapon">(
+    "all",
+  );
 
   const [operatorCurrentLevel, setOperatorCurrentLevel] = useState(1);
   const [operatorTargetLevel, setOperatorTargetLevel] =
@@ -1981,6 +2015,36 @@ export default function SimulatorPage() {
     : "무기를 선택해 주세요.";
 
 
+  const materialTabs = [
+    {
+      key: "all" as const,
+      label: "전체",
+      summary: combinedSummary,
+      items: combinedMaterialDeficitItems,
+      enabled: Boolean(selectedOperator || selectedWeapon),
+      emptyText:
+        "오퍼레이터나 무기를 선택하면 전체 필요 재화를 보여드립니다.",
+    },
+    {
+      key: "operator" as const,
+      label: "오퍼레이터",
+      summary: operatorMaterialsSummary,
+      items: operatorMaterialDeficitItems,
+      enabled: Boolean(selectedOperator),
+      emptyText: "오퍼레이터를 먼저 선택해 주세요.",
+    },
+    {
+      key: "weapon" as const,
+      label: "무기",
+      summary: weaponMaterialsSummary,
+      items: weaponMaterialDeficitItems,
+      enabled: Boolean(selectedWeapon),
+      emptyText: "무기를 먼저 선택해 주세요.",
+    },
+  ];
+  const activeMaterialTab =
+    materialTabs.find((item) => item.key === materialTab) ?? materialTabs[0];
+
   function handleGoFarmingCalculator() {
     saveSimulatorFormState({
       operatorSlug: selectedOperatorSlug,
@@ -2293,42 +2357,57 @@ export default function SimulatorPage() {
 
           <div className="grid items-start gap-3 lg:gap-5 xl:grid-cols-[560px_minmax(0,1fr)]">
             <div id="growth" className="grid scroll-mt-24 auto-rows-max content-start gap-3 self-start lg:gap-6">
-              <InfoPanel title="레벨" summary={levelSummary}>
-                {selectedOperator || selectedWeapon ? (
-                  <SimulatorLevelPanel
-                    operatorCurrentLevel={safeOperatorCurrentLevel}
-                    operatorTargetLevel={safeOperatorTargetLevel}
-                    operatorCurrentOptions={OPERATOR_CURRENT_LEVEL_OPTIONS}
-                    operatorTargetOptions={selectedOperator
-                      ? OPERATOR_TARGET_LEVEL_OPTIONS.filter(
-                          (level: OperatorTargetLevel) =>
-                            level > safeOperatorCurrentLevel
-                        )
-                      : []}
-                    weaponCurrentLevel={safeWeaponCurrentLevel}
-                    weaponTargetLevel={safeWeaponTargetLevel}
-                    weaponCurrentOptions={WEAPON_CURRENT_LEVEL_OPTIONS}
-                    weaponTargetOptions={selectedWeapon
-                      ? WEAPON_TARGET_LEVEL_OPTIONS.filter(
-                          (level: WeaponTargetLevel) =>
-                            level > safeWeaponCurrentLevel
-                        )
-                      : []}
-                    onChangeOperatorCurrent={setOperatorCurrentLevel}
-                    onChangeOperatorTarget={(value: number) =>
-                      setOperatorTargetLevel(toOperatorTargetLevel(value))
-                    }
-                    onChangeWeaponCurrent={setWeaponCurrentLevel}
-                    onChangeWeaponTarget={setWeaponTargetLevel}
-                  />
-                ) : (
-                  <div className="text-sm text-zinc-500">
-                    오퍼레이터 또는 무기를 먼저 선택해 주세요.
-                  </div>
-                )}
-              </InfoPanel>
+              <InfoPanel
+                title="성장 설정"
+                summary={[
+                  levelSummary,
+                  eliteSummary,
+                  weaponBreakthroughSummary,
+                  combatSummary,
+                  talentSummary,
+                  infrastructureSummary,
+                  trustSummary,
+                ]
+                  .filter(Boolean)
+                  .join(" / ")}
+              >
+                <div className="grid gap-4">
+                  <GrowthSection title="레벨" summary={levelSummary}>
+                    {selectedOperator || selectedWeapon ? (
+                      <SimulatorLevelPanel
+                        operatorCurrentLevel={safeOperatorCurrentLevel}
+                        operatorTargetLevel={safeOperatorTargetLevel}
+                        operatorCurrentOptions={OPERATOR_CURRENT_LEVEL_OPTIONS}
+                        operatorTargetOptions={selectedOperator
+                          ? OPERATOR_TARGET_LEVEL_OPTIONS.filter(
+                              (level: OperatorTargetLevel) =>
+                                level > safeOperatorCurrentLevel,
+                            )
+                          : []}
+                        weaponCurrentLevel={safeWeaponCurrentLevel}
+                        weaponTargetLevel={safeWeaponTargetLevel}
+                        weaponCurrentOptions={WEAPON_CURRENT_LEVEL_OPTIONS}
+                        weaponTargetOptions={selectedWeapon
+                          ? WEAPON_TARGET_LEVEL_OPTIONS.filter(
+                              (level: WeaponTargetLevel) =>
+                                level > safeWeaponCurrentLevel,
+                            )
+                          : []}
+                        onChangeOperatorCurrent={setOperatorCurrentLevel}
+                        onChangeOperatorTarget={(value: number) =>
+                          setOperatorTargetLevel(toOperatorTargetLevel(value))
+                        }
+                        onChangeWeaponCurrent={setWeaponCurrentLevel}
+                        onChangeWeaponTarget={setWeaponTargetLevel}
+                      />
+                    ) : (
+                      <div className="text-sm text-zinc-500">
+                        오퍼레이터 또는 무기를 먼저 선택해 주세요.
+                      </div>
+                    )}
+                  </GrowthSection>
 
-              <InfoPanel title="정예화" summary={eliteSummary}>
+              <GrowthSection title="정예화" summary={eliteSummary}>
                 {selectedOperator ? (
                   <RangeSelector
                     current={eliteRange.current}
@@ -2353,9 +2432,9 @@ export default function SimulatorPage() {
                     오퍼레이터를 먼저 선택해 주세요.
                   </div>
                 )}
-              </InfoPanel>
+              </GrowthSection>
 
-              <InfoPanel title="무기 돌파" summary={weaponBreakthroughSummary}>
+              <GrowthSection title="무기 돌파" summary={weaponBreakthroughSummary}>
                 {!selectedWeapon ? (
                   <div className="text-sm text-zinc-500">
                     무기를 먼저 선택해 주세요.
@@ -2384,9 +2463,9 @@ export default function SimulatorPage() {
                     등록된 무기 돌파 데이터가 없습니다.
                   </div>
                 )}
-              </InfoPanel>
+              </GrowthSection>
 
-              <InfoPanel title="전투 스킬" summary={combatSummary}>
+              <GrowthSection title="전투 스킬" summary={combatSummary}>
                 {selectedOperator ? (
                   <SimulatorSkillPanel
                     metas={combatSkillMetas}
@@ -2406,9 +2485,9 @@ export default function SimulatorPage() {
                     오퍼레이터를 먼저 선택해 주세요.
                   </div>
                 )}
-              </InfoPanel>
+              </GrowthSection>
 
-              <InfoPanel title="재능 스킬" summary={talentSummary}>
+              <GrowthSection title="재능 스킬" summary={talentSummary}>
                 {selectedOperator ? (
                   <SimulatorStageSection
                     emptyText="등록된 재능 스킬 데이터가 없습니다."
@@ -2432,9 +2511,9 @@ export default function SimulatorPage() {
                     오퍼레이터를 먼저 선택해 주세요.
                   </div>
                 )}
-              </InfoPanel>
+              </GrowthSection>
 
-              <InfoPanel title="인프라 스킬" summary={infrastructureSummary}>
+              <GrowthSection title="인프라 스킬" summary={infrastructureSummary}>
                 {selectedOperator ? (
                   <SimulatorStageSection
                     emptyText="등록된 인프라 스킬 데이터가 없습니다."
@@ -2495,9 +2574,9 @@ export default function SimulatorPage() {
                     오퍼레이터를 먼저 선택해 주세요.
                   </div>
                 )}
-              </InfoPanel>
+              </GrowthSection>
 
-              <InfoPanel title="신뢰도 보너스" summary={trustSummary}>
+              <GrowthSection title="신뢰도 보너스" summary={trustSummary}>
                 {selectedOperator ? (
                   visibleTrustStageInfos.length ? (
                     <RangeSelector
@@ -2530,46 +2609,50 @@ export default function SimulatorPage() {
                     오퍼레이터를 먼저 선택해 주세요.
                   </div>
                 )}
+              </GrowthSection>
+                </div>
               </InfoPanel>
             </div>
 
             <div id="materials" className="grid scroll-mt-24 gap-3 lg:gap-6">
-              <InfoPanel title="총 필요 재화" summary={combinedSummary}>
-                {selectedOperator || selectedWeapon ? (
-                  <MaterialList items={combinedMaterialDeficitItems} columns={4} />
-                ) : (
-                  <div className="text-sm text-zinc-500">
-                    오퍼레이터와 무기를 선택하시면 총 필요 재화를 보여드립니다.
-                  </div>
-                )}
-              </InfoPanel>
+              <InfoPanel title="필요 재화" summary={activeMaterialTab.summary}>
+                <div className="mb-4 flex flex-wrap gap-2">
+                  {materialTabs.map((tab) => (
+                    <button
+                      key={tab.key}
+                      type="button"
+                      onClick={() => setMaterialTab(tab.key)}
+                      className={`rounded-xl px-3 py-2 text-xs font-black transition ${
+                        activeMaterialTab.key === tab.key
+                          ? "bg-[#ffd24a] text-black"
+                          : "bg-black text-zinc-300 hover:text-yellow-200"
+                      }`}
+                      style={{
+                        border: `1px solid ${
+                          activeMaterialTab.key === tab.key
+                            ? "rgba(255,210,74,0.55)"
+                            : YELLOW_BORDER_SOFT
+                        }`,
+                      }}
+                    >
+                      {tab.label}
+                      <span className="ml-2 opacity-70">
+                        {tab.items.length.toLocaleString()}
+                      </span>
+                    </button>
+                  ))}
+                </div>
 
-              <InfoPanel title="오퍼레이터 필요 재화" summary={operatorMaterialsSummary}>
-                {selectedOperator ? (
-                  <MaterialList items={operatorMaterialDeficitItems} columns={4} />
+                {!activeMaterialTab.enabled ? (
+                  <div className="rounded-2xl border border-yellow-500/10 bg-[#090d14] p-5 text-sm text-zinc-500">
+                    {activeMaterialTab.emptyText}
+                  </div>
+                ) : activeMaterialTab.items.length ? (
+                  <MaterialList items={activeMaterialTab.items} columns={4} />
                 ) : (
-                  <div className="text-sm text-zinc-500">
-                    오퍼레이터를 먼저 선택해 주세요.
+                  <div className="rounded-2xl border border-yellow-500/10 bg-[#090d14] p-5 text-sm text-zinc-500">
+                    계산된 필요 재화가 없습니다.
                   </div>
-                )}
-              </InfoPanel>
-
-              <InfoPanel title="무기 필요 재화" summary={weaponMaterialsSummary}>
-                {!selectedWeapon ? (
-                  <div className="text-sm text-zinc-500">
-                    무기를 먼저 선택해 주세요.
-                  </div>
-                ) : weaponLevelSteps.length === 0 &&
-                  weaponExpSteps.length === 0 &&
-                  weaponBreakthroughSteps.length === 0 ? (
-                  <div className="rounded-2xl border border-yellow-500/10 bg-[#090d14] p-4 text-sm text-zinc-500">
-                    무기 레벨업 / 돌파 재화 데이터를 찾지 못했습니다.
-                    <br />
-                    현재 선택된 무기 코드:{" "}
-                    <span className="text-yellow-300">{selectedWeapon.slug}</span>
-                  </div>
-                ) : (
-                  <MaterialList items={weaponMaterialDeficitItems} columns={4} />
                 )}
               </InfoPanel>
             </div>
