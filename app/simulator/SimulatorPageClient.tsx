@@ -2050,14 +2050,14 @@ export default function SimulatorPage() {
   ];
 
   return (
-    <main className="min-h-screen bg-[#03060b] bg-[radial-gradient(circle_at_top_left,rgba(255,210,74,0.10),transparent_34%),radial-gradient(circle_at_85%_18%,rgba(56,189,248,0.08),transparent_26%),linear-gradient(180deg,#03060b_0%,#05070b_52%,#020305_100%)] text-white">
-      <div className="mx-auto max-w-[1840px] px-3 py-3 sm:px-4 md:px-6 md:py-5 xl:px-8 xl:py-8">
+    <main className="min-h-screen bg-[#03060b] text-white">
+      <div className="mx-auto max-w-[1720px] px-3 py-3 sm:px-4 md:px-6 md:py-5 xl:px-8 xl:py-7">
         <div className="grid gap-4 lg:gap-5">
           <header
-            className="relative overflow-hidden rounded-[24px] bg-[#05070b] p-4 shadow-[0_22px_90px_rgba(0,0,0,0.42)] sm:rounded-[32px] sm:p-6"
+            className="relative overflow-hidden rounded-[22px] bg-[#05070b] p-4 shadow-[0_16px_48px_rgba(0,0,0,0.28)] sm:p-6"
             style={{ border: `1px solid ${YELLOW_BORDER}` }}
           >
-            <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,rgba(255,210,74,0.12),transparent_34%),radial-gradient(circle_at_88%_0%,rgba(255,255,255,0.08),transparent_28%)]" />
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-yellow-300/25" />
             <div className="relative flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div className="min-w-0">
                 <p
@@ -2081,14 +2081,14 @@ export default function SimulatorPage() {
                 <button
                   type="button"
                   onClick={() => setIsOwnedPanelOpen(true)}
-                  className="rounded-2xl bg-[#ffd24a] px-4 py-2.5 text-xs font-black text-black shadow-[0_0_24px_rgba(255,210,74,0.18)] transition hover:brightness-110 sm:text-sm"
+                  className="rounded-xl bg-[#ffd24a] px-4 py-2.5 text-xs font-black text-black transition hover:brightness-110 sm:text-sm"
                 >
                   보유 재화 입력
                 </button>
                 <button
                   type="button"
                   onClick={handleGoFarmingCalculator}
-                  className="rounded-2xl bg-black/70 px-4 py-2.5 text-xs font-black text-yellow-200 transition hover:bg-black sm:text-sm"
+                  className="rounded-xl bg-black px-4 py-2.5 text-xs font-black text-yellow-200 transition hover:border-yellow-400/35 sm:text-sm"
                   style={{ border: `1px solid ${YELLOW_BORDER}` }}
                 >
                   파밍 계산기로 이동
@@ -2096,7 +2096,7 @@ export default function SimulatorPage() {
                 <Link
                   href="/"
                   onClick={handleGoHome}
-                  className="rounded-2xl bg-black/70 px-4 py-2.5 text-xs font-bold text-zinc-200 transition hover:bg-black hover:text-yellow-200 sm:text-sm"
+                  className="rounded-xl bg-black px-4 py-2.5 text-xs font-bold text-zinc-200 transition hover:border-yellow-400/30 hover:text-yellow-200 sm:text-sm"
                   style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
                 >
                   홈으로
@@ -2109,7 +2109,7 @@ export default function SimulatorPage() {
             {dashboardStats.map((item) => (
               <div
                 key={item.label}
-                className="rounded-[22px] bg-black/45 p-4 shadow-[0_12px_46px_rgba(0,0,0,0.24)] backdrop-blur"
+                className="rounded-2xl bg-[#05070b] p-4 shadow-[0_10px_30px_rgba(0,0,0,0.22)]"
                 style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
               >
                 <p className="text-[10px] font-black tracking-[0.24em] text-zinc-500">
@@ -2141,10 +2141,10 @@ export default function SimulatorPage() {
 
           <section
             id="select"
-            className="relative scroll-mt-24 overflow-hidden rounded-[24px] bg-[#05070b] shadow-[0_24px_90px_rgba(0,0,0,0.34)] lg:rounded-[32px]"
+            className="relative scroll-mt-24 overflow-hidden rounded-[22px] bg-[#05070b] shadow-[0_16px_48px_rgba(0,0,0,0.28)]"
             style={{ border: `1px solid ${YELLOW_BORDER}` }}
           >
-            <div className="relative min-h-[420px] overflow-hidden rounded-[24px] bg-[radial-gradient(circle_at_46%_18%,rgba(255,210,74,0.16),transparent_35%),radial-gradient(circle_at_84%_12%,rgba(255,255,255,0.08),transparent_24%),linear-gradient(135deg,#05070b,#020305)] sm:min-h-[500px] md:min-h-[560px] xl:min-h-[620px] xl:rounded-[32px]">
+            <div className="relative min-h-[390px] overflow-hidden rounded-[22px] bg-[#020305] sm:min-h-[460px] md:min-h-[520px] xl:min-h-[580px]">
               {selectedOperator && selectedOperatorImage ? (
                 <Image
                   src={selectedOperatorImage}
@@ -2160,7 +2160,7 @@ export default function SimulatorPage() {
                 </div>
               )}
 
-              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.04),rgba(0,0,0,0.72)),linear-gradient(90deg,rgba(0,0,0,0.72),transparent_55%,rgba(0,0,0,0.42))]" />
+              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(0,0,0,0.08),rgba(0,0,0,0.68)),linear-gradient(90deg,rgba(0,0,0,0.68),transparent_58%,rgba(0,0,0,0.38))]" />
 
               <div className="absolute left-4 top-4 z-20 sm:left-5 sm:top-5">
                 <button
