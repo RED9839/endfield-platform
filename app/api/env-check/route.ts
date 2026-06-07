@@ -9,7 +9,6 @@ export async function GET() {
     GOOGLE_CLIENT_SECRET: Boolean(process.env.GOOGLE_CLIENT_SECRET),
     SUPABASE_DATABASE_URL: Boolean(process.env.SUPABASE_DATABASE_URL),
     SUPABASE_DIRECT_URL: Boolean(process.env.SUPABASE_DIRECT_URL),
-    SUPABASE_MIGRATION_URL: Boolean(process.env.SUPABASE_MIGRATION_URL),
     NODE_ENV: process.env.NODE_ENV,
     VERCEL_ENV: process.env.VERCEL_ENV,
   });
