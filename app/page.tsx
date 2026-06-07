@@ -155,15 +155,6 @@ function SideNav({ user }: { user?: AccountUser }) {
                   마이페이지
                 </Link>
 
-                {user.role === "ADMIN" && (
-                  <Link
-                    href="/admin"
-                    className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-2 text-center text-sm font-black text-red-300 transition hover:bg-red-500/20"
-                  >
-                    관리자 페이지
-                  </Link>
-                )}
-
                 <SignOutButton />
               </div>
             </div>

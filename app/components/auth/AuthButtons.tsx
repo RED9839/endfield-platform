@@ -31,7 +31,7 @@ export function SignOutButton() {
     >
       <button
         type="submit"
-        className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm font-bold text-zinc-200 hover:border-yellow-400/40 hover:text-yellow-300"
+        className="min-h-11 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-bold text-zinc-200 hover:border-yellow-400/40 hover:text-yellow-300"
       >
         로그아웃
       </button>

@@ -534,7 +534,7 @@ export default function WeaponsPageClient({
 
         <div className="grid gap-3 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-5">
           <aside
-            className="relative z-30 flex min-w-0 max-w-full self-start flex-col overflow-hidden rounded-[20px] bg-[#05070b] shadow-[0_0_30px_rgba(250,204,21,0.04)] lg:sticky lg:top-5 lg:h-[calc(100vh-40px)] lg:max-h-[calc(100vh-40px)] lg:rounded-[24px]"
+            className="sticky top-2 z-40 flex min-w-0 max-w-full self-start flex-col overflow-hidden rounded-[18px] bg-[#05070b] shadow-[0_0_30px_rgba(250,204,21,0.04)] lg:top-5 lg:h-[calc(100vh-40px)] lg:max-h-[calc(100vh-40px)] lg:rounded-[24px]"
             style={{ border: `1px solid ${YELLOW_BORDER}` }}
           >
             <button
