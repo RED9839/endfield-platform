@@ -136,14 +136,32 @@ function getKeywordWhere(query: string) {
           },
         },
       },
-      ...(matchingOperatorSlugs.length
-        ? [{ operatorSlugs: { hasSome: matchingOperatorSlugs } }]
-        : []),
-      ...(matchingWeaponSlugs.length
-        ? [{ mainWeaponSlug: { in: matchingWeaponSlugs } }]
-        : []),
+      ...getOperatorSlugFilters(matchingOperatorSlugs),
+      ...getWeaponSlugFilters(matchingWeaponSlugs),
     ],
   };
+}
+
+const SLOT_KEYS = ["main", "member1", "member2", "member3"] as const;
+
+function getOperatorSlugFilters(slugs: string[]) {
+  return slugs.flatMap((slug) =>
+    SLOT_KEYS.map((slotKey) => ({
+      slots: {
+        path: [slotKey, "operatorSlug"],
+        equals: slug,
+      },
+    })),
+  );
+}
+
+function getWeaponSlugFilters(slugs: string[]) {
+  return slugs.map((slug) => ({
+    slots: {
+      path: ["main", "form", "weaponSlug"],
+      equals: slug,
+    },
+  }));
 }
 
 function toListResponseItem(setting: OperatorSettingListItem) {
@@ -337,9 +355,11 @@ export async function GET(request: Request) {
   const filterParts = [
     ...keywordQueries.map(getKeywordWhere),
     ...(operatorFilters.length
-      ? [{ operatorSlugs: { hasSome: operatorFilters } }]
+      ? [{ OR: getOperatorSlugFilters(operatorFilters) }]
       : []),
-    ...(weaponFilter ? [{ mainWeaponSlug: weaponFilter }] : []),
+    ...(weaponFilter
+      ? [{ OR: getWeaponSlugFilters([weaponFilter]) }]
+      : []),
   ];
   const start = (page - 1) * limit;
   const result = await getPagedSettings({
@@ -396,9 +416,6 @@ export async function POST(request: Request) {
 
   const count = countRegisteredSlots(slots);
   const type = count >= 2 ? "party" : "solo";
-  const operatorSlugs = getSettingOperatorSlugs(slots);
-  const mainWeaponSlug = getSettingWeaponSlug(slots) || null;
-
   const setting = await prisma.userOperatorSetting.create({
     data: {
       userId: user.id,
@@ -407,8 +424,6 @@ export async function POST(request: Request) {
       description: description || null,
       cycle,
       slots,
-      operatorSlugs,
-      mainWeaponSlug,
       nickname,
     },
   });

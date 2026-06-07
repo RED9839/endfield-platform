@@ -43,20 +43,6 @@ function countRegisteredSlots(slots: Record<SlotKey, any | null>) {
     .length;
 }
 
-function getSearchFields(slots: Record<SlotKey, any | null>) {
-  return {
-    operatorSlugs: Array.from(
-      new Set(
-        SLOT_KEYS.map((slotKey) =>
-          String(slots[slotKey]?.operatorSlug ?? "").trim(),
-        ).filter(Boolean),
-      ),
-    ),
-    mainWeaponSlug:
-      String(slots.main?.form?.weaponSlug ?? "").trim() || null,
-  };
-}
-
 async function getCurrentUserId() {
   const session = await auth();
 
@@ -170,7 +156,6 @@ export async function PUT(
       description: description || null,
       cycle,
       slots,
-      ...getSearchFields(slots),
     },
   });
 
