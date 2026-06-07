@@ -1,11 +1,11 @@
-import { gearDetails } from "@/data/gear-detail-data";
+import { gearSummaries } from "@/data/gear-summary-data";
 import GearPageClient, {
   type GearListItem,
 } from "./_components/GearPageClient";
 import "./gear-list-overrides.css";
 
 export default function GearPage() {
-  const gears: GearListItem[] = gearDetails.map((gear) => ({
+  const gears: GearListItem[] = gearSummaries.map((gear) => ({
     slug: gear.slug,
     name: gear.name,
     enName: gear.enName,
@@ -16,7 +16,7 @@ export default function GearPage() {
     image: gear.image,
     abilityTypes: gear.abilityTypes,
     attributeTypes: gear.attributeTypes,
-    attributeLabel: gear.attribute.label,
+    attributeLabel: gear.attributeLabel,
   }));
 
   return <GearPageClient gears={gears} />;

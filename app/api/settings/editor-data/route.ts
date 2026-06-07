@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { gearDetails } from "@/data/gear-detail-data";
+import { gearSummaries } from "@/data/gear-summary-data";
 import { operatorSummaries } from "@/data/operators-summary-data";
 import { weaponSummaries } from "@/data/weapons-summary-data";
 
@@ -30,7 +30,7 @@ export function GET() {
       image: weapon.image,
       series: weapon.series,
     })),
-    gears: gearDetails.map((gear) => ({
+    gears: gearSummaries.map((gear) => ({
       slug: gear.slug,
       name: gear.name,
       enName: gear.enName,
