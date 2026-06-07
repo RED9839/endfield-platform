@@ -132,6 +132,7 @@ let specialWeaponStack: WeaponStackItem[] = [];
 let lastStackOperatorKey = "";
 let currentStackOperatorTitle = "";
 let pendingWeaponStackAdvance = false;
+let normalWeaponStackPersistKey = "";
 
 function abs(url?: string | null) {
   if (!url) return "";
@@ -550,16 +551,40 @@ async function loadNormalWeaponStackFromDb() {
     );
     pendingWeaponStackAdvance =
       String(pendingState?.value ?? "") === "true";
+    normalWeaponStackPersistKey = getNormalWeaponStackPersistKey();
   } catch {
     normalWeaponStack = normalWeaponStack.filter((weapon) => weapon.stack < 3);
+    normalWeaponStackPersistKey = "";
   }
+}
+
+function getNormalWeaponStackPersistKey() {
+  return JSON.stringify({
+    stack: applyWeaponStackOrder(normalWeaponStack).map((weapon) => ({
+      id: weapon.id,
+      title: weapon.title,
+      stack: weapon.stack,
+      image: weapon.image,
+      detailImage: weapon.detailImage,
+      bannerImage: weapon.bannerImage,
+      articleImage: weapon.articleImage,
+      thumbnail: weapon.thumbnail,
+      href: weapon.href,
+      publishedAt: weapon.publishedAt,
+    })),
+    lastStackOperatorKey,
+    pendingWeaponStackAdvance,
+  });
 }
 
 async function saveNormalWeaponStackToDb() {
   const stack = applyWeaponStackOrder(normalWeaponStack);
   const ids = stack.map((weapon) => weapon.id).filter(Boolean);
+  const nextPersistKey = getNormalWeaponStackPersistKey();
 
   normalWeaponStack = stack;
+
+  if (normalWeaponStackPersistKey === nextPersistKey) return;
 
   try {
     await db.$transaction([
@@ -617,6 +642,7 @@ async function saveNormalWeaponStackToDb() {
         },
       }),
     ]);
+    normalWeaponStackPersistKey = nextPersistKey;
   } catch {
     // DB 저장 실패 시에도 홈 API 자체는 메모리 스택으로 계속 응답합니다.
   }
