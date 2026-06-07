@@ -4,7 +4,14 @@ import { auth } from "@/auth";
 import { operatorSummaries } from "@/data/operators-summary-data";
 import { weaponSummaries } from "@/data/weapons-summary-data";
 import { formatServerTiming } from "@/lib/http/server-timing";
+import { consumeRateLimit } from "@/lib/http/rate-limit";
+import {
+  getGroupedPageWindow,
+  getSettingsLimit,
+  getSettingsPage,
+} from "@/lib/operator-settings/pagination";
 import { prisma } from "@/lib/prisma";
+import { validateOperatorSettingInput } from "@/lib/operator-settings/validation";
 
 type SettingType = "solo" | "party";
 type SortType = "latest" | "popular" | "views";
@@ -24,9 +31,6 @@ type OperatorSettingListItem = {
   } | null;
 };
 
-const DEFAULT_PAGE = 1;
-const DEFAULT_LIMIT = 24;
-const MAX_LIMIT = 60;
 const DEFAULT_SETTING_NICKNAME = "red9839";
 
 const operatorSearchMap = new Map(
@@ -70,17 +74,6 @@ function splitListParam(value: string | null) {
     .split(",")
     .map((item) => item.trim())
     .filter(Boolean);
-}
-
-function getPageParam(value: string | null) {
-  const page = Number(value ?? DEFAULT_PAGE);
-  return Number.isFinite(page) && page > 0 ? Math.floor(page) : DEFAULT_PAGE;
-}
-
-function getLimitParam(value: string | null) {
-  const limit = Number(value ?? DEFAULT_LIMIT);
-  if (!Number.isFinite(limit) || limit <= 0) return DEFAULT_LIMIT;
-  return Math.min(Math.floor(limit), MAX_LIMIT);
 }
 
 function getSettingNickname(setting: Pick<OperatorSettingListItem, "nickname" | "user">) {
@@ -212,14 +205,22 @@ const listSelect = {
 
 function getOrderBy(sortType: SortType) {
   if (sortType === "popular") {
-    return [{ likeCount: "desc" as const }, { createdAt: "desc" as const }];
+    return [
+      { likeCount: "desc" as const },
+      { createdAt: "desc" as const },
+      { id: "desc" as const },
+    ];
   }
 
   if (sortType === "views") {
-    return [{ viewCount: "desc" as const }, { createdAt: "desc" as const }];
+    return [
+      { viewCount: "desc" as const },
+      { createdAt: "desc" as const },
+      { id: "desc" as const },
+    ];
   }
 
-  return [{ createdAt: "desc" as const }];
+  return [{ createdAt: "desc" as const }, { id: "desc" as const }];
 }
 
 function getBaseWhere(settingType: SettingType | "all") {
@@ -253,16 +254,12 @@ async function getPagedSettings({
   page,
   limit,
   filters,
-  knownNonDefaultTotal,
-  knownDefaultTotal,
 }: {
   settingType: SettingType | "all";
   sortType: SortType;
   page: number;
   limit: number;
   filters?: Record<string, unknown>;
-  knownNonDefaultTotal?: number;
-  knownDefaultTotal?: number;
 }) {
   const baseWhere = {
     ...getBaseWhere(settingType),
@@ -277,51 +274,40 @@ async function getPagedSettings({
     ...getNicknameWhere(true),
   };
   const orderBy = getOrderBy(sortType);
-  const start = (page - 1) * limit;
-
-  const hasKnownTotals =
-    Number.isInteger(knownNonDefaultTotal) &&
-    Number.isInteger(knownDefaultTotal) &&
-    knownNonDefaultTotal! >= 0 &&
-    knownDefaultTotal! >= 0;
-  const [nonDefaultTotal, defaultTotal] = hasKnownTotals
-    ? [knownNonDefaultTotal!, knownDefaultTotal!]
-    : await Promise.all([
-        prisma.userOperatorSetting.count({ where: nonDefaultWhere }),
-        prisma.userOperatorSetting.count({ where: defaultWhere }),
-      ]);
-
-  const total = nonDefaultTotal + defaultTotal;
-  const nonDefaultTake = Math.max(
-    0,
-    Math.min(limit, nonDefaultTotal - Math.min(start, nonDefaultTotal)),
-  );
-  const defaultTake = limit - nonDefaultTake;
-
-  const defaultStart = Math.max(0, start - nonDefaultTotal);
+  const [nonDefaultTotal, defaultTotal] = await Promise.all([
+    prisma.userOperatorSetting.count({ where: nonDefaultWhere }),
+    prisma.userOperatorSetting.count({ where: defaultWhere }),
+  ]);
+  const window = getGroupedPageWindow({
+    page,
+    limit,
+    primaryTotal: nonDefaultTotal,
+    secondaryTotal: defaultTotal,
+  });
   const [nonDefaultSettings, defaultSettings] = await Promise.all([
-    nonDefaultTake > 0
+    window.primaryTake > 0
       ? prisma.userOperatorSetting.findMany({
           where: nonDefaultWhere,
           orderBy,
-          skip: Math.min(start, nonDefaultTotal),
-          take: nonDefaultTake,
+          skip: window.primarySkip,
+          take: window.primaryTake,
           select: listSelect,
         })
       : Promise.resolve([]),
-    defaultTake > 0
+    window.secondaryTake > 0
       ? prisma.userOperatorSetting.findMany({
           where: defaultWhere,
           orderBy,
-          skip: defaultStart,
-          take: defaultTake,
+          skip: window.secondarySkip,
+          take: window.secondaryTake,
           select: listSelect,
         })
       : Promise.resolve([]),
   ]);
 
   return {
-    total,
+    total: window.total,
+    hasMore: window.hasMore,
     nonDefaultTotal,
     defaultTotal,
     settings: [...nonDefaultSettings, ...defaultSettings],
@@ -363,14 +349,8 @@ export async function GET(request: Request) {
   const sortParam = cleanSearchParam(searchParams.get("sort"));
   const operatorFilters = splitListParam(searchParams.get("operators"));
   const weaponFilter = cleanSearchParam(searchParams.get("weapon"));
-  const page = getPageParam(searchParams.get("page"));
-  const limit = getLimitParam(searchParams.get("limit"));
-  const knownNonDefaultTotal = Number(
-    searchParams.get("nonDefaultTotal") ?? Number.NaN,
-  );
-  const knownDefaultTotal = Number(
-    searchParams.get("defaultTotal") ?? Number.NaN,
-  );
+  const page = getSettingsPage(searchParams.get("page"));
+  const limit = getSettingsLimit(searchParams.get("limit"));
 
   const settingType: SettingType | "all" =
     typeParam === "solo" || typeParam === "party" ? typeParam : "all";
@@ -389,7 +369,6 @@ export async function GET(request: Request) {
       ? [{ OR: getWeaponSlugFilters([weaponFilter]) }]
       : []),
   ];
-  const start = (page - 1) * limit;
   const dbStartedAt = performance.now();
   const result = await getPagedSettings({
     settingType,
@@ -397,8 +376,6 @@ export async function GET(request: Request) {
     page,
     limit,
     filters: filterParts.length ? { AND: filterParts } : undefined,
-    knownNonDefaultTotal,
-    knownDefaultTotal,
   });
   const dbFinishedAt = performance.now();
 
@@ -410,7 +387,7 @@ export async function GET(request: Request) {
       total: result.total,
       nonDefaultTotal: result.nonDefaultTotal,
       defaultTotal: result.defaultTotal,
-      hasMore: start + limit < result.total,
+      hasMore: result.hasMore,
       settings: result.settings.map(toListResponseItem),
     },
     {
@@ -443,28 +420,37 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json().catch(() => null);
-  const title = String(body?.title ?? "").trim();
-  const description = String(body?.description ?? "").trim();
-  const slots = body?.slots;
-  const cycle = Array.isArray(body?.cycle) ? body.cycle : [];
+  const validation = validateOperatorSettingInput(body);
+
+  if (!validation.ok) {
+    return NextResponse.json(
+      { ok: false, message: validation.message },
+      { status: 400 },
+    );
+  }
+
+  const rateLimit = consumeRateLimit({
+    scope: "operator-settings:create",
+    identifier: user.id,
+    limit: 10,
+    windowMs: 60_000,
+  });
+
+  if (!rateLimit.allowed) {
+    return NextResponse.json(
+      { ok: false, message: "요청이 너무 많습니다. 잠시 후 다시 시도해주세요." },
+      {
+        status: 429,
+        headers: { "Retry-After": String(rateLimit.retryAfter) },
+      },
+    );
+  }
+
+  const { title, description, slots, cycle } = validation.data;
   const bodyNickname = String(
     body?.userNickname ?? body?.authorNickname ?? body?.nickname ?? "",
   ).trim();
   const nickname = bodyNickname || getUserNickname(user) || null;
-
-  if (!title) {
-    return NextResponse.json(
-      { ok: false, message: "세팅 제목을 입력해주세요." },
-      { status: 400 },
-    );
-  }
-
-  if (!slots?.main?.operatorSlug) {
-    return NextResponse.json(
-      { ok: false, message: "메인 오퍼레이터를 먼저 등록해주세요." },
-      { status: 400 },
-    );
-  }
 
   const count = countRegisteredSlots(slots);
   const type = count >= 2 ? "party" : "solo";

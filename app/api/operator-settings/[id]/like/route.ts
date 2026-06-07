@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { auth } from "@/auth";
+import { consumeRateLimit } from "@/lib/http/rate-limit";
 import { prisma } from "@/lib/prisma";
 
 async function getCurrentUserId() {
@@ -40,6 +41,22 @@ export async function POST(
     }
 
     const { id } = await context.params;
+    const rateLimit = consumeRateLimit({
+      scope: `operator-settings:like:${id}`,
+      identifier: userId,
+      limit: 20,
+      windowMs: 60_000,
+    });
+
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { ok: false, message: "요청이 너무 많습니다. 잠시 후 다시 시도해주세요." },
+        {
+          status: 429,
+          headers: { "Retry-After": String(rateLimit.retryAfter) },
+        },
+      );
+    }
 
     const setting = await prisma.userOperatorSetting.findUnique({
       where: { id },
