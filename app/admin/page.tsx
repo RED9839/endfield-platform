@@ -1,22 +1,23 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+
 import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
+
+const RECENT_USER_CUTOFF = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
 const ADMIN_MENUS = [
   {
     title: "유저 관리",
-    description: "회원 정보 및 권한 관리",
+    description: "가입 회원, 닉네임, 권한과 가입 현황을 확인합니다.",
     href: "/admin/users",
+    eyebrow: "USERS",
   },
   {
     title: "세팅 관리",
-    description: "오퍼레이터 세팅 조회 및 삭제",
+    description: "사용자가 등록한 세팅을 검색하고 관리합니다.",
     href: "/admin/settings",
-  },
-  {
-    title: "홈으로 이동",
-    description: "메인 페이지 바로가기",
-    href: "/",
+    eyebrow: "SETTINGS",
   },
 ];
 
@@ -27,47 +28,109 @@ export default async function AdminPage() {
     redirect("/");
   }
 
+  const [userCount, adminCount, settingCount, recentUserCount] =
+    await Promise.all([
+      prisma.user.count(),
+      prisma.user.count({ where: { role: "ADMIN" } }),
+      prisma.userOperatorSetting.count(),
+      prisma.user.count({
+        where: {
+          createdAt: {
+            gte: RECENT_USER_CUTOFF,
+          },
+        },
+      }),
+    ]);
+
   return (
-    <main className="min-h-screen bg-[#050505] p-3 pb-[calc(1.5rem+env(safe-area-inset-bottom))] text-white sm:p-6">
-      <div className="mx-auto max-w-6xl">
-        <div className="mb-8">
-          <h1 className="text-3xl font-black text-[#ffdc70] sm:text-4xl">
-            관리자 패널
-          </h1>
+    <main className="min-h-screen overflow-x-clip bg-[#030405] px-3 py-4 pb-[calc(2rem+env(safe-area-inset-bottom))] text-white sm:px-5 sm:py-8">
+      <div className="mx-auto max-w-[1180px]">
+        <header className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-[10px] font-black tracking-[0.3em] text-red-300/70">
+              ADMIN CONSOLE
+            </p>
+            <h1 className="mt-1 text-2xl font-black tracking-[-0.04em] text-white sm:text-4xl">
+              관리자 허브
+            </h1>
+            <p className="mt-2 text-sm text-zinc-500">
+              서비스 운영 기능만 모아둔 관리자 전용 공간입니다.
+            </p>
+          </div>
 
-          <p className="mt-2 text-sm text-zinc-400">
-            엔드필드 플랫폼 관리자 전용 페이지
-          </p>
-        </div>
+          <Link
+            href="/"
+            className="flex min-h-11 shrink-0 items-center rounded-xl border border-white/10 bg-black px-4 text-xs font-black text-zinc-300 transition hover:border-red-400/30 hover:text-white sm:px-5 sm:text-sm"
+          >
+            서비스로 돌아가기
+          </Link>
+        </header>
 
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {ADMIN_MENUS.map((menu) => (
-            <Link
-              key={menu.href}
-              href={menu.href}
-              className="group rounded-2xl border border-yellow-500/20 bg-black/30 p-6 transition hover:border-yellow-500/50 hover:bg-black/50"
-            >
-              <h2 className="text-xl font-black text-[#ffdc70] transition group-hover:text-yellow-300">
-                {menu.title}
-              </h2>
+        <section className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
+          <AdminStat label="전체 유저" value={userCount} />
+          <AdminStat label="최근 7일 가입" value={recentUserCount} />
+          <AdminStat label="등록 세팅" value={settingCount} />
+          <AdminStat label="관리자" value={adminCount} />
+        </section>
 
-              <p className="mt-2 text-sm text-zinc-400">
-                {menu.description}
+        <section className="mt-4 rounded-[24px] border border-red-500/15 bg-[#09090b] p-4 sm:p-6">
+          <div className="flex flex-wrap items-end justify-between gap-3 border-b border-white/10 pb-4">
+            <div>
+              <p className="text-[10px] font-black tracking-[0.24em] text-red-300/60">
+                MANAGEMENT
               </p>
-            </Link>
-          ))}
-        </div>
-
-        <div className="mt-8 rounded-2xl border border-zinc-800 bg-black/30 p-5">
-          <div className="text-sm text-zinc-400">
-            현재 로그인:
+              <h2 className="mt-1 text-xl font-black text-white">관리 메뉴</h2>
+            </div>
+            <p className="text-xs font-bold text-zinc-600">
+              {session.user.name ?? session.user.email}
+            </p>
           </div>
 
-          <div className="mt-1 font-bold text-white">
-            {session.user.name ?? session.user.email}
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
+            {ADMIN_MENUS.map((menu) => (
+              <Link
+                key={menu.href}
+                href={menu.href}
+                className="group relative overflow-hidden rounded-[20px] border border-white/10 bg-black/35 p-5 transition hover:border-red-400/35 hover:bg-red-500/[0.04] sm:p-6"
+              >
+                <div className="absolute right-4 top-3 text-4xl font-black text-white/[0.03] transition group-hover:text-red-400/[0.06]">
+                  {menu.eyebrow}
+                </div>
+                <p className="text-[10px] font-black tracking-[0.22em] text-red-300/60">
+                  {menu.eyebrow}
+                </p>
+                <h3 className="mt-3 text-xl font-black text-white transition group-hover:text-red-200">
+                  {menu.title}
+                </h3>
+                <p className="mt-2 max-w-md text-sm leading-6 text-zinc-500">
+                  {menu.description}
+                </p>
+                <span className="mt-5 inline-flex text-xs font-black text-red-300">
+                  관리 화면 열기 →
+                </span>
+              </Link>
+            ))}
           </div>
+        </section>
+
+        <div className="mt-4 rounded-2xl border border-amber-500/15 bg-amber-500/[0.04] px-4 py-3 text-xs leading-5 text-amber-100/60">
+          관리자 화면은 관리자 권한을 가진 계정만 접근할 수 있습니다. 일반 사용자
+          마이페이지와 데이터 관리 기능은 서로 분리되어 있습니다.
         </div>
       </div>
     </main>
+  );
+}
+
+function AdminStat({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-2xl border border-white/10 bg-[#09090b] p-3 sm:p-4">
+      <p className="truncate text-[10px] font-black tracking-[0.14em] text-zinc-600">
+        {label}
+      </p>
+      <p className="mt-2 text-xl font-black text-red-200 sm:text-2xl">
+        {value.toLocaleString()}
+      </p>
+    </div>
   );
 }
