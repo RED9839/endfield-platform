@@ -35,12 +35,21 @@ const DIRECT_IMAGE_HOSTS = new Set([
   "hg-cdn.com",
 ]);
 
+const LOCAL_BANNER_IMAGE_REPLACEMENTS: Record<string, string> = {
+  "/banners/pickup/rossi.png": "/banners/pickup/rossi.avif",
+  "/banners/event/청소 대작전.png": "/banners/event/청소 대작전.avif",
+  "/banners/event/물자 공급 개척의 날.png":
+    "/banners/event/물자 공급 개척의 날.avif",
+  "/banners/event/그림자 이정표.png": "/banners/event/그림자 이정표.avif",
+  "/banners/version/1.1.png": "/banners/version/1.1.avif",
+};
+
 function normalizeImage(url?: string) {
   const src = url?.trim();
   if (!src) return "";
 
   if (src.startsWith("/api/banners/image")) return src;
-  if (src.startsWith("/")) return src;
+  if (src.startsWith("/")) return LOCAL_BANNER_IMAGE_REPLACEMENTS[src] ?? src;
 
   try {
     const parsed = new URL(src);

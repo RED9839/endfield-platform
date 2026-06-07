@@ -1,10 +1,10 @@
-import { weaponDetails } from "@/data/weapons-detail-data";
+import { weaponSummaries } from "@/data/weapons-summary-data";
 import WeaponsPageClient, {
   type WeaponListItem,
 } from "./_components/WeaponsPageClient";
 
 export default function WeaponsPage() {
-  const weapons: WeaponListItem[] = weaponDetails.map((weapon) => ({
+  const weapons: WeaponListItem[] = weaponSummaries.map((weapon) => ({
     slug: weapon.slug,
     name: weapon.name,
     enName: weapon.enName,

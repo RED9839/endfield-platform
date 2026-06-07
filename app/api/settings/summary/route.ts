@@ -6,7 +6,7 @@ import {
 } from "@/data/operator-arts-effects";
 import { getOperatorSkillPhysicalEffects } from "@/data/operator-physical-effects";
 import { operatorDetails } from "@/data/operators-detail-data";
-import { weaponDetails } from "@/data/weapons-detail-data";
+import { weaponSummaries } from "@/data/weapons-summary-data";
 
 export const dynamic = "force-static";
 
@@ -39,11 +39,11 @@ export function GET() {
         ultimate: pickSkill(operator.slug, "ultimate", operator.skills?.ultimate),
       },
     })),
-    weapons: weaponDetails.map((weapon: any) => ({
+    weapons: weaponSummaries.map((weapon) => ({
       slug: weapon.slug,
       name: weapon.name,
-      image: weapon.image ?? weapon.avatar ?? "",
-      avatar: weapon.avatar ?? weapon.image ?? "",
+      image: weapon.image ?? "",
+      avatar: weapon.image ?? "",
     })),
   });
 }
