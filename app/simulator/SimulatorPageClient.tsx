@@ -912,7 +912,7 @@ export default function SimulatorPage() {
     | { kind: "weapon"; title: string; selectedSlug: string }
     | null
   >(null);
-  const [growthTab, setGrowthTab] = useState<GrowthTabKey>("level");
+  const [growthTab, setGrowthTab] = useState<GrowthTabKey>("progression");
   const [materialTab, setMaterialTab] = useState<MaterialTabKey>("all");
 
   const [operatorCurrentLevel, setOperatorCurrentLevel] = useState(1);
@@ -1924,12 +1924,12 @@ export default function SimulatorPage() {
     : "무기를 선택해 주세요.";
 
   const growthTabs = [
-    { key: "level" as const, label: "레벨", summary: levelSummary },
-    { key: "elite" as const, label: "정예화", summary: eliteSummary },
     {
-      key: "weapon" as const,
-      label: "무기 돌파",
-      summary: weaponBreakthroughSummary,
+      key: "progression" as const,
+      label: "레벨·돌파",
+      summary: [levelSummary, eliteSummary, weaponBreakthroughSummary]
+        .filter(Boolean)
+        .join(" / "),
     },
     { key: "combat" as const, label: "전투 스킬", summary: combatSummary },
     { key: "talent" as const, label: "재능 스킬", summary: talentSummary },
@@ -2291,98 +2291,107 @@ export default function SimulatorPage() {
                   value={growthTab}
                   onChange={setGrowthTab}
                 >
-                  <GrowthSection title="레벨" summary={levelSummary}>
-                    {selectedOperator || selectedWeapon ? (
-                      <SimulatorLevelPanel
-                        operatorCurrentLevel={safeOperatorCurrentLevel}
-                        operatorTargetLevel={safeOperatorTargetLevel}
-                        operatorCurrentOptions={OPERATOR_CURRENT_LEVEL_OPTIONS}
-                        operatorTargetOptions={selectedOperator
-                          ? OPERATOR_TARGET_LEVEL_OPTIONS.filter(
-                              (level: OperatorTargetLevel) =>
-                                level > safeOperatorCurrentLevel,
-                            )
-                          : []}
-                        weaponCurrentLevel={safeWeaponCurrentLevel}
-                        weaponTargetLevel={safeWeaponTargetLevel}
-                        weaponCurrentOptions={WEAPON_CURRENT_LEVEL_OPTIONS}
-                        weaponTargetOptions={selectedWeapon
-                          ? WEAPON_TARGET_LEVEL_OPTIONS.filter(
-                              (level: WeaponTargetLevel) =>
-                                level > safeWeaponCurrentLevel,
-                            )
-                          : []}
-                        onChangeOperatorCurrent={setOperatorCurrentLevel}
-                        onChangeOperatorTarget={(value: number) =>
-                          setOperatorTargetLevel(toOperatorTargetLevel(value))
-                        }
-                        onChangeWeaponCurrent={setWeaponCurrentLevel}
-                        onChangeWeaponTarget={setWeaponTargetLevel}
-                      />
-                    ) : (
-                      <div className="text-sm text-zinc-500">
-                        오퍼레이터 또는 무기를 먼저 선택해 주세요.
-                      </div>
-                    )}
-                  </GrowthSection>
+                  <div className="grid gap-4">
+                    <GrowthSection title="레벨" summary={levelSummary}>
+                      {selectedOperator || selectedWeapon ? (
+                        <SimulatorLevelPanel
+                          operatorCurrentLevel={safeOperatorCurrentLevel}
+                          operatorTargetLevel={safeOperatorTargetLevel}
+                          operatorCurrentOptions={OPERATOR_CURRENT_LEVEL_OPTIONS}
+                          operatorTargetOptions={selectedOperator
+                            ? OPERATOR_TARGET_LEVEL_OPTIONS.filter(
+                                (level: OperatorTargetLevel) =>
+                                  level > safeOperatorCurrentLevel,
+                              )
+                            : []}
+                          weaponCurrentLevel={safeWeaponCurrentLevel}
+                          weaponTargetLevel={safeWeaponTargetLevel}
+                          weaponCurrentOptions={WEAPON_CURRENT_LEVEL_OPTIONS}
+                          weaponTargetOptions={selectedWeapon
+                            ? WEAPON_TARGET_LEVEL_OPTIONS.filter(
+                                (level: WeaponTargetLevel) =>
+                                  level > safeWeaponCurrentLevel,
+                              )
+                            : []}
+                          onChangeOperatorCurrent={setOperatorCurrentLevel}
+                          onChangeOperatorTarget={(value: number) =>
+                            setOperatorTargetLevel(toOperatorTargetLevel(value))
+                          }
+                          onChangeWeaponCurrent={setWeaponCurrentLevel}
+                          onChangeWeaponTarget={setWeaponTargetLevel}
+                        />
+                      ) : (
+                        <div className="text-sm text-zinc-500">
+                          오퍼레이터 또는 무기를 먼저 선택해 주세요.
+                        </div>
+                      )}
+                    </GrowthSection>
 
-              <GrowthSection title="정예화" summary={eliteSummary}>
-                {selectedOperator ? (
-                  <RangeSelector
-                    current={eliteRange.current}
-                    target={eliteRange.target}
-                    stages={eliteStages}
-                    getLabel={(stage) => (stage === 0 ? "0단계" : `${stage}단계`)}
-                    onChangeCurrent={(stage) =>
-                      setEliteRange((prev) => ({
-                        current: stage,
-                        target: Math.max(stage, prev.target),
-                      }))
-                    }
-                    onChangeTarget={(stage) =>
-                      setEliteRange((prev) => ({
-                        current: prev.current,
-                        target: Math.max(prev.current, stage),
-                      }))
-                    }
-                  />
-                ) : (
-                  <div className="text-sm text-zinc-500">
-                    오퍼레이터를 먼저 선택해 주세요.
-                  </div>
-                )}
-              </GrowthSection>
+                    <GrowthSection title="정예화" summary={eliteSummary}>
+                      {selectedOperator ? (
+                        <RangeSelector
+                          current={eliteRange.current}
+                          target={eliteRange.target}
+                          stages={eliteStages}
+                          getLabel={(stage) =>
+                            stage === 0 ? "0단계" : `${stage}단계`
+                          }
+                          onChangeCurrent={(stage) =>
+                            setEliteRange((prev) => ({
+                              current: stage,
+                              target: Math.max(stage, prev.target),
+                            }))
+                          }
+                          onChangeTarget={(stage) =>
+                            setEliteRange((prev) => ({
+                              current: prev.current,
+                              target: Math.max(prev.current, stage),
+                            }))
+                          }
+                        />
+                      ) : (
+                        <div className="text-sm text-zinc-500">
+                          오퍼레이터를 먼저 선택해 주세요.
+                        </div>
+                      )}
+                    </GrowthSection>
 
-              <GrowthSection title="무기 돌파" summary={weaponBreakthroughSummary}>
-                {!selectedWeapon ? (
-                  <div className="text-sm text-zinc-500">
-                    무기를 먼저 선택해 주세요.
+                    <GrowthSection
+                      title="무기 돌파"
+                      summary={weaponBreakthroughSummary}
+                    >
+                      {!selectedWeapon ? (
+                        <div className="text-sm text-zinc-500">
+                          무기를 먼저 선택해 주세요.
+                        </div>
+                      ) : weaponBreakthroughItems.length ? (
+                        <RangeSelector
+                          current={weaponBreakthroughRange.current}
+                          target={weaponBreakthroughRange.target}
+                          stages={weaponBreakthroughStages}
+                          getLabel={(stage) =>
+                            stage === 0 ? "0단계" : `${stage}단계`
+                          }
+                          onChangeCurrent={(stage) =>
+                            setWeaponBreakthroughRange((prev) => ({
+                              current: stage,
+                              target: Math.max(stage, prev.target),
+                            }))
+                          }
+                          onChangeTarget={(stage) =>
+                            setWeaponBreakthroughRange((prev) => ({
+                              current: prev.current,
+                              target: Math.max(prev.current, stage),
+                            }))
+                          }
+                        />
+                      ) : (
+                        <div className="text-sm text-zinc-500">
+                          등록된 무기 돌파 데이터가 없습니다.
+                        </div>
+                      )}
+                    </GrowthSection>
                   </div>
-                ) : weaponBreakthroughItems.length ? (
-                  <RangeSelector
-                    current={weaponBreakthroughRange.current}
-                    target={weaponBreakthroughRange.target}
-                    stages={weaponBreakthroughStages}
-                    getLabel={(stage) => (stage === 0 ? "0단계" : `${stage}단계`)}
-                    onChangeCurrent={(stage) =>
-                      setWeaponBreakthroughRange((prev) => ({
-                        current: stage,
-                        target: Math.max(stage, prev.target),
-                      }))
-                    }
-                    onChangeTarget={(stage) =>
-                      setWeaponBreakthroughRange((prev) => ({
-                        current: prev.current,
-                        target: Math.max(prev.current, stage),
-                      }))
-                    }
-                  />
-                ) : (
-                  <div className="text-sm text-zinc-500">
-                    등록된 무기 돌파 데이터가 없습니다.
-                  </div>
-                )}
-              </GrowthSection>
 
               <GrowthSection title="전투 스킬" summary={combatSummary}>
                 {selectedOperator ? (
