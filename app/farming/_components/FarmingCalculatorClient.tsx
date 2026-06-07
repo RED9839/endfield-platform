@@ -252,10 +252,10 @@ function Panel({
 }) {
   return (
     <section
-      className="relative overflow-hidden rounded-[24px] bg-[#05070b] p-4 shadow-[0_18px_64px_rgba(0,0,0,0.30)]"
+      className="relative overflow-hidden rounded-[22px] bg-[#05070b] p-4 shadow-[0_12px_36px_rgba(0,0,0,0.24)]"
       style={{ border: `1px solid ${YELLOW_BORDER}` }}
     >
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_18%_0%,rgba(255,210,74,0.08),transparent_30%)]" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-yellow-300/20" />
       <div className="relative mb-3 flex items-end justify-between gap-3">
         <div>
           <h2
@@ -282,14 +282,14 @@ function SummaryCard({
 }) {
   return (
     <div
-      className="min-h-[104px] rounded-[22px] border bg-[linear-gradient(180deg,rgba(9,13,20,0.96),rgba(0,0,0,0.82))] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
+      className="min-h-[100px] rounded-2xl border bg-[#090d14] p-4"
       style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
     >
       <div className="text-[10px] font-black tracking-[0.18em] text-zinc-500">
         {label}
       </div>
       <div
-        className="mt-3 text-3xl font-black leading-none tracking-[-0.06em]"
+        className="mt-3 text-2xl font-black leading-none tracking-[-0.05em] sm:text-3xl"
         style={{ color: YELLOW_MAIN }}
       >
         {Math.max(0, Math.ceil(value)).toLocaleString()}
@@ -737,13 +737,13 @@ function FarmingCalculatorClientContent() {
   );
 
   return (
-    <main className="min-h-screen bg-[#03060b] bg-[radial-gradient(circle_at_top_left,rgba(255,210,74,0.11),transparent_34%),radial-gradient(circle_at_82%_12%,rgba(56,189,248,0.08),transparent_28%),linear-gradient(180deg,#03060b_0%,#05070b_54%,#020305_100%)] text-white">
-      <div className="mx-auto w-full max-w-[1840px] px-3 pb-3 pt-[76px] sm:px-4 md:px-6 md:py-5 xl:px-8 xl:py-8">
+    <main className="min-h-screen bg-[#03060b] text-white">
+      <div className="mx-auto w-full max-w-[1720px] px-3 pb-3 pt-[76px] sm:px-4 md:px-6 md:py-5 xl:px-8 xl:py-7">
         <section
-          className="relative overflow-hidden rounded-[24px] bg-[#05070b] p-4 shadow-[0_24px_90px_rgba(0,0,0,0.42)] sm:rounded-[32px] sm:p-6"
+          className="relative overflow-hidden rounded-[22px] bg-[#05070b] p-4 shadow-[0_16px_48px_rgba(0,0,0,0.28)] sm:p-6"
           style={{ border: `1px solid ${YELLOW_BORDER}` }}
         >
-          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(120deg,rgba(255,210,74,0.12),transparent_34%),radial-gradient(circle_at_90%_0%,rgba(255,255,255,0.08),transparent_28%)]" />
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-yellow-300/25" />
           <div className="relative flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div className="min-w-0">
               <p className="text-[10px] font-black tracking-[0.22em] sm:text-[11px] sm:tracking-[0.24em]" style={{ color: YELLOW_TEXT }}>
@@ -757,14 +757,14 @@ function FarmingCalculatorClientContent() {
               <button
                 type="button"
                 onClick={() => setModalMode("target")}
-                className="rounded-2xl bg-[#ffd24a] px-4 py-2.5 text-xs font-black text-black shadow-[0_0_24px_rgba(255,210,74,0.18)] transition hover:brightness-110 sm:text-sm"
+                className="rounded-xl bg-[#ffd24a] px-4 py-2.5 text-xs font-black text-black transition hover:brightness-110 sm:text-sm"
               >
                 목표 재화 입력
               </button>
               <button
                 type="button"
                 onClick={() => setModalMode("owned")}
-                className="rounded-2xl bg-black/70 px-4 py-2.5 text-xs font-black text-yellow-200 transition hover:bg-black sm:text-sm"
+                className="rounded-xl bg-black px-4 py-2.5 text-xs font-black text-yellow-200 transition hover:border-yellow-400/35 sm:text-sm"
                 style={{ border: `1px solid ${YELLOW_BORDER}` }}
               >
                 보유 재화 입력
@@ -772,7 +772,7 @@ function FarmingCalculatorClientContent() {
               <button
                 type="button"
                 onClick={moveToSimulator}
-                className="rounded-2xl bg-black/70 px-4 py-2.5 text-xs font-bold text-zinc-200 transition hover:bg-black hover:text-yellow-200 sm:text-sm"
+                className="rounded-xl bg-black px-4 py-2.5 text-xs font-bold text-zinc-200 transition hover:border-yellow-400/30 hover:text-yellow-200 sm:text-sm"
                 style={{ border: `1px solid ${YELLOW_BORDER}` }}
               >
                 성장 시뮬레이션 이동
@@ -780,7 +780,7 @@ function FarmingCalculatorClientContent() {
               <button
                 type="button"
                 onClick={resetAndGoHome}
-                className="rounded-2xl bg-black/70 px-4 py-2.5 text-xs font-bold text-zinc-200 transition hover:bg-black hover:text-yellow-200 sm:text-sm"
+                className="rounded-xl bg-black px-4 py-2.5 text-xs font-bold text-zinc-200 transition hover:border-yellow-400/30 hover:text-yellow-200 sm:text-sm"
                 style={{ border: `1px solid ${YELLOW_BORDER}` }}
               >
                 홈으로
@@ -793,7 +793,7 @@ function FarmingCalculatorClientContent() {
           {farmingDashboardStats.map((item) => (
             <div
               key={item.label}
-              className="rounded-[22px] bg-black/45 p-4 shadow-[0_12px_46px_rgba(0,0,0,0.24)] backdrop-blur"
+              className="rounded-2xl bg-[#05070b] p-4 shadow-[0_10px_30px_rgba(0,0,0,0.22)]"
               style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
             >
               <p className="text-[10px] font-black tracking-[0.24em] text-zinc-500">
