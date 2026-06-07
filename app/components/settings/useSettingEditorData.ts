@@ -18,11 +18,21 @@ let catalogPromise: Promise<SettingEditorData> | null = null;
 const detailPromises = new Map<string, Promise<SettingEditorData>>();
 const MAX_DETAIL_CACHE_ENTRIES = 24;
 
-async function fetchEditorData(url: string) {
-  const response = await fetch(url);
-  const data = await response.json().catch(() => null);
+function normalizeSlugs(slugs: string[]) {
+  return Array.from(
+    new Set(
+      slugs
+        .map((slug) => String(slug ?? "").trim())
+        .filter(Boolean),
+    ),
+  ).sort();
+}
 
-  if (!response.ok || !data?.ok) return EMPTY_DATA;
+async function fetchEditorData(url: string) {
+  const response = await fetch(url).catch(() => null);
+  const data = await response?.json().catch(() => null);
+
+  if (!response?.ok || !data?.ok) return EMPTY_DATA;
 
   return {
     operators: Array.isArray(data.operators) ? data.operators : [],
@@ -44,7 +54,7 @@ function loadDetails(key: string, url: string) {
     return cached;
   }
 
-  const request = fetchEditorData(url);
+  const request = fetchEditorData(url).catch(() => EMPTY_DATA);
   detailPromises.set(key, request);
 
   if (detailPromises.size > MAX_DETAIL_CACHE_ENTRIES) {
@@ -66,14 +76,26 @@ export function useSettingEditorData({
 }) {
   const [catalog, setCatalog] = useState<SettingEditorData | null>(null);
   const [details, setDetails] = useState<SettingEditorData>(EMPTY_DATA);
+  const normalizedOperatorSlugs = useMemo(
+    () => normalizeSlugs(operatorSlugs),
+    [operatorSlugs],
+  );
+  const normalizedWeaponSlugs = useMemo(
+    () => normalizeSlugs(weaponSlugs),
+    [weaponSlugs],
+  );
+  const normalizedGearSlugs = useMemo(
+    () => normalizeSlugs(gearSlugs),
+    [gearSlugs],
+  );
   const detailKey = useMemo(
     () =>
       [
-        [...operatorSlugs].sort().join(","),
-        [...weaponSlugs].sort().join(","),
-        [...gearSlugs].sort().join(","),
+        normalizedOperatorSlugs.join(","),
+        normalizedWeaponSlugs.join(","),
+        normalizedGearSlugs.join(","),
       ].join("|"),
-    [gearSlugs, operatorSlugs, weaponSlugs],
+    [normalizedGearSlugs, normalizedOperatorSlugs, normalizedWeaponSlugs],
   );
 
   useEffect(() => {
