@@ -132,7 +132,9 @@ const simulatorDetailRequests = new Map<
 const MAX_SIMULATOR_DETAIL_CACHE_ENTRIES = 16;
 
 function loadSimulatorDetails(operatorSlug: string, weaponSlug: string) {
-  const key = `${operatorSlug}|${weaponSlug}`;
+  const normalizedOperatorSlug = operatorSlug.trim();
+  const normalizedWeaponSlug = weaponSlug.trim();
+  const key = `${normalizedOperatorSlug}|${normalizedWeaponSlug}`;
   const cached = simulatorDetailRequests.get(key);
 
   if (cached) {
@@ -142,17 +144,17 @@ function loadSimulatorDetails(operatorSlug: string, weaponSlug: string) {
   }
 
   const params = new URLSearchParams();
-  if (operatorSlug) params.set("operator", operatorSlug);
-  if (weaponSlug) params.set("weapon", weaponSlug);
+  if (normalizedOperatorSlug) params.set("operator", normalizedOperatorSlug);
+  if (normalizedWeaponSlug) params.set("weapon", normalizedWeaponSlug);
 
   const request = fetch(`/api/simulator/detail?${params.toString()}`)
     .then(async (response) => {
-      if (!response.ok) throw new Error("Failed to load simulator details.");
+      if (!response.ok) return { ok: false } as SimulatorDetailPayload;
       return (await response.json()) as SimulatorDetailPayload;
     })
-    .catch((error) => {
+    .catch(() => {
       simulatorDetailRequests.delete(key);
-      throw error;
+      return { ok: false } as SimulatorDetailPayload;
     });
 
   simulatorDetailRequests.set(key, request);

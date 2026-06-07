@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getOperatorDetailBySlug } from "@/data/operators-detail-data";
-import { weaponDetails } from "@/data/weapons-detail-data";
+import { getWeaponDetailBySlug } from "@/data/weapons-detail-data";
 
 const CACHE_CONTROL = "public, s-maxage=86400, stale-while-revalidate=604800";
 
@@ -13,9 +13,7 @@ export function GET(request: Request) {
   const operator = operatorSlug
     ? getOperatorDetailBySlug(operatorSlug) ?? null
     : null;
-  const weapon = weaponSlug
-    ? weaponDetails.find((item) => item.slug === weaponSlug) ?? null
-    : null;
+  const weapon = weaponSlug ? getWeaponDetailBySlug(weaponSlug) ?? null : null;
 
   if ((operatorSlug && !operator) || (weaponSlug && !weapon)) {
     return NextResponse.json(
