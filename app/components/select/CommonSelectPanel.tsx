@@ -653,7 +653,7 @@ export default function CommonSelectPanel({
 
           {kind === "gear" ? (
             <>
-              <SelectFilterGroup title="세트 유형">
+              <SelectFilterGroup title="세트 유형" grid>
                 <SelectFilterButton active={gearSetFilter === "all"} label="전체" onClick={() => setGearSetFilter("all")} />
                 {gearSets.map((gearSetName) => (
                   <SelectFilterButton
@@ -665,7 +665,7 @@ export default function CommonSelectPanel({
                 ))}
               </SelectFilterGroup>
 
-              <SelectFilterGroup title="속성">
+              <SelectFilterGroup title="속성" grid>
                 {gearAttributeOptions.map((attributeOption) => (
                   <SelectFilterButton
                     key={attributeOption.value}
@@ -768,7 +768,7 @@ export default function CommonSelectPanel({
 
       {kind === "gear" ? (
         filteredGears.length > 0 ? (
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-[repeat(auto-fill,minmax(150px,1fr))] sm:gap-3">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-[repeat(auto-fill,minmax(170px,1fr))] sm:gap-3">
             {filteredGears.map((gear) => (
               <GearSelectCard
                 key={gear.slug}

@@ -8,10 +8,12 @@ export default function FilterGroup({
   title,
   children,
   last = false,
+  grid = false,
 }: {
   title: string;
   children: ReactNode;
   last?: boolean;
+  grid?: boolean;
 }) {
   return (
     <div className={last ? "" : "mb-4 lg:mb-5"}>
@@ -22,7 +24,13 @@ export default function FilterGroup({
         {title}
       </h2>
 
-      <div className="flex flex-wrap gap-2 lg:flex-col">
+      <div
+        className={
+          grid
+            ? "grid min-w-0 max-w-full grid-cols-[repeat(auto-fit,minmax(72px,1fr))] gap-2 lg:grid-cols-1"
+            : "flex min-w-0 max-w-full flex-wrap gap-2 pb-1 lg:flex-col lg:flex-nowrap lg:pb-0"
+        }
+      >
         {children}
       </div>
     </div>
