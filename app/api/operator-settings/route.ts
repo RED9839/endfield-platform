@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { operatorDetails } from "@/data/operators-detail-data";
 import { weaponDetails } from "@/data/weapons-detail-data";
+import { formatServerTiming } from "@/lib/http/server-timing";
 import { prisma } from "@/lib/prisma";
 
 type SettingType = "solo" | "party";
@@ -278,28 +279,27 @@ async function getPagedSettings({
   );
   const defaultTake = limit - nonDefaultTake;
 
-  const nonDefaultSettings =
+  const defaultStart = Math.max(0, start - nonDefaultTotal);
+  const [nonDefaultSettings, defaultSettings] = await Promise.all([
     nonDefaultTake > 0
-      ? await prisma.userOperatorSetting.findMany({
+      ? prisma.userOperatorSetting.findMany({
           where: nonDefaultWhere,
           orderBy,
           skip: Math.min(start, nonDefaultTotal),
           take: nonDefaultTake,
           select: listSelect,
         })
-      : [];
-
-  const defaultStart = Math.max(0, start - nonDefaultTotal);
-  const defaultSettings =
+      : Promise.resolve([]),
     defaultTake > 0
-      ? await prisma.userOperatorSetting.findMany({
+      ? prisma.userOperatorSetting.findMany({
           where: defaultWhere,
           orderBy,
           skip: defaultStart,
           take: defaultTake,
           select: listSelect,
         })
-      : [];
+      : Promise.resolve([]),
+  ]);
 
   return {
     total,
@@ -335,6 +335,7 @@ async function getCurrentUser() {
 }
 
 export async function GET(request: Request) {
+  const startedAt = performance.now();
   const { searchParams } = new URL(request.url);
   const keyword = cleanSearchParam(searchParams.get("keyword"));
   const typeParam = cleanSearchParam(searchParams.get("type"));
@@ -362,6 +363,7 @@ export async function GET(request: Request) {
       : []),
   ];
   const start = (page - 1) * limit;
+  const dbStartedAt = performance.now();
   const result = await getPagedSettings({
     settingType,
     sortType,
@@ -369,15 +371,34 @@ export async function GET(request: Request) {
     limit,
     filters: filterParts.length ? { AND: filterParts } : undefined,
   });
+  const dbFinishedAt = performance.now();
 
-  return NextResponse.json({
-    ok: true,
-    page,
-    limit,
-    total: result.total,
-    hasMore: start + limit < result.total,
-    settings: result.settings.map(toListResponseItem),
-  });
+  return NextResponse.json(
+    {
+      ok: true,
+      page,
+      limit,
+      total: result.total,
+      hasMore: start + limit < result.total,
+      settings: result.settings.map(toListResponseItem),
+    },
+    {
+      headers: {
+        "Server-Timing": formatServerTiming([
+          {
+            name: "db",
+            duration: dbFinishedAt - dbStartedAt,
+            description: "settings queries",
+          },
+          {
+            name: "total",
+            duration: performance.now() - startedAt,
+            description: "request total",
+          },
+        ]),
+      },
+    },
+  );
 }
 
 export async function POST(request: Request) {

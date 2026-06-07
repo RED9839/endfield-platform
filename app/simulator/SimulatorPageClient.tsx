@@ -117,6 +117,7 @@ const SIMULATOR_FORM_STORAGE_KEY = "simulator:formState";
 const SIMULATOR_SELECT_CONTEXT_KEY = "endfield-simulator-select-context-v1";
 const USER_SIMULATOR_STATE_API = "/api/user/simulator-state";
 const USER_MATERIAL_INVENTORY_API = "/api/user/material-inventory";
+const USER_SIMULATOR_DATA_API = "/api/simulator/user-data";
 
 type SimulatorFormState = {
   operatorSlug: string;
@@ -183,9 +184,12 @@ function getSelectedOperatorWeaponType(operator: OperatorDetail | null) {
   );
 }
 
-async function readUserSimulatorState(): Promise<Partial<SimulatorFormState> | null> {
+async function readUserSimulatorData(): Promise<{
+  state: Partial<SimulatorFormState> | null;
+  materials: Record<string, number> | null;
+} | null> {
   try {
-    const response = await fetch(USER_SIMULATOR_STATE_API, {
+    const response = await fetch(USER_SIMULATOR_DATA_API, {
       method: "GET",
       cache: "no-store",
     });
@@ -195,29 +199,13 @@ async function readUserSimulatorState(): Promise<Partial<SimulatorFormState> | n
     const payload = (await response.json()) as {
       ok?: boolean;
       state?: Partial<SimulatorFormState> | null;
-    };
-
-    return payload.state ?? null;
-  } catch {
-    return null;
-  }
-}
-
-async function readUserMaterialInventory(): Promise<Record<string, number> | null> {
-  try {
-    const response = await fetch(USER_MATERIAL_INVENTORY_API, {
-      method: "GET",
-      cache: "no-store",
-    });
-
-    if (!response.ok) return null;
-
-    const payload = (await response.json()) as {
-      ok?: boolean;
       materials?: Record<string, number> | null;
     };
 
-    return payload.materials ?? null;
+    return {
+      state: payload.state ?? null,
+      materials: payload.materials ?? null,
+    };
   } catch {
     return null;
   }
@@ -226,10 +214,9 @@ async function readUserMaterialInventory(): Promise<Record<string, number> | nul
 async function readSimulatorFormState(): Promise<Partial<SimulatorFormState> | null> {
   if (typeof window === "undefined") return null;
 
-  const [userState, userMaterials] = await Promise.all([
-    readUserSimulatorState(),
-    readUserMaterialInventory(),
-  ]);
+  const userData = await readUserSimulatorData();
+  const userState = userData?.state ?? null;
+  const userMaterials = userData?.materials ?? null;
 
   if (userState || userMaterials) {
     const mergedState = {

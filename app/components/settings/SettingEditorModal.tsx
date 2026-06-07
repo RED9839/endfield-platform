@@ -1,6 +1,18 @@
 "use client";
 
-import SettingEditor from "@/app/components/settings/SettingEditor";
+import dynamic from "next/dynamic";
+
+const SettingEditor = dynamic(
+  () => import("@/app/components/settings/SettingEditor"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex min-h-[520px] items-center justify-center text-sm font-bold text-zinc-500">
+        설정 에디터를 불러오는 중...
+      </div>
+    ),
+  },
+);
 
 const YELLOW_BORDER = "rgba(255,196,74,0.14)";
 const YELLOW_BORDER_SOFT = "rgba(255,196,74,0.10)";

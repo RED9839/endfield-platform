@@ -2197,7 +2197,12 @@ export default function SettingsPage({ partyForms = [] }: SettingEditorProps) {
 
   useEffect(() => {
     if (!hydrated) return;
-    saveFormToStorage(form);
+
+    const timeoutId = window.setTimeout(() => {
+      saveFormToStorage(form);
+    }, 250);
+
+    return () => window.clearTimeout(timeoutId);
   }, [form, hydrated]);
 
   const detailOperatorSlugs = useMemo(
