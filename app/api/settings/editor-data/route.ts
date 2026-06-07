@@ -35,9 +35,13 @@ export function GET() {
       name: gear.name,
       enName: gear.enName,
       image: gear.image,
+      level: gear.level,
       quality: gear.quality,
       category: gear.category,
       setName: gear.setName,
+      abilityTypes: gear.abilityTypes,
+      attributeTypes: gear.attributeTypes,
+      attributeLabel: gear.attributeLabel,
     })),
   });
 }
