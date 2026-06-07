@@ -31,6 +31,14 @@ export function GET() {
       fullImage: weapon.fullImage,
       series: weapon.series,
     })),
-    gears: gearDetails,
+    gears: gearDetails.map((gear) => ({
+      slug: gear.slug,
+      name: gear.name,
+      enName: gear.enName,
+      image: gear.image,
+      quality: gear.quality,
+      category: gear.category,
+      setName: gear.setName,
+    })),
   });
 }
