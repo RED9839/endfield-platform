@@ -12,6 +12,7 @@ import { resolveCycleStates } from "@/lib/combat/cycle-state";
 import { operatorDetails } from "@/data/operators-detail-data";
 import { weaponDetails } from "@/data/weapons-detail-data";
 import DeleteOperatorSettingButton from "@/app/components/settings/DeleteOperatorSettingButton";
+import OperatorSettingViewTracker from "@/app/components/settings/OperatorSettingViewTracker";
 import OperatorSettingLikeButton from "@/app/components/settings/OperatorSettingLikeButton";
 import ReadonlySettingEditor from "@/app/components/settings/ReadonlySettingEditor";
 
@@ -164,18 +165,7 @@ export default async function OperatorSettingDetailPage({
 
   if (!found) notFound();
 
-  const isPartySlotSwitch = Boolean(query?.slot);
-
-  const setting = isPartySlotSwitch
-    ? found
-    : await prisma.userOperatorSetting.update({
-        where: { id },
-        data: {
-          viewCount: {
-            increment: 1,
-          },
-        },
-      });
+  const setting = found;
 
   const slots = normalizeSlots(setting.slots);
   const cycle = Array.isArray((setting as any).cycle) ? (setting as any).cycle : [];
@@ -237,6 +227,7 @@ export default async function OperatorSettingDetailPage({
 
   return (
     <main className="min-h-screen bg-[var(--background)] px-3 py-3 text-white sm:px-4 md:px-6 md:py-5">
+      <OperatorSettingViewTracker settingId={setting.id} />
       <div className="mx-auto max-w-[1840px]">
         <header className="panel mb-3 rounded-[20px] p-4 sm:mb-5 sm:rounded-[24px]">
           <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">

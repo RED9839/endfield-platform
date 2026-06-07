@@ -101,6 +101,8 @@ model UserOperatorSetting {
   description String?
   cycle       Json     @default("[]")
   slots       Json
+  operatorSlugs  String[] @default([])
+  mainWeaponSlug String?
   nickname    String?
   viewCount   Int      @default(0)
   likeCount   Int      @default(0)
@@ -114,6 +116,8 @@ model UserOperatorSetting {
   @@index([userId, type])
   @@index([updatedAt])
   @@index([type, updatedAt])
+  @@index([operatorSlugs], type: Gin)
+  @@index([mainWeaponSlug])
   @@index([createdAt])
   @@index([likeCount, createdAt])
   @@index([viewCount, createdAt])

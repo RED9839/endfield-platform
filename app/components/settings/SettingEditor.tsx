@@ -8,6 +8,7 @@ import { sortOperatorSelectList } from "@/data/operator-sort";
 import { sortWeaponSelectList } from "@/data/weapons-sort";
 import { gearSetOrder, sortGearSelectList } from "@/data/gear-sort";
 import type { CommonGearSlot } from "@/app/components/select/CommonSelectPanel";
+import { useSettingEditorData } from "./useSettingEditorData";
 
 
 const CommonSelectPanel = dynamic(
@@ -21,12 +22,6 @@ const CommonSelectPanel = dynamic(
     ),
   },
 );
-
-type EditorData = {
-  operators: any[];
-  weapons: any[];
-  gears: any[];
-};
 
 type SkillLevel =
   | "1"
@@ -2188,7 +2183,6 @@ type SettingEditorProps = {
 export default function SettingsPage({ partyForms = [] }: SettingEditorProps) {
   const [form, setForm] = useState<FormState>(createDefaultForm);
   const [hydrated, setHydrated] = useState(false);
-  const [editorData, setEditorData] = useState<EditorData | null>(null);
   const [selectPanel, setSelectPanel] = useState<
     | { kind: "operator"; title: string; selectedSlug: string }
     | { kind: "weapon"; title: string; selectedSlug: string }
@@ -2202,45 +2196,42 @@ export default function SettingsPage({ partyForms = [] }: SettingEditorProps) {
   }, []);
 
   useEffect(() => {
-    let mounted = true;
-
-    async function loadEditorData() {
-      try {
-        const response = await fetch("/api/settings/editor-data", {
-          cache: "force-cache",
-        });
-        const data = await response.json().catch(() => null);
-
-        if (!mounted) return;
-
-        if (!response.ok || !data?.ok) {
-          setEditorData({ operators: [], weapons: [], gears: [] });
-          return;
-        }
-
-        setEditorData({
-          operators: Array.isArray(data.operators) ? data.operators : [],
-          weapons: Array.isArray(data.weapons) ? data.weapons : [],
-          gears: Array.isArray(data.gears) ? data.gears : [],
-        });
-      } catch {
-        if (mounted) {
-          setEditorData({ operators: [], weapons: [], gears: [] });
-        }
-      }
-    }
-
-    loadEditorData();
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
-  useEffect(() => {
     if (!hydrated) return;
     saveFormToStorage(form);
   }, [form, hydrated]);
+
+  const detailOperatorSlugs = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          [form.operatorSlug, ...partyForms.map((item) => item.operatorSlug)]
+            .map((slug) => String(slug ?? "").trim())
+            .filter(Boolean),
+        ),
+      ),
+    [form.operatorSlug, partyForms],
+  );
+  const detailWeaponSlugs = useMemo(
+    () => [form.weaponSlug].filter(Boolean),
+    [form.weaponSlug],
+  );
+  const detailGearSlugs = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          [form.armorSlug, form.glovesSlug, form.kit1Slug, form.kit2Slug].filter(
+            Boolean,
+          ),
+        ),
+      ),
+    [form.armorSlug, form.glovesSlug, form.kit1Slug, form.kit2Slug],
+  );
+
+  const { editorData, editorDetailData } = useSettingEditorData({
+    operatorSlugs: detailOperatorSlugs,
+    weaponSlugs: detailWeaponSlugs,
+    gearSlugs: detailGearSlugs,
+  });
 
   const operatorDetails = editorData?.operators ?? [];
   const weaponDetails = editorData?.weapons ?? [];
@@ -2258,48 +2249,48 @@ export default function SettingsPage({ partyForms = [] }: SettingEditorProps) {
     () => sortGearSelectList(gearDetails).map(toGearItem),
     [gearDetails],
   );
-  const armorItems = useMemo(
-    () => gearItems.filter((item) => item.category === "armor"),
-    [gearItems],
+  const detailedOperatorItems = useMemo(
+    () => editorDetailData.operators.map(toOperatorItem),
+    [editorDetailData.operators],
   );
-  const glovesItems = useMemo(
-    () => gearItems.filter((item) => item.category === "gloves"),
-    [gearItems],
+  const detailedWeaponItems = useMemo(
+    () => editorDetailData.weapons.map(toWeaponItem),
+    [editorDetailData.weapons],
   );
-  const kitItems = useMemo(
-    () => gearItems.filter((item) => item.category === "kit"),
-    [gearItems],
+  const detailedGearItems = useMemo(
+    () => editorDetailData.gears.map(toGearItem),
+    [editorDetailData.gears],
   );
 
   const selectedOperator = useMemo(
-    () => operatorItems.find((item) => item.slug === form.operatorSlug),
-    [form.operatorSlug, operatorItems],
+    () => detailedOperatorItems.find((item) => item.slug === form.operatorSlug),
+    [detailedOperatorItems, form.operatorSlug],
   );
   const selectedWeapon = useMemo(
-    () => weaponItems.find((item) => item.slug === form.weaponSlug),
-    [form.weaponSlug, weaponItems],
+    () => detailedWeaponItems.find((item) => item.slug === form.weaponSlug),
+    [detailedWeaponItems, form.weaponSlug],
   );
   const selectedArmor = useMemo(
-    () => armorItems.find((item) => item.slug === form.armorSlug),
-    [form.armorSlug, armorItems],
+    () => detailedGearItems.find((item) => item.slug === form.armorSlug),
+    [detailedGearItems, form.armorSlug],
   );
   const selectedGloves = useMemo(
-    () => glovesItems.find((item) => item.slug === form.glovesSlug),
-    [form.glovesSlug, glovesItems],
+    () => detailedGearItems.find((item) => item.slug === form.glovesSlug),
+    [detailedGearItems, form.glovesSlug],
   );
   const selectedKit1 = useMemo(
-    () => kitItems.find((item) => item.slug === form.kit1Slug),
-    [form.kit1Slug, kitItems],
+    () => detailedGearItems.find((item) => item.slug === form.kit1Slug),
+    [detailedGearItems, form.kit1Slug],
   );
   const selectedKit2 = useMemo(
-    () => kitItems.find((item) => item.slug === form.kit2Slug),
-    [form.kit2Slug, kitItems],
+    () => detailedGearItems.find((item) => item.slug === form.kit2Slug),
+    [detailedGearItems, form.kit2Slug],
   );
 
   const externalPartySlots = useMemo(() => {
     return partyForms
       .map((partyForm) => {
-        const partyOperator = operatorItems.find(
+        const partyOperator = detailedOperatorItems.find(
           (item) => item.slug === partyForm.operatorSlug,
         );
 
@@ -2311,7 +2302,7 @@ export default function SettingsPage({ partyForms = [] }: SettingEditorProps) {
         };
       })
       .filter(Boolean) as PartyBuffSlot[];
-  }, [operatorItems, partyForms]);
+  }, [detailedOperatorItems, partyForms]);
 
   const partySlotsForStats = useMemo(() => {
     const currentSlot = selectedOperator

@@ -110,42 +110,40 @@ function getSettingWeaponSlug(slots: any) {
   return String(slots?.main?.form?.weaponSlug ?? "").trim();
 }
 
-function getSettingSearchText(setting: OperatorSettingListItem) {
-  const operatorSlugs = getSettingOperatorSlugs(setting.slots);
-  const weaponSlug = getSettingWeaponSlug(setting.slots);
-
-  return [
-    getSettingNickname(setting),
-    setting.title,
-    setting.description,
-    ...operatorSlugs,
-    ...operatorSlugs.map((slug) => operatorSearchMap.get(slug)),
-    weaponSlug,
-    weaponSearchMap.get(weaponSlug),
-  ]
-    .filter(Boolean)
-    .join(" ")
-    .toLowerCase();
+function getMatchingSlugs(searchMap: Map<string, string>, query: string) {
+  return Array.from(searchMap.entries())
+    .filter(([, searchText]) => searchText.toLowerCase().includes(query))
+    .map(([slug]) => slug);
 }
 
-function sortSettings(settings: OperatorSettingListItem[], sortType: SortType) {
-  return [...settings].sort((a, b) => {
-    const defaultPriority = Number(isDefaultSetting(a)) - Number(isDefaultSetting(b));
-    if (defaultPriority !== 0) return defaultPriority;
+function getKeywordWhere(query: string) {
+  const matchingOperatorSlugs = getMatchingSlugs(operatorSearchMap, query);
+  const matchingWeaponSlugs = getMatchingSlugs(weaponSearchMap, query);
+  const insensitiveContains = {
+    contains: query,
+    mode: "insensitive" as const,
+  };
 
-    const aCreatedAt = a.createdAt.toISOString();
-    const bCreatedAt = b.createdAt.toISOString();
-
-    if (sortType === "popular") {
-      return b.likeCount - a.likeCount || bCreatedAt.localeCompare(aCreatedAt);
-    }
-
-    if (sortType === "views") {
-      return b.viewCount - a.viewCount || bCreatedAt.localeCompare(aCreatedAt);
-    }
-
-    return bCreatedAt.localeCompare(aCreatedAt);
-  });
+  return {
+    OR: [
+      { title: insensitiveContains },
+      { description: insensitiveContains },
+      { nickname: insensitiveContains },
+      {
+        user: {
+          is: {
+            nickname: insensitiveContains,
+          },
+        },
+      },
+      ...(matchingOperatorSlugs.length
+        ? [{ operatorSlugs: { hasSome: matchingOperatorSlugs } }]
+        : []),
+      ...(matchingWeaponSlugs.length
+        ? [{ mainWeaponSlug: { in: matchingWeaponSlugs } }]
+        : []),
+    ],
+  };
 }
 
 function toListResponseItem(setting: OperatorSettingListItem) {
@@ -222,18 +220,23 @@ function getNicknameWhere(defaultSetting: boolean) {
   return defaultSetting ? defaultNicknameWhere : { NOT: defaultNicknameWhere };
 }
 
-async function getPagedSettingsWithoutClientFilters({
+async function getPagedSettings({
   settingType,
   sortType,
   page,
   limit,
+  filters,
 }: {
   settingType: SettingType | "all";
   sortType: SortType;
   page: number;
   limit: number;
+  filters?: Record<string, unknown>;
 }) {
-  const baseWhere = getBaseWhere(settingType);
+  const baseWhere = {
+    ...getBaseWhere(settingType),
+    ...filters,
+  };
   const nonDefaultWhere = {
     ...baseWhere,
     ...getNicknameWhere(false),
@@ -331,64 +334,29 @@ export async function GET(request: Request) {
     .split("/")
     .map((item) => item.trim().toLowerCase())
     .filter(Boolean);
-  const hasClientOnlyFilters =
-    keywordQueries.length > 0 || operatorFilters.length > 0 || Boolean(weaponFilter);
-
-  if (!hasClientOnlyFilters) {
-    const start = (page - 1) * limit;
-    const result = await getPagedSettingsWithoutClientFilters({
-      settingType,
-      sortType,
-      page,
-      limit,
-    });
-
-    return NextResponse.json({
-      ok: true,
-      page,
-      limit,
-      total: result.total,
-      hasMore: start + limit < result.total,
-      settings: result.settings.map(toListResponseItem),
-    });
-  }
-
-  const settings = await prisma.userOperatorSetting.findMany({
-    where: settingType === "all" ? undefined : { type: settingType },
-    orderBy: { updatedAt: "desc" },
-    select: listSelect,
-  });
-
-  const filteredSettings = settings.filter((setting) => {
-    const operatorSlugs = getSettingOperatorSlugs(setting.slots);
-    const weaponSlug = getSettingWeaponSlug(setting.slots);
-    const searchableText = getSettingSearchText(setting);
-
-    const matchesKeyword =
-      keywordQueries.length === 0 ||
-      keywordQueries.every((query) => searchableText.includes(query));
-    const matchesOperator =
-      operatorFilters.length === 0 ||
-      operatorFilters.some((operatorSlug) => operatorSlugs.includes(operatorSlug));
-    const matchesWeapon = !weaponFilter || weaponSlug === weaponFilter;
-
-    return matchesKeyword && matchesOperator && matchesWeapon;
-  });
-
-  const total = filteredSettings.length;
+  const filterParts = [
+    ...keywordQueries.map(getKeywordWhere),
+    ...(operatorFilters.length
+      ? [{ operatorSlugs: { hasSome: operatorFilters } }]
+      : []),
+    ...(weaponFilter ? [{ mainWeaponSlug: weaponFilter }] : []),
+  ];
   const start = (page - 1) * limit;
-  const pagedSettings = sortSettings(filteredSettings, sortType).slice(
-    start,
-    start + limit,
-  );
+  const result = await getPagedSettings({
+    settingType,
+    sortType,
+    page,
+    limit,
+    filters: filterParts.length ? { AND: filterParts } : undefined,
+  });
 
   return NextResponse.json({
     ok: true,
     page,
     limit,
-    total,
-    hasMore: start + limit < total,
-    settings: pagedSettings.map(toListResponseItem),
+    total: result.total,
+    hasMore: start + limit < result.total,
+    settings: result.settings.map(toListResponseItem),
   });
 }
 
@@ -428,6 +396,8 @@ export async function POST(request: Request) {
 
   const count = countRegisteredSlots(slots);
   const type = count >= 2 ? "party" : "solo";
+  const operatorSlugs = getSettingOperatorSlugs(slots);
+  const mainWeaponSlug = getSettingWeaponSlug(slots) || null;
 
   const setting = await prisma.userOperatorSetting.create({
     data: {
@@ -437,6 +407,8 @@ export async function POST(request: Request) {
       description: description || null,
       cycle,
       slots,
+      operatorSlugs,
+      mainWeaponSlug,
       nickname,
     },
   });

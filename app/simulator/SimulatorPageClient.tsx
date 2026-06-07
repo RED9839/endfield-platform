@@ -7,14 +7,12 @@ import dynamic from "next/dynamic";
 import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import NumberInput from "@/app/components/common/NumberInput";
-import {
-  operatorDetails,
-  type OperatorDetail,
-} from "@/data/operators-detail-data";
-import {
-  weaponDetails,
-  type SourceWeaponDetail,
-} from "@/data/weapons-detail-data";
+import type {
+  SelectOperatorItem,
+  SelectWeaponItem,
+} from "@/app/components/select/CommonSelectPanel";
+import type { OperatorDetail } from "@/data/operators-detail-data";
+import type { SourceWeaponDetail } from "@/data/weapons-detail-data";
 import InfoPanel from "./_components/InfoPanel";
 import MaterialList from "./_components/MaterialList";
 import SimulatorStageSection from "./_components/SimulatorStageSection";
@@ -64,17 +62,6 @@ import {
   getWeaponLevelCurrencyDelta,
   getWeaponLevelExpDelta,
 } from "./_lib/exp-converters";
-
-const operators = operatorDetails as OperatorDetail[];
-const weapons = weaponDetails as SourceWeaponDetail[];
-
-const operatorBySlug = new Map(
-  operators.map((operator: OperatorDetail) => [operator.slug, operator] as const),
-);
-
-const weaponBySlug = new Map(
-  weapons.map((weapon: SourceWeaponDetail) => [weapon.slug, weapon] as const),
-);
 
 const CommonSelectPanel = dynamic(
   () => import("@/app/components/select/CommonSelectPanel"),
@@ -934,8 +921,15 @@ export default function SimulatorPage() {
   const searchParams = useSearchParams();
   const syncKey = searchParams.get("sync") ?? "";
 
+  const [operators, setOperators] = useState<SelectOperatorItem[]>([]);
+  const [weapons, setWeapons] = useState<SelectWeaponItem[]>([]);
+  const [catalogReady, setCatalogReady] = useState(false);
   const [selectedOperatorSlug, setSelectedOperatorSlug] = useState("");
   const [selectedWeaponSlug, setSelectedWeaponSlug] = useState("");
+  const [selectedOperator, setSelectedOperator] =
+    useState<OperatorDetail | null>(null);
+  const [selectedWeapon, setSelectedWeapon] =
+    useState<SourceWeaponDetail | null>(null);
   const [isOwnedPanelOpen, setIsOwnedPanelOpen] = useState(false);
   const [selectPanel, setSelectPanel] = useState<
     | { kind: "operator"; title: string; selectedSlug: string }
@@ -986,9 +980,82 @@ export default function SimulatorPage() {
   const operatorRestoreAppliedRef = useRef(false);
   const weaponRestoreAppliedRef = useRef(false);
   const simulatorRestoreAppliedRef = useRef(false);
+  const operatorBySlug = useMemo(
+    () => new Map(operators.map((operator) => [operator.slug, operator])),
+    [operators],
+  );
+  const weaponBySlug = useMemo(
+    () => new Map(weapons.map((weapon) => [weapon.slug, weapon])),
+    [weapons],
+  );
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    fetch("/api/simulator/catalog", { signal: controller.signal })
+      .then((response) => response.json())
+      .then((data) => {
+        if (!data?.ok) return;
+        setOperators(Array.isArray(data.operators) ? data.operators : []);
+        setWeapons(Array.isArray(data.weapons) ? data.weapons : []);
+      })
+      .finally(() => setCatalogReady(true))
+      .catch(() => {});
+
+    return () => controller.abort();
+  }, []);
+
+  useEffect(() => {
+    if (!selectedOperatorSlug) {
+      setSelectedOperator(null);
+      return;
+    }
+
+    const controller = new AbortController();
+    setSelectedOperator(null);
+
+    fetch(
+      `/api/simulator/detail?operator=${encodeURIComponent(selectedOperatorSlug)}`,
+      { signal: controller.signal },
+    )
+      .then((response) => response.json())
+      .then((data) => {
+        if (data?.ok && data.operator?.slug === selectedOperatorSlug) {
+          setSelectedOperator(data.operator);
+        }
+      })
+      .catch(() => {});
+
+    return () => controller.abort();
+  }, [selectedOperatorSlug]);
+
+  useEffect(() => {
+    if (!selectedWeaponSlug) {
+      setSelectedWeapon(null);
+      return;
+    }
+
+    const controller = new AbortController();
+    setSelectedWeapon(null);
+
+    fetch(
+      `/api/simulator/detail?weapon=${encodeURIComponent(selectedWeaponSlug)}`,
+      { signal: controller.signal },
+    )
+      .then((response) => response.json())
+      .then((data) => {
+        if (data?.ok && data.weapon?.slug === selectedWeaponSlug) {
+          setSelectedWeapon(data.weapon);
+        }
+      })
+      .catch(() => {});
+
+    return () => controller.abort();
+  }, [selectedWeaponSlug]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    if (!catalogReady) return;
     if (simulatorRestoreAppliedRef.current && !syncKey) return;
 
     simulatorRestoreAppliedRef.current = true;
@@ -1069,7 +1136,7 @@ export default function SimulatorPage() {
     return () => {
       cancelled = true;
     };
-  }, [syncKey]);
+  }, [catalogReady, operatorBySlug, searchParams, syncKey, weaponBySlug]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -1132,19 +1199,6 @@ export default function SimulatorPage() {
     ownedMaterials,
   ]);
 
-
-  const selectedOperator = useMemo(
-    () =>
-      operatorBySlug.get(selectedOperatorSlug) ?? null,
-    [selectedOperatorSlug]
-  );
-
-  const selectedWeapon = useMemo(
-    () =>
-      weaponBySlug.get(selectedWeaponSlug) ?? null,
-    [selectedWeaponSlug]
-  );
-
   const selectedOperatorImage = useMemo(
     () => getOperatorHeroImage(selectedOperator),
     [selectedOperator]
@@ -1156,7 +1210,6 @@ export default function SimulatorPage() {
   );
 
   const handleOperatorSelect = (slug: string) => {
-    const nextOperator = operatorBySlug.get(slug) ?? null;
     const resetCombatSkillState: CombatSkillState = {
       normal: { current: "1", target: "M3" },
       combo: { current: "1", target: "M3" },
@@ -1164,124 +1217,19 @@ export default function SimulatorPage() {
       ultimate: { current: "1", target: "M3" },
     };
 
-    operatorRestoreAppliedRef.current = true;
+    operatorRestoreAppliedRef.current = false;
     setSelectedOperatorSlug(slug);
     writeSimulatorSelectOperatorContext(slug);
     setOperatorCurrentLevel(1);
     setOperatorTargetLevel(90);
     setCombatSkillState(resetCombatSkillState);
-
-    if (!nextOperator) {
-      setEliteRange({ current: 0, target: 0 });
-      setTrustRange({ current: 0, target: 0 });
-      setTalentRanges({});
-      setInfrastructureRanges({});
-
-      writeLocalSimulatorFormState({
-        operatorSlug: "",
-        weaponSlug: selectedWeaponSlug,
-        operatorCurrentLevel: 1,
-        operatorTargetLevel: 90,
-        weaponCurrentLevel,
-        weaponTargetLevel,
-        eliteRange: { current: 0, target: 0 },
-        weaponBreakthroughRange,
-        trustRange: { current: 0, target: 0 },
-        combatSkillState: resetCombatSkillState,
-        talentRanges: {},
-        infrastructureRanges: {},
-        ownedMaterials,
-      });
-      return;
-    }
-
-    const isNextEndministrator = nextOperator.slug === "endministrator";
-    const nextEliteMax = ((nextOperator as any)?.elite?.length ?? 0);
-    const nextTrustMax = isNextEndministrator
-      ? 0
-      : getMaxRangeStage(
-          getTrustStageInfos(nextOperator).map((item) => item.stage)
-        );
-    const nextTalentRanges = buildMaxRangeMap(getTalentGroups(nextOperator));
-    const nextInfrastructureRanges = isNextEndministrator
-      ? {}
-      : buildMaxRangeMap(getInfrastructureGroups(nextOperator));
-
-    setEliteRange({ current: 0, target: nextEliteMax });
-    setTrustRange({ current: 0, target: nextTrustMax });
-    setTalentRanges(nextTalentRanges);
-    setInfrastructureRanges(nextInfrastructureRanges);
-
-    writeLocalSimulatorFormState({
-      operatorSlug: slug,
-      weaponSlug: selectedWeaponSlug,
-      operatorCurrentLevel: 1,
-      operatorTargetLevel: 90,
-      weaponCurrentLevel,
-      weaponTargetLevel,
-      eliteRange: { current: 0, target: nextEliteMax },
-      weaponBreakthroughRange,
-      trustRange: { current: 0, target: nextTrustMax },
-      combatSkillState: resetCombatSkillState,
-      talentRanges: nextTalentRanges,
-      infrastructureRanges: nextInfrastructureRanges,
-      ownedMaterials,
-    });
   };
 
   const handleWeaponSelect = (slug: string) => {
-    const nextWeapon = weaponBySlug.get(slug) ?? null;
-
-    weaponRestoreAppliedRef.current = true;
+    weaponRestoreAppliedRef.current = false;
     setSelectedWeaponSlug(slug);
     setWeaponCurrentLevel(1);
     setWeaponTargetLevel(90);
-
-    if (!nextWeapon) {
-      setWeaponBreakthroughRange({ current: 0, target: 0 });
-
-      writeLocalSimulatorFormState({
-        operatorSlug: selectedOperatorSlug,
-        weaponSlug: "",
-        operatorCurrentLevel,
-        operatorTargetLevel,
-        weaponCurrentLevel: 1,
-        weaponTargetLevel: 90,
-        eliteRange,
-        weaponBreakthroughRange: { current: 0, target: 0 },
-        trustRange,
-        combatSkillState,
-        talentRanges,
-        infrastructureRanges,
-        ownedMaterials,
-      });
-      return;
-    }
-
-    const nextBreakthroughMax = getMaxRangeStage(
-      getWeaponBreakthroughItems(nextWeapon).map((item) => item.stage)
-    );
-
-    setWeaponBreakthroughRange({
-      current: 0,
-      target: nextBreakthroughMax,
-    });
-
-    writeLocalSimulatorFormState({
-      operatorSlug: selectedOperatorSlug,
-      weaponSlug: slug,
-      operatorCurrentLevel,
-      operatorTargetLevel,
-      weaponCurrentLevel: 1,
-      weaponTargetLevel: 90,
-      eliteRange,
-      weaponBreakthroughRange: { current: 0, target: nextBreakthroughMax },
-      trustRange,
-      combatSkillState,
-      talentRanges,
-      infrastructureRanges,
-      ownedMaterials,
-    });
   };
 
   const isEndministrator = selectedOperator?.slug === "endministrator";
