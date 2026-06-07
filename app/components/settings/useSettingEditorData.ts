@@ -1,11 +1,16 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import type {
+  SettingsEditorGearSummary,
+  SettingsEditorOperatorSummary,
+  SettingsEditorWeaponSummary,
+} from "@/lib/settings/editor-data";
 
 export type SettingEditorData = {
-  operators: any[];
-  weapons: any[];
-  gears: any[];
+  operators: SettingsEditorOperatorSummary[];
+  weapons: SettingsEditorWeaponSummary[];
+  gears: SettingsEditorGearSummary[];
 };
 
 const EMPTY_DATA: SettingEditorData = {

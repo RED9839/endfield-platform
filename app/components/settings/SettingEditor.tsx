@@ -2,12 +2,10 @@
 
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
-import { sortOperatorSelectList } from "@/data/operator-sort";
-import { sortWeaponSelectList } from "@/data/weapons-sort";
-import { gearSetOrder, sortGearSelectList } from "@/data/gear-sort";
 import type { CommonGearSlot } from "@/app/components/select/CommonSelectPanel";
+import EditorPanel from "./EditorPanel";
 import { useSettingEditorData } from "./useSettingEditorData";
 
 
@@ -91,15 +89,6 @@ type SelectableItem = {
 };
 
 const LEVEL_OPTIONS = [1, 20, 40, 60, 80, 90];
-
-const OPERATOR_BREAKTHROUGH_OPTIONS = [
-  { label: "0돌파", value: "0" },
-  { label: "1돌파", value: "1" },
-  { label: "2돌파", value: "2" },
-  { label: "3돌파", value: "3" },
-  { label: "4돌파", value: "4" },
-  { label: "5돌파", value: "5" },
-];
 
 const OPERATOR_TRUST_STAGE_OPTIONS = ["0", "1", "2", "3", "4"];
 
@@ -424,21 +413,8 @@ function saveFormToStorage(form: FormState) {
   window.localStorage.setItem(SETTINGS_FORM_STORAGE_KEY, JSON.stringify(form));
 }
 
-function clearSavedForm() {
-  if (typeof window === "undefined") return;
-  window.localStorage.removeItem(SETTINGS_FORM_STORAGE_KEY);
-}
-
-
 function levelIndex(level: number) {
   return Math.max(0, Math.min(89, level - 1));
-}
-
-function skillIndex(level: SkillLevel) {
-  if (level === "M1") return 9;
-  if (level === "M2") return 10;
-  if (level === "M3") return 11;
-  return Number(level) - 1;
 }
 
 function rankIndex(rank: string) {
@@ -455,31 +431,6 @@ function parseNumber(value: unknown) {
 
 function formatPercent(value: number) {
   return `${Math.floor(value * 10) / 10}%`;
-}
-
-function readIcon(value: unknown): string {
-  if (!value) return "";
-  if (typeof value === "string") return value;
-
-  if (typeof value === "object") {
-    const item = value as Record<string, unknown>;
-    const candidates = [
-      item.icon,
-      item.image,
-      item.avatar,
-      item.src,
-      item.iconSrc,
-      item.iconPath,
-    ];
-
-    for (const candidate of candidates) {
-      if (typeof candidate === "string" && candidate.trim()) {
-        return candidate.trim();
-      }
-    }
-  }
-
-  return "";
 }
 
 function getOperatorBreakthroughItems(operator?: SelectableItem): any[] {
@@ -521,22 +472,6 @@ function getOperatorBreakthroughItem(
     items[stage - 1] ??
     null
   );
-}
-
-function getOperatorBreakthroughIcon(
-  operator: SelectableItem | undefined,
-  rank: string,
-) {
-  const stage = Number(rank);
-  if (!Number.isFinite(stage) || stage <= 0) {
-    return "";
-  }
-
-  const item = getOperatorBreakthroughItem(operator, rank);
-  const icon = readIcon(item);
-  if (icon) return icon;
-
-  return stage >= 1 && stage <= 5 ? `/icons/potential/${stage}.webp` : "";
 }
 
 function getOperatorBreakthroughText(
@@ -2257,18 +2192,6 @@ export default function SettingsPage({ partyForms = [] }: SettingEditorProps) {
   const weaponDetails = editorData?.weapons ?? [];
   const gearDetails = editorData?.gears ?? [];
 
-  const operatorItems = useMemo(
-    () => sortOperatorSelectList(operatorDetails).map(toOperatorItem),
-    [operatorDetails],
-  );
-  const weaponItems = useMemo(
-    () => sortWeaponSelectList(weaponDetails).map(toWeaponItem),
-    [weaponDetails],
-  );
-  const gearItems = useMemo(
-    () => sortGearSelectList(gearDetails).map(toGearItem),
-    [gearDetails],
-  );
   const detailedOperatorItems = useMemo(
     () => editorDetailData.operators.map(toOperatorItem),
     [editorDetailData.operators],
@@ -2399,11 +2322,6 @@ export default function SettingsPage({ partyForms = [] }: SettingEditorProps) {
     }));
   }
 
-  function resetSettings() {
-    clearSavedForm();
-    setForm(createDefaultForm());
-  }
-
   if (!hydrated || !editorData) {
     return (
       <main className="min-h-screen bg-[#050505] px-3 py-3 text-white sm:px-4 md:px-6 md:py-5">
@@ -2439,7 +2357,6 @@ export default function SettingsPage({ partyForms = [] }: SettingEditorProps) {
             <OperatorPanel
               operator={selectedOperator}
               form={form}
-              finalStats={finalStats}
               onOpen={() =>
                 setSelectPanel({
                   kind: "operator",
@@ -2499,7 +2416,6 @@ export default function SettingsPage({ partyForms = [] }: SettingEditorProps) {
               kit1={selectedKit1}
               kit2={selectedKit2}
               form={form}
-              finalStats={finalStats}
               onOpen={(picker) => {
                 const selectedSlug =
                   picker.slot === "armor"
@@ -2570,19 +2486,9 @@ export default function SettingsPage({ partyForms = [] }: SettingEditorProps) {
   );
 }
 
-function Panel({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <section className="rounded-[18px] border border-yellow-500/15 bg-[#070a0f] p-3 shadow-[0_0_24px_rgba(250,204,21,0.025)] sm:rounded-[20px] sm:p-4">
-      <h2 className="mb-3 text-base font-black text-[#ffdc70] sm:mb-4 sm:text-lg">{title}</h2>
-      {children}
-    </section>
-  );
-}
-
 function OperatorPanel({
   operator,
   form,
-  finalStats,
   onOpen,
   onLevelChange,
   onBreakthroughChange,
@@ -2591,7 +2497,6 @@ function OperatorPanel({
 }: {
   operator?: SelectableItem;
   form: FormState;
-  finalStats: ReturnType<typeof calculateFinalStats>;
   onOpen: () => void;
   onLevelChange: (value: number) => void;
   onBreakthroughChange: (value: string) => void;
@@ -2604,7 +2509,7 @@ function OperatorPanel({
   const operatorBaseStats = getOperatorLevelStats(operator, form.operatorLevel);
 
   return (
-    <Panel title="오퍼레이터">
+    <EditorPanel title="오퍼레이터">
       <div className="grid gap-3 md:grid-cols-[240px_1fr] xl:grid-cols-[260px_1fr]">
         <button
           type="button"
@@ -2695,7 +2600,7 @@ function OperatorPanel({
           onChange={onBreakthroughChange}
         />
       </div>
-    </Panel>
+    </EditorPanel>
   );
 }
 
@@ -2718,7 +2623,7 @@ function WeaponPanel({
   ) => void;
 }) {
   return (
-    <Panel title="무기">
+    <EditorPanel title="무기">
       <div className="grid gap-3 md:grid-cols-[240px_1fr] xl:grid-cols-[260px_1fr]">
         <button
           type="button"
@@ -2780,7 +2685,7 @@ function WeaponPanel({
           onChange={(value) => onRankChange("weaponSeriesRank", value)}
         />
       </div>
-    </Panel>
+    </EditorPanel>
   );
 }
 
@@ -2790,7 +2695,6 @@ function GearPanel({
   kit1,
   kit2,
   form,
-  finalStats,
   onOpen,
   onGearLevelChange,
 }: {
@@ -2799,7 +2703,6 @@ function GearPanel({
   kit1?: SelectableItem;
   kit2?: SelectableItem;
   form: FormState;
-  finalStats: ReturnType<typeof calculateFinalStats>;
   onOpen: (picker: { slot: GearSlot; title: string }) => void;
   onGearLevelChange: (
     slot: GearSlot,
@@ -2815,7 +2718,7 @@ function GearPanel({
   ]);
 
   return (
-    <Panel title="장비">
+    <EditorPanel title="장비">
       <div className="grid grid-cols-1 gap-2 sm:gap-3 min-[1500px]:grid-cols-2">
         <GearSlotCard
           title="방어구"
@@ -2876,7 +2779,7 @@ function GearPanel({
           </div>
         </div>
       ) : null}
-    </Panel>
+    </EditorPanel>
   );
 }
 
@@ -3175,7 +3078,7 @@ function FinalStatPanel({
   }[];
 
   return (
-    <Panel title="최종 스탯">
+    <EditorPanel title="최종 스탯">
       <div ref={statPanelRef} className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-x-6">
         <StatLine
           label="체력"
@@ -3317,7 +3220,7 @@ function FinalStatPanel({
 
 
 
-    </Panel>
+    </EditorPanel>
   );
 }
 
@@ -3327,7 +3230,7 @@ function SetEffectPanel({
   setEffect: ReturnType<typeof getActiveSetEffect>;
 }) {
   return (
-    <Panel title="세트 효과">
+    <EditorPanel title="세트 효과">
       {setEffect ? (
         <div className="rounded-xl border border-green-400/20 bg-green-400/5 p-4">
           <div className="flex items-center justify-between">
@@ -3348,7 +3251,7 @@ function SetEffectPanel({
           같은 세트 장비 3개 이상 장착 시 세트 효과가 활성화됩니다.
         </div>
       )}
-    </Panel>
+    </EditorPanel>
   );
 }
 
@@ -3692,15 +3595,6 @@ function StatLine({
   );
 }
 
-function InfoBox({ title, value }: { title: string; value: string }) {
-  return (
-    <div className="rounded-lg border border-white/10 bg-black/35 p-3">
-      <p className="text-xs text-zinc-500">{title}</p>
-      <p className="mt-1 text-sm font-black text-white">{value || "-"}</p>
-    </div>
-  );
-}
-
 function SelectBox({
   label,
   value,
@@ -3839,31 +3733,3 @@ function OperatorBreakthroughSelect({
   );
 }
 
-function OptionSelectBox({
-  label,
-  value,
-  options,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  options: { label: string; value: string }[];
-  onChange: (value: string) => void;
-}) {
-  return (
-    <label className="grid gap-1">
-      <span className="text-xs text-zinc-500">{label}</span>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-md border border-white/10 bg-black px-3 py-2 text-xs font-black outline-none sm:text-sm"
-      >
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-    </label>
-  );
-}
