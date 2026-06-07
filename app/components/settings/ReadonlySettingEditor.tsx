@@ -111,6 +111,14 @@ export default function ReadonlySettingEditor({
 
         const text = button.textContent?.trim() ?? "";
 
+        if (button.querySelector("img")) {
+          button.disabled = true;
+          button.tabIndex = -1;
+          button.style.display = "";
+          button.style.pointerEvents = "none";
+          return;
+        }
+
         const shouldHide =
           text.includes("선택") ||
           text.includes("세팅") ||
