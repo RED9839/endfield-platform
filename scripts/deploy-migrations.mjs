@@ -1,18 +1,14 @@
 import { spawnSync } from "node:child_process";
 
-const hasDatabaseUrl = Boolean(process.env.SUPABASE_DATABASE_URL);
-const hasDirectUrl = Boolean(process.env.SUPABASE_DIRECT_URL);
+const migrationUrl =
+  process.env.SUPABASE_MIGRATION_URL ??
+  process.env.SUPABASE_DATABASE_URL;
 const isVercel = Boolean(process.env.VERCEL);
 
-if (!hasDatabaseUrl || !hasDirectUrl) {
+if (!migrationUrl) {
   if (isVercel) {
-    const missing = [
-      !hasDatabaseUrl && "SUPABASE_DATABASE_URL",
-      !hasDirectUrl && "SUPABASE_DIRECT_URL",
-    ].filter(Boolean);
-
     throw new Error(
-      `Cannot deploy Prisma migrations. Missing environment variables: ${missing.join(", ")}`,
+      "Cannot deploy Prisma migrations. Configure SUPABASE_MIGRATION_URL or SUPABASE_DATABASE_URL.",
     );
   }
 
@@ -25,7 +21,11 @@ const result = spawnSync(
   npmCommand,
   ["exec", "--", "prisma", "migrate", "deploy"],
   {
-    env: process.env,
+    env: {
+      ...process.env,
+      SUPABASE_DATABASE_URL: migrationUrl,
+      SUPABASE_DIRECT_URL: migrationUrl,
+    },
     stdio: "inherit",
   },
 );
