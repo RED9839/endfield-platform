@@ -21,6 +21,9 @@ import type { OperatorDetail } from "@/data/operators-detail-data";
 import type { SourceWeaponDetail } from "@/data/weapons-detail-data";
 import InfoPanel from "./_components/InfoPanel";
 import GrowthSection from "./_components/GrowthSection";
+import GrowthTabs, {
+  type GrowthTabKey,
+} from "./_components/GrowthTabs";
 import MaterialTabs, {
   type MaterialTabKey,
 } from "./_components/MaterialTabs";
@@ -909,6 +912,7 @@ export default function SimulatorPage() {
     | { kind: "weapon"; title: string; selectedSlug: string }
     | null
   >(null);
+  const [growthTab, setGrowthTab] = useState<GrowthTabKey>("level");
   const [materialTab, setMaterialTab] = useState<MaterialTabKey>("all");
 
   const [operatorCurrentLevel, setOperatorCurrentLevel] = useState(1);
@@ -1919,6 +1923,23 @@ export default function SimulatorPage() {
       ).toLocaleString()}`
     : "무기를 선택해 주세요.";
 
+  const growthTabs = [
+    { key: "level" as const, label: "레벨", summary: levelSummary },
+    { key: "elite" as const, label: "정예화", summary: eliteSummary },
+    {
+      key: "weapon" as const,
+      label: "무기 돌파",
+      summary: weaponBreakthroughSummary,
+    },
+    { key: "combat" as const, label: "전투 스킬", summary: combatSummary },
+    { key: "talent" as const, label: "재능 스킬", summary: talentSummary },
+    {
+      key: "infrastructure" as const,
+      label: "인프라 스킬",
+      summary: infrastructureSummary,
+    },
+    { key: "trust" as const, label: "신뢰도", summary: trustSummary },
+  ];
 
   const materialTabs = [
     {
@@ -2261,19 +2282,15 @@ export default function SimulatorPage() {
             <div id="growth" className="grid scroll-mt-24 auto-rows-max content-start gap-3 self-start lg:gap-6">
               <InfoPanel
                 title="성장 설정"
-                summary={[
-                  levelSummary,
-                  eliteSummary,
-                  weaponBreakthroughSummary,
-                  combatSummary,
-                  talentSummary,
-                  infrastructureSummary,
-                  trustSummary,
-                ]
-                  .filter(Boolean)
-                  .join(" / ")}
+                summary={
+                  growthTabs.find((item) => item.key === growthTab)?.summary
+                }
               >
-                <div className="grid gap-4">
+                <GrowthTabs
+                  tabs={growthTabs}
+                  value={growthTab}
+                  onChange={setGrowthTab}
+                >
                   <GrowthSection title="레벨" summary={levelSummary}>
                     {selectedOperator || selectedWeapon ? (
                       <SimulatorLevelPanel
@@ -2512,7 +2529,7 @@ export default function SimulatorPage() {
                   </div>
                 )}
               </GrowthSection>
-                </div>
+                </GrowthTabs>
               </InfoPanel>
             </div>
 
