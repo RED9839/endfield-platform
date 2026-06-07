@@ -30,11 +30,11 @@ export default function PickerShell({
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/72 p-0 backdrop-blur-sm sm:items-center sm:p-4">
       <div
-        className="flex h-[92vh] w-full max-w-[1540px] flex-col overflow-hidden rounded-t-[24px] bg-[#05070b] shadow-[0_22px_90px_rgba(0,0,0,0.62)] sm:max-h-[90vh] sm:rounded-[28px]"
+        className="flex h-[100dvh] w-full max-w-[1540px] flex-col overflow-hidden bg-[#05070b] shadow-[0_22px_90px_rgba(0,0,0,0.62)] sm:h-[90vh] sm:max-h-[90vh] sm:rounded-[28px]"
         style={{ border: `1px solid ${YELLOW_BORDER}` }}
       >
         <div
-          className="flex shrink-0 items-center justify-between gap-3 p-4 sm:p-5"
+          className="safe-top flex shrink-0 items-center justify-between gap-3 p-3 sm:p-5"
           style={{ borderBottom: `1px solid ${YELLOW_BORDER_SOFT}` }}
         >
           <div className="min-w-0">
@@ -119,7 +119,7 @@ export default function PickerShell({
           </section>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-3 lg:hidden">
+        <div className="safe-bottom min-h-0 flex-1 overflow-y-auto overscroll-contain p-2.5 sm:p-3 lg:hidden">
           <section
             className="sticky top-0 z-30 mb-3 overflow-hidden rounded-[20px] bg-[#05070b] shadow-[0_0_24px_rgba(0,0,0,0.32)]"
             style={{ border: `1px solid ${YELLOW_BORDER}` }}

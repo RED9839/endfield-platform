@@ -55,7 +55,7 @@ export function HomeSideNav({ items }: { items: NavigationItem[] }) {
 
 export function HomeMobileTopBar() {
   return (
-    <header className="sticky top-0 z-40 border-b border-yellow-500/15 bg-black/95 px-4 py-3 backdrop-blur lg:hidden">
+    <header className="safe-top sticky top-0 z-40 border-b border-yellow-500/15 bg-black/95 px-3 py-2.5 backdrop-blur lg:hidden sm:px-4 sm:py-3">
       <div className="flex items-center justify-between gap-3">
         <Link href="/" className="min-w-0">
           <p className="text-[10px] font-black tracking-[0.28em] text-yellow-400/75">

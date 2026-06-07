@@ -28,10 +28,10 @@ export default async function AdminPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#050505] p-6 text-white">
+    <main className="min-h-screen bg-[#050505] p-3 pb-[calc(1.5rem+env(safe-area-inset-bottom))] text-white sm:p-6">
       <div className="mx-auto max-w-6xl">
         <div className="mb-8">
-          <h1 className="text-4xl font-black text-[#ffdc70]">
+          <h1 className="text-3xl font-black text-[#ffdc70] sm:text-4xl">
             관리자 패널
           </h1>
 

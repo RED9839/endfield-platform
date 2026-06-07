@@ -35,20 +35,20 @@ export default function SettingEditorModal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[120] bg-black/80 px-4 py-5 text-white backdrop-blur-sm">
+    <div className="fixed inset-0 z-[120] bg-black/80 text-white backdrop-blur-sm sm:px-4 sm:py-5">
       <div
-        className="mx-auto flex h-full max-w-[1760px] flex-col overflow-hidden rounded-[24px] bg-[#05070b]"
+        className="mx-auto flex h-full max-w-[1760px] flex-col overflow-hidden bg-[#05070b] sm:rounded-[24px]"
         style={{ border: `1px solid ${YELLOW_BORDER}` }}
       >
         <div
-          className="flex shrink-0 items-center justify-between gap-3 px-5 py-4"
+          className="safe-top flex shrink-0 items-center justify-between gap-3 px-3 py-3 sm:px-5 sm:py-4"
           style={{ borderBottom: `1px solid ${YELLOW_BORDER_SOFT}` }}
         >
           <div>
-            <p className="text-[11px] font-semibold tracking-[0.35em] text-[#ffdc70]">
+            <p className="text-[9px] font-semibold tracking-[0.22em] text-[#ffdc70] sm:text-[11px] sm:tracking-[0.35em]">
               {subtitle}
             </p>
-            <h2 className="mt-1 text-2xl font-black text-[#ffdc70]">
+            <h2 className="mt-1 text-lg font-black text-[#ffdc70] sm:text-2xl">
               {title}
             </h2>
           </div>
@@ -60,7 +60,7 @@ export default function SettingEditorModal({
                 onApply?.();
                 onClose();
               }}
-              className="rounded-xl bg-[#ffd24a] px-5 py-2 text-sm font-black text-black transition hover:brightness-110"
+              className="min-h-11 rounded-xl bg-[#ffd24a] px-3 py-2 text-xs font-black text-black transition hover:brightness-110 sm:px-5 sm:text-sm"
             >
               적용
             </button>
@@ -68,7 +68,7 @@ export default function SettingEditorModal({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-xl bg-black px-4 py-2 text-sm font-bold text-zinc-200 transition hover:bg-[#0b1018] hover:text-yellow-300"
+              className="min-h-11 rounded-xl bg-black px-3 py-2 text-xs font-bold text-zinc-200 transition hover:bg-[#0b1018] hover:text-yellow-300 sm:px-4 sm:text-sm"
               style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
             >
               닫기
@@ -76,7 +76,7 @@ export default function SettingEditorModal({
           </div>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5">
+        <div className="safe-bottom min-h-0 flex-1 overflow-y-auto px-3 py-3 sm:px-5 sm:py-5">
           <SettingEditor />
         </div>
       </div>

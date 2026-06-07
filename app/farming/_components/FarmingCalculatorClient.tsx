@@ -653,7 +653,7 @@ function FarmingCalculatorClientContent() {
                   <div className="min-w-0 flex-1">
                     <div className="truncate text-sm font-bold text-white">{ADVANCED_BOX_NAME}</div>
                   </div>
-                  <div className="w-[96px]">
+                  <div className="w-[88px] sm:w-[96px]">
                     <NumberInput value={settings.advancedBoxCount} onChange={(value) => updateSettings({ advancedBoxCount: value })} min={0} />
                   </div>
                 </div>
@@ -671,7 +671,7 @@ function FarmingCalculatorClientContent() {
                     <Image src={materialImage("통합 징표")} alt="통합 징표" fill sizes="44px" className="object-contain p-1" />
                   </div>
                   <div className="min-w-0 flex-1"><div className="text-sm font-bold text-white">보유 통합 징표</div></div>
-                  <div className="w-[96px]"><NumberInput value={settings.ownedToken} onChange={(value) => updateSettings({ ownedToken: value })} min={0} /></div>
+                  <div className="w-[88px] sm:w-[96px]"><NumberInput value={settings.ownedToken} onChange={(value) => updateSettings({ ownedToken: value })} min={0} /></div>
                 </div>
 
                 <div className="rounded-2xl border" style={{ border: `1px solid ${YELLOW_BORDER_SOFT}`, background: CARD_BG }}>
@@ -718,7 +718,7 @@ function FarmingCalculatorClientContent() {
                     <div className="text-sm font-bold text-white">파생 오리지늄 회복</div>
                     <div className="text-xs text-zinc-500">소모 {ORIGINIUM_COST_TABLE.slice(0, settings.dailyOriginiumRefreshCount).reduce((sum, value) => sum + value, 0)}개 / 일</div>
                   </div>
-                  <div className="w-[96px]"><NumberInput value={settings.dailyOriginiumRefreshCount} onChange={(value) => updateSettings({ dailyOriginiumRefreshCount: Math.min(value, ORIGINIUM_COST_TABLE.length) })} min={0} max={ORIGINIUM_COST_TABLE.length} /></div>
+                  <div className="w-[88px] sm:w-[96px]"><NumberInput value={settings.dailyOriginiumRefreshCount} onChange={(value) => updateSettings({ dailyOriginiumRefreshCount: Math.min(value, ORIGINIUM_COST_TABLE.length) })} min={0} max={ORIGINIUM_COST_TABLE.length} /></div>
                 </div>
 
                 {RECOVERY_ITEMS.map((item) => (
@@ -730,15 +730,15 @@ function FarmingCalculatorClientContent() {
                       <div className="text-sm font-bold text-white">{item.name}</div>
                       <div className="text-xs text-zinc-500">{item.sanity} 이성 회복</div>
                     </div>
-                    <div className="w-[96px]"><NumberInput value={settings.recovery[item.name] ?? 0} onChange={(value) => updateSettings({ recovery: { ...settings.recovery, [item.name]: value } })} min={0} /></div>
+                    <div className="w-[88px] sm:w-[96px]"><NumberInput value={settings.recovery[item.name] ?? 0} onChange={(value) => updateSettings({ recovery: { ...settings.recovery, [item.name]: value } })} min={0} /></div>
                   </div>
                 ))}
               </div>
   );
 
   return (
-    <main className="min-h-screen bg-[#03060b] text-white">
-      <div className="mx-auto w-full max-w-[1720px] px-3 pb-3 pt-[76px] sm:px-4 md:px-6 md:py-5 xl:px-8 xl:py-7">
+    <main className="min-h-screen overflow-x-clip bg-[#03060b] text-white">
+      <div className="mx-auto w-full max-w-[1720px] px-3 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-[76px] sm:px-4 md:px-6 md:py-5 xl:px-8 xl:py-7">
         <section
           className="relative overflow-hidden rounded-[22px] bg-[#05070b] p-4 shadow-[0_16px_48px_rgba(0,0,0,0.28)] sm:p-6"
           style={{ border: `1px solid ${YELLOW_BORDER}` }}
@@ -753,7 +753,7 @@ function FarmingCalculatorClientContent() {
                 재화 파밍 계산기
               </h1>
             </div>
-            <div className="flex shrink-0 flex-wrap gap-2 sm:gap-3 lg:justify-end">
+            <div className="grid shrink-0 grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-3 lg:justify-end">
               <button
                 type="button"
                 onClick={() => setModalMode("target")}
@@ -789,17 +789,17 @@ function FarmingCalculatorClientContent() {
           </div>
         </section>
 
-        <section className="mt-3 grid gap-3 sm:grid-cols-2 lg:mt-5 xl:grid-cols-4">
+        <section className="mt-3 grid grid-cols-2 gap-2 sm:gap-3 lg:mt-5 xl:grid-cols-4">
           {farmingDashboardStats.map((item) => (
             <div
               key={item.label}
-              className="rounded-2xl bg-[#05070b] p-4 shadow-[0_10px_30px_rgba(0,0,0,0.22)]"
+              className="min-w-0 rounded-2xl bg-[#05070b] p-3 shadow-[0_10px_30px_rgba(0,0,0,0.22)] sm:p-4"
               style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
             >
               <p className="text-[10px] font-black tracking-[0.24em] text-zinc-500">
                 {item.label}
               </p>
-              <p className="mt-2 truncate text-2xl font-black tracking-[-0.05em] text-white">
+              <p className="mt-2 truncate text-xl font-black tracking-[-0.05em] text-white sm:text-2xl">
                 {item.value}
               </p>
               <p className="mt-1 line-clamp-1 text-xs font-semibold text-zinc-500">

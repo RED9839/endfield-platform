@@ -443,13 +443,13 @@ export default function SettingsPageClient({
   }
 
   return (
-    <main className="min-h-screen bg-[#050505] px-3 py-3 text-white sm:px-4 md:px-6 md:py-5">
-      <div className="mx-auto max-w-[1840px]">
+    <main className="min-h-screen overflow-x-clip bg-[#050505] px-3 py-3 pb-[calc(1.5rem+env(safe-area-inset-bottom))] text-white sm:px-4 md:px-6 md:py-5">
+      <div className="mx-auto max-w-[1840px] overflow-x-clip">
         <header
           className="mb-3 rounded-[20px] bg-[#05070b] p-4 shadow-[0_0_30px_rgba(250,204,21,0.04)] sm:mb-5 sm:rounded-[24px] sm:p-5"
           style={{ border: `1px solid ${YELLOW_BORDER}` }}
         >
-          <div className="flex items-end justify-between gap-3">
+          <div className="flex items-start justify-between gap-3 max-[419px]:flex-col">
             <div className="min-w-0">
               <p
                 className="text-[10px] font-semibold tracking-[0.28em] sm:text-[11px] sm:tracking-[0.35em]"
@@ -470,11 +470,11 @@ export default function SettingsPageClient({
               </p>
             </div>
 
-            <div className="flex shrink-0 flex-wrap justify-end gap-2">
+            <div className="grid shrink-0 grid-cols-2 gap-2 max-[419px]:w-full sm:flex sm:flex-wrap sm:justify-end">
               {isLoggedIn ? (
                 <Link
                   href="/settings/party"
-                  className="rounded-xl px-3 py-2 text-xs font-black text-black transition hover:brightness-110 sm:px-5 sm:text-sm"
+                  className="flex min-h-11 items-center justify-center rounded-xl px-3 py-2 text-xs font-black text-black transition hover:brightness-110 sm:px-5 sm:text-sm"
                   style={{ background: YELLOW_MAIN }}
                 >
                   <span className="sm:hidden">등록</span>
@@ -483,7 +483,7 @@ export default function SettingsPageClient({
               ) : (
                 <Link
                   href="/login"
-                  className="rounded-xl border border-white/10 bg-black px-3 py-2 text-xs font-black text-zinc-300 transition hover:border-yellow-400/40 hover:text-yellow-300 sm:px-5 sm:text-sm"
+                  className="flex min-h-11 items-center justify-center rounded-xl border border-white/10 bg-black px-3 py-2 text-xs font-black text-zinc-300 transition hover:border-yellow-400/40 hover:text-yellow-300 sm:px-5 sm:text-sm"
                 >
                   <span className="sm:hidden">로그인</span>
                   <span className="hidden sm:inline">로그인 후 세팅 등록</span>
@@ -492,7 +492,7 @@ export default function SettingsPageClient({
 
               <Link
                 href="/"
-                className="rounded-xl bg-black px-3 py-2 text-xs font-bold text-zinc-200 transition hover:bg-[#0b1018] sm:px-4 sm:text-sm"
+                className="flex min-h-11 items-center justify-center rounded-xl bg-black px-3 py-2 text-xs font-bold text-zinc-200 transition hover:bg-[#0b1018] sm:px-4 sm:text-sm"
                 style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
               >
                 홈
@@ -503,7 +503,7 @@ export default function SettingsPageClient({
 
         <div className="grid gap-3 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-5">
           <aside
-            className="sticky top-3 z-30 rounded-[20px] bg-[#05070b] shadow-[0_0_30px_rgba(250,204,21,0.04)] lg:top-5 lg:flex lg:max-h-[calc(100vh-40px)] lg:flex-col lg:overflow-hidden lg:rounded-[24px]"
+            className="sticky top-2 z-30 rounded-[18px] bg-[#05070b] shadow-[0_0_30px_rgba(250,204,21,0.04)] lg:top-5 lg:flex lg:max-h-[calc(100vh-40px)] lg:flex-col lg:overflow-hidden lg:rounded-[24px]"
             style={{ border: `1px solid ${YELLOW_BORDER}` }}
           >
             <button
@@ -717,7 +717,7 @@ export default function SettingsPageClient({
               </div>
             ) : settings.length > 0 ? (
               <>
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-[repeat(auto-fill,minmax(190px,220px))] sm:justify-between sm:gap-3 lg:gap-y-5">
+                <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(190px,220px))] sm:justify-between lg:gap-y-5">
                   {settings.map((setting) => (
                     <SettingCard key={setting.id} setting={setting} />
                   ))}

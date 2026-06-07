@@ -21,7 +21,7 @@ export default function QuickAccessPanel({
     <div
       className={
         compact
-          ? "flex gap-3 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:grid md:grid-cols-3 xl:grid-cols-6"
+          ? "mobile-scroll-row -mx-1 px-1 pb-1 md:mx-0 md:grid md:grid-cols-3 md:px-0 xl:grid-cols-6"
           : "grid gap-3 md:grid-cols-2 xl:grid-cols-2"
       }
     >
@@ -32,7 +32,7 @@ export default function QuickAccessPanel({
           className={[
             "group rounded-[18px] border border-yellow-500/15 bg-[#060b14] transition hover:border-yellow-500/35 hover:bg-[#0a1120]",
             compact
-              ? "min-w-[150px] p-4 md:min-w-0"
+              ? "min-w-[138px] p-3.5 md:min-w-0 md:p-4"
               : "p-6",
           ].join(" ")}
         >

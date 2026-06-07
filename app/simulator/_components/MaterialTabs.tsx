@@ -32,13 +32,13 @@ export default function MaterialTabs({
 
   return (
     <>
-      <div className="mb-4 flex flex-wrap gap-2">
+      <div className="mobile-scroll-row -mx-1 mb-3 px-1 pb-1 sm:mb-4">
         {tabs.map((tab) => (
           <button
             key={tab.key}
             type="button"
             onClick={() => onChange(tab.key)}
-            className={`rounded-xl px-3 py-2 text-xs font-black transition ${
+            className={`min-h-11 shrink-0 rounded-xl px-3 py-2 text-xs font-black transition ${
               activeTab.key === tab.key
                 ? "bg-[#ffd24a] text-black"
                 : "bg-black text-zinc-300 hover:text-yellow-200"

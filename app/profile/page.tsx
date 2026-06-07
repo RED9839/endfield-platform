@@ -157,7 +157,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
   const profileInitial = displayName.slice(0, 1).toUpperCase();
 
   return (
-    <main className="min-h-screen bg-[#050505] px-4 py-8 text-white">
+    <main className="min-h-screen overflow-x-clip bg-[#050505] px-3 py-4 pb-[calc(1.5rem+env(safe-area-inset-bottom))] text-white sm:px-4 sm:py-8">
       <div className="mx-auto max-w-[1080px]">
         <header className="mb-5 flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -176,7 +176,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
 
           <Link
             href="/"
-            className="rounded-lg border border-white/10 bg-black px-5 py-2 text-sm font-bold text-zinc-200 hover:border-yellow-400/40 hover:text-yellow-300"
+            className="flex min-h-11 items-center rounded-lg border border-white/10 bg-black px-5 py-2 text-sm font-bold text-zinc-200 hover:border-yellow-400/40 hover:text-yellow-300"
           >
             홈으로
           </Link>
@@ -195,7 +195,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
         ) : null}
 
         <section className="overflow-hidden rounded-[24px] border border-yellow-500/15 bg-[#070a0f]">
-          <div className="border-b border-white/10 bg-black/30 px-6 py-5">
+          <div className="border-b border-white/10 bg-black/30 px-4 py-4 sm:px-6 sm:py-5">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div className="flex min-w-0 items-center gap-4">
                 <div className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl border border-yellow-500/20 bg-[#11151c] text-2xl font-black text-[#ffdc70] shadow-[0_0_30px_rgba(255,210,74,0.08)]">
@@ -213,7 +213,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
                 </div>
               </div>
 
-              <div className="rounded-2xl border border-yellow-500/15 bg-yellow-400/5 px-5 py-3 text-right">
+              <div className="w-full rounded-2xl border border-yellow-500/15 bg-yellow-400/5 px-5 py-3 text-left min-[420px]:w-auto min-[420px]:text-right">
                 <p className="text-xs font-bold text-zinc-500">
                   작성한 세팅
                 </p>
@@ -226,7 +226,7 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
           </div>
 
           <div className="grid gap-6 p-4 sm:p-6 lg:grid-cols-[0.9fr_1.1fr]">
-            <aside className="rounded-2xl border border-white/10 bg-black/35 p-5">
+            <aside className="rounded-2xl border border-white/10 bg-black/35 p-4 sm:p-5">
               <h3 className="text-base font-black text-[#ffdc70]">
                 회원 정보
               </h3>

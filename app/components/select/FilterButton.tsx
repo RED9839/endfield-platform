@@ -23,7 +23,7 @@ export default function FilterButton({
     <button
       type="button"
       onClick={onClick}
-      className="flex h-9 max-w-full shrink-0 items-center justify-start gap-2 rounded-xl px-3 text-left text-xs font-bold transition hover:bg-[#101923] lg:w-full"
+      className="flex min-h-11 max-w-full shrink-0 items-center justify-start gap-2 rounded-xl px-3 text-left text-xs font-bold transition hover:bg-[#101923] lg:h-9 lg:min-h-0 lg:w-full"
       style={{
         background: active ? "rgba(255,212,74,0.10)" : FILTER_BG,
         border: `1px solid ${active ? color : "rgba(255,255,255,0.10)"}`,
