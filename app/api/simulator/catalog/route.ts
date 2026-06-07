@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 
-import { gearDetails } from "@/data/gear-detail-data";
 import { operatorDetails } from "@/data/operators-detail-data";
 import { weaponDetails } from "@/data/weapons-detail-data";
 
@@ -31,6 +30,5 @@ export function GET() {
       fullImage: weapon.fullImage,
       series: weapon.series,
     })),
-    gears: gearDetails,
   });
 }

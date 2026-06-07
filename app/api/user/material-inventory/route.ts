@@ -53,25 +53,39 @@ export async function PUT(request: Request) {
     );
   }
 
-  await prisma.userMaterialInventory.deleteMany({
-    where: {
-      userId: session.user.id,
-    },
-  });
-
   const entries = Object.entries(materials)
     .map(([material, quantity]) => ({
       userId: session.user.id,
-      material,
+      material: material.trim(),
       quantity: Number(quantity) || 0,
     }))
-    .filter((item) => item.quantity > 0);
+    .filter((item) => item.material && item.quantity > 0);
+  const retainedMaterials = entries.map((item) => item.material);
 
-  if (entries.length > 0) {
-    await prisma.userMaterialInventory.createMany({
-      data: entries,
-    });
-  }
+  await prisma.$transaction([
+    prisma.userMaterialInventory.deleteMany({
+      where: {
+        userId: session.user.id,
+        ...(retainedMaterials.length
+          ? { material: { notIn: retainedMaterials } }
+          : {}),
+      },
+    }),
+    ...entries.map((item) =>
+      prisma.userMaterialInventory.upsert({
+        where: {
+          userId_material: {
+            userId: item.userId,
+            material: item.material,
+          },
+        },
+        create: item,
+        update: {
+          quantity: item.quantity,
+        },
+      }),
+    ),
+  ]);
 
   return NextResponse.json({ ok: true });
 }
