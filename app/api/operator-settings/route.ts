@@ -16,7 +16,6 @@ type OperatorSettingListItem = {
   description: string | null;
   slots: any;
   createdAt: Date;
-  updatedAt: Date;
   likeCount: number;
   viewCount: number;
   nickname: string | null;
@@ -167,20 +166,30 @@ function getWeaponSlugFilters(slugs: string[]) {
 
 function toListResponseItem(setting: OperatorSettingListItem) {
   const nickname = setting.nickname ?? setting.user?.nickname ?? null;
+  const slots = setting.slots ?? {};
 
   return {
     id: setting.id,
     type: normalizeSettingType(setting.type),
     title: setting.title,
     description: setting.description,
-    slots: setting.slots,
     createdAt: setting.createdAt,
-    updatedAt: setting.updatedAt,
     likeCount: setting.likeCount,
     viewCount: setting.viewCount,
     nickname,
     userNickname: nickname,
     isDefaultSetting: isDefaultSetting(setting),
+    slotsSummary: {
+      mainOperatorSlug: String(slots?.main?.operatorSlug ?? ""),
+      memberOperatorSlugs: [
+        slots?.member1?.operatorSlug,
+        slots?.member2?.operatorSlug,
+        slots?.member3?.operatorSlug,
+      ]
+        .map((slug) => String(slug ?? "").trim())
+        .filter(Boolean),
+      mainWeaponSlug: String(slots?.main?.form?.weaponSlug ?? ""),
+    },
   };
 }
 
@@ -191,7 +200,6 @@ const listSelect = {
   description: true,
   slots: true,
   createdAt: true,
-  updatedAt: true,
   likeCount: true,
   viewCount: true,
   nickname: true,

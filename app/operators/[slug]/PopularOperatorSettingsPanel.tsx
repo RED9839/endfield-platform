@@ -52,6 +52,11 @@ type PopularSetting = {
   nickname?: string | null;
   userNickname?: string | null;
   isDefaultSetting?: boolean;
+  slotsSummary?: {
+    mainOperatorSlug?: string;
+    memberOperatorSlugs?: string[];
+    mainWeaponSlug?: string;
+  };
 };
 
 type SettingCardItem = {
@@ -101,19 +106,31 @@ function toSettingCardItem(
   weaponBySlug: Map<string, PopularWeaponItem>,
 ): SettingCardItem {
   const mainSlot = setting.slots?.main;
-  const mainOperatorSlug = String(mainSlot?.operatorSlug ?? fallbackOperatorSlug ?? "").trim();
+  const mainOperatorSlug = String(
+    setting.slotsSummary?.mainOperatorSlug ??
+      mainSlot?.operatorSlug ??
+      fallbackOperatorSlug ??
+      "",
+  ).trim();
+  const mainWeaponSlug = String(
+    setting.slotsSummary?.mainWeaponSlug ?? mainSlot?.form?.weaponSlug ?? "",
+  ).trim();
   const mainOperator = operatorBySlug.get(mainOperatorSlug) as any;
-  const weapon = weaponBySlug.get(mainSlot?.form?.weaponSlug) as any;
+  const weapon = weaponBySlug.get(mainWeaponSlug) as any;
 
-  const memberSlots = [
-    setting.slots?.member1,
-    setting.slots?.member2,
-    setting.slots?.member3,
-  ].filter(Boolean);
+  const memberOperatorSlugs =
+    setting.slotsSummary?.memberOperatorSlugs ??
+    [
+      setting.slots?.member1?.operatorSlug,
+      setting.slots?.member2?.operatorSlug,
+      setting.slots?.member3?.operatorSlug,
+    ];
 
-  const partyMembers = memberSlots
-    .map((slot: any) => {
-      const operator = operatorBySlug.get(slot?.operatorSlug) as any;
+  const partyMembers = memberOperatorSlugs
+    .map((operatorSlug) => String(operatorSlug ?? "").trim())
+    .filter(Boolean)
+    .map((operatorSlug) => {
+      const operator = operatorBySlug.get(operatorSlug) as any;
       if (!operator) return null;
 
       return {
