@@ -11,6 +11,7 @@ import { resolveCycleStates } from "@/lib/combat/cycle-state";
 import {
   useEffect,
   useMemo,
+  useRef,
   useState,
   type Dispatch,
   type ReactNode,
@@ -25,6 +26,8 @@ const YELLOW_BORDER_SOFT = "rgba(255,196,74,0.10)";
 const OPERATOR_SETTING_DRAFT_KEY = "endfield-operator-setting-draft-v2";
 const SOLO_EDITOR_STORAGE_KEY = "endfield-operator-setting-form-v1";
 const EDITING_SETTING_ID_KEY = "endfield-operator-setting-editing-id-v1";
+const MAX_DESCRIPTION_LENGTH = 1000;
+const MAX_DESCRIPTION_HEIGHT = 240;
 
 const SettingEditor = dynamic(
   () => import("@/app/components/settings/SettingEditor"),
@@ -237,6 +240,18 @@ export default function OperatorSettingRegisterPage() {
   const [mobileModal, setMobileModal] = useState<"cycle" | "preview" | null>(null);
   const [operatorSummaries, setOperatorSummaries] = useState<OperatorSummary[]>([]);
   const [weaponSummaries, setWeaponSummaries] = useState<WeaponSummary[]>([]);
+  const descriptionInputRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    const textarea = descriptionInputRef.current;
+    if (!textarea) return;
+
+    textarea.style.height = "auto";
+    const nextHeight = Math.min(textarea.scrollHeight, MAX_DESCRIPTION_HEIGHT);
+    textarea.style.height = `${nextHeight}px`;
+    textarea.style.overflowY =
+      textarea.scrollHeight > MAX_DESCRIPTION_HEIGHT ? "auto" : "hidden";
+  }, [draft.description]);
 
   useEffect(() => {
     let mounted = true;
@@ -686,11 +701,18 @@ export default function OperatorSettingRegisterPage() {
               />
             </label>
 
-            <label className="grid gap-2">
-              <span className="text-[11px] font-black tracking-[0.2em] text-[#ffdc70] sm:text-xs">
-                설명
+            <label className="grid content-start gap-2">
+              <span className="flex items-center justify-between gap-3">
+                <span className="text-[11px] font-black tracking-[0.2em] text-[#ffdc70] sm:text-xs">
+                  설명
+                </span>
+                <span className="text-[10px] font-bold text-zinc-500 sm:text-[11px]">
+                  {draft.description.length.toLocaleString()} /{" "}
+                  {MAX_DESCRIPTION_LENGTH.toLocaleString()}
+                </span>
               </span>
-              <input
+              <textarea
+                ref={descriptionInputRef}
                 value={draft.description}
                 onChange={(event) =>
                   setDraft((prev) => ({
@@ -698,8 +720,10 @@ export default function OperatorSettingRegisterPage() {
                     description: event.target.value,
                   }))
                 }
+                maxLength={MAX_DESCRIPTION_LENGTH}
+                rows={3}
                 placeholder="세팅 운용 방식, 추천 상황, 핵심 옵션 등을 입력"
-                className="h-10 rounded-xl border border-white/10 bg-black px-4 text-xs font-bold text-white outline-none placeholder:text-zinc-600 focus:border-yellow-400/40 sm:h-11 sm:text-sm"
+                className="min-h-[76px] w-full resize-none rounded-xl border border-white/10 bg-black px-4 py-3 text-xs font-bold leading-5 text-white outline-none placeholder:text-zinc-600 focus:border-yellow-400/40 sm:min-h-[84px] sm:text-sm sm:leading-6"
               />
             </label>
           </div>
