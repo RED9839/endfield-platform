@@ -869,12 +869,12 @@ function SettingCard({ setting }: { setting: SettingItem }) {
         </div>
       </div>
 
-      <div className="flex min-h-[124px] flex-col border-t border-yellow-500/10 bg-black px-2.5 pb-2 pt-2 sm:min-h-[138px] sm:px-3">
+      <div className="flex min-h-[164px] flex-col border-t border-yellow-500/10 bg-black px-2.5 pb-2 pt-2 sm:min-h-[178px] sm:px-3">
         <h2 className="line-clamp-2 text-[12px] font-black leading-[17px] text-yellow-300 sm:text-[13px] sm:leading-[18px]">
           {setting.title}
         </h2>
 
-        <p className="mt-1 line-clamp-2 text-[10px] leading-[16px] text-zinc-300 sm:text-[11px] sm:leading-[17px]">
+        <p className="mt-1 line-clamp-5 break-words text-[10px] leading-[16px] text-zinc-300 sm:text-[11px] sm:leading-[17px]">
           {setting.description}
         </p>
 

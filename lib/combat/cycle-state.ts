@@ -220,7 +220,11 @@ function resolvePhysicalState(
     if (!isPhysicalStatusIconKey(effect.status)) continue;
 
     if (effect.forced) {
-      nextState = applyPhysicalAbnormality(nextState, effect.status);
+      nextState = applyPhysicalAbnormality(
+        nextState,
+        effect.status,
+        effect.addsDefenseBreak !== false,
+      );
       continue;
     }
 
@@ -242,6 +246,7 @@ function resolvePhysicalState(
 function applyPhysicalAbnormality(
   state: CyclePhysicalState,
   status: PhysicalStatusIconKey,
+  addsDefenseBreak = true,
 ) {
   if (status === "smash" || status === "armorBreak") {
     return {
@@ -252,7 +257,9 @@ function applyPhysicalAbnormality(
 
   return {
     ...state,
-    defenseBreakStacks: Math.min(4, state.defenseBreakStacks + 1),
+    defenseBreakStacks: addsDefenseBreak
+      ? Math.min(4, state.defenseBreakStacks + 1)
+      : state.defenseBreakStacks,
     status,
   };
 }

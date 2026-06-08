@@ -55,3 +55,16 @@ test("rate limiting blocks requests until the window resets", () => {
   assert.equal(consumeRateLimit({ ...base, now: 1200 }).allowed, false);
   assert.equal(consumeRateLimit({ ...base, now: 2001 }).allowed, true);
 });
+
+test("rate limiting prunes expired entries without blocking new windows", () => {
+  const base = {
+    scope: "test-prune",
+    identifier: "unique-prune-user",
+    limit: 1,
+    windowMs: 1000,
+  };
+
+  assert.equal(consumeRateLimit({ ...base, now: 10_000 }).allowed, true);
+  assert.equal(consumeRateLimit({ ...base, now: 10_100 }).allowed, false);
+  assert.equal(consumeRateLimit({ ...base, now: 71_001 }).allowed, true);
+});

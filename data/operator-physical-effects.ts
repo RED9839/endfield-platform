@@ -30,6 +30,7 @@ export type PhysicalEffect =
       operation: "applyPhysicalStatus";
       status: Exclude<PhysicalStatus, "defenseBreak">;
       forced?: boolean;
+      addsDefenseBreak?: boolean;
       condition?: string;
       notes?: string;
     }
@@ -212,7 +213,12 @@ export const operatorPhysicalEffects: OperatorPhysicalEffectData = {
     comboSkill: [{ operation: "requireDefenseBreak", minimumStacks: 3 }],
     ultimate: [
       { operation: "applyPhysicalStatus", status: "launch", forced: true },
-      { operation: "applyPhysicalStatus", status: "knockdown", forced: true },
+      {
+        operation: "applyPhysicalStatus",
+        status: "knockdown",
+        forced: true,
+        addsDefenseBreak: false,
+      },
     ],
   },
 };

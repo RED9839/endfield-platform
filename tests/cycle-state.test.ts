@@ -85,3 +85,13 @@ test("Lifeng ultimate applies knockdown twice and reaches two stacks", () => {
   assert.equal(result.physicalState?.defenseBreakStacks, 2);
   assert.equal(result.physicalState?.status, "knockdown");
 });
+
+test("Mifu ultimate adds one stack from launch but none from knockdown", () => {
+  const [, result] = resolveCycleStates([
+    { physicalEffects: [{ operation: "applyDefenseBreak", stacks: 1 }] },
+    { operatorSlug: "mifu", skillKey: "ultimate" },
+  ]);
+
+  assert.equal(result.physicalState?.defenseBreakStacks, 2);
+  assert.equal(result.physicalState?.status, "knockdown");
+});

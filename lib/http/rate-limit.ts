@@ -7,14 +7,28 @@ type RateLimitStore = Map<string, RateLimitEntry>;
 
 const globalForRateLimit = globalThis as typeof globalThis & {
   operatorSettingsRateLimits?: RateLimitStore;
+  operatorSettingsRateLimitLastPrune?: number;
 };
 
 const store =
   globalForRateLimit.operatorSettingsRateLimits ??
   new Map<string, RateLimitEntry>();
 
-if (process.env.NODE_ENV !== "production") {
-  globalForRateLimit.operatorSettingsRateLimits = store;
+globalForRateLimit.operatorSettingsRateLimits = store;
+
+const PRUNE_INTERVAL_MS = 60_000;
+
+function pruneExpiredEntries(now: number) {
+  const lastPrune = globalForRateLimit.operatorSettingsRateLimitLastPrune ?? 0;
+  if (now - lastPrune < PRUNE_INTERVAL_MS) return;
+
+  globalForRateLimit.operatorSettingsRateLimitLastPrune = now;
+
+  for (const [key, entry] of store) {
+    if (entry.resetAt <= now) {
+      store.delete(key);
+    }
+  }
 }
 
 export function getRequestIdentifier(request: Request) {
@@ -41,6 +55,8 @@ export function consumeRateLimit({
   windowMs: number;
   now?: number;
 }) {
+  pruneExpiredEntries(now);
+
   const key = `${scope}:${identifier}`;
   const current = store.get(key);
 

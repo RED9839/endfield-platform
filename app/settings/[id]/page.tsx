@@ -249,7 +249,7 @@ export default async function OperatorSettingDetailPage({
                 </h1>
               </div>
 
-              <p className="mt-2 line-clamp-2 max-w-5xl text-xs font-semibold leading-5 text-zinc-200 sm:text-sm sm:leading-6 lg:pl-[62px]">
+              <p className="mt-2 whitespace-pre-wrap break-words text-xs font-semibold leading-5 text-zinc-200 sm:text-sm sm:leading-6 lg:pl-[62px]">
                 {setting.description || "등록된 설명이 없습니다."}
               </p>
 

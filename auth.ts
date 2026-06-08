@@ -9,6 +9,8 @@ type SessionUserWithDbState = {
   role?: string;
 };
 
+const DB_USER_SYNC_INTERVAL_MS = 5 * 60 * 1000;
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
     Google({
@@ -27,21 +29,31 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.id = user.id;
       }
 
-      // 이미 DB 조회가 끝난 토큰이면 재조회하지 않음
+      const now = Date.now();
+      const lastDbUserSyncAt =
+        typeof token.dbUserSyncAt === "number" ? token.dbUserSyncAt : 0;
+
       if (
         token.hasDbUser === true &&
-        typeof token.id === "string"
+        typeof token.id === "string" &&
+        now - lastDbUserSyncAt < DB_USER_SYNC_INTERVAL_MS
       ) {
         return token;
       }
 
-      if (token.email) {
+      const tokenId = typeof token.id === "string" ? token.id : "";
+      const tokenEmail =
+        typeof token.email === "string" ? token.email.trim().toLowerCase() : "";
+
+      if (tokenId || tokenEmail) {
         const dbUser = await prisma.user.findFirst({
           where: {
-            email: {
-              equals: token.email,
-              mode: "insensitive",
-            },
+            OR: [
+              ...(tokenId ? [{ id: tokenId }] : []),
+              ...(tokenEmail
+                ? [{ email: { equals: tokenEmail, mode: "insensitive" as const } }]
+                : []),
+            ],
           },
           select: {
             id: true,
@@ -58,6 +70,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         } else {
           token.hasDbUser = false;
         }
+
+        token.dbUserSyncAt = now;
       }
 
       return token;
