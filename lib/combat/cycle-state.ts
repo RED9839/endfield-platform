@@ -59,16 +59,16 @@ export function resolveCycleStates<
 
     const skillKey = toOperatorSkillKey(step.skillKey);
     const artsEffects =
-      Array.isArray(step.artsEffects) && step.artsEffects.length > 0
-        ? step.artsEffects
-        : step.operatorSlug && skillKey
-          ? getOperatorSkillArtsEffects(step.operatorSlug, skillKey)
+      step.operatorSlug && skillKey
+        ? getOperatorSkillArtsEffects(step.operatorSlug, skillKey)
+        : Array.isArray(step.artsEffects)
+          ? step.artsEffects
           : [];
     const physicalEffects =
-      Array.isArray(step.physicalEffects) && step.physicalEffects.length > 0
-        ? step.physicalEffects
-        : step.operatorSlug && skillKey
-          ? getOperatorSkillPhysicalEffects(step.operatorSlug, skillKey)
+      step.operatorSlug && skillKey
+        ? getOperatorSkillPhysicalEffects(step.operatorSlug, skillKey)
+        : Array.isArray(step.physicalEffects)
+          ? step.physicalEffects
           : [];
     const resolvedArts = resolveArtsState(artsState, reactionState, artsEffects);
     artsState = resolvedArts.artsState;

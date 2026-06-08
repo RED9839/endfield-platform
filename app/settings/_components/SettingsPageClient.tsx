@@ -869,7 +869,7 @@ function SettingCard({ setting }: { setting: SettingItem }) {
         </div>
       </div>
 
-      <div className="flex min-h-[164px] flex-col border-t border-yellow-500/10 bg-black px-2.5 pb-2 pt-2 sm:min-h-[178px] sm:px-3">
+      <div className="flex min-h-[146px] flex-col border-t border-yellow-500/10 bg-black px-2.5 pb-2 pt-2 sm:min-h-[158px] sm:px-3">
         <h2 className="line-clamp-2 text-[12px] font-black leading-[17px] text-yellow-300 sm:text-[13px] sm:leading-[18px]">
           {setting.title}
         </h2>
@@ -878,7 +878,7 @@ function SettingCard({ setting }: { setting: SettingItem }) {
           {setting.description}
         </p>
 
-        <div className="mt-auto flex flex-wrap items-center gap-1 pt-2 text-[9px] font-black sm:text-[10px]">
+        <div className="mt-2 flex flex-wrap items-center gap-1 text-[9px] font-black sm:text-[10px]">
           <span className="max-w-full truncate text-white">
             {setting.nickname}
           </span>

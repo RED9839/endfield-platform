@@ -27,6 +27,18 @@ test("a different Arts attachment consumes attachments and triggers its abnormal
   assert.deepEqual(result[1].reactionState, { reaction: "electrified" });
 });
 
+test("current operator Arts data overrides a stale saved cycle snapshot", () => {
+  const [result] = resolveCycleStates([
+    {
+      operatorSlug: "rossi",
+      skillKey: "ultimate",
+      artsEffects: [{ operation: "apply", elements: ["cryo"], stacks: 2 }],
+    },
+  ]);
+
+  assert.deepEqual(result.artsState, { element: "heat", stacks: 1 });
+});
+
 test("launch and knockdown add defense-break stacks on repeated applications", () => {
   const result = resolveCycleStates([
     {
