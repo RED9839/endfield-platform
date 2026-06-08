@@ -878,7 +878,7 @@ function SettingCard({ setting }: { setting: SettingItem }) {
           {setting.description}
         </p>
 
-        <div className="mt-2 flex flex-wrap items-center gap-1 text-[9px] font-black sm:text-[10px]">
+        <div className="mt-auto flex flex-wrap items-center gap-1 pt-2 text-[9px] font-black sm:text-[10px]">
           <span className="max-w-full truncate text-white">
             {setting.nickname}
           </span>
