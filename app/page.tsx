@@ -3,7 +3,6 @@ import Link from "next/link";
 import { Suspense, type ComponentType } from "react";
 import {
   ArrowRight,
-  Boxes,
   Calculator,
   Database,
   Gem,
@@ -18,8 +17,8 @@ import BannerSection, {
   type HomeApiResponse,
 } from "@/app/components/home/BannerSection";
 import {
+  HomeHeaderAccountPanel,
   MobileAccountFallback,
-  MobileAccountPanel,
 } from "@/app/components/home/HomeAccountPanels";
 import { HomeMobileTopBar } from "@/app/components/home/HomeNavigation";
 import HomeSearchPanel, {
@@ -183,7 +182,10 @@ export default function HomePage() {
   const featuredWeapon =
     weaponSummaries.find((weapon) => weapon.name === "적영") ??
     weaponSummaries[0];
-  const featuredGear = gearSummaries[0];
+  const featuredGear =
+    gearSummaries.find((gear) => gear.setName === "고검의 잔향") ??
+    gearSummaries[0];
+  const featuredGearSet = "고검의 잔향";
 
   return (
     <main className="min-h-screen overflow-hidden bg-[#030405] text-white">
@@ -219,7 +221,7 @@ export default function HomePage() {
           </nav>
 
           <Suspense fallback={<MobileAccountFallback />}>
-            <MobileAccountPanel />
+            <HomeHeaderAccountPanel />
           </Suspense>
         </div>
       </header>
@@ -242,6 +244,14 @@ export default function HomePage() {
             />
             <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.96)_0%,rgba(0,0,0,0.82)_38%,rgba(0,0,0,0.26)_72%,rgba(0,0,0,0.12)_100%)]" />
             <div className="absolute inset-0 bg-[linear-gradient(0deg,rgba(0,0,0,0.82),transparent_48%)]" />
+            <div className="absolute bottom-6 left-6 z-10 sm:bottom-8 sm:left-8">
+              <p className="text-2xl font-black text-white drop-shadow-lg sm:text-3xl">
+                {featured.name}
+              </p>
+              <p className="mt-1 text-xs font-black uppercase tracking-[0.22em] text-zinc-300 sm:text-sm">
+                {featured.enName}
+              </p>
+            </div>
           </div>
 
           <div className="min-h-[300px] overflow-hidden rounded-[28px] sm:min-h-[380px] xl:min-h-[480px]">
@@ -311,10 +321,10 @@ export default function HomePage() {
             />
             <DataCard
               eyebrow="GEAR DATABASE"
-              title={featuredGear?.name ?? "장비 데이터"}
-              description="장비 세트, 주 능력치와 추천 옵션 조합을 빠르게 확인하세요."
+              title={featuredGearSet}
+              description="고검의 잔향 세트 장비와 옵션 조합을 한 번에 확인하세요."
               image={featuredGear?.image ?? "/icons/placeholder.webp"}
-              href={featuredGear ? `/gear/${featuredGear.slug}` : "/gear"}
+              href={`/gear?set=${encodeURIComponent(featuredGearSet)}`}
             />
           </div>
         </section>
@@ -324,27 +334,21 @@ export default function HomePage() {
             <div className="absolute right-0 top-0 h-56 w-56 rounded-full bg-yellow-300/6 blur-3xl" />
             <div className="relative">
               <span className="flex h-11 w-11 items-center justify-center rounded-2xl border border-yellow-300/15 bg-yellow-300/8 text-yellow-200">
-                <Boxes className="h-5 w-5" />
+                <Settings2 className="h-5 w-5" />
               </span>
               <h2 className="mt-5 text-2xl font-black">
-                내 성장 계획을 한눈에
+                나만의 세팅을 등록하세요
               </h2>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-400">
-                목표 레벨과 돌파 단계를 설정하고 필요한 재화, 현재 보유량,
-                부족한 파밍 수량을 이어서 계산할 수 있습니다.
+                오퍼레이터, 무기, 장비와 스킬 사이클을 구성해 나만의 세팅을
+                저장하고 다른 사용자와 공유할 수 있습니다.
               </p>
               <div className="mt-6 flex flex-wrap gap-2">
                 <Link
-                  href="/simulator"
+                  href="/settings/party"
                   className="rounded-xl bg-[#ffd24a] px-5 py-3 text-sm font-black text-black"
                 >
-                  성장 시뮬레이터
-                </Link>
-                <Link
-                  href="/farming"
-                  className="rounded-xl border border-white/12 bg-white/5 px-5 py-3 text-sm font-black text-white"
-                >
-                  파밍 계산기
+                  세팅 등록하기
                 </Link>
               </div>
             </div>

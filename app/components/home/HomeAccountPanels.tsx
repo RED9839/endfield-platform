@@ -18,6 +18,32 @@ export function MobileAccountFallback() {
   return <div className="h-9 w-20 animate-pulse rounded-xl bg-white/5" />;
 }
 
+export async function HomeHeaderAccountPanel() {
+  const user = await getCurrentUser();
+
+  if (user && !user.nickname?.trim()) redirect("/setup-profile");
+
+  return (
+    <div className="ml-auto flex shrink-0 items-center gap-2">
+      {user?.role === "ADMIN" ? (
+        <Link
+          href="/admin"
+          className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs font-black text-red-300 transition hover:bg-red-500/20"
+        >
+          관리자 페이지
+        </Link>
+      ) : null}
+
+      <Link
+        href={user ? "/profile" : "/login"}
+        className="rounded-lg bg-[#ffd24a] px-4 py-2 text-xs font-black text-black shadow-[0_0_18px_rgba(255,210,74,0.18)] transition hover:brightness-110"
+      >
+        {user ? "마이페이지" : "로그인"}
+      </Link>
+    </div>
+  );
+}
+
 export async function DesktopAccountPanel() {
   const user = await getCurrentUser();
 
@@ -82,19 +108,23 @@ export async function MobileAccountPanel() {
 
   if (user && !user.nickname?.trim()) redirect("/setup-profile");
 
-  return user ? (
-    <Link
-      href="/profile"
-      className="block max-w-[44vw] truncate rounded-xl border border-yellow-500/25 bg-yellow-500/10 px-3 py-2 text-xs font-black text-yellow-200"
-    >
-      마이페이지
-    </Link>
-  ) : (
-    <Link
-      href="/login"
-      className="block rounded-xl bg-[#ffd24a] px-4 py-2 text-xs font-black text-black shadow-[0_0_18px_rgba(255,210,74,0.18)]"
-    >
-      로그인
-    </Link>
+  return (
+    <div className="flex items-center gap-1.5">
+      {user?.role === "ADMIN" ? (
+        <Link
+          href="/admin"
+          className="rounded-lg border border-red-500/30 bg-red-500/10 px-2.5 py-2 text-[10px] font-black text-red-300"
+        >
+          관리자
+        </Link>
+      ) : null}
+
+      <Link
+        href={user ? "/profile" : "/login"}
+        className="block max-w-[32vw] truncate rounded-xl bg-[#ffd24a] px-3 py-2 text-xs font-black text-black shadow-[0_0_18px_rgba(255,210,74,0.18)]"
+      >
+        {user ? "마이페이지" : "로그인"}
+      </Link>
+    </div>
   );
 }

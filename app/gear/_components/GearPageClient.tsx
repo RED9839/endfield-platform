@@ -365,12 +365,15 @@ GearCard.displayName = "GearCard";
 
 export default function GearPageClient({
   gears,
+  initialSetName = "all",
 }: {
   gears: GearListItem[];
+  initialSetName?: GearSetName | "all";
 }) {
   const [keyword, setKeyword] = useState("");
   const [category, setCategory] = useState<GearCategory | "all">("all");
-  const [setName, setSetName] = useState<GearSetName | "all">("all");
+  const [setName, setSetName] =
+    useState<GearSetName | "all">(initialSetName);
   const [attributeFilter, setAttributeFilter] =
     useState<GearAttributeKey | "all">("all");
   const [abilityFilters, setAbilityFilters] = useState<GearAbilityKey[]>([]);
