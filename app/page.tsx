@@ -10,7 +10,6 @@ import {
   Pickaxe,
   Settings2,
   Shield,
-  Sparkles,
   Swords,
   Users,
 } from "lucide-react";
@@ -181,7 +180,9 @@ function DataCard({
 export default function HomePage() {
   const featured = defaultHomeFeaturedOperator;
   const searchItems = getSearchItems();
-  const featuredWeapon = weaponSummaries[0];
+  const featuredWeapon =
+    weaponSummaries.find((weapon) => weapon.name === "적영") ??
+    weaponSummaries[0];
   const featuredGear = gearSummaries[0];
 
   return (
@@ -191,7 +192,7 @@ export default function HomePage() {
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_50%_-10%,rgba(250,204,21,0.08),transparent_35%)]" />
 
       <header className="relative z-30 hidden border-b border-white/8 bg-black/80 backdrop-blur-xl lg:block">
-        <div className="mx-auto flex h-16 max-w-[1500px] items-center gap-8 px-6">
+        <div className="mx-auto flex h-16 max-w-[1840px] items-center gap-8 px-6">
           <Link href="/" className="mr-auto">
             <p className="text-[9px] font-black tracking-[0.35em] text-yellow-300/60">
               ENDFIELD
@@ -219,9 +220,9 @@ export default function HomePage() {
         </div>
       </header>
 
-      <div className="relative mx-auto max-w-[1500px] px-3 pb-24 pt-3 sm:px-5 sm:pt-5 lg:px-6 lg:pb-12 lg:pt-6">
-        <section className="grid gap-4 xl:grid-cols-[minmax(0,1.55fr)_minmax(360px,0.72fr)]">
-          <div className="relative min-h-[500px] overflow-hidden rounded-[28px] border border-yellow-300/15 bg-black sm:min-h-[560px] xl:min-h-[520px]">
+      <div className="relative mx-auto max-w-[1840px] px-3 pb-24 pt-3 sm:px-4 sm:pt-5 md:px-6 lg:pb-12 lg:pt-6">
+        <section className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(520px,1fr)]">
+          <div className="relative min-h-[420px] overflow-hidden rounded-[28px] border border-yellow-300/15 bg-black sm:min-h-[460px] xl:min-h-[480px]">
             <Image
               src={featured.heroImage}
               alt={featured.name}
@@ -234,28 +235,12 @@ export default function HomePage() {
             <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.96)_0%,rgba(0,0,0,0.82)_38%,rgba(0,0,0,0.26)_72%,rgba(0,0,0,0.12)_100%)]" />
             <div className="absolute inset-0 bg-[linear-gradient(0deg,rgba(0,0,0,0.82),transparent_48%)]" />
 
-            <div className="relative z-10 flex min-h-[500px] max-w-[720px] flex-col justify-center p-5 sm:min-h-[560px] sm:p-10 xl:min-h-[520px] xl:p-12">
-              <div className="inline-flex w-fit items-center gap-2 rounded-full border border-yellow-300/20 bg-black/45 px-3 py-1.5 text-[10px] font-black tracking-[0.22em] text-yellow-200 backdrop-blur">
-                <Sparkles className="h-3.5 w-3.5" />
-                ENDFIELD DATA PLATFORM
-              </div>
-
-              <h1 className="mt-6 text-3xl font-black leading-[1.12] tracking-tight sm:text-5xl lg:text-[56px]">
-                필요한 데이터를
-                <br />
-                <span className="text-[#ffda61]">가장 빠르게.</span>
-              </h1>
-
-              <p className="mt-4 max-w-xl text-sm leading-6 text-zinc-300 sm:text-base sm:leading-7">
-                오퍼레이터부터 무기, 장비, 성장 재화와 유저 세팅까지
-                한곳에서 검색하고 비교하세요.
-              </p>
-
-              <div className="mt-7">
+            <div className="relative z-10 flex min-h-[420px] max-w-[760px] flex-col justify-end p-5 sm:min-h-[460px] sm:p-8 xl:min-h-[480px] xl:p-10">
+              <div>
                 <HomeSearchPanel items={searchItems} />
               </div>
 
-              <div className="mt-5 flex flex-wrap gap-2">
+              <div className="mt-3 flex flex-wrap gap-2">
                 <Link
                   href="/simulator"
                   className="inline-flex h-11 items-center gap-2 rounded-xl bg-[#ffd24a] px-5 text-sm font-black text-black transition hover:brightness-110"
@@ -269,17 +254,11 @@ export default function HomePage() {
                 >
                   세팅 만들기
                 </Link>
-                <Link
-                  href={featured.href}
-                  className="inline-flex h-11 items-center gap-2 rounded-xl px-4 text-sm font-bold text-zinc-300 transition hover:text-yellow-200"
-                >
-                  픽업 {featured.name} 보기
-                </Link>
               </div>
             </div>
           </div>
 
-          <div className="min-h-[320px] overflow-hidden rounded-[28px] xl:min-h-[520px]">
+          <div className="min-h-[300px] overflow-hidden rounded-[28px] sm:min-h-[380px] xl:min-h-[480px]">
             <BannerSection initialData={initialHomeBannerData} />
           </div>
         </section>

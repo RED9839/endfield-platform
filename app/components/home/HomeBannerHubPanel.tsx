@@ -184,8 +184,8 @@ export default function HomeBannerHubPanel({
               alt={cur.title}
               fill
               quality={68}
-              sizes="(min-width: 1024px) 38vw, 100vw"
-              className={`block h-full w-full object-cover object-center transition-opacity duration-200 ${
+              sizes="(min-width: 1280px) 40vw, 100vw"
+              className={`block h-full w-full object-contain object-center transition-opacity duration-200 ${
                 isLoaded ? "opacity-100" : "opacity-0"
               }`}
               onLoad={() => setLoadedKey(curKey)}
