@@ -192,8 +192,8 @@ export default function HomePage() {
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_50%_-10%,rgba(250,204,21,0.08),transparent_35%)]" />
 
       <header className="relative z-30 hidden border-b border-white/8 bg-black/80 backdrop-blur-xl lg:block">
-        <div className="mx-auto flex h-16 max-w-[1840px] items-center gap-8 px-6">
-          <Link href="/" className="mr-auto">
+        <div className="mx-auto flex h-16 max-w-[1840px] items-center gap-5 px-6">
+          <Link href="/" className="shrink-0">
             <p className="text-[9px] font-black tracking-[0.35em] text-yellow-300/60">
               ENDFIELD
             </p>
@@ -201,6 +201,10 @@ export default function HomePage() {
               데이터 허브
             </p>
           </Link>
+
+          <div className="min-w-0 flex-1 max-w-[560px]">
+            <HomeSearchPanel items={searchItems} compact />
+          </div>
 
           <nav className="flex items-center gap-1">
             {navigationItems.map((item) => (
@@ -221,6 +225,10 @@ export default function HomePage() {
       </header>
 
       <div className="relative mx-auto max-w-[1840px] px-3 pb-24 pt-3 sm:px-4 sm:pt-5 md:px-6 lg:pb-12 lg:pt-6">
+        <div className="relative z-30 mb-3 lg:hidden">
+          <HomeSearchPanel items={searchItems} compact />
+        </div>
+
         <section className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(520px,1fr)]">
           <div className="relative min-h-[420px] overflow-hidden rounded-[28px] border border-yellow-300/15 bg-black sm:min-h-[460px] xl:min-h-[480px]">
             <Image
@@ -234,28 +242,6 @@ export default function HomePage() {
             />
             <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.96)_0%,rgba(0,0,0,0.82)_38%,rgba(0,0,0,0.26)_72%,rgba(0,0,0,0.12)_100%)]" />
             <div className="absolute inset-0 bg-[linear-gradient(0deg,rgba(0,0,0,0.82),transparent_48%)]" />
-
-            <div className="relative z-10 flex min-h-[420px] max-w-[760px] flex-col justify-end p-5 sm:min-h-[460px] sm:p-8 xl:min-h-[480px] xl:p-10">
-              <div>
-                <HomeSearchPanel items={searchItems} />
-              </div>
-
-              <div className="mt-3 flex flex-wrap gap-2">
-                <Link
-                  href="/simulator"
-                  className="inline-flex h-11 items-center gap-2 rounded-xl bg-[#ffd24a] px-5 text-sm font-black text-black transition hover:brightness-110"
-                >
-                  성장 계산 시작
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-                <Link
-                  href="/settings/party"
-                  className="inline-flex h-11 items-center gap-2 rounded-xl border border-white/15 bg-black/55 px-5 text-sm font-black text-white backdrop-blur transition hover:border-yellow-300/35 hover:bg-white/8"
-                >
-                  세팅 만들기
-                </Link>
-              </div>
-            </div>
           </div>
 
           <div className="min-h-[300px] overflow-hidden rounded-[28px] sm:min-h-[380px] xl:min-h-[480px]">

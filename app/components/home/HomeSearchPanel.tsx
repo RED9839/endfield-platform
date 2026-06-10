@@ -26,8 +26,10 @@ function normalize(value: string) {
 
 export default function HomeSearchPanel({
   items,
+  compact = false,
 }: {
   items: HomeSearchItem[];
+  compact?: boolean;
 }) {
   const router = useRouter();
   const [query, setQuery] = useState("");
@@ -56,9 +58,21 @@ export default function HomeSearchPanel({
   };
 
   return (
-    <div className="relative max-w-[620px]">
-      <div className="flex h-14 items-center rounded-2xl border border-white/15 bg-black/70 p-1.5 shadow-[0_18px_50px_rgba(0,0,0,0.35)] backdrop-blur-xl transition focus-within:border-yellow-300/45">
-        <Search className="ml-3 h-5 w-5 shrink-0 text-yellow-200/70" />
+    <div className={compact ? "relative w-full" : "relative max-w-[620px]"}>
+      <div
+        className={[
+          "flex items-center border border-white/15 bg-black/70 shadow-[0_18px_50px_rgba(0,0,0,0.35)] backdrop-blur-xl transition focus-within:border-yellow-300/45",
+          compact
+            ? "h-10 rounded-xl p-1"
+            : "h-14 rounded-2xl p-1.5",
+        ].join(" ")}
+      >
+        <Search
+          className={[
+            "shrink-0 text-yellow-200/70",
+            compact ? "ml-2.5 h-4 w-4" : "ml-3 h-5 w-5",
+          ].join(" ")}
+        />
         <input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
@@ -68,13 +82,21 @@ export default function HomeSearchPanel({
             if (event.key === "Enter") submit();
           }}
           placeholder="오퍼레이터, 무기, 장비를 검색하세요"
-          className="min-w-0 flex-1 bg-transparent px-3 text-sm font-bold text-white outline-none placeholder:text-zinc-500"
+          className={[
+            "min-w-0 flex-1 bg-transparent font-bold text-white outline-none placeholder:text-zinc-500",
+            compact ? "px-2.5 text-xs" : "px-3 text-sm",
+          ].join(" ")}
           aria-label="통합 데이터 검색"
         />
         <button
           type="button"
           onClick={submit}
-          className="h-full shrink-0 rounded-xl bg-[#ffd24a] px-4 text-xs font-black text-black transition hover:brightness-110 sm:px-5"
+          className={[
+            "h-full shrink-0 bg-[#ffd24a] font-black text-black transition hover:brightness-110",
+            compact
+              ? "rounded-lg px-3 text-[11px]"
+              : "rounded-xl px-4 text-xs sm:px-5",
+          ].join(" ")}
         >
           검색
         </button>
