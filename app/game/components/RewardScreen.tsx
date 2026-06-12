@@ -21,18 +21,58 @@ function primaryStat(gear: RunGear) {
 function effectLine(gear: RunGear) {
   const setEffect = getGameSetEffectDescription(gear.setName);
   if (setEffect !== "세트 효과 없음") return setEffect.replace("3세트:", "3세트 효과 ·");
-  return `개별 보정 · ${gear.attributeLabel}`;
+  return `기본 옵션 · ${gear.attributeLabel}`;
 }
 
-function qualityStars(quality: number) {
-  return Array.from({ length: 5 }, (_, index) => (
-    <span
-      key={index}
-      className={index < quality ? "text-amber-200" : "text-zinc-500/70"}
-    >
-      ★
-    </span>
-  ));
+function rarityTone(quality: number) {
+  if (quality >= 5) {
+    return {
+      label: "LEGEND",
+      accent: "bg-amber-300",
+      badge: "border-amber-200/40 bg-amber-200/[0.12] text-amber-100",
+      name: "text-amber-300",
+      plate: "bg-[linear-gradient(135deg,#5e3a1e_0%,#b57a2e_48%,#f2c66b_100%)]",
+      strip: "bg-amber-300/85 text-black",
+    };
+  }
+  if (quality === 4) {
+    return {
+      label: "EPIC",
+      accent: "bg-violet-300",
+      badge: "border-violet-200/40 bg-violet-200/[0.12] text-violet-100",
+      name: "text-violet-200",
+      plate: "bg-[linear-gradient(135deg,#342451_0%,#6847a8_52%,#b894ff_100%)]",
+      strip: "bg-violet-300/85 text-black",
+    };
+  }
+  if (quality === 3) {
+    return {
+      label: "RARE",
+      accent: "bg-cyan-300",
+      badge: "border-cyan-200/40 bg-cyan-200/[0.12] text-cyan-100",
+      name: "text-cyan-200",
+      plate: "bg-[linear-gradient(135deg,#1e4053_0%,#2d7fa0_52%,#8be4ff_100%)]",
+      strip: "bg-cyan-300/85 text-black",
+    };
+  }
+  if (quality === 2) {
+    return {
+      label: "UNCOMMON",
+      accent: "bg-emerald-300",
+      badge: "border-emerald-200/40 bg-emerald-200/[0.12] text-emerald-100",
+      name: "text-emerald-200",
+      plate: "bg-[linear-gradient(135deg,#244435_0%,#3a7f5a_52%,#8de0ad_100%)]",
+      strip: "bg-emerald-300/85 text-black",
+    };
+  }
+  return {
+    label: "COMMON",
+    accent: "bg-zinc-300",
+    badge: "border-zinc-200/30 bg-zinc-200/[0.10] text-zinc-100",
+    name: "text-zinc-100",
+    plate: "bg-[linear-gradient(135deg,#34363a_0%,#5f6268_52%,#a7abb3_100%)]",
+    strip: "bg-zinc-300/85 text-black",
+  };
 }
 
 export default function RewardScreen({
@@ -79,6 +119,7 @@ export default function RewardScreen({
           {gearSlugs.map((slug) => {
             const gear = getGameGear(slug);
             const selected = selectedGearSlug === gear.slug;
+            const rarity = rarityTone(gear.quality);
             return (
               <button
                 key={gear.slug}
@@ -92,10 +133,10 @@ export default function RewardScreen({
               >
                 <span
                   className={`absolute left-0 top-0 h-full w-1 ${
-                    selected ? "bg-cyan-200" : "bg-amber-300/70"
+                    selected ? "bg-cyan-200" : rarity.accent
                   }`}
                 />
-                <span className="relative h-32 w-32 shrink-0 overflow-hidden bg-[linear-gradient(135deg,#5d382e_0%,#a36b45_50%,#d1a767_100%)] sm:h-36 sm:w-36">
+                <span className={`relative h-32 w-32 shrink-0 overflow-hidden ${rarity.plate} sm:h-36 sm:w-36`}>
                   <span className="absolute inset-5 rotate-45 border border-white/20" />
                   <span className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.24),transparent_34%),linear-gradient(135deg,transparent_52%,rgba(0,0,0,0.24)_53%)]" />
                   <Image
@@ -105,21 +146,24 @@ export default function RewardScreen({
                     sizes="144px"
                     className="object-contain p-5 drop-shadow-[0_10px_18px_rgba(0,0,0,0.45)]"
                   />
-                  <span className="absolute bottom-0 left-0 right-0 flex h-7 items-center gap-0.5 bg-black/35 px-2 text-sm">
-                    {qualityStars(gear.quality)}
+                  <span className={`absolute bottom-0 left-0 right-0 h-7 px-2 py-1 text-[10px] font-black tracking-[0.22em] ${rarity.strip}`}>
+                    {rarity.label}
                   </span>
                 </span>
 
                 <span className="flex min-w-0 flex-1 flex-col justify-center px-4 py-4 sm:px-6">
                   <span className="flex flex-wrap items-center gap-2">
-                    <span className="inline-flex rounded-md border border-amber-200/30 bg-amber-200/[0.08] px-2 py-1 text-[10px] font-black text-amber-100">
+                    <span className={`inline-flex rounded-md border px-2 py-1 text-[10px] font-black ${rarity.badge}`}>
+                      레어도 {gear.quality}
+                    </span>
+                    <span className="inline-flex rounded-md border border-white/10 bg-white/[0.04] px-2 py-1 text-[10px] font-black text-zinc-200">
                       {categoryLabel(gear.category)}
                     </span>
                     <span className="text-[10px] font-black tracking-[0.18em] text-cyan-100/45">
-                      LV.{gear.level} / TIER {gear.quality}
+                      LV.{gear.level}
                     </span>
                   </span>
-                  <span className="mt-2 line-clamp-1 text-xl font-black text-amber-300">
+                  <span className={`mt-2 line-clamp-1 text-xl font-black ${rarity.name}`}>
                     {gear.name}
                   </span>
                   <span className="mt-1 text-xs font-bold text-cyan-100/65">{gear.setName} 세트</span>
