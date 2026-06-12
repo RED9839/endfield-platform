@@ -8,6 +8,7 @@ import { getMapNode, startingNodeIds } from "../data/maps";
 import { startingParty } from "../data/operators";
 import { getRelic, relics } from "../data/relics";
 import type {
+  BattleState,
   BattleEnemy,
   EnemyStatus,
   GameEventChoice,
@@ -28,6 +29,11 @@ const ACTION_COST: Record<SkillKind, number> = {
 const ENEMY_ACTION_COST = 100;
 const READY_GAUGE = 100;
 const REAL_TIME_TICK = 0.025;
+const ARTS_ATTACHMENT_STATUSES: EnemyStatus[] = [
+  "originium-crystal",
+  "electric-attachment",
+  "corrosion",
+];
 
 function freshParty(): PartyMember[] {
   return startingParty.map((operator) => ({
@@ -101,6 +107,43 @@ function getStatusBonus(actor: PartyMember, target: BattleEnemy) {
   return 1;
 }
 
+function hasArtsAttachment(enemy: BattleEnemy) {
+  return enemy.statuses.some((status) => ARTS_ATTACHMENT_STATUSES.includes(status));
+}
+
+function getLinkTarget(actor: PartyMember, battle: BattleState) {
+  if (actor.linkCondition === "defense-break") {
+    return battle.enemies.find((enemy) => enemy.hp > 0 && enemy.statuses.includes("defense-break"));
+  }
+
+  const windowTarget = battle.linkWindow?.targetEnemyId
+    ? battle.enemies.find((enemy) => enemy.id === battle.linkWindow?.targetEnemyId && enemy.hp > 0)
+    : undefined;
+  return windowTarget ?? battle.enemies.find((enemy) => enemy.hp > 0);
+}
+
+function canUseLinkSkill(actor: PartyMember, battle: BattleState) {
+  const target = getLinkTarget(actor, battle);
+  if (!target) return false;
+
+  if (actor.linkCondition === "ally-link-damage") {
+    return (
+      battle.linkWindow?.trigger === "ally-link-damage" &&
+      battle.linkWindow.sourceOperatorId !== actor.id
+    );
+  }
+  if (actor.linkCondition === "strong-hit") return battle.linkWindow?.trigger === "strong-hit";
+  if (actor.linkCondition === "defense-break") return target.statuses.includes("defense-break");
+  if (actor.linkCondition === "strong-hit-vs-clean") {
+    return (
+      battle.linkWindow?.trigger === "strong-hit" &&
+      !target.statuses.includes("defense-break") &&
+      !hasArtsAttachment(target)
+    );
+  }
+  return battle.linkWindow?.trigger === "ally-hit";
+}
+
 function applySkillMechanic(actor: PartyMember, target: BattleEnemy, baseDamage: number, kind: SkillKind) {
   let damage = baseDamage;
   let statuses = target.statuses;
@@ -128,19 +171,23 @@ function applySkillMechanic(actor: PartyMember, target: BattleEnemy, baseDamage:
     }
   }
 
-  if (actor.skillMechanic === "combo-strike" && kind === "link-skill" && target.hp <= target.maxHp / 2) {
+  if (
+    actor.skillMechanic === "combo-strike" &&
+    kind === "link-skill" &&
+    target.statuses.includes("defense-break")
+  ) {
     damage += Math.ceil(actor.attack * 0.75);
-    notes.push("약점 연격");
+    notes.push("방어 불능 연격");
   }
 
   if (actor.skillMechanic === "corrosion-support") {
-    if (kind === "battle-skill") {
-      statuses = addStatus(statuses, "corrosion");
-      notes.push("부식 부여");
-    } else if (kind === "link-skill" && statuses.includes("corrosion")) {
+    if (kind === "battle-skill" && statuses.includes("corrosion")) {
       statuses = withoutStatus(statuses, "corrosion");
       damage += Math.ceil(actor.attack * 1.1);
       notes.push("부식 소모");
+    } else if (kind === "link-skill") {
+      statuses = addStatus(statuses, "corrosion");
+      notes.push("부식 부여");
     }
   }
 
@@ -366,6 +413,7 @@ function resolveAutomaticBattleTurns(state: RunState): RunState {
       battle: {
         ...activeBattle,
         enemies: enemiesAfterAction,
+        linkWindow: { trigger: "ally-hit" },
         turn: activeBattle.turn + 1,
         log: [enemyLog, ...activeBattle.log].slice(0, 8),
       },
@@ -452,11 +500,15 @@ export function useRunState(): RunState & RunActions {
     setState((current) => {
       if (!current.battle || current.screen !== "battle") return current;
       const actor = current.party.find((member) => member.id === operatorId);
-      const target = current.battle.enemies.find((enemy) => enemy.hp > 0);
+      const target =
+        actor && kind === "link-skill"
+          ? getLinkTarget(actor, current.battle)
+          : current.battle.enemies.find((enemy) => enemy.hp > 0);
       if (!actor || !target || actor.hp <= 0) return current;
       if (current.battle.activeSide !== "party" || current.battle.activeUnitId !== operatorId) return current;
       if (kind === "battle-skill" && current.sp < actor.battleSkillCost) return current;
       if (kind === "link-skill" && current.cp < actor.linkSkillCost) return current;
+      if (kind === "link-skill" && !canUseLinkSkill(actor, current.battle)) return current;
       if (kind === "ultimate" && actor.ultimateCharge < 100) return current;
       const actionCost = ACTION_COST[kind];
 
@@ -491,10 +543,15 @@ export function useRunState(): RunState & RunActions {
                   : applySkillMechanic(actor, enemy, baseDamage, kind);
               mechanic.notes.forEach((note) => noteSet.add(note));
               totalDamage += mechanic.damage;
+              const hp = Math.max(0, enemy.hp - mechanic.damage);
+              const statuses =
+                kind === "attack" && hp > 0 && hp <= enemy.maxHp / 2
+                  ? addStatus(mechanic.statuses, "defense-break")
+                  : mechanic.statuses;
               return {
                 ...enemy,
-                hp: Math.max(0, enemy.hp - mechanic.damage),
-                statuses: mechanic.statuses,
+                hp,
+                statuses,
               };
             })()
           : enemy,
@@ -511,6 +568,12 @@ export function useRunState(): RunState & RunActions {
       const note = noteSet.size > 0 ? ` (${Array.from(noteSet).join(", ")})` : "";
       const actionLog = `${actor.name}: ${actionLabel}으로 ${hitLabel}에게 총 ${totalDamage} 피해${note}.`;
       const allDefeated = enemiesAfterAction.every((enemy) => enemy.hp <= 0);
+      const linkWindow =
+        kind === "attack"
+          ? { trigger: "strong-hit" as const, sourceOperatorId: actor.id, targetEnemyId: target.id }
+          : kind === "link-skill"
+            ? { trigger: "ally-link-damage" as const, sourceOperatorId: actor.id, targetEnemyId: target.id }
+            : undefined;
       const spAfterAction =
         kind === "attack"
           ? Math.min(current.maxSp, current.sp + 1)
@@ -554,7 +617,12 @@ export function useRunState(): RunState & RunActions {
             party: partyAfterCost,
             sp: spAfterAction,
             cp: cpAfterAction,
-            battle: { ...current.battle, enemies: enemiesAfterAction, log: [actionLog, ...current.battle.log] },
+            battle: {
+              ...current.battle,
+              enemies: enemiesAfterAction,
+              linkWindow,
+              log: [actionLog, ...current.battle.log],
+            },
             battlesWon: won,
             screen: "summary",
             result: "victory",
@@ -566,7 +634,12 @@ export function useRunState(): RunState & RunActions {
           party: partyAfterCost,
           sp: spAfterAction,
           cp: cpAfterAction,
-          battle: { ...current.battle, enemies: enemiesAfterAction, log: [actionLog, ...current.battle.log] },
+          battle: {
+            ...current.battle,
+            enemies: enemiesAfterAction,
+            linkWindow,
+            log: [actionLog, ...current.battle.log],
+          },
           screen: "reward",
           credits: current.credits + (node.type === "elite" ? 100 : 55),
           pendingRelicIds: chooseRewards(withWin),
@@ -601,6 +674,7 @@ export function useRunState(): RunState & RunActions {
         battle: {
           ...current.battle,
           enemies: enemiesAfterAction,
+          linkWindow,
           turn: current.battle.turn + 1,
           log: [actionLog, ...current.battle.log].slice(0, 8),
         },

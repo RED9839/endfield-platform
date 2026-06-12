@@ -10,6 +10,13 @@ export type Element = "physical" | "heat" | "electric" | "cryo" | "nature";
 export type NodeType = "battle" | "elite" | "event" | "camp" | "boss";
 export type SkillKind = "attack" | "battle-skill" | "link-skill" | "ultimate";
 export type UnitSide = "party" | "enemy";
+export type LinkCondition =
+  | "ally-link-damage"
+  | "strong-hit"
+  | "defense-break"
+  | "strong-hit-vs-clean"
+  | "ally-hit";
+export type LinkTrigger = "ally-link-damage" | "strong-hit" | "ally-hit";
 export type OperatorClass =
   | "가드"
   | "디펜더"
@@ -23,7 +30,12 @@ export type SkillMechanic =
   | "combo-strike"
   | "protective-arts"
   | "corrosion-support";
-export type EnemyStatus = "originium-crystal" | "electric-attachment" | "shock" | "corrosion";
+export type EnemyStatus =
+  | "originium-crystal"
+  | "electric-attachment"
+  | "shock"
+  | "corrosion"
+  | "defense-break";
 
 export type Operator = {
   id: string;
@@ -42,6 +54,7 @@ export type Operator = {
   linkSkillName: string;
   linkSkillIcon: string;
   linkSkillDescription: string;
+  linkCondition: LinkCondition;
   ultimateName: string;
   ultimateIcon: string;
   ultimateDescription: string;
@@ -127,6 +140,11 @@ export type BattleState = {
   enemies: BattleEnemy[];
   activeUnitId?: string;
   activeSide?: UnitSide;
+  linkWindow?: {
+    trigger: LinkTrigger;
+    sourceOperatorId?: string;
+    targetEnemyId?: string;
+  };
   timeline: TimelineEntry[];
   turn: number;
   log: string[];

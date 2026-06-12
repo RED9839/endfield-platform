@@ -9,6 +9,12 @@ import type {
   SkillKind,
 } from "../types/game";
 
+const ARTS_ATTACHMENT_STATUSES: EnemyStatus[] = [
+  "originium-crystal",
+  "electric-attachment",
+  "corrosion",
+];
+
 function HealthBar({ value, max }: { value: number; max: number }) {
   const width = Math.max(0, Math.min(100, (value / max) * 100));
   return (
@@ -37,7 +43,45 @@ function statusLabel(status: EnemyStatus) {
   if (status === "originium-crystal") return "오리지늄 결정";
   if (status === "electric-attachment") return "전기 부착";
   if (status === "corrosion") return "부식";
+  if (status === "defense-break") return "방어 불능";
   return "감전";
+}
+
+function hasArtsAttachment(statuses: EnemyStatus[]) {
+  return statuses.some((status) => ARTS_ATTACHMENT_STATUSES.includes(status));
+}
+
+function getLinkTarget(member: PartyMember, battle: BattleState) {
+  if (member.linkCondition === "defense-break") {
+    return battle.enemies.find((enemy) => enemy.hp > 0 && enemy.statuses.includes("defense-break"));
+  }
+
+  const windowTarget = battle.linkWindow?.targetEnemyId
+    ? battle.enemies.find((enemy) => enemy.id === battle.linkWindow?.targetEnemyId && enemy.hp > 0)
+    : undefined;
+  return windowTarget ?? battle.enemies.find((enemy) => enemy.hp > 0);
+}
+
+function canUseLinkSkill(member: PartyMember, battle: BattleState) {
+  const target = getLinkTarget(member, battle);
+  if (!target) return false;
+
+  if (member.linkCondition === "ally-link-damage") {
+    return (
+      battle.linkWindow?.trigger === "ally-link-damage" &&
+      battle.linkWindow.sourceOperatorId !== member.id
+    );
+  }
+  if (member.linkCondition === "strong-hit") return battle.linkWindow?.trigger === "strong-hit";
+  if (member.linkCondition === "defense-break") return target.statuses.includes("defense-break");
+  if (member.linkCondition === "strong-hit-vs-clean") {
+    return (
+      battle.linkWindow?.trigger === "strong-hit" &&
+      !target.statuses.includes("defense-break") &&
+      !hasArtsAttachment(target.statuses)
+    );
+  }
+  return battle.linkWindow?.trigger === "ally-hit";
 }
 
 function ActionIcon({ src }: { src: string }) {
@@ -173,6 +217,7 @@ export default function BattleScreen({
               (() => {
                 const isActive = battle.activeSide === "party" && battle.activeUnitId === member.id;
                 const disabled = !isActive || member.hp <= 0;
+                const linkReady = canUseLinkSkill(member, battle);
                 return (
               <article
                 key={member.id}
@@ -241,7 +286,7 @@ export default function BattleScreen({
                   </button>
                   <button
                     type="button"
-                    disabled={disabled || cp < member.linkSkillCost}
+                    disabled={disabled || cp < member.linkSkillCost || !linkReady}
                     title={member.linkSkillDescription}
                     onClick={() => onAction(member.id, "link-skill")}
                     className="flex flex-col items-center gap-1 border-r border-white/8 px-1 py-3 text-[9px] font-bold text-violet-200 transition hover:bg-violet-300/10 disabled:opacity-25"
