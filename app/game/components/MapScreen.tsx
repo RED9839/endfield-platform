@@ -64,7 +64,7 @@ function OperatorCard({ operator, index }: { operator: Operator; index: number }
 
       <div className="absolute inset-x-4 top-4 bottom-4 z-10 overflow-hidden rounded-[30px]">
         <div className="absolute left-1/2 top-1/2 h-96 w-full -translate-x-1/2 -translate-y-1/2 rounded-full bg-yellow-300/10 blur-3xl" />
-        <Image src={image} alt={operator.name} fill sizes="(min-width: 1536px) 24vw, (min-width: 768px) 48vw, 100vw" className="scale-[2] object-contain object-center drop-shadow-[0_34px_46px_rgba(0,0,0,0.78)] transition duration-500 group-hover:scale-[2.06]" priority={index === 0} />
+        <Image src={image} alt={operator.name} fill sizes="(min-width: 1536px) 25vw, (min-width: 768px) 50vw, 100vw" className="scale-[2] object-contain object-center drop-shadow-[0_34px_46px_rgba(0,0,0,0.78)] transition duration-500 group-hover:scale-[2.06]" priority={index === 0} />
       </div>
 
       <div className="absolute inset-x-4 bottom-4 z-20 rounded-[28px] border border-yellow-100/12 bg-black/76 p-4 shadow-[0_18px_38px_rgba(0,0,0,0.34)] backdrop-blur-xl">
@@ -112,7 +112,7 @@ export default function MapScreen({ onEnter, availableNodes }: { availableNodes:
           <div className="rounded-full border border-yellow-100/20 bg-yellow-100/8 px-5 py-3 text-sm font-black text-yellow-100 shadow-[0_0_30px_rgba(250,204,21,0.12)] backdrop-blur-xl">TEAM 04 / READY</div>
         </header>
 
-        <div className="grid gap-8 md:grid-cols-2 2xl:grid-cols-4">
+        <div className="grid gap-0 md:grid-cols-2 2xl:grid-cols-4">
           {startingParty.map((operator, index) => <OperatorCard key={operator.id} operator={operator} index={index} />)}
         </div>
 
