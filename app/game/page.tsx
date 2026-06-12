@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronLeft, CircleDollarSign, Flag, Zap } from "lucide-react";
+import { ChevronLeft, CircleDollarSign, Flag, PackageCheck } from "lucide-react";
 
 import BattleScreen from "./components/BattleScreen";
 import CampScreen from "./components/CampScreen";
@@ -56,8 +56,8 @@ export default function GamePage() {
             <span className="text-xs font-black">{run.credits}</span>
           </div>
           <div className="hidden items-center gap-2 rounded-lg border border-white/8 bg-white/[0.03] px-3 py-2 md:flex">
-            <Zap className="h-4 w-4 text-cyan-300" />
-            <span className="text-xs font-black">{run.relics.length} 유물</span>
+            <PackageCheck className="h-4 w-4 text-cyan-300" />
+            <span className="text-xs font-black">{run.collectedGears.length} 장비</span>
           </div>
           {run.screen !== "summary" && (
             <button
@@ -93,9 +93,10 @@ export default function GamePage() {
       )}
       {run.screen === "reward" && (
         <RewardScreen
-          relicIds={run.pendingRelicIds}
+          gearSlugs={run.pendingGearSlugs}
+          party={run.party}
           credits={run.credits}
-          onClaim={run.claimRelic}
+          onEquip={run.equipRewardGear}
         />
       )}
       {run.screen === "event" && activeEvent && (
