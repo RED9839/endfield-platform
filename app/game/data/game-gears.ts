@@ -1,6 +1,6 @@
 import { gearSummaries } from "@/data/gear-summary-data";
 
-import type { GearLoadout, GearSlot, RunGear, RunGearCategory, RunGearLevel } from "../types/game";
+import type { GearLoadout, GearSlot, RewardTier, RunGear, RunGearCategory, RunGearLevel } from "../types/game";
 
 const GAME_GEAR_LEVELS = [10, 20, 28, 36, 50] as const;
 
@@ -15,6 +15,14 @@ const GAME_SET_EFFECTS: Record<string, string> = {
   검술사: "3세트: 기본공격 피해 증가, 물리 피해 증가",
   펄스식: "3세트: 기본공격 후 궁극기 충전량 증가",
   "아부레이의 메아리": "3세트: 모든 스킬 피해 증가, 궁극기 충전 효율 증가",
+};
+
+const REWARD_LEVEL_TABLE: Record<RewardTier, RunGearLevel[]> = {
+  early: [10, 20],
+  mid: [20, 28],
+  late: [28, 36],
+  elite: [28, 36],
+  boss: [36, 50],
 };
 
 function isGameGearLevel(level: number): level is RunGearLevel {
@@ -86,18 +94,26 @@ export function getGearSlot(gear: RunGear, currentKit1?: RunGear, currentKit2?: 
   return "kit1";
 }
 
-export function chooseGearRewards(battlesWon: number, count = 3) {
-  const setPool = gameGears.filter((gear) => hasGameSetEffect(gear.setName));
-  const noSetPool = gameGears.filter((gear) => !hasGameSetEffect(gear.setName));
-  const pool = setPool.length >= count ? setPool : gameGears;
+function getRewardPool(tier: RewardTier) {
+  const allowedLevels = REWARD_LEVEL_TABLE[tier];
+  const pool = gameGears.filter((gear) => allowedLevels.includes(gear.level));
+  return pool.length > 0 ? pool : gameGears.filter((gear) => gear.level !== 50);
+}
+
+export function chooseGearRewards(battlesWon: number, count = 3, tier: RewardTier = "early") {
+  const tierPool = getRewardPool(tier);
+  const setPool = tierPool.filter((gear) => hasGameSetEffect(gear.setName));
+  const noSetPool = tierPool.filter((gear) => !hasGameSetEffect(gear.setName));
+  const pool = setPool.length >= count ? setPool : tierPool;
 
   if (pool.length <= count) return pool.map((gear) => gear.slug);
 
-  const start = (battlesWon * 5) % pool.length;
+  const tierSeed = tier === "early" ? 1 : tier === "mid" ? 2 : tier === "late" ? 3 : tier === "elite" ? 4 : 5;
+  const start = (battlesWon * 5 + tierSeed * 11) % pool.length;
   const rewards = Array.from({ length: count }, (_, index) => pool[(start + index * 7) % pool.length]);
 
   if (noSetPool.length > 0 && battlesWon % 3 === 0) {
-    rewards[count - 1] = noSetPool[(battlesWon * 3) % noSetPool.length];
+    rewards[count - 1] = noSetPool[(battlesWon * 3 + tierSeed) % noSetPool.length];
   }
 
   return rewards.map((gear) => gear.slug);
