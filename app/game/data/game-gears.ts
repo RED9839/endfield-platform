@@ -1,6 +1,6 @@
 import { gearSummaries } from "@/data/gear-summary-data";
 
-import type { GearLoadout, GearSlot, RewardTier, RunGear, RunGearCategory, RunGearLevel } from "../types/game";
+import type { Element, GearLoadout, GearSlot, RewardTier, RunGear, RunGearCategory, RunGearLevel } from "../types/game";
 
 const GAME_GEAR_LEVELS = [10, 20, 28, 36, 50] as const;
 
@@ -43,6 +43,103 @@ export function getGearPowerTier(gear: Pick<RunGear, "level" | "quality" | "setN
   const sameLevelQualityNoSetBonus = hasGameSetEffect(gear.setName) ? 0 : 1;
 
   return levelTier + qualityTier - 1 + sameLevelQualityNoSetBonus;
+}
+
+export type GearStatDeltas = {
+  attack?: number;
+  maxHp?: number;
+  defense?: number;
+  evasion?: number;
+  speed?: number;
+  battleSkillPower?: number;
+  linkSkillPower?: number;
+  ultimatePower?: number;
+  ultimateCharge?: number;
+};
+
+function addDelta(target: GearStatDeltas, delta: GearStatDeltas) {
+  Object.entries(delta).forEach(([key, value]) => {
+    const stat = key as keyof GearStatDeltas;
+    target[stat] = (target[stat] ?? 0) + (value ?? 0);
+  });
+}
+
+function matchesElementalAttribute(types: string[], element?: Element) {
+  if (types.includes("physicalDamage")) return element === "physical";
+  if (types.includes("cryoElectricDamage")) return element === "cryo" || element === "electric";
+  if (types.includes("heatNatureDamage")) return element === "heat" || element === "nature";
+  return true;
+}
+
+export function getGearStatDeltas(gear: RunGear, element?: Element): GearStatDeltas {
+  const value = getGearPowerTier(gear);
+  const deltas: GearStatDeltas = {};
+
+  if (gear.category === "armor") addDelta(deltas, { defense: value });
+  if (gear.category === "gloves") addDelta(deltas, { attack: value });
+  if (gear.category === "kit") addDelta(deltas, { speed: 1 });
+
+  gear.attributeTypes.forEach((type) => {
+    if (type === "attack") addDelta(deltas, { attack: value * 2, battleSkillPower: value, linkSkillPower: value, ultimatePower: value });
+    if (type === "hp") addDelta(deltas, { maxHp: value * 7 });
+    if (type === "critRate") addDelta(deltas, { attack: value, linkSkillPower: value, evasion: 1 });
+    if (type === "originiumArts" || type === "artsDamage") {
+      addDelta(deltas, { battleSkillPower: value * 2, linkSkillPower: value, ultimatePower: value * 2 });
+    }
+    if (type === "healEfficiency") addDelta(deltas, { maxHp: value * 4, defense: value });
+    if (type === "ultimateEfficiency") addDelta(deltas, { ultimateCharge: value * 5, ultimatePower: value });
+    if (type === "normalAttack") addDelta(deltas, { attack: value * 3 });
+    if (type === "skillDamage") addDelta(deltas, { battleSkillPower: value * 3 });
+    if (type === "comboSkillDamage") addDelta(deltas, { linkSkillPower: value * 3 });
+    if (type === "ultimateDamage") addDelta(deltas, { ultimatePower: value * 4 });
+    if (type === "unbalancedTargetDamage") addDelta(deltas, { attack: value, linkSkillPower: value * 2 });
+    if (type === "mainStat") {
+      if (gear.category === "armor") addDelta(deltas, { maxHp: value * 5, defense: value });
+      if (gear.category === "gloves") addDelta(deltas, { attack: value * 2 });
+      if (gear.category === "kit") addDelta(deltas, { battleSkillPower: value, linkSkillPower: value, ultimatePower: value });
+    }
+    if (type === "damageReduction") addDelta(deltas, { defense: value * 3, evasion: 1 });
+    if (type === "subStat") addDelta(deltas, { attack: value, maxHp: value * 2, speed: 1 });
+    if (type === "allSkillDamage") {
+      addDelta(deltas, { battleSkillPower: value * 2, linkSkillPower: value * 2, ultimatePower: value * 2 });
+    }
+    if (
+      (type === "physicalDamage" || type === "cryoElectricDamage" || type === "heatNatureDamage") &&
+      matchesElementalAttribute([type], element)
+    ) {
+      addDelta(deltas, { attack: value, battleSkillPower: value * 2, linkSkillPower: value, ultimatePower: value });
+    }
+  });
+
+  return deltas;
+}
+
+export function getGearPrimaryStatLine(gear: RunGear) {
+  const value = getGearPowerTier(gear);
+  const type = gear.attributeTypes[0];
+
+  if (type === "attack") return `공격력 +${value * 2}`;
+  if (type === "hp") return `생명력 +${value * 7}`;
+  if (type === "critRate") return `치명 정밀 +${value}%`;
+  if (type === "originiumArts" || type === "artsDamage") return `아츠 출력 +${value * 2}`;
+  if (type === "healEfficiency") return `회복 효율 +${value * 2}%`;
+  if (type === "physicalDamage") return `물리 피해 +${value * 2}`;
+  if (type === "ultimateEfficiency") return `궁극기 충전 +${value * 5}%`;
+  if (type === "normalAttack") return `기본공격 피해 +${value * 3}`;
+  if (type === "skillDamage") return `배틀스킬 피해 +${value * 3}`;
+  if (type === "comboSkillDamage") return `연계스킬 피해 +${value * 3}`;
+  if (type === "ultimateDamage") return `궁극기 피해 +${value * 4}`;
+  if (type === "unbalancedTargetDamage") return `방어 불능 피해 +${value * 3}`;
+  if (type === "mainStat") return `주 능력치 +${value * 3}`;
+  if (type === "cryoElectricDamage") return `냉기/전기 피해 +${value * 2}`;
+  if (type === "damageReduction") return `피해 감소 +${value * 3}`;
+  if (type === "subStat") return `보조 능력치 +${value * 2}`;
+  if (type === "allSkillDamage") return `스킬 피해 +${value * 2}`;
+  if (type === "heatNatureDamage") return `열기/자연 피해 +${value * 2}`;
+
+  if (gear.category === "armor") return `방어력 +${value}`;
+  if (gear.category === "gloves") return `공격력 +${value}`;
+  return `속도 +1`;
 }
 
 function toCombatDescription(attributeLabel: string, level: RunGearLevel, quality: number, hasSetEffect: boolean) {

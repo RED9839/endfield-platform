@@ -9,7 +9,7 @@ import {
   getActiveThreePieceSets,
   getEquippedGears,
   getGameGear,
-  getGearPowerTier,
+  getGearStatDeltas,
   getGearSlot,
 } from "../data/game-gears";
 import { getMapNode, startingNodeIds } from "../data/maps";
@@ -382,46 +382,18 @@ function tickCombatGauges(party: PartyMember[], enemies: BattleEnemy[], activeUn
 }
 
 function applyGearStats(member: PartyMember, gear: RunGear): PartyMember {
-  const value = getGearPowerTier(gear);
+  const deltas = getGearStatDeltas(gear, member.element);
   const next = { ...member };
 
-  if (gear.category === "armor") next.defense += value * 2;
-  if (gear.category === "gloves") next.attack += value;
-
-  if (gear.attributeTypes.includes("attack")) {
-    next.attack += value;
-    next.battleSkillPower += value;
-    next.linkSkillPower += value;
-    next.ultimatePower += value;
-  }
-  if (gear.attributeTypes.includes("hp")) next.maxHp += value * 4;
-  if (gear.attributeTypes.includes("skillDamage")) next.battleSkillPower += value * 2;
-  if (gear.attributeTypes.includes("comboSkillDamage")) next.linkSkillPower += value * 2;
-  if (gear.attributeTypes.includes("ultimateDamage")) next.ultimatePower += value * 3;
-  if (gear.attributeTypes.includes("normalAttack")) next.attack += value * 2;
-  if (gear.attributeTypes.includes("allSkillDamage")) {
-    next.battleSkillPower += value;
-    next.linkSkillPower += value;
-    next.ultimatePower += value;
-  }
-  if (gear.attributeTypes.includes("ultimateEfficiency")) {
-    next.ultimateCharge = Math.min(100, next.ultimateCharge + value * 4);
-  }
-  if (gear.attributeTypes.includes("physicalDamage") && next.element === "physical") {
-    next.attack += value;
-    next.battleSkillPower += value;
-    next.linkSkillPower += value;
-  }
-  if (gear.attributeTypes.includes("cryoElectricDamage") && (next.element === "cryo" || next.element === "electric")) {
-    next.attack += value;
-    next.battleSkillPower += value;
-    next.linkSkillPower += value;
-  }
-  if (gear.attributeTypes.includes("heatNatureDamage") && (next.element === "heat" || next.element === "nature")) {
-    next.attack += value;
-    next.battleSkillPower += value;
-    next.linkSkillPower += value;
-  }
+  next.attack += deltas.attack ?? 0;
+  next.maxHp += deltas.maxHp ?? 0;
+  next.defense += deltas.defense ?? 0;
+  next.evasion += deltas.evasion ?? 0;
+  next.speed += deltas.speed ?? 0;
+  next.battleSkillPower += deltas.battleSkillPower ?? 0;
+  next.linkSkillPower += deltas.linkSkillPower ?? 0;
+  next.ultimatePower += deltas.ultimatePower ?? 0;
+  next.ultimateCharge = Math.min(100, next.ultimateCharge + (deltas.ultimateCharge ?? 0));
 
   return next;
 }

@@ -2,20 +2,13 @@ import { useState } from "react";
 import Image from "next/image";
 import { PackageOpen, Search } from "lucide-react";
 
-import { getGameGear, getGameSetEffectDescription } from "../data/game-gears";
+import { getGameGear, getGearPrimaryStatLine, getGameSetEffectDescription } from "../data/game-gears";
 import type { PartyMember, RunGear } from "../types/game";
 
 function categoryLabel(category: string) {
   if (category === "armor") return "방어구";
   if (category === "gloves") return "장갑";
   return "부품";
-}
-
-function primaryStat(gear: RunGear) {
-  const bonus = Math.round(gear.level * 0.45 + gear.quality * 5 + (gear.category === "armor" ? 2 : 0));
-  if (gear.category === "armor") return `방어력 +${bonus}`;
-  if (gear.category === "gloves") return `공격력 +${bonus}`;
-  return `전술 출력 +${bonus}`;
 }
 
 function effectLine(gear: RunGear) {
@@ -168,7 +161,7 @@ export default function RewardScreen({
                   </span>
                   <span className="mt-1 text-xs font-bold text-cyan-100/65">{gear.setName} 세트</span>
                   <span className="mt-4 grid gap-2 text-sm sm:grid-cols-[160px_1fr]">
-                    <span className="font-black text-white">{primaryStat(gear)}</span>
+                    <span className="font-black text-white">{getGearPrimaryStatLine(gear)}</span>
                     <span className="leading-6 text-zinc-300">{effectLine(gear)}</span>
                   </span>
                 </span>
