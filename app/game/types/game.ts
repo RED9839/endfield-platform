@@ -21,8 +21,9 @@ export type SkillMechanic =
   | "originium-crystal"
   | "electric-attachment"
   | "combo-strike"
-  | "protective-arts";
-export type EnemyStatus = "originium-crystal" | "electric-attachment" | "shock";
+  | "protective-arts"
+  | "corrosion-support";
+export type EnemyStatus = "originium-crystal" | "electric-attachment" | "shock" | "corrosion";
 
 export type Operator = {
   id: string;

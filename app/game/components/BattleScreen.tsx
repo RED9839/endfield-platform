@@ -36,6 +36,7 @@ function GaugeBar({ value }: { value: number }) {
 function statusLabel(status: EnemyStatus) {
   if (status === "originium-crystal") return "오리지늄 결정";
   if (status === "electric-attachment") return "전기 부착";
+  if (status === "corrosion") return "부식";
   return "감전";
 }
 

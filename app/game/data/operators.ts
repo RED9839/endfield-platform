@@ -85,6 +85,37 @@ export const operators: Operator[] = [
     ultimatePower: 76,
   },
   {
+    id: "ardelia",
+    name: "아델리아",
+    role: "아츠 유닛",
+    className: "서포터",
+    element: "nature",
+    image: "/operators/ardelia/avatar.webp",
+    maxHp: 82,
+    attack: 12,
+    speed: 96,
+    normalAttackIcon: "/operators/ardelia/skills/normal.webp",
+    battleSkillName: "질주하는 돌리",
+    battleSkillIcon: "/operators/ardelia/skills/battle.webp",
+    battleSkillDescription: "자연 피해를 주고 부식 상태를 부여하며 파티를 소량 회복합니다.",
+    linkSkillName: "화산 분화",
+    linkSkillIcon: "/operators/ardelia/skills/combo.webp",
+    linkSkillDescription: "부식 상태를 소모해 추가 자연 피해를 주고 파티를 회복합니다.",
+    ultimateName: "복슬복슬 파티",
+    ultimateIcon: "/operators/ardelia/skills/ultimate.webp",
+    ultimateDescription: "모든 적에게 자연 피해를 주고 파티 전체를 크게 회복합니다.",
+    skillMechanic: "corrosion-support",
+    artsAttachment: "부식",
+    battleSkillPower: 24,
+    battleSkillCost: 2,
+    linkSkillPower: 32,
+    linkSkillCost: 1,
+    ultimatePower: 52,
+  },
+];
+
+export const benchOperators: Operator[] = [
+  {
     id: "ember",
     name: "엠버",
     role: "대검",
@@ -113,4 +144,5 @@ export const operators: Operator[] = [
   },
 ];
 
+export const allOperators = [...operators, ...benchOperators];
 export const startingParty = operators;

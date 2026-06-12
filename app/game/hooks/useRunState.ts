@@ -126,6 +126,17 @@ function applySkillMechanic(actor: PartyMember, target: BattleEnemy, baseDamage:
     notes.push("약점 연격");
   }
 
+  if (actor.skillMechanic === "corrosion-support") {
+    if (kind === "battle-skill") {
+      statuses = addStatus(statuses, "corrosion");
+      notes.push("부식 부여");
+    } else if (kind === "link-skill" && statuses.includes("corrosion")) {
+      statuses = withoutStatus(statuses, "corrosion");
+      damage += Math.ceil(actor.attack * 1.1);
+      notes.push("부식 소모");
+    }
+  }
+
   if (kind === "ultimate") {
     notes.push(actor.ultimateName);
   }
@@ -496,7 +507,7 @@ export function useRunState(): RunState & RunActions {
           ? Math.min(current.maxSp, current.sp + 1)
           : kind === "battle-skill"
             ? current.sp - actor.battleSkillCost
-            : actor.id === "ember" && kind === "link-skill"
+            : actor.skillMechanic === "protective-arts" && kind === "link-skill"
               ? Math.min(current.maxSp, current.sp + 1)
               : current.sp;
       const cpAfterAction =
@@ -553,13 +564,22 @@ export function useRunState(): RunState & RunActions {
         };
       }
 
+      const supportHeal =
+        actor.skillMechanic === "corrosion-support" && kind !== "attack"
+          ? kind === "ultimate"
+            ? 22
+            : kind === "link-skill"
+              ? 12
+              : 7
+          : 0;
+      const partyWithSupport = supportHeal > 0 ? healParty(partyAfterCost, supportHeal) : partyAfterCost;
       const party =
         actor.skillMechanic === "protective-arts" && kind !== "attack"
-          ? partyAfterCost.map((member) => ({
+          ? partyWithSupport.map((member) => ({
               ...member,
               shield: member.shield + (kind === "ultimate" ? 18 : member.id === actor.id ? 14 : 8),
             }))
-          : partyAfterCost;
+          : partyWithSupport;
 
       const defeated = party.every((member) => member.hp <= 0);
       const nextState: RunState = {
