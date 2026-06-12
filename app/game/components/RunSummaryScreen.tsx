@@ -28,7 +28,7 @@ export default function RunSummaryScreen({
           {[
             ["승리", state.battlesWon],
             ["크레딧", state.credits],
-            ["유물", state.relics.length],
+            ["장비", state.collectedGears.length],
           ].map(([label, value]) => (
             <div key={label} className="rounded-2xl border border-white/8 bg-white/[0.03] p-4">
               <p className="text-2xl font-black text-white">{value}</p>
