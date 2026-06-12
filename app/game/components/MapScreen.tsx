@@ -12,6 +12,13 @@ const operatorAccents = [
   "from-yellow-300 via-orange-400 to-red-400",
 ];
 
+const deploymentImages: Record<string, string> = {
+  endministrator: "/operators/endministrator/full2.webp",
+  perlica: "/operators/perlica/full.webp",
+  chenqianyu: "/operators/chenqianyu/full.webp",
+  ardelia: "/operators/ardelia/full.webp",
+};
+
 function StatChip({ label, value }: { label: string; value: string | number }) {
   return (
     <span className="rounded-xl border border-yellow-200/15 bg-black/55 px-2 py-2 text-center shadow-inner shadow-yellow-200/5">
@@ -24,6 +31,7 @@ function StatChip({ label, value }: { label: string; value: string | number }) {
 function OperatorCard({ operator, index }: { operator: Operator; index: number }) {
   const accent = operatorAccents[index % operatorAccents.length];
   const selected = index === 0;
+  const image = deploymentImages[operator.id] ?? operator.image;
 
   return (
     <article
@@ -56,7 +64,7 @@ function OperatorCard({ operator, index }: { operator: Operator; index: number }
 
       <div className="relative z-10 -mt-4 h-[540px] overflow-hidden rounded-[28px]">
         <div className="absolute inset-x-2 top-24 h-72 rounded-full bg-yellow-300/10 blur-3xl" />
-        <Image src={operator.image} alt={operator.name} fill sizes="(min-width: 1536px) 25vw, (min-width: 768px) 50vw, 100vw" className="scale-[1.22] object-contain object-center drop-shadow-[0_32px_42px_rgba(0,0,0,0.75)] transition duration-500 group-hover:scale-[1.28]" priority={index === 0} />
+        <Image src={image} alt={operator.name} fill sizes="(min-width: 1536px) 25vw, (min-width: 768px) 50vw, 100vw" className="scale-[1.22] object-contain object-center drop-shadow-[0_32px_42px_rgba(0,0,0,0.75)] transition duration-500 group-hover:scale-[1.28]" priority={index === 0} />
       </div>
 
       <div className="relative z-10 -mt-8 rounded-[26px] border border-yellow-100/12 bg-black/70 p-4 shadow-[0_18px_38px_rgba(0,0,0,0.32)] backdrop-blur-xl">
