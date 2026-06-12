@@ -94,13 +94,13 @@ export const enemies: Enemy[] = [
     elite: true,
   },
   {
-    id: "agelos-mimic",
-    name: "모방아겔로스",
+    id: "tunneling-needworm",
+    name: "Tunneling Needworm",
     image: "/enemies/eny_0007_mimicw.webp",
     maxHp: 46,
     attack: 9,
     speed: 100,
-    intent: "아군 행동을 모방",
+    intent: "지하에서 튀어나와 기습",
   },
   {
     id: "agelos-mimic-alpha",
