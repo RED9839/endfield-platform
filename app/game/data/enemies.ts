@@ -67,7 +67,7 @@ export const enemies: Enemy[] = [
   {
     id: "agelos-three-tail-alpha",
     name: "삼미아겔로스 · α",
-    image: "/enemies/eny_0007_mimw.webp",
+    image: "/enemies/eny_0007_mimicw.webp",
     maxHp: 82,
     attack: 14,
     speed: 110,
