@@ -134,6 +134,7 @@ function getStatusBonus(actor: PartyMember, target: BattleEnemy) {
   if (hasSet(actor, "본 크러셔") && target.statuses.includes("defense-break")) bonus += 0.2;
   if (hasSet(actor, "조류의 물결") && target.statuses.includes("shock")) bonus += 0.18;
   if (hasSet(actor, "열 작업용") && target.statuses.length > 0) bonus += 0.15;
+  if (hasSet(actor, "아부레이의 메아리")) bonus += 0.08;
   return bonus;
 }
 
@@ -195,6 +196,10 @@ function applySkillMechanic(actor: PartyMember, target: BattleEnemy, baseDamage:
   if (sets.includes("검술사") && kind === "attack") {
     damage += Math.ceil(actor.attack * 0.25);
     notes.push("검술사 3세트");
+  }
+  if (sets.includes("아부레이의 메아리") && kind !== "attack") {
+    damage += Math.ceil(actor.attack * 0.25);
+    notes.push("아부레이 3세트");
   }
 
   if (actor.skillMechanic === "originium-crystal") {
@@ -372,6 +377,14 @@ function applyGearStats(member: PartyMember, gear: RunGear): PartyMember {
   const value = getGearPowerTier(gear);
   const next = { ...member };
 
+  if (gear.abilityTypes.includes("strength")) next.strength += value;
+  if (gear.abilityTypes.includes("agility")) next.agility += value;
+  if (gear.abilityTypes.includes("intelligence")) next.intelligence += value;
+  if (gear.abilityTypes.includes("will")) next.will += value;
+
+  if (gear.category === "armor") next.defense += value * 2;
+  if (gear.category === "gloves") next.attack += value;
+
   if (gear.attributeTypes.includes("attack")) {
     next.attack += value;
     next.battleSkillPower += value;
@@ -447,6 +460,9 @@ function applyBattleStartSetEffects(party: PartyMember[], sp: number, maxSp: num
     if (sets.includes("생체 보조")) {
       next = { ...next, maxHp: next.maxHp + 10, hp: Math.min(next.maxHp + 10, next.hp + 10) };
     }
+    if (sets.includes("아부레이의 메아리")) {
+      next = { ...next, ultimateCharge: Math.min(100, next.ultimateCharge + 8) };
+    }
     return next;
   });
 
@@ -491,7 +507,7 @@ function resolveAutomaticBattleTurns(state: RunState): RunState {
 
     const hit = Math.max(1, actor.attack);
     const partyAfterHit = current.party.map((member) =>
-      member.id === victim.id ? absorbHit(member, hit) : member,
+      member.id === victim.id ? absorbHit(member, Math.max(1, hit - Math.floor(member.defense / 40))) : member,
     );
     const enemiesAfterAction = activeBattle.enemies.map((enemy) =>
       enemy.id === actor.id ? spendGauge(enemy, ENEMY_ACTION_COST) : enemy,
