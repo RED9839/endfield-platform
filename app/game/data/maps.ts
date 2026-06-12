@@ -9,7 +9,7 @@ const agelosRoute: MapNode[] = [
     title: "아겔로스 초원",
     subtitle: "일반구역 · 큰뿔/일미",
     next: ["agelos-2a", "agelos-event-1"],
-    enemyIds: ["agelos-big-horn", "agelos-one-tail"],
+    enemyIds: ["ram", "sting"],
     rewardTier: "early",
   },
   {
@@ -20,7 +20,7 @@ const agelosRoute: MapNode[] = [
     title: "모방체 흔적지",
     subtitle: "일반구역 · 모방/큰뿔",
     next: ["agelos-event-1", "agelos-2b"],
-    enemyIds: ["tunneling-needworm", "agelos-big-horn"],
+    enemyIds: ["tunneling-nidwyrm", "ram"],
     rewardTier: "early",
   },
   {
@@ -31,7 +31,7 @@ const agelosRoute: MapNode[] = [
     title: "큰뿔 이동로",
     subtitle: "일반구역",
     next: ["agelos-3a", "agelos-shop-1"],
-    enemyIds: ["agelos-big-horn", "tunneling-needworm"],
+    enemyIds: ["ram", "tunneling-nidwyrm"],
     rewardTier: "early",
   },
   {
@@ -52,7 +52,7 @@ const agelosRoute: MapNode[] = [
     title: "일미 둥지 입구",
     subtitle: "일반구역",
     next: ["agelos-3b", "agelos-camp-1"],
-    enemyIds: ["agelos-one-tail", "tunneling-needworm"],
+    enemyIds: ["sting", "tunneling-nidwyrm"],
     rewardTier: "early",
   },
   {
@@ -63,7 +63,7 @@ const agelosRoute: MapNode[] = [
     title: "쌍뿔 이동로",
     subtitle: "일반구역 · 강화 개체",
     next: ["agelos-4a", "agelos-elite-1"],
-    enemyIds: ["agelos-double-horn", "agelos-one-tail"],
+    enemyIds: ["heavy-ram", "sting"],
     rewardTier: "mid",
   },
   {
@@ -84,7 +84,7 @@ const agelosRoute: MapNode[] = [
     title: "모방체 산란지",
     subtitle: "일반구역",
     next: ["agelos-elite-1", "agelos-4b"],
-    enemyIds: ["tunneling-needworm", "agelos-one-tail-alpha"],
+    enemyIds: ["tunneling-nidwyrm", "sting-alpha"],
     rewardTier: "mid",
   },
   {
@@ -104,7 +104,7 @@ const agelosRoute: MapNode[] = [
     title: "알파 변이 지대",
     subtitle: "일반구역 · α 개체",
     next: ["agelos-5a", "agelos-5b"],
-    enemyIds: ["agelos-big-horn-alpha", "agelos-one-tail-alpha", "tunneling-needworm"],
+    enemyIds: ["ram-alpha", "sting-alpha", "tunneling-nidwyrm"],
     rewardTier: "mid",
   },
   {
@@ -125,7 +125,7 @@ const agelosRoute: MapNode[] = [
     title: "보초아겔로스 초소",
     subtitle: "엘리트구역",
     next: ["agelos-6a", "agelos-camp-2"],
-    enemyIds: ["agelos-sentinel", "agelos-double-horn-alpha"],
+    enemyIds: ["sentinel", "heavy-ram-alpha"],
     rewardTier: "elite",
   },
   {
@@ -136,7 +136,7 @@ const agelosRoute: MapNode[] = [
     title: "쌍뿔 무리길",
     subtitle: "일반구역 · 강화 개체",
     next: ["agelos-6a", "agelos-6b"],
-    enemyIds: ["agelos-double-horn", "agelos-big-horn-alpha"],
+    enemyIds: ["heavy-ram", "ram-alpha"],
     rewardTier: "mid",
   },
   {
@@ -147,7 +147,7 @@ const agelosRoute: MapNode[] = [
     title: "삼미 흔적지",
     subtitle: "일반구역 · 강화 개체",
     next: ["agelos-6b", "agelos-shop-2"],
-    enemyIds: ["agelos-three-tail", "tunneling-needworm"],
+    enemyIds: ["heavy-sting", "tunneling-nidwyrm"],
     rewardTier: "mid",
   },
   {
@@ -168,7 +168,7 @@ const agelosRoute: MapNode[] = [
     title: "일미 알파 둥지",
     subtitle: "일반구역",
     next: ["agelos-7a", "agelos-event-2"],
-    enemyIds: ["agelos-one-tail-alpha", "agelos-mimic-alpha"],
+    enemyIds: ["sting-alpha", "falsewings-alpha"],
     rewardTier: "mid",
   },
   {
@@ -179,7 +179,7 @@ const agelosRoute: MapNode[] = [
     title: "쌍뿔 알파 돌파로",
     subtitle: "일반구역 · 강화 개체",
     next: ["agelos-event-2", "agelos-elite-2"],
-    enemyIds: ["agelos-double-horn-alpha", "agelos-one-tail-alpha"],
+    enemyIds: ["heavy-ram-alpha", "sting-alpha"],
     rewardTier: "late",
   },
   {
@@ -199,7 +199,7 @@ const agelosRoute: MapNode[] = [
     title: "삼미 둥지",
     subtitle: "일반구역 · 강화 개체",
     next: ["agelos-8a", "agelos-8b"],
-    enemyIds: ["agelos-three-tail", "agelos-mimic-alpha"],
+    enemyIds: ["heavy-sting", "falsewings-alpha"],
     rewardTier: "late",
   },
   {
@@ -220,7 +220,7 @@ const agelosRoute: MapNode[] = [
     title: "삼미 알파 변이장",
     subtitle: "일반구역 · 강화 α",
     next: ["agelos-9a", "agelos-elite-2"],
-    enemyIds: ["agelos-three-tail-alpha", "agelos-big-horn-alpha"],
+    enemyIds: ["heavy-sting-alpha", "ram-alpha"],
     rewardTier: "late",
   },
   {
@@ -231,7 +231,7 @@ const agelosRoute: MapNode[] = [
     title: "모방 알파 군락",
     subtitle: "일반구역",
     next: ["agelos-elite-2", "agelos-shop-3"],
-    enemyIds: ["agelos-mimic-alpha", "agelos-double-horn-alpha"],
+    enemyIds: ["falsewings-alpha", "heavy-ram-alpha"],
     rewardTier: "late",
   },
   {
@@ -242,7 +242,7 @@ const agelosRoute: MapNode[] = [
     title: "결정 외곽 방어선",
     subtitle: "일반구역 · 보스 전초",
     next: ["agelos-mid-boss", "agelos-camp-3"],
-    enemyIds: ["agelos-three-tail-alpha", "agelos-mimic-alpha"],
+    enemyIds: ["heavy-sting-alpha", "falsewings-alpha"],
     rewardTier: "late",
   },
   {
@@ -263,7 +263,7 @@ const agelosRoute: MapNode[] = [
     title: "형상아겔로스 변이장",
     subtitle: "엘리트구역",
     next: ["agelos-11a", "agelos-camp-3"],
-    enemyIds: ["agelos-shaper", "agelos-three-tail-alpha"],
+    enemyIds: ["effigy", "heavy-sting-alpha"],
     rewardTier: "elite",
   },
   {
@@ -283,7 +283,7 @@ const agelosRoute: MapNode[] = [
     title: "결정아겔로스 전초체",
     subtitle: "엘리트구역 · 중간 보스",
     next: ["agelos-11a", "agelos-11b"],
-    enemyIds: ["agelos-crystal"],
+    enemyIds: ["walking-chrysopolis"],
     rewardTier: "elite",
   },
   {
@@ -294,7 +294,7 @@ const agelosRoute: MapNode[] = [
     title: "결정 협곡 입구",
     subtitle: "일반구역 · 후반",
     next: ["agelos-12a", "agelos-shop-4"],
-    enemyIds: ["agelos-double-horn-alpha", "agelos-mimic-alpha"],
+    enemyIds: ["heavy-ram-alpha", "falsewings-alpha"],
     rewardTier: "late",
   },
   {
@@ -315,7 +315,7 @@ const agelosRoute: MapNode[] = [
     title: "형상 잔향로",
     subtitle: "일반구역",
     next: ["agelos-13a", "agelos-camp-4"],
-    enemyIds: ["agelos-shaper", "agelos-mimic-alpha"],
+    enemyIds: ["effigy", "falsewings-alpha"],
     rewardTier: "late",
   },
   {
@@ -336,7 +336,7 @@ const agelosRoute: MapNode[] = [
     title: "보초 군집로",
     subtitle: "일반구역 · 위험",
     next: ["agelos-13b", "agelos-elite-3"],
-    enemyIds: ["agelos-sentinel", "agelos-double-horn-alpha"],
+    enemyIds: ["sentinel", "heavy-ram-alpha"],
     rewardTier: "late",
   },
   {
@@ -347,7 +347,7 @@ const agelosRoute: MapNode[] = [
     title: "결정화 둥지",
     subtitle: "일반구역 · 후반",
     next: ["agelos-14a", "agelos-elite-3"],
-    enemyIds: ["agelos-three-tail-alpha", "agelos-mimic-alpha"],
+    enemyIds: ["heavy-sting-alpha", "falsewings-alpha"],
     rewardTier: "late",
   },
   {
@@ -367,7 +367,7 @@ const agelosRoute: MapNode[] = [
     title: "알파 밀집지",
     subtitle: "일반구역 · 위험",
     next: ["agelos-14b", "agelos-shop-5"],
-    enemyIds: ["agelos-one-tail-alpha", "agelos-double-horn-alpha", "agelos-mimic-alpha"],
+    enemyIds: ["sting-alpha", "heavy-ram-alpha", "falsewings-alpha"],
     rewardTier: "late",
   },
   {
@@ -378,7 +378,7 @@ const agelosRoute: MapNode[] = [
     title: "형상 보초 복합체",
     subtitle: "엘리트구역",
     next: ["agelos-15a", "agelos-camp-5"],
-    enemyIds: ["agelos-shaper", "agelos-sentinel"],
+    enemyIds: ["effigy", "sentinel"],
     rewardTier: "elite",
   },
   {
@@ -389,7 +389,7 @@ const agelosRoute: MapNode[] = [
     title: "결정 전초길",
     subtitle: "일반구역 · 최종 전초",
     next: ["agelos-15a", "agelos-shop-5"],
-    enemyIds: ["agelos-three-tail-alpha", "agelos-sentinel"],
+    enemyIds: ["heavy-sting-alpha", "sentinel"],
     rewardTier: "late",
   },
   {
@@ -410,7 +410,7 @@ const agelosRoute: MapNode[] = [
     title: "결정화 보초선",
     subtitle: "엘리트구역",
     next: ["agelos-16a", "agelos-camp-5"],
-    enemyIds: ["agelos-sentinel", "agelos-three-tail-alpha"],
+    enemyIds: ["sentinel", "heavy-sting-alpha"],
     rewardTier: "elite",
   },
   {
@@ -431,7 +431,7 @@ const agelosRoute: MapNode[] = [
     title: "결정 파편로",
     subtitle: "일반구역 · 최종 전초",
     next: ["agelos-16b", "agelos-elite-4"],
-    enemyIds: ["agelos-shaper", "agelos-mimic-alpha"],
+    enemyIds: ["effigy", "falsewings-alpha"],
     rewardTier: "late",
   },
   {
@@ -451,7 +451,7 @@ const agelosRoute: MapNode[] = [
     title: "핵심지 외곽",
     subtitle: "일반구역 · 최종 전초",
     next: ["agelos-17a", "agelos-17b"],
-    enemyIds: ["agelos-sentinel", "agelos-double-horn-alpha"],
+    enemyIds: ["sentinel", "heavy-ram-alpha"],
     rewardTier: "late",
   },
   {
@@ -462,7 +462,7 @@ const agelosRoute: MapNode[] = [
     title: "형상 침식로",
     subtitle: "일반구역 · 최종 전초",
     next: ["agelos-17b", "agelos-elite-4"],
-    enemyIds: ["agelos-shaper", "agelos-three-tail-alpha"],
+    enemyIds: ["effigy", "heavy-sting-alpha"],
     rewardTier: "late",
   },
   {
@@ -473,7 +473,7 @@ const agelosRoute: MapNode[] = [
     title: "결정 핵 외벽",
     subtitle: "일반구역 · 위험",
     next: ["agelos-18a", "agelos-shop-6"],
-    enemyIds: ["agelos-sentinel", "agelos-mimic-alpha"],
+    enemyIds: ["sentinel", "falsewings-alpha"],
     rewardTier: "late",
   },
   {
@@ -494,7 +494,7 @@ const agelosRoute: MapNode[] = [
     title: "최종 보초아겔로스",
     subtitle: "엘리트구역 · 보스 전초",
     next: ["agelos-19a", "agelos-camp-6"],
-    enemyIds: ["agelos-sentinel", "agelos-shaper", "agelos-mimic-alpha"],
+    enemyIds: ["sentinel", "effigy", "falsewings-alpha"],
     rewardTier: "elite",
   },
   {
@@ -505,7 +505,7 @@ const agelosRoute: MapNode[] = [
     title: "결정 핵 진입로",
     subtitle: "일반구역 · 보스 전초",
     next: ["agelos-19a", "agelos-camp-6"],
-    enemyIds: ["agelos-three-tail-alpha", "agelos-sentinel"],
+    enemyIds: ["heavy-sting-alpha", "sentinel"],
     rewardTier: "late",
   },
   {
@@ -516,7 +516,7 @@ const agelosRoute: MapNode[] = [
     title: "결정 핵 측면로",
     subtitle: "일반구역 · 보스 전초",
     next: ["agelos-camp-6", "agelos-19b"],
-    enemyIds: ["agelos-shaper", "agelos-double-horn-alpha"],
+    enemyIds: ["effigy", "heavy-ram-alpha"],
     rewardTier: "late",
   },
   {
@@ -546,7 +546,7 @@ const agelosRoute: MapNode[] = [
     title: "결정 핵 수문장",
     subtitle: "엘리트구역 · 보스 전",
     next: ["agelos-final-boss"],
-    enemyIds: ["agelos-shaper", "agelos-sentinel"],
+    enemyIds: ["effigy", "sentinel"],
     rewardTier: "elite",
   },
   {
@@ -557,7 +557,7 @@ const agelosRoute: MapNode[] = [
     title: "마지막 군집로",
     subtitle: "일반구역 · 보스 전",
     next: ["agelos-final-boss"],
-    enemyIds: ["agelos-three-tail-alpha", "agelos-mimic-alpha"],
+    enemyIds: ["heavy-sting-alpha", "falsewings-alpha"],
     rewardTier: "late",
   },
   {
@@ -568,7 +568,7 @@ const agelosRoute: MapNode[] = [
     title: "결정아겔로스 핵심지",
     subtitle: "보스구역 · 결정아겔로스",
     next: [],
-    enemyIds: ["agelos-crystal"],
+    enemyIds: ["walking-chrysopolis"],
     rewardTier: "boss",
   },
 ];
