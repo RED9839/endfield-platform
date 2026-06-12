@@ -1,4 +1,5 @@
 export type Screen =
+  | "deployment"
   | "map"
   | "battle"
   | "reward"
@@ -240,11 +241,13 @@ export type RunState = {
 
 export type RunActions = {
   startRun: () => void;
+  startDeployment: () => void;
   abandonRun: () => void;
   enterNode: (nodeId: string) => void;
   tickBattle: () => void;
   performAction: (operatorId: string, kind: SkillKind) => void;
   equipRewardGear: (gearSlug: string, operatorId: string) => void;
+  skipReward: () => void;
   resolveEvent: (choiceId: string) => void;
   rest: (mode: "heal" | "train") => void;
   continueToMap: () => void;
