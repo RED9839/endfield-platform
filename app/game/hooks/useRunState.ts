@@ -72,8 +72,8 @@ function initialState(): RunState {
     availableNodes: startingNodeIds,
     pendingGearSlugs: [],
     credits: 0,
-    sp: 3,
-    maxSp: 3,
+    sp: 2,
+    maxSp: 2,
     cp: 0,
     maxCp: 3,
     battlesWon: 0,
@@ -148,8 +148,7 @@ function getStatusBonus(actor: PartyMember, target: BattleEnemy) {
 
 function hasArtsAttachment(enemy: BattleEnemy) {
   return enemy.statuses.some((status) => ARTS_ATTACHMENT_STATUSES.includes(status));
-}
-
+}\n
 function getLinkTarget(actor: PartyMember, battle: BattleState) {
   if (actor.linkCondition === "defense-break") {
     return battle.enemies.find((enemy) => enemy.hp > 0 && enemy.statuses.includes("defense-break"));
