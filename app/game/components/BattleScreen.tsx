@@ -1,0 +1,161 @@
+import Image from "next/image";
+import { BatteryCharging, Shield, Sparkles, Swords } from "lucide-react";
+
+import type {
+  BattleState,
+  PartyMember,
+  SkillKind,
+} from "../types/game";
+
+function HealthBar({ value, max }: { value: number; max: number }) {
+  const width = Math.max(0, Math.min(100, (value / max) * 100));
+  return (
+    <div className="h-1.5 overflow-hidden rounded-full bg-black/70">
+      <div
+        className="h-full rounded-full bg-gradient-to-r from-red-600 to-orange-400 transition-all"
+        style={{ width: `${width}%` }}
+      />
+    </div>
+  );
+}
+
+export default function BattleScreen({
+  party,
+  battle,
+  sp,
+  maxSp,
+  onAction,
+}: {
+  party: PartyMember[];
+  battle: BattleState;
+  sp: number;
+  maxSp: number;
+  onAction: (operatorId: string, kind: SkillKind) => void;
+}) {
+  return (
+    <section className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6">
+      <div className="mb-5 flex items-end justify-between gap-4">
+        <div>
+          <p className="text-[10px] font-black tracking-[0.3em] text-red-300/70">
+            COMBAT PHASE
+          </p>
+          <h1 className="mt-1 text-2xl font-black text-white">
+            교전 {battle.turn}
+          </h1>
+        </div>
+        <div className="flex items-center gap-2 rounded-xl border border-cyan-300/20 bg-cyan-300/[0.06] px-4 py-2 text-cyan-100">
+          <BatteryCharging className="h-4 w-4" />
+          <span className="text-xs font-black">SP {sp} / {maxSp}</span>
+        </div>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-[1fr_260px]">
+        <div className="overflow-hidden rounded-[26px] border border-white/10 bg-[radial-gradient(circle_at_50%_20%,#182129_0%,#080b0f_48%,#030405_100%)] p-4 sm:p-6">
+          <div className="grid min-h-[240px] grid-cols-2 items-end gap-3 sm:grid-cols-4">
+            {battle.enemies.map((enemy) => (
+              <article
+                key={enemy.id}
+                className={`relative overflow-hidden rounded-2xl border p-4 ${
+                  enemy.hp > 0
+                    ? enemy.boss
+                      ? "border-orange-400/40 bg-orange-950/20"
+                      : "border-red-400/20 bg-red-950/10"
+                    : "border-white/5 bg-black/20 opacity-30"
+                }`}
+              >
+                <div className="flex h-24 items-center justify-center">
+                  <Shield className="h-16 w-16 text-red-200/20" />
+                </div>
+                <p className="truncate text-sm font-black text-white">{enemy.name}</p>
+                <p className="mt-1 text-[10px] text-red-200/60">{enemy.intent}</p>
+                <div className="mt-3">
+                  <HealthBar value={enemy.hp} max={enemy.maxHp} />
+                  <p className="mt-1 text-right text-[10px] font-bold text-zinc-400">
+                    {enemy.hp} / {enemy.maxHp}
+                  </p>
+                </div>
+              </article>
+            ))}
+          </div>
+
+          <div className="my-5 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {party.map((member) => (
+              <article
+                key={member.id}
+                className={`overflow-hidden rounded-2xl border border-white/10 bg-black/40 ${
+                  member.hp <= 0 ? "pointer-events-none grayscale opacity-35" : ""
+                }`}
+              >
+                <div className="flex items-center gap-3 p-3">
+                  <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-zinc-900">
+                    <Image
+                      src={member.image}
+                      alt=""
+                      fill
+                      sizes="56px"
+                      className="object-cover"
+                    />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-black text-white">{member.name}</p>
+                    <p className="text-[10px] font-bold text-yellow-200/60">{member.role}</p>
+                    <div className="mt-2">
+                      <HealthBar value={member.hp} max={member.maxHp} />
+                      <p className="mt-1 text-[9px] text-zinc-500">
+                        HP {member.hp}/{member.maxHp}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 border-t border-white/8">
+                  <button
+                    type="button"
+                    onClick={() => onAction(member.id, "attack")}
+                    className="flex flex-col items-center gap-1 px-1 py-3 text-[9px] font-bold text-zinc-300 transition hover:bg-white/5 hover:text-white"
+                  >
+                    <Swords className="h-4 w-4" /> 공격
+                  </button>
+                  <button
+                    type="button"
+                    disabled={sp < member.skillCost}
+                    onClick={() => onAction(member.id, "skill")}
+                    className="flex flex-col items-center gap-1 border-x border-white/8 px-1 py-3 text-[9px] font-bold text-cyan-200 transition hover:bg-cyan-300/10 disabled:opacity-25"
+                  >
+                    <Sparkles className="h-4 w-4" /> 스킬 {member.skillCost}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onAction(member.id, "guard")}
+                    className="flex flex-col items-center gap-1 px-1 py-3 text-[9px] font-bold text-amber-200 transition hover:bg-amber-300/10"
+                  >
+                    <Shield className="h-4 w-4" /> 방어
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+
+        <aside className="rounded-[22px] border border-white/10 bg-[#080b0f] p-4">
+          <p className="text-[10px] font-black tracking-[0.24em] text-zinc-500">
+            BATTLE LOG
+          </p>
+          <div className="mt-4 space-y-3">
+            {battle.log.map((entry, index) => (
+              <p
+                key={`${entry}-${index}`}
+                className={`border-l pl-3 text-xs leading-5 ${
+                  index === 0 ? "border-yellow-300 text-zinc-200" : "border-white/10 text-zinc-500"
+                }`}
+              >
+                {entry}
+              </p>
+            ))}
+          </div>
+        </aside>
+      </div>
+    </section>
+  );
+}
