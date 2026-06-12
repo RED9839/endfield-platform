@@ -134,6 +134,7 @@ export type GameEventChoice = {
   heal?: number;
   credits?: number;
   gearSlug?: string;
+  gearReward?: boolean;
 };
 
 export type GameEvent = {
