@@ -568,10 +568,23 @@ export function useRunState(): RunState & RunActions {
       };
 
       if (node.type === "event") {
-        const event = events[current.visitedNodes.length % events.length];
-        return { ...base, screen: "event", eventId: event.id };
-      }
-      if (node.type === "camp") return { ...base, screen: "camp" };
+  const event = events[current.visitedNodes.length % events.length];
+  return { ...base, screen: "event", eventId: event.id };
+}
+
+if (node.type === "shop") {
+  return {
+    ...base,
+    screen: "reward",
+    pendingGearSlugs: chooseGearRewards(
+      current.battlesWon + 1,
+      3,
+      node.rewardTier ?? "mid",
+    ),
+  };
+}
+
+if (node.type === "camp") return { ...base, screen: "camp" };
 
       const battleStart = applyBattleStartSetEffects(resetPartyActionGauges(current.party), current.sp, current.maxSp);
 
@@ -763,7 +776,7 @@ export function useRunState(): RunState & RunActions {
           battlesWon: won,
           screen: "reward",
           credits: current.credits + (node.type === "elite" ? 100 : 55),
-          pendingGearSlugs: chooseGearRewards(won),
+          pendingGearSlugs: chooseGearRewards(won, 3, node.rewardTier ?? "early"),
         };
       }
 
@@ -836,7 +849,13 @@ export function useRunState(): RunState & RunActions {
       if (choice.gearSlug || choice.gearReward) {
         next = {
           ...next,
-          pendingGearSlugs: choice.gearSlug ? [choice.gearSlug] : chooseGearRewards(current.battlesWon + 1),
+          pendingGearSlugs: choice.gearSlug
+  ? [choice.gearSlug]
+  : chooseGearRewards(
+      current.battlesWon + 1,
+      3,
+      getMapNode(current.currentNodeId ?? "").rewardTier ?? "early",
+    ),
           screen: "reward",
         };
         return next;
