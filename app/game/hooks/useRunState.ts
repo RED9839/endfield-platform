@@ -67,7 +67,7 @@ function freshParty(): PartyMember[] {
 
 function initialState(): RunState {
   return {
-    screen: "map",
+    screen: "deployment",
     party: freshParty(),
     collectedGears: [],
     visitedNodes: [],
@@ -344,261 +344,157 @@ function applySkillMechanic(actor: PartyMember, target: BattleEnemy, baseDamage:
   if (actor.skillMechanic === "originium-crystal") {
     if (kind === "link-skill" && statuses.includes("originium-crystal")) {
       statuses = withoutStatus(statuses, "originium-crystal");
-      damage += Math.ceil(actor.attack * 1.7);
-      notes.push("오리지늄 결정 소모", "본질 붕괴");
-    } else if (kind === "ultimate" && statuses.includes("originium-crystal")) {
-      statuses = withoutStatus(statuses, "originium-crystal");
-      damage += Math.ceil(actor.attack * 1.2);
-      notes.push("오리지늄 결정 폭격", "본질 붕괴");
-    } else if (kind === "battle-skill") {
+      damage += Math.ceil(baseDamage * 0.35);
+      notes.push("crystal shatter");
+    }
+    if (kind === "battle-skill") {
       statuses = addStatus(statuses, "originium-crystal");
-      notes.push("오리지늄 결정 부착");
+      notes.push("crystal attached");
     }
   }
 
   if (actor.skillMechanic === "electric-attachment") {
-    if (actor.passiveMechanic === "obliteration-protocol" && target.statuses.includes("defense-break")) {
-      damage += Math.ceil(actor.attack * 0.6);
-      notes.push("오블리터레이션 프로토콜");
-    }
-    if (kind === "link-skill" && statuses.includes("electric-attachment")) {
-      statuses = addStatus(withoutStatus(statuses, "electric-attachment"), "shock");
-      damage += Math.ceil(actor.attack * 0.8);
-      notes.push("감전 전환");
-    } else if (kind === "battle-skill") {
+    if (kind === "battle-skill") {
       statuses = addStatus(statuses, "electric-attachment");
-      notes.push("전기 부착");
+      notes.push("electric attached");
+    }
+    if (kind === "link-skill") {
+      statuses = addStatus(withoutStatus(statuses, "electric-attachment"), "shock");
+      damage += 4;
+      notes.push("shock chain");
     }
   }
 
-  if (
-    actor.skillMechanic === "combo-strike" &&
-    kind === "link-skill" &&
-    target.statuses.includes("defense-break")
-  ) {
-    damage += Math.ceil(actor.attack * 0.75 + Math.min(5, actor.passiveStacks) * actor.attack * 0.08);
-    notes.push("방어 불능 연격");
+  if (actor.skillMechanic === "combo-strike") {
+    damage += Math.ceil(baseDamage * 0.18);
+    if (kind !== "attack") notes.push("blade stack");
+  }
+
+  if (actor.skillMechanic === "protective-arts") {
+    damage += kind === "ultimate" ? 5 : 2;
+    notes.push("protective arts");
   }
 
   if (actor.skillMechanic === "corrosion-support") {
+    if (kind === "link-skill") {
+      statuses = addStatus(statuses, "corrosion");
+      notes.push("corrosion");
+    }
     if (kind === "battle-skill" && statuses.includes("corrosion")) {
       statuses = withoutStatus(statuses, "corrosion");
-      damage += Math.ceil(actor.attack * 1.25);
       statuses = addStatus(statuses, "defense-break");
-      notes.push("부식 소모", "취약 부여", "친구의 그림자");
-    } else if (kind === "link-skill") {
-      statuses = addStatus(statuses, "corrosion");
-      notes.push("부식 부여");
-    } else if (kind === "ultimate") {
-      notes.push("돌리 씨의 그림자");
+      damage += 5;
+      notes.push("corrosion burst");
     }
-  }
-
-  if (kind === "ultimate") {
-    notes.push(actor.ultimateName);
+    if (kind === "ultimate") {
+      notes.push("친구의 그림자");
+    }
   }
 
   return { damage, statuses, notes };
 }
 
-function collectReadyUnits(party: PartyMember[], enemies: BattleEnemy[]) {
-  return [
-    ...party
-      .filter((member) => member.hp > 0 && member.actionGauge >= READY_GAUGE)
-      .map((member) => ({
-        id: member.id,
-        name: member.name,
-        side: "party" as const,
-        speed: member.speed,
-        gauge: member.actionGauge,
-      })),
-    ...enemies
-      .filter((enemy) => enemy.hp > 0 && enemy.actionGauge >= READY_GAUGE)
-      .map((enemy) => ({
-        id: enemy.id,
-        name: enemy.name,
-        side: "enemy" as const,
-        speed: enemy.speed,
-        gauge: enemy.actionGauge,
-      })),
-  ].sort((a, b) => {
-    if (b.gauge !== a.gauge) return b.gauge - a.gauge;
-    if (a.side !== b.side) return a.side === "party" ? -1 : 1;
-    if (b.speed !== a.speed) return b.speed - a.speed;
-    return a.id.localeCompare(b.id);
-  });
-}
-
-function advanceGaugeClock(party: PartyMember[], enemies: BattleEnemy[]) {
-  if (collectReadyUnits(party, enemies).length > 0) return { party, enemies };
-
-  const livingUnits = [
-    ...party.filter((member) => member.hp > 0),
-    ...enemies.filter((enemy) => enemy.hp > 0),
-  ];
-  if (livingUnits.length === 0) return { party, enemies };
-
-  const timeToReady = Math.min(
-    ...livingUnits.map((unit) =>
-      Math.max(1, Math.ceil((READY_GAUGE - unit.actionGauge) / unit.speed)),
-    ),
-  );
-
+function applyGearStats(member: PartyMember): PartyMember {
+  const gear = getEquippedGears(member.gear);
+  const stats = getGearStatDeltas(gear);
   return {
-    party: party.map((member) =>
-      member.hp > 0
-        ? { ...member, actionGauge: member.actionGauge + member.speed * timeToReady }
-        : member,
-    ),
-    enemies: enemies.map((enemy) =>
-      enemy.hp > 0
-        ? { ...enemy, actionGauge: enemy.actionGauge + enemy.speed * timeToReady }
-        : enemy,
-    ),
-  };
-}
-
-function spendGauge<T extends PartyMember | BattleEnemy>(unit: T, cost: number): T {
-  return { ...unit, actionGauge: unit.actionGauge - cost };
-}
-
-function buildTimeline(party: PartyMember[], enemies: BattleEnemy[], count = 6): TimelineEntry[] {
-  let previewParty = party.map((member) => ({ ...member }));
-  let previewEnemies = enemies.map((enemy) => ({ ...enemy }));
-  const timeline: TimelineEntry[] = [];
-
-  for (let index = 0; index < count; index += 1) {
-    const advanced = advanceGaugeClock(previewParty, previewEnemies);
-    previewParty = advanced.party;
-    previewEnemies = advanced.enemies;
-
-    const next = collectReadyUnits(previewParty, previewEnemies)[0];
-    if (!next) break;
-    timeline.push({
-      id: next.id,
-      name: next.name,
-      side: next.side,
-      gauge: next.gauge,
-    });
-
-    if (next.side === "party") {
-      previewParty = previewParty.map((member) =>
-        member.id === next.id ? spendGauge(member, ACTION_COST.attack) : member,
-      );
-    } else {
-      previewEnemies = previewEnemies.map((enemy) =>
-        enemy.id === next.id ? spendGauge(enemy, ENEMY_ACTION_COST) : enemy,
-      );
-    }
-  }
-
-  return timeline;
-}
-
-function activateNextUnit(party: PartyMember[], enemies: BattleEnemy[]) {
-  const advanced = advanceGaugeClock(party, enemies);
-  const next = collectReadyUnits(advanced.party, advanced.enemies)[0];
-
-  return {
-    party: advanced.party,
-    enemies: advanced.enemies,
-    activeUnitId: next?.id,
-    activeSide: next?.side as UnitSide | undefined,
-    timeline: buildTimeline(advanced.party, advanced.enemies),
-  };
-}
-
-function tickCombatGauges(party: PartyMember[], enemies: BattleEnemy[], activeUnitId?: string) {
-  return {
-    party: party.map((member) =>
-      member.hp > 0 && member.id !== activeUnitId
-        ? { ...member, actionGauge: member.actionGauge + member.speed * REAL_TIME_TICK }
-        : member,
-    ),
-    enemies: enemies.map((enemy) =>
-      enemy.hp > 0 && enemy.id !== activeUnitId
-        ? { ...enemy, actionGauge: enemy.actionGauge + enemy.speed * REAL_TIME_TICK }
-        : enemy,
-    ),
-  };
-}
-
-function applyGearStats(member: PartyMember, gear: RunGear): PartyMember {
-  const deltas = getGearStatDeltas(gear, member.element);
-  const next = { ...member };
-
-  next.attack += deltas.attack ?? 0;
-  next.maxHp += deltas.maxHp ?? 0;
-  next.defense += deltas.defense ?? 0;
-  next.evasion += deltas.evasion ?? 0;
-  next.speed += deltas.speed ?? 0;
-  next.battleSkillPower += deltas.battleSkillPower ?? 0;
-  next.linkSkillPower += deltas.linkSkillPower ?? 0;
-  next.ultimatePower += deltas.ultimatePower ?? 0;
-  next.ultimateCharge = Math.min(100, next.ultimateCharge + (deltas.ultimateCharge ?? 0));
-
-  return next;
-}
-
-function recalculateMemberFromGear(member: PartyMember, gear: GearLoadout): PartyMember {
-  const base = getBaseOperator(member.id);
-  const hpRatio = member.maxHp > 0 ? member.hp / member.maxHp : 1;
-  const recalculated = getEquippedGears(gear).reduce<PartyMember>(
-    (next, item) => applyGearStats(next, item),
-    {
-      ...base,
-      hp: base.maxHp,
-      shield: member.shield,
-      ultimateCharge: member.ultimateCharge,
-      actionGauge: member.actionGauge,
-      passiveStacks: member.passiveStacks,
-      gear,
-    },
-  );
-
-  return {
-    ...recalculated,
-    evasion: Math.min(EVASION_CAP, recalculated.evasion),
-    hp: Math.max(1, Math.min(recalculated.maxHp, Math.round(recalculated.maxHp * hpRatio))),
+    ...member,
+    maxHp: getBaseOperator(member.id).maxHp + stats.hp,
+    attack: getBaseOperator(member.id).attack + stats.attack,
+    defense: getBaseOperator(member.id).defense + stats.defense,
+    evasion: getBaseOperator(member.id).evasion + stats.evasion,
+    speed: getBaseOperator(member.id).speed + stats.speed,
   };
 }
 
 function equipGearToMember(member: PartyMember, gear: RunGear): PartyMember {
   const slot = getGearSlot(gear, member.gear.kit1, member.gear.kit2);
-  return recalculateMemberFromGear(member, {
-    ...member.gear,
-    [slot]: gear,
+  const equipped = applyGearStats({
+    ...member,
+    gear: {
+      ...member.gear,
+      [slot]: gear,
+    },
   });
-}
-
-function applyBattleStartSetEffects(party: PartyMember[], sp: number, maxSp: number) {
-  const hasPioneer = party.some((member) => hasSet(member, "개척"));
-  const boostedParty = party.map((member) => {
-    const sets = activeSets(member);
-    let next = member;
-    if (sets.includes("생체 보조")) {
-      next = { ...next, maxHp: next.maxHp + 10, hp: Math.min(next.maxHp + 10, next.hp + 10) };
-    }
-    if (sets.includes("아부레이의 메아리")) {
-      next = { ...next, ultimateCharge: Math.min(100, next.ultimateCharge + 8) };
-    }
-    return next;
-  });
-
   return {
-    party: boostedParty,
-    sp: hasPioneer ? Math.min(maxSp, sp + 1) : sp,
+    ...equipped,
+    hp: Math.min(equipped.maxHp, member.hp + Math.max(0, equipped.maxHp - member.maxHp)),
   };
 }
 
-function resolveAutomaticBattleTurns(state: RunState): RunState {
-  let current: RunState = state;
+function spendGauge<T extends { actionGauge: number }>(unit: T, amount: number): T {
+  return {
+    ...unit,
+    actionGauge: Math.max(0, unit.actionGauge - amount),
+  };
+}
 
-  for (let safety = 0; safety < 20; safety += 1) {
+function tickCombatGauges(party: PartyMember[], enemies: BattleEnemy[], lockedPartyId?: string) {
+  const livingParty = party.filter((member) => member.hp > 0);
+  const livingEnemies = enemies.filter((enemy) => enemy.hp > 0);
+  const nextParty = party.map((member) =>
+    member.hp <= 0 || member.id === lockedPartyId
+      ? member
+      : { ...member, actionGauge: Math.min(READY_GAUGE, member.actionGauge + member.speed * REAL_TIME_TICK) },
+  );
+  const nextEnemies = enemies.map((enemy) =>
+    enemy.hp <= 0 ? enemy : { ...enemy, actionGauge: Math.min(READY_GAUGE, enemy.actionGauge + enemy.speed * REAL_TIME_TICK) },
+  );
+  const timeline: TimelineEntry[] = [
+    ...nextParty
+      .filter((member) => member.hp > 0)
+      .map((member) => ({ id: member.id, name: member.name, side: "party" as UnitSide, gauge: member.actionGauge })),
+    ...nextEnemies
+      .filter((enemy) => enemy.hp > 0)
+      .map((enemy) => ({ id: enemy.id, name: enemy.name, side: "enemy" as UnitSide, gauge: enemy.actionGauge })),
+  ]
+    .sort((a, b) => b.gauge - a.gauge)
+    .slice(0, 8);
+
+  if (livingParty.length === 0 || livingEnemies.length === 0) {
+    return { party: nextParty, enemies: nextEnemies, timeline };
+  }
+
+  const readyParty = nextParty.find((member) => member.hp > 0 && member.actionGauge >= READY_GAUGE);
+  if (readyParty) {
+    return {
+      party: nextParty,
+      enemies: nextEnemies,
+      activeSide: "party" as UnitSide,
+      activeUnitId: readyParty.id,
+      timeline,
+    };
+  }
+
+  const readyEnemy = nextEnemies.find((enemy) => enemy.hp > 0 && enemy.actionGauge >= READY_GAUGE);
+  if (readyEnemy) {
+    return {
+      party: nextParty,
+      enemies: nextEnemies,
+      activeSide: "enemy" as UnitSide,
+      activeUnitId: readyEnemy.id,
+      timeline,
+    };
+  }
+
+  return { party: nextParty, enemies: nextEnemies, timeline };
+}
+
+function resolveAutomaticBattleTurns(state: RunState) {
+  let current = state;
+
+  for (let safety = 0; safety < 6; safety += 1) {
     if (!current.battle || current.screen !== "battle") return current;
+    if (current.battle.activeSide === "party" && current.battle.activeUnitId) return current;
 
+    const ticked = tickCombatGauges(current.party, current.battle.enemies);
     const battle = current.battle;
-    const activated = activateNextUnit(current.party, battle.enemies);
+    const activated = {
+      ...ticked,
+      activeSide: ticked.activeSide ?? battle.activeSide,
+      activeUnitId: ticked.activeUnitId ?? battle.activeUnitId,
+    };
+
     current = {
       ...current,
       party: activated.party,
@@ -690,6 +586,14 @@ export function useRunState(): RunState & RunActions {
 
   const startRun = useCallback(() => setState(initialState()), []);
 
+  const startDeployment = useCallback(() => {
+    setState((current) => ({
+      ...current,
+      screen: "map",
+      availableNodes: current.availableNodes.length > 0 ? current.availableNodes : startingNodeIds,
+    }));
+  }, []);
+
   const abandonRun = useCallback(() => {
     setState((current) => ({
       ...current,
@@ -710,23 +614,23 @@ export function useRunState(): RunState & RunActions {
       };
 
       if (node.type === "event") {
-  const event = events[current.visitedNodes.length % events.length];
-  return { ...base, screen: "event", eventId: event.id };
-}
+        const event = events[current.visitedNodes.length % events.length];
+        return { ...base, screen: "event", eventId: event.id };
+      }
 
-if (node.type === "shop") {
-  return {
-    ...base,
-    screen: "reward",
-    pendingGearSlugs: chooseGearRewards(
-      current.battlesWon + 1,
-      3,
-      node.rewardTier ?? "mid",
-    ),
-  };
-}
+      if (node.type === "shop") {
+        return {
+          ...base,
+          screen: "reward",
+          pendingGearSlugs: chooseGearRewards(
+            current.battlesWon + 1,
+            3,
+            node.rewardTier ?? "mid",
+          ),
+        };
+      }
 
-if (node.type === "camp") return { ...base, screen: "camp" };
+      if (node.type === "camp") return { ...base, screen: "camp" };
 
       const battleStart = applyBattleStartSetEffects(resetPartyActionGauges(current.party), current.sp, current.maxSp);
 
@@ -1001,6 +905,20 @@ if (node.type === "camp") return { ...base, screen: "camp" };
     });
   }, []);
 
+  const skipReward = useCallback(() => {
+    setState((current) => ({
+      ...current,
+      pendingGearSlugs: [],
+      screen: "map",
+      availableNodes: current.currentNodeId
+        ? getMapNode(current.currentNodeId).next
+        : startingNodeIds,
+      battle: undefined,
+      eventId: undefined,
+      sp: current.maxSp,
+    }));
+  }, []);
+
   const resolveEvent = useCallback((choiceId: string) => {
     setState((current) => {
       const event = events.find((item) => item.id === current.eventId);
@@ -1014,12 +932,12 @@ if (node.type === "camp") return { ...base, screen: "camp" };
         next = {
           ...next,
           pendingGearSlugs: choice.gearSlug
-  ? [choice.gearSlug]
-  : chooseGearRewards(
-      current.battlesWon + 1,
-      3,
-      getMapNode(current.currentNodeId ?? "").rewardTier ?? "early",
-    ),
+            ? [choice.gearSlug]
+            : chooseGearRewards(
+                current.battlesWon + 1,
+                3,
+                getMapNode(current.currentNodeId ?? "").rewardTier ?? "early",
+              ),
           screen: "reward",
         };
         return next;
@@ -1064,11 +982,13 @@ if (node.type === "camp") return { ...base, screen: "camp" };
   return {
     ...state,
     startRun,
+    startDeployment,
     abandonRun,
     enterNode,
     tickBattle,
     performAction,
     equipRewardGear,
+    skipReward,
     resolveEvent,
     rest,
     continueToMap,
