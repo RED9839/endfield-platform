@@ -1,6 +1,6 @@
 import { useState } from "react";
 import Image from "next/image";
-import { PackageOpen, Search } from "lucide-react";
+import { ArrowRight, PackageOpen, Search } from "lucide-react";
 
 import {
   getGameGear,
@@ -78,11 +78,13 @@ export default function RewardScreen({
   party,
   credits,
   onEquip,
+  onSkip,
 }: {
   gearSlugs: string[];
   party: PartyMember[];
   credits: number;
   onEquip: (gearSlug: string, operatorId: string) => void;
+  onSkip: () => void;
 }) {
   const [selectedGearSlug, setSelectedGearSlug] = useState<string | null>(null);
   const selectedGear = selectedGearSlug ? getGameGear(selectedGearSlug) : null;
@@ -118,9 +120,15 @@ export default function RewardScreen({
               {credits} 크레딧 확보. 회수한 장비 하나를 선택해 오퍼레이터에게 장착하세요.
             </p>
           </div>
-          <div className="rounded-2xl border border-cyan-300/20 bg-cyan-300/[0.05] px-4 py-3 text-right">
-            <p className="text-[10px] font-black tracking-[0.25em] text-cyan-100/50">RECOVERED</p>
-            <p className="mt-1 text-2xl font-black text-cyan-100">{gearSlugs.length}</p>
+          <div className="flex items-center gap-3">
+            <button type="button" onClick={onSkip} className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm font-black text-zinc-200 transition hover:border-amber-200/40 hover:bg-amber-200/[0.08]">
+              맵으로 이동
+              <ArrowRight className="h-4 w-4" />
+            </button>
+            <div className="rounded-2xl border border-cyan-300/20 bg-cyan-300/[0.05] px-4 py-3 text-right">
+              <p className="text-[10px] font-black tracking-[0.25em] text-cyan-100/50">RECOVERED</p>
+              <p className="mt-1 text-2xl font-black text-cyan-100">{gearSlugs.length}</p>
+            </div>
           </div>
         </div>
 
