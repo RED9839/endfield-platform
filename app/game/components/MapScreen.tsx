@@ -3,6 +3,7 @@ import {
   Flame,
   HelpCircle,
   ShieldAlert,
+  ShoppingBag,
   Swords,
 } from "lucide-react";
 
@@ -17,25 +18,31 @@ const nodeVisual: Record<
     icon: Swords,
     color: "border-sky-400/40 text-sky-100",
     glow: "shadow-[0_0_24px_rgba(56,189,248,0.1)]",
-    label: "전투",
+    label: "일반",
   },
   elite: {
     icon: ShieldAlert,
     color: "border-red-400/50 text-red-100",
     glow: "shadow-[0_0_26px_rgba(248,113,113,0.13)]",
-    label: "정예",
+    label: "엘리트",
   },
   event: {
     icon: HelpCircle,
     color: "border-violet-400/40 text-violet-100",
     glow: "shadow-[0_0_24px_rgba(167,139,250,0.12)]",
-    label: "사건",
+    label: "이벤트",
+  },
+  shop: {
+    icon: ShoppingBag,
+    color: "border-emerald-400/45 text-emerald-100",
+    glow: "shadow-[0_0_26px_rgba(52,211,153,0.13)]",
+    label: "상점",
   },
   camp: {
     icon: Flame,
     color: "border-amber-400/50 text-amber-100",
     glow: "shadow-[0_0_26px_rgba(251,191,36,0.12)]",
-    label: "야영",
+    label: "휴식",
   },
   boss: {
     icon: Castle,
@@ -67,16 +74,17 @@ export default function MapScreen({
             아겔로스 서식지 돌파
           </h1>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-400">
-            일반 개체에서 시작해 강화, 정예, 두목 아겔로스까지 이어지는 첫 번째 탐사 루트입니다.
+            일반구역, 이벤트구역, 상점구역, 휴식구역, 엘리트구역을 선택하며 20층 보스까지 돌파하세요.
           </p>
         </div>
         <div className="rounded-[28px] border border-yellow-300/15 bg-yellow-300/[0.04] p-5">
-          <p className="text-[10px] font-black tracking-[0.28em] text-yellow-200/60">ROUTE RULE</p>
+          <p className="text-[10px] font-black tracking-[0.28em] text-yellow-200/60">ZONE RULE</p>
           <div className="mt-4 space-y-2 text-xs font-bold text-zinc-400">
-            <p>일반: 큰뿔/일미/모방 개체</p>
-            <p>강화: 쌍뿔/삼미/α 개체</p>
-            <p>정예: 보초/형상 아겔로스</p>
-            <p>두목: 결정아겔로스</p>
+            <p>일반구역: 기본 전투와 장비 보상</p>
+            <p>엘리트구역: 강한 전투와 상위 장비</p>
+            <p>상점구역: 장비 후보 보상</p>
+            <p>휴식구역: 회복 또는 훈련</p>
+            <p>보스구역: 최종 전투</p>
           </div>
         </div>
       </div>
@@ -85,7 +93,7 @@ export default function MapScreen({
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_10%,rgba(234,179,8,0.12),transparent_35%),linear-gradient(rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.025)_1px,transparent_1px)] bg-[size:100%_100%,40px_40px,40px_40px]" />
         <div className="pointer-events-none absolute inset-x-10 top-1/2 h-px bg-gradient-to-r from-transparent via-yellow-300/20 to-transparent" />
 
-        <div className="relative grid min-h-[760px] grid-cols-5 grid-rows-6 gap-3 sm:gap-5">
+        <div className="relative grid min-h-[2200px] grid-cols-5 grid-rows-[repeat(20,minmax(84px,1fr))] gap-3 sm:gap-5">
           {mapNodes.map((node) => {
             const visual = nodeVisual[node.type];
             const Icon = visual.icon;
