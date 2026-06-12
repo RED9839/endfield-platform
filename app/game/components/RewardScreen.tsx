@@ -2,7 +2,12 @@ import { useState } from "react";
 import Image from "next/image";
 import { PackageOpen, Search } from "lucide-react";
 
-import { getGameGear, getGearPrimaryStatLine, getGameSetEffectDescription } from "../data/game-gears";
+import {
+  getGameGear,
+  getGearPrimaryStatLine,
+  getGearSellValue,
+  getGameSetEffectDescription,
+} from "../data/game-gears";
 import type { PartyMember, RunGear } from "../types/game";
 
 function categoryLabel(category: string) {
@@ -81,6 +86,17 @@ export default function RewardScreen({
 }) {
   const [selectedGearSlug, setSelectedGearSlug] = useState<string | null>(null);
   const selectedGear = selectedGearSlug ? getGameGear(selectedGearSlug) : null;
+
+  function equipGear(gear: RunGear, member: PartyMember, currentGear?: RunGear) {
+    if (currentGear) {
+      const confirmed = window.confirm(
+        `${member.name}의 ${currentGear.name}을(를) 교체할까요?\n기존 장비는 ${getGearSellValue(currentGear)} 크레딧에 자동 판매됩니다.`,
+      );
+      if (!confirmed) return;
+    }
+
+    onEquip(gear.slug, member.id);
+  }
 
   return (
     <section className="mx-auto flex min-h-[620px] w-full max-w-6xl flex-col justify-center px-4 py-10 sm:px-6">
@@ -198,7 +214,7 @@ export default function RewardScreen({
                   <button
                     key={member.id}
                     type="button"
-                    onClick={() => onEquip(selectedGear.slug, member.id)}
+                    onClick={() => equipGear(selectedGear, member, currentGear)}
                     className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-left transition hover:border-cyan-300/40 hover:bg-cyan-300/[0.06]"
                   >
                     <div className="flex items-center gap-3">
@@ -211,7 +227,9 @@ export default function RewardScreen({
                       </div>
                     </div>
                     <p className="mt-3 text-[10px] leading-4 text-zinc-500">
-                      {currentGear ? `${currentGear.name} 교체` : "빈 슬롯에 장착"}
+                      {currentGear
+                        ? `${currentGear.name} 교체 · 판매 +${getGearSellValue(currentGear)}`
+                        : "빈 슬롯에 장착"}
                     </p>
                   </button>
                 );

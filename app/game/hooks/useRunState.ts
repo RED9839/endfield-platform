@@ -9,6 +9,7 @@ import {
   getActiveThreePieceSets,
   getEquippedGears,
   getGameGear,
+  getGearSellValue,
   getGearStatDeltas,
   getGearSlot,
 } from "../data/game-gears";
@@ -73,7 +74,7 @@ function initialState(): RunState {
     pendingGearSlugs: [],
     credits: 0,
     sp: 2,
-    maxSp: 2,
+    maxSp: 3,
     cp: 0,
     maxCp: 3,
     battlesWon: 0,
@@ -793,12 +794,20 @@ if (node.type === "camp") return { ...base, screen: "camp" };
   const equipRewardGear = useCallback((gearSlug: string, operatorId: string) => {
     setState((current) => {
       const gear = getGameGear(gearSlug);
+      const target = current.party.find((member) => member.id === operatorId);
+      const slot = target ? getGearSlot(gear, target.gear.kit1, target.gear.kit2) : undefined;
+      const replacedGear = target && slot ? target.gear[slot] : undefined;
+      const sellCredits = replacedGear ? getGearSellValue(replacedGear) : 0;
       return {
         ...current,
         party: current.party.map((member) =>
           member.id === operatorId ? equipGearToMember(member, gear) : member,
         ),
-        collectedGears: [...current.collectedGears, gear],
+        collectedGears: [
+          ...current.collectedGears.filter((item) => item.slug !== replacedGear?.slug),
+          gear,
+        ],
+        credits: current.credits + sellCredits,
         pendingGearSlugs: [],
         screen: "map",
         availableNodes: getMapNode(current.currentNodeId ?? "").next,

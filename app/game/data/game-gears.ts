@@ -45,6 +45,10 @@ export function getGearPowerTier(gear: Pick<RunGear, "level" | "quality" | "setN
   return levelTier + qualityTier - 1 + sameLevelQualityNoSetBonus;
 }
 
+export function getGearSellValue(gear: RunGear) {
+  return getGearPowerTier(gear) * 12 + gear.quality * 8;
+}
+
 export type GearStatDeltas = {
   attack?: number;
   maxHp?: number;

@@ -31,7 +31,7 @@ function HealthBar({ value, max }: { value: number; max: number }) {
 function GaugeBar({ value, tone = "ally" }: { value: number; tone?: "ally" | "enemy" }) {
   const width = Math.max(0, Math.min(100, value));
   return (
-    <div className="h-1 overflow-hidden rounded-full bg-black/70">
+    <div className="h-2 overflow-hidden rounded-full bg-black/70">
       <div
         className={`h-full rounded-full transition-all ${
           tone === "enemy"
@@ -46,10 +46,12 @@ function GaugeBar({ value, tone = "ally" }: { value: number; tone?: "ally" | "en
 
 function SpeedPanel({ speed, gauge, tone = "ally" }: { speed: number; gauge: number; tone?: "ally" | "enemy" }) {
   const enemy = tone === "enemy";
+  const ready = gauge >= 100;
+  const percent = Math.max(0, Math.min(100, Math.floor(gauge)));
   return (
     <div className={`mt-2 rounded-lg border px-2 py-1.5 ${
       enemy
-        ? "border-red-300/15 bg-red-400/[0.045]"
+        ? "border-red-300/25 bg-red-400/[0.07]"
         : "border-cyan-300/10 bg-cyan-300/[0.035]"
     }`}>
       <div className="flex items-center justify-between gap-2">
@@ -58,14 +60,21 @@ function SpeedPanel({ speed, gauge, tone = "ally" }: { speed: number; gauge: num
         }`}>
           <Zap className="h-3 w-3" /> SPD
         </span>
-        <span className={`text-xs font-black ${enemy ? "text-red-50" : "text-cyan-50"}`}>{speed}</span>
+        <span className={`rounded-full border px-2 py-0.5 text-[9px] font-black ${
+          enemy
+            ? "border-red-300/30 bg-red-400/10 text-red-100"
+            : "border-cyan-300/20 bg-cyan-300/10 text-cyan-100"
+        }`}>
+          {ready ? "READY" : `${percent}%`}
+        </span>
       </div>
       <div className="mt-1.5">
         <GaugeBar value={gauge} tone={tone} />
-        <p className={`mt-1 text-right text-[8px] font-bold ${
+        <p className={`mt-1 flex items-center justify-between text-[8px] font-bold ${
           enemy ? "text-red-100/45" : "text-cyan-100/40"
         }`}>
-          행동 게이지 {Math.floor(gauge)} / 100
+          <span>속도 {speed}</span>
+          <span>행동 준비도 {ready ? "완료" : `${percent}/100`}</span>
         </p>
       </div>
     </div>
@@ -413,13 +422,21 @@ export default function BattleScreen({
                 key={`${entry.side}-${entry.id}-${index}`}
                 className={`flex items-center justify-between rounded-xl border px-3 py-2 text-xs ${
                   index === 0
-                    ? "border-cyan-300/25 bg-cyan-300/10 text-cyan-50"
-                    : "border-white/8 bg-white/[0.03] text-zinc-400"
+                    ? entry.side === "enemy"
+                      ? "border-red-300/30 bg-red-400/10 text-red-50"
+                      : "border-cyan-300/25 bg-cyan-300/10 text-cyan-50"
+                    : entry.side === "enemy"
+                      ? "border-red-300/15 bg-red-400/[0.045] text-red-100/75"
+                      : "border-white/8 bg-white/[0.03] text-zinc-400"
                 }`}
               >
                 <span className="truncate font-black">{entry.name}</span>
-                <span className="ml-3 rounded-full border border-cyan-300/15 bg-cyan-300/[0.05] px-2 py-0.5 text-[10px] font-black text-cyan-100/70">
-                  SPD {entry.gauge >= 100 ? "READY" : Math.floor(entry.gauge)}
+                <span className={`ml-3 rounded-full border px-2 py-0.5 text-[10px] font-black ${
+                  entry.side === "enemy"
+                    ? "border-red-300/25 bg-red-400/10 text-red-100"
+                    : "border-cyan-300/15 bg-cyan-300/[0.05] text-cyan-100/70"
+                }`}>
+                  SPD {entry.gauge >= 100 ? "READY" : `${Math.floor(entry.gauge)}%`}
                 </span>
               </div>
             ))}
