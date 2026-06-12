@@ -4,7 +4,7 @@ export const enemies: Enemy[] = [
   {
     id: "agelos-big-horn",
     name: "큰뿔아겔로스",
-    image: "/enemies/eny_0023_aghornb.webp",
+    image: "/enemies/ram.webp",
     maxHp: 44,
     attack: 8,
     speed: 86,
@@ -13,7 +13,7 @@ export const enemies: Enemy[] = [
   {
     id: "agelos-double-horn",
     name: "쌍뿔아겔로스",
-    image: "/enemies/eny_0069_aghornb2.webp",
+    image: "/enemies/heavy-ram.webp",
     maxHp: 58,
     attack: 10,
     speed: 92,
@@ -22,7 +22,7 @@ export const enemies: Enemy[] = [
   {
     id: "agelos-one-tail",
     name: "일미아겔로스",
-    image: "/enemies/eny_0021_agmelee.webp",
+    image: "/enemies/sting.webp",
     maxHp: 40,
     attack: 9,
     speed: 98,
@@ -31,7 +31,7 @@ export const enemies: Enemy[] = [
   {
     id: "agelos-three-tail",
     name: "삼미아겔로스",
-    image: "/enemies/eny_0063_agmelee2.webp",
+    image: "/enemies/heavy-sting.webp",
     maxHp: 62,
     attack: 11,
     speed: 104,
@@ -40,7 +40,7 @@ export const enemies: Enemy[] = [
   {
     id: "agelos-big-horn-alpha",
     name: "큰뿔아겔로스 · α",
-    image: "/enemies/eny_0039_agcanno.webp",
+    image: "/enemies/ram-alpha.webp",
     maxHp: 52,
     attack: 10,
     speed: 92,
@@ -49,7 +49,7 @@ export const enemies: Enemy[] = [
   {
     id: "agelos-one-tail-alpha",
     name: "일미아겔로스 · α",
-    image: "/enemies/eny_0025_agrange.webp",
+    image: "/enemies/sting-alpha.webp",
     maxHp: 48,
     attack: 10,
     speed: 106,
@@ -58,7 +58,7 @@ export const enemies: Enemy[] = [
   {
     id: "agelos-double-horn-alpha",
     name: "쌍뿔아겔로스 · α",
-    image: "/enemies/eny_0064_agrange2.webp",
+    image: "/enemies/heavy-ram-alpha.webp",
     maxHp: 76,
     attack: 13,
     speed: 98,
@@ -67,7 +67,7 @@ export const enemies: Enemy[] = [
   {
     id: "agelos-three-tail-alpha",
     name: "삼미아겔로스 · α",
-    image: "/enemies/eny_0027_agscorp.webp",
+    image: "/enemies/heavy-sting-alpha.webp",
     maxHp: 82,
     attack: 14,
     speed: 110,
@@ -76,7 +76,7 @@ export const enemies: Enemy[] = [
   {
     id: "agelos-sentinel",
     name: "보초아겔로스",
-    image: "/enemies/eny_0077_agshield.webp",
+    image: "/enemies/sentinel.webp",
     maxHp: 108,
     attack: 15,
     speed: 88,
@@ -86,7 +86,7 @@ export const enemies: Enemy[] = [
   {
     id: "agelos-shaper",
     name: "형상아겔로스",
-    image: "/enemies/eny_0045_agtrinit.webp",
+    image: "/enemies/effigy.webp",
     maxHp: 96,
     attack: 16,
     speed: 104,
@@ -95,8 +95,8 @@ export const enemies: Enemy[] = [
   },
   {
     id: "tunneling-needworm",
-    name: "Tunneling Needworm",
-    image: "/enemies/eny_0007_mimicw.webp",
+    name: "터널링 니드웜",
+    image: "/enemies/tunneling-needworm.webp",
     maxHp: 46,
     attack: 9,
     speed: 100,
@@ -105,7 +105,7 @@ export const enemies: Enemy[] = [
   {
     id: "agelos-mimic-alpha",
     name: "모방아겔로스 · α",
-    image: "/enemies/eny_0058_agdisk.webp",
+    image: "/enemies/falsewings-alpha.webp",
     maxHp: 60,
     attack: 12,
     speed: 112,
@@ -114,7 +114,7 @@ export const enemies: Enemy[] = [
   {
     id: "agelos-crystal",
     name: "결정아겔로스",
-    image: "/enemies/eny_0076_agfly.webp",
+    image: "/enemies/walking-chrysopolis.webp",
     maxHp: 260,
     attack: 21,
     speed: 90,
