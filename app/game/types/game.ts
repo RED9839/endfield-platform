@@ -42,6 +42,30 @@ export type EnemyStatus =
   | "shock"
   | "corrosion"
   | "defense-break";
+export type EnemyMechanic =
+  | "none"
+  | "armored"
+  | "ranged"
+  | "sniper"
+  | "flame"
+  | "acid"
+  | "poison"
+  | "cold"
+  | "shock"
+  | "shield"
+  | "evasive"
+  | "charge"
+  | "grab"
+  | "self-destruct"
+  | "revive"
+  | "smoke"
+  | "healer"
+  | "summoner"
+  | "enrage"
+  | "rockfall"
+  | "bind"
+  | "reflect"
+  | "boss-shield";
 
 export type RunGearCategory = "armor" | "gloves" | "kit";
 export type GearSlot = "armor" | "gloves" | "kit1" | "kit2";
@@ -123,8 +147,16 @@ export type Enemy = {
   image?: string;
   maxHp: number;
   attack: number;
+  defense: number;
   speed: number;
+  range: number;
+  weight: number;
+  staggerHp: number;
   intent: string;
+  faction?: string;
+  tier?: string;
+  traits: string[];
+  mechanics: EnemyMechanic[];
   elite?: boolean;
   boss?: boolean;
 };
@@ -133,6 +165,7 @@ export type BattleEnemy = Enemy & {
   hp: number;
   statuses: EnemyStatus[];
   actionGauge: number;
+  revived?: boolean;
 };
 
 export type TimelineEntry = {

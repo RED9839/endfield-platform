@@ -5,6 +5,7 @@ import { BatteryCharging, Link2, Shield, Zap } from "lucide-react";
 import { getActiveThreePieceSets, getEquippedGears, getGameSetEffectDescription } from "../data/game-gears";
 import type {
   BattleState,
+  EnemyMechanic,
   EnemyStatus,
   PartyMember,
   SkillKind,
@@ -87,6 +88,35 @@ function statusLabel(status: EnemyStatus) {
   if (status === "corrosion") return "부식";
   if (status === "defense-break") return "방어 불능";
   return "감전";
+}
+
+function mechanicLabel(mechanic: EnemyMechanic) {
+  const labels: Record<EnemyMechanic, string> = {
+    none: "일반",
+    armored: "장갑",
+    ranged: "원거리",
+    sniper: "저격",
+    flame: "화염",
+    acid: "산성",
+    poison: "독",
+    cold: "냉기",
+    shock: "전격",
+    shield: "가드",
+    evasive: "회피",
+    charge: "차지",
+    grab: "잡기",
+    "self-destruct": "자폭",
+    revive: "부활",
+    smoke: "연막",
+    healer: "치유",
+    summoner: "소환",
+    enrage: "분노",
+    rockfall: "낙석",
+    bind: "속박",
+    reflect: "반사",
+    "boss-shield": "보스 실드",
+  };
+  return labels[mechanic];
 }
 
 function hasArtsAttachment(statuses: EnemyStatus[]) {
@@ -286,6 +316,20 @@ export default function BattleScreen({
                 </div>
                 <p className="truncate text-base font-black text-white">{enemy.name}</p>
                 <p className="mt-1 text-[10px] text-red-200/60">{enemy.intent}</p>
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {enemy.mechanics
+                    .filter((mechanic) => mechanic !== "none")
+                    .slice(0, 4)
+                    .map((mechanic) => (
+                      <span
+                        key={mechanic}
+                        className="rounded-full border border-red-300/20 bg-red-400/10 px-2 py-0.5 text-[9px] font-black text-red-100"
+                        title={enemy.traits.join("\n")}
+                      >
+                        {mechanicLabel(mechanic)}
+                      </span>
+                    ))}
+                </div>
                 {enemy.statuses.length > 0 && (
                   <div className="mt-2 flex flex-wrap gap-1">
                     {enemy.statuses.map((status) => (

@@ -135,6 +135,121 @@ function didEvade(member: PartyMember, battleTurn: number, enemyId: string) {
   return roll < chance;
 }
 
+function enemyHas(enemy: BattleEnemy, mechanic: BattleEnemy["mechanics"][number]) {
+  return enemy.mechanics.includes(mechanic);
+}
+
+function isEnemyInterrupted(enemy: BattleEnemy) {
+  return enemy.statuses.includes("defense-break");
+}
+
+function isEnemyEnraged(enemy: BattleEnemy) {
+  return enemyHas(enemy, "enrage") && enemy.hp <= enemy.maxHp * 0.45 && !isEnemyInterrupted(enemy);
+}
+
+function getEnemyDamageTaken(enemy: BattleEnemy, damage: number, kind: SkillKind) {
+  let nextDamage = damage;
+  const notes: string[] = [];
+  const interrupted = isEnemyInterrupted(enemy);
+
+  if (enemyHas(enemy, "boss-shield") && !interrupted) {
+    nextDamage = Math.ceil(nextDamage * (kind === "ultimate" ? 0.8 : 0.65));
+    notes.push("boss shield");
+  }
+  if (enemyHas(enemy, "shield") && !interrupted) {
+    nextDamage = Math.ceil(nextDamage * 0.7);
+    notes.push("guard");
+  }
+  if (enemyHas(enemy, "armored") && kind === "attack" && !interrupted) {
+    nextDamage = Math.ceil(nextDamage * 0.82);
+    notes.push("armor");
+  }
+  if (enemyHas(enemy, "evasive") && kind === "attack" && !interrupted) {
+    nextDamage = Math.ceil(nextDamage * 0.75);
+    notes.push("evasion");
+  }
+
+  return {
+    damage: Math.max(1, nextDamage),
+    notes,
+  };
+}
+
+function shouldInterruptEnemy(enemy: BattleEnemy, kind: SkillKind) {
+  if (kind === "attack") return false;
+  return (
+    enemyHas(enemy, "charge") ||
+    enemyHas(enemy, "grab") ||
+    enemyHas(enemy, "evasive") ||
+    enemyHas(enemy, "shield") ||
+    enemyHas(enemy, "boss-shield")
+  );
+}
+
+function reviveEnemies(enemies: BattleEnemy[]) {
+  const notes: string[] = [];
+  const revived = enemies.map((enemy) => {
+    if (enemy.hp > 0 || !enemyHas(enemy, "revive") || enemy.revived) return enemy;
+    notes.push(`${enemy.name} revive`);
+    return {
+      ...enemy,
+      hp: Math.max(1, Math.ceil(enemy.maxHp * 0.35)),
+      revived: true,
+      statuses: withoutStatus(enemy.statuses, "defense-break"),
+    };
+  });
+
+  return { enemies: revived, notes };
+}
+
+function buildEnemyAction(actor: BattleEnemy, battleTurn: number) {
+  let damage = actor.attack;
+  const notes: string[] = [];
+  const enraged = isEnemyEnraged(actor);
+  const selfDestruct = enemyHas(actor, "self-destruct") && actor.hp <= actor.maxHp * 0.3;
+
+  if (enraged) {
+    damage = Math.ceil(damage * 1.25);
+    notes.push("enrage");
+  }
+  if (enemyHas(actor, "charge") && (enraged || battleTurn % 3 === 0)) {
+    damage = Math.ceil(damage * 1.35);
+    notes.push("charge");
+  }
+  if (enemyHas(actor, "sniper")) {
+    damage += 2;
+    notes.push("sniper");
+  }
+  if (enemyHas(actor, "acid")) {
+    damage += 2;
+    notes.push("acid");
+  }
+  if (enemyHas(actor, "flame")) {
+    damage += 1;
+    notes.push("flame");
+  }
+  if (selfDestruct) {
+    damage = Math.ceil(actor.attack * 1.85);
+    notes.push("self destruct");
+  }
+
+  return {
+    damage,
+    notes,
+    targetAll:
+      enemyHas(actor, "rockfall") ||
+      (enemyHas(actor, "flame") && battleTurn % 4 === 0) ||
+      selfDestruct,
+    gaugeDelay:
+      (enemyHas(actor, "grab") ? 35 : 0) +
+      (enemyHas(actor, "bind") ? 30 : 0) +
+      (enemyHas(actor, "cold") ? 25 : 0) +
+      (enemyHas(actor, "smoke") ? 18 : 0),
+    selfDestruct,
+    healsAllies: enemyHas(actor, "healer") || (enemyHas(actor, "summoner") && battleTurn % 4 === 0),
+  };
+}
+
 function getStatusBonus(actor: PartyMember, target: BattleEnemy) {
   let bonus = 1;
   if (actor.element === "physical" && target.statuses.includes("originium-crystal")) bonus += 0.2;
@@ -504,24 +619,51 @@ function resolveAutomaticBattleTurns(state: RunState): RunState {
     if (!actor || actor.hp <= 0) return current;
 
     const livingParty = current.party.filter((member) => member.hp > 0);
-    const victim =
-      livingParty.reduce((lowest, member) => (member.hp < lowest.hp ? member : lowest), livingParty[0]) ??
-      current.party[0];
-    if (!victim) return current;
+    const action = buildEnemyAction(actor, activeBattle.turn);
+    const targets = action.targetAll
+      ? livingParty
+      : [
+          enemyHas(actor, "ranged") || enemyHas(actor, "sniper")
+            ? livingParty.reduce((lowest, member) => (member.hp < lowest.hp ? member : lowest), livingParty[0])
+            : livingParty.reduce((lowest, member) => (member.shield < lowest.shield ? member : lowest), livingParty[0]),
+        ];
+    if (targets.length === 0) return current;
 
-    const evaded = didEvade(victim, activeBattle.turn, actor.id);
-    const rawHit = Math.max(1, actor.attack);
-    const hit = evaded ? 0 : Math.max(1, rawHit - Math.floor(victim.defense / 40));
-    const partyAfterHit = current.party.map((member) =>
-      member.id === victim.id ? (evaded ? member : absorbHit(member, hit)) : member,
-    );
-    const enemiesAfterAction = activeBattle.enemies.map((enemy) =>
-      enemy.id === actor.id ? spendGauge(enemy, ENEMY_ACTION_COST) : enemy,
-    );
+    let totalHit = 0;
+    const evadedNames: string[] = [];
+    const targetIds = new Set(targets.map((target) => target.id));
+    const partyAfterHit = current.party.map((member) => {
+      if (!targetIds.has(member.id) || member.hp <= 0) return member;
+      const evaded = didEvade(member, activeBattle.turn, actor.id);
+      if (evaded) {
+        evadedNames.push(member.name);
+        return member;
+      }
+      const defenseDivider = enemyHas(actor, "acid") ? 70 : 40;
+      const hit = Math.max(1, action.damage - Math.floor(member.defense / defenseDivider));
+      totalHit += hit;
+      const damaged = absorbHit(member, hit);
+      return action.gaugeDelay > 0
+        ? { ...damaged, actionGauge: damaged.actionGauge - action.gaugeDelay }
+        : damaged;
+    });
+    const enemiesAfterAction = activeBattle.enemies.map((enemy) => {
+      if (enemy.id === actor.id) {
+        return {
+          ...spendGauge(enemy, ENEMY_ACTION_COST),
+          hp: action.selfDestruct ? 0 : enemy.hp,
+        };
+      }
+      if (action.healsAllies && enemy.hp > 0) {
+        return { ...enemy, hp: Math.min(enemy.maxHp, enemy.hp + Math.ceil(enemy.maxHp * 0.08)) };
+      }
+      return enemy;
+    });
     const defeated = partyAfterHit.every((member) => member.hp <= 0);
-    const enemyLog = evaded
-      ? `${actor.name}: ${victim.name} 공격, 회피!`
-      : `${actor.name}: ${victim.name}에게 ${hit} 피해.`;
+    const targetLabel = action.targetAll ? "all allies" : targets[0]?.name;
+    const note = action.notes.length > 0 ? ` (${action.notes.join(", ")})` : "";
+    const evadeNote = evadedNames.length > 0 ? ` evade: ${evadedNames.join(", ")}.` : "";
+    const enemyLog = `${actor.name}: ${targetLabel} ${totalHit} damage${note}.${evadeNote}`;
 
     current = {
       ...current,
@@ -664,7 +806,7 @@ if (node.type === "camp") return { ...base, screen: "camp" };
       );
       let totalDamage = 0;
       const noteSet = new Set<string>();
-      const enemiesAfterAction = current.battle.enemies.map((enemy) =>
+      const damagedEnemies = current.battle.enemies.map((enemy) =>
         targetIds.has(enemy.id)
           ? (() => {
               const mechanic =
@@ -676,11 +818,15 @@ if (node.type === "camp") return { ...base, screen: "camp" };
                     }
                   : applySkillMechanic(actor, enemy, baseDamage, kind);
               mechanic.damage = Math.ceil(mechanic.damage * getPassiveDamageBonus(actor, enemy, kind));
+              const enemyDamage = getEnemyDamageTaken(enemy, mechanic.damage, kind);
               mechanic.notes.forEach((note) => noteSet.add(note));
-              totalDamage += mechanic.damage;
-              const hp = Math.max(0, enemy.hp - mechanic.damage);
-              const statuses =
-                kind === "attack" && hp > 0 && hp <= enemy.maxHp / 2
+              enemyDamage.notes.forEach((note) => noteSet.add(note));
+              if (shouldInterruptEnemy(enemy, kind)) noteSet.add("interrupt");
+              totalDamage += enemyDamage.damage;
+              const hp = Math.max(0, enemy.hp - enemyDamage.damage);
+              const statuses = shouldInterruptEnemy(enemy, kind)
+                ? addStatus(mechanic.statuses, "defense-break")
+                : kind === "attack" && hp > 0 && hp <= enemy.maxHp / 2
                   ? addStatus(mechanic.statuses, "defense-break")
                   : mechanic.statuses;
               return {
@@ -691,6 +837,9 @@ if (node.type === "camp") return { ...base, screen: "camp" };
             })()
           : enemy,
       );
+      const revival = reviveEnemies(damagedEnemies);
+      revival.notes.forEach((note) => noteSet.add(note));
+      const enemiesAfterAction = revival.enemies;
       const actionLabel =
         kind === "battle-skill"
           ? actor.battleSkillName
