@@ -35,24 +35,24 @@ function OperatorCard({ operator, index }: { operator: Operator; index: number }
 
   return (
     <article
-      className={`group relative min-h-[760px] overflow-hidden rounded-[34px] border p-4 backdrop-blur-xl transition duration-300 hover:-translate-y-1 ${
+      className={`group relative min-h-[860px] overflow-hidden rounded-[38px] border p-4 backdrop-blur-xl transition duration-300 hover:-translate-y-1 ${
         selected
-          ? "border-yellow-200/75 bg-yellow-200/[0.07] shadow-[0_0_55px_rgba(250,204,21,0.22)]"
-          : "border-white/12 bg-zinc-950/58 shadow-[0_26px_70px_rgba(0,0,0,0.3)] hover:border-yellow-200/45"
+          ? "border-yellow-200/80 bg-yellow-200/[0.065] shadow-[0_0_58px_rgba(250,204,21,0.2)]"
+          : "border-white/12 bg-zinc-950/62 shadow-[0_26px_70px_rgba(0,0,0,0.32)] hover:border-yellow-200/45"
       }`}
     >
       <div className={`absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r ${accent}`} />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_22%,rgba(250,204,21,0.16),transparent_36%),linear-gradient(180deg,rgba(255,255,255,0.08),transparent_42%)]" />
-      <div className="absolute inset-4 rounded-[28px] border border-yellow-100/10" />
-      <div className="absolute left-1/2 top-28 h-80 w-80 -translate-x-1/2 rounded-full border border-yellow-200/16 bg-yellow-200/5" />
-      <div className="absolute left-1/2 top-40 h-60 w-60 -translate-x-1/2 rounded-full border border-white/10" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(250,204,21,0.18),transparent_38%),linear-gradient(180deg,rgba(255,255,255,0.08),transparent_44%)]" />
+      <div className="absolute inset-4 rounded-[32px] border border-yellow-100/10" />
+      <div className="absolute left-1/2 top-36 h-[430px] w-[430px] -translate-x-1/2 rounded-full border border-yellow-200/16 bg-yellow-200/5" />
+      <div className="absolute left-1/2 top-48 h-80 w-80 -translate-x-1/2 rounded-full border border-white/10" />
 
-      <div className="relative z-10 flex items-start justify-between gap-3">
+      <div className="relative z-20 flex items-start justify-between gap-3">
         <div className="grid gap-2">
-          <span className="flex h-11 w-11 items-center justify-center rounded-xl border border-yellow-100/15 bg-black/65 text-yellow-100 shadow-lg shadow-black/20">
+          <span className="flex h-11 w-11 items-center justify-center rounded-xl border border-yellow-100/15 bg-black/70 text-yellow-100 shadow-lg shadow-black/20">
             <Crosshair className="h-5 w-5" />
           </span>
-          <span className="rounded-lg border border-yellow-100/20 bg-black/75 px-3 py-1 text-xl font-black leading-none text-white">
+          <span className="rounded-lg border border-yellow-100/20 bg-black/80 px-3 py-1 text-xl font-black leading-none text-white">
             {String(index + 1).padStart(2, "0")}
           </span>
         </div>
@@ -62,12 +62,12 @@ function OperatorCard({ operator, index }: { operator: Operator; index: number }
         </button>
       </div>
 
-      <div className="relative z-10 -mt-4 h-[540px] overflow-hidden rounded-[28px]">
-        <div className="absolute inset-x-2 top-24 h-72 rounded-full bg-yellow-300/10 blur-3xl" />
-        <Image src={image} alt={operator.name} fill sizes="(min-width: 1536px) 25vw, (min-width: 768px) 50vw, 100vw" className="scale-[1.22] object-contain object-center drop-shadow-[0_32px_42px_rgba(0,0,0,0.75)] transition duration-500 group-hover:scale-[1.28]" priority={index === 0} />
+      <div className="relative z-10 -mt-8 h-[660px] overflow-hidden rounded-[30px]">
+        <div className="absolute inset-x-0 top-28 h-96 rounded-full bg-yellow-300/10 blur-3xl" />
+        <Image src={image} alt={operator.name} fill sizes="(min-width: 1536px) 25vw, (min-width: 768px) 50vw, 100vw" className="scale-[1.42] object-contain object-center drop-shadow-[0_34px_46px_rgba(0,0,0,0.78)] transition duration-500 group-hover:scale-[1.5]" priority={index === 0} />
       </div>
 
-      <div className="relative z-10 -mt-8 rounded-[26px] border border-yellow-100/12 bg-black/70 p-4 shadow-[0_18px_38px_rgba(0,0,0,0.32)] backdrop-blur-xl">
+      <div className="relative z-20 -mt-24 rounded-[28px] border border-yellow-100/12 bg-black/76 p-4 shadow-[0_18px_38px_rgba(0,0,0,0.34)] backdrop-blur-xl">
         <div className="min-w-0">
           <p className="text-[10px] font-black tracking-[0.28em] text-yellow-100/45">OPERATOR</p>
           <h3 className="mt-1 truncate text-3xl font-black tracking-tight text-white">{operator.name}</h3>
