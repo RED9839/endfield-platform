@@ -42,10 +42,10 @@ function OperatorCard({ operator, index }: { operator: Operator; index: number }
       }`}
     >
       <div className={`absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r ${accent}`} />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(250,204,21,0.12),transparent_38%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_46%,rgba(250,204,21,0.12),transparent_42%)]" />
       <div className="absolute inset-4 rounded-[32px] border border-yellow-100/10" />
-      <div className="absolute left-1/2 top-36 h-[430px] w-[430px] -translate-x-1/2 rounded-full border border-yellow-200/16 bg-yellow-200/5" />
-      <div className="absolute left-1/2 top-48 h-80 w-80 -translate-x-1/2 rounded-full border border-white/10" />
+      <div className="absolute left-1/2 top-1/2 h-[430px] w-[430px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-yellow-200/16 bg-yellow-200/5" />
+      <div className="absolute left-1/2 top-1/2 h-80 w-80 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/10" />
 
       <div className="relative z-20 flex items-start justify-between gap-3 bg-transparent">
         <div className="grid gap-2">
@@ -62,8 +62,8 @@ function OperatorCard({ operator, index }: { operator: Operator; index: number }
         </button>
       </div>
 
-      <div className="absolute inset-x-1 top-6 bottom-46 z-10 overflow-hidden rounded-[30px]">
-        <div className="absolute inset-x-0 top-28 h-96 rounded-full bg-yellow-300/10 blur-3xl" />
+      <div className="absolute inset-x-4 top-4 bottom-4 z-10 overflow-hidden rounded-[30px]">
+        <div className="absolute left-1/2 top-1/2 h-96 w-full -translate-x-1/2 -translate-y-1/2 rounded-full bg-yellow-300/10 blur-3xl" />
         <Image src={image} alt={operator.name} fill sizes="(min-width: 1536px) 25vw, (min-width: 768px) 50vw, 100vw" className="scale-[2] object-contain object-center drop-shadow-[0_34px_46px_rgba(0,0,0,0.78)] transition duration-500 group-hover:scale-[2.06]" priority={index === 0} />
       </div>
 
