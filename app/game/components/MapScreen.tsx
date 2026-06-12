@@ -1,129 +1,96 @@
 "use client";
 
-import Image from "next/image";
-import { ArrowRight, ChevronRight, Crosshair, Eye, Shield } from "lucide-react";
-import { startingParty } from "../data/operators";
-import type { Operator } from "../types/game";
+import { ArrowRight, BadgeInfo, Flag, Gem, Skull, Sparkles, Store, Tent } from "lucide-react";
+import { mapNodes } from "../data/maps";
+import type { MapNode } from "../types/game";
 
-const operatorAccents = [
-  "from-yellow-200 via-yellow-400 to-cyan-300",
-  "from-yellow-300 via-orange-300 to-white",
-  "from-cyan-300 via-yellow-300 to-white",
-  "from-yellow-300 via-orange-400 to-red-400",
-];
-
-const deploymentImages: Record<string, string> = {
-  endministrator: "/operators/endministrator/full2.webp",
-  perlica: "/operators/perlica/full.webp",
-  chenqianyu: "/operators/chenqianyu/full.webp",
-  ardelia: "/operators/ardelia/full.webp",
+const nodeVisual: Record<MapNode["type"], { label: string; icon: typeof Skull; tone: string }> = {
+  battle: { label: "COMBAT", icon: Skull, tone: "border-yellow-200/40 bg-yellow-200/[0.08] text-yellow-100" },
+  elite: { label: "ELITE", icon: Flag, tone: "border-red-300/40 bg-red-300/[0.08] text-red-100" },
+  event: { label: "EVENT", icon: Sparkles, tone: "border-cyan-300/40 bg-cyan-300/[0.08] text-cyan-100" },
+  shop: { label: "SUPPLY", icon: Store, tone: "border-emerald-300/40 bg-emerald-300/[0.08] text-emerald-100" },
+  camp: { label: "CAMP", icon: Tent, tone: "border-blue-300/40 bg-blue-300/[0.08] text-blue-100" },
+  boss: { label: "BOSS", icon: Gem, tone: "border-orange-300/50 bg-orange-300/[0.1] text-orange-100" },
 };
 
-function StatChip({ label, value }: { label: string; value: string | number }) {
-  return (
-    <span className="rounded-xl border border-yellow-200/15 bg-black/55 px-2 py-2 text-center shadow-inner shadow-yellow-200/5">
-      <span className="block text-[9px] font-black tracking-[0.2em] text-yellow-100/45">{label}</span>
-      <span className="mt-1 block text-sm font-black text-white">{value}</span>
-    </span>
-  );
+function nodePosition(node: MapNode) {
+  return {
+    left: `${node.floor * 150}px`,
+    top: `${60 + node.column * 74}px`,
+  };
 }
 
-function OperatorCard({ operator, index }: { operator: Operator; index: number }) {
-  const accent = operatorAccents[index % operatorAccents.length];
-  const selected = index === 0;
-  const image = deploymentImages[operator.id] ?? operator.image;
+function RouteNode({ node, available, visited, onEnter }: { node: MapNode; available: boolean; visited: boolean; onEnter: (nodeId: string) => void }) {
+  const visual = nodeVisual[node.type];
+  const Icon = visual.icon;
 
   return (
-    <article
-      className={`group relative min-h-[900px] w-full overflow-hidden rounded-[38px] border p-4 backdrop-blur-xl transition duration-300 hover:-translate-y-1 ${
-        selected
-          ? "border-yellow-200/80 bg-yellow-200/[0.04] shadow-[0_0_58px_rgba(250,204,21,0.2)]"
-          : "border-white/12 bg-zinc-950/48 shadow-[0_26px_70px_rgba(0,0,0,0.32)] hover:border-yellow-200/45"
+    <button
+      type="button"
+      disabled={!available}
+      onClick={() => onEnter(node.id)}
+      style={nodePosition(node)}
+      className={`absolute w-52 rounded-3xl border p-4 text-left shadow-[0_20px_50px_rgba(0,0,0,0.35)] backdrop-blur-xl transition ${
+        available
+          ? `${visual.tone} hover:-translate-y-1 hover:shadow-[0_0_36px_rgba(250,204,21,0.16)]`
+          : visited
+            ? "border-white/15 bg-white/[0.045] text-white/45"
+            : "border-white/8 bg-black/35 text-white/20"
       }`}
     >
-      <div className={`absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r ${accent}`} />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_46%,rgba(250,204,21,0.12),transparent_42%)]" />
-      <div className="absolute inset-4 rounded-[32px] border border-yellow-100/10" />
-      <div className="absolute left-1/2 top-1/2 h-[430px] w-[430px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-yellow-200/16 bg-yellow-200/5" />
-      <div className="absolute left-1/2 top-1/2 h-80 w-80 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/10" />
-
-      <div className="relative z-20 flex items-start justify-between gap-3 bg-transparent">
-        <div className="grid gap-2">
-          <span className="flex h-11 w-11 items-center justify-center rounded-xl border border-yellow-100/15 bg-black/35 text-yellow-100 shadow-lg shadow-black/20 backdrop-blur-sm">
-            <Crosshair className="h-5 w-5" />
-          </span>
-          <span className="rounded-lg border border-yellow-100/20 bg-black/50 px-3 py-1 text-xl font-black leading-none text-white backdrop-blur-sm">
-            {String(index + 1).padStart(2, "0")}
-          </span>
-        </div>
-
-        <button type="button" className="flex h-12 w-12 items-center justify-center rounded-full border border-yellow-100/20 bg-white/8 text-white shadow-lg backdrop-blur-sm transition hover:bg-yellow-100/15" aria-label={`${operator.name} 상세 보기`}>
-          <Eye className="h-5 w-5" />
-        </button>
+      <div className="flex items-start justify-between gap-3">
+        <span className="grid h-12 w-12 place-items-center rounded-2xl border border-current/25 bg-black/45">
+          <Icon className="h-5 w-5" />
+        </span>
+        <span className="rounded-lg border border-current/20 bg-black/45 px-2 py-1 text-[10px] font-black tracking-[0.2em]">
+          F{node.floor}
+        </span>
       </div>
-
-      <div className="absolute inset-x-4 top-4 bottom-4 z-10 overflow-hidden rounded-[30px]">
-        <div className="absolute left-1/2 top-1/2 h-96 w-full -translate-x-1/2 -translate-y-1/2 rounded-full bg-yellow-300/10 blur-3xl" />
-        <Image src={image} alt={operator.name} fill sizes="(min-width: 1536px) 25vw, (min-width: 768px) 50vw, 100vw" className="scale-[2] object-contain object-center drop-shadow-[0_34px_46px_rgba(0,0,0,0.78)] transition duration-500 group-hover:scale-[2.06]" priority={index === 0} />
+      <p className="mt-4 text-[10px] font-black tracking-[0.26em] opacity-55">{visual.label}</p>
+      <h3 className="mt-1 line-clamp-1 text-lg font-black text-white">{node.title}</h3>
+      <p className="mt-1 line-clamp-1 text-xs font-bold opacity-55">{node.subtitle}</p>
+      <div className="mt-4 flex items-center justify-between border-t border-current/15 pt-3 text-[10px] font-black tracking-[0.18em]">
+        <span>{available ? "SELECT" : visited ? "CLEARED" : "LOCKED"}</span>
+        <ArrowRight className="h-4 w-4" />
       </div>
-
-      <div className="absolute inset-x-4 bottom-4 z-20 rounded-[28px] border border-yellow-100/12 bg-black/76 p-4 shadow-[0_18px_38px_rgba(0,0,0,0.34)] backdrop-blur-xl">
-        <div className="min-w-0">
-          <p className="text-[10px] font-black tracking-[0.28em] text-yellow-100/45">OPERATOR</p>
-          <h3 className="mt-1 truncate text-3xl font-black tracking-tight text-white">{operator.name}</h3>
-          <p className="mt-1 truncate text-xs font-bold text-white/45">{operator.className} / {operator.role}</p>
-        </div>
-
-        <div className="mt-4 grid grid-cols-3 gap-2">
-          <StatChip label="ATK" value={operator.attack} />
-          <StatChip label="SPD" value={operator.speed} />
-          <StatChip label="HP" value={operator.maxHp} />
-        </div>
-
-        <div className="mt-4 flex items-center justify-between gap-3 border-t border-yellow-100/10 pt-3">
-          <span className="flex items-center gap-2 text-[10px] font-black tracking-[0.2em] text-white/35">
-            <Shield className="h-4 w-4 text-yellow-200/55" />
-            DEPLOY READY
-          </span>
-          <button type="button" className="flex items-center gap-1 text-xs font-black text-yellow-100/80">
-            교체 <ChevronRight className="h-4 w-4" />
-          </button>
-        </div>
-      </div>
-    </article>
+    </button>
   );
 }
 
-export default function MapScreen({ onEnter, availableNodes }: { availableNodes: string[]; visitedNodes: string[]; onEnter: (nodeId: string) => void }) {
-  const firstNodeId = availableNodes[0];
+export default function MapScreen({ availableNodes, visitedNodes, onEnter }: { availableNodes: string[]; visitedNodes: string[]; onEnter: (nodeId: string) => void }) {
+  const availableSet = new Set(availableNodes);
+  const visitedSet = new Set(visitedNodes);
 
   return (
     <section className="relative min-h-[calc(100vh-64px)] overflow-hidden bg-black px-4 py-6 text-white sm:px-7">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_16%,rgba(250,204,21,0.18),transparent_31%),radial-gradient(circle_at_82%_12%,rgba(34,211,238,0.12),transparent_34%),linear-gradient(135deg,#050505_0%,#111009_48%,#000000_100%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_16%,rgba(250,204,21,0.14),transparent_31%),radial-gradient(circle_at_82%_12%,rgba(34,211,238,0.1),transparent_34%),linear-gradient(135deg,#050505_0%,#111009_48%,#000000_100%)]" />
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(250,204,21,0.055)_1px,transparent_1px),linear-gradient(rgba(255,255,255,0.035)_1px,transparent_1px)] bg-[size:56px_56px] opacity-35" />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-72 bg-gradient-to-t from-black to-transparent" />
 
       <div className="relative mx-auto max-w-[1880px]">
-        <header className="mb-7 flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+        <header className="mb-6 flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
           <div>
-            <p className="text-[10px] font-black tracking-[0.42em] text-yellow-100/55">ENDFIELD FIELD OPERATION</p>
-            <h1 className="mt-3 text-4xl font-black tracking-tight text-white sm:text-5xl">오퍼레이터 선택</h1>
+            <p className="text-[10px] font-black tracking-[0.42em] text-yellow-100/55">ENDFIELD ROUTE MAP</p>
+            <h1 className="mt-3 text-4xl font-black tracking-tight text-white sm:text-5xl">작전 경로 선택</h1>
+            <p className="mt-3 text-sm font-bold text-white/45">왼쪽에서 오른쪽으로 진행하며 다음 작전 노드를 선택합니다.</p>
           </div>
-          <div className="rounded-full border border-yellow-100/20 bg-yellow-100/8 px-5 py-3 text-sm font-black text-yellow-100 shadow-[0_0_30px_rgba(250,204,21,0.12)] backdrop-blur-xl">TEAM 04 / READY</div>
+          <div className="rounded-full border border-yellow-100/20 bg-yellow-100/8 px-5 py-3 text-sm font-black text-yellow-100 shadow-[0_0_30px_rgba(250,204,21,0.12)] backdrop-blur-xl">
+            CLEARED {visitedNodes.length} / ROUTE {mapNodes.length}
+          </div>
         </header>
 
-        <div className="grid gap-0 md:grid-cols-2 2xl:grid-cols-4">
-          {startingParty.map((operator, index) => <OperatorCard key={operator.id} operator={operator} index={index} />)}
+        <div className="relative overflow-x-auto rounded-[34px] border border-yellow-100/10 bg-black/55 p-5 shadow-[0_30px_100px_rgba(0,0,0,0.35)] backdrop-blur-xl">
+          <div className="relative h-[470px] min-w-[2200px]">
+            <div className="absolute left-10 right-10 top-1/2 h-px bg-gradient-to-r from-yellow-200/5 via-yellow-200/25 to-yellow-200/5" />
+            {mapNodes.map((node) => (
+              <RouteNode key={node.id} node={node} available={availableSet.has(node.id)} visited={visitedSet.has(node.id)} onEnter={onEnter} />
+            ))}
+          </div>
         </div>
 
-        <div className="mt-6 flex flex-col gap-3 rounded-[28px] border border-yellow-100/10 bg-black/55 p-4 backdrop-blur-xl md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-[10px] font-black tracking-[0.3em] text-yellow-100/45">DEPLOYMENT CONTROL</p>
-            <p className="mt-1 text-sm font-bold text-white/55">오퍼레이터 4명을 확인하고 선택한 작전 구역으로 진입합니다.</p>
-          </div>
-          <div className="flex gap-3">
-            <button type="button" className="rounded-2xl border border-white/15 bg-white/8 px-6 py-3 text-sm font-black text-white/70 transition hover:bg-white/12">편성 초기화</button>
-            <button type="button" onClick={() => onEnter(firstNodeId)} className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-yellow-200 via-yellow-400 to-amber-500 px-7 py-3 text-sm font-black text-black shadow-[0_0_42px_rgba(250,204,21,0.26)] transition hover:-translate-y-0.5 hover:brightness-110">작전 시작 <ArrowRight className="h-5 w-5" /></button>
+        <div className="mt-5 rounded-[24px] border border-yellow-100/10 bg-black/50 p-4 text-sm font-bold text-white/55 backdrop-blur-xl">
+          <div className="flex items-center gap-2">
+            <BadgeInfo className="h-4 w-4 text-yellow-200/60" />
+            선택 가능한 노드만 밝게 표시됩니다. 교전 완료 후 이 경로 선택 화면으로 복귀합니다.
           </div>
         </div>
       </div>
