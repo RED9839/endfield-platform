@@ -20,7 +20,7 @@ const agelosRoute: MapNode[] = [
     title: "모방체 흔적지",
     subtitle: "일반구역 · 모방/큰뿔",
     next: ["agelos-event-1", "agelos-2b"],
-    enemyIds: ["agelos-mimic", "agelos-big-horn"],
+    enemyIds: ["tunneling-needworm", "agelos-big-horn"],
     rewardTier: "early",
   },
   {
@@ -31,7 +31,7 @@ const agelosRoute: MapNode[] = [
     title: "큰뿔 이동로",
     subtitle: "일반구역",
     next: ["agelos-3a", "agelos-shop-1"],
-    enemyIds: ["agelos-big-horn", "agelos-mimic"],
+    enemyIds: ["agelos-big-horn", "tunneling-needworm"],
     rewardTier: "early",
   },
   {
@@ -52,7 +52,7 @@ const agelosRoute: MapNode[] = [
     title: "일미 둥지 입구",
     subtitle: "일반구역",
     next: ["agelos-3b", "agelos-camp-1"],
-    enemyIds: ["agelos-one-tail", "agelos-mimic"],
+    enemyIds: ["agelos-one-tail", "tunneling-needworm"],
     rewardTier: "early",
   },
   {
@@ -84,7 +84,7 @@ const agelosRoute: MapNode[] = [
     title: "모방체 산란지",
     subtitle: "일반구역",
     next: ["agelos-elite-1", "agelos-4b"],
-    enemyIds: ["agelos-mimic", "agelos-one-tail-alpha"],
+    enemyIds: ["tunneling-needworm", "agelos-one-tail-alpha"],
     rewardTier: "mid",
   },
   {
@@ -104,7 +104,7 @@ const agelosRoute: MapNode[] = [
     title: "알파 변이 지대",
     subtitle: "일반구역 · α 개체",
     next: ["agelos-5a", "agelos-5b"],
-    enemyIds: ["agelos-big-horn-alpha", "agelos-one-tail-alpha", "agelos-mimic"],
+    enemyIds: ["agelos-big-horn-alpha", "agelos-one-tail-alpha", "tunneling-needworm"],
     rewardTier: "mid",
   },
   {
@@ -147,7 +147,7 @@ const agelosRoute: MapNode[] = [
     title: "삼미 흔적지",
     subtitle: "일반구역 · 강화 개체",
     next: ["agelos-6b", "agelos-shop-2"],
-    enemyIds: ["agelos-three-tail", "agelos-mimic"],
+    enemyIds: ["agelos-three-tail", "tunneling-needworm"],
     rewardTier: "mid",
   },
   {
