@@ -9,10 +9,8 @@ type Props = {
   enName: string;
 };
 
-const PANEL_RADIUS = "24px";
-const BORDER_COLOR = "rgba(255,196,74,0.14)";
 const HERO_IMAGE_SIZES =
-  "(max-width: 768px) calc(100vw - 24px), (max-width: 1280px) calc(100vw - 48px), 1180px";
+  "(max-width: 768px) 100vw, (max-width: 1280px) 62vw, 1120px";
 
 const navButtonStyle: React.CSSProperties = {
   position: "absolute",
@@ -55,48 +53,15 @@ export default function HeroSlider({ images, alt, enName }: Props) {
   };
 
   return (
-    <section
-      style={{
-        borderRadius: PANEL_RADIUS,
-        position: "relative",
-        height: "min(58vw, 620px)",
-        border: `1px solid ${BORDER_COLOR}`,
-        overflow: "hidden",
-        marginBottom: "18px",
-        background: "#000",
-        boxShadow: "0 10px 28px rgba(0,0,0,0.28)",
-      }}
-    >
+    <div className="relative h-full w-full">
       <Image
         src={currentImage}
         alt={alt}
         fill
         priority
         sizes={HERO_IMAGE_SIZES}
-        style={{
-          objectFit: "cover",
-          filter: "blur(16px) brightness(0.25)",
-        }}
+        className="object-contain object-bottom drop-shadow-[0_24px_42px_rgba(0,0,0,0.68)]"
       />
-
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <Image
-          src={currentImage}
-          alt={alt}
-          fill
-          priority
-          sizes={HERO_IMAGE_SIZES}
-          style={{ objectFit: "contain" }}
-        />
-      </div>
 
       {validImages.length > 1 && (
         <>
@@ -104,7 +69,7 @@ export default function HeroSlider({ images, alt, enName }: Props) {
             type="button"
             onClick={goPrev}
             aria-label="이전 이미지"
-            style={{ ...navButtonStyle, left: "14px" }}
+            style={{ ...navButtonStyle, left: "calc(10% + 14px)" }}
           >
             ‹
           </button>
@@ -113,43 +78,22 @@ export default function HeroSlider({ images, alt, enName }: Props) {
             type="button"
             onClick={goNext}
             aria-label="다음 이미지"
-            style={{ ...navButtonStyle, right: "14px" }}
+            style={{ ...navButtonStyle, right: "calc(10% + 14px)" }}
           >
             ›
           </button>
         </>
       )}
 
-      <div
-        style={{
-          position: "absolute",
-          left: 24,
-          bottom: 24,
-          zIndex: 2,
-        }}
-      >
-        <div
-          style={{
-            fontSize: "clamp(42px, 5vw, 88px)",
-            fontWeight: 900,
-            textShadow: "0 8px 20px rgba(0,0,0,0.8)",
-            color: "#fff",
-          }}
-        >
+      <div className="pointer-events-none absolute left-[10%] bottom-12 z-[2] max-w-[70%] sm:bottom-16 lg:bottom-24">
+        <div className="break-keep text-[clamp(54px,9vw,104px)] font-black leading-none tracking-tight text-white drop-shadow-[0_8px_24px_rgba(0,0,0,0.8)]">
           {alt}
         </div>
 
-        <div
-          style={{
-            fontSize: "20px",
-            color: "#dbe4f0",
-            textShadow: "0 4px 12px rgba(0,0,0,0.7)",
-            marginTop: "6px",
-          }}
-        >
+        <div className="mt-4 break-words text-base font-bold text-zinc-200 drop-shadow-[0_4px_12px_rgba(0,0,0,0.75)] sm:text-xl">
           {enName}
         </div>
       </div>
-    </section>
+    </div>
   );
 }
