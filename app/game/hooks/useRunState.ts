@@ -4,16 +4,17 @@ import { useCallback, useState } from "react";
 
 import { getEnemies } from "../data/enemies";
 import { events } from "../data/events";
+import { chooseGearRewards, getGameGear, getGearSlot } from "../data/game-gears";
 import { getMapNode, startingNodeIds } from "../data/maps";
 import { startingParty } from "../data/operators";
-import { getRelic, relics } from "../data/relics";
 import type {
-  BattleState,
   BattleEnemy,
+  BattleState,
   EnemyStatus,
   GameEventChoice,
   PartyMember,
   RunActions,
+  RunGear,
   RunState,
   SkillKind,
   TimelineEntry,
@@ -42,6 +43,7 @@ function freshParty(): PartyMember[] {
     shield: 0,
     ultimateCharge: 0,
     actionGauge: 0,
+    gear: {},
   }));
 }
 
@@ -49,10 +51,10 @@ function initialState(): RunState {
   return {
     screen: "map",
     party: freshParty(),
-    relics: [],
+    collectedGears: [],
     visitedNodes: [],
     availableNodes: startingNodeIds,
-    pendingRelicIds: [],
+    pendingGearSlugs: [],
     credits: 0,
     sp: 3,
     maxSp: 3,
@@ -320,46 +322,64 @@ function tickCombatGauges(party: PartyMember[], enemies: BattleEnemy[], activeUn
   };
 }
 
-function applyRelic(state: RunState, relicId: string): RunState {
-  const relic = getRelic(relicId);
-  if (state.relics.some((item) => item.id === relicId)) return state;
-
-  let party = state.party;
-  let maxSp = state.maxSp;
-  let sp = state.sp;
-
-  if (relic.effect === "heal") party = healParty(party, relic.value);
-  if (relic.effect === "attack") {
-    party = party.map((member) => ({
-      ...member,
-      attack: member.attack + relic.value,
-      battleSkillPower: member.battleSkillPower + relic.value,
-      linkSkillPower: member.linkSkillPower + relic.value,
-      ultimatePower: member.ultimatePower + relic.value,
-    }));
-  }
-  if (relic.effect === "max-hp") {
-    party = party.map((member) => ({
-      ...member,
-      maxHp: member.maxHp + relic.value,
-      hp: member.hp + relic.value,
-    }));
-  }
-  if (relic.effect === "sp") {
-    maxSp += relic.value;
-    sp = maxSp;
-  }
-
-  return { ...state, party, maxSp, sp, relics: [...state.relics, relic] };
+function gearLevelValue(gear: RunGear) {
+  if (gear.level === 10) return 1;
+  if (gear.level === 20) return 2;
+  if (gear.level === 28) return 3;
+  if (gear.level === 36) return 4;
+  return 5;
 }
 
-function chooseRewards(state: RunState) {
-  const owned = new Set(state.relics.map((item) => item.id));
-  const pool = relics.filter((item) => !owned.has(item.id));
-  if (pool.length <= 2) return pool.map((item) => item.id);
+function equipGearToMember(member: PartyMember, gear: RunGear): PartyMember {
+  const slot = getGearSlot(gear, member.gear.kit1, member.gear.kit2);
+  const value = gearLevelValue(gear);
+  const next: PartyMember = {
+    ...member,
+    gear: {
+      ...member.gear,
+      [slot]: gear,
+    },
+  };
 
-  const start = state.battlesWon % pool.length;
-  return [pool[start], pool[(start + 1) % pool.length]].map((item) => item.id);
+  if (gear.attributeTypes.includes("attack")) {
+    next.attack += value;
+    next.battleSkillPower += value;
+    next.linkSkillPower += value;
+    next.ultimatePower += value;
+  }
+  if (gear.attributeTypes.includes("hp")) {
+    next.maxHp += value * 4;
+    next.hp += value * 4;
+  }
+  if (gear.attributeTypes.includes("skillDamage")) next.battleSkillPower += value * 2;
+  if (gear.attributeTypes.includes("comboSkillDamage")) next.linkSkillPower += value * 2;
+  if (gear.attributeTypes.includes("ultimateDamage")) next.ultimatePower += value * 3;
+  if (gear.attributeTypes.includes("normalAttack")) next.attack += value * 2;
+  if (gear.attributeTypes.includes("allSkillDamage")) {
+    next.battleSkillPower += value;
+    next.linkSkillPower += value;
+    next.ultimatePower += value;
+  }
+  if (gear.attributeTypes.includes("ultimateEfficiency")) {
+    next.ultimateCharge = Math.min(100, next.ultimateCharge + value * 4);
+  }
+  if (gear.attributeTypes.includes("physicalDamage") && next.element === "physical") {
+    next.attack += value;
+    next.battleSkillPower += value;
+    next.linkSkillPower += value;
+  }
+  if (gear.attributeTypes.includes("cryoElectricDamage") && (next.element === "cryo" || next.element === "electric")) {
+    next.attack += value;
+    next.battleSkillPower += value;
+    next.linkSkillPower += value;
+  }
+  if (gear.attributeTypes.includes("heatNatureDamage") && (next.element === "heat" || next.element === "nature")) {
+    next.attack += value;
+    next.battleSkillPower += value;
+    next.linkSkillPower += value;
+  }
+
+  return next;
 }
 
 function resolveAutomaticBattleTurns(state: RunState): RunState {
@@ -628,9 +648,8 @@ export function useRunState(): RunState & RunActions {
             result: "victory",
           };
         }
-        const withWin = { ...current, battlesWon: won };
         return {
-          ...withWin,
+          ...current,
           party: partyAfterCost,
           sp: spAfterAction,
           cp: cpAfterAction,
@@ -640,9 +659,10 @@ export function useRunState(): RunState & RunActions {
             linkWindow,
             log: [actionLog, ...current.battle.log],
           },
+          battlesWon: won,
           screen: "reward",
           credits: current.credits + (node.type === "elite" ? 100 : 55),
-          pendingRelicIds: chooseRewards(withWin),
+          pendingGearSlugs: chooseGearRewards(won),
         };
       }
 
@@ -683,16 +703,20 @@ export function useRunState(): RunState & RunActions {
     });
   }, []);
 
-  const claimRelic = useCallback((relicId: string) => {
+  const equipRewardGear = useCallback((gearSlug: string, operatorId: string) => {
     setState((current) => {
-      const next = applyRelic(current, relicId);
+      const gear = getGameGear(gearSlug);
       return {
-        ...next,
-        pendingRelicIds: [],
+        ...current,
+        party: current.party.map((member) =>
+          member.id === operatorId ? equipGearToMember(member, gear) : member,
+        ),
+        collectedGears: [...current.collectedGears, gear],
+        pendingGearSlugs: [],
         screen: "map",
         availableNodes: getMapNode(current.currentNodeId ?? "").next,
         battle: undefined,
-        sp: next.maxSp,
+        sp: current.maxSp,
       };
     });
   }, []);
@@ -706,7 +730,14 @@ export function useRunState(): RunState & RunActions {
       if (choice.hpCost) next = { ...next, party: damageParty(next.party, choice.hpCost) };
       if (choice.heal) next = { ...next, party: healParty(next.party, choice.heal) };
       if (choice.credits) next = { ...next, credits: next.credits + choice.credits };
-      if (choice.relicId) next = applyRelic(next, choice.relicId);
+      if (choice.gearSlug) {
+        next = {
+          ...next,
+          pendingGearSlugs: [choice.gearSlug],
+          screen: "reward",
+        };
+        return next;
+      }
       return {
         ...next,
         screen: "map",
@@ -751,7 +782,7 @@ export function useRunState(): RunState & RunActions {
     enterNode,
     tickBattle,
     performAction,
-    claimRelic,
+    equipRewardGear,
     resolveEvent,
     rest,
     continueToMap,
