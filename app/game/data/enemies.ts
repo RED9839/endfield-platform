@@ -1,5 +1,7 @@
 import type { Enemy } from "../types/game";
 
+const DEFAULT_BOSS_SPEED = 84;
+
 export const enemies: Enemy[] = [
   {
     id: "raider",
@@ -44,7 +46,7 @@ export const enemies: Enemy[] = [
     image: "/enemies/eny_0051_rodin.webp",
     maxHp: 210,
     attack: 18,
-    speed: 72,
+    speed: DEFAULT_BOSS_SPEED,
     intent: "파괴적인 연속 공격",
     elite: true,
     boss: true,

@@ -70,6 +70,13 @@ function damageParty(party: PartyMember[], amount: number) {
   }));
 }
 
+function resetPartyActionGauges(party: PartyMember[]) {
+  return party.map((member) => ({
+    ...member,
+    actionGauge: 0,
+  }));
+}
+
 function addStatus(statuses: EnemyStatus[], status: EnemyStatus) {
   return statuses.includes(status) ? statuses : [...statuses, status];
 }
@@ -402,6 +409,7 @@ export function useRunState(): RunState & RunActions {
 
       return resolveAutomaticBattleTurns({
         ...base,
+        party: resetPartyActionGauges(current.party),
         screen: "battle",
         battle: {
           enemies: getEnemies(node.enemyIds ?? []).map((enemy) => ({
