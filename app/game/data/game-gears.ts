@@ -5,15 +5,16 @@ import type { GearLoadout, GearSlot, RunGear, RunGearCategory, RunGearLevel } fr
 const GAME_GEAR_LEVELS = [10, 20, 28, 36, 50] as const;
 
 const GAME_SET_EFFECTS: Record<string, string> = {
-  개척: "3세트: 전투 시작 시 SP +1, 배틀스킬 피해가 증가합니다.",
-  "응룡 50식": "3세트: 연계스킬 피해가 증가하고 방어 불능 대상에게 추가 피해를 줍니다.",
-  "본 크러셔": "3세트: 강력한 일격과 방어 불능 대상 피해가 증가합니다.",
-  "조류의 물결": "3세트: 전기/냉기 피해가 증가하고 감전 대상 피해가 증가합니다.",
-  청파: "3세트: 궁극기 충전 효율과 궁극기 피해가 증가합니다.",
-  "열 작업용": "3세트: 열기/자연 피해가 증가하고 상태 이상 대상 피해가 증가합니다.",
-  "생체 보조": "3세트: 회복량과 최대 HP가 증가합니다.",
-  검술사: "3세트: 기본공격과 물리 피해가 증가합니다.",
-  펄스식: "3세트: 기본공격 후 궁극기 충전량이 증가합니다.",
+  개척: "3세트: 전투 시작 시 SP +1, 배틀스킬 피해 증가",
+  "응룡 50식": "3세트: 연계스킬 피해 증가, 방어 불능 대상 추가 피해",
+  "본 크러셔": "3세트: 강력한 일격 확률 증가, 방어 불능 대상 피해 증가",
+  "조류의 물결": "3세트: 전기/냉기 피해 증가, 감전 대상 피해 증가",
+  청파: "3세트: 궁극기 충전 효율 증가, 궁극기 피해 증가",
+  "열 작업용": "3세트: 열기/자연 피해 증가, 상태 이상 대상 피해 증가",
+  "생체 보조": "3세트: 회복량 증가, 최대 체력 증가",
+  검술사: "3세트: 기본공격 피해 증가, 물리 피해 증가",
+  펄스식: "3세트: 기본공격 후 궁극기 충전량 증가",
+  "아부레이의 메아리": "3세트: 모든 스킬 피해 증가, 궁극기 충전 효율 증가",
 };
 
 function isGameGearLevel(level: number): level is RunGearLevel {
@@ -37,26 +38,12 @@ export function getGearPowerTier(gear: Pick<RunGear, "level" | "quality" | "setN
 }
 
 function toCombatDescription(attributeLabel: string, level: RunGearLevel, quality: number, hasSetEffect: boolean) {
-  const levelLabel = `Lv.${level} / ${quality}등급`;
-  const strengthLabel = hasSetEffect ? "표준" : "상향";
-  const suffix = hasSetEffect
-    ? " 3세트를 완성하면 세트 효과로 최종 효율이 더 높아집니다."
-    : " 같은 레벨·등급 기준 세트 효과가 없는 대신 개별 성능이 더 높습니다.";
+  const grade = `Lv.${level} / ${quality}등급`;
+  const balanceNote = hasSetEffect
+    ? "3세트 완성 시 추가 효과가 발동합니다."
+    : "세트 효과는 없지만 같은 레벨·등급 기준 개별 성능이 더 높습니다.";
 
-  if (attributeLabel.includes("연계")) return `${levelLabel} ${strengthLabel} 연계 스킬 피해 증가.${suffix}`;
-  if (attributeLabel.includes("배틀")) return `${levelLabel} ${strengthLabel} 배틀 스킬 피해 증가.${suffix}`;
-  if (attributeLabel.includes("궁극기 피해")) return `${levelLabel} ${strengthLabel} 궁극기 피해 증가.${suffix}`;
-  if (attributeLabel.includes("궁극기 충전")) return `${levelLabel} ${strengthLabel} 궁극기 충전 효율 증가.${suffix}`;
-  if (attributeLabel.includes("일반")) return `${levelLabel} ${strengthLabel} 기본공격 피해 증가.${suffix}`;
-  if (attributeLabel.includes("물리")) return `${levelLabel} ${strengthLabel} 물리 피해 증가.${suffix}`;
-  if (attributeLabel.includes("냉기") || attributeLabel.includes("전기")) return `${levelLabel} ${strengthLabel} 냉기/전기 피해 증가.${suffix}`;
-  if (attributeLabel.includes("열기") || attributeLabel.includes("자연")) return `${levelLabel} ${strengthLabel} 열기/자연 피해 증가.${suffix}`;
-  if (attributeLabel.includes("불균형")) return `${levelLabel} ${strengthLabel} 방어 불능 대상 피해 증가.${suffix}`;
-  if (attributeLabel.includes("치명")) return `${levelLabel} ${strengthLabel} 강력한 일격 확률 증가.${suffix}`;
-  if (attributeLabel.includes("치유")) return `${levelLabel} ${strengthLabel} 회복량 증가.${suffix}`;
-  if (attributeLabel.includes("피해 감소")) return `${levelLabel} ${strengthLabel} 받는 피해 감소.${suffix}`;
-  if (attributeLabel.includes("모든 스킬")) return `${levelLabel} ${strengthLabel} 모든 스킬 피해 증가.${suffix}`;
-  return `${levelLabel} ${strengthLabel} ${attributeLabel} 효과 증가.${suffix}`;
+  return `${grade} · ${attributeLabel}. ${balanceNote}`;
 }
 
 function toRunGear(gear: (typeof gearSummaries)[number]): RunGear | null {
