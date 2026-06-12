@@ -27,6 +27,7 @@ const ACTION_COST: Record<SkillKind, number> = {
 };
 const ENEMY_ACTION_COST = 100;
 const READY_GAUGE = 100;
+const REAL_TIME_TICK = 0.025;
 
 function freshParty(): PartyMember[] {
   return startingParty.map((operator) => ({
@@ -239,6 +240,21 @@ function activateNextUnit(party: PartyMember[], enemies: BattleEnemy[]) {
   };
 }
 
+function tickCombatGauges(party: PartyMember[], enemies: BattleEnemy[], activeUnitId?: string) {
+  return {
+    party: party.map((member) =>
+      member.hp > 0 && member.id !== activeUnitId
+        ? { ...member, actionGauge: member.actionGauge + member.speed * REAL_TIME_TICK }
+        : member,
+    ),
+    enemies: enemies.map((enemy) =>
+      enemy.hp > 0 && enemy.id !== activeUnitId
+        ? { ...enemy, actionGauge: enemy.actionGauge + enemy.speed * REAL_TIME_TICK }
+        : enemy,
+    ),
+  };
+}
+
 function applyRelic(state: RunState, relicId: string): RunState {
   const relic = getRelic(relicId);
   if (state.relics.some((item) => item.id === relicId)) return state;
@@ -386,6 +402,27 @@ export function useRunState(): RunState & RunActions {
           timeline: [],
           turn: 1,
           log: [`${node.title}에서 적과 조우했습니다.`],
+        },
+      });
+    });
+  }, []);
+
+  const tickBattle = useCallback(() => {
+    setState((current) => {
+      if (!current.battle || current.screen !== "battle") return current;
+
+      const ticked = tickCombatGauges(
+        current.party,
+        current.battle.enemies,
+        current.battle.activeSide === "party" ? current.battle.activeUnitId : undefined,
+      );
+
+      return resolveAutomaticBattleTurns({
+        ...current,
+        party: ticked.party,
+        battle: {
+          ...current.battle,
+          enemies: ticked.enemies,
         },
       });
     });
@@ -609,6 +646,7 @@ export function useRunState(): RunState & RunActions {
     startRun,
     abandonRun,
     enterNode,
+    tickBattle,
     performAction,
     claimRelic,
     resolveEvent,

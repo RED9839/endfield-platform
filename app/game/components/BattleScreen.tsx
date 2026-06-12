@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import Image from "next/image";
 import { BatteryCharging, Link2, Shield } from "lucide-react";
 
@@ -53,6 +54,7 @@ export default function BattleScreen({
   maxSp,
   cp,
   maxCp,
+  onTick,
   onAction,
 }: {
   party: PartyMember[];
@@ -61,6 +63,7 @@ export default function BattleScreen({
   maxSp: number;
   cp: number;
   maxCp: number;
+  onTick: () => void;
   onAction: (operatorId: string, kind: SkillKind) => void;
 }) {
   const activePartyMember =
@@ -72,6 +75,12 @@ export default function BattleScreen({
       ? battle.enemies.find((enemy) => enemy.id === battle.activeUnitId)
       : undefined;
   const activeName = activePartyMember?.name ?? activeEnemy?.name ?? "계산 중";
+
+  useEffect(() => {
+    const timer = window.setInterval(onTick, 250);
+
+    return () => window.clearInterval(timer);
+  }, [onTick]);
 
   return (
     <section className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6">

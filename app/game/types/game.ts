@@ -154,6 +154,7 @@ export type RunActions = {
   startRun: () => void;
   abandonRun: () => void;
   enterNode: (nodeId: string) => void;
+  tickBattle: () => void;
   performAction: (operatorId: string, kind: SkillKind) => void;
   claimRelic: (relicId: string) => void;
   resolveEvent: (choiceId: string) => void;

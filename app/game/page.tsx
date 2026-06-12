@@ -87,6 +87,7 @@ export default function GamePage() {
           maxSp={run.maxSp}
           cp={run.cp}
           maxCp={run.maxCp}
+          onTick={run.tickBattle}
           onAction={run.performAction}
         />
       )}
