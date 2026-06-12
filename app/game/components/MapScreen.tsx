@@ -20,15 +20,16 @@ import { getEnemies } from "../data/enemies";
 import { chooseGearRewards, getGameGear } from "../data/game-gears";
 import { mapNodes } from "../data/maps";
 import { startingParty } from "../data/operators";
-import type { GameMapNode, GameOperator } from "../types/game";
+import type { MapNode, Operator } from "../types/game";
 
 const nodeVisual: Record<
-  GameMapNode["type"],
+  MapNode["type"],
   { label: string; icon: typeof Skull; color: string; difficulty: number }
 > = {
   battle: { label: "COMBAT", icon: Skull, color: "from-red-500 to-orange-400", difficulty: 2 },
   elite: { label: "ELITE", icon: Flag, color: "from-fuchsia-500 to-violet-500", difficulty: 4 },
   event: { label: "EVENT", icon: Sparkles, color: "from-cyan-400 to-blue-500", difficulty: 1 },
+  shop: { label: "SHOP", icon: Gem, color: "from-yellow-300 to-orange-500", difficulty: 1 },
   camp: { label: "CAMP", icon: BadgeInfo, color: "from-emerald-400 to-teal-500", difficulty: 1 },
   boss: { label: "BOSS", icon: Gem, color: "from-amber-400 to-red-600", difficulty: 5 },
 };
@@ -55,7 +56,7 @@ function StatChip({ label, value }: { label: string; value: string | number }) {
   );
 }
 
-function OperatorCard({ operator, index }: { operator: GameOperator; index: number }) {
+function OperatorCard({ operator, index }: { operator: Operator; index: number }) {
   const accent = operatorAccents[index % operatorAccents.length];
   const selected = index === 0;
 
@@ -104,7 +105,7 @@ function OperatorCard({ operator, index }: { operator: GameOperator; index: numb
             <p className="mt-1 truncate text-xs font-bold text-white/45">{operator.className} / {operator.role}</p>
           </div>
           <span className="shrink-0 rounded-xl border border-cyan-200/20 bg-cyan-200/10 px-3 py-2 text-center text-xs font-black text-cyan-100">
-            LV <span className="ml-1 text-lg text-white">{operator.level}</span>
+            LV <span className="ml-1 text-lg text-white">60</span>
           </span>
         </div>
 
