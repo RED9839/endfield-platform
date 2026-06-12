@@ -1,5 +1,82 @@
-          {operator.className} / {operator.role}
-        </p>
+"use client";
+
+import Image from "next/image";
+import { useMemo, useState } from "react";
+import { ArrowRight, BadgeInfo, Flag, Gem, Search, Skull, Sparkles } from "lucide-react";
+import { getEnemies } from "../data/enemies";
+import { chooseGearRewards, getGameGear } from "../data/gear";
+import { mapNodes } from "../data/maps";
+import { startingParty } from "../data/operators";
+import type { GameMapNode, GameOperator } from "../types/game";
+
+const nodeVisual: Record<
+  GameMapNode["type"],
+  { label: string; icon: typeof Skull; color: string; difficulty: number }
+> = {
+  battle: {
+    label: "COMBAT",
+    icon: Skull,
+    color: "from-red-500 to-orange-400",
+    difficulty: 2,
+  },
+  elite: {
+    label: "ELITE",
+    icon: Flag,
+    color: "from-fuchsia-500 to-violet-500",
+    difficulty: 4,
+  },
+  event: {
+    label: "EVENT",
+    icon: Sparkles,
+    color: "from-cyan-400 to-blue-500",
+    difficulty: 1,
+  },
+  camp: {
+    label: "CAMP",
+    icon: BadgeInfo,
+    color: "from-emerald-400 to-teal-500",
+    difficulty: 1,
+  },
+  boss: {
+    label: "BOSS",
+    icon: Gem,
+    color: "from-amber-400 to-red-600",
+    difficulty: 5,
+  },
+};
+
+function difficultyMarks(count: number) {
+  return Array.from({ length: 5 }).map((_, index) => (
+    <span
+      key={index}
+      className={`h-2.5 w-8 rounded-full ${index < count ? "bg-orange-300" : "bg-white/10"}`}
+    />
+  ));
+}
+
+function OperatorCard({ operator, index }: { operator: GameOperator; index: number }) {
+  return (
+    <article className="group relative overflow-hidden rounded-[30px] border border-white/45 bg-white/55 p-4 shadow-[0_24px_60px_rgba(15,23,42,0.16)] backdrop-blur-xl transition hover:-translate-y-1 hover:bg-white/70">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_10%,rgba(255,255,255,0.9),transparent_34%)] opacity-70" />
+      <div className="relative flex items-start justify-between gap-3">
+        <div>
+          <p className="text-[10px] font-black tracking-[0.28em] text-zinc-500">
+            MEMBER {String(index + 1).padStart(2, "0")}
+          </p>
+          <h3 className="mt-2 text-2xl font-black text-zinc-950">{operator.name}</h3>
+          <p className="mt-1 text-xs font-bold text-zinc-500">
+            {operator.className} / {operator.role}
+          </p>
+        </div>
+        <span className="rounded-full border border-black/10 bg-zinc-950 px-3 py-1 text-xs font-black text-white">
+          Lv.{operator.level}
+        </span>
+      </div>
+      <div className="relative mt-4 h-56 overflow-hidden rounded-[24px] bg-gradient-to-b from-zinc-100 to-white">
+        <Image src={operator.image} alt={operator.name} fill sizes="(min-width: 1536px) 25vw, (min-width: 768px) 50vw, 100vw" className="object-contain object-bottom transition duration-500 group-hover:scale-105" priority={index === 0} />
+      </div>
+      <div className="relative mt-4">
+        <p className="line-clamp-2 text-xs font-bold leading-5 text-zinc-600">{operator.description}</p>
         <div className="mt-3 grid grid-cols-3 gap-2">
           <span className="rounded-lg border border-white/10 bg-white/10 px-2 py-1 text-[10px] font-black text-white">
             ATK {operator.attack}
