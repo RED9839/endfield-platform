@@ -421,6 +421,7 @@ export function useRunState(): RunState & RunActions {
   const tickBattle = useCallback(() => {
     setState((current) => {
       if (!current.battle || current.screen !== "battle") return current;
+      if (current.battle.activeSide === "party" && current.battle.activeUnitId) return current;
 
       const ticked = tickCombatGauges(
         current.party,
