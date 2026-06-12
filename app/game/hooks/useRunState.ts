@@ -786,10 +786,10 @@ export function useRunState(): RunState & RunActions {
       if (choice.hpCost) next = { ...next, party: damageParty(next.party, choice.hpCost) };
       if (choice.heal) next = { ...next, party: healParty(next.party, choice.heal) };
       if (choice.credits) next = { ...next, credits: next.credits + choice.credits };
-      if (choice.gearSlug) {
+      if (choice.gearSlug || choice.gearReward) {
         next = {
           ...next,
-          pendingGearSlugs: [choice.gearSlug],
+          pendingGearSlugs: choice.gearSlug ? [choice.gearSlug] : chooseGearRewards(current.battlesWon + 1),
           screen: "reward",
         };
         return next;
