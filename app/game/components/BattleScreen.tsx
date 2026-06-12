@@ -19,7 +19,7 @@ const ARTS_ATTACHMENT_STATUSES: EnemyStatus[] = [
 function HealthBar({ value, max }: { value: number; max: number }) {
   const width = Math.max(0, Math.min(100, (value / max) * 100));
   return (
-    <div className="h-1.5 overflow-hidden rounded-full bg-black/70">
+    <div className="h-2 overflow-hidden rounded-full bg-black/70">
       <div
         className="h-full rounded-full bg-gradient-to-r from-red-600 to-orange-400 transition-all"
         style={{ width: `${width}%` }}
@@ -119,8 +119,8 @@ function canUseLinkSkill(member: PartyMember, battle: BattleState) {
 
 function ActionIcon({ src }: { src: string }) {
   return (
-    <span className="relative h-5 w-5 overflow-hidden rounded bg-black/30">
-      <Image src={src} alt="" fill sizes="20px" className="object-contain" />
+    <span className="relative h-6 w-6 overflow-hidden rounded bg-black/30">
+      <Image src={src} alt="" fill sizes="24px" className="object-contain" />
     </span>
   );
 }
@@ -130,16 +130,16 @@ function GearStrip({ member }: { member: PartyMember }) {
   const activeSets = getActiveThreePieceSets(member.gear);
 
   return (
-    <div className="border-t border-white/8 px-3 py-2">
+    <div className="border-t border-white/8 px-4 py-3">
       <div className="grid grid-cols-4 gap-1">
         {[member.gear.armor, member.gear.gloves, member.gear.kit1, member.gear.kit2].map((gear, index) => (
           <div
             key={gear?.slug ?? `empty-${index}`}
-            className="relative flex h-9 items-center justify-center rounded-lg border border-white/8 bg-white/[0.03]"
+            className="relative flex h-10 items-center justify-center rounded-lg border border-white/8 bg-white/[0.03]"
             title={gear ? `${gear.name} · ${gear.setName}` : "빈 장비 슬롯"}
           >
             {gear ? (
-              <Image src={gear.image} alt="" fill sizes="36px" className="object-contain p-1" />
+              <Image src={gear.image} alt="" fill sizes="40px" className="object-contain p-1" />
             ) : (
               <span className="text-[9px] font-black text-zinc-700">-</span>
             )}
@@ -169,18 +169,18 @@ function GearStrip({ member }: { member: PartyMember }) {
 
 function StatGrid({ member }: { member: PartyMember }) {
   const stats = [
-    ["체력", `${member.hp}/${member.maxHp}`],
     ["기본공격력", member.attack],
     ["방어력", member.defense],
+    ["속도", member.speed],
     ["회피율", `${member.evasion}%`],
   ];
 
   return (
-    <div className="grid grid-cols-2 gap-1 px-3 pb-3">
+    <div className="grid grid-cols-2 gap-1.5 px-4 pb-4">
       {stats.map(([label, value]) => (
-        <div key={label} className="rounded-lg border border-white/8 bg-white/[0.025] px-2 py-1">
+        <div key={label} className="rounded-lg border border-white/8 bg-white/[0.025] px-2.5 py-1.5">
           <p className="text-[8px] font-bold text-zinc-600">{label}</p>
-          <p className="text-[10px] font-black text-zinc-200">{value}</p>
+          <p className="text-[11px] font-black text-zinc-200">{value}</p>
         </div>
       ))}
     </div>
@@ -223,16 +223,16 @@ export default function BattleScreen({
   }, [onTick]);
 
   return (
-    <section className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6">
-      <div className="mb-5 flex items-end justify-between gap-4">
+    <section className="mx-auto w-full max-w-[1500px] px-4 py-7 sm:px-7">
+      <div className="mb-6 flex items-end justify-between gap-4">
         <div>
           <p className="text-[10px] font-black tracking-[0.3em] text-red-300/70">
             COMBAT PHASE
           </p>
-          <h1 className="mt-1 text-2xl font-black text-white">
+          <h1 className="mt-1 text-3xl font-black text-white">
             교전 {battle.turn}
           </h1>
-          <p className="mt-1 text-xs font-bold text-cyan-100/70">
+          <p className="mt-1 text-sm font-bold text-cyan-100/70">
             현재 행동: {activeName}
           </p>
         </div>
@@ -248,13 +248,13 @@ export default function BattleScreen({
         </div>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[1fr_260px]">
-        <div className="overflow-hidden rounded-[26px] border border-white/10 bg-[radial-gradient(circle_at_50%_20%,#182129_0%,#080b0f_48%,#030405_100%)] p-4 sm:p-6">
-          <div className="grid min-h-[240px] grid-cols-2 items-end gap-3 sm:grid-cols-4">
+      <div className="grid gap-5 lg:grid-cols-[1fr_310px]">
+        <div className="overflow-hidden rounded-[30px] border border-white/10 bg-[radial-gradient(circle_at_50%_20%,#182129_0%,#080b0f_48%,#030405_100%)] p-5 sm:p-7">
+          <div className="grid min-h-[270px] grid-cols-2 items-end gap-4 sm:grid-cols-4">
             {battle.enemies.map((enemy) => (
               <article
                 key={enemy.id}
-                className={`relative overflow-hidden rounded-2xl border p-4 ${
+                className={`relative overflow-hidden rounded-3xl border p-5 ${
                   enemy.hp > 0
                     ? enemy.boss
                       ? "border-orange-400/40 bg-orange-950/20"
@@ -262,7 +262,7 @@ export default function BattleScreen({
                     : "border-white/5 bg-black/20 opacity-30"
                 }`}
               >
-                <div className="relative flex h-24 items-center justify-center">
+                <div className="relative flex h-28 items-center justify-center">
                   {enemy.image ? (
                     <Image
                       src={enemy.image}
@@ -275,7 +275,7 @@ export default function BattleScreen({
                     <Shield className="h-16 w-16 text-red-200/20" />
                   )}
                 </div>
-                <p className="truncate text-sm font-black text-white">{enemy.name}</p>
+                <p className="truncate text-base font-black text-white">{enemy.name}</p>
                 <p className="mt-1 text-[10px] text-red-200/60">{enemy.intent}</p>
                 {enemy.statuses.length > 0 && (
                   <div className="mt-2 flex flex-wrap gap-1">
@@ -300,9 +300,9 @@ export default function BattleScreen({
             ))}
           </div>
 
-          <div className="my-5 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+          <div className="my-6 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
 
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {party.map((member) => {
               const isActive = battle.activeSide === "party" && battle.activeUnitId === member.id;
               const disabled = !isActive || member.hp <= 0;
@@ -310,35 +310,43 @@ export default function BattleScreen({
               return (
                 <article
                   key={member.id}
-                  className={`overflow-hidden rounded-2xl border bg-black/40 ${
+                  className={`overflow-hidden rounded-3xl border bg-black/40 ${
                     isActive ? "border-cyan-300/50 shadow-[0_0_24px_rgba(103,232,249,0.12)]" : "border-white/10"
                   } ${
                     member.hp <= 0 ? "pointer-events-none grayscale opacity-35" : ""
                   }`}
                 >
-                  <div className="flex items-center gap-3 p-3">
-                    <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-zinc-900">
+                  <div className="flex items-start gap-4 p-4">
+                    <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-zinc-900">
                       <Image
                         src={member.image}
                         alt=""
                         fill
-                        sizes="56px"
+                        sizes="64px"
                         className="object-cover"
                       />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-black text-white">{member.name}</p>
+                      <p className="truncate text-base font-black text-white">{member.name}</p>
                       <p className="text-[10px] font-bold text-yellow-200/60">
                         {member.className} · {member.role}
                       </p>
                       <div className="mt-2">
+                        <div className="mb-1 flex items-center justify-between gap-2">
+                          <span className="text-[10px] font-black tracking-[0.16em] text-red-200/70">
+                            HP
+                          </span>
+                          <span className="text-xs font-black text-red-50">
+                            {member.hp} / {member.maxHp}
+                          </span>
+                        </div>
                         <HealthBar value={member.hp} max={member.maxHp} />
                         <SpeedPanel speed={member.speed} gauge={member.actionGauge} />
                       </div>
                     </div>
                   </div>
                   <StatGrid member={member} />
-                  <p className="px-3 pb-3 text-[10px] leading-4 text-zinc-500">
+                  <p className="px-4 pb-4 text-[11px] leading-5 text-zinc-500">
                     {member.battleSkillDescription}
                     <br />
                     궁극기 {member.ultimateCharge}%{member.shield > 0 ? ` · 보호 ${member.shield}` : ""}
@@ -349,44 +357,44 @@ export default function BattleScreen({
                       type="button"
                       disabled={disabled}
                       onClick={() => onAction(member.id, "attack")}
-                      className="flex flex-col items-center gap-1 px-1 py-3 text-[9px] font-bold text-zinc-300 transition hover:bg-white/5 hover:text-white disabled:opacity-25"
+                    className="flex flex-col items-center gap-1 px-1 py-3.5 text-[10px] font-bold text-zinc-300 transition hover:bg-white/5 hover:text-white disabled:opacity-25"
                     >
                       <ActionIcon src={member.normalAttackIcon} />
                       기본공격
-                      <span className="text-[8px] text-zinc-500">SP +1</span>
+                      <span className="text-[9px] text-zinc-500">SP +1</span>
                     </button>
                     <button
                       type="button"
                       disabled={disabled || sp < member.battleSkillCost}
                       title={member.battleSkillDescription}
                       onClick={() => onAction(member.id, "battle-skill")}
-                      className="flex flex-col items-center gap-1 border-x border-white/8 px-1 py-3 text-[9px] font-bold text-cyan-200 transition hover:bg-cyan-300/10 disabled:opacity-25"
+                      className="flex flex-col items-center gap-1 border-x border-white/8 px-1 py-3.5 text-[10px] font-bold text-cyan-200 transition hover:bg-cyan-300/10 disabled:opacity-25"
                     >
                       <ActionIcon src={member.battleSkillIcon} />
                       배틀스킬
-                      <span className="text-[8px] text-cyan-200/50">SP {member.battleSkillCost}</span>
+                      <span className="text-[9px] text-cyan-200/50">SP {member.battleSkillCost}</span>
                     </button>
                     <button
                       type="button"
                       disabled={disabled || cp < member.linkSkillCost || !linkReady}
                       title={member.linkSkillDescription}
                       onClick={() => onAction(member.id, "link-skill")}
-                      className="flex flex-col items-center gap-1 border-r border-white/8 px-1 py-3 text-[9px] font-bold text-violet-200 transition hover:bg-violet-300/10 disabled:opacity-25"
+                      className="flex flex-col items-center gap-1 border-r border-white/8 px-1 py-3.5 text-[10px] font-bold text-violet-200 transition hover:bg-violet-300/10 disabled:opacity-25"
                     >
                       <ActionIcon src={member.linkSkillIcon} />
                       연계스킬
-                      <span className="text-[8px] text-violet-200/50">CP {member.linkSkillCost}</span>
+                      <span className="text-[9px] text-violet-200/50">CP {member.linkSkillCost}</span>
                     </button>
                     <button
                       type="button"
                       disabled={disabled || member.ultimateCharge < 100}
                       title={member.ultimateDescription}
                       onClick={() => onAction(member.id, "ultimate")}
-                      className="flex flex-col items-center gap-1 px-1 py-3 text-[9px] font-bold text-yellow-200 transition hover:bg-yellow-300/10 disabled:opacity-25"
+                      className="flex flex-col items-center gap-1 px-1 py-3.5 text-[10px] font-bold text-yellow-200 transition hover:bg-yellow-300/10 disabled:opacity-25"
                     >
                       <ActionIcon src={member.ultimateIcon} />
                       궁극기
-                      <span className="text-[8px] text-yellow-200/50">{member.ultimateCharge}%</span>
+                      <span className="text-[9px] text-yellow-200/50">{member.ultimateCharge}%</span>
                     </button>
                   </div>
                 </article>
@@ -395,7 +403,7 @@ export default function BattleScreen({
           </div>
         </div>
 
-        <aside className="rounded-[22px] border border-white/10 bg-[#080b0f] p-4">
+        <aside className="rounded-[26px] border border-white/10 bg-[#080b0f] p-5">
           <p className="text-[10px] font-black tracking-[0.24em] text-zinc-500">
             NEXT
           </p>

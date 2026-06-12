@@ -20,7 +20,7 @@ export default function GamePage() {
   return (
     <main className="min-h-screen bg-[#030405] text-white">
       <header className="sticky top-0 z-40 border-b border-white/8 bg-black/85 backdrop-blur-xl">
-        <div className="mx-auto flex min-h-16 max-w-7xl items-center gap-3 px-4 py-2 sm:px-6">
+        <div className="mx-auto flex min-h-16 max-w-[1500px] items-center gap-3 px-4 py-2 sm:px-7">
           <Link
             href="/"
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 text-zinc-400 transition hover:text-white"
