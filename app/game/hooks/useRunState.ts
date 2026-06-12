@@ -148,7 +148,8 @@ function getStatusBonus(actor: PartyMember, target: BattleEnemy) {
 
 function hasArtsAttachment(enemy: BattleEnemy) {
   return enemy.statuses.some((status) => ARTS_ATTACHMENT_STATUSES.includes(status));
-}\n
+}
+
 function getLinkTarget(actor: PartyMember, battle: BattleState) {
   if (actor.linkCondition === "defense-break") {
     return battle.enemies.find((enemy) => enemy.hp > 0 && enemy.statuses.includes("defense-break"));
