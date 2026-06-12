@@ -17,8 +17,8 @@ export const events: GameEvent[] = [
       {
         id: "reroute",
         label: "전력을 우회한다",
-        description: "보관된 전술 장비를 획득합니다.",
-        gearSlug: "frontierscomm",
+        description: "전술 장비 보상 후보를 확인합니다.",
+        gearReward: true,
       },
     ],
   },
