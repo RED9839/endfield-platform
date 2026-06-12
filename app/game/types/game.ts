@@ -40,6 +40,7 @@ export type EnemyStatus =
 export type RunGearCategory = "armor" | "gloves" | "kit";
 export type GearSlot = "armor" | "gloves" | "kit1" | "kit2";
 export type RunGearLevel = 10 | 20 | 28 | 36 | 50;
+export type RewardTier = "early" | "mid" | "late" | "elite" | "boss";
 
 export type RunGear = {
   slug: string;
@@ -155,6 +156,7 @@ export type MapNode = {
   subtitle: string;
   next: string[];
   enemyIds?: string[];
+  rewardTier?: RewardTier;
 };
 
 export type BattleState = {
