@@ -10,7 +10,7 @@ export const operators: Operator[] = [
     role: "한손검",
     className: "가드",
     element: "physical",
-    image: "/operators/endministrator/full.webp",
+    image: "/operators/endministrator/full2.webp",
     maxHp: 72,
     attack: 9,
     defense: BASE_DEFENSE,
