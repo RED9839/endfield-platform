@@ -28,30 +28,35 @@ export function getGameSetEffectDescription(setName: string) {
   return GAME_SET_EFFECTS[setName] ?? "세트 효과 없음";
 }
 
-function toCombatDescription(attributeLabel: string, level: RunGearLevel, hasSetEffect: boolean) {
-  const levelBonus = {
-    10: hasSetEffect ? "소폭" : "높게",
-    20: hasSetEffect ? "일정량" : "높게",
-    28: hasSetEffect ? "중간" : "크게",
-    36: hasSetEffect ? "높은" : "크게",
-    50: hasSetEffect ? "큰" : "매우 크게",
-  }[level];
-  const suffix = hasSetEffect ? "" : " 세트 효과가 없는 대신 개별 성능이 더 높습니다.";
+export function getGearPowerTier(gear: Pick<RunGear, "level" | "quality" | "setName">) {
+  const levelTier = gear.level === 10 ? 1 : gear.level === 20 ? 2 : gear.level === 28 ? 3 : gear.level === 36 ? 4 : 5;
+  const qualityTier = Math.max(1, Math.min(5, gear.quality));
+  const sameLevelQualityNoSetBonus = hasGameSetEffect(gear.setName) ? 0 : 1;
 
-  if (attributeLabel.includes("연계")) return `연계 스킬 피해가 ${levelBonus} 증가합니다.${suffix}`;
-  if (attributeLabel.includes("배틀")) return `배틀 스킬 피해가 ${levelBonus} 증가합니다.${suffix}`;
-  if (attributeLabel.includes("궁극기 피해")) return `궁극기 피해가 ${levelBonus} 증가합니다.${suffix}`;
-  if (attributeLabel.includes("궁극기 충전")) return `궁극기 충전 효율이 ${levelBonus} 증가합니다.${suffix}`;
-  if (attributeLabel.includes("일반")) return `기본공격 피해가 ${levelBonus} 증가합니다.${suffix}`;
-  if (attributeLabel.includes("물리")) return `물리 피해가 ${levelBonus} 증가합니다.${suffix}`;
-  if (attributeLabel.includes("냉기") || attributeLabel.includes("전기")) return `냉기/전기 피해가 ${levelBonus} 증가합니다.${suffix}`;
-  if (attributeLabel.includes("열기") || attributeLabel.includes("자연")) return `열기/자연 피해가 ${levelBonus} 증가합니다.${suffix}`;
-  if (attributeLabel.includes("불균형")) return `방어 불능 대상에게 주는 피해가 ${levelBonus} 증가합니다.${suffix}`;
-  if (attributeLabel.includes("치명")) return `강력한 일격 확률이 ${levelBonus} 증가합니다.${suffix}`;
-  if (attributeLabel.includes("치유")) return `회복량이 ${levelBonus} 증가합니다.${suffix}`;
-  if (attributeLabel.includes("피해 감소")) return `받는 피해가 ${levelBonus} 감소합니다.${suffix}`;
-  if (attributeLabel.includes("모든 스킬")) return `모든 스킬 피해가 ${levelBonus} 증가합니다.${suffix}`;
-  return `${attributeLabel} 효과가 ${levelBonus} 증가합니다.${suffix}`;
+  return levelTier + qualityTier - 1 + sameLevelQualityNoSetBonus;
+}
+
+function toCombatDescription(attributeLabel: string, level: RunGearLevel, quality: number, hasSetEffect: boolean) {
+  const levelLabel = `Lv.${level} / ${quality}등급`;
+  const strengthLabel = hasSetEffect ? "표준" : "상향";
+  const suffix = hasSetEffect
+    ? " 3세트를 완성하면 세트 효과로 최종 효율이 더 높아집니다."
+    : " 같은 레벨·등급 기준 세트 효과가 없는 대신 개별 성능이 더 높습니다.";
+
+  if (attributeLabel.includes("연계")) return `${levelLabel} ${strengthLabel} 연계 스킬 피해 증가.${suffix}`;
+  if (attributeLabel.includes("배틀")) return `${levelLabel} ${strengthLabel} 배틀 스킬 피해 증가.${suffix}`;
+  if (attributeLabel.includes("궁극기 피해")) return `${levelLabel} ${strengthLabel} 궁극기 피해 증가.${suffix}`;
+  if (attributeLabel.includes("궁극기 충전")) return `${levelLabel} ${strengthLabel} 궁극기 충전 효율 증가.${suffix}`;
+  if (attributeLabel.includes("일반")) return `${levelLabel} ${strengthLabel} 기본공격 피해 증가.${suffix}`;
+  if (attributeLabel.includes("물리")) return `${levelLabel} ${strengthLabel} 물리 피해 증가.${suffix}`;
+  if (attributeLabel.includes("냉기") || attributeLabel.includes("전기")) return `${levelLabel} ${strengthLabel} 냉기/전기 피해 증가.${suffix}`;
+  if (attributeLabel.includes("열기") || attributeLabel.includes("자연")) return `${levelLabel} ${strengthLabel} 열기/자연 피해 증가.${suffix}`;
+  if (attributeLabel.includes("불균형")) return `${levelLabel} ${strengthLabel} 방어 불능 대상 피해 증가.${suffix}`;
+  if (attributeLabel.includes("치명")) return `${levelLabel} ${strengthLabel} 강력한 일격 확률 증가.${suffix}`;
+  if (attributeLabel.includes("치유")) return `${levelLabel} ${strengthLabel} 회복량 증가.${suffix}`;
+  if (attributeLabel.includes("피해 감소")) return `${levelLabel} ${strengthLabel} 받는 피해 감소.${suffix}`;
+  if (attributeLabel.includes("모든 스킬")) return `${levelLabel} ${strengthLabel} 모든 스킬 피해 증가.${suffix}`;
+  return `${levelLabel} ${strengthLabel} ${attributeLabel} 효과 증가.${suffix}`;
 }
 
 function toRunGear(gear: (typeof gearSummaries)[number]): RunGear | null {
@@ -72,7 +77,7 @@ function toRunGear(gear: (typeof gearSummaries)[number]): RunGear | null {
     abilityTypes: gear.abilityTypes,
     attributeTypes: gear.attributeTypes,
     attributeLabel: gear.attributeLabel,
-    combatDescription: toCombatDescription(gear.attributeLabel, gear.level, setEnabled),
+    combatDescription: toCombatDescription(gear.attributeLabel, gear.level, gear.quality, setEnabled),
   };
 }
 
