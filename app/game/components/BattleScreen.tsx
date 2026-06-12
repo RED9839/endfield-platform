@@ -28,30 +28,43 @@ function HealthBar({ value, max }: { value: number; max: number }) {
   );
 }
 
-function GaugeBar({ value }: { value: number }) {
+function GaugeBar({ value, tone = "ally" }: { value: number; tone?: "ally" | "enemy" }) {
   const width = Math.max(0, Math.min(100, value));
   return (
     <div className="h-1 overflow-hidden rounded-full bg-black/70">
       <div
-        className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-violet-400 transition-all"
+        className={`h-full rounded-full transition-all ${
+          tone === "enemy"
+            ? "bg-gradient-to-r from-red-500 to-orange-400"
+            : "bg-gradient-to-r from-cyan-500 to-violet-400"
+        }`}
         style={{ width: `${width}%` }}
       />
     </div>
   );
 }
 
-function SpeedPanel({ speed, gauge }: { speed: number; gauge: number }) {
+function SpeedPanel({ speed, gauge, tone = "ally" }: { speed: number; gauge: number; tone?: "ally" | "enemy" }) {
+  const enemy = tone === "enemy";
   return (
-    <div className="mt-2 rounded-lg border border-cyan-300/10 bg-cyan-300/[0.035] px-2 py-1.5">
+    <div className={`mt-2 rounded-lg border px-2 py-1.5 ${
+      enemy
+        ? "border-red-300/15 bg-red-400/[0.045]"
+        : "border-cyan-300/10 bg-cyan-300/[0.035]"
+    }`}>
       <div className="flex items-center justify-between gap-2">
-        <span className="flex items-center gap-1 text-[9px] font-black tracking-[0.16em] text-cyan-200/70">
+        <span className={`flex items-center gap-1 text-[9px] font-black tracking-[0.16em] ${
+          enemy ? "text-red-200/75" : "text-cyan-200/70"
+        }`}>
           <Zap className="h-3 w-3" /> SPD
         </span>
-        <span className="text-xs font-black text-cyan-50">{speed}</span>
+        <span className={`text-xs font-black ${enemy ? "text-red-50" : "text-cyan-50"}`}>{speed}</span>
       </div>
       <div className="mt-1.5">
-        <GaugeBar value={gauge} />
-        <p className="mt-1 text-right text-[8px] font-bold text-cyan-100/40">
+        <GaugeBar value={gauge} tone={tone} />
+        <p className={`mt-1 text-right text-[8px] font-bold ${
+          enemy ? "text-red-100/45" : "text-cyan-100/40"
+        }`}>
           행동 게이지 {Math.floor(gauge)} / 100
         </p>
       </div>
@@ -281,7 +294,7 @@ export default function BattleScreen({
                   <p className="mt-1 text-right text-[10px] font-bold text-zinc-400">
                     {enemy.hp} / {enemy.maxHp}
                   </p>
-                  <SpeedPanel speed={enemy.speed} gauge={enemy.actionGauge} />
+                  <SpeedPanel speed={enemy.speed} gauge={enemy.actionGauge} tone="enemy" />
                 </div>
               </article>
             ))}
