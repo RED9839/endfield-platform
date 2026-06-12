@@ -10,6 +10,7 @@ const agelosRoute: MapNode[] = [
     subtitle: "일반 전투",
     next: ["agelos-event-1", "agelos-2a"],
     enemyIds: ["agelos-big-horn", "agelos-one-tail"],
+    rewardTier: "early",
   },
   {
     id: "agelos-1b",
@@ -20,6 +21,7 @@ const agelosRoute: MapNode[] = [
     subtitle: "일반 전투",
     next: ["agelos-2a", "agelos-camp-1"],
     enemyIds: ["agelos-mimic", "agelos-big-horn"],
+    rewardTier: "early",
   },
   {
     id: "agelos-event-1",
@@ -29,6 +31,7 @@ const agelosRoute: MapNode[] = [
     title: "결정 껍질",
     subtitle: "사건",
     next: ["agelos-2b", "agelos-camp-1"],
+    rewardTier: "early",
   },
   {
     id: "agelos-2a",
@@ -39,6 +42,7 @@ const agelosRoute: MapNode[] = [
     subtitle: "강화 전투",
     next: ["agelos-2b", "agelos-elite-1"],
     enemyIds: ["agelos-double-horn", "agelos-one-tail"],
+    rewardTier: "mid",
   },
   {
     id: "agelos-camp-1",
@@ -58,6 +62,7 @@ const agelosRoute: MapNode[] = [
     subtitle: "일반 전투",
     next: ["agelos-elite-1", "agelos-event-2"],
     enemyIds: ["agelos-big-horn-alpha", "agelos-one-tail-alpha", "agelos-mimic"],
+    rewardTier: "mid",
   },
   {
     id: "agelos-elite-1",
@@ -68,6 +73,7 @@ const agelosRoute: MapNode[] = [
     subtitle: "정예 전투",
     next: ["agelos-3a", "agelos-camp-2"],
     enemyIds: ["agelos-sentinel", "agelos-double-horn-alpha"],
+    rewardTier: "elite",
   },
   {
     id: "agelos-event-2",
@@ -77,6 +83,7 @@ const agelosRoute: MapNode[] = [
     title: "모방체 군집",
     subtitle: "사건",
     next: ["agelos-3a", "agelos-elite-2"],
+    rewardTier: "late",
   },
   {
     id: "agelos-3a",
@@ -87,6 +94,7 @@ const agelosRoute: MapNode[] = [
     subtitle: "강화 전투",
     next: ["agelos-camp-2", "agelos-elite-2"],
     enemyIds: ["agelos-three-tail", "agelos-mimic-alpha"],
+    rewardTier: "late",
   },
   {
     id: "agelos-camp-2",
@@ -106,6 +114,7 @@ const agelosRoute: MapNode[] = [
     subtitle: "정예 전투",
     next: ["agelos-boss"],
     enemyIds: ["agelos-shaper", "agelos-three-tail-alpha"],
+    rewardTier: "elite",
   },
   {
     id: "agelos-boss",
@@ -116,6 +125,7 @@ const agelosRoute: MapNode[] = [
     subtitle: "두목 전투",
     next: [],
     enemyIds: ["agelos-crystal"],
+    rewardTier: "boss",
   },
 ];
 
