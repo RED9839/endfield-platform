@@ -120,6 +120,20 @@ function hasSet(member: PartyMember, setName: string) {
   return activeSets(member).includes(setName);
 }
 
+function applyBattleStartSetEffects(
+  party: PartyMember[],
+  sp: number,
+  maxSp: number,
+) {
+  const pioneerCount = party.filter((member) => hasSet(member, "개척")).length;
+  const supportCount = party.filter((member) => hasSet(member, "생체 보조")).length;
+
+  return {
+    party: supportCount > 0 ? healParty(party, supportCount * 6) : party,
+    sp: Math.min(maxSp, sp + pioneerCount),
+  };
+}
+
 function didEvade(member: PartyMember, battleTurn: number, enemyId: string) {
   const chance = Math.max(0, Math.min(EVASION_CAP, member.evasion));
   const seed = `${member.id}:${enemyId}:${battleTurn}:${member.actionGauge}`;
