@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import Image from "next/image";
 import { BatteryCharging, Link2, Shield } from "lucide-react";
 
+import { getActiveThreePieceSets, getEquippedGears, getGameSetEffectDescription } from "../data/game-gears";
 import type {
   BattleState,
   EnemyStatus,
@@ -89,6 +90,48 @@ function ActionIcon({ src }: { src: string }) {
     <span className="relative h-5 w-5 overflow-hidden rounded bg-black/30">
       <Image src={src} alt="" fill sizes="20px" className="object-contain" />
     </span>
+  );
+}
+
+function GearStrip({ member }: { member: PartyMember }) {
+  const gears = getEquippedGears(member.gear);
+  const activeSets = getActiveThreePieceSets(member.gear);
+
+  return (
+    <div className="border-t border-white/8 px-3 py-2">
+      <div className="grid grid-cols-4 gap-1">
+        {[member.gear.armor, member.gear.gloves, member.gear.kit1, member.gear.kit2].map((gear, index) => (
+          <div
+            key={gear?.slug ?? `empty-${index}`}
+            className="relative flex h-9 items-center justify-center rounded-lg border border-white/8 bg-white/[0.03]"
+            title={gear ? `${gear.name} · ${gear.setName}` : "빈 장비 슬롯"}
+          >
+            {gear ? (
+              <Image src={gear.image} alt="" fill sizes="36px" className="object-contain p-1" />
+            ) : (
+              <span className="text-[9px] font-black text-zinc-700">-</span>
+            )}
+          </div>
+        ))}
+      </div>
+      <div className="mt-2 flex flex-wrap gap-1">
+        {activeSets.length > 0 ? (
+          activeSets.map((setName) => (
+            <span
+              key={setName}
+              className="rounded-full border border-yellow-300/25 bg-yellow-300/10 px-2 py-0.5 text-[9px] font-black text-yellow-100"
+              title={getGameSetEffectDescription(setName)}
+            >
+              {setName} 3세트
+            </span>
+          ))
+        ) : (
+          <span className="text-[9px] font-bold text-zinc-600">
+            장비 {gears.length}/4 · 3세트 미활성
+          </span>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -213,104 +256,103 @@ export default function BattleScreen({
           <div className="my-5 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
 
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            {party.map((member) => (
-              (() => {
-                const isActive = battle.activeSide === "party" && battle.activeUnitId === member.id;
-                const disabled = !isActive || member.hp <= 0;
-                const linkReady = canUseLinkSkill(member, battle);
-                return (
-              <article
-                key={member.id}
-                className={`overflow-hidden rounded-2xl border bg-black/40 ${
-                  isActive ? "border-cyan-300/50 shadow-[0_0_24px_rgba(103,232,249,0.12)]" : "border-white/10"
-                } ${
-                  member.hp <= 0 ? "pointer-events-none grayscale opacity-35" : ""
-                }`}
-              >
-                <div className="flex items-center gap-3 p-3">
-                  <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-zinc-900">
-                    <Image
-                      src={member.image}
-                      alt=""
-                      fill
-                      sizes="56px"
-                      className="object-cover"
-                    />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-black text-white">{member.name}</p>
-                    <p className="text-[10px] font-bold text-yellow-200/60">
-                      {member.className} · {member.role}
-                    </p>
-                    <div className="mt-2">
-                      <HealthBar value={member.hp} max={member.maxHp} />
-                      <p className="mt-1 text-[9px] text-zinc-500">
-                        HP {member.hp}/{member.maxHp}
-                        {member.shield > 0 ? ` · 보호 ${member.shield}` : ""}
+            {party.map((member) => {
+              const isActive = battle.activeSide === "party" && battle.activeUnitId === member.id;
+              const disabled = !isActive || member.hp <= 0;
+              const linkReady = canUseLinkSkill(member, battle);
+              return (
+                <article
+                  key={member.id}
+                  className={`overflow-hidden rounded-2xl border bg-black/40 ${
+                    isActive ? "border-cyan-300/50 shadow-[0_0_24px_rgba(103,232,249,0.12)]" : "border-white/10"
+                  } ${
+                    member.hp <= 0 ? "pointer-events-none grayscale opacity-35" : ""
+                  }`}
+                >
+                  <div className="flex items-center gap-3 p-3">
+                    <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-zinc-900">
+                      <Image
+                        src={member.image}
+                        alt=""
+                        fill
+                        sizes="56px"
+                        className="object-cover"
+                      />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-black text-white">{member.name}</p>
+                      <p className="text-[10px] font-bold text-yellow-200/60">
+                        {member.className} · {member.role}
                       </p>
                       <div className="mt-2">
-                        <GaugeBar value={member.actionGauge} />
-                        <p className="mt-1 text-[9px] text-cyan-100/40">
-                          SPD {member.speed} · {Math.floor(member.actionGauge)}
+                        <HealthBar value={member.hp} max={member.maxHp} />
+                        <p className="mt-1 text-[9px] text-zinc-500">
+                          HP {member.hp}/{member.maxHp}
+                          {member.shield > 0 ? ` · 보호 ${member.shield}` : ""}
                         </p>
+                        <div className="mt-2">
+                          <GaugeBar value={member.actionGauge} />
+                          <p className="mt-1 text-[9px] text-cyan-100/40">
+                            SPD {member.speed} · {Math.floor(member.actionGauge)}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-                <p className="px-3 pb-3 text-[10px] leading-4 text-zinc-500">
-                  {member.battleSkillDescription}
-                  <br />
-                  궁극기 {member.ultimateCharge}%
-                </p>
-                <div className="grid grid-cols-4 border-t border-white/8">
-                  <button
-                    type="button"
-                    disabled={disabled}
-                    onClick={() => onAction(member.id, "attack")}
-                    className="flex flex-col items-center gap-1 px-1 py-3 text-[9px] font-bold text-zinc-300 transition hover:bg-white/5 hover:text-white"
-                  >
-                    <ActionIcon src={member.normalAttackIcon} />
-                    기본공격
-                    <span className="text-[8px] text-zinc-500">SP +1</span>
-                  </button>
-                  <button
-                    type="button"
-                    disabled={disabled || sp < member.battleSkillCost}
-                    title={member.battleSkillDescription}
-                    onClick={() => onAction(member.id, "battle-skill")}
-                    className="flex flex-col items-center gap-1 border-x border-white/8 px-1 py-3 text-[9px] font-bold text-cyan-200 transition hover:bg-cyan-300/10 disabled:opacity-25"
-                  >
-                    <ActionIcon src={member.battleSkillIcon} />
-                    배틀스킬
-                    <span className="text-[8px] text-cyan-200/50">SP {member.battleSkillCost}</span>
-                  </button>
-                  <button
-                    type="button"
-                    disabled={disabled || cp < member.linkSkillCost || !linkReady}
-                    title={member.linkSkillDescription}
-                    onClick={() => onAction(member.id, "link-skill")}
-                    className="flex flex-col items-center gap-1 border-r border-white/8 px-1 py-3 text-[9px] font-bold text-violet-200 transition hover:bg-violet-300/10 disabled:opacity-25"
-                  >
-                    <ActionIcon src={member.linkSkillIcon} />
-                    연계스킬
-                    <span className="text-[8px] text-violet-200/50">CP {member.linkSkillCost}</span>
-                  </button>
-                  <button
-                    type="button"
-                    disabled={disabled || member.ultimateCharge < 100}
-                    title={member.ultimateDescription}
-                    onClick={() => onAction(member.id, "ultimate")}
-                    className="flex flex-col items-center gap-1 px-1 py-3 text-[9px] font-bold text-yellow-200 transition hover:bg-yellow-300/10 disabled:opacity-25"
-                  >
-                    <ActionIcon src={member.ultimateIcon} />
-                    궁극기
-                    <span className="text-[8px] text-yellow-200/50">{member.ultimateCharge}%</span>
-                  </button>
-                </div>
-              </article>
-                );
-              })()
-            ))}
+                  <p className="px-3 pb-3 text-[10px] leading-4 text-zinc-500">
+                    {member.battleSkillDescription}
+                    <br />
+                    궁극기 {member.ultimateCharge}%
+                  </p>
+                  <GearStrip member={member} />
+                  <div className="grid grid-cols-4 border-t border-white/8">
+                    <button
+                      type="button"
+                      disabled={disabled}
+                      onClick={() => onAction(member.id, "attack")}
+                      className="flex flex-col items-center gap-1 px-1 py-3 text-[9px] font-bold text-zinc-300 transition hover:bg-white/5 hover:text-white disabled:opacity-25"
+                    >
+                      <ActionIcon src={member.normalAttackIcon} />
+                      기본공격
+                      <span className="text-[8px] text-zinc-500">SP +1</span>
+                    </button>
+                    <button
+                      type="button"
+                      disabled={disabled || sp < member.battleSkillCost}
+                      title={member.battleSkillDescription}
+                      onClick={() => onAction(member.id, "battle-skill")}
+                      className="flex flex-col items-center gap-1 border-x border-white/8 px-1 py-3 text-[9px] font-bold text-cyan-200 transition hover:bg-cyan-300/10 disabled:opacity-25"
+                    >
+                      <ActionIcon src={member.battleSkillIcon} />
+                      배틀스킬
+                      <span className="text-[8px] text-cyan-200/50">SP {member.battleSkillCost}</span>
+                    </button>
+                    <button
+                      type="button"
+                      disabled={disabled || cp < member.linkSkillCost || !linkReady}
+                      title={member.linkSkillDescription}
+                      onClick={() => onAction(member.id, "link-skill")}
+                      className="flex flex-col items-center gap-1 border-r border-white/8 px-1 py-3 text-[9px] font-bold text-violet-200 transition hover:bg-violet-300/10 disabled:opacity-25"
+                    >
+                      <ActionIcon src={member.linkSkillIcon} />
+                      연계스킬
+                      <span className="text-[8px] text-violet-200/50">CP {member.linkSkillCost}</span>
+                    </button>
+                    <button
+                      type="button"
+                      disabled={disabled || member.ultimateCharge < 100}
+                      title={member.ultimateDescription}
+                      onClick={() => onAction(member.id, "ultimate")}
+                      className="flex flex-col items-center gap-1 px-1 py-3 text-[9px] font-bold text-yellow-200 transition hover:bg-yellow-300/10 disabled:opacity-25"
+                    >
+                      <ActionIcon src={member.ultimateIcon} />
+                      궁극기
+                      <span className="text-[8px] text-yellow-200/50">{member.ultimateCharge}%</span>
+                    </button>
+                  </div>
+                </article>
+              );
+            })}
           </div>
         </div>
 
