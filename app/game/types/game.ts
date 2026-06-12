@@ -72,6 +72,11 @@ export type Operator = {
   image: string;
   maxHp: number;
   attack: number;
+  defense: number;
+  strength: number;
+  agility: number;
+  intelligence: number;
+  will: number;
   speed: number;
   normalAttackIcon: string;
   battleSkillName: string;
