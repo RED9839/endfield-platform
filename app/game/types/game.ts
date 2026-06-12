@@ -37,6 +37,32 @@ export type EnemyStatus =
   | "corrosion"
   | "defense-break";
 
+export type RunGearCategory = "armor" | "gloves" | "kit";
+export type GearSlot = "armor" | "gloves" | "kit1" | "kit2";
+export type RunGearLevel = 10 | 20 | 28 | 36 | 50;
+
+export type RunGear = {
+  slug: string;
+  name: string;
+  enName: string;
+  category: RunGearCategory;
+  level: RunGearLevel;
+  quality: number;
+  setName: string;
+  image: string;
+  abilityTypes: string[];
+  attributeTypes: string[];
+  attributeLabel: string;
+  combatDescription: string;
+};
+
+export type GearLoadout = {
+  armor?: RunGear;
+  gloves?: RunGear;
+  kit1?: RunGear;
+  kit2?: RunGear;
+};
+
 export type Operator = {
   id: string;
   name: string;
@@ -72,6 +98,7 @@ export type PartyMember = Operator & {
   shield: number;
   ultimateCharge: number;
   actionGauge: number;
+  gear: GearLoadout;
 };
 
 export type Enemy = {
@@ -99,15 +126,6 @@ export type TimelineEntry = {
   gauge: number;
 };
 
-export type Relic = {
-  id: string;
-  name: string;
-  description: string;
-  icon: string;
-  effect: "max-hp" | "attack" | "heal" | "sp";
-  value: number;
-};
-
 export type GameEventChoice = {
   id: string;
   label: string;
@@ -115,7 +133,7 @@ export type GameEventChoice = {
   hpCost?: number;
   heal?: number;
   credits?: number;
-  relicId?: string;
+  gearSlug?: string;
 };
 
 export type GameEvent = {
@@ -153,11 +171,11 @@ export type BattleState = {
 export type RunState = {
   screen: Screen;
   party: PartyMember[];
-  relics: Relic[];
+  collectedGears: RunGear[];
   visitedNodes: string[];
   availableNodes: string[];
   currentNodeId?: string;
-  pendingRelicIds: string[];
+  pendingGearSlugs: string[];
   credits: number;
   sp: number;
   maxSp: number;
@@ -175,7 +193,7 @@ export type RunActions = {
   enterNode: (nodeId: string) => void;
   tickBattle: () => void;
   performAction: (operatorId: string, kind: SkillKind) => void;
-  claimRelic: (relicId: string) => void;
+  equipRewardGear: (gearSlug: string, operatorId: string) => void;
   resolveEvent: (choiceId: string) => void;
   rest: (mode: "heal" | "train") => void;
   continueToMap: () => void;
