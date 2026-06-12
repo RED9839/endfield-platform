@@ -19,6 +19,13 @@ const deploymentImages: Record<string, string> = {
   ardelia: "/operators/ardelia/full.webp",
 };
 
+const imageScale: Record<string, string> = {
+  endministrator: "scale-[1.72] group-hover:scale-[1.78]",
+  perlica: "scale-[1.66] group-hover:scale-[1.72]",
+  chenqianyu: "scale-[1.68] group-hover:scale-[1.74]",
+  ardelia: "scale-[1.62] group-hover:scale-[1.68]",
+};
+
 function StatChip({ label, value }: { label: string; value: string | number }) {
   return (
     <span className="rounded-xl border border-yellow-200/15 bg-black/55 px-2 py-2 text-center shadow-inner shadow-yellow-200/5">
@@ -32,10 +39,11 @@ function OperatorCard({ operator, index }: { operator: Operator; index: number }
   const accent = operatorAccents[index % operatorAccents.length];
   const selected = index === 0;
   const image = deploymentImages[operator.id] ?? operator.image;
+  const scale = imageScale[operator.id] ?? "scale-[1.66] group-hover:scale-[1.72]";
 
   return (
     <article
-      className={`group relative min-h-[860px] overflow-hidden rounded-[38px] border p-4 backdrop-blur-xl transition duration-300 hover:-translate-y-1 ${
+      className={`group relative aspect-[0.58] min-h-[880px] overflow-hidden rounded-[38px] border p-4 backdrop-blur-xl transition duration-300 hover:-translate-y-1 ${
         selected
           ? "border-yellow-200/80 bg-yellow-200/[0.065] shadow-[0_0_58px_rgba(250,204,21,0.2)]"
           : "border-white/12 bg-zinc-950/62 shadow-[0_26px_70px_rgba(0,0,0,0.32)] hover:border-yellow-200/45"
@@ -62,12 +70,12 @@ function OperatorCard({ operator, index }: { operator: Operator; index: number }
         </button>
       </div>
 
-      <div className="relative z-10 -mt-8 h-[660px] overflow-hidden rounded-[30px]">
+      <div className="absolute inset-x-4 top-20 bottom-48 z-10 overflow-hidden rounded-[30px]">
         <div className="absolute inset-x-0 top-28 h-96 rounded-full bg-yellow-300/10 blur-3xl" />
-        <Image src={image} alt={operator.name} fill sizes="(min-width: 1536px) 25vw, (min-width: 768px) 50vw, 100vw" className="scale-[1.42] object-contain object-center drop-shadow-[0_34px_46px_rgba(0,0,0,0.78)] transition duration-500 group-hover:scale-[1.5]" priority={index === 0} />
+        <Image src={image} alt={operator.name} fill sizes="(min-width: 1536px) 25vw, (min-width: 768px) 50vw, 100vw" className={`${scale} object-contain object-center drop-shadow-[0_34px_46px_rgba(0,0,0,0.78)] transition duration-500`} priority={index === 0} />
       </div>
 
-      <div className="relative z-20 -mt-24 rounded-[28px] border border-yellow-100/12 bg-black/76 p-4 shadow-[0_18px_38px_rgba(0,0,0,0.34)] backdrop-blur-xl">
+      <div className="absolute inset-x-4 bottom-4 z-20 rounded-[28px] border border-yellow-100/12 bg-black/76 p-4 shadow-[0_18px_38px_rgba(0,0,0,0.34)] backdrop-blur-xl">
         <div className="min-w-0">
           <p className="text-[10px] font-black tracking-[0.28em] text-yellow-100/45">OPERATOR</p>
           <h3 className="mt-1 truncate text-3xl font-black tracking-tight text-white">{operator.name}</h3>
