@@ -32,11 +32,15 @@ export type Operator = {
   image: string;
   maxHp: number;
   attack: number;
+  normalAttackIcon: string;
   battleSkillName: string;
+  battleSkillIcon: string;
   battleSkillDescription: string;
   linkSkillName: string;
+  linkSkillIcon: string;
   linkSkillDescription: string;
   ultimateName: string;
+  ultimateIcon: string;
   ultimateDescription: string;
   skillMechanic: SkillMechanic;
   artsAttachment?: string;

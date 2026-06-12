@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { BatteryCharging, Link2, Shield, Sparkles, Swords, Zap } from "lucide-react";
+import { BatteryCharging, Link2, Shield } from "lucide-react";
 
 import type {
   BattleState,
@@ -24,6 +24,14 @@ function statusLabel(status: EnemyStatus) {
   if (status === "originium-crystal") return "오리지늄 결정";
   if (status === "electric-attachment") return "전기 부착";
   return "감전";
+}
+
+function ActionIcon({ src }: { src: string }) {
+  return (
+    <span className="relative h-5 w-5 overflow-hidden rounded bg-black/30">
+      <Image src={src} alt="" fill sizes="20px" className="object-contain" />
+    </span>
+  );
 }
 
 export default function BattleScreen({
@@ -162,7 +170,9 @@ export default function BattleScreen({
                     onClick={() => onAction(member.id, "attack")}
                     className="flex flex-col items-center gap-1 px-1 py-3 text-[9px] font-bold text-zinc-300 transition hover:bg-white/5 hover:text-white"
                   >
-                    <Swords className="h-4 w-4" /> 기본 +SP
+                    <ActionIcon src={member.normalAttackIcon} />
+                    기본공격
+                    <span className="text-[8px] text-zinc-500">SP +1</span>
                   </button>
                   <button
                     type="button"
@@ -171,7 +181,9 @@ export default function BattleScreen({
                     onClick={() => onAction(member.id, "battle-skill")}
                     className="flex flex-col items-center gap-1 border-x border-white/8 px-1 py-3 text-[9px] font-bold text-cyan-200 transition hover:bg-cyan-300/10 disabled:opacity-25"
                   >
-                    <Sparkles className="h-4 w-4" /> 배틀 {member.battleSkillCost}
+                    <ActionIcon src={member.battleSkillIcon} />
+                    배틀스킬
+                    <span className="text-[8px] text-cyan-200/50">SP {member.battleSkillCost}</span>
                   </button>
                   <button
                     type="button"
@@ -180,7 +192,9 @@ export default function BattleScreen({
                     onClick={() => onAction(member.id, "link-skill")}
                     className="flex flex-col items-center gap-1 border-r border-white/8 px-1 py-3 text-[9px] font-bold text-violet-200 transition hover:bg-violet-300/10 disabled:opacity-25"
                   >
-                    <Link2 className="h-4 w-4" /> 연계 {member.linkSkillCost}
+                    <ActionIcon src={member.linkSkillIcon} />
+                    연계스킬
+                    <span className="text-[8px] text-violet-200/50">CP {member.linkSkillCost}</span>
                   </button>
                   <button
                     type="button"
@@ -189,7 +203,9 @@ export default function BattleScreen({
                     onClick={() => onAction(member.id, "ultimate")}
                     className="flex flex-col items-center gap-1 px-1 py-3 text-[9px] font-bold text-yellow-200 transition hover:bg-yellow-300/10 disabled:opacity-25"
                   >
-                    <Zap className="h-4 w-4" /> 궁극기
+                    <ActionIcon src={member.ultimateIcon} />
+                    궁극기
+                    <span className="text-[8px] text-yellow-200/50">{member.ultimateCharge}%</span>
                   </button>
                 </div>
               </article>
