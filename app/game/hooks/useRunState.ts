@@ -39,6 +39,7 @@ const ACTION_COST: Record<SkillKind, number> = {
 const ENEMY_ACTION_COST = 100;
 const READY_GAUGE = 100;
 const REAL_TIME_TICK = 0.025;
+const EVASION_CAP = 25;
 const ARTS_ATTACHMENT_STATUSES: EnemyStatus[] = [
   "originium-crystal",
   "electric-attachment",
@@ -123,6 +124,13 @@ function activeSets(member: PartyMember) {
 
 function hasSet(member: PartyMember, setName: string) {
   return activeSets(member).includes(setName);
+}
+
+function didEvade(member: PartyMember, battleTurn: number, enemyId: string) {
+  const chance = Math.max(0, Math.min(EVASION_CAP, member.evasion));
+  const seed = `${member.id}:${enemyId}:${battleTurn}:${member.actionGauge}`;
+  const roll = Array.from(seed).reduce((acc, char) => acc + char.charCodeAt(0), 0) % 100;
+  return roll < chance;
 }
 
 function getStatusBonus(actor: PartyMember, target: BattleEnemy) {
@@ -377,11 +385,6 @@ function applyGearStats(member: PartyMember, gear: RunGear): PartyMember {
   const value = getGearPowerTier(gear);
   const next = { ...member };
 
-  if (gear.abilityTypes.includes("strength")) next.strength += value;
-  if (gear.abilityTypes.includes("agility")) next.agility += value;
-  if (gear.abilityTypes.includes("intelligence")) next.intelligence += value;
-  if (gear.abilityTypes.includes("will")) next.will += value;
-
   if (gear.category === "armor") next.defense += value * 2;
   if (gear.category === "gloves") next.attack += value;
 
@@ -440,6 +443,7 @@ function recalculateMemberFromGear(member: PartyMember, gear: GearLoadout): Part
 
   return {
     ...recalculated,
+    evasion: Math.min(EVASION_CAP, recalculated.evasion),
     hp: Math.max(1, Math.min(recalculated.maxHp, Math.round(recalculated.maxHp * hpRatio))),
   };
 }
@@ -505,15 +509,19 @@ function resolveAutomaticBattleTurns(state: RunState): RunState {
       current.party[0];
     if (!victim) return current;
 
-    const hit = Math.max(1, actor.attack);
+    const evaded = didEvade(victim, activeBattle.turn, actor.id);
+    const rawHit = Math.max(1, actor.attack);
+    const hit = evaded ? 0 : Math.max(1, rawHit - Math.floor(victim.defense / 40));
     const partyAfterHit = current.party.map((member) =>
-      member.id === victim.id ? absorbHit(member, Math.max(1, hit - Math.floor(member.defense / 40))) : member,
+      member.id === victim.id ? (evaded ? member : absorbHit(member, hit)) : member,
     );
     const enemiesAfterAction = activeBattle.enemies.map((enemy) =>
       enemy.id === actor.id ? spendGauge(enemy, ENEMY_ACTION_COST) : enemy,
     );
     const defeated = partyAfterHit.every((member) => member.hp <= 0);
-    const enemyLog = `${actor.name}: ${victim.name}에게 ${hit} 피해.`;
+    const enemyLog = evaded
+      ? `${actor.name}: ${victim.name} 공격, 회피!`
+      : `${actor.name}: ${victim.name}에게 ${hit} 피해.`;
 
     current = {
       ...current,
