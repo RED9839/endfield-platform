@@ -15,7 +15,18 @@ import type {
   RunActions,
   RunState,
   SkillKind,
+  TimelineEntry,
+  UnitSide,
 } from "../types/game";
+
+const ACTION_COST: Record<SkillKind, number> = {
+  attack: 100,
+  "battle-skill": 115,
+  "link-skill": 90,
+  ultimate: 140,
+};
+const ENEMY_ACTION_COST = 100;
+const READY_GAUGE = 100;
 
 function freshParty(): PartyMember[] {
   return startingParty.map((operator) => ({
@@ -23,6 +34,7 @@ function freshParty(): PartyMember[] {
     hp: operator.maxHp,
     shield: 0,
     ultimateCharge: 0,
+    actionGauge: 0,
   }));
 }
 
@@ -120,6 +132,113 @@ function applySkillMechanic(actor: PartyMember, target: BattleEnemy, baseDamage:
   return { damage, statuses, notes };
 }
 
+function collectReadyUnits(party: PartyMember[], enemies: BattleEnemy[]) {
+  return [
+    ...party
+      .filter((member) => member.hp > 0 && member.actionGauge >= READY_GAUGE)
+      .map((member) => ({
+        id: member.id,
+        name: member.name,
+        side: "party" as const,
+        speed: member.speed,
+        gauge: member.actionGauge,
+      })),
+    ...enemies
+      .filter((enemy) => enemy.hp > 0 && enemy.actionGauge >= READY_GAUGE)
+      .map((enemy) => ({
+        id: enemy.id,
+        name: enemy.name,
+        side: "enemy" as const,
+        speed: enemy.speed,
+        gauge: enemy.actionGauge,
+      })),
+  ].sort((a, b) => {
+    if (b.gauge !== a.gauge) return b.gauge - a.gauge;
+    if (a.side !== b.side) return a.side === "party" ? -1 : 1;
+    if (b.speed !== a.speed) return b.speed - a.speed;
+    return a.id.localeCompare(b.id);
+  });
+}
+
+function advanceGaugeClock(party: PartyMember[], enemies: BattleEnemy[]) {
+  if (collectReadyUnits(party, enemies).length > 0) return { party, enemies };
+
+  const livingUnits = [
+    ...party.filter((member) => member.hp > 0),
+    ...enemies.filter((enemy) => enemy.hp > 0),
+  ];
+  if (livingUnits.length === 0) return { party, enemies };
+
+  const timeToReady = Math.min(
+    ...livingUnits.map((unit) =>
+      Math.max(1, Math.ceil((READY_GAUGE - unit.actionGauge) / unit.speed)),
+    ),
+  );
+
+  return {
+    party: party.map((member) =>
+      member.hp > 0
+        ? { ...member, actionGauge: member.actionGauge + member.speed * timeToReady }
+        : member,
+    ),
+    enemies: enemies.map((enemy) =>
+      enemy.hp > 0
+        ? { ...enemy, actionGauge: enemy.actionGauge + enemy.speed * timeToReady }
+        : enemy,
+    ),
+  };
+}
+
+function spendGauge<T extends PartyMember | BattleEnemy>(unit: T, cost: number): T {
+  return { ...unit, actionGauge: unit.actionGauge - cost };
+}
+
+function buildTimeline(party: PartyMember[], enemies: BattleEnemy[], count = 6): TimelineEntry[] {
+  let previewParty = party.map((member) => ({ ...member }));
+  let previewEnemies = enemies.map((enemy) => ({ ...enemy }));
+  const timeline: TimelineEntry[] = [];
+
+  for (let index = 0; index < count; index += 1) {
+    const advanced = advanceGaugeClock(previewParty, previewEnemies);
+    previewParty = advanced.party;
+    previewEnemies = advanced.enemies;
+
+    const next = collectReadyUnits(previewParty, previewEnemies)[0];
+    if (!next) break;
+    timeline.push({
+      id: next.id,
+      name: next.name,
+      side: next.side,
+      gauge: next.gauge,
+    });
+
+    if (next.side === "party") {
+      previewParty = previewParty.map((member) =>
+        member.id === next.id ? spendGauge(member, ACTION_COST.attack) : member,
+      );
+    } else {
+      previewEnemies = previewEnemies.map((enemy) =>
+        enemy.id === next.id ? spendGauge(enemy, ENEMY_ACTION_COST) : enemy,
+      );
+    }
+  }
+
+  return timeline;
+}
+
+function activateNextUnit(party: PartyMember[], enemies: BattleEnemy[]) {
+  const advanced = advanceGaugeClock(party, enemies);
+  const next = collectReadyUnits(advanced.party, advanced.enemies)[0];
+
+  return {
+    party: advanced.party,
+    enemies: advanced.enemies,
+    activeUnitId: next?.id,
+    activeSide: next?.side as UnitSide | undefined,
+    timeline: buildTimeline(advanced.party, advanced.enemies),
+  };
+}
+
 function applyRelic(state: RunState, relicId: string): RunState {
   const relic = getRelic(relicId);
   if (state.relics.some((item) => item.id === relicId)) return state;
@@ -162,6 +281,68 @@ function chooseRewards(state: RunState) {
   return [pool[start], pool[(start + 1) % pool.length]].map((item) => item.id);
 }
 
+function resolveAutomaticBattleTurns(state: RunState): RunState {
+  let current: RunState = state;
+
+  for (let safety = 0; safety < 20; safety += 1) {
+    if (!current.battle || current.screen !== "battle") return current;
+
+    const battle = current.battle;
+    const activated = activateNextUnit(current.party, battle.enemies);
+    current = {
+      ...current,
+      party: activated.party,
+      battle: {
+        ...battle,
+        enemies: activated.enemies,
+        activeUnitId: activated.activeUnitId,
+        activeSide: activated.activeSide,
+        timeline: activated.timeline,
+      },
+    };
+
+    if (activated.activeSide !== "enemy" || !activated.activeUnitId) return current;
+
+    const activeBattle = current.battle;
+    if (!activeBattle) return current;
+    const actor = activeBattle.enemies.find((enemy) => enemy.id === activated.activeUnitId);
+    if (!actor || actor.hp <= 0) return current;
+
+    const livingParty = current.party.filter((member) => member.hp > 0);
+    const victim =
+      livingParty.reduce((lowest, member) => (member.hp < lowest.hp ? member : lowest), livingParty[0]) ??
+      current.party[0];
+    if (!victim) return current;
+
+    const hit = Math.max(1, actor.attack);
+    const partyAfterHit = current.party.map((member) =>
+      member.id === victim.id ? absorbHit(member, hit) : member,
+    );
+    const enemiesAfterAction = activeBattle.enemies.map((enemy) =>
+      enemy.id === actor.id ? spendGauge(enemy, ENEMY_ACTION_COST) : enemy,
+    );
+    const defeated = partyAfterHit.every((member) => member.hp <= 0);
+    const enemyLog = `${actor.name}: ${victim.name}에게 ${hit} 피해.`;
+
+    current = {
+      ...current,
+      party: partyAfterHit,
+      screen: defeated ? "summary" : "battle",
+      result: defeated ? "defeat" : current.result,
+      battle: {
+        ...activeBattle,
+        enemies: enemiesAfterAction,
+        turn: activeBattle.turn + 1,
+        log: [enemyLog, ...activeBattle.log].slice(0, 8),
+      },
+    };
+
+    if (defeated) return current;
+  }
+
+  return current;
+}
+
 export function useRunState(): RunState & RunActions {
   const [state, setState] = useState<RunState>(initialState);
 
@@ -192,7 +373,7 @@ export function useRunState(): RunState & RunActions {
       }
       if (node.type === "camp") return { ...base, screen: "camp" };
 
-      return {
+      return resolveAutomaticBattleTurns({
         ...base,
         screen: "battle",
         battle: {
@@ -200,11 +381,13 @@ export function useRunState(): RunState & RunActions {
             ...enemy,
             hp: enemy.maxHp,
             statuses: [],
+            actionGauge: 0,
           })),
+          timeline: [],
           turn: 1,
           log: [`${node.title}에서 적과 조우했습니다.`],
         },
-      };
+      });
     });
   }, []);
 
@@ -214,9 +397,11 @@ export function useRunState(): RunState & RunActions {
       const actor = current.party.find((member) => member.id === operatorId);
       const target = current.battle.enemies.find((enemy) => enemy.hp > 0);
       if (!actor || !target || actor.hp <= 0) return current;
+      if (current.battle.activeSide !== "party" || current.battle.activeUnitId !== operatorId) return current;
       if (kind === "battle-skill" && current.sp < actor.battleSkillCost) return current;
       if (kind === "link-skill" && current.cp < actor.linkSkillCost) return current;
       if (kind === "ultimate" && actor.ultimateCharge < 100) return current;
+      const actionCost = ACTION_COST[kind];
 
       const baseDamage =
         kind === "attack"
@@ -294,7 +479,7 @@ export function useRunState(): RunState & RunActions {
       const partyAfterCost = current.party.map((member) =>
         member.id === actor.id
           ? {
-              ...member,
+              ...spendGauge(member, actionCost),
               ultimateCharge:
                 kind === "ultimate"
                   ? 0
@@ -331,29 +516,16 @@ export function useRunState(): RunState & RunActions {
         };
       }
 
-      const livingParty = current.party.filter((member) => member.hp > 0);
-      let party =
+      const party =
         actor.skillMechanic === "protective-arts" && kind !== "attack"
           ? partyAfterCost.map((member) => ({
               ...member,
               shield: member.shield + (kind === "ultimate" ? 18 : member.id === actor.id ? 14 : 8),
             }))
           : partyAfterCost;
-      const enemyLogs: string[] = [];
-
-      for (const enemy of enemiesAfterAction.filter((item) => item.hp > 0)) {
-        const victim =
-          livingParty.reduce((lowest, member) => (member.hp < lowest.hp ? member : lowest), livingParty[0]) ??
-          actor;
-        const hit = Math.max(1, enemy.attack);
-        party = party.map((member) =>
-          member.id === victim.id ? absorbHit(member, hit) : member,
-        );
-        enemyLogs.push(`${enemy.name}: ${victim.name}에게 ${hit} 피해.`);
-      }
 
       const defeated = party.every((member) => member.hp <= 0);
-      return {
+      const nextState: RunState = {
         ...current,
         party,
         sp: spAfterAction,
@@ -361,11 +533,13 @@ export function useRunState(): RunState & RunActions {
         screen: defeated ? "summary" : "battle",
         result: defeated ? "defeat" : current.result,
         battle: {
+          ...current.battle,
           enemies: enemiesAfterAction,
           turn: current.battle.turn + 1,
-          log: [...enemyLogs, actionLog, ...current.battle.log].slice(0, 8),
+          log: [actionLog, ...current.battle.log].slice(0, 8),
         },
       };
+      return defeated ? nextState : resolveAutomaticBattleTurns(nextState);
     });
   }, []);
 

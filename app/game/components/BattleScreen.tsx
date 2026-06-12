@@ -20,6 +20,18 @@ function HealthBar({ value, max }: { value: number; max: number }) {
   );
 }
 
+function GaugeBar({ value }: { value: number }) {
+  const width = Math.max(0, Math.min(100, value));
+  return (
+    <div className="h-1 overflow-hidden rounded-full bg-black/70">
+      <div
+        className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-violet-400 transition-all"
+        style={{ width: `${width}%` }}
+      />
+    </div>
+  );
+}
+
 function statusLabel(status: EnemyStatus) {
   if (status === "originium-crystal") return "오리지늄 결정";
   if (status === "electric-attachment") return "전기 부착";
@@ -51,6 +63,16 @@ export default function BattleScreen({
   maxCp: number;
   onAction: (operatorId: string, kind: SkillKind) => void;
 }) {
+  const activePartyMember =
+    battle.activeSide === "party"
+      ? party.find((member) => member.id === battle.activeUnitId)
+      : undefined;
+  const activeEnemy =
+    battle.activeSide === "enemy"
+      ? battle.enemies.find((enemy) => enemy.id === battle.activeUnitId)
+      : undefined;
+  const activeName = activePartyMember?.name ?? activeEnemy?.name ?? "계산 중";
+
   return (
     <section className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6">
       <div className="mb-5 flex items-end justify-between gap-4">
@@ -61,6 +83,9 @@ export default function BattleScreen({
           <h1 className="mt-1 text-2xl font-black text-white">
             교전 {battle.turn}
           </h1>
+          <p className="mt-1 text-xs font-bold text-cyan-100/70">
+            현재 행동: {activeName}
+          </p>
         </div>
         <div className="flex gap-2">
           <div className="flex items-center gap-2 rounded-xl border border-cyan-300/20 bg-cyan-300/[0.06] px-4 py-2 text-cyan-100">
@@ -120,6 +145,12 @@ export default function BattleScreen({
                   <p className="mt-1 text-right text-[10px] font-bold text-zinc-400">
                     {enemy.hp} / {enemy.maxHp}
                   </p>
+                  <div className="mt-2">
+                    <GaugeBar value={enemy.actionGauge} />
+                    <p className="mt-1 text-right text-[9px] text-cyan-100/40">
+                      SPD {enemy.speed} · {Math.floor(enemy.actionGauge)}
+                    </p>
+                  </div>
                 </div>
               </article>
             ))}
@@ -129,9 +160,15 @@ export default function BattleScreen({
 
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             {party.map((member) => (
+              (() => {
+                const isActive = battle.activeSide === "party" && battle.activeUnitId === member.id;
+                const disabled = !isActive || member.hp <= 0;
+                return (
               <article
                 key={member.id}
-                className={`overflow-hidden rounded-2xl border border-white/10 bg-black/40 ${
+                className={`overflow-hidden rounded-2xl border bg-black/40 ${
+                  isActive ? "border-cyan-300/50 shadow-[0_0_24px_rgba(103,232,249,0.12)]" : "border-white/10"
+                } ${
                   member.hp <= 0 ? "pointer-events-none grayscale opacity-35" : ""
                 }`}
               >
@@ -156,6 +193,12 @@ export default function BattleScreen({
                         HP {member.hp}/{member.maxHp}
                         {member.shield > 0 ? ` · 보호 ${member.shield}` : ""}
                       </p>
+                      <div className="mt-2">
+                        <GaugeBar value={member.actionGauge} />
+                        <p className="mt-1 text-[9px] text-cyan-100/40">
+                          SPD {member.speed} · {Math.floor(member.actionGauge)}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -167,6 +210,7 @@ export default function BattleScreen({
                 <div className="grid grid-cols-4 border-t border-white/8">
                   <button
                     type="button"
+                    disabled={disabled}
                     onClick={() => onAction(member.id, "attack")}
                     className="flex flex-col items-center gap-1 px-1 py-3 text-[9px] font-bold text-zinc-300 transition hover:bg-white/5 hover:text-white"
                   >
@@ -176,7 +220,7 @@ export default function BattleScreen({
                   </button>
                   <button
                     type="button"
-                    disabled={sp < member.battleSkillCost}
+                    disabled={disabled || sp < member.battleSkillCost}
                     title={member.battleSkillDescription}
                     onClick={() => onAction(member.id, "battle-skill")}
                     className="flex flex-col items-center gap-1 border-x border-white/8 px-1 py-3 text-[9px] font-bold text-cyan-200 transition hover:bg-cyan-300/10 disabled:opacity-25"
@@ -187,7 +231,7 @@ export default function BattleScreen({
                   </button>
                   <button
                     type="button"
-                    disabled={cp < member.linkSkillCost}
+                    disabled={disabled || cp < member.linkSkillCost}
                     title={member.linkSkillDescription}
                     onClick={() => onAction(member.id, "link-skill")}
                     className="flex flex-col items-center gap-1 border-r border-white/8 px-1 py-3 text-[9px] font-bold text-violet-200 transition hover:bg-violet-300/10 disabled:opacity-25"
@@ -198,7 +242,7 @@ export default function BattleScreen({
                   </button>
                   <button
                     type="button"
-                    disabled={member.ultimateCharge < 100}
+                    disabled={disabled || member.ultimateCharge < 100}
                     title={member.ultimateDescription}
                     onClick={() => onAction(member.id, "ultimate")}
                     className="flex flex-col items-center gap-1 px-1 py-3 text-[9px] font-bold text-yellow-200 transition hover:bg-yellow-300/10 disabled:opacity-25"
@@ -209,11 +253,34 @@ export default function BattleScreen({
                   </button>
                 </div>
               </article>
+                );
+              })()
             ))}
           </div>
         </div>
 
         <aside className="rounded-[22px] border border-white/10 bg-[#080b0f] p-4">
+          <p className="text-[10px] font-black tracking-[0.24em] text-zinc-500">
+            NEXT
+          </p>
+          <div className="mt-4 space-y-2">
+            {battle.timeline.map((entry, index) => (
+              <div
+                key={`${entry.side}-${entry.id}-${index}`}
+                className={`flex items-center justify-between rounded-xl border px-3 py-2 text-xs ${
+                  index === 0
+                    ? "border-cyan-300/25 bg-cyan-300/10 text-cyan-50"
+                    : "border-white/8 bg-white/[0.03] text-zinc-400"
+                }`}
+              >
+                <span className="truncate font-black">{entry.name}</span>
+                <span className="ml-3 text-[10px] font-bold">
+                  {entry.side === "party" ? "아군" : "적"} {Math.floor(entry.gauge)}
+                </span>
+              </div>
+            ))}
+          </div>
+          <div className="my-5 h-px bg-white/10" />
           <p className="text-[10px] font-black tracking-[0.24em] text-zinc-500">
             BATTLE LOG
           </p>

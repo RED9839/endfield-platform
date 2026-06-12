@@ -9,6 +9,7 @@ export type Screen =
 export type Element = "physical" | "heat" | "electric" | "cryo" | "nature";
 export type NodeType = "battle" | "elite" | "event" | "camp" | "boss";
 export type SkillKind = "attack" | "battle-skill" | "link-skill" | "ultimate";
+export type UnitSide = "party" | "enemy";
 export type OperatorClass =
   | "가드"
   | "디펜더"
@@ -32,6 +33,7 @@ export type Operator = {
   image: string;
   maxHp: number;
   attack: number;
+  speed: number;
   normalAttackIcon: string;
   battleSkillName: string;
   battleSkillIcon: string;
@@ -55,6 +57,7 @@ export type PartyMember = Operator & {
   hp: number;
   shield: number;
   ultimateCharge: number;
+  actionGauge: number;
 };
 
 export type Enemy = {
@@ -63,6 +66,7 @@ export type Enemy = {
   image?: string;
   maxHp: number;
   attack: number;
+  speed: number;
   intent: string;
   elite?: boolean;
   boss?: boolean;
@@ -71,6 +75,14 @@ export type Enemy = {
 export type BattleEnemy = Enemy & {
   hp: number;
   statuses: EnemyStatus[];
+  actionGauge: number;
+};
+
+export type TimelineEntry = {
+  id: string;
+  name: string;
+  side: UnitSide;
+  gauge: number;
 };
 
 export type Relic = {
@@ -112,6 +124,9 @@ export type MapNode = {
 
 export type BattleState = {
   enemies: BattleEnemy[];
+  activeUnitId?: string;
+  activeSide?: UnitSide;
+  timeline: TimelineEntry[];
   turn: number;
   log: string[];
 };

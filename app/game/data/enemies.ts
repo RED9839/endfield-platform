@@ -7,6 +7,7 @@ export const enemies: Enemy[] = [
     image: "/enemies/eny_0029_lbmob.webp",
     maxHp: 46,
     attack: 8,
+    speed: 86,
     intent: "전열을 공격",
   },
   {
@@ -15,6 +16,7 @@ export const enemies: Enemy[] = [
     image: "/enemies/eny_0046_lbshamman.webp",
     maxHp: 38,
     attack: 11,
+    speed: 92,
     intent: "후열에 화염 공격",
   },
   {
@@ -23,6 +25,7 @@ export const enemies: Enemy[] = [
     image: "/enemies/eny_0071_sandb.webp",
     maxHp: 74,
     attack: 12,
+    speed: 104,
     intent: "강한 일격을 준비",
     elite: true,
   },
@@ -32,6 +35,7 @@ export const enemies: Enemy[] = [
     image: "/enemies/eny_0049_rogue.webp",
     maxHp: 42,
     attack: 10,
+    speed: 108,
     intent: "가장 약한 대상을 노림",
   },
   {
@@ -40,6 +44,7 @@ export const enemies: Enemy[] = [
     image: "/enemies/eny_0051_rodin.webp",
     maxHp: 210,
     attack: 18,
+    speed: 72,
     intent: "파괴적인 연속 공격",
     elite: true,
     boss: true,
