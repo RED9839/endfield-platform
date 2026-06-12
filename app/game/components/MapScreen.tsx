@@ -19,13 +19,6 @@ const deploymentImages: Record<string, string> = {
   ardelia: "/operators/ardelia/full.webp",
 };
 
-const imageScale: Record<string, string> = {
-  endministrator: "scale-[1.72] group-hover:scale-[1.78]",
-  perlica: "scale-[1.66] group-hover:scale-[1.72]",
-  chenqianyu: "scale-[1.68] group-hover:scale-[1.74]",
-  ardelia: "scale-[1.62] group-hover:scale-[1.68]",
-};
-
 function StatChip({ label, value }: { label: string; value: string | number }) {
   return (
     <span className="rounded-xl border border-yellow-200/15 bg-black/55 px-2 py-2 text-center shadow-inner shadow-yellow-200/5">
@@ -39,40 +32,39 @@ function OperatorCard({ operator, index }: { operator: Operator; index: number }
   const accent = operatorAccents[index % operatorAccents.length];
   const selected = index === 0;
   const image = deploymentImages[operator.id] ?? operator.image;
-  const scale = imageScale[operator.id] ?? "scale-[1.66] group-hover:scale-[1.72]";
 
   return (
     <article
-      className={`group relative aspect-[0.58] min-h-[880px] overflow-hidden rounded-[38px] border p-4 backdrop-blur-xl transition duration-300 hover:-translate-y-1 ${
+      className={`group relative aspect-[0.58] min-h-[900px] overflow-hidden rounded-[38px] border p-4 backdrop-blur-xl transition duration-300 hover:-translate-y-1 ${
         selected
-          ? "border-yellow-200/80 bg-yellow-200/[0.065] shadow-[0_0_58px_rgba(250,204,21,0.2)]"
-          : "border-white/12 bg-zinc-950/62 shadow-[0_26px_70px_rgba(0,0,0,0.32)] hover:border-yellow-200/45"
+          ? "border-yellow-200/80 bg-yellow-200/[0.04] shadow-[0_0_58px_rgba(250,204,21,0.2)]"
+          : "border-white/12 bg-zinc-950/48 shadow-[0_26px_70px_rgba(0,0,0,0.32)] hover:border-yellow-200/45"
       }`}
     >
       <div className={`absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r ${accent}`} />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(250,204,21,0.18),transparent_38%),linear-gradient(180deg,rgba(255,255,255,0.08),transparent_44%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(250,204,21,0.12),transparent_38%)]" />
       <div className="absolute inset-4 rounded-[32px] border border-yellow-100/10" />
       <div className="absolute left-1/2 top-36 h-[430px] w-[430px] -translate-x-1/2 rounded-full border border-yellow-200/16 bg-yellow-200/5" />
       <div className="absolute left-1/2 top-48 h-80 w-80 -translate-x-1/2 rounded-full border border-white/10" />
 
-      <div className="relative z-20 flex items-start justify-between gap-3">
+      <div className="relative z-20 flex items-start justify-between gap-3 bg-transparent">
         <div className="grid gap-2">
-          <span className="flex h-11 w-11 items-center justify-center rounded-xl border border-yellow-100/15 bg-black/70 text-yellow-100 shadow-lg shadow-black/20">
+          <span className="flex h-11 w-11 items-center justify-center rounded-xl border border-yellow-100/15 bg-black/35 text-yellow-100 shadow-lg shadow-black/20 backdrop-blur-sm">
             <Crosshair className="h-5 w-5" />
           </span>
-          <span className="rounded-lg border border-yellow-100/20 bg-black/80 px-3 py-1 text-xl font-black leading-none text-white">
+          <span className="rounded-lg border border-yellow-100/20 bg-black/50 px-3 py-1 text-xl font-black leading-none text-white backdrop-blur-sm">
             {String(index + 1).padStart(2, "0")}
           </span>
         </div>
 
-        <button type="button" className="flex h-12 w-12 items-center justify-center rounded-full border border-yellow-100/20 bg-white/10 text-white shadow-lg backdrop-blur transition hover:bg-yellow-100/15" aria-label={`${operator.name} 상세 보기`}>
+        <button type="button" className="flex h-12 w-12 items-center justify-center rounded-full border border-yellow-100/20 bg-white/8 text-white shadow-lg backdrop-blur-sm transition hover:bg-yellow-100/15" aria-label={`${operator.name} 상세 보기`}>
           <Eye className="h-5 w-5" />
         </button>
       </div>
 
-      <div className="absolute inset-x-4 top-20 bottom-48 z-10 overflow-hidden rounded-[30px]">
+      <div className="absolute inset-x-1 top-6 bottom-46 z-10 overflow-hidden rounded-[30px]">
         <div className="absolute inset-x-0 top-28 h-96 rounded-full bg-yellow-300/10 blur-3xl" />
-        <Image src={image} alt={operator.name} fill sizes="(min-width: 1536px) 25vw, (min-width: 768px) 50vw, 100vw" className={`${scale} object-contain object-center drop-shadow-[0_34px_46px_rgba(0,0,0,0.78)] transition duration-500`} priority={index === 0} />
+        <Image src={image} alt={operator.name} fill sizes="(min-width: 1536px) 25vw, (min-width: 768px) 50vw, 100vw" className="scale-[2] object-contain object-center drop-shadow-[0_34px_46px_rgba(0,0,0,0.78)] transition duration-500 group-hover:scale-[2.06]" priority={index === 0} />
       </div>
 
       <div className="absolute inset-x-4 bottom-4 z-20 rounded-[28px] border border-yellow-100/12 bg-black/76 p-4 shadow-[0_18px_38px_rgba(0,0,0,0.34)] backdrop-blur-xl">
