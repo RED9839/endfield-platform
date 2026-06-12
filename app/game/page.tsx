@@ -5,6 +5,7 @@ import { ChevronLeft, Flag } from "lucide-react";
 
 import BattleScreen from "./components/BattleScreen";
 import CampScreen from "./components/CampScreen";
+import DeploymentScreen from "./components/DeploymentScreen";
 import EventScreen from "./components/EventScreen";
 import MapScreen from "./components/MapScreen";
 import RewardScreen from "./components/RewardScreen";
@@ -36,7 +37,7 @@ export default function GamePage() {
 
           <div className="ml-auto" />
 
-          {run.screen !== "summary" && (
+          {run.screen !== "summary" && run.screen !== "deployment" && (
             <button
               type="button"
               onClick={run.abandonRun}
@@ -49,6 +50,7 @@ export default function GamePage() {
         </div>
       </header>
 
+      {run.screen === "deployment" && <DeploymentScreen onStart={run.startDeployment} />}
       {run.screen === "map" && (
         <MapScreen
           availableNodes={run.availableNodes}
@@ -74,6 +76,7 @@ export default function GamePage() {
           party={run.party}
           credits={run.credits}
           onEquip={run.equipRewardGear}
+          onSkip={run.skipReward}
         />
       )}
       {run.screen === "event" && activeEvent && (
