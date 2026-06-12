@@ -1,8 +1,9 @@
 import Image from "next/image";
-import { BatteryCharging, Shield, Sparkles, Swords } from "lucide-react";
+import { BatteryCharging, Link2, Shield, Sparkles, Swords, Zap } from "lucide-react";
 
 import type {
   BattleState,
+  EnemyStatus,
   PartyMember,
   SkillKind,
 } from "../types/game";
@@ -19,17 +20,27 @@ function HealthBar({ value, max }: { value: number; max: number }) {
   );
 }
 
+function statusLabel(status: EnemyStatus) {
+  if (status === "originium-crystal") return "오리지늄 결정";
+  if (status === "electric-attachment") return "전기 부착";
+  return "감전";
+}
+
 export default function BattleScreen({
   party,
   battle,
   sp,
   maxSp,
+  cp,
+  maxCp,
   onAction,
 }: {
   party: PartyMember[];
   battle: BattleState;
   sp: number;
   maxSp: number;
+  cp: number;
+  maxCp: number;
   onAction: (operatorId: string, kind: SkillKind) => void;
 }) {
   return (
@@ -43,9 +54,15 @@ export default function BattleScreen({
             교전 {battle.turn}
           </h1>
         </div>
-        <div className="flex items-center gap-2 rounded-xl border border-cyan-300/20 bg-cyan-300/[0.06] px-4 py-2 text-cyan-100">
-          <BatteryCharging className="h-4 w-4" />
-          <span className="text-xs font-black">SP {sp} / {maxSp}</span>
+        <div className="flex gap-2">
+          <div className="flex items-center gap-2 rounded-xl border border-cyan-300/20 bg-cyan-300/[0.06] px-4 py-2 text-cyan-100">
+            <BatteryCharging className="h-4 w-4" />
+            <span className="text-xs font-black">SP {sp} / {maxSp}</span>
+          </div>
+          <div className="flex items-center gap-2 rounded-xl border border-violet-300/20 bg-violet-300/[0.06] px-4 py-2 text-violet-100">
+            <Link2 className="h-4 w-4" />
+            <span className="text-xs font-black">CP {cp} / {maxCp}</span>
+          </div>
         </div>
       </div>
 
@@ -63,11 +80,33 @@ export default function BattleScreen({
                     : "border-white/5 bg-black/20 opacity-30"
                 }`}
               >
-                <div className="flex h-24 items-center justify-center">
-                  <Shield className="h-16 w-16 text-red-200/20" />
+                <div className="relative flex h-24 items-center justify-center">
+                  {enemy.image ? (
+                    <Image
+                      src={enemy.image}
+                      alt=""
+                      fill
+                      sizes="160px"
+                      className="object-contain drop-shadow-[0_10px_24px_rgba(248,113,113,0.25)]"
+                    />
+                  ) : (
+                    <Shield className="h-16 w-16 text-red-200/20" />
+                  )}
                 </div>
                 <p className="truncate text-sm font-black text-white">{enemy.name}</p>
                 <p className="mt-1 text-[10px] text-red-200/60">{enemy.intent}</p>
+                {enemy.statuses.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-1">
+                    {enemy.statuses.map((status) => (
+                      <span
+                        key={status}
+                        className="rounded-full border border-cyan-300/20 bg-cyan-300/10 px-2 py-0.5 text-[9px] font-black text-cyan-100"
+                      >
+                        {statusLabel(status)}
+                      </span>
+                    ))}
+                  </div>
+                )}
                 <div className="mt-3">
                   <HealthBar value={enemy.hp} max={enemy.maxHp} />
                   <p className="mt-1 text-right text-[10px] font-bold text-zinc-400">
@@ -100,37 +139,57 @@ export default function BattleScreen({
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-black text-white">{member.name}</p>
-                    <p className="text-[10px] font-bold text-yellow-200/60">{member.role}</p>
+                    <p className="text-[10px] font-bold text-yellow-200/60">
+                      {member.className} · {member.role}
+                    </p>
                     <div className="mt-2">
                       <HealthBar value={member.hp} max={member.maxHp} />
                       <p className="mt-1 text-[9px] text-zinc-500">
                         HP {member.hp}/{member.maxHp}
+                        {member.shield > 0 ? ` · 보호 ${member.shield}` : ""}
                       </p>
                     </div>
                   </div>
                 </div>
-                <div className="grid grid-cols-3 border-t border-white/8">
+                <p className="px-3 pb-3 text-[10px] leading-4 text-zinc-500">
+                  {member.battleSkillDescription}
+                  <br />
+                  궁극기 {member.ultimateCharge}%
+                </p>
+                <div className="grid grid-cols-4 border-t border-white/8">
                   <button
                     type="button"
                     onClick={() => onAction(member.id, "attack")}
                     className="flex flex-col items-center gap-1 px-1 py-3 text-[9px] font-bold text-zinc-300 transition hover:bg-white/5 hover:text-white"
                   >
-                    <Swords className="h-4 w-4" /> 공격
+                    <Swords className="h-4 w-4" /> 기본 +SP
                   </button>
                   <button
                     type="button"
-                    disabled={sp < member.skillCost}
-                    onClick={() => onAction(member.id, "skill")}
+                    disabled={sp < member.battleSkillCost}
+                    title={member.battleSkillDescription}
+                    onClick={() => onAction(member.id, "battle-skill")}
                     className="flex flex-col items-center gap-1 border-x border-white/8 px-1 py-3 text-[9px] font-bold text-cyan-200 transition hover:bg-cyan-300/10 disabled:opacity-25"
                   >
-                    <Sparkles className="h-4 w-4" /> 스킬 {member.skillCost}
+                    <Sparkles className="h-4 w-4" /> 배틀 {member.battleSkillCost}
                   </button>
                   <button
                     type="button"
-                    onClick={() => onAction(member.id, "guard")}
-                    className="flex flex-col items-center gap-1 px-1 py-3 text-[9px] font-bold text-amber-200 transition hover:bg-amber-300/10"
+                    disabled={cp < member.linkSkillCost}
+                    title={member.linkSkillDescription}
+                    onClick={() => onAction(member.id, "link-skill")}
+                    className="flex flex-col items-center gap-1 border-r border-white/8 px-1 py-3 text-[9px] font-bold text-violet-200 transition hover:bg-violet-300/10 disabled:opacity-25"
                   >
-                    <Shield className="h-4 w-4" /> 방어
+                    <Link2 className="h-4 w-4" /> 연계 {member.linkSkillCost}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={member.ultimateCharge < 100}
+                    title={member.ultimateDescription}
+                    onClick={() => onAction(member.id, "ultimate")}
+                    className="flex flex-col items-center gap-1 px-1 py-3 text-[9px] font-bold text-yellow-200 transition hover:bg-yellow-300/10 disabled:opacity-25"
+                  >
+                    <Zap className="h-4 w-4" /> 궁극기
                   </button>
                 </div>
               </article>

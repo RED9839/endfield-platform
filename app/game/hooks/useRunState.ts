@@ -8,6 +8,8 @@ import { getMapNode, startingNodeIds } from "../data/maps";
 import { startingParty } from "../data/operators";
 import { getRelic, relics } from "../data/relics";
 import type {
+  BattleEnemy,
+  EnemyStatus,
   GameEventChoice,
   PartyMember,
   RunActions,
@@ -20,6 +22,7 @@ function freshParty(): PartyMember[] {
     ...operator,
     hp: operator.maxHp,
     shield: 0,
+    ultimateCharge: 0,
   }));
 }
 
@@ -34,6 +37,8 @@ function initialState(): RunState {
     credits: 0,
     sp: 3,
     maxSp: 3,
+    cp: 0,
+    maxCp: 3,
     battlesWon: 0,
   };
 }
@@ -52,6 +57,69 @@ function damageParty(party: PartyMember[], amount: number) {
   }));
 }
 
+function addStatus(statuses: EnemyStatus[], status: EnemyStatus) {
+  return statuses.includes(status) ? statuses : [...statuses, status];
+}
+
+function withoutStatus(statuses: EnemyStatus[], status: EnemyStatus) {
+  return statuses.filter((item) => item !== status);
+}
+
+function absorbHit(member: PartyMember, amount: number) {
+  const blocked = Math.min(member.shield, amount);
+  return {
+    ...member,
+    shield: member.shield - blocked,
+    hp: Math.max(0, member.hp - (amount - blocked)),
+  };
+}
+
+function getStatusBonus(actor: PartyMember, target: BattleEnemy) {
+  if (actor.element === "physical" && target.statuses.includes("originium-crystal")) return 1.2;
+  if (actor.element === "electric" && target.statuses.includes("shock")) return 1.3;
+  if (actor.element === "electric" && target.statuses.includes("electric-attachment")) return 1.15;
+  return 1;
+}
+
+function applySkillMechanic(actor: PartyMember, target: BattleEnemy, baseDamage: number, kind: SkillKind) {
+  let damage = baseDamage;
+  let statuses = target.statuses;
+  const notes: string[] = [];
+
+  if (actor.skillMechanic === "originium-crystal") {
+    if (kind === "link-skill" && statuses.includes("originium-crystal")) {
+      statuses = withoutStatus(statuses, "originium-crystal");
+      damage += Math.ceil(actor.attack * 1.4);
+      notes.push("오리지늄 결정 소모");
+    } else if (kind === "battle-skill") {
+      statuses = addStatus(statuses, "originium-crystal");
+      notes.push("오리지늄 결정 부착");
+    }
+  }
+
+  if (actor.skillMechanic === "electric-attachment") {
+    if (kind === "link-skill" && statuses.includes("electric-attachment")) {
+      statuses = addStatus(withoutStatus(statuses, "electric-attachment"), "shock");
+      damage += Math.ceil(actor.attack * 0.8);
+      notes.push("감전 전환");
+    } else if (kind === "battle-skill") {
+      statuses = addStatus(statuses, "electric-attachment");
+      notes.push("전기 부착");
+    }
+  }
+
+  if (actor.skillMechanic === "combo-strike" && kind === "link-skill" && target.hp <= target.maxHp / 2) {
+    damage += Math.ceil(actor.attack * 0.75);
+    notes.push("약점 연격");
+  }
+
+  if (kind === "ultimate") {
+    notes.push(actor.ultimateName);
+  }
+
+  return { damage, statuses, notes };
+}
+
 function applyRelic(state: RunState, relicId: string): RunState {
   const relic = getRelic(relicId);
   if (state.relics.some((item) => item.id === relicId)) return state;
@@ -65,7 +133,9 @@ function applyRelic(state: RunState, relicId: string): RunState {
     party = party.map((member) => ({
       ...member,
       attack: member.attack + relic.value,
-      skillPower: member.skillPower + relic.value,
+      battleSkillPower: member.battleSkillPower + relic.value,
+      linkSkillPower: member.linkSkillPower + relic.value,
+      ultimatePower: member.ultimatePower + relic.value,
     }));
   }
   if (relic.effect === "max-hp") {
@@ -129,6 +199,7 @@ export function useRunState(): RunState & RunActions {
           enemies: getEnemies(node.enemyIds ?? []).map((enemy) => ({
             ...enemy,
             hp: enemy.maxHp,
+            statuses: [],
           })),
           turn: 1,
           log: [`${node.title}에서 적과 조우했습니다.`],
@@ -143,21 +214,94 @@ export function useRunState(): RunState & RunActions {
       const actor = current.party.find((member) => member.id === operatorId);
       const target = current.battle.enemies.find((enemy) => enemy.hp > 0);
       if (!actor || !target || actor.hp <= 0) return current;
-      if (kind === "skill" && current.sp < actor.skillCost) return current;
+      if (kind === "battle-skill" && current.sp < actor.battleSkillCost) return current;
+      if (kind === "link-skill" && current.cp < actor.linkSkillCost) return current;
+      if (kind === "ultimate" && actor.ultimateCharge < 100) return current;
 
-      const damage =
+      const baseDamage =
         kind === "attack"
           ? actor.attack
-          : kind === "skill"
-            ? actor.skillPower
-            : Math.ceil(actor.attack * 0.45);
+          : kind === "battle-skill"
+            ? actor.battleSkillPower
+            : kind === "link-skill"
+              ? actor.linkSkillPower
+              : actor.ultimatePower;
+      const actionHitsAll =
+        kind === "ultimate" && actor.id !== "chenqianyu" ||
+        kind === "link-skill" && actor.skillMechanic === "electric-attachment";
+      const targetIds = new Set(
+        actionHitsAll
+          ? current.battle.enemies.filter((enemy) => enemy.hp > 0).map((enemy) => enemy.id)
+          : [target.id],
+      );
+      let totalDamage = 0;
+      const noteSet = new Set<string>();
       const enemiesAfterAction = current.battle.enemies.map((enemy) =>
-        enemy.id === target.id ? { ...enemy, hp: Math.max(0, enemy.hp - damage) } : enemy,
+        targetIds.has(enemy.id)
+          ? (() => {
+              const mechanic =
+                kind === "attack"
+                  ? {
+                      damage: Math.ceil(baseDamage * getStatusBonus(actor, enemy)),
+                      statuses: enemy.statuses,
+                      notes: [],
+                    }
+                  : applySkillMechanic(actor, enemy, baseDamage, kind);
+              mechanic.notes.forEach((note) => noteSet.add(note));
+              totalDamage += mechanic.damage;
+              return {
+                ...enemy,
+                hp: Math.max(0, enemy.hp - mechanic.damage),
+                statuses: mechanic.statuses,
+              };
+            })()
+          : enemy,
       );
       const actionLabel =
-        kind === "skill" ? actor.skillName : kind === "guard" ? "방어 태세" : "기본 공격";
-      const actionLog = `${actor.name}: ${actionLabel}으로 ${target.name}에게 ${damage} 피해.`;
+        kind === "battle-skill"
+          ? actor.battleSkillName
+          : kind === "link-skill"
+            ? actor.linkSkillName
+            : kind === "ultimate"
+              ? actor.ultimateName
+              : "기본 공격";
+      const hitLabel = actionHitsAll ? "모든 적" : target.name;
+      const note = noteSet.size > 0 ? ` (${Array.from(noteSet).join(", ")})` : "";
+      const actionLog = `${actor.name}: ${actionLabel}으로 ${hitLabel}에게 총 ${totalDamage} 피해${note}.`;
       const allDefeated = enemiesAfterAction.every((enemy) => enemy.hp <= 0);
+      const spAfterAction =
+        kind === "attack"
+          ? Math.min(current.maxSp, current.sp + 1)
+          : kind === "battle-skill"
+            ? current.sp - actor.battleSkillCost
+            : actor.id === "ember" && kind === "link-skill"
+              ? Math.min(current.maxSp, current.sp + 1)
+              : current.sp;
+      const cpAfterAction =
+        kind === "battle-skill"
+          ? Math.min(current.maxCp, current.cp + 1)
+          : kind === "link-skill"
+            ? current.cp - actor.linkSkillCost
+            : current.cp;
+      const chargeGain =
+        kind === "attack"
+          ? 14
+          : kind === "battle-skill"
+            ? 24
+            : kind === "link-skill"
+              ? 18
+              : 0;
+      const partyAfterCost = current.party.map((member) =>
+        member.id === actor.id
+          ? {
+              ...member,
+              ultimateCharge:
+                kind === "ultimate"
+                  ? 0
+                  : Math.min(100, member.ultimateCharge + chargeGain),
+            }
+          : member,
+      );
 
       if (allDefeated) {
         const node = getMapNode(current.currentNodeId ?? "");
@@ -165,6 +309,9 @@ export function useRunState(): RunState & RunActions {
         if (node.type === "boss") {
           return {
             ...current,
+            party: partyAfterCost,
+            sp: spAfterAction,
+            cp: cpAfterAction,
             battle: { ...current.battle, enemies: enemiesAfterAction, log: [actionLog, ...current.battle.log] },
             battlesWon: won,
             screen: "summary",
@@ -174,6 +321,9 @@ export function useRunState(): RunState & RunActions {
         const withWin = { ...current, battlesWon: won };
         return {
           ...withWin,
+          party: partyAfterCost,
+          sp: spAfterAction,
+          cp: cpAfterAction,
           battle: { ...current.battle, enemies: enemiesAfterAction, log: [actionLog, ...current.battle.log] },
           screen: "reward",
           credits: current.credits + (node.type === "elite" ? 100 : 55),
@@ -181,19 +331,23 @@ export function useRunState(): RunState & RunActions {
         };
       }
 
-      const guardActor = kind === "guard" ? actor.id : undefined;
       const livingParty = current.party.filter((member) => member.hp > 0);
-      let party = current.party;
+      let party =
+        actor.skillMechanic === "protective-arts" && kind !== "attack"
+          ? partyAfterCost.map((member) => ({
+              ...member,
+              shield: member.shield + (kind === "ultimate" ? 18 : member.id === actor.id ? 14 : 8),
+            }))
+          : partyAfterCost;
       const enemyLogs: string[] = [];
 
       for (const enemy of enemiesAfterAction.filter((item) => item.hp > 0)) {
         const victim =
           livingParty.reduce((lowest, member) => (member.hp < lowest.hp ? member : lowest), livingParty[0]) ??
           actor;
-        const guarded = victim.id === guardActor;
-        const hit = Math.max(1, enemy.attack - (guarded ? 7 : 0));
+        const hit = Math.max(1, enemy.attack);
         party = party.map((member) =>
-          member.id === victim.id ? { ...member, hp: Math.max(0, member.hp - hit) } : member,
+          member.id === victim.id ? absorbHit(member, hit) : member,
         );
         enemyLogs.push(`${enemy.name}: ${victim.name}에게 ${hit} 피해.`);
       }
@@ -202,10 +356,8 @@ export function useRunState(): RunState & RunActions {
       return {
         ...current,
         party,
-        sp:
-          kind === "skill"
-            ? current.sp - actor.skillCost
-            : Math.min(current.maxSp, current.sp + 1),
+        sp: spAfterAction,
+        cp: cpAfterAction,
         screen: defeated ? "summary" : "battle",
         result: defeated ? "defeat" : current.result,
         battle: {
@@ -259,7 +411,9 @@ export function useRunState(): RunState & RunActions {
           : current.party.map((member) => ({
               ...member,
               attack: member.attack + 2,
-              skillPower: member.skillPower + 2,
+              battleSkillPower: member.battleSkillPower + 2,
+              linkSkillPower: member.linkSkillPower + 2,
+              ultimatePower: member.ultimatePower + 2,
             })),
       screen: "map",
       availableNodes: getMapNode(current.currentNodeId ?? "").next,

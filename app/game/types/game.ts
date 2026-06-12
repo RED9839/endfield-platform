@@ -8,24 +8,49 @@ export type Screen =
 
 export type Element = "physical" | "heat" | "electric" | "cryo" | "nature";
 export type NodeType = "battle" | "elite" | "event" | "camp" | "boss";
-export type SkillKind = "attack" | "skill" | "guard";
+export type SkillKind = "attack" | "battle-skill" | "link-skill" | "ultimate";
+export type OperatorClass =
+  | "가드"
+  | "디펜더"
+  | "서포터"
+  | "캐스터"
+  | "뱅가드"
+  | "스트라이커";
+export type SkillMechanic =
+  | "originium-crystal"
+  | "electric-attachment"
+  | "combo-strike"
+  | "protective-arts";
+export type EnemyStatus = "originium-crystal" | "electric-attachment" | "shock";
 
 export type Operator = {
   id: string;
   name: string;
   role: string;
+  className: OperatorClass;
   element: Element;
   image: string;
   maxHp: number;
   attack: number;
-  skillName: string;
-  skillPower: number;
-  skillCost: number;
+  battleSkillName: string;
+  battleSkillDescription: string;
+  linkSkillName: string;
+  linkSkillDescription: string;
+  ultimateName: string;
+  ultimateDescription: string;
+  skillMechanic: SkillMechanic;
+  artsAttachment?: string;
+  battleSkillPower: number;
+  battleSkillCost: number;
+  linkSkillPower: number;
+  linkSkillCost: number;
+  ultimatePower: number;
 };
 
 export type PartyMember = Operator & {
   hp: number;
   shield: number;
+  ultimateCharge: number;
 };
 
 export type Enemy = {
@@ -41,6 +66,7 @@ export type Enemy = {
 
 export type BattleEnemy = Enemy & {
   hp: number;
+  statuses: EnemyStatus[];
 };
 
 export type Relic = {
@@ -97,6 +123,8 @@ export type RunState = {
   credits: number;
   sp: number;
   maxSp: number;
+  cp: number;
+  maxCp: number;
   battlesWon: number;
   battle?: BattleState;
   eventId?: string;
