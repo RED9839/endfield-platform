@@ -135,6 +135,29 @@ function GearStrip({ member }: { member: PartyMember }) {
   );
 }
 
+function StatGrid({ member }: { member: PartyMember }) {
+  const stats = [
+    ["체력", `${member.hp}/${member.maxHp}`],
+    ["기본공격력", member.attack],
+    ["방어력", member.defense],
+    ["힘", member.strength],
+    ["민첩", member.agility],
+    ["지능", member.intelligence],
+    ["의지", member.will],
+  ];
+
+  return (
+    <div className="grid grid-cols-2 gap-1 px-3 pb-3">
+      {stats.map(([label, value]) => (
+        <div key={label} className="rounded-lg border border-white/8 bg-white/[0.025] px-2 py-1">
+          <p className="text-[8px] font-bold text-zinc-600">{label}</p>
+          <p className="text-[10px] font-black text-zinc-200">{value}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function BattleScreen({
   party,
   battle,
@@ -286,10 +309,6 @@ export default function BattleScreen({
                       </p>
                       <div className="mt-2">
                         <HealthBar value={member.hp} max={member.maxHp} />
-                        <p className="mt-1 text-[9px] text-zinc-500">
-                          HP {member.hp}/{member.maxHp}
-                          {member.shield > 0 ? ` · 보호 ${member.shield}` : ""}
-                        </p>
                         <div className="mt-2">
                           <GaugeBar value={member.actionGauge} />
                           <p className="mt-1 text-[9px] text-cyan-100/40">
@@ -299,10 +318,11 @@ export default function BattleScreen({
                       </div>
                     </div>
                   </div>
+                  <StatGrid member={member} />
                   <p className="px-3 pb-3 text-[10px] leading-4 text-zinc-500">
                     {member.battleSkillDescription}
                     <br />
-                    궁극기 {member.ultimateCharge}%
+                    궁극기 {member.ultimateCharge}%{member.shield > 0 ? ` · 보호 ${member.shield}` : ""}
                   </p>
                   <GearStrip member={member} />
                   <div className="grid grid-cols-4 border-t border-white/8">
