@@ -359,6 +359,9 @@ export default function BattleScreen({
                     {member.battleSkillDescription}
                     <br />
                     궁극기 {member.ultimateCharge}%{member.shield > 0 ? ` · 보호 ${member.shield}` : ""}
+                    <br />
+                    패시브: {member.passiveName}
+                    {member.passiveStacks > 0 ? ` · ${member.passiveStacks}스택` : ""}
                   </p>
                   <GearStrip member={member} />
                   <div className="grid grid-cols-4 border-t border-white/8">
@@ -370,6 +373,7 @@ export default function BattleScreen({
                     >
                       <ActionIcon src={member.normalAttackIcon} />
                       기본공격
+                      <span className="max-w-full truncate text-[8px] text-zinc-500">{member.normalAttackName}</span>
                       <span className="text-[9px] text-zinc-500">SP +1</span>
                     </button>
                     <button
@@ -381,6 +385,7 @@ export default function BattleScreen({
                     >
                       <ActionIcon src={member.battleSkillIcon} />
                       배틀스킬
+                      <span className="max-w-full truncate text-[8px] text-cyan-200/50">{member.battleSkillName}</span>
                       <span className="text-[9px] text-cyan-200/50">SP {member.battleSkillCost}</span>
                     </button>
                     <button
@@ -392,6 +397,7 @@ export default function BattleScreen({
                     >
                       <ActionIcon src={member.linkSkillIcon} />
                       연계스킬
+                      <span className="max-w-full truncate text-[8px] text-violet-200/50">{member.linkSkillName}</span>
                       <span className="text-[9px] text-violet-200/50">CP {member.linkSkillCost}</span>
                     </button>
                     <button
@@ -403,6 +409,7 @@ export default function BattleScreen({
                     >
                       <ActionIcon src={member.ultimateIcon} />
                       궁극기
+                      <span className="max-w-full truncate text-[8px] text-yellow-200/50">{member.ultimateName}</span>
                       <span className="text-[9px] text-yellow-200/50">{member.ultimateCharge}%</span>
                     </button>
                   </div>

@@ -60,6 +60,7 @@ function freshParty(): PartyMember[] {
     shield: 0,
     ultimateCharge: 0,
     actionGauge: 0,
+    passiveStacks: 0,
     gear: {},
   }));
 }
@@ -147,6 +148,20 @@ function getStatusBonus(actor: PartyMember, target: BattleEnemy) {
   return bonus;
 }
 
+function getPassiveDamageBonus(actor: PartyMember, target: BattleEnemy, kind: SkillKind) {
+  let bonus = 1;
+  if (actor.passiveMechanic === "essence-collapse" && target.statuses.includes("originium-crystal")) {
+    bonus += 0.2;
+  }
+  if (actor.passiveMechanic === "obliteration-protocol" && target.statuses.includes("defense-break")) {
+    bonus += 0.3;
+  }
+  if (actor.passiveMechanic === "blade-cut" && kind !== "attack") {
+    bonus += Math.min(5, actor.passiveStacks) * 0.08;
+  }
+  return bonus;
+}
+
 function hasArtsAttachment(enemy: BattleEnemy) {
   return enemy.statuses.some((status) => ARTS_ATTACHMENT_STATUSES.includes(status));
 }
@@ -214,8 +229,12 @@ function applySkillMechanic(actor: PartyMember, target: BattleEnemy, baseDamage:
   if (actor.skillMechanic === "originium-crystal") {
     if (kind === "link-skill" && statuses.includes("originium-crystal")) {
       statuses = withoutStatus(statuses, "originium-crystal");
-      damage += Math.ceil(actor.attack * 1.4);
-      notes.push("오리지늄 결정 소모");
+      damage += Math.ceil(actor.attack * 1.7);
+      notes.push("오리지늄 결정 소모", "본질 붕괴");
+    } else if (kind === "ultimate" && statuses.includes("originium-crystal")) {
+      statuses = withoutStatus(statuses, "originium-crystal");
+      damage += Math.ceil(actor.attack * 1.2);
+      notes.push("오리지늄 결정 폭격", "본질 붕괴");
     } else if (kind === "battle-skill") {
       statuses = addStatus(statuses, "originium-crystal");
       notes.push("오리지늄 결정 부착");
@@ -223,6 +242,10 @@ function applySkillMechanic(actor: PartyMember, target: BattleEnemy, baseDamage:
   }
 
   if (actor.skillMechanic === "electric-attachment") {
+    if (actor.passiveMechanic === "obliteration-protocol" && target.statuses.includes("defense-break")) {
+      damage += Math.ceil(actor.attack * 0.6);
+      notes.push("오블리터레이션 프로토콜");
+    }
     if (kind === "link-skill" && statuses.includes("electric-attachment")) {
       statuses = addStatus(withoutStatus(statuses, "electric-attachment"), "shock");
       damage += Math.ceil(actor.attack * 0.8);
@@ -238,18 +261,21 @@ function applySkillMechanic(actor: PartyMember, target: BattleEnemy, baseDamage:
     kind === "link-skill" &&
     target.statuses.includes("defense-break")
   ) {
-    damage += Math.ceil(actor.attack * 0.75);
+    damage += Math.ceil(actor.attack * 0.75 + Math.min(5, actor.passiveStacks) * actor.attack * 0.08);
     notes.push("방어 불능 연격");
   }
 
   if (actor.skillMechanic === "corrosion-support") {
     if (kind === "battle-skill" && statuses.includes("corrosion")) {
       statuses = withoutStatus(statuses, "corrosion");
-      damage += Math.ceil(actor.attack * 1.1);
-      notes.push("부식 소모");
+      damage += Math.ceil(actor.attack * 1.25);
+      statuses = addStatus(statuses, "defense-break");
+      notes.push("부식 소모", "취약 부여", "친구의 그림자");
     } else if (kind === "link-skill") {
       statuses = addStatus(statuses, "corrosion");
       notes.push("부식 부여");
+    } else if (kind === "ultimate") {
+      notes.push("돌리 씨의 그림자");
     }
   }
 
@@ -410,6 +436,7 @@ function recalculateMemberFromGear(member: PartyMember, gear: GearLoadout): Part
       shield: member.shield,
       ultimateCharge: member.ultimateCharge,
       actionGauge: member.actionGauge,
+      passiveStacks: member.passiveStacks,
       gear,
     },
   );
@@ -648,6 +675,7 @@ if (node.type === "camp") return { ...base, screen: "camp" };
                       notes: activeSets(actor).includes("펄스식") ? ["펄스식 3세트"] : [],
                     }
                   : applySkillMechanic(actor, enemy, baseDamage, kind);
+              mechanic.damage = Math.ceil(mechanic.damage * getPassiveDamageBonus(actor, enemy, kind));
               mechanic.notes.forEach((note) => noteSet.add(note));
               totalDamage += mechanic.damage;
               const hp = Math.max(0, enemy.hp - mechanic.damage);
@@ -707,6 +735,10 @@ if (node.type === "camp") return { ...base, screen: "camp" };
         member.id === actor.id
           ? {
               ...spendGauge(member, actionCost),
+              passiveStacks:
+                member.passiveMechanic === "blade-cut" && kind !== "attack"
+                  ? Math.min(5, member.passiveStacks + 1)
+                  : member.passiveStacks,
               ultimateCharge:
                 kind === "ultimate"
                   ? 0
@@ -756,10 +788,12 @@ if (node.type === "camp") return { ...base, screen: "camp" };
       const supportHeal =
         actor.skillMechanic === "corrosion-support" && kind !== "attack"
           ? kind === "ultimate"
-            ? 22
+            ? 26
             : kind === "link-skill"
               ? 12
-              : 7
+              : noteSet.has("친구의 그림자")
+                ? 16
+                : 7
           : 0;
       const setHeal = activeSets(actor).includes("생체 보조") && supportHeal > 0 ? 8 : 0;
       const partyWithSupport = supportHeal + setHeal > 0 ? healParty(partyAfterCost, supportHeal + setHeal) : partyAfterCost;

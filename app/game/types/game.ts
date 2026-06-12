@@ -30,6 +30,12 @@ export type SkillMechanic =
   | "combo-strike"
   | "protective-arts"
   | "corrosion-support";
+export type PassiveMechanic =
+  | "essence-collapse"
+  | "obliteration-protocol"
+  | "blade-cut"
+  | "dolly-shadow"
+  | "protective-vanguard";
 export type EnemyStatus =
   | "originium-crystal"
   | "electric-attachment"
@@ -76,7 +82,9 @@ export type Operator = {
   defense: number;
   evasion: number;
   speed: number;
+  normalAttackName: string;
   normalAttackIcon: string;
+  normalAttackDescription: string;
   battleSkillName: string;
   battleSkillIcon: string;
   battleSkillDescription: string;
@@ -88,6 +96,10 @@ export type Operator = {
   ultimateIcon: string;
   ultimateDescription: string;
   skillMechanic: SkillMechanic;
+  passiveName: string;
+  passiveIcon?: string;
+  passiveDescription: string;
+  passiveMechanic: PassiveMechanic;
   artsAttachment?: string;
   battleSkillPower: number;
   battleSkillCost: number;
@@ -101,6 +113,7 @@ export type PartyMember = Operator & {
   shield: number;
   ultimateCharge: number;
   actionGauge: number;
+  passiveStacks: number;
   gear: GearLoadout;
 };
 
