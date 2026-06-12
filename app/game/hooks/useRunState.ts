@@ -4,7 +4,13 @@ import { useCallback, useState } from "react";
 
 import { getEnemies } from "../data/enemies";
 import { events } from "../data/events";
-import { chooseGearRewards, getGameGear, getGearSlot } from "../data/game-gears";
+import {
+  chooseGearRewards,
+  getActiveThreePieceSets,
+  getGameGear,
+  getGearSlot,
+  hasGameSetEffect,
+} from "../data/game-gears";
 import { getMapNode, startingNodeIds } from "../data/maps";
 import { startingParty } from "../data/operators";
 import type {
@@ -102,11 +108,24 @@ function absorbHit(member: PartyMember, amount: number) {
   };
 }
 
+function activeSets(member: PartyMember) {
+  return getActiveThreePieceSets(member.gear);
+}
+
+function hasSet(member: PartyMember, setName: string) {
+  return activeSets(member).includes(setName);
+}
+
 function getStatusBonus(actor: PartyMember, target: BattleEnemy) {
-  if (actor.element === "physical" && target.statuses.includes("originium-crystal")) return 1.2;
-  if (actor.element === "electric" && target.statuses.includes("shock")) return 1.3;
-  if (actor.element === "electric" && target.statuses.includes("electric-attachment")) return 1.15;
-  return 1;
+  let bonus = 1;
+  if (actor.element === "physical" && target.statuses.includes("originium-crystal")) bonus += 0.2;
+  if (actor.element === "electric" && target.statuses.includes("shock")) bonus += 0.3;
+  if (actor.element === "electric" && target.statuses.includes("electric-attachment")) bonus += 0.15;
+  if (hasSet(actor, "응룡 50식") && target.statuses.includes("defense-break")) bonus += 0.18;
+  if (hasSet(actor, "본 크러셔") && target.statuses.includes("defense-break")) bonus += 0.2;
+  if (hasSet(actor, "조류의 물결") && target.statuses.includes("shock")) bonus += 0.18;
+  if (hasSet(actor, "열 작업용") && target.statuses.length > 0) bonus += 0.15;
+  return bonus;
 }
 
 function hasArtsAttachment(enemy: BattleEnemy) {
@@ -150,6 +169,24 @@ function applySkillMechanic(actor: PartyMember, target: BattleEnemy, baseDamage:
   let damage = baseDamage;
   let statuses = target.statuses;
   const notes: string[] = [];
+  const sets = activeSets(actor);
+
+  if (sets.includes("개척") && kind === "battle-skill") {
+    damage += Math.ceil(actor.attack * 0.3);
+    notes.push("개척 3세트");
+  }
+  if (sets.includes("응룡 50식") && kind === "link-skill") {
+    damage += Math.ceil(actor.attack * 0.35);
+    notes.push("응룡 3세트");
+  }
+  if (sets.includes("청파") && kind === "ultimate") {
+    damage += Math.ceil(actor.attack * 0.45);
+    notes.push("청파 3세트");
+  }
+  if (sets.includes("검술사") && kind === "attack") {
+    damage += Math.ceil(actor.attack * 0.25);
+    notes.push("검술사 3세트");
+  }
 
   if (actor.skillMechanic === "originium-crystal") {
     if (kind === "link-skill" && statuses.includes("originium-crystal")) {
@@ -323,11 +360,8 @@ function tickCombatGauges(party: PartyMember[], enemies: BattleEnemy[], activeUn
 }
 
 function gearLevelValue(gear: RunGear) {
-  if (gear.level === 10) return 1;
-  if (gear.level === 20) return 2;
-  if (gear.level === 28) return 3;
-  if (gear.level === 36) return 4;
-  return 5;
+  const base = gear.level === 10 ? 1 : gear.level === 20 ? 2 : gear.level === 28 ? 3 : gear.level === 36 ? 4 : 5;
+  return hasGameSetEffect(gear.setName) ? base : base + 1;
 }
 
 function equipGearToMember(member: PartyMember, gear: RunGear): PartyMember {
@@ -380,6 +414,23 @@ function equipGearToMember(member: PartyMember, gear: RunGear): PartyMember {
   }
 
   return next;
+}
+
+function applyBattleStartSetEffects(party: PartyMember[], sp: number, maxSp: number) {
+  const hasPioneer = party.some((member) => hasSet(member, "개척"));
+  const boostedParty = party.map((member) => {
+    const sets = activeSets(member);
+    let next = member;
+    if (sets.includes("생체 보조")) {
+      next = { ...next, maxHp: next.maxHp + 10, hp: Math.min(next.maxHp + 10, next.hp + 10) };
+    }
+    return next;
+  });
+
+  return {
+    party: boostedParty,
+    sp: hasPioneer ? Math.min(maxSp, sp + 1) : sp,
+  };
 }
 
 function resolveAutomaticBattleTurns(state: RunState): RunState {
@@ -475,9 +526,12 @@ export function useRunState(): RunState & RunActions {
       }
       if (node.type === "camp") return { ...base, screen: "camp" };
 
+      const battleStart = applyBattleStartSetEffects(resetPartyActionGauges(current.party), current.sp, current.maxSp);
+
       return resolveAutomaticBattleTurns({
         ...base,
-        party: resetPartyActionGauges(current.party),
+        party: battleStart.party,
+        sp: battleStart.sp,
         screen: "battle",
         battle: {
           enemies: getEnemies(node.enemyIds ?? []).map((enemy) => ({
@@ -558,7 +612,7 @@ export function useRunState(): RunState & RunActions {
                   ? {
                       damage: Math.ceil(baseDamage * getStatusBonus(actor, enemy)),
                       statuses: enemy.statuses,
-                      notes: [],
+                      notes: activeSets(actor).includes("펄스식") ? ["펄스식 3세트"] : [],
                     }
                   : applySkillMechanic(actor, enemy, baseDamage, kind);
               mechanic.notes.forEach((note) => noteSet.add(note));
@@ -610,7 +664,7 @@ export function useRunState(): RunState & RunActions {
             : current.cp;
       const chargeGain =
         kind === "attack"
-          ? 14
+          ? activeSets(actor).includes("펄스식") ? 20 : 14
           : kind === "battle-skill"
             ? 24
             : kind === "link-skill"
@@ -674,7 +728,8 @@ export function useRunState(): RunState & RunActions {
               ? 12
               : 7
           : 0;
-      const partyWithSupport = supportHeal > 0 ? healParty(partyAfterCost, supportHeal) : partyAfterCost;
+      const setHeal = activeSets(actor).includes("생체 보조") && supportHeal > 0 ? 8 : 0;
+      const partyWithSupport = supportHeal + setHeal > 0 ? healParty(partyAfterCost, supportHeal + setHeal) : partyAfterCost;
       const party =
         actor.skillMechanic === "protective-arts" && kind !== "attack"
           ? partyWithSupport.map((member) => ({
@@ -716,6 +771,7 @@ export function useRunState(): RunState & RunActions {
         screen: "map",
         availableNodes: getMapNode(current.currentNodeId ?? "").next,
         battle: undefined,
+        eventId: undefined,
         sp: current.maxSp,
       };
     });
