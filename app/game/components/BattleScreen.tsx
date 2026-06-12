@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import Image from "next/image";
-import { BatteryCharging, Link2, Shield } from "lucide-react";
+import { BatteryCharging, Link2, Shield, Zap } from "lucide-react";
 
 import { getActiveThreePieceSets, getEquippedGears, getGameSetEffectDescription } from "../data/game-gears";
 import type {
@@ -36,6 +36,25 @@ function GaugeBar({ value }: { value: number }) {
         className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-violet-400 transition-all"
         style={{ width: `${width}%` }}
       />
+    </div>
+  );
+}
+
+function SpeedPanel({ speed, gauge }: { speed: number; gauge: number }) {
+  return (
+    <div className="mt-2 rounded-lg border border-cyan-300/10 bg-cyan-300/[0.035] px-2 py-1.5">
+      <div className="flex items-center justify-between gap-2">
+        <span className="flex items-center gap-1 text-[9px] font-black tracking-[0.16em] text-cyan-200/70">
+          <Zap className="h-3 w-3" /> SPD
+        </span>
+        <span className="text-xs font-black text-cyan-50">{speed}</span>
+      </div>
+      <div className="mt-1.5">
+        <GaugeBar value={gauge} />
+        <p className="mt-1 text-right text-[8px] font-bold text-cyan-100/40">
+          행동 게이지 {Math.floor(gauge)} / 100
+        </p>
+      </div>
     </div>
   );
 }
@@ -262,12 +281,7 @@ export default function BattleScreen({
                   <p className="mt-1 text-right text-[10px] font-bold text-zinc-400">
                     {enemy.hp} / {enemy.maxHp}
                   </p>
-                  <div className="mt-2">
-                    <GaugeBar value={enemy.actionGauge} />
-                    <p className="mt-1 text-right text-[9px] text-cyan-100/40">
-                      SPD {enemy.speed} · {Math.floor(enemy.actionGauge)}
-                    </p>
-                  </div>
+                  <SpeedPanel speed={enemy.speed} gauge={enemy.actionGauge} />
                 </div>
               </article>
             ))}
@@ -306,12 +320,7 @@ export default function BattleScreen({
                       </p>
                       <div className="mt-2">
                         <HealthBar value={member.hp} max={member.maxHp} />
-                        <div className="mt-2">
-                          <GaugeBar value={member.actionGauge} />
-                          <p className="mt-1 text-[9px] text-cyan-100/40">
-                            SPD {member.speed} · {Math.floor(member.actionGauge)}
-                          </p>
-                        </div>
+                        <SpeedPanel speed={member.speed} gauge={member.actionGauge} />
                       </div>
                     </div>
                   </div>
@@ -388,8 +397,8 @@ export default function BattleScreen({
                 }`}
               >
                 <span className="truncate font-black">{entry.name}</span>
-                <span className="ml-3 text-[10px] font-bold">
-                  {entry.side === "party" ? "아군" : "적"} {Math.floor(entry.gauge)}
+                <span className="ml-3 rounded-full border border-cyan-300/15 bg-cyan-300/[0.05] px-2 py-0.5 text-[10px] font-black text-cyan-100/70">
+                  SPD {entry.gauge >= 100 ? "READY" : Math.floor(entry.gauge)}
                 </span>
               </div>
             ))}
