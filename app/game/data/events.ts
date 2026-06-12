@@ -17,8 +17,8 @@ export const events: GameEvent[] = [
       {
         id: "reroute",
         label: "전력을 우회한다",
-        description: "프로토콜 축전지를 획득합니다.",
-        relicId: "protocol-battery",
+        description: "보관된 전술 장비를 획득합니다.",
+        gearSlug: "frontierscomm",
       },
     ],
   },
