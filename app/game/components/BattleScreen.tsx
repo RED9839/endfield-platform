@@ -140,10 +140,7 @@ function StatGrid({ member }: { member: PartyMember }) {
     ["체력", `${member.hp}/${member.maxHp}`],
     ["기본공격력", member.attack],
     ["방어력", member.defense],
-    ["힘", member.strength],
-    ["민첩", member.agility],
-    ["지능", member.intelligence],
-    ["의지", member.will],
+    ["회피율", `${member.evasion}%`],
   ];
 
   return (
