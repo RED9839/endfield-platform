@@ -8,8 +8,8 @@ import {
   chooseGearRewards,
   getActiveThreePieceSets,
   getGameGear,
+  getGearPowerTier,
   getGearSlot,
-  hasGameSetEffect,
 } from "../data/game-gears";
 import { getMapNode, startingNodeIds } from "../data/maps";
 import { startingParty } from "../data/operators";
@@ -360,8 +360,7 @@ function tickCombatGauges(party: PartyMember[], enemies: BattleEnemy[], activeUn
 }
 
 function gearLevelValue(gear: RunGear) {
-  const base = gear.level === 10 ? 1 : gear.level === 20 ? 2 : gear.level === 28 ? 3 : gear.level === 36 ? 4 : 5;
-  return hasGameSetEffect(gear.setName) ? base : base + 1;
+  return getGearPowerTier(gear);
 }
 
 function equipGearToMember(member: PartyMember, gear: RunGear): PartyMember {
