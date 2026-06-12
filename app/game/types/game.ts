@@ -7,7 +7,7 @@ export type Screen =
   | "summary";
 
 export type Element = "physical" | "heat" | "electric" | "cryo" | "nature";
-export type NodeType = "battle" | "elite" | "event" | "camp" | "boss";
+export type NodeType = "battle" | "elite" | "event" | "shop" | "camp" | "boss";
 export type SkillKind = "attack" | "battle-skill" | "link-skill" | "ultimate";
 export type UnitSide = "party" | "enemy";
 export type LinkCondition =
