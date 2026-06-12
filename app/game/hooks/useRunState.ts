@@ -7,6 +7,7 @@ import { events } from "../data/events";
 import {
   chooseGearRewards,
   getActiveThreePieceSets,
+  getEquippedGears,
   getGameGear,
   getGearPowerTier,
   getGearSlot,
@@ -18,6 +19,8 @@ import type {
   BattleState,
   EnemyStatus,
   GameEventChoice,
+  GearLoadout,
+  Operator,
   PartyMember,
   RunActions,
   RunGear,
@@ -41,6 +44,12 @@ const ARTS_ATTACHMENT_STATUSES: EnemyStatus[] = [
   "electric-attachment",
   "corrosion",
 ];
+
+function getBaseOperator(operatorId: string): Operator {
+  const operator = startingParty.find((item) => item.id === operatorId);
+  if (!operator) throw new Error(`Unknown starting operator: ${operatorId}`);
+  return operator;
+}
 
 function freshParty(): PartyMember[] {
   return startingParty.map((operator) => ({
@@ -359,20 +368,9 @@ function tickCombatGauges(party: PartyMember[], enemies: BattleEnemy[], activeUn
   };
 }
 
-function gearLevelValue(gear: RunGear) {
-  return getGearPowerTier(gear);
-}
-
-function equipGearToMember(member: PartyMember, gear: RunGear): PartyMember {
-  const slot = getGearSlot(gear, member.gear.kit1, member.gear.kit2);
-  const value = gearLevelValue(gear);
-  const next: PartyMember = {
-    ...member,
-    gear: {
-      ...member.gear,
-      [slot]: gear,
-    },
-  };
+function applyGearStats(member: PartyMember, gear: RunGear): PartyMember {
+  const value = getGearPowerTier(gear);
+  const next = { ...member };
 
   if (gear.attributeTypes.includes("attack")) {
     next.attack += value;
@@ -380,10 +378,7 @@ function equipGearToMember(member: PartyMember, gear: RunGear): PartyMember {
     next.linkSkillPower += value;
     next.ultimatePower += value;
   }
-  if (gear.attributeTypes.includes("hp")) {
-    next.maxHp += value * 4;
-    next.hp += value * 4;
-  }
+  if (gear.attributeTypes.includes("hp")) next.maxHp += value * 4;
   if (gear.attributeTypes.includes("skillDamage")) next.battleSkillPower += value * 2;
   if (gear.attributeTypes.includes("comboSkillDamage")) next.linkSkillPower += value * 2;
   if (gear.attributeTypes.includes("ultimateDamage")) next.ultimatePower += value * 3;
@@ -413,6 +408,35 @@ function equipGearToMember(member: PartyMember, gear: RunGear): PartyMember {
   }
 
   return next;
+}
+
+function recalculateMemberFromGear(member: PartyMember, gear: GearLoadout): PartyMember {
+  const base = getBaseOperator(member.id);
+  const hpRatio = member.maxHp > 0 ? member.hp / member.maxHp : 1;
+  const recalculated = getEquippedGears(gear).reduce<PartyMember>(
+    (next, item) => applyGearStats(next, item),
+    {
+      ...base,
+      hp: base.maxHp,
+      shield: member.shield,
+      ultimateCharge: member.ultimateCharge,
+      actionGauge: member.actionGauge,
+      gear,
+    },
+  );
+
+  return {
+    ...recalculated,
+    hp: Math.max(1, Math.min(recalculated.maxHp, Math.round(recalculated.maxHp * hpRatio))),
+  };
+}
+
+function equipGearToMember(member: PartyMember, gear: RunGear): PartyMember {
+  const slot = getGearSlot(gear, member.gear.kit1, member.gear.kit2);
+  return recalculateMemberFromGear(member, {
+    ...member.gear,
+    [slot]: gear,
+  });
 }
 
 function applyBattleStartSetEffects(party: PartyMember[], sp: number, maxSp: number) {
