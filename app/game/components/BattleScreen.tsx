@@ -40,6 +40,35 @@ function operatorArt(member: PartyMember) {
   return operatorFullArt[member.id] ?? member.image;
 }
 
+function OperatorBattleArt({
+  member,
+  sizes,
+  className = "",
+}: {
+  member: PartyMember;
+  sizes: string;
+  className?: string;
+}) {
+  if (member.id === "endministrator") {
+    return (
+      <div className={`absolute inset-0 flex items-end justify-center ${className}`}>
+        <div className="operator-idle-sprite h-full max-w-full" aria-hidden="true" />
+      </div>
+    );
+  }
+
+  return (
+    <Image
+      src={operatorArt(member)}
+      alt=""
+      fill
+      sizes={sizes}
+      className={className}
+      priority
+    />
+  );
+}
+
 function HealthBar({
   value,
   max,
@@ -222,13 +251,10 @@ function PartyUnit({
       } hover:brightness-110`}
       style={{ transform: `translateY(${index % 2 === 0 ? 8 : -8}px)` }}
     >
-      <Image
-        src={operatorArt(member)}
-        alt=""
-        fill
+      <OperatorBattleArt
+        member={member}
         sizes="240px"
         className="object-contain object-bottom drop-shadow-[0_18px_24px_rgba(0,0,0,0.75)]"
-        priority
       />
       {active && (
         <div className="absolute inset-x-4 bottom-1 h-8 rounded-[50%] bg-cyan-300/20 blur-lg" />
@@ -652,10 +678,8 @@ export default function BattleScreen({
                 {activeMember ? (
                   <>
                     <div className="absolute bottom-0 left-0 h-full w-36">
-                      <Image
-                        src={operatorArt(activeMember)}
-                        alt=""
-                        fill
+                      <OperatorBattleArt
+                        member={activeMember}
                         sizes="144px"
                         className="object-contain object-bottom"
                       />

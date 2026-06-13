@@ -293,3 +293,33 @@ input[type="number"]::-webkit-outer-spin-button {
 input[type="checkbox"] {
   accent-color: var(--yellow-main);
 }
+
+/* =========================
+   GAME SPRITES
+========================= */
+.operator-idle-sprite {
+  width: auto;
+  aspect-ratio: 362 / 724;
+  background-image: url("/operators/endministrator/animations/idle-01.png");
+  background-repeat: no-repeat;
+  background-position: 0 0;
+  background-size: 600% 100%;
+  image-rendering: pixelated;
+  animation: operator-idle-01 1.35s steps(6, jump-none) infinite;
+}
+
+@keyframes operator-idle-01 {
+  from {
+    background-position-x: 0;
+  }
+
+  to {
+    background-position-x: -500%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .operator-idle-sprite {
+    animation: none;
+  }
+}
