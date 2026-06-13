@@ -261,8 +261,8 @@ function getLinkTarget(actor: PartyMember, battle: BattleState) {
   return windowTarget ?? battle.enemies.find((enemy) => enemy.hp > 0);
 }
 
-function canUseLinkSkill(actor: PartyMember, battle: BattleState) {
-  const target = getLinkTarget(actor, battle);
+function canUseLinkSkill(actor: PartyMember, battle: BattleState, selectedTarget?: BattleEnemy) {
+  const target = selectedTarget ?? getLinkTarget(actor, battle);
   if (!target) return false;
   if (actor.linkCondition === "ally-link-damage") return battle.linkWindow?.trigger === "ally-link-damage" && battle.linkWindow.sourceOperatorId !== actor.id;
   if (actor.linkCondition === "strong-hit") return battle.linkWindow?.trigger === "strong-hit";
@@ -483,16 +483,23 @@ export function useRunState(): RunState & RunActions {
     });
   }, []);
 
-  const performAction = useCallback((operatorId: string, kind: SkillKind) => {
+  const performAction = useCallback((operatorId: string, kind: SkillKind, targetEnemyId?: string) => {
     setState((current) => {
       if (!current.battle || current.screen !== "battle") return current;
       const actor = current.party.find((member) => member.id === operatorId);
-      const target = actor && kind === "link-skill" ? getLinkTarget(actor, current.battle) : current.battle.enemies.find((enemy) => enemy.hp > 0);
+      const selectedTarget = targetEnemyId
+        ? current.battle.enemies.find((enemy) => enemy.id === targetEnemyId && enemy.hp > 0)
+        : undefined;
+      const target =
+        selectedTarget ??
+        (actor && kind === "link-skill"
+          ? getLinkTarget(actor, current.battle)
+          : current.battle.enemies.find((enemy) => enemy.hp > 0));
       if (!actor || !target || actor.hp <= 0) return current;
       if (current.battle.activeSide !== "party" || current.battle.activeUnitId !== operatorId) return current;
       if (kind === "battle-skill" && current.sp < actor.battleSkillCost) return current;
       if (kind === "link-skill" && current.cp < actor.linkSkillCost) return current;
-      if (kind === "link-skill" && !canUseLinkSkill(actor, current.battle)) return current;
+      if (kind === "link-skill" && !canUseLinkSkill(actor, current.battle, target)) return current;
       if (kind === "ultimate" && actor.ultimateCharge < 100) return current;
       const actionCost = ACTION_COST[kind];
       const baseDamage = kind === "attack" ? actor.attack : kind === "battle-skill" ? actor.battleSkillPower : kind === "link-skill" ? actor.linkSkillPower : actor.ultimatePower;
