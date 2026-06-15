@@ -1,4 +1,5 @@
 import * as cheerio from "cheerio";
+import { after } from "next/server";
 import type { HomeWeaponStack } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
@@ -747,7 +748,9 @@ async function updateNormalWeaponStack(items: ParsedItem[]) {
     lastStackOperatorKey = makeStackOperatorKey(stackOperator);
   }
 
-  await saveNormalWeaponStackToDb();
+  // DB 영속화는 응답을 블로킹하지 않도록 응답 전송 후로 미룬다(write-on-read 제거).
+  // 응답에 쓰는 weaponStack은 위에서 갱신된 in-memory 값이라 동작은 동일하다.
+  after(() => saveNormalWeaponStackToDb());
 
   return normalWeaponStack;
 }

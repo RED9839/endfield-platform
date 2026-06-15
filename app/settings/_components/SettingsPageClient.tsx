@@ -82,7 +82,7 @@ type ApiSetting = {
   type: SettingType;
   title: string;
   description?: string | null;
-  slots: any;
+  slots?: any;
   createdAt: string;
   likeCount?: number | null;
   viewCount?: number | null;
@@ -246,16 +246,25 @@ function buildSettingsApiUrl({
   return `/api/operator-settings?${params.toString()}`;
 }
 
+type InitialSettingsData = {
+  settings: ApiSetting[];
+  total: number;
+  hasMore: boolean;
+  page: number;
+};
+
 type SettingsPageClientProps = {
   operators: SelectOperatorItem[];
   weapons: SelectWeaponItem[];
   initialOperatorFilters?: string[];
+  initialData?: InitialSettingsData;
 };
 
 export default function SettingsPageClient({
   operators,
   weapons,
   initialOperatorFilters = [],
+  initialData,
 }: SettingsPageClientProps) {
   const operatorBySlug = useMemo(
     () => new Map(operators.map((operator) => [operator.slug, operator])),
@@ -270,11 +279,15 @@ export default function SettingsPageClient({
   const [debouncedKeyword, setDebouncedKeyword] = useState("");
   const [settingType, setSettingType] = useState<SettingType | "all">("all");
   const [sortType, setSortType] = useState<SortType>("latest");
-  const [settings, setSettings] = useState<SettingItem[]>([]);
-  const [totalCount, setTotalCount] = useState(0);
+  const [settings, setSettings] = useState<SettingItem[]>(() =>
+    (initialData?.settings ?? []).map((setting) =>
+      toSettingItem(setting, operatorBySlug, weaponBySlug),
+    ),
+  );
+  const [totalCount, setTotalCount] = useState(initialData?.total ?? 0);
   const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [hasMore, setHasMore] = useState(Boolean(initialData?.hasMore));
+  const [loading, setLoading] = useState(!initialData);
   const [loadingMore, setLoadingMore] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
@@ -299,6 +312,8 @@ export default function SettingsPageClient({
     null,
   );
   const settingsRequestRef = useRef<AbortController | null>(null);
+  // 서버에서 1페이지를 프리페치했으면 마운트 시 첫 fetch를 건너뛴다(필터 변경 시에만 재요청).
+  const skipInitialLoadRef = useRef(Boolean(initialData));
 
   const loadSettings = useCallback(
     async (targetPage: number, mode: "replace" | "append") => {
@@ -379,6 +394,11 @@ export default function SettingsPageClient({
   }, [keyword]);
 
   useEffect(() => {
+    if (skipInitialLoadRef.current) {
+      skipInitialLoadRef.current = false;
+      return;
+    }
+
     loadSettings(1, "replace");
 
     return () => {
