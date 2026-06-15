@@ -28,7 +28,7 @@ export default function SimulatorDailyIncomePanel({
           <div className="flex items-center gap-3">
             <div className="relative h-11 w-11 overflow-hidden rounded-xl bg-black">
               {item.icon ? (
-                <Image src={item.icon} alt={item.name} fill className="object-contain p-1" />
+                <Image src={item.icon} alt={item.name} fill sizes="44px" className="object-contain p-1" />
               ) : (
                 <div className="flex h-full w-full items-center justify-center text-xs text-zinc-500">?</div>
               )}

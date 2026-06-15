@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { Fragment, useEffect, useMemo, useState, type ReactNode } from "react";
 
 type WeaponLevelStatRow = {
@@ -437,10 +438,12 @@ export default function WeaponLevelPanel({
           <div className="relative flex min-w-0 items-center gap-4 rounded-[20px] border border-white/10 bg-black/20 p-3">
             <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl border border-yellow-500/15 bg-black/45 sm:h-20 sm:w-20">
               {safeWeaponImage ? (
-                <img
+                <Image
                   src={safeWeaponImage}
                   alt={safeWeaponName}
-                  className="h-full w-full object-contain p-2 drop-shadow-[0_10px_18px_rgba(0,0,0,0.58)]"
+                  fill
+                  sizes="80px"
+                  className="object-contain p-2 drop-shadow-[0_10px_18px_rgba(0,0,0,0.58)]"
                 />
               ) : (
                 <div className="grid h-full w-full place-items-center text-2xl font-black text-yellow-100">?</div>
