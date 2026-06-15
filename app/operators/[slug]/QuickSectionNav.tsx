@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 type SectionLink = {
   href: string;
   label: string;
@@ -12,7 +14,10 @@ type Props = {
 
 // 기술 문서(인게임 데이터 인덱스) 스타일 섹션 네비. 동작은 그대로(아코디언 열기 + 스크롤).
 export default function QuickSectionNav({ links, accent = "#ffd24a" }: Props) {
+  const [active, setActive] = useState(links[0]?.href ?? "");
+
   function handleMove(href: string) {
+    setActive(href);
     const targetId = href.replace("#", "");
     const target = document.getElementById(targetId);
 
@@ -46,25 +51,40 @@ export default function QuickSectionNav({ links, accent = "#ffd24a" }: Props) {
           </span>
         </span>
 
-        {links.map((item, index) => (
-          <button
-            key={item.href}
-            type="button"
-            onClick={() => handleMove(item.href)}
-            className="group relative inline-flex min-h-10 shrink-0 items-center gap-2 px-3.5"
-          >
-            <span className="font-mono text-[11px] font-bold text-ef-muted">
-              {String(index + 1).padStart(2, "0")}
-            </span>
-            <span className="text-xs font-black text-zinc-300 transition group-hover:text-white sm:text-sm">
-              {item.label}
-            </span>
-            <span
-              className="absolute inset-x-2 bottom-0 h-0.5 opacity-0 transition group-hover:opacity-100"
-              style={{ background: accent }}
-            />
-          </button>
-        ))}
+        {links.map((item, index) => {
+          const isActive = item.href === active;
+          return (
+            <button
+              key={item.href}
+              type="button"
+              onClick={() => handleMove(item.href)}
+              className="group relative inline-flex min-h-10 shrink-0 items-center gap-2 px-3.5"
+              style={isActive ? { background: `${accent}1f` } : undefined}
+            >
+              <span
+                className="font-mono text-[11px] font-bold"
+                style={{ color: isActive ? accent : "#a0a0a0" }}
+              >
+                {String(index + 1).padStart(2, "0")}
+              </span>
+              <span
+                className={`text-xs font-black transition sm:text-sm ${
+                  isActive
+                    ? "text-white"
+                    : "text-zinc-300 group-hover:text-white"
+                }`}
+              >
+                {item.label}
+              </span>
+              <span
+                className={`absolute inset-x-2 bottom-0 h-0.5 transition ${
+                  isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                }`}
+                style={{ background: accent }}
+              />
+            </button>
+          );
+        })}
       </div>
     </nav>
   );

@@ -175,9 +175,13 @@ export default async function OperatorDetailPage({
   ];
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-ef-bg text-ef-ink">
+    <main className="relative min-h-screen overflow-x-hidden bg-ef-bg text-ef-ink">
+      {/* 배경 데이터 레이어 (점 그리드 + 미세 스캔라인) */}
+      <div className="pointer-events-none fixed inset-0 z-0 opacity-[0.04] [background-image:radial-gradient(circle,#ffd24a_1px,transparent_1px)] [background-size:22px_22px]" />
+      <div className="pointer-events-none fixed inset-0 z-0 opacity-[0.5] [background-image:repeating-linear-gradient(180deg,transparent_0,transparent_2px,rgba(0,0,0,0.4)_3px)]" />
+
       {/* ===== HERO — 캐릭터 중심 게임 UI (PC 좌우 분할 / 모바일 일러 배경) ===== */}
-      <section className="relative min-h-[660px] overflow-hidden sm:min-h-[760px] lg:min-h-[88vh]">
+      <section className="relative z-10 min-h-[660px] overflow-hidden sm:min-h-[760px] lg:min-h-[88vh]">
         {/* 배경: 블러 일러 + 속성 글로우 + 그리드 HUD + 스크림 */}
         <div className="absolute inset-0">
           <Image
@@ -223,10 +227,13 @@ export default async function OperatorDetailPage({
 
         {/* 상단 HUD 바 (빈 공간 제거 — 라벨 + 네비) */}
         <div className="relative z-20 mx-auto flex max-w-[1400px] items-center justify-between px-4 pt-5 sm:px-6 lg:px-10">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5">
             <span className="h-3 w-3" style={{ background: accent.color }} />
             <span className="font-mono text-[10px] font-bold uppercase tracking-[0.3em] text-ef-muted">
               Operator File
+            </span>
+            <span className="hidden font-mono text-[10px] font-bold tracking-[0.2em] text-ef-muted/60 sm:inline">
+              {`// ID:${operator.slug.toUpperCase()} · CL:${operator.class.toUpperCase()}`}
             </span>
           </div>
           <div className="flex items-center gap-2">
@@ -247,11 +254,23 @@ export default async function OperatorDetailPage({
           </div>
         </div>
 
-        {/* 코너 브래킷 */}
-        <span
-          className="pointer-events-none absolute left-3 top-16 z-20 h-8 w-8 border-l-2 border-t-2 sm:left-6 lg:left-10"
-          style={{ borderColor: `${accent.color}88` }}
-        />
+        {/* 코너 브래킷 4곳 + 우측 틱 레일 (HUD) */}
+        <span className="pointer-events-none absolute left-3 top-16 z-20 h-8 w-8 border-l-2 border-t-2 sm:left-6 lg:left-10" style={{ borderColor: `${accent.color}88` }} />
+        <span className="pointer-events-none absolute right-3 top-16 z-20 h-8 w-8 border-r-2 border-t-2 sm:right-6 lg:right-10" style={{ borderColor: `${accent.color}55` }} />
+        <span className="pointer-events-none absolute bottom-5 left-3 z-20 h-8 w-8 border-b-2 border-l-2 sm:left-6 lg:left-10" style={{ borderColor: `${accent.color}55` }} />
+        <span className="pointer-events-none absolute bottom-5 right-3 z-20 h-8 w-8 border-b-2 border-r-2 sm:right-6 lg:right-10" style={{ borderColor: `${accent.color}55` }} />
+        <div className="pointer-events-none absolute right-6 top-1/2 z-20 hidden -translate-y-1/2 flex-col items-end gap-1.5 lg:flex">
+          {Array.from({ length: 9 }).map((_, index) => (
+            <span
+              key={index}
+              className="block h-px"
+              style={{
+                width: index % 3 === 0 ? 18 : 9,
+                background: index % 3 === 0 ? accent.color : "#3a3a3a",
+              }}
+            />
+          ))}
+        </div>
 
         {/* 콘텐츠: 모바일=하단 / PC=좌측 중앙 */}
         <div className="relative z-20 mx-auto flex min-h-[560px] max-w-[1400px] flex-col justify-end px-4 pb-8 sm:min-h-[660px] sm:px-6 lg:min-h-[76vh] lg:justify-center lg:px-10 lg:pb-0">
@@ -318,13 +337,14 @@ export default async function OperatorDetailPage({
       </section>
 
       {/* ===== 본문 ===== */}
-      <div className="relative mx-auto max-w-[1400px] px-3 py-4 sm:px-6 md:py-6 lg:px-10">
+      <div className="relative z-10 mx-auto max-w-[1400px] px-3 py-4 sm:px-6 md:py-6 lg:px-10">
         {/* 기술 문서 스타일 섹션 탭 */}
         <QuickSectionNav links={sectionLinks} accent={accent.color} />
 
         {/* 인기 세팅(기능 보존) */}
         <div className="mb-3 lg:mb-5">
           <PopularOperatorSettingsPanel
+            accent={accent.color}
             operatorSlug={operator.slug}
             operatorName={operator.name}
             operators={operatorDetails.map((item) => ({

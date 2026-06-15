@@ -166,11 +166,13 @@ export default function PopularOperatorSettingsPanel({
   operatorName,
   operators,
   weapons,
+  accent = "#ffd24a",
 }: {
   operatorSlug: string;
   operatorName: string;
   operators: PopularOperatorItem[];
   weapons: PopularWeaponItem[];
+  accent?: string;
 }) {
   const [settings, setSettings] = useState<PopularSetting[]>([]);
   const [loading, setLoading] = useState(true);
@@ -224,43 +226,46 @@ export default function PopularOperatorSettingsPanel({
 
   return (
     <section
-      className="mb-3 min-w-0 rounded-[22px] bg-black/58 p-3 shadow-[0_18px_48px_rgba(0,0,0,0.34)] backdrop-blur-md sm:p-4"
-      style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
+      className="relative mb-3 min-w-0 overflow-hidden border border-ef-line bg-ef-card p-3 sm:p-4"
+      style={{
+        clipPath:
+          "polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px))",
+      }}
     >
+      <span
+        className="absolute left-0 top-0 h-0.5 w-full"
+        style={{ background: `linear-gradient(90deg, ${accent}, transparent 55%)` }}
+      />
       <div className="mb-3 flex items-end justify-between gap-2">
         <div className="min-w-0">
-          <p
-            className="text-[10px] font-black tracking-[0.24em] sm:text-[11px]"
-            style={{ color: YELLOW_TEXT }}
-          >
-            POPULAR SETTINGS
-          </p>
-          <p className="mt-1 truncate text-xs text-zinc-400">
-            {operatorName} 인기 세팅 3개
+          <div className="flex items-center gap-2">
+            <span className="h-2.5 w-2.5 shrink-0" style={{ background: accent }} />
+            <p className="font-mono text-[11px] font-black uppercase tracking-[0.26em] text-ef-accent-soft">
+              Popular Settings
+            </p>
+            <span className="border border-ef-line px-1.5 py-0.5 font-mono text-[9px] font-black text-ef-muted">
+              TOP 3
+            </span>
+          </div>
+          <p className="mt-1.5 truncate text-xs text-ef-muted">
+            {operatorName} 인기 세팅
           </p>
         </div>
 
         <Link
           href={`/settings?operators=${encodeURIComponent(operatorSlug)}`}
-          className="shrink-0 rounded-xl bg-black px-3 py-2 text-xs font-black text-zinc-200 transition hover:border-yellow-400/40 hover:text-yellow-300"
-          style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
+          className="inline-flex min-h-9 shrink-0 items-center border border-ef-line bg-ef-card2 px-3 text-xs font-black text-ef-muted transition hover:border-ef-accent/40 hover:text-ef-accent-soft"
         >
           전체 보기
         </Link>
       </div>
 
       {loading ? (
-        <div
-          className="rounded-2xl bg-black/35 p-3 text-xs font-bold text-zinc-500"
-          style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
-        >
+        <div className="border border-ef-line bg-ef-card2 p-3 text-xs font-bold text-ef-muted">
           인기 세팅을 불러오는 중입니다.
         </div>
       ) : settings.length === 0 ? (
-        <div
-          className="rounded-2xl bg-black/35 p-3 text-xs text-zinc-500"
-          style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
-        >
+        <div className="border border-ef-line bg-ef-card2 p-3 text-xs text-ef-muted">
           아직 등록된 {operatorName} 세팅이 없습니다.
           <div className="mt-2">
             <Link
@@ -295,7 +300,11 @@ function SettingCard({ setting }: { setting: SettingCardItem }) {
   return (
     <Link
       href={`/settings/${setting.id}`}
-      className="group block min-w-0 overflow-hidden rounded-xl border border-white/10 bg-black transition hover:-translate-y-0.5 hover:border-yellow-400/40"
+      className="group block min-w-0 overflow-hidden border border-ef-line bg-black transition hover:-translate-y-0.5 hover:border-ef-accent/45"
+      style={{
+        clipPath:
+          "polygon(0 0, calc(100% - 9px) 0, 100% 9px, 100% 100%, 9px 100%, 0 calc(100% - 9px))",
+      }}
     >
       <div className="relative aspect-[4/3] overflow-hidden bg-black">
         <Image
