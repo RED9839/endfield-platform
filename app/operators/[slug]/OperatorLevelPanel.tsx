@@ -59,14 +59,28 @@ const STAT_CONFIGS: StatConfig[] = [
   { key: "will", label: "의지", maxValue: 200, icon: "/icons/stats/will.webp" },
 ];
 
-const statIconMap: Record<string, string> = {
-  생명력: "/icons/stats/hp.webp",
-  공격력: "/icons/stats/attack.webp",
-  힘: "/icons/stats/strength.webp",
-  민첩: "/icons/stats/agility.webp",
-  지능: "/icons/stats/intelligence.webp",
-  의지: "/icons/stats/will.webp",
+const elementAccent: Record<string, string> = {
+  physical: "#d6dae3",
+  cryo: "#4fa3ff",
+  heat: "#ff8a1f",
+  nature: "#3ecf8e",
+  electric: "#c084fc",
 };
+
+const STAT_EN: Record<string, string> = {
+  생명력: "VITALITY",
+  공격력: "ATTACK",
+  힘: "STRENGTH",
+  민첩: "AGILITY",
+  지능: "INTELLIGENCE",
+  의지: "WILL",
+};
+
+const CUT = {
+  clipPath:
+    "polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))",
+};
+const SECONDARY = "#7aa2c4";
 
 function clamp(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, value));
@@ -88,152 +102,123 @@ function getBarPercent(value: number, maxValue: number) {
 
 function IconFallback({ text, size }: { text?: string; size: number }) {
   const safeText = text ?? "?";
-
   return (
     <div
-      className="flex shrink-0 items-center justify-center rounded-full border border-white/10 bg-[#080b10] font-black text-zinc-400"
-      style={{ width: size, height: size, fontSize: Math.max(10, Math.floor(size * 0.4)) }}
+      className="flex shrink-0 items-center justify-center border border-ef-line bg-ef-card2 font-black text-ef-muted"
+      style={{ width: size, height: size, fontSize: Math.max(9, Math.floor(size * 0.4)) }}
     >
       {safeText.slice(0, 1)}
     </div>
   );
 }
 
-function SmallIcon({ src, alt, size = 20 }: { src?: string; alt?: string; size?: number }) {
+function SmallIcon({ src, alt, size = 18 }: { src?: string; alt?: string; size?: number }) {
   const [hasError, setHasError] = useState(false);
   const safeAlt = alt ?? "icon";
-
   if (!src || hasError) return <IconFallback text={safeAlt} size={size} />;
-
   return (
     <div className="relative shrink-0" style={{ width: size, height: size }}>
-      <Image
-        src={src}
-        alt={safeAlt}
-        fill
-        sizes={`${size}px`}
-        className="object-contain"
-        onError={() => setHasError(true)}
-      />
+      <Image src={src} alt={safeAlt} fill sizes={`${size}px`} className="object-contain" onError={() => setHasError(true)} />
     </div>
   );
 }
 
-function OperatorAvatar({ src, name }: { src?: string; name: string }) {
-  if (!src) return <IconFallback text={name} size={58} />;
-
+function TechHeader({ children, accent }: { children: React.ReactNode; accent: string }) {
   return (
-    <div className="relative h-[58px] w-[58px] shrink-0 overflow-hidden rounded-[18px] border border-yellow-400/25 bg-black/45 shadow-[0_0_18px_rgba(255,210,74,0.10)] sm:h-16 sm:w-16">
-      <Image src={src} alt={name} fill sizes="64px" className="object-cover object-top" />
+    <div className="flex items-center gap-1.5">
+      <span className="h-2 w-2 shrink-0" style={{ background: accent }} />
+      <span className="font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-ef-muted">
+        {children}
+      </span>
     </div>
   );
 }
 
-function FocusStatCard({
+// 주/보조 능력치 — PRIMARY / SECONDARY ATTRIBUTE (EN 라벨 + 큰 수치 + 데이터 바)
+function AttributeFocus({
   title,
   label,
   value,
   maxValue,
   icon,
-  tone = "yellow",
+  accent,
 }: {
   title: string;
   label: string;
   value: number;
   maxValue: number;
   icon?: string;
-  tone?: "yellow" | "blue";
+  accent: string;
 }) {
   const percent = getBarPercent(value, maxValue);
-  const accentClass = tone === "yellow" ? "text-yellow-200" : "text-sky-300";
-  const borderClass = tone === "yellow" ? "border-yellow-300/25" : "border-sky-300/25";
-  const bgClass = tone === "yellow" ? "bg-yellow-400/10" : "bg-sky-400/10";
-  const barClass = tone === "yellow" ? "bg-yellow-300" : "bg-sky-400";
-
+  const en = STAT_EN[label] ?? label;
   return (
-    <div className={`min-w-0 rounded-[18px] border ${borderClass} bg-black/25 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]`}>
-      <div className={`text-sm font-black ${accentClass}`}>{title}</div>
-      <div className="mt-3 grid grid-cols-[42px_minmax(0,1fr)] items-center gap-3">
-        <div className={`flex h-10 w-10 items-center justify-center rounded-full border border-white/10 ${bgClass}`}>
-          <SmallIcon src={icon} alt={label} size={24} />
+    <div className="relative overflow-hidden border border-ef-line bg-ef-card2 p-4 pl-5" style={CUT}>
+      <span className="absolute left-0 top-0 h-full w-1" style={{ background: accent }} />
+      <TechHeader accent={accent}>{title}</TechHeader>
+      <div className="mt-3 flex items-end justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2">
+          <SmallIcon src={icon} alt={label} size={22} />
+          <div className="min-w-0">
+            <p className="truncate font-mono text-sm font-black uppercase tracking-wide text-ef-ink">{en}</p>
+            <p className="truncate text-[11px] text-ef-muted">{label}</p>
+          </div>
         </div>
-        <div className="min-w-0">
-          <div className="truncate text-sm font-black text-zinc-200">{label}</div>
-          <div className={`mt-0.5 text-[30px] font-black leading-none ${accentClass}`}>{value}</div>
-        </div>
+        <p className="font-mono text-[40px] font-black leading-none" style={{ color: accent }}>
+          {value}
+        </p>
       </div>
-      <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[#151b24]">
-        <div className={`h-full rounded-full ${barClass} shadow-[0_0_14px_rgba(255,210,74,0.25)]`} style={{ width: `${percent}%` }} />
+      <div className="mt-3 h-1.5 overflow-hidden bg-ef-bg">
+        <div className="h-full" style={{ width: `${percent}%`, background: accent }} />
       </div>
     </div>
   );
 }
 
-function StatCard({
+// 능력치 정보 — 카드 나열 금지: 데이터 행(매트릭스)
+function StatRow({
   config,
   value,
-  variant,
+  highlight,
+  accent,
 }: {
   config: StatConfig;
   value: number;
-  variant: "normal" | "mainStat" | "subStat";
+  highlight: boolean;
+  accent: string;
 }) {
   const percent = getBarPercent(value, config.maxValue);
-  const isMain = variant === "mainStat";
-  const isSub = variant === "subStat";
-
+  const en = STAT_EN[config.label] ?? config.label;
   return (
-    <div
-      className={[
-        "min-w-0 rounded-[16px] border bg-black/25 px-3 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]",
-        isMain ? "border-yellow-300/25" : isSub ? "border-sky-300/25" : "border-white/10",
-      ].join(" ")}
-    >
-      <div className="grid min-w-0 grid-cols-[34px_minmax(0,1fr)_auto] items-center gap-2.5">
-        <div className="flex h-8 w-8 items-center justify-center rounded-full border border-white/10 bg-black/35">
-          <SmallIcon src={config.icon} alt={config.label} size={20} />
-        </div>
-        <div className="min-w-0">
-          <div className="truncate text-xs font-black text-zinc-100">{config.label}</div>
-          <div className="mt-0.5 text-xl font-black leading-none text-white">{value}</div>
-        </div>
+    <div className="flex items-center gap-3 px-1.5 py-2.5">
+      <SmallIcon src={config.icon} alt={config.label} size={18} />
+      <div className="w-[88px] shrink-0">
+        <p className="font-mono text-[10px] uppercase tracking-wide text-ef-muted">{en}</p>
+        <p className="truncate text-xs font-black text-ef-ink">{config.label}</p>
       </div>
-      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#141a24]">
-        <div
-          className={[
-            "h-full rounded-full shadow-[0_0_12px_rgba(247,180,35,0.22)]",
-            isSub ? "bg-sky-400" : "bg-yellow-300",
-          ].join(" ")}
-          style={{ width: `${percent}%` }}
-        />
+      <div className="relative h-1.5 flex-1 overflow-hidden bg-ef-bg">
+        <div className="h-full" style={{ width: `${percent}%`, background: highlight ? accent : "#3a3a3a" }} />
       </div>
-      {(isMain || isSub) && (
-        <div
-          className={[
-            "mt-1.5 inline-flex rounded-full border px-2 py-0.5 text-[10px] font-black",
-            isMain
-              ? "border-yellow-300/25 bg-yellow-400/10 text-yellow-200"
-              : "border-sky-300/25 bg-sky-400/10 text-sky-300",
-          ].join(" ")}
-        >
-          {isMain ? "주요" : "보조"}
-        </div>
-      )}
+      <p
+        className="w-14 shrink-0 text-right font-mono text-sm font-black"
+        style={{ color: highlight ? accent : "#ffffff" }}
+      >
+        {value}
+      </p>
     </div>
   );
 }
 
 export default function OperatorLevelPanel({
-  name,
-  enName,
-  avatar,
+  element,
   mainStatLabel,
   subStatLabel,
   levelStats,
 }: Props) {
+  const accent = elementAccent[element] ?? "#ffd24a";
+
   const safeStats = useMemo<LevelStatRow[]>(() => {
     if (!Array.isArray(levelStats)) return [];
-
     return [...levelStats]
       .filter(
         (row): row is LevelStatRow =>
@@ -249,19 +234,18 @@ export default function OperatorLevelPanel({
   const [isEditing, setIsEditing] = useState(false);
   const [inputValue, setInputValue] = useState(String(initialLevel));
 
-  const currentStats = useMemo(() => {
-    return safeStats.find((row) => row.level === level) ?? null;
-  }, [level, safeStats]);
+  const currentStats = useMemo(
+    () => safeStats.find((row) => row.level === level) ?? null,
+    [level, safeStats],
+  );
 
   const commitInputLevel = () => {
     const parsed = Number(inputValue);
-
     if (Number.isNaN(parsed)) {
       setInputValue(String(level));
       setIsEditing(false);
       return;
     }
-
     const nextLevel = clamp(Math.floor(parsed), LEVEL_MIN, LEVEL_MAX);
     setLevel(nextLevel);
     setInputValue(String(nextLevel));
@@ -274,20 +258,14 @@ export default function OperatorLevelPanel({
     setIsEditing(false);
   };
 
-  const getStatVariant = (label: string): "normal" | "mainStat" | "subStat" => {
-    if (label === mainStatLabel) return "mainStat";
-    if (label === subStatLabel) return "subStat";
-    return "normal";
-  };
-
   const mainStatConfig = findStatConfig(mainStatLabel);
   const subStatConfig = findStatConfig(subStatLabel);
 
   if (!currentStats) {
     return (
-      <section className="rounded-[22px] border border-yellow-500/15 bg-[#05070b] p-4 text-sm font-bold text-zinc-500">
+      <div className="border border-ef-line bg-ef-card2 p-4 text-sm font-bold text-ef-muted" style={CUT}>
         해당 레벨 데이터가 없음
-      </section>
+      </div>
     );
   }
 
@@ -295,135 +273,118 @@ export default function OperatorLevelPanel({
   const subStatValue = subStatConfig ? getStatValue(currentStats, subStatConfig.key) : 0;
 
   return (
-    <section className="relative min-w-0 overflow-hidden rounded-[22px] border border-yellow-500/15 bg-[#05070b] shadow-[0_12px_30px_rgba(0,0,0,0.22)]">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_8%_0%,rgba(255,210,74,0.10),transparent_30%),linear-gradient(135deg,rgba(255,255,255,0.03),rgba(255,255,255,0.004))]" />
-      <div className="pointer-events-none absolute right-0 top-0 h-28 w-28 bg-[repeating-linear-gradient(135deg,rgba(255,210,74,0.06)_0px,rgba(255,210,74,0.06)_2px,transparent_2px,transparent_8px)] opacity-25" />
-
-      <div className="relative p-3 sm:p-4">
-        <div className="rounded-[18px] border border-white/10 bg-black/25 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]">
-          <div className="grid min-w-0 grid-cols-[58px_minmax(0,1fr)] items-center gap-3 sm:grid-cols-[64px_minmax(0,1fr)]">
-            <OperatorAvatar src={avatar} name={name} />
-            <div className="min-w-0">
-              <h3 className="break-keep text-[clamp(28px,6vw,38px)] font-black leading-none text-white">
-                {name}
-              </h3>
-              <div className="mt-1 text-xs font-bold uppercase tracking-[0.08em] text-zinc-500">
-                {enName}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-3 grid gap-3 xl:grid-cols-[minmax(0,0.95fr)_minmax(320px,1.05fr)]">
-          <section className="min-w-0 rounded-[18px] border border-white/10 bg-black/25 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]">
-            <div className="text-[10px] font-black tracking-[0.2em] text-zinc-500">
-              CURRENT LEVEL
-            </div>
-
-            <div className="mt-2 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-              <div className="flex flex-wrap items-end gap-2">
-                {isEditing ? (
-                  <input
-                    autoFocus
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value.replace(/[^0-9]/g, ""))}
-                    onBlur={commitInputLevel}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") commitInputLevel();
-                      if (e.key === "Escape") {
-                        setInputValue(String(level));
-                        setIsEditing(false);
-                      }
-                    }}
-                    className="h-11 w-28 rounded-xl border border-yellow-500/25 bg-[#05070b] px-3 text-3xl font-black text-white outline-none"
-                  />
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => {
+    <div className="grid min-w-0 gap-3">
+      {/* LEVEL SYNCHRONIZATION */}
+      <div className="relative overflow-hidden border border-ef-line bg-ef-card2 p-4" style={CUT}>
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <TechHeader accent={accent}>Level Synchronization</TechHeader>
+            <div className="mt-2 flex items-end gap-2">
+              {isEditing ? (
+                <input
+                  autoFocus
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value.replace(/[^0-9]/g, ""))}
+                  onBlur={commitInputLevel}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") commitInputLevel();
+                    if (e.key === "Escape") {
                       setInputValue(String(level));
-                      setIsEditing(true);
-                    }}
-                    className="text-left text-[40px] font-black leading-none text-white transition hover:text-yellow-100"
-                  >
-                    Lv. {level}
-                  </button>
-                )}
-                <span className="pb-1 text-xs font-black text-zinc-500">/ 90</span>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setInputValue(String(level));
-                  setIsEditing(true);
-                }}
-                className="h-9 rounded-xl border border-yellow-500/20 bg-yellow-400/10 px-3 text-xs font-black text-yellow-100 transition hover:bg-yellow-400/15"
-              >
-                직접 입력
-              </button>
-            </div>
-
-            <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-6">
-              {LEVEL_MARKS.map((mark) => (
+                      setIsEditing(false);
+                    }
+                  }}
+                  className="h-12 w-28 border border-ef-line bg-ef-bg px-3 font-mono text-3xl font-black text-ef-ink outline-none"
+                  style={{ borderColor: `${accent}66` }}
+                />
+              ) : (
                 <button
-                  key={mark}
                   type="button"
-                  onClick={() => selectLevel(mark)}
-                  className={[
-                    "h-10 rounded-xl border text-sm font-black transition",
-                    mark === level
-                      ? "border-yellow-300/45 bg-yellow-400/18 text-yellow-100 shadow-[0_0_16px_rgba(255,210,74,0.16)]"
-                      : "border-white/10 bg-black/25 text-zinc-400 hover:border-yellow-300/25 hover:bg-yellow-400/10 hover:text-yellow-100",
-                  ].join(" ")}
+                  onClick={() => {
+                    setInputValue(String(level));
+                    setIsEditing(true);
+                  }}
+                  className="font-mono text-[44px] font-black leading-none text-white transition hover:opacity-80"
                 >
-                  {mark}
+                  LV {String(level).padStart(2, "0")}
                 </button>
-              ))}
+              )}
+              <span className="pb-1 font-mono text-xs font-black text-ef-muted">/ 90</span>
             </div>
-          </section>
+          </div>
 
-          <section className="grid min-w-0 gap-3 sm:grid-cols-2">
-            {mainStatConfig ? (
-              <FocusStatCard
-                title="주요 능력치"
-                label={mainStatLabel}
-                value={mainStatValue}
-                maxValue={mainStatConfig.maxValue}
-                icon={mainStatConfig.icon}
-              />
-            ) : null}
-
-            {subStatConfig ? (
-              <FocusStatCard
-                title="보조 능력치"
-                label={subStatLabel}
-                value={subStatValue}
-                maxValue={subStatConfig.maxValue}
-                icon={subStatConfig.icon}
-                tone="blue"
-              />
-            ) : null}
-          </section>
+          <button
+            type="button"
+            onClick={() => {
+              setInputValue(String(level));
+              setIsEditing(true);
+            }}
+            className="inline-flex min-h-9 items-center border border-ef-line bg-ef-card px-3 font-mono text-[11px] font-black uppercase tracking-wide text-ef-muted transition hover:border-ef-accent/40 hover:text-ef-accent-soft"
+          >
+            Manual Input
+          </button>
         </div>
 
-        <section className="mt-3 rounded-[18px] border border-white/10 bg-black/25 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]">
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <div className="text-base font-black text-yellow-200">능력치 정보</div>
-          </div>
-
-          <div className="grid min-w-0 gap-2 sm:grid-cols-2 xl:grid-cols-3">
-            {STAT_CONFIGS.map((config) => (
-              <StatCard
-                key={config.key}
-                config={config}
-                value={getStatValue(currentStats, config.key)}
-                variant={getStatVariant(config.label)}
-              />
-            ))}
-          </div>
-        </section>
+        <div className="mt-4 grid grid-cols-3 gap-1.5 sm:grid-cols-6">
+          {LEVEL_MARKS.map((mark) => {
+            const active = mark === level;
+            return (
+              <button
+                key={mark}
+                type="button"
+                onClick={() => selectLevel(mark)}
+                className="h-11 border font-mono text-sm font-black transition"
+                style={{
+                  background: active ? `${accent}24` : "#0b0b0b",
+                  borderColor: active ? accent : "#202020",
+                  color: active ? "#ffffff" : "#a0a0a0",
+                }}
+              >
+                {String(mark).padStart(2, "0")}
+              </button>
+            );
+          })}
+        </div>
       </div>
-    </section>
+
+      {/* PRIMARY / SECONDARY ATTRIBUTE */}
+      <div className="grid gap-3 sm:grid-cols-2">
+        {mainStatConfig ? (
+          <AttributeFocus
+            title="Primary Attribute"
+            label={mainStatLabel}
+            value={mainStatValue}
+            maxValue={mainStatConfig.maxValue}
+            icon={mainStatConfig.icon}
+            accent={accent}
+          />
+        ) : null}
+        {subStatConfig ? (
+          <AttributeFocus
+            title="Secondary Attribute"
+            label={subStatLabel}
+            value={subStatValue}
+            maxValue={subStatConfig.maxValue}
+            icon={subStatConfig.icon}
+            accent={SECONDARY}
+          />
+        ) : null}
+      </div>
+
+      {/* ATTRIBUTE DATA (능력치 정보 — 매트릭스) */}
+      <div className="relative overflow-hidden border border-ef-line bg-ef-card2 p-3 sm:p-4" style={CUT}>
+        <TechHeader accent={accent}>Attribute Data</TechHeader>
+        <div className="mt-2 divide-y divide-ef-line">
+          {STAT_CONFIGS.map((config) => (
+            <StatRow
+              key={config.key}
+              config={config}
+              value={getStatValue(currentStats, config.key)}
+              highlight={config.label === mainStatLabel || config.label === subStatLabel}
+              accent={config.label === subStatLabel ? SECONDARY : accent}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }
