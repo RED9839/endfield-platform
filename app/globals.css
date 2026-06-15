@@ -1,6 +1,24 @@
 @import "tailwindcss";
 
 /* =========================
+   ENDFIELD DESIGN SYSTEM TOKENS (Tailwind v4 @theme)
+   산업 디자인 · 검은 기반 · 노란 포인트 · 중성 그레이 보더
+   생성 유틸 예: bg-ef-card, border-ef-line, text-ef-accent, text-ef-muted
+========================= */
+@theme {
+  --color-ef-bg: #050505;
+  --color-ef-card: #0b0b0b;
+  --color-ef-card2: #111111;
+  --color-ef-line: #202020;
+  --color-ef-accent: #ffd24a;
+  --color-ef-accent-soft: #ffdc70;
+  --color-ef-ink: #ffffff;
+  --color-ef-muted: #a0a0a0;
+  --color-ef-danger: #ff6b6b;
+  --color-ef-success: #3ecf8e;
+}
+
+/* =========================
    COLOR SYSTEM
 ========================= */
 :root {
