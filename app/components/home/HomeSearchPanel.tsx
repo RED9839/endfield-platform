@@ -24,16 +24,36 @@ function normalize(value: string) {
   return value.toLocaleLowerCase().replace(/\s+/g, "");
 }
 
+// 검색 인덱스(정적 JSON)를 검색 사용 시점에만 한 번 가져온다.
+// 모듈 스코프 프라미스로 데스크톱/모바일 두 패널이 동일 요청을 공유한다.
+let searchIndexPromise: Promise<HomeSearchItem[]> | null = null;
+
+function loadSearchIndex(): Promise<HomeSearchItem[]> {
+  if (!searchIndexPromise) {
+    searchIndexPromise = fetch("/api/search-index")
+      .then((response) => (response.ok ? response.json() : []))
+      .catch(() => []);
+  }
+
+  return searchIndexPromise;
+}
+
 export default function HomeSearchPanel({
-  items,
   compact = false,
 }: {
-  items: HomeSearchItem[];
   compact?: boolean;
 }) {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [focused, setFocused] = useState(false);
+  const [items, setItems] = useState<HomeSearchItem[]>([]);
+
+  // 검색창에 처음 진입할 때 인덱스를 지연 로딩한다.
+  const ensureIndexLoaded = () => {
+    if (items.length === 0) {
+      loadSearchIndex().then(setItems);
+    }
+  };
 
   const results = useMemo(() => {
     const keyword = normalize(query);
@@ -76,7 +96,10 @@ export default function HomeSearchPanel({
         <input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          onFocus={() => setFocused(true)}
+          onFocus={() => {
+            setFocused(true);
+            ensureIndexLoaded();
+          }}
           onBlur={() => window.setTimeout(() => setFocused(false), 120)}
           onKeyDown={(event) => {
             if (event.key === "Enter") submit();
