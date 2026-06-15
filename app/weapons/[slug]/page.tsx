@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import {
   getWeaponDetailBySlug,
+  weaponDetails,
   type WeaponRarity,
 } from "@/data/weapons-detail-data";
 
@@ -332,6 +333,11 @@ function DetailSection({
       </div>
     </details>
   );
+}
+
+// 정적 데이터 기반이므로 빌드 시 모든 슬러그를 프리렌더(SSG)한다 → CDN 캐시.
+export function generateStaticParams() {
+  return weaponDetails.map((weapon) => ({ slug: weapon.slug }));
 }
 
 export default async function WeaponDetailPage({

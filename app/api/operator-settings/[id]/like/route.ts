@@ -1,37 +1,15 @@
 import { NextResponse } from "next/server";
 
-import { auth } from "@/auth";
-import { consumeRateLimit } from "@/lib/http/rate-limit";
+import { getSessionUserId } from "@/lib/auth/get-current-user";
+import { enforceRateLimit } from "@/lib/http/rate-limit";
 import { prisma } from "@/lib/prisma";
-
-async function getCurrentUserId() {
-  const session = await auth();
-
-  if (!session?.user?.id) return null;
-
-  const email = session.user.email?.trim().toLowerCase();
-
-  const user = await prisma.user.findFirst({
-    where: {
-      OR: [
-        { id: session.user.id },
-        ...(email
-          ? [{ email: { equals: email, mode: "insensitive" as const } }]
-          : []),
-      ],
-    },
-    select: { id: true },
-  });
-
-  return user?.id ?? null;
-}
 
 export async function POST(
   request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
   try {
-    const userId = await getCurrentUserId();
+    const userId = await getSessionUserId();
 
     if (!userId) {
       return NextResponse.json(
@@ -41,7 +19,7 @@ export async function POST(
     }
 
     const { id } = await context.params;
-    const rateLimit = consumeRateLimit({
+    const rateLimit = await enforceRateLimit({
       scope: `operator-settings:like:${id}`,
       identifier: userId,
       limit: 20,

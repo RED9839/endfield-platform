@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getGearDetailBySlug } from "@/data/gear-detail-data";
+import { gearDetails, getGearDetailBySlug } from "@/data/gear-detail-data";
 import type { GearDetail } from "@/data/gear-types";
 import GearHeroPanel from "./GearHeroPanel";
 import GearAbilityPanel from "./GearAbilityPanel";
@@ -88,6 +88,11 @@ function StaticDetailSection({
       </div>
     </section>
   );
+}
+
+// 정적 데이터 기반이므로 빌드 시 모든 슬러그를 프리렌더(SSG)한다 → CDN 캐시.
+export function generateStaticParams() {
+  return gearDetails.map((gear) => ({ slug: gear.slug }));
 }
 
 export default async function GearDetailPage({

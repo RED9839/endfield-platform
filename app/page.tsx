@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Suspense, type ComponentType } from "react";
+import type { ComponentType } from "react";
 import {
   ArrowRight,
   Calculator,
@@ -13,13 +13,15 @@ import {
   Users,
 } from "lucide-react";
 
+import { SessionProvider } from "next-auth/react";
+
 import BannerSection, {
   type HomeApiResponse,
 } from "@/app/components/home/BannerSection";
 import {
-  HomeHeaderAccountPanel,
-  MobileAccountFallback,
-} from "@/app/components/home/HomeAccountPanels";
+  HomeHeaderAccountClient,
+  HomeProfileGate,
+} from "@/app/components/home/HomeAccountClient";
 import { HomeMobileTopBar } from "@/app/components/home/HomeNavigation";
 import HomeSearchPanel, {
   type HomeSearchItem,
@@ -188,8 +190,11 @@ export default function HomePage() {
   const featuredGearSet = "고검의 잔향";
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[#030405] text-white">
-      <HomeMobileTopBar />
+    <SessionProvider>
+      <HomeProfileGate />
+
+      <main className="min-h-screen overflow-hidden bg-[#030405] text-white">
+        <HomeMobileTopBar />
 
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_50%_-10%,rgba(250,204,21,0.08),transparent_35%)]" />
 
@@ -220,9 +225,7 @@ export default function HomePage() {
             ))}
           </nav>
 
-          <Suspense fallback={<MobileAccountFallback />}>
-            <HomeHeaderAccountPanel />
-          </Suspense>
+          <HomeHeaderAccountClient />
         </div>
       </header>
 
@@ -402,6 +405,7 @@ export default function HomePage() {
           </div>
         </footer>
       </div>
-    </main>
+      </main>
+    </SessionProvider>
   );
 }

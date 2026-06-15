@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import type { ReactNode } from "react";
 import type { GearDetail } from "@/data/gear-types";
 
@@ -120,7 +121,14 @@ export default function GearHeroPanel({ gear, categoryLabel }: { gear: GearDetai
         <div className="relative min-h-[520px] overflow-hidden bg-black">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_0%,rgba(255,210,74,0.16),transparent_32%)]" />
 
-          <img src={gear.image} alt={gear.name} className="absolute inset-0 h-full w-full object-contain p-8 drop-shadow-[0_24px_42px_rgba(0,0,0,0.72)]" />
+          <Image
+            src={gear.image}
+            alt={gear.name}
+            fill
+            priority
+            sizes="(max-width: 1024px) 100vw, 55vw"
+            className="object-contain p-8 drop-shadow-[0_24px_42px_rgba(0,0,0,0.72)]"
+          />
         </div>
 
         <div className="relative p-6 lg:p-8">

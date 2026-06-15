@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { auth } from "@/auth";
-import { consumeRateLimit } from "@/lib/http/rate-limit";
+import { getSessionUserId } from "@/lib/auth/get-current-user";
+import { enforceRateLimit } from "@/lib/http/rate-limit";
 import { validateOperatorSettingInput } from "@/lib/operator-settings/validation";
 import { prisma } from "@/lib/prisma";
 
@@ -45,35 +45,12 @@ function countRegisteredSlots(slots: Record<SlotKey, any | null>) {
     .length;
 }
 
-async function getCurrentUserId() {
-  const session = await auth();
-
-  if (!session?.user?.id) return null;
-
-  const sessionUserId = String(session.user.id).trim();
-  const sessionEmail = session.user.email?.trim().toLowerCase();
-
-  const user = await prisma.user.findFirst({
-    where: {
-      OR: [
-        { id: sessionUserId },
-        ...(sessionEmail
-          ? [{ email: { equals: sessionEmail, mode: "insensitive" as const } }]
-          : []),
-      ],
-    },
-    select: { id: true },
-  });
-
-  return user?.id ?? sessionUserId;
-}
-
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const userId = await getCurrentUserId();
+  const userId = await getSessionUserId();
 
   const setting = await prisma.userOperatorSetting.findUnique({
     where: { id },
@@ -102,7 +79,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const userId = await getCurrentUserId();
+  const userId = await getSessionUserId();
 
   if (!userId) {
     return NextResponse.json(
@@ -139,7 +116,7 @@ export async function PUT(
     );
   }
 
-  const rateLimit = consumeRateLimit({
+  const rateLimit = await enforceRateLimit({
     scope: "operator-settings:update",
     identifier: userId,
     limit: 20,
@@ -187,7 +164,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const userId = await getCurrentUserId();
+  const userId = await getSessionUserId();
 
   if (!userId) {
     return NextResponse.json(
@@ -218,7 +195,7 @@ export async function DELETE(
     );
   }
 
-  const rateLimit = consumeRateLimit({
+  const rateLimit = await enforceRateLimit({
     scope: "operator-settings:delete",
     identifier: userId,
     limit: 10,

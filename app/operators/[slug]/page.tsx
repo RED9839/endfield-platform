@@ -137,6 +137,11 @@ function DetailSection({ id, title, children, defaultOpen = false }: { id: strin
   );
 }
 
+// 정적 데이터 기반이므로 빌드 시 모든 슬러그를 프리렌더(SSG)한다 → CDN 캐시.
+export function generateStaticParams() {
+  return operatorDetails.map((operator) => ({ slug: operator.slug }));
+}
+
 export default async function OperatorDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const operator = getOperatorDetailBySlug(slug);
