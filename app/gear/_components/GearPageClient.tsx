@@ -2,7 +2,15 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { memo, useDeferredValue, useMemo, useState, type ReactNode } from "react";
+import { useSearchParams } from "next/navigation";
+import {
+  memo,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import type {
   GearAbilityKey,
   GearAttributeKey,
@@ -100,6 +108,9 @@ const setTypeOptions: GearSetName[] = [
 ];
 
 const levelOptions: GearLevel[] = [70, 50, 36, 28, 20, 10];
+
+// 220여 개 카드를 한 번에 렌더하지 않고 점진적으로 노출해 DOM/레이아웃 비용을 낮춘다.
+const GEAR_PAGE_SIZE = 60;
 
 const abilityOptions: Array<{ key: GearAbilityKey; label: string }> = [
   { key: "strength", label: "힘" },
@@ -363,23 +374,26 @@ const GearCard = memo(function GearCard({ gear }: { gear: GearListItem }) {
 
 GearCard.displayName = "GearCard";
 
-export default function GearPageClient({
-  gears,
-  initialSetName = "all",
-}: {
-  gears: GearListItem[];
-  initialSetName?: GearSetName | "all";
-}) {
+export default function GearPageClient({ gears }: { gears: GearListItem[] }) {
+  // `?set=` 딥링크를 클라이언트에서 해석 → 페이지 자체는 정적으로 유지된다.
+  const searchParams = useSearchParams();
+  const requestedSet = (searchParams.get("set") ?? "").trim();
+  const initialSetName: GearSetName | "all" = gears.some(
+    (gear) => gear.setName === requestedSet,
+  )
+    ? (requestedSet as GearSetName)
+    : "all";
+
   const [keyword, setKeyword] = useState("");
   const [category, setCategory] = useState<GearCategory | "all">("all");
-  const [setName, setSetName] =
-    useState<GearSetName | "all">(initialSetName);
+  const [setName, setSetName] = useState<GearSetName | "all">(initialSetName);
   const [attributeFilter, setAttributeFilter] =
     useState<GearAttributeKey | "all">("all");
   const [abilityFilters, setAbilityFilters] = useState<GearAbilityKey[]>([]);
   const [quality, setQuality] = useState<GearQuality | "all">("all");
   const [level, setLevel] = useState<GearLevel | "all">("all");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(GEAR_PAGE_SIZE);
   const deferredKeyword = useDeferredValue(keyword);
   const indexedGears = useMemo(
     () =>
@@ -459,6 +473,16 @@ export default function GearPageClient({
       })
       .map(({ gear }) => gear);
   }, [indexedGears, deferredKeyword, category, setName, attributeFilter, abilityFilters, quality, level]);
+
+  // 필터/검색이 바뀌면 다시 처음 페이지부터 노출한다.
+  useEffect(() => {
+    setVisibleCount(GEAR_PAGE_SIZE);
+  }, [deferredKeyword, category, setName, attributeFilter, abilityFilters, quality, level]);
+
+  const visibleGears = useMemo(
+    () => sortedGears.slice(0, visibleCount),
+    [sortedGears, visibleCount],
+  );
 
   const activeFilterCount = [
     keyword.trim() ? 1 : 0,
@@ -670,11 +694,31 @@ export default function GearPageClient({
             </div>
 
             {sortedGears.length > 0 ? (
-              <div className="grid grid-cols-1 gap-3 min-[360px]:grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(150px,170px))] sm:justify-between">
-                {sortedGears.map((gear) => (
-                  <GearCard key={gear.slug} gear={gear} />
-                ))}
-              </div>
+              <>
+                <div className="grid grid-cols-1 gap-3 min-[360px]:grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(150px,170px))] sm:justify-between">
+                  {visibleGears.map((gear) => (
+                    <GearCard key={gear.slug} gear={gear} />
+                  ))}
+                </div>
+
+                {visibleCount < sortedGears.length && (
+                  <div className="mt-4 flex justify-center">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setVisibleCount((count) => count + GEAR_PAGE_SIZE)
+                      }
+                      className="rounded-lg px-5 py-2 text-sm font-semibold transition hover:bg-[#101923]"
+                      style={{
+                        border: "1px solid rgba(255,196,74,0.3)",
+                        color: YELLOW_TEXT,
+                      }}
+                    >
+                      더 보기 ({sortedGears.length - visibleCount}개 남음)
+                    </button>
+                  </div>
+                )}
+              </>
             ) : (
               <div
                 className="flex min-h-[260px] items-center justify-center rounded-[20px] bg-black p-6 text-center text-sm text-zinc-500"

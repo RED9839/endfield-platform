@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Suspense, type ComponentType } from "react";
+import type { ComponentType } from "react";
 import {
   ArrowRight,
   Calculator,
@@ -13,17 +13,17 @@ import {
   Users,
 } from "lucide-react";
 
+import { SessionProvider } from "next-auth/react";
+
 import BannerSection, {
   type HomeApiResponse,
 } from "@/app/components/home/BannerSection";
 import {
-  HomeHeaderAccountPanel,
-  MobileAccountFallback,
-} from "@/app/components/home/HomeAccountPanels";
+  HomeHeaderAccountClient,
+  HomeProfileGate,
+} from "@/app/components/home/HomeAccountClient";
 import { HomeMobileTopBar } from "@/app/components/home/HomeNavigation";
-import HomeSearchPanel, {
-  type HomeSearchItem,
-} from "@/app/components/home/HomeSearchPanel";
+import HomeSearchPanel from "@/app/components/home/HomeSearchPanel";
 import { gearSummaries } from "@/data/gear-summary-data";
 import { operatorSummaries } from "@/data/operators-summary-data";
 import { weaponSummaries } from "@/data/weapons-summary-data";
@@ -104,35 +104,6 @@ const initialHomeBannerData = {
   ],
 } satisfies HomeApiResponse;
 
-function getSearchItems(): HomeSearchItem[] {
-  return [
-    ...operatorSummaries.map((item) => ({
-      id: `operator-${item.slug}`,
-      name: item.name,
-      subName: item.enName ?? item.slug,
-      image: item.avatar ?? `/operators/${item.slug}/avatar.webp`,
-      href: `/operators/${item.slug}`,
-      category: "operator" as const,
-    })),
-    ...weaponSummaries.map((item) => ({
-      id: `weapon-${item.slug}`,
-      name: item.name,
-      subName: item.enName ?? item.slug,
-      image: item.image ?? `/weapons/${item.slug}/avatar.webp`,
-      href: `/weapons/${item.slug}`,
-      category: "weapon" as const,
-    })),
-    ...gearSummaries.map((item) => ({
-      id: `gear-${item.slug}`,
-      name: item.name,
-      subName: item.enName ?? item.setName ?? item.slug,
-      image: item.image ?? `/gear/${item.slug}.webp`,
-      href: `/gear/${item.slug}`,
-      category: "gear" as const,
-    })),
-  ];
-}
-
 function DataCard({
   eyebrow,
   title,
@@ -178,7 +149,6 @@ function DataCard({
 
 export default function HomePage() {
   const featured = defaultHomeFeaturedOperator;
-  const searchItems = getSearchItems();
   const featuredWeapon =
     weaponSummaries.find((weapon) => weapon.name === "적영") ??
     weaponSummaries[0];
@@ -188,8 +158,11 @@ export default function HomePage() {
   const featuredGearSet = "고검의 잔향";
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[#030405] text-white">
-      <HomeMobileTopBar />
+    <SessionProvider>
+      <HomeProfileGate />
+
+      <main className="min-h-screen overflow-hidden bg-[#030405] text-white">
+        <HomeMobileTopBar />
 
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_50%_-10%,rgba(250,204,21,0.08),transparent_35%)]" />
 
@@ -205,7 +178,7 @@ export default function HomePage() {
           </Link>
 
           <div className="min-w-0 flex-1 max-w-[560px]">
-            <HomeSearchPanel items={searchItems} compact />
+            <HomeSearchPanel compact />
           </div>
 
           <nav className="flex items-center gap-1">
@@ -220,15 +193,13 @@ export default function HomePage() {
             ))}
           </nav>
 
-          <Suspense fallback={<MobileAccountFallback />}>
-            <HomeHeaderAccountPanel />
-          </Suspense>
+          <HomeHeaderAccountClient />
         </div>
       </header>
 
       <div className="relative mx-auto max-w-[1840px] px-3 pb-24 pt-3 sm:px-4 sm:pt-5 md:px-6 lg:pb-12 lg:pt-6">
         <div className="relative z-30 mb-3 lg:hidden">
-          <HomeSearchPanel items={searchItems} compact />
+          <HomeSearchPanel compact />
         </div>
 
         <section className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(520px,1fr)]">
@@ -402,6 +373,7 @@ export default function HomePage() {
           </div>
         </footer>
       </div>
-    </main>
+      </main>
+    </SessionProvider>
   );
 }

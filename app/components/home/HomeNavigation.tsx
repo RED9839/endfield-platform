@@ -1,11 +1,10 @@
 import Link from "next/link";
 import { Suspense } from "react";
 
+import { MobileAccountClient } from "@/app/components/home/HomeAccountClient";
 import {
   DesktopAccountFallback,
   DesktopAccountPanel,
-  MobileAccountFallback,
-  MobileAccountPanel,
 } from "@/app/components/home/HomeAccountPanels";
 
 type NavigationItem = {
@@ -65,9 +64,7 @@ export function HomeMobileTopBar() {
         </Link>
 
         <div className="shrink-0">
-          <Suspense fallback={<MobileAccountFallback />}>
-            <MobileAccountPanel />
-          </Suspense>
+          <MobileAccountClient />
         </div>
       </div>
     </header>

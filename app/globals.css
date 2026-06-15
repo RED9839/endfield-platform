@@ -300,7 +300,7 @@ input[type="checkbox"] {
 .operator-idle-sprite {
   width: auto;
   aspect-ratio: 306 / 856;
-  background-image: url("/operators/endministrator/animations/idle-01.png");
+  background-image: url("/operators/endministrator/animations/idle-01.webp");
   background-repeat: no-repeat;
   background-position: 0 0;
   background-size: 600% 100%;

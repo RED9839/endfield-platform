@@ -63,38 +63,30 @@ export default async function SetupProfilePage({
       redirect(`/setup-profile?error=format&value=${encodedValue}`);
     }
 
-    const exists = await prisma.user.findFirst({
-      where: {
-        nickname,
-        NOT: {
-          OR: [
-            { id: session.user.id },
-            ...(sessionEmail
-              ? [{ email: { equals: sessionEmail, mode: "insensitive" as const } }]
-              : []),
-          ],
-        },
-      },
-      select: { id: true },
-    });
+    const ownerWhere = {
+      OR: [
+        { id: session.user.id },
+        ...(sessionEmail
+          ? [{ email: { equals: sessionEmail, mode: "insensitive" as const } }]
+          : []),
+      ],
+    };
+
+    // 닉네임 중복 체크와 본인 행 조회를 한 번에(순차 라운드트립 제거).
+    const [exists, existingUser] = await Promise.all([
+      prisma.user.findFirst({
+        where: { nickname, NOT: ownerWhere },
+        select: { id: true },
+      }),
+      prisma.user.findFirst({
+        where: ownerWhere,
+        select: { id: true },
+      }),
+    ]);
 
     if (exists) {
       redirect(`/setup-profile?error=duplicate&value=${encodedValue}`);
     }
-
-    const existingUser = await prisma.user.findFirst({
-      where: {
-        OR: [
-          { id: session.user.id },
-          ...(sessionEmail
-            ? [{ email: { equals: sessionEmail, mode: "insensitive" as const } }]
-            : []),
-        ],
-      },
-      select: {
-        id: true,
-      },
-    });
 
     if (existingUser) {
       await prisma.user.update({

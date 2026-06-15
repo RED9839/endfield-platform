@@ -4,7 +4,7 @@ import { auth } from "@/auth";
 import { operatorSummaries } from "@/data/operators-summary-data";
 import { weaponSummaries } from "@/data/weapons-summary-data";
 import { formatServerTiming } from "@/lib/http/server-timing";
-import { consumeRateLimit } from "@/lib/http/rate-limit";
+import { enforceRateLimit } from "@/lib/http/rate-limit";
 import {
   getGroupedPageWindow,
   getSettingsLimit,
@@ -392,6 +392,8 @@ export async function GET(request: Request) {
     },
     {
       headers: {
+        // 공개 목록(쿼리 파라미터별 결정적) → CDN에서 짧게 캐시하고 백그라운드 재검증.
+        "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
         "Server-Timing": formatServerTiming([
           {
             name: "db",
@@ -429,7 +431,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const rateLimit = consumeRateLimit({
+  const rateLimit = await enforceRateLimit({
     scope: "operator-settings:create",
     identifier: user.id,
     limit: 10,

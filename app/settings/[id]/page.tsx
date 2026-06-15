@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 
-import { auth } from "@/auth";
+import { getSessionUserId } from "@/lib/auth/get-current-user";
 import { prisma } from "@/lib/prisma";
 import ArtsAttachmentStackIcon from "@/app/components/combat/ArtsAttachmentStackIcon";
 import ArtsReactionStatusIcon from "@/app/components/combat/ArtsReactionStatusIcon";
@@ -125,29 +125,6 @@ function getElementIcon(operator: any) {
   return element ? `/icons/elements/${element}.webp` : "";
 }
 
-async function getCurrentUserId() {
-  const session = await auth();
-
-  if (!session?.user?.id) return null;
-
-  const sessionUserId = String(session.user.id).trim();
-  const sessionEmail = session.user.email?.trim().toLowerCase();
-
-  const user = await prisma.user.findFirst({
-    where: {
-      OR: [
-        { id: sessionUserId },
-        ...(sessionEmail
-          ? [{ email: { equals: sessionEmail, mode: "insensitive" as const } }]
-          : []),
-      ],
-    },
-    select: { id: true },
-  });
-
-  return user?.id ?? sessionUserId;
-}
-
 export default async function OperatorSettingDetailPage({
   params,
   searchParams,
@@ -157,7 +134,7 @@ export default async function OperatorSettingDetailPage({
 }) {
   const { id } = await params;
   const query = await searchParams;
-  const currentUserId = await getCurrentUserId();
+  const currentUserId = await getSessionUserId();
 
   const found = await prisma.userOperatorSetting.findUnique({
     where: { id },

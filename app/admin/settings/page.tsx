@@ -84,7 +84,12 @@ export default async function AdminSettingsPage({
       createdAt: "desc",
     },
     include: {
-      user: true,
+      // 템플릿에서 user.nickname 만 사용 → 전체 user 행 과조회 방지.
+      user: {
+        select: {
+          nickname: true,
+        },
+      },
     },
     take: 200,
   });

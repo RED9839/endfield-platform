@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import {
-  consumeRateLimit,
+  enforceRateLimit,
   getRequestIdentifier,
 } from "@/lib/http/rate-limit";
 import { prisma } from "@/lib/prisma";
@@ -11,7 +11,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const rateLimit = consumeRateLimit({
+  const rateLimit = await enforceRateLimit({
     scope: `operator-settings:view:${id}`,
     identifier: getRequestIdentifier(request),
     limit: 1,
