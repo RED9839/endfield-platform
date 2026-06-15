@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 
 import { SignOutButton } from "@/app/components/auth/AuthButtons";
 import { auth } from "@/auth";
+import { getSessionUserId } from "@/lib/auth/get-current-user";
 import { prisma } from "@/lib/prisma";
 
 type ProfilePageProps = {
@@ -61,8 +62,9 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
   async function updateProfile(formData: FormData) {
     "use server";
 
-    const currentUser = await getCurrentUser();
-    if (!currentUser) redirect("/login");
+    // 세션에 이미 있는 id로 인증 확인(추가 DB 조회 없음).
+    const userId = await getSessionUserId();
+    if (!userId) redirect("/login");
 
     const nickname = String(formData.get("nickname") ?? "").trim();
 
@@ -72,14 +74,14 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
     }
 
     const duplicated = await prisma.user.findFirst({
-      where: { nickname, NOT: { id: currentUser.id } },
+      where: { nickname, NOT: { id: userId } },
       select: { id: true },
     });
 
     if (duplicated) redirect("/profile?error=duplicate");
 
     await prisma.user.update({
-      where: { id: currentUser.id },
+      where: { id: userId },
       data: { nickname },
     });
 
@@ -89,15 +91,15 @@ export default async function ProfilePage({ searchParams }: ProfilePageProps) {
   async function deleteAccount(formData: FormData) {
     "use server";
 
-    const currentUser = await getCurrentUser();
-    if (!currentUser) redirect("/login");
+    const userId = await getSessionUserId();
+    if (!userId) redirect("/login");
 
     const confirmText = String(formData.get("confirmText") ?? "").trim();
     if (confirmText !== "탈퇴합니다") {
       redirect("/profile?error=delete-confirm");
     }
 
-    await prisma.user.delete({ where: { id: currentUser.id } });
+    await prisma.user.delete({ where: { id: userId } });
     redirect("/");
   }
 
