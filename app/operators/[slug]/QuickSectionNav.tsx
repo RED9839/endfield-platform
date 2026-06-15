@@ -7,9 +7,11 @@ type SectionLink = {
 
 type Props = {
   links: SectionLink[];
+  accent?: string;
 };
 
-export default function QuickSectionNav({ links }: Props) {
+// 기술 문서(인게임 데이터 인덱스) 스타일 섹션 네비. 동작은 그대로(아코디언 열기 + 스크롤).
+export default function QuickSectionNav({ links, accent = "#ffd24a" }: Props) {
   function handleMove(href: string) {
     const targetId = href.replace("#", "");
     const target = document.getElementById(targetId);
@@ -23,25 +25,44 @@ export default function QuickSectionNav({ links }: Props) {
 
     if (target) {
       setTimeout(() => {
-        target.scrollIntoView({
-          behavior: "smooth",
-          block: "start",
-        });
+        target.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 40);
     }
   }
 
   return (
-    <nav className="sticky top-2 z-30 mb-3 rounded-[18px] border border-yellow-500/15 bg-black/90 p-2 backdrop-blur lg:top-5 lg:mb-5">
-      <div className="flex gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {links.map((item) => (
+    <nav
+      className="sticky top-2 z-30 mb-3 border border-ef-line bg-black/85 p-1 backdrop-blur lg:top-4 lg:mb-5"
+      style={{
+        clipPath:
+          "polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))",
+      }}
+    >
+      <div className="flex items-center gap-0.5 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <span className="ml-2 mr-1 hidden shrink-0 items-center gap-1.5 sm:flex">
+          <span className="h-2 w-2" style={{ background: accent }} />
+          <span className="font-mono text-[10px] font-bold uppercase tracking-[0.25em] text-ef-muted">
+            Index
+          </span>
+        </span>
+
+        {links.map((item, index) => (
           <button
             key={item.href}
             type="button"
             onClick={() => handleMove(item.href)}
-            className="shrink-0 rounded-xl border border-yellow-500/15 bg-[#05070b] px-3 py-2 text-xs font-black text-zinc-300 transition hover:border-yellow-400/40 hover:text-yellow-200 sm:text-sm"
+            className="group relative inline-flex min-h-10 shrink-0 items-center gap-2 px-3.5"
           >
-            {item.label}
+            <span className="font-mono text-[11px] font-bold text-ef-muted">
+              {String(index + 1).padStart(2, "0")}
+            </span>
+            <span className="text-xs font-black text-zinc-300 transition group-hover:text-white sm:text-sm">
+              {item.label}
+            </span>
+            <span
+              className="absolute inset-x-2 bottom-0 h-0.5 opacity-0 transition group-hover:opacity-100"
+              style={{ background: accent }}
+            />
           </button>
         ))}
       </div>
