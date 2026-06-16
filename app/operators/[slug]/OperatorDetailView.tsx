@@ -26,11 +26,11 @@ type PopularOperatorItem = {
 type PopularWeaponItem = { slug: string; name: string; image: string };
 
 const elementAccent: Record<string, { color: string; glow: string }> = {
-  physical: { color: "#d6dae3", glow: "rgba(214,218,227,0.20)" },
-  cryo: { color: "#4fa3ff", glow: "rgba(79,163,255,0.38)" },
-  heat: { color: "#ff8a1f", glow: "rgba(255,138,31,0.40)" },
-  nature: { color: "#3ecf8e", glow: "rgba(62,207,142,0.34)" },
-  electric: { color: "#c084fc", glow: "rgba(192,132,252,0.38)" },
+  physical: { color: "#d6dae3", glow: "rgba(214,218,227,0.22)" },
+  cryo: { color: "#4fa3ff", glow: "rgba(79,163,255,0.42)" },
+  heat: { color: "#ff8a1f", glow: "rgba(255,138,31,0.46)" },
+  nature: { color: "#3ecf8e", glow: "rgba(62,207,142,0.40)" },
+  electric: { color: "#c084fc", glow: "rgba(192,132,252,0.42)" },
 };
 const elementLabelMap: Record<string, string> = {
   physical: "물리",
@@ -65,7 +65,7 @@ const weaponLabelMap: Record<string, string> = {
 
 const CUT = {
   clipPath:
-    "polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))",
+    "polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px))",
 };
 
 type TopBuild = {
@@ -75,7 +75,11 @@ type TopBuild = {
   viewCount?: number;
   nickname?: string | null;
   userNickname?: string | null;
-  slotsSummary?: { mainOperatorSlug?: string; mainWeaponSlug?: string };
+  slotsSummary?: {
+    mainOperatorSlug?: string;
+    mainWeaponSlug?: string;
+    memberOperatorSlugs?: string[];
+  };
 };
 
 type TabId = "data" | "skill" | "build" | "material" | "archive";
@@ -88,6 +92,14 @@ function SubHeader({ en, accent }: { en: string; accent: string }) {
         {en}
       </span>
     </div>
+  );
+}
+
+function MetaLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="font-mono text-[9px] font-bold uppercase tracking-[0.18em] text-ef-muted">
+      {children}
+    </span>
   );
 }
 
@@ -123,7 +135,6 @@ export default function OperatorDetailView({
   const elementIcon = `/icons/elements/${operator.element}.webp`;
   const role = classRoleMap[operator.class] ?? "오퍼레이터";
   const elementLabel = elementLabelMap[operator.element] ?? operator.element;
-
   const maxLevel =
     Array.isArray(operator.levelStats) && operator.levelStats.length
       ? Math.max(...operator.levelStats.map((row) => row.level))
@@ -133,7 +144,6 @@ export default function OperatorDetailView({
   const [topBuild, setTopBuild] = useState<TopBuild | null>(null);
   const [topBuildLoading, setTopBuildLoading] = useState(true);
 
-  // Overview TOP BUILD: 인기 1순위 세팅을 미리 가져와 노출(API 재사용).
   useEffect(() => {
     let mounted = true;
     const params = new URLSearchParams({
@@ -157,9 +167,16 @@ export default function OperatorDetailView({
     };
   }, [operator.slug]);
 
+  const operatorBySlug = new Map(operators.map((item) => [item.slug, item]));
   const topWeapon = topBuild?.slotsSummary?.mainWeaponSlug
     ? weapons.find((weapon) => weapon.slug === topBuild.slotsSummary?.mainWeaponSlug)
     : undefined;
+  const partySlugs = [
+    operator.slug,
+    ...(topBuild?.slotsSummary?.memberOperatorSlugs ?? []),
+  ]
+    .filter(Boolean)
+    .slice(0, 4);
 
   const tabs: { id: TabId; label: string }[] = [
     { id: "data", label: "DATA" },
@@ -171,12 +188,11 @@ export default function OperatorDetailView({
 
   return (
     <main className="relative min-h-screen bg-ef-bg text-ef-ink">
-      {/* 배경 데이터 레이어 */}
       <div className="pointer-events-none fixed inset-0 z-0 opacity-[0.04] [background-image:radial-gradient(circle,#ffd24a_1px,transparent_1px)] [background-size:22px_22px]" />
       <div className="pointer-events-none fixed inset-0 z-0 opacity-50 [background-image:repeating-linear-gradient(180deg,transparent_0,transparent_2px,rgba(0,0,0,0.4)_3px)]" />
 
       {/* HUD */}
-      <div className="relative z-20 mx-auto flex max-w-[1760px] items-center justify-between px-3 py-3 sm:px-6 lg:px-8">
+      <div className="relative z-20 mx-auto flex max-w-[1840px] items-center justify-between px-3 py-2.5 sm:px-6 lg:px-7">
         <div className="flex items-center gap-2">
           <span className="h-3 w-3" style={{ background: accent.color }} />
           <span className="font-mono text-[10px] font-bold uppercase tracking-[0.3em] text-ef-muted">
@@ -196,26 +212,33 @@ export default function OperatorDetailView({
         </div>
       </div>
 
-      {/* 2컬럼 */}
-      <div className="relative z-10 mx-auto grid max-w-[1760px] gap-4 px-3 pb-[calc(5.5rem+env(safe-area-inset-bottom))] sm:px-6 lg:grid-cols-[minmax(0,380px)_minmax(0,1fr)] lg:gap-6 lg:px-8 lg:pb-12">
-        {/* ===== LEFT: HERO + OVERVIEW (PC sticky) ===== */}
-        <div className="lg:sticky lg:top-4 lg:self-start">
-          {/* HERO */}
-          <section className="relative overflow-hidden border border-ef-line" style={CUT}>
-            <div className="relative h-[38vh] min-h-[300px] sm:h-[42vh] lg:h-[440px]">
-              <Image src={heroImage} alt="" fill priority sizes="(max-width:1024px) 100vw, 380px" className="scale-125 object-cover object-top blur-2xl brightness-[0.32]" />
-              <div className="absolute inset-0" style={{ background: `radial-gradient(60% 50% at 58% 30%, ${accent.glow}, transparent 72%)` }} />
+      <div className="relative z-10 mx-auto grid max-w-[1840px] gap-4 px-3 pb-[calc(5.5rem+env(safe-area-inset-bottom))] sm:px-6 lg:grid-cols-[minmax(0,460px)_minmax(0,1fr)] lg:gap-6 lg:px-7 lg:pb-12">
+        {/* ============ LEFT: 캐릭터 지배 패널 (PC 풀하이트 sticky) ============ */}
+        <div className="lg:sticky lg:top-3 lg:h-[calc(100vh-1.25rem)]">
+          <section className="flex h-full flex-col overflow-hidden border border-ef-line bg-ef-card" style={CUT}>
+            {/* 캐릭터 일러 — object-contain bottom 으로 전신 부각 */}
+            <div className="relative min-h-[300px] flex-1 overflow-hidden">
+              <Image src={heroImage} alt="" fill priority sizes="(max-width:1024px) 100vw, 460px" className="scale-110 object-cover object-center blur-2xl brightness-[0.4]" />
+              <div className="absolute inset-0" style={{ background: `radial-gradient(46% 38% at 50% 30%, ${accent.glow}, transparent 70%)` }} />
               <div className="absolute inset-0">
                 {isAdminSlider ? (
                   <HeroSlider images={adminSlides} alt={operator.name} enName={operator.enName} />
                 ) : (
-                  <Image src={heroImage} alt={operator.name} fill priority sizes="(max-width:1024px) 100vw, 380px" className="object-cover object-top" />
+                  <Image src={heroImage} alt={operator.name} fill priority sizes="(max-width:1024px) 100vw, 460px" className="object-cover object-[center_18%]" />
                 )}
               </div>
-              <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent_34%,rgba(11,11,11,0.62)_72%,#0b0b0b_100%)]" />
-              <span className="pointer-events-none absolute left-2 top-2 h-6 w-6 border-l-2 border-t-2" style={{ borderColor: `${accent.color}88` }} />
-              <span className="pointer-events-none absolute right-2 top-2 h-6 w-6 border-r-2 border-t-2" style={{ borderColor: `${accent.color}55` }} />
+              <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent_46%,rgba(11,11,11,0.55)_78%,#0b0b0b_100%)]" />
 
+              {/* HUD 프레임 */}
+              <span className="pointer-events-none absolute left-2.5 top-2.5 h-7 w-7 border-l-2 border-t-2" style={{ borderColor: `${accent.color}99` }} />
+              <span className="pointer-events-none absolute right-2.5 top-2.5 h-7 w-7 border-r-2 border-t-2" style={{ borderColor: `${accent.color}66` }} />
+              <div className="pointer-events-none absolute right-3 top-1/2 flex -translate-y-1/2 flex-col items-end gap-1.5">
+                {Array.from({ length: 7 }).map((_, index) => (
+                  <span key={index} className="block h-px" style={{ width: index % 3 === 0 ? 16 : 8, background: index % 3 === 0 ? accent.color : "#3a3a3a" }} />
+                ))}
+              </div>
+
+              {/* 아이덴티티 오버레이 */}
               <div className="absolute inset-x-0 bottom-0 p-4">
                 <div className="mb-2 flex items-center gap-2">
                   <span className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-black" style={{ ...CUT, background: accent.color, color: "#050505" }}>
@@ -224,116 +247,120 @@ export default function OperatorDetailView({
                     </span>
                     {elementLabel}
                   </span>
-                  <span className="text-sm font-black tracking-widest text-ef-accent">
-                    {"★".repeat(operator.rarity)}
-                  </span>
+                  <span className="text-sm font-black tracking-widest text-ef-accent">{"★".repeat(operator.rarity)}</span>
                 </div>
-                <h1 className="break-keep text-[clamp(32px,8.5vw,48px)] font-black leading-[0.92] text-white drop-shadow-[0_6px_24px_rgba(0,0,0,0.85)]">
+                <h1 className="break-keep text-[clamp(34px,9vw,54px)] font-black leading-[0.9] text-white drop-shadow-[0_6px_24px_rgba(0,0,0,0.9)]">
                   {operator.name}
                 </h1>
-                <p className="mt-1 font-mono text-xs font-bold uppercase tracking-[0.24em]" style={{ color: accent.color }}>
-                  {operator.enName}
-                </p>
-                <p className="mt-2 text-sm font-black text-ef-ink">
-                  〈 {role} · {elementLabel} 〉
-                </p>
+                <div className="mt-1.5 flex items-center gap-2">
+                  <span className="font-mono text-xs font-bold uppercase tracking-[0.24em]" style={{ color: accent.color }}>{operator.enName}</span>
+                  <span className="h-3 w-px bg-ef-line" />
+                  <span className="text-xs font-black text-ef-ink">{role}</span>
+                </div>
               </div>
             </div>
 
-            {/* 정체성 칩 (스탯 수치는 DATA 탭으로 통합 — 중복 제거) */}
-            <div className="grid grid-cols-3 gap-px bg-ef-line">
-              {[
-                ["CLASS", classLabelMap[operator.class] ?? operator.class],
-                ["WEAPON", weaponLabelMap[operator.weapon] ?? operator.weapon],
-                ["MAIN", operator.mainStatLabel || "-"],
-              ].map(([en, value]) => (
-                <div key={en} className="bg-ef-card px-2.5 py-2.5">
-                  <p className="font-mono text-[9px] uppercase tracking-[0.15em] text-ef-muted">{en}</p>
-                  <p className="mt-0.5 truncate text-sm font-black text-ef-ink">{value}</p>
+            {/* 메타: 정체성 + GROWTH + RECOMMENDED BUILD (좌측 sticky 활용 극대화) */}
+            <div className="shrink-0 border-t border-ef-line">
+              <div className="grid grid-cols-3 gap-px bg-ef-line">
+                {[
+                  ["CLASS", classLabelMap[operator.class] ?? operator.class],
+                  ["WEAPON", weaponLabelMap[operator.weapon] ?? operator.weapon],
+                  ["MAIN", operator.mainStatLabel || "-"],
+                ].map(([en, value]) => (
+                  <div key={en} className="bg-ef-card px-3 py-2.5">
+                    <MetaLabel>{en}</MetaLabel>
+                    <p className="mt-0.5 truncate text-sm font-black text-ef-ink">{value}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-3 gap-px border-t border-ef-line bg-ef-line">
+                {[
+                  ["MAX LV", String(maxLevel)],
+                  ["정예화", `${operator.elite.length}단계`],
+                  ["주 능력치", operator.mainStatLabel || "-"],
+                ].map(([en, value]) => (
+                  <div key={en} className="bg-ef-card px-3 py-2.5">
+                    <MetaLabel>{en}</MetaLabel>
+                    <p className="mt-0.5 truncate text-base font-black" style={{ color: accent.color }}>{value}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* RECOMMENDED BUILD — Hero급 콘텐츠 */}
+              <div className="border-t-2 p-3.5" style={{ borderTopColor: `${accent.color}66` }}>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-sm" style={{ color: accent.color }}>★</span>
+                    <span className="font-mono text-[10px] font-black uppercase tracking-[0.22em] text-ef-accent-soft">Recommended Build</span>
+                  </div>
+                  <button type="button" onClick={() => setTab("build")} className="font-mono text-[10px] font-black uppercase tracking-wide text-ef-muted transition hover:text-ef-accent-soft">전체 →</button>
                 </div>
-              ))}
+
+                {topBuildLoading ? (
+                  <div className="mt-3 h-20 animate-pulse bg-ef-card2" />
+                ) : topBuild ? (
+                  <button type="button" onClick={() => setTab("build")} className="mt-3 block w-full border border-ef-line bg-ef-card2 p-3 text-left transition hover:border-ef-accent/40" style={CUT}>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <MetaLabel>Weapon</MetaLabel>
+                        <div className="mt-1 flex items-center gap-1.5">
+                          <span className="relative h-7 w-7 shrink-0 overflow-hidden border border-ef-line bg-black">
+                            {topWeapon?.image ? (
+                              <Image src={topWeapon.image} alt="" fill sizes="28px" className="object-cover" />
+                            ) : null}
+                          </span>
+                          <span className="truncate text-xs font-black text-ef-ink">{topWeapon?.name ?? "—"}</span>
+                        </div>
+                      </div>
+                      <div>
+                        <MetaLabel>Attribute</MetaLabel>
+                        <p className="mt-1 truncate text-xs font-black" style={{ color: accent.color }}>
+                          {operator.mainStatLabel || "-"}{operator.subStatLabel ? ` · ${operator.subStatLabel}` : ""}
+                        </p>
+                      </div>
+                      <div className="col-span-2">
+                        <MetaLabel>Party</MetaLabel>
+                        <div className="mt-1 flex items-center gap-1">
+                          {partySlugs.map((slug) => {
+                            const member = operatorBySlug.get(slug);
+                            const img = member?.avatar ?? `/operators/${slug}/avatar.webp`;
+                            return (
+                              <span key={slug} className="relative h-7 w-7 shrink-0 overflow-hidden border border-ef-line bg-black">
+                                <Image src={img} alt="" fill sizes="28px" className="object-cover object-top" />
+                              </span>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-2.5 flex items-center justify-between border-t border-ef-line pt-2">
+                      <span className="truncate text-[11px] font-bold text-ef-muted">{topBuild.title}</span>
+                      <span className="shrink-0 text-[11px] font-black" style={{ color: accent.color }}>♥ {topBuild.likeCount ?? 0}</span>
+                    </div>
+                  </button>
+                ) : (
+                  <div className="mt-3 border border-ef-line bg-ef-card2 p-3 text-center" style={CUT}>
+                    <p className="text-xs text-ef-muted">아직 추천 빌드가 없습니다.</p>
+                    <Link href="/settings/party" className="mt-2 inline-flex px-3 py-1.5 text-xs font-black text-black" style={{ background: accent.color }}>첫 빌드 등록</Link>
+                  </div>
+                )}
+              </div>
             </div>
           </section>
-
-          {/* OVERVIEW: GROWTH (10초) */}
-          <div className="mt-3 border border-ef-line bg-ef-card p-3.5" style={CUT}>
-            <div className="flex items-center gap-1.5">
-              <span className="h-2 w-2" style={{ background: accent.color }} />
-              <span className="font-mono text-[10px] font-black uppercase tracking-[0.22em] text-ef-muted">Growth</span>
-            </div>
-            <div className="mt-2 grid grid-cols-3 gap-2">
-              {[
-                ["MAX LV", String(maxLevel)],
-                ["정예화", `${operator.elite.length}단계`],
-                ["주능력", operator.mainStatLabel || "-"],
-              ].map(([en, value]) => (
-                <div key={en}>
-                  <p className="font-mono text-[9px] uppercase tracking-wide text-ef-muted">{en}</p>
-                  <p className="mt-0.5 truncate text-base font-black" style={{ color: accent.color }}>{value}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* OVERVIEW: TOP BUILD (20초) — 핵심 콘텐츠로 노출 */}
-          <div className="mt-3 overflow-hidden border bg-ef-card" style={{ ...CUT, borderColor: `${accent.color}44` }}>
-            <span className="block h-0.5 w-full" style={{ background: `linear-gradient(90deg, ${accent.color}, transparent 55%)` }} />
-            <div className="p-3.5">
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-sm" style={{ color: accent.color }}>★</span>
-                  <span className="font-mono text-[10px] font-black uppercase tracking-[0.22em] text-ef-accent-soft">Top Build</span>
-                </div>
-                <button type="button" onClick={() => setTab("build")} className="font-mono text-[10px] font-black uppercase tracking-wide text-ef-muted transition hover:text-ef-accent-soft">
-                  전체 보기 →
-                </button>
-              </div>
-
-              {topBuildLoading ? (
-                <div className="mt-3 h-16 animate-pulse bg-ef-card2" />
-              ) : topBuild ? (
-                <button type="button" onClick={() => setTab("build")} className="mt-3 flex w-full items-center gap-3 border border-ef-line bg-ef-card2 p-2.5 text-left transition hover:border-ef-accent/40" style={CUT}>
-                  <span className="relative h-12 w-12 shrink-0 overflow-hidden border border-ef-line bg-black">
-                    {topWeapon?.image ? (
-                      <Image src={topWeapon.image} alt="" fill sizes="48px" className="object-cover" />
-                    ) : (
-                      <span className="flex h-full w-full items-center justify-center font-mono text-[10px] text-ef-muted">BUILD</span>
-                    )}
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-black text-ef-ink">{topBuild.title}</span>
-                    <span className="mt-0.5 block truncate text-[11px] text-ef-muted">
-                      ♥ {topBuild.likeCount ?? 0} · {topBuild.userNickname ?? topBuild.nickname ?? "익명"}
-                    </span>
-                  </span>
-                </button>
-              ) : (
-                <div className="mt-3 border border-ef-line bg-ef-card2 p-3 text-center" style={CUT}>
-                  <p className="text-xs text-ef-muted">아직 등록된 추천 빌드가 없습니다.</p>
-                  <Link href="/settings/party" className="mt-2 inline-flex border px-3 py-1.5 text-xs font-black text-black" style={{ background: accent.color }}>
-                    첫 빌드 등록하기
-                  </Link>
-                </div>
-              )}
-            </div>
-          </div>
         </div>
 
-        {/* ===== RIGHT: 탭 + 콘텐츠 ===== */}
+        {/* ============ RIGHT: 탭 + 콘텐츠 ============ */}
         <div className="min-w-0">
-          {/* 탭바: 모바일 하단 고정(한 손·safe-area) / PC 상단 정적 */}
           <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-ef-line bg-black/92 px-2 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:static lg:z-auto lg:border lg:bg-black/85 lg:px-1.5 lg:pb-0">
-            <div className="mx-auto flex max-w-[1760px] items-center gap-1 overflow-x-auto py-1.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:max-w-none">
+            <div className="mx-auto flex max-w-[1840px] items-center gap-1 overflow-x-auto py-1.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:max-w-none">
               {tabs.map((item, index) => {
                 const isActive = item.id === tab;
                 return (
                   <button key={item.id} type="button" onClick={() => setTab(item.id)} className="group relative inline-flex min-h-11 flex-1 shrink-0 items-center justify-center gap-1.5 px-3 lg:flex-none lg:justify-start" style={isActive ? { background: `${accent.color}1f` } : undefined}>
-                    <span className="font-mono text-[10px] font-bold" style={{ color: isActive ? accent.color : "#a0a0a0" }}>
-                      {String(index + 1).padStart(2, "0")}
-                    </span>
-                    <span className={`font-mono text-xs font-black tracking-wide transition ${isActive ? "text-white" : "text-zinc-400 group-hover:text-white"}`}>
-                      {item.label}
-                    </span>
+                    <span className="font-mono text-[10px] font-bold" style={{ color: isActive ? accent.color : "#a0a0a0" }}>{String(index + 1).padStart(2, "0")}</span>
+                    <span className={`font-mono text-xs font-black tracking-wide transition ${isActive ? "text-white" : "text-zinc-400 group-hover:text-white"}`}>{item.label}</span>
                     <span className={`absolute inset-x-2 bottom-0 h-0.5 transition ${isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`} style={{ background: accent.color }} />
                   </button>
                 );
@@ -341,24 +368,12 @@ export default function OperatorDetailView({
             </div>
           </nav>
 
-          {/* 콘텐츠 */}
           <div className="mt-3 grid min-w-0 gap-4">
             {tab === "data" ? (
               <>
                 <div>
                   <SubHeader en="Attribute Data" accent={accent.color} />
-                  <OperatorLevelPanel
-                    name={operator.name}
-                    enName={operator.enName}
-                    avatar={operator.avatar}
-                    element={operator.element}
-                    operatorClass={operator.class}
-                    weapon={operator.weapon}
-                    rarity={operator.rarity}
-                    mainStatLabel={operator.mainStatLabel ?? ""}
-                    subStatLabel={operator.subStatLabel ?? ""}
-                    levelStats={operator.levelStats}
-                  />
+                  <OperatorLevelPanel name={operator.name} enName={operator.enName} avatar={operator.avatar} element={operator.element} operatorClass={operator.class} weapon={operator.weapon} rarity={operator.rarity} mainStatLabel={operator.mainStatLabel ?? ""} subStatLabel={operator.subStatLabel ?? ""} levelStats={operator.levelStats} />
                 </div>
                 {operator.trustBonus.length ? (
                   <div>
@@ -379,15 +394,7 @@ export default function OperatorDetailView({
               <>
                 <div>
                   <SubHeader en="Skill Data" accent={accent.color} />
-                  <OperatorSkillsDeck
-                    accentColor={accent.color}
-                    skills={[
-                      operator.skills.normalAttack,
-                      operator.skills.battleSkill,
-                      operator.skills.comboSkill,
-                      operator.skills.ultimate,
-                    ]}
-                  />
+                  <OperatorSkillsDeck accentColor={accent.color} skills={[operator.skills.normalAttack, operator.skills.battleSkill, operator.skills.comboSkill, operator.skills.ultimate]} />
                 </div>
                 {operator.talents.length ? (
                   <div>
@@ -413,17 +420,9 @@ export default function OperatorDetailView({
             {tab === "build" ? (
               <div>
                 <SubHeader en="Popular Settings" accent={accent.color} />
-                <PopularOperatorSettingsPanel
-                  accent={accent.color}
-                  operatorSlug={operator.slug}
-                  operatorName={operator.name}
-                  operators={operators}
-                  weapons={weapons}
-                />
+                <PopularOperatorSettingsPanel accent={accent.color} operatorSlug={operator.slug} operatorName={operator.name} operators={operators} weapons={weapons} />
                 <div className="mt-3 flex justify-center">
-                  <Link href="/settings/party" className="inline-flex min-h-11 items-center border px-5 text-sm font-black text-black" style={{ ...CUT, background: accent.color }}>
-                    내 세팅 만들기
-                  </Link>
+                  <Link href="/settings/party" className="inline-flex min-h-11 items-center border px-5 text-sm font-black text-black" style={{ ...CUT, background: accent.color }}>내 세팅 만들기</Link>
                 </div>
               </div>
             ) : null}
