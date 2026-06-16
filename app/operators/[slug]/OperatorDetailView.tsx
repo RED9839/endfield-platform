@@ -74,13 +74,11 @@ type TopBuild = {
   likeCount?: number;
   nickname?: string | null;
   userNickname?: string | null;
-  slotsSummary?: {
-    mainWeaponSlug?: string;
-    memberOperatorSlugs?: string[];
-  };
+  slotsSummary?: { mainWeaponSlug?: string; memberOperatorSlugs?: string[] };
 };
 
 type TabId = "data" | "skill" | "build" | "material" | "archive";
+type DataSub = "attr" | "trust" | "potential";
 
 function SubHeader({ en, accent }: { en: string; accent: string }) {
   return (
@@ -134,6 +132,7 @@ export default function OperatorDetailView({
       : 90;
 
   const [tab, setTab] = useState<TabId>("data");
+  const [dataSub, setDataSub] = useState<DataSub>("attr");
   const [topBuild, setTopBuild] = useState<TopBuild | null>(null);
   const [topBuildLoading, setTopBuildLoading] = useState(true);
 
@@ -159,6 +158,7 @@ export default function OperatorDetailView({
     ? weapons.find((weapon) => weapon.slug === topBuild.slotsSummary?.mainWeaponSlug)
     : undefined;
   const partySlugs = [operator.slug, ...(topBuild?.slotsSummary?.memberOperatorSlugs ?? [])].filter(Boolean).slice(0, 4);
+  const topAuthor = topBuild?.userNickname ?? topBuild?.nickname ?? "익명";
 
   const tabs: { id: TabId; label: string }[] = [
     { id: "data", label: "DATA" },
@@ -168,29 +168,108 @@ export default function OperatorDetailView({
     { id: "archive", label: "ARCHIVE" },
   ];
 
+  const dataSubs: { id: DataSub; label: string; show: boolean }[] = [
+    { id: "attr", label: "능력치", show: true },
+    { id: "trust", label: "신뢰도", show: operator.trustBonus.length > 0 },
+    { id: "potential", label: "잠재", show: operator.potential.length > 0 },
+  ];
+
+  const RecommendedBuild = (
+    <div className="overflow-hidden border bg-ef-card/92 backdrop-blur" style={{ ...CUT, borderColor: `${accent}55` }}>
+      <span className="block h-0.5 w-full" style={{ background: `linear-gradient(90deg, ${accent}, transparent 55%)` }} />
+      <div className="p-3.5">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5">
+            <span className="text-sm" style={{ color: accent }}>★</span>
+            <span className="font-mono text-[10px] font-black uppercase tracking-[0.22em] text-ef-accent-soft">Recommended Build</span>
+          </div>
+          <button type="button" onClick={() => setTab("build")} className="font-mono text-[10px] font-black uppercase tracking-wide text-ef-muted transition hover:text-ef-accent-soft">전체 →</button>
+        </div>
+
+        {topBuildLoading ? (
+          <div className="mt-3 h-24 animate-pulse bg-ef-card2" />
+        ) : topBuild ? (
+          <button type="button" onClick={() => setTab("build")} className="mt-3 block w-full border border-ef-line bg-ef-card2 p-3 text-left transition hover:border-ef-accent/40" style={CUT}>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
+              <div className="col-span-2">
+                <MetaLabel>Weapon</MetaLabel>
+                <div className="mt-1 flex items-center gap-2">
+                  <span className="relative h-9 w-9 shrink-0 overflow-hidden border border-ef-line bg-black">
+                    {topWeapon?.image ? <Image src={topWeapon.image} alt="" fill sizes="36px" className="object-cover" /> : null}
+                  </span>
+                  <span className="truncate text-sm font-black text-ef-ink">{topWeapon?.name ?? "—"}</span>
+                </div>
+              </div>
+              <div>
+                <MetaLabel>Main</MetaLabel>
+                <p className="mt-1 truncate text-sm font-black" style={{ color: accent }}>{operator.mainStatLabel || "-"}</p>
+              </div>
+              <div>
+                <MetaLabel>Sub</MetaLabel>
+                <p className="mt-1 truncate text-sm font-black text-ef-ink">{operator.subStatLabel || "-"}</p>
+              </div>
+              <div className="col-span-2 sm:col-span-4">
+                <MetaLabel>Party</MetaLabel>
+                <div className="mt-1 flex items-center gap-1">
+                  {partySlugs.map((slug) => {
+                    const img = operatorBySlug.get(slug)?.avatar ?? `/operators/${slug}/avatar.webp`;
+                    return (
+                      <span key={slug} className="relative h-8 w-8 shrink-0 overflow-hidden border border-ef-line bg-black">
+                        <Image src={img} alt="" fill sizes="32px" className="object-cover object-top" />
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+            <div className="mt-3 flex items-center justify-between border-t border-ef-line pt-2.5">
+              <span className="min-w-0 truncate text-[11px] font-bold text-ef-muted">{topBuild.title} · by {topAuthor}</span>
+              <span className="shrink-0 text-sm font-black" style={{ color: accent }}>♥ {topBuild.likeCount ?? 0}</span>
+            </div>
+          </button>
+        ) : (
+          <div className="mt-3 border border-ef-line bg-ef-card2 p-3 text-center" style={CUT}>
+            <p className="text-xs text-ef-muted">아직 추천 빌드가 없습니다.</p>
+            <Link href="/settings/party" className="mt-2 inline-flex px-3 py-1.5 text-xs font-black text-black" style={{ background: accent }}>첫 빌드 등록</Link>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  const GrowthStrip = (
+    <div className="grid grid-cols-3 gap-px border border-ef-line bg-ef-line" style={CUT}>
+      {[
+        ["MAX LV", String(maxLevel)],
+        ["정예화", `${operator.elite.length}단계`],
+        ["주 능력치", operator.mainStatLabel || "-"],
+      ].map(([en, value]) => (
+        <div key={en} className="bg-ef-card/92 px-3 py-2.5 backdrop-blur">
+          <MetaLabel>{en}</MetaLabel>
+          <p className="mt-0.5 truncate text-lg font-black" style={{ color: accent }}>{value}</p>
+        </div>
+      ))}
+    </div>
+  );
+
   return (
     <main className="relative min-h-screen bg-ef-bg text-ef-ink">
-      {/* ============ HERO — 캐릭터가 화면을 지배 ============ */}
-      <section className="relative h-[78vh] min-h-[560px] w-full overflow-hidden sm:h-[84vh] lg:h-[90vh] lg:max-h-[940px] lg:min-h-[760px]">
-        {/* 캐릭터 일러: 모바일 풀블리드 / PC 우측 우세 */}
+      {/* ============ HERO 100vh — 캐릭터 + 정보 + 추천 빌드 = 첫 화면 ============ */}
+      <section className="relative min-h-screen w-full overflow-hidden">
+        {/* 캐릭터 일러 */}
         <div className="absolute inset-y-0 right-0 w-full lg:w-[64%]">
           {isAdminSlider ? (
             <HeroSlider images={adminSlides} alt={operator.name} enName={operator.enName} />
           ) : (
             <Image src={heroImage} alt={operator.name} fill priority sizes="100vw" className="object-cover object-[center_12%]" />
           )}
-          {/* PC 좌측 페이드(텍스트 가독) */}
-          <div className="absolute inset-0 hidden lg:block bg-[linear-gradient(90deg,#050505_0%,rgba(5,5,5,0.55)_24%,rgba(5,5,5,0.05)_52%,transparent_70%)]" />
+          <div className="absolute inset-0 hidden lg:block bg-[linear-gradient(90deg,#050505_0%,rgba(5,5,5,0.6)_26%,rgba(5,5,5,0.08)_54%,transparent_72%)]" />
         </div>
-
-        {/* 상하 스크림(주황 블러 대신 다크 산업 그라데이션) */}
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,5,5,0.5)_0%,transparent_24%,transparent_52%,rgba(5,5,5,0.6)_82%,#050505_100%)]" />
-        {/* 산업 SF 텍스처: 미세 그리드 + 하단 스캔라인 (은은하게) */}
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,5,5,0.5)_0%,transparent_22%,transparent_46%,rgba(5,5,5,0.72)_78%,#050505_100%)]" />
         <div className="pointer-events-none absolute inset-0 opacity-[0.05] [background-image:linear-gradient(#fff_1px,transparent_1px),linear-gradient(90deg,#fff_1px,transparent_1px)] [background-size:52px_52px]" />
-        {/* 좌측 수직 accent 라인 */}
         <span className="absolute left-0 top-0 hidden h-full w-px lg:block" style={{ background: `linear-gradient(180deg, transparent, ${accent}, transparent)` }} />
 
-        {/* 상단 HUD 바 */}
+        {/* HUD 바 */}
         <div className="absolute inset-x-0 top-0 z-20 mx-auto flex max-w-[1840px] items-center justify-between px-4 py-3 sm:px-7">
           <div className="flex items-center gap-2">
             <span className="h-3 w-3" style={{ background: accent }} />
@@ -203,11 +282,8 @@ export default function OperatorDetailView({
           </div>
         </div>
 
-        {/* 코너 틱 (은은한 HUD) */}
-        <span className="pointer-events-none absolute bottom-5 left-5 hidden h-10 w-10 border-b-2 border-l-2 lg:block" style={{ borderColor: `${accent}66` }} />
-
-        {/* 아이덴티티: 모바일 하단 / PC 좌측 중앙 */}
-        <div className="relative z-10 flex h-full flex-col justify-end px-5 pb-7 sm:px-7 lg:max-w-[52%] lg:justify-center lg:px-12 lg:pb-0">
+        {/* 좌측(PC)/하단(모바일) 콘텐츠: 이름 → 칩 → 추천빌드 → Growth */}
+        <div className="relative z-10 flex min-h-screen flex-col justify-end px-5 pb-7 pt-20 sm:px-7 lg:max-w-[600px] lg:justify-center lg:px-12 lg:pb-0">
           <div className="mb-3 flex items-center gap-2.5">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 text-[12px] font-black" style={{ ...CUT, background: accent, color: "#050505" }}>
               <span className="relative inline-block h-4 w-4">
@@ -220,115 +296,46 @@ export default function OperatorDetailView({
             <span className="hidden font-mono text-xs font-bold uppercase tracking-[0.2em] text-ef-muted sm:inline">{classLabelMap[operator.class] ?? operator.class}</span>
           </div>
 
-          <h1 className="break-keep text-[clamp(52px,11vw,128px)] font-black leading-[0.86] tracking-tight text-white drop-shadow-[0_10px_40px_rgba(0,0,0,0.9)]">
+          <h1 className="break-keep text-[clamp(56px,12vw,160px)] font-black leading-[0.82] tracking-tight text-white drop-shadow-[0_12px_44px_rgba(0,0,0,0.92)]">
             {operator.name}
           </h1>
 
           <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5">
-            <span className="font-mono text-base font-bold uppercase tracking-[0.26em] sm:text-lg" style={{ color: accent }}>{operator.enName}</span>
+            <span className="font-mono text-base font-bold uppercase tracking-[0.26em] sm:text-xl" style={{ color: accent }}>{operator.enName}</span>
             <span className="h-3.5 w-px bg-ef-line" />
-            <span className="text-sm font-black text-ef-ink sm:text-base">{role} · {elementLabel}</span>
+            <span className="text-sm font-black text-ef-ink sm:text-lg">{role} · {elementLabel}</span>
           </div>
 
-          {/* 정체성 칩 (산업 라인) */}
-          <div className="mt-5 inline-grid w-full max-w-[420px] grid-cols-3 gap-px border border-ef-line bg-ef-line" style={CUT}>
+          {/* 정체성 칩 */}
+          <div className="mt-5 inline-grid w-full max-w-[440px] grid-cols-3 gap-px border border-ef-line bg-ef-line" style={CUT}>
             {[
               ["CLASS", classLabelMap[operator.class] ?? operator.class],
               ["WEAPON", weaponLabelMap[operator.weapon] ?? operator.weapon],
               ["MAIN", operator.mainStatLabel || "-"],
             ].map(([en, value]) => (
-              <div key={en} className="bg-ef-card/90 px-3 py-2.5 backdrop-blur">
+              <div key={en} className="bg-ef-card/92 px-3 py-2.5 backdrop-blur">
                 <MetaLabel>{en}</MetaLabel>
                 <p className="mt-0.5 truncate text-sm font-black text-ef-ink">{value}</p>
               </div>
             ))}
           </div>
+
+          {/* 추천 빌드 (칩 다음) */}
+          <div className="mt-4 w-full max-w-[560px]">{RecommendedBuild}</div>
+
+          {/* Growth (추천빌드 다음) */}
+          <div className="mt-3 w-full max-w-[440px]">{GrowthStrip}</div>
         </div>
 
-        {/* 스크롤 큐 */}
         <div className="pointer-events-none absolute bottom-3 left-1/2 z-10 hidden -translate-x-1/2 flex-col items-center gap-1 lg:flex">
           <span className="font-mono text-[9px] uppercase tracking-[0.3em] text-ef-muted">scroll</span>
           <span className="h-4 w-px" style={{ background: accent }} />
         </div>
       </section>
 
-      {/* ============ 본문 (캐릭터 다음) ============ */}
+      {/* ============ 본문 (스크롤) ============ */}
       <div className="relative z-10 mx-auto max-w-[1840px] px-3 pb-[calc(5.5rem+env(safe-area-inset-bottom))] sm:px-6 lg:px-7 lg:pb-12">
-        {/* OVERVIEW 밴드: GROWTH + RECOMMENDED BUILD */}
-        <div className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
-          <div className="border border-ef-line bg-ef-card p-3.5" style={CUT}>
-            <div className="flex items-center gap-1.5">
-              <span className="h-2 w-2" style={{ background: accent }} />
-              <span className="font-mono text-[10px] font-black uppercase tracking-[0.22em] text-ef-muted">Growth</span>
-            </div>
-            <div className="mt-2 grid grid-cols-3 gap-2">
-              {[
-                ["MAX LV", String(maxLevel)],
-                ["정예화", `${operator.elite.length}단계`],
-                ["주 능력치", operator.mainStatLabel || "-"],
-              ].map(([en, value]) => (
-                <div key={en}>
-                  <MetaLabel>{en}</MetaLabel>
-                  <p className="mt-0.5 truncate text-lg font-black" style={{ color: accent }}>{value}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="overflow-hidden border bg-ef-card" style={{ ...CUT, borderColor: `${accent}44` }}>
-            <span className="block h-0.5 w-full" style={{ background: `linear-gradient(90deg, ${accent}, transparent 55%)` }} />
-            <div className="p-3.5">
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-sm" style={{ color: accent }}>★</span>
-                  <span className="font-mono text-[10px] font-black uppercase tracking-[0.22em] text-ef-accent-soft">Recommended Build</span>
-                </div>
-                <button type="button" onClick={() => setTab("build")} className="font-mono text-[10px] font-black uppercase tracking-wide text-ef-muted transition hover:text-ef-accent-soft">전체 →</button>
-              </div>
-              {topBuildLoading ? (
-                <div className="mt-3 h-12 animate-pulse bg-ef-card2" />
-              ) : topBuild ? (
-                <button type="button" onClick={() => setTab("build")} className="mt-3 flex w-full flex-wrap items-center gap-x-5 gap-y-3 border border-ef-line bg-ef-card2 p-3 text-left transition hover:border-ef-accent/40" style={CUT}>
-                  <span className="flex items-center gap-2">
-                    <span className="relative h-9 w-9 shrink-0 overflow-hidden border border-ef-line bg-black">
-                      {topWeapon?.image ? <Image src={topWeapon.image} alt="" fill sizes="36px" className="object-cover" /> : null}
-                    </span>
-                    <span>
-                      <MetaLabel>Weapon</MetaLabel>
-                      <span className="block truncate text-xs font-black text-ef-ink">{topWeapon?.name ?? "—"}</span>
-                    </span>
-                  </span>
-                  <span>
-                    <MetaLabel>Attribute</MetaLabel>
-                    <span className="block truncate text-xs font-black" style={{ color: accent }}>{operator.mainStatLabel || "-"}{operator.subStatLabel ? ` · ${operator.subStatLabel}` : ""}</span>
-                  </span>
-                  <span>
-                    <MetaLabel>Party</MetaLabel>
-                    <span className="mt-0.5 flex items-center gap-1">
-                      {partySlugs.map((slug) => {
-                        const img = operatorBySlug.get(slug)?.avatar ?? `/operators/${slug}/avatar.webp`;
-                        return (
-                          <span key={slug} className="relative h-7 w-7 shrink-0 overflow-hidden border border-ef-line bg-black">
-                            <Image src={img} alt="" fill sizes="28px" className="object-cover object-top" />
-                          </span>
-                        );
-                      })}
-                    </span>
-                  </span>
-                  <span className="ml-auto shrink-0 text-sm font-black" style={{ color: accent }}>♥ {topBuild.likeCount ?? 0}</span>
-                </button>
-              ) : (
-                <div className="mt-3 border border-ef-line bg-ef-card2 p-3 text-center" style={CUT}>
-                  <p className="text-xs text-ef-muted">아직 추천 빌드가 없습니다.</p>
-                  <Link href="/settings/party" className="mt-2 inline-flex px-3 py-1.5 text-xs font-black text-black" style={{ background: accent }}>첫 빌드 등록</Link>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* 탭바 (모바일 하단 고정 / PC sticky) */}
-        <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-ef-line bg-black/92 px-2 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:sticky lg:top-0 lg:z-30 lg:mt-4 lg:border lg:bg-black/85 lg:px-1.5 lg:pb-0">
+        <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-ef-line bg-black/92 px-2 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:sticky lg:top-0 lg:z-30 lg:mt-2 lg:border lg:bg-black/85 lg:px-1.5 lg:pb-0">
           <div className="mx-auto flex max-w-[1840px] items-center gap-1 overflow-x-auto py-1.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {tabs.map((item, index) => {
               const isActive = item.id === tab;
@@ -343,27 +350,40 @@ export default function OperatorDetailView({
           </div>
         </nav>
 
-        {/* 탭 콘텐츠 */}
         <div className="mt-4 grid min-w-0 gap-4">
           {tab === "data" ? (
-            <>
-              <div>
-                <SubHeader en="Attribute Data" accent={accent} />
-                <OperatorLevelPanel name={operator.name} enName={operator.enName} avatar={operator.avatar} element={operator.element} operatorClass={operator.class} weapon={operator.weapon} rarity={operator.rarity} mainStatLabel={operator.mainStatLabel ?? ""} subStatLabel={operator.subStatLabel ?? ""} levelStats={operator.levelStats} />
+            <div>
+              {/* DATA 서브탭 — 능력치 / 신뢰도 / 잠재 (스크롤 분산) */}
+              <div className="mb-3 flex gap-1.5 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                {dataSubs.filter((s) => s.show).map((s) => {
+                  const isActive = s.id === dataSub;
+                  return (
+                    <button key={s.id} type="button" onClick={() => setDataSub(s.id)} className="inline-flex min-h-9 shrink-0 items-center border px-4 text-xs font-black transition" style={{ ...CUT, background: isActive ? `${accent}1f` : "#0b0b0b", borderColor: isActive ? accent : "#202020", color: isActive ? "#fff" : "#a0a0a0" }}>
+                      {s.label}
+                    </button>
+                  );
+                })}
               </div>
-              {operator.trustBonus.length ? (
-                <div>
+
+              {dataSub === "attr" ? (
+                <>
+                  <SubHeader en="Attribute Data" accent={accent} />
+                  <OperatorLevelPanel name={operator.name} enName={operator.enName} avatar={operator.avatar} element={operator.element} operatorClass={operator.class} weapon={operator.weapon} rarity={operator.rarity} mainStatLabel={operator.mainStatLabel ?? ""} subStatLabel={operator.subStatLabel ?? ""} levelStats={operator.levelStats} />
+                </>
+              ) : null}
+              {dataSub === "trust" && operator.trustBonus.length ? (
+                <>
                   <SubHeader en="Trust Data" accent={accent} />
                   <TrustBonusPanel items={operator.trustBonus} />
-                </div>
+                </>
               ) : null}
-              {operator.potential.length ? (
-                <div>
+              {dataSub === "potential" && operator.potential.length ? (
+                <>
                   <SubHeader en="Potential Data" accent={accent} />
                   <PotentialPanel items={operator.potential} />
-                </div>
+                </>
               ) : null}
-            </>
+            </div>
           ) : null}
 
           {tab === "skill" ? (
