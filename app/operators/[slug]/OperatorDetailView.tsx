@@ -197,7 +197,24 @@ export default function OperatorDetailView({
             <span className="pointer-events-none absolute left-3 top-3 h-7 w-7 border-l-2 border-t-2" style={{ borderColor: `${elColor}99` }} />
             <span className="pointer-events-none absolute right-3 top-3 h-7 w-7 border-r-2 border-t-2" style={{ borderColor: `${elColor}55` }} />
 
-            {/* 정체성만: 속성·희귀도·클래스 · 이름 · 영문 · 역할 */}
+            {/* TACTICAL BRIEFING — 상단 좌측 HUD 캡슐 (빈 공간 활용) */}
+            <div className="absolute left-4 top-12 z-10 grid w-[190px] gap-2 sm:left-6 lg:left-8 lg:top-14 lg:w-[220px]">
+              {([
+                ["IDENTITY", `${elementLabel} · ${classLabelMap[operator.class] ?? operator.class} · ${weaponLabelMap[operator.weapon] ?? operator.weapon}`],
+                ["ROLE", role],
+                ["GROWTH", `MAX ${maxLevel} · 정예 ${operator.elite.length}`],
+              ] as const).map(([label, value]) => (
+                <div key={label} className="border border-ef-line bg-ef-card/82 px-3 py-2 backdrop-blur" style={CUT}>
+                  <div className="flex items-center gap-1.5">
+                    <span className="h-1.5 w-1.5" style={{ background: PRIMARY }} />
+                    <Meta>{label}</Meta>
+                  </div>
+                  <p className="mt-1 truncate text-xs font-black text-ef-ink">{value}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* 정체성: 속성·희귀도·클래스 · 이름 · 영문 · 역할 */}
             <div className="relative z-10 mt-auto p-5 lg:p-8">
               <div className="mb-2.5 flex items-center gap-2.5">
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[12px] font-black" style={{ ...CUT, background: elColor, color: "#050505" }}>
@@ -240,39 +257,42 @@ export default function OperatorDetailView({
           <div className="mt-4 min-w-0">
             {/* ===== BUILD MODULE ===== */}
             {activeModule === "build" ? (
-              <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,0.82fr)]">
-                {/* LEFT: FEATURED → PARTY → ROTATION */}
+              <div className="grid gap-4 xl:grid-cols-2">
+                {/* LEFT: FEATURED → CREATE → PARTY */}
                 <div className="grid content-start gap-4">
-                  {/* FEATURED BUILD — 고밀도·저높이 */}
+                  {/* FEATURED BUILD — 고밀도(전 정보) */}
                   <div>
                     <SectionLabel en="Featured Build" />
                     <div className="overflow-hidden border bg-ef-card" style={{ ...CUT, borderColor: `${PRIMARY}55` }}>
                       <span className="block h-0.5 w-full" style={{ background: `linear-gradient(90deg, ${PRIMARY}, transparent 55%)` }} />
                       {buildsLoading ? (
-                        <div className="m-3 h-24 animate-pulse bg-ef-card2" />
+                        <div className="m-3 h-28 animate-pulse bg-ef-card2" />
                       ) : featured ? (
                         <div className="p-3.5">
                           <div className="flex items-center justify-between gap-2">
                             <p className="min-w-0 truncate text-sm font-black text-ef-ink">{featured.title}</p>
                             <span className="shrink-0 text-sm font-black" style={{ color: PRIMARY }}>♥ {featured.likeCount ?? 0}</span>
                           </div>
-                          <div className="mt-2.5 grid grid-cols-2 gap-x-3 gap-y-2 sm:grid-cols-4">
-                            <div className="col-span-2 flex items-center gap-2">
+                          <div className="mt-2.5 grid grid-cols-2 gap-x-3 gap-y-2.5">
+                            <div className="flex items-center gap-2">
                               <span className="relative h-9 w-9 shrink-0 overflow-hidden border border-ef-line bg-black">{featWeapon?.image ? <Image src={featWeapon.image} alt="" fill sizes="36px" className="object-cover" /> : null}</span>
                               <span className="min-w-0"><Meta>Weapon</Meta><span className="block truncate text-xs font-black text-ef-ink">{featWeapon?.name ?? "—"}</span></span>
                             </div>
-                            <div className="col-span-2 flex items-center gap-1.5">
-                              <span className="flex shrink-0 items-center gap-1">
-                                {featGears.length ? featGears.map((g) => (<span key={g.slug} className="relative h-9 w-9 overflow-hidden border border-ef-line bg-black"><Image src={g.image} alt="" fill sizes="36px" className="object-cover" /></span>)) : <span className="text-xs font-black text-ef-muted">—</span>}
-                              </span>
+                            <div className="flex items-center gap-1.5">
+                              <span className="flex shrink-0 items-center gap-1">{featGears.length ? featGears.map((g) => (<span key={g.slug} className="relative h-9 w-9 overflow-hidden border border-ef-line bg-black"><Image src={g.image} alt="" fill sizes="36px" className="object-cover" /></span>)) : <span className="text-xs font-black text-ef-muted">—</span>}</span>
                               <span className="min-w-0"><Meta>Gear Set</Meta><span className="block truncate text-xs font-black" style={{ color: PRIMARY }}>{featSetName ?? "세트 없음"}</span></span>
                             </div>
                             <div><Meta>Main</Meta><p className="text-xs font-black" style={{ color: PRIMARY }}>{operator.mainStatLabel || "-"}</p></div>
                             <div><Meta>Sub</Meta><p className="text-xs font-black text-ef-ink">{operator.subStatLabel || "-"}</p></div>
-                            <div className="col-span-2 flex items-center justify-end gap-2">
-                              <Meta>by {featAuthor}</Meta>
-                              <Link href={`/settings/${featured.id}`} className="font-mono text-[10px] font-black uppercase tracking-wide" style={{ color: PRIMARY }}>상세 →</Link>
+                            <div>
+                              <Meta>Party</Meta>
+                              <span className="mt-1 flex items-center gap-1">{featParty.map((s) => (<span key={s} className="relative h-7 w-7 overflow-hidden border border-ef-line bg-black"><Image src={operatorBySlug.get(s)?.avatar ?? `/operators/${s}/avatar.webp`} alt="" fill sizes="28px" className="object-cover object-top" /></span>))}</span>
                             </div>
+                            <div><Meta>Cycle</Meta><p className="mt-1 text-xs font-black" style={{ color: featCycle.length ? PRIMARY : "#a0a0a0" }}>{featCycle.length ? `${featCycle.length}-STEP` : "없음"}</p></div>
+                          </div>
+                          <div className="mt-3 flex items-center justify-between border-t border-ef-line pt-2.5">
+                            <Meta>by {featAuthor}</Meta>
+                            <Link href={`/settings/${featured.id}`} className="font-mono text-[10px] font-black uppercase tracking-wide" style={{ color: PRIMARY }}>빌드 상세 →</Link>
                           </div>
                         </div>
                       ) : (
@@ -281,97 +301,96 @@ export default function OperatorDetailView({
                     </div>
                   </div>
 
-                  {/* PARTY COMPOSITION */}
+                  {/* CREATE CTA — FEATURED 바로 아래 */}
+                  <Link href="/settings/party" className="flex min-h-12 items-center justify-center border text-sm font-black text-black transition hover:brightness-110" style={{ ...CUT, background: PRIMARY }}>+ 내 세팅 만들기</Link>
+
+                  {/* PARTY COMPOSITION — 슬롯 UI */}
                   <div>
                     <SectionLabel en="Party Composition" />
-                    <div className="border border-ef-line bg-ef-card p-3.5" style={CUT}>
-                      {featured && featParty.length > 1 ? (
-                        <div className="flex flex-wrap gap-3">
-                          {featParty.map((slug) => {
-                            const m = operatorBySlug.get(slug);
-                            return (
-                              <span key={slug} className="flex items-center gap-2">
-                                <span className="relative h-10 w-10 shrink-0 overflow-hidden border border-ef-line bg-black"><Image src={m?.avatar ?? `/operators/${slug}/avatar.webp`} alt="" fill sizes="40px" className="object-cover object-top" /></span>
-                                <span className="text-xs font-black text-ef-ink">{m?.name ?? slug}</span>
-                              </span>
-                            );
-                          })}
-                        </div>
-                      ) : (
-                        <p className="text-xs text-ef-muted">단일 운용 빌드 (파티 미지정).</p>
-                      )}
+                    <div className="grid grid-cols-4 gap-2">
+                      {(["메인", "서브 1", "서브 2", "서브 3"] as const).map((label, i) => {
+                        const slug = featParty[i];
+                        const m = slug ? operatorBySlug.get(slug) : undefined;
+                        return (
+                          <div key={label} className="border border-ef-line bg-ef-card2 p-2 text-center" style={CUT}>
+                            <span className="relative mx-auto block h-12 w-12 overflow-hidden border border-ef-line bg-black sm:h-14 sm:w-14">
+                              {slug ? <Image src={m?.avatar ?? `/operators/${slug}/avatar.webp`} alt="" fill sizes="56px" className="object-cover object-top" /> : <span className="flex h-full w-full items-center justify-center text-lg font-black text-ef-muted">+</span>}
+                            </span>
+                            <p className="mt-1.5 truncate font-mono text-[9px] font-black uppercase tracking-wide" style={{ color: i === 0 ? PRIMARY : "#a0a0a0" }}>{label}</p>
+                            <p className="truncate text-[10px] font-bold text-ef-muted">{m?.name ?? "빈 슬롯"}</p>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
+                </div>
 
-                  {/* ROTATION / CYCLE */}
+                {/* RIGHT: ROTATION → COMMUNITY */}
+                <div className="grid content-start gap-4">
+                  {/* ROTATION / CYCLE — 전술 플로우 */}
                   <div>
                     <SectionLabel en="Rotation / Cycle" />
                     <div className="border border-ef-line bg-ef-card p-3.5" style={CUT}>
                       {featCycle.length ? (
-                        <div className="flex flex-wrap items-center gap-1.5">
-                          {featCycle.slice(0, 10).map((_, i) => (
-                            <span key={i} className="inline-flex items-center">
-                              <span className="inline-flex h-7 min-w-7 items-center justify-center border px-1.5 font-mono text-xs font-black" style={{ borderColor: `${PRIMARY}66`, color: PRIMARY, background: `${PRIMARY}12` }}>{i + 1}</span>
-                              {i < Math.min(featCycle.length, 10) - 1 ? <span className="px-1 text-ef-muted">›</span> : null}
+                        <div className="flex flex-wrap items-center gap-x-1 gap-y-2">
+                          {featCycle.slice(0, 12).map((_, i, arr) => (
+                            <span key={i} className="flex items-center">
+                              <span className="inline-flex h-9 items-center gap-1.5 border px-2.5 font-mono text-[11px] font-black" style={{ borderColor: `${PRIMARY}66`, background: `${PRIMARY}14`, color: "#fff" }}>
+                                <span style={{ color: PRIMARY }}>{String(i + 1).padStart(2, "0")}</span> STEP
+                              </span>
+                              {i < arr.length - 1 ? <span className="px-1 font-black" style={{ color: PRIMARY }}>→</span> : null}
                             </span>
                           ))}
                           <span className="ml-1 font-mono text-[10px] text-ef-muted">{featCycle.length}-STEP</span>
                         </div>
                       ) : (
-                        <p className="text-xs text-ef-muted">{featured ? "사이클 정보는 빌드 상세에서 확인하세요." : "—"}</p>
+                        <p className="py-3 text-center text-xs font-bold text-ef-muted">등록된 사이클 없음</p>
                       )}
                     </div>
                   </div>
-                </div>
 
-                {/* RIGHT: COMMUNITY BUILDS (PC 공간 활용) */}
-                <div>
-                  <SectionLabel en="Community Builds" />
-                  {buildsLoading ? (
-                    <div className="grid gap-2">{[0, 1, 2, 3].map((i) => <div key={i} className="h-16 animate-pulse bg-ef-card2" style={CUT} />)}</div>
-                  ) : builds.length > 1 ? (
-                    <div className="grid gap-2">
-                      {builds.slice(1).map((b) => {
-                        const w = b.slotsSummary?.mainWeaponSlug ? weaponBySlug.get(b.slotsSummary.mainWeaponSlug) : undefined;
-                        const party = (b.slotsSummary?.memberOperatorSlugs ?? []).slice(0, 3);
-                        return (
-                          <Link key={b.id} href={`/settings/${b.id}`} className="group flex items-center gap-3 border border-ef-line bg-ef-card p-2.5 transition hover:border-ef-accent/40" style={CUT}>
-                            <span className="relative h-11 w-11 shrink-0 overflow-hidden border border-ef-line bg-black">{w?.image ? <Image src={w.image} alt="" fill sizes="44px" className="object-cover" /> : null}</span>
-                            <span className="min-w-0 flex-1">
-                              <span className="block truncate text-sm font-black text-ef-ink">{b.title}</span>
-                              <span className="flex items-center gap-2 text-[11px] text-ef-muted">
-                                <span className="truncate">{b.userNickname ?? b.nickname ?? "익명"}</span>
-                                <span style={{ color: PRIMARY }}>· {operator.mainStatLabel || "-"}</span>
+                  {/* COMMUNITY BUILDS — 강화 */}
+                  <div>
+                    <SectionLabel en="Community Builds" />
+                    {buildsLoading ? (
+                      <div className="grid gap-2">{[0, 1, 2, 3].map((i) => <div key={i} className="h-16 animate-pulse bg-ef-card2" style={CUT} />)}</div>
+                    ) : builds.length > 1 ? (
+                      <div className="grid gap-2">
+                        {builds.slice(1).map((b) => {
+                          const w = b.slotsSummary?.mainWeaponSlug ? weaponBySlug.get(b.slotsSummary.mainWeaponSlug) : undefined;
+                          const party = (b.slotsSummary?.memberOperatorSlugs ?? []).slice(0, 3);
+                          const isParty = b.type === "party" || party.length > 0;
+                          return (
+                            <Link key={b.id} href={`/settings/${b.id}`} className="group flex items-center gap-3 border border-ef-line bg-ef-card p-2.5 transition hover:border-ef-accent/40" style={CUT}>
+                              <span className="relative h-11 w-11 shrink-0 overflow-hidden border border-ef-line bg-black">{w?.image ? <Image src={w.image} alt="" fill sizes="44px" className="object-cover" /> : null}</span>
+                              <span className="min-w-0 flex-1">
+                                <span className="flex items-center gap-1.5">
+                                  <span className="truncate text-sm font-black text-ef-ink">{b.title}</span>
+                                  <span className="shrink-0 border border-ef-line px-1 font-mono text-[8px] font-black text-ef-muted">{isParty ? "PARTY" : "SOLO"}</span>
+                                </span>
+                                <span className="flex items-center gap-2 text-[11px] text-ef-muted">
+                                  <span className="truncate">{b.userNickname ?? b.nickname ?? "익명"}</span>
+                                  <span style={{ color: PRIMARY }}>· {operator.mainStatLabel || "-"}</span>
+                                </span>
                               </span>
-                            </span>
-                            {/* 호버 시 파티 노출 */}
-                            <span className="hidden shrink-0 items-center gap-0.5 group-hover:flex">
-                              {party.map((s) => (<span key={s} className="relative h-6 w-6 overflow-hidden border border-ef-line bg-black"><Image src={operatorBySlug.get(s)?.avatar ?? `/operators/${s}/avatar.webp`} alt="" fill sizes="24px" className="object-cover object-top" /></span>))}
-                            </span>
-                            <span className="shrink-0 text-xs font-black group-hover:hidden" style={{ color: PRIMARY }}>♥ {b.likeCount ?? 0}</span>
-                          </Link>
-                        );
-                      })}
-                      <Link href={`/settings?operators=${encodeURIComponent(operator.slug)}`} className="mt-1 flex min-h-11 items-center justify-center border border-ef-line bg-ef-card2 text-xs font-black text-ef-muted transition hover:text-ef-accent-soft" style={CUT}>커뮤니티 빌드 전체 →</Link>
-                    </div>
-                  ) : (
-                    <Placeholder title="No Community Builds" note="이 오퍼레이터의 커뮤니티 빌드가 아직 없습니다." />
-                  )}
+                              <span className="hidden shrink-0 items-center gap-0.5 group-hover:flex">{party.map((s) => (<span key={s} className="relative h-6 w-6 overflow-hidden border border-ef-line bg-black"><Image src={operatorBySlug.get(s)?.avatar ?? `/operators/${s}/avatar.webp`} alt="" fill sizes="24px" className="object-cover object-top" /></span>))}</span>
+                              <span className="shrink-0 text-xs font-black group-hover:hidden" style={{ color: PRIMARY }}>♥ {b.likeCount ?? 0}</span>
+                            </Link>
+                          );
+                        })}
+                        <Link href={`/settings?operators=${encodeURIComponent(operator.slug)}`} className="mt-1 flex min-h-11 items-center justify-center border border-ef-line bg-ef-card2 text-xs font-black text-ef-muted transition hover:text-ef-accent-soft" style={CUT}>커뮤니티 빌드 전체 →</Link>
+                      </div>
+                    ) : (
+                      <Placeholder title="No Community Builds" note="이 오퍼레이터의 커뮤니티 빌드가 아직 없습니다." />
+                    )}
+                  </div>
                 </div>
-
-                {/* CREATE BUILD CTA (최하단, 전체 폭) */}
-                <Link href="/settings/party" className="flex min-h-12 items-center justify-center border text-sm font-black text-black transition hover:brightness-110 xl:col-span-2" style={{ ...CUT, background: PRIMARY }}>+ 내 세팅 만들기</Link>
               </div>
             ) : null}
 
             {/* ===== DATA MODULE (성장정보 이동: MAX LV/정예화/주능력치) ===== */}
             {activeModule === "data" ? (
               <div>
-                <div className="mb-3 grid grid-cols-3 gap-px border border-ef-line bg-ef-line" style={CUT}>
-                  {[["MAX LV", String(maxLevel)], ["정예화", `${operator.elite.length}단계`], ["주 능력치", operator.mainStatLabel || "-"]].map(([en, v]) => (
-                    <div key={en} className="bg-ef-card px-3 py-2.5"><Meta>{en}</Meta><p className="mt-0.5 truncate text-base font-black" style={{ color: PRIMARY }}>{v}</p></div>
-                  ))}
-                </div>
                 <div className="mb-3 flex gap-1.5 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                   {dataSubs.filter((s) => s.show).map((s) => {
                     const isActive = s.id === dataSub;
