@@ -4,6 +4,7 @@ import {
   operatorDetails,
 } from "@/data/operators-detail-data";
 import { weaponDetails } from "@/data/weapons-detail-data";
+import { gearSummaries } from "@/data/gear-summary-data";
 
 import OperatorDetailView from "./OperatorDetailView";
 
@@ -33,12 +34,19 @@ export default async function OperatorDetailPage({
     name: item.name,
     image: item.image,
   }));
+  const gears = gearSummaries.map((item) => ({
+    slug: item.slug,
+    name: item.name,
+    setName: item.setName,
+    image: item.image,
+  }));
 
   return (
     <OperatorDetailView
       operator={operator}
       operators={operators}
       weapons={weapons}
+      gears={gears}
     />
   );
 }
