@@ -189,50 +189,36 @@ export default function OperatorDetailView({
               {isAdminSlider ? (
                 <HeroSlider images={adminSlides} alt={operator.name} enName={operator.enName} />
               ) : (
-                <Image src={heroImage} alt={operator.name} fill priority sizes="(max-width:1024px) 100vw, 820px" className="object-cover object-[center_10%]" />
+                <Image src={heroImage} alt={operator.name} fill priority sizes="(max-width:1024px) 100vw, 900px" className="scale-[1.08] object-cover object-[center_6%]" />
               )}
             </div>
-            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,5,5,0.4)_0%,transparent_30%,transparent_56%,rgba(5,5,5,0.7)_82%,#0b0b0b_100%)]" />
+            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,5,5,0.3)_0%,transparent_22%,transparent_64%,rgba(5,5,5,0.74)_87%,#0b0b0b_100%)]" />
             <div className="pointer-events-none absolute inset-0 opacity-[0.05] [background-image:linear-gradient(#fff_1px,transparent_1px),linear-gradient(90deg,#fff_1px,transparent_1px)] [background-size:50px_50px]" />
             <span className="pointer-events-none absolute left-3 top-3 h-7 w-7 border-l-2 border-t-2" style={{ borderColor: `${elColor}99` }} />
             <span className="pointer-events-none absolute right-3 top-3 h-7 w-7 border-r-2 border-t-2" style={{ borderColor: `${elColor}55` }} />
 
-            {/* TACTICAL BRIEFING — 상단 좌측 HUD 캡슐 (빈 공간 활용) */}
-            <div className="absolute left-4 top-12 z-10 grid w-[190px] gap-2 sm:left-6 lg:left-8 lg:top-14 lg:w-[220px]">
-              {([
-                ["IDENTITY", `${elementLabel} · ${classLabelMap[operator.class] ?? operator.class} · ${weaponLabelMap[operator.weapon] ?? operator.weapon}`],
-                ["ROLE", role],
-                ["GROWTH", `MAX ${maxLevel} · 정예 ${operator.elite.length}`],
-              ] as const).map(([label, value]) => (
-                <div key={label} className="border border-ef-line bg-ef-card/82 px-3 py-2 backdrop-blur" style={CUT}>
-                  <div className="flex items-center gap-1.5">
-                    <span className="h-1.5 w-1.5" style={{ background: PRIMARY }} />
-                    <Meta>{label}</Meta>
-                  </div>
-                  <p className="mt-1 truncate text-xs font-black text-ef-ink">{value}</p>
+            {/* 콘텐츠: TACTICAL BRIEFING CLUSTER(이름 위) + 이름 — 하단 25~35% 영역 */}
+            <div className="relative z-10 mt-auto p-5 lg:px-8 lg:pb-[13vh]">
+              {/* 단일 Briefing Cluster (이름 바로 위) */}
+              <div className="mb-4 inline-grid w-full max-w-[440px] gap-px border border-ef-line bg-ef-card/82 backdrop-blur" style={CUT}>
+                <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 px-3 py-2">
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-black" style={{ background: elColor, color: "#050505" }}>
+                    <span className="relative inline-block h-3 w-3"><Image src={elementIcon} alt="" fill sizes="12px" className="object-contain" /></span>{elementLabel}
+                  </span>
+                  <Meta>IDENTITY</Meta>
+                  <span className="text-xs font-black text-ef-ink">{classLabelMap[operator.class] ?? operator.class} · {weaponLabelMap[operator.weapon] ?? operator.weapon}</span>
+                  <span className="ml-auto text-sm tracking-widest text-ef-accent">{"★".repeat(operator.rarity)}</span>
                 </div>
-              ))}
-            </div>
-
-            {/* 정체성: 속성·희귀도·클래스 · 이름 · 영문 · 역할 */}
-            <div className="relative z-10 mt-auto p-5 lg:p-8">
-              <div className="mb-2.5 flex items-center gap-2.5">
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[12px] font-black" style={{ ...CUT, background: elColor, color: "#050505" }}>
-                  <span className="relative inline-block h-4 w-4"><Image src={elementIcon} alt="" fill sizes="16px" className="object-contain" /></span>
-                  {elementLabel}
-                </span>
-                <span className="text-base font-black tracking-widest text-ef-accent">{"★".repeat(operator.rarity)}</span>
-                <span className="h-3 w-px bg-ef-line" />
-                <span className="font-mono text-xs font-bold uppercase tracking-[0.2em] text-ef-muted">{classLabelMap[operator.class] ?? operator.class}</span>
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-ef-line px-3 py-2">
+                  <Meta>ROLE</Meta><span className="text-xs font-black text-ef-ink">{role}</span>
+                  <span className="mx-1.5 h-3 w-px bg-ef-line" />
+                  <Meta>GROWTH</Meta><span className="text-xs font-black" style={{ color: PRIMARY }}>MAX {maxLevel} · 정예 {operator.elite.length}</span>
+                </div>
               </div>
               <h1 className="break-keep text-[clamp(54px,12vw,120px)] font-black leading-[0.84] tracking-tight text-white drop-shadow-[0_8px_34px_rgba(0,0,0,0.92)]">
                 {operator.name}
               </h1>
-              <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1">
-                <span className="font-mono text-base font-bold uppercase tracking-[0.26em] sm:text-lg" style={{ color: elColor }}>{operator.enName}</span>
-                <span className="h-3.5 w-px bg-ef-line" />
-                <span className="text-base font-black text-ef-ink">{role} · {elementLabel}</span>
-              </div>
+              <p className="mt-2.5 font-mono text-base font-bold uppercase tracking-[0.26em] sm:text-lg" style={{ color: elColor }}>{operator.enName}</p>
             </div>
           </section>
         </div>
@@ -257,9 +243,9 @@ export default function OperatorDetailView({
           <div className="mt-4 min-w-0">
             {/* ===== BUILD MODULE ===== */}
             {activeModule === "build" ? (
-              <div className="grid gap-4 xl:grid-cols-2">
-                {/* LEFT: FEATURED → CREATE → PARTY */}
-                <div className="grid content-start gap-4">
+              <div className="grid gap-4 xl:grid-cols-2 xl:items-start">
+                {/* FEATURED + CREATE — 2x2 좌상 */}
+                <div className="grid content-start gap-4 xl:order-1">
                   {/* FEATURED BUILD — 고밀도(전 정보) */}
                   <div>
                     <SectionLabel en="Featured Build" />
@@ -303,8 +289,10 @@ export default function OperatorDetailView({
 
                   {/* CREATE CTA — FEATURED 바로 아래 */}
                   <Link href="/settings/party" className="flex min-h-12 items-center justify-center border text-sm font-black text-black transition hover:brightness-110" style={{ ...CUT, background: PRIMARY }}>+ 내 세팅 만들기</Link>
+                </div>
 
-                  {/* PARTY COMPOSITION — 슬롯 UI */}
+                {/* PARTY COMPOSITION — 2x2 좌하 */}
+                <div className="xl:order-3">
                   <div>
                     <SectionLabel en="Party Composition" />
                     <div className="grid grid-cols-4 gap-2">
@@ -325,8 +313,8 @@ export default function OperatorDetailView({
                   </div>
                 </div>
 
-                {/* RIGHT: ROTATION → COMMUNITY */}
-                <div className="grid content-start gap-4">
+                {/* ROTATION — 2x2 우하 */}
+                <div className="xl:order-4">
                   {/* ROTATION / CYCLE — 전술 플로우 */}
                   <div>
                     <SectionLabel en="Rotation / Cycle" />
@@ -348,7 +336,10 @@ export default function OperatorDetailView({
                       )}
                     </div>
                   </div>
+                </div>
 
+                {/* COMMUNITY — 2x2 우상 */}
+                <div className="xl:order-2">
                   {/* COMMUNITY BUILDS — 강화 */}
                   <div>
                     <SectionLabel en="Community Builds" />
