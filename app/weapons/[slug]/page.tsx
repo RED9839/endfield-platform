@@ -137,7 +137,7 @@ export default async function WeaponDetailPage({
         </div>
       </div>
 
-      <div className="relative z-10 mx-auto flex max-w-[1280px] flex-col gap-4 px-3 pb-16 sm:px-6">
+      <div className="relative z-10 mx-auto flex max-w-[1280px] flex-col gap-3 px-3 pb-16 sm:gap-4 sm:px-6">
         {/* ===== 요약 패널 — 좌 이미지 / 우 정보 (모바일: 이미지 위, 정보 아래) ===== */}
         <section className="overflow-hidden border border-ef-line bg-ef-card2" style={CUT}>
           <span className="block h-0.5 w-full" style={{ background: `linear-gradient(90deg, ${PRIMARY}, transparent 55%)` }} />
@@ -156,10 +156,9 @@ export default async function WeaponDetailPage({
 
               <div className="mt-3 flex flex-wrap gap-1.5">
                 <Badge icon={rarityIcon} tone="accent">{rarityLabelMap[weapon.rarity]}</Badge>
-                <Badge icon={typeIcon}>{typeLabel}</Badge>
-                {weapon.series ? <Badge tone="accent">{weapon.series}</Badge> : null}
               </div>
 
+              {/* 정보 카드 — 주/부 능력치 + 무기 유형 + 시리즈(뱃지 → 카드로 존재감 강화) */}
               <div className="mt-3 grid grid-cols-2 gap-2">
                 <div className="border border-ef-line bg-ef-card p-2.5" style={CUT_SM}>
                   <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">주 능력치</p>
@@ -168,6 +167,17 @@ export default async function WeaponDetailPage({
                 <div className="border border-ef-line bg-ef-card p-2.5" style={CUT_SM}>
                   <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">부 능력치</p>
                   <p className="mt-0.5 truncate text-sm font-black text-ef-ink">{weapon.subStatLabel ?? "-"}</p>
+                </div>
+                <div className="flex items-center gap-2 border border-ef-line bg-ef-card p-2.5" style={CUT_SM}>
+                  {typeIcon ? <span className="relative h-5 w-5 shrink-0"><Image src={typeIcon} alt="" fill sizes="20px" className="object-contain" /></span> : null}
+                  <span className="min-w-0">
+                    <span className="block font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">무기 유형</span>
+                    <span className="mt-0.5 block truncate text-sm font-black text-ef-ink">{typeLabel}</span>
+                  </span>
+                </div>
+                <div className="border border-ef-line bg-ef-card p-2.5" style={CUT_SM}>
+                  <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">시리즈</p>
+                  <p className="mt-0.5 truncate text-sm font-black" style={{ color: PRIMARY }}>{weapon.series ?? "-"}</p>
                 </div>
               </div>
 
@@ -183,19 +193,30 @@ export default async function WeaponDetailPage({
           <section className="min-w-0">
             <SectionLabel en="Weapon Stats" />
             <div className="overflow-hidden border border-ef-line bg-ef-card2 p-3 sm:p-4" style={CUT}>
-              {/* 공격력 / 주 능력치 / 부 능력치 한 카드에 정리 */}
-              <div className="mb-3 grid grid-cols-3 gap-2 border-b border-ef-line pb-3">
+              {/* 공격력 / 주 / 부 / 무기 유형 / 시리즈 — 5개 스탯 카드 */}
+              <div className="mb-3 grid grid-cols-2 gap-2 border-b border-ef-line pb-3 min-[520px]:grid-cols-3 lg:grid-cols-5">
                 <div className="border border-ef-line bg-ef-card p-2.5" style={CUT_SM}>
                   <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">공격력 · Lv.90</p>
-                  <p className="mt-1 font-mono text-2xl font-black leading-none sm:text-[32px]" style={{ color: PRIMARY }}>{maxAttack}</p>
+                  <p className="mt-1 font-mono text-2xl font-black leading-none sm:text-[28px]" style={{ color: PRIMARY }}>{maxAttack}</p>
                 </div>
                 <div className="border border-ef-line bg-ef-card p-2.5" style={CUT_SM}>
                   <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">주 능력치</p>
-                  <p className="mt-1 break-keep text-sm font-black leading-tight sm:text-base" style={{ color: ACCENT }}>{weapon.mainStatLabel ?? "-"}</p>
+                  <p className="mt-1 break-keep text-sm font-black leading-tight" style={{ color: ACCENT }}>{weapon.mainStatLabel ?? "-"}</p>
                 </div>
                 <div className="border border-ef-line bg-ef-card p-2.5" style={CUT_SM}>
                   <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">부 능력치</p>
-                  <p className="mt-1 break-keep text-sm font-black leading-tight text-ef-ink sm:text-base">{weapon.subStatLabel ?? "-"}</p>
+                  <p className="mt-1 break-keep text-sm font-black leading-tight text-ef-ink">{weapon.subStatLabel ?? "-"}</p>
+                </div>
+                <div className="border border-ef-line bg-ef-card p-2.5" style={CUT_SM}>
+                  <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">무기 유형</p>
+                  <p className="mt-1 flex items-center gap-1 break-keep text-sm font-black leading-tight text-ef-ink">
+                    {typeIcon ? <span className="relative h-4 w-4 shrink-0"><Image src={typeIcon} alt="" fill sizes="16px" className="object-contain" /></span> : null}
+                    {typeLabel}
+                  </p>
+                </div>
+                <div className="border border-ef-line bg-ef-card p-2.5" style={CUT_SM}>
+                  <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">시리즈</p>
+                  <p className="mt-1 break-keep text-sm font-black leading-tight" style={{ color: PRIMARY }}>{weapon.series ?? "-"}</p>
                 </div>
               </div>
 
@@ -238,6 +259,8 @@ export default async function WeaponDetailPage({
                   .map((lv) => ({ rank: lv.rank, value: lv.stats?.[0]?.value ?? (lv.description?.match(/[+\-]?\d+(?:\.\d+)?%?/)?.[0] ?? "") }))
                   .filter((r) => r.value !== "");
                 const compareRows = (skill.compareRows ?? []).filter((row) => row.values?.length);
+                // 효과 구획화 — 최대 랭크의 라벨별 수치(물리 피해 / 스킬 사용 시 / 최대 중첩 등). 데이터에 있는 것만.
+                const summaryStats = ([...levelValues].reverse().find((l) => l.stats?.length)?.stats ?? []).filter((s) => s.value !== undefined && s.value !== null && String(s.value).trim() !== "");
                 return (
                   <div key={skill.key} className="flex flex-col border border-ef-line bg-ef-card2 p-2.5 sm:p-3" style={CUT}>
                     <div className="flex items-center gap-2.5">
@@ -254,6 +277,18 @@ export default async function WeaponDetailPage({
                       <div className="mt-2.5">
                         <p className="mb-1 font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">효과</p>
                         <p className="whitespace-pre-line break-keep text-[13px] leading-6 text-ef-muted">{highlightNums(effect)}</p>
+                      </div>
+                    ) : null}
+
+                    {/* 효과 구획 요약 — 최대 랭크 기준 라벨별 수치(데이터 있을 때만) */}
+                    {summaryStats.length ? (
+                      <div className="mt-2.5 grid grid-cols-2 gap-1.5 min-[420px]:grid-cols-3">
+                        {summaryStats.map((st, i) => (
+                          <div key={i} className="border border-ef-line bg-ef-card px-2 py-1.5" style={CUT_SM}>
+                            <p className="truncate font-mono text-[9px] font-bold uppercase tracking-wide text-ef-muted">{st.label}</p>
+                            <p className="mt-0.5 font-mono text-sm font-black tabular-nums" style={{ color: ACCENT }}>{st.value}</p>
+                          </div>
+                        ))}
                       </div>
                     ) : null}
 
@@ -317,7 +352,7 @@ export default async function WeaponDetailPage({
                 const isBase = stage.stage === 0;
                 const hasMats = stage.materials.length > 0;
                 return (
-                  <details key={stage.stage} className="group overflow-hidden border border-ef-line bg-ef-card2" style={CUT}>
+                  <details key={stage.stage} open={isBase} className="group overflow-hidden border border-ef-line bg-ef-card2" style={CUT}>
                     <summary className="flex cursor-pointer list-none items-center gap-3 px-3 py-2.5 [&::-webkit-details-marker]:hidden">
                       <span className="inline-flex h-6 min-w-[42px] items-center justify-center border px-1.5 font-mono text-[11px] font-black" style={{ ...CUT_SM, borderColor: `${PRIMARY}66`, background: `${PRIMARY}1a`, color: PRIMARY }}>
                         {isBase ? "기본" : `T${stage.stage}`}
@@ -340,15 +375,15 @@ export default async function WeaponDetailPage({
                         </ul>
                       ) : null}
                       {hasMats ? (
-                        <div className="mt-3 grid grid-cols-1 gap-1.5 border-t border-ef-line pt-3 min-[420px]:grid-cols-2 lg:grid-cols-3">
+                        <div className="mt-2.5 grid grid-cols-2 gap-1.5 border-t border-ef-line pt-2.5 min-[420px]:grid-cols-3 lg:grid-cols-4">
                           {stage.materials.map((m, i) => (
-                            <div key={i} className="flex items-center gap-2 border border-ef-line bg-ef-card px-2 py-1.5" style={CUT_SM}>
-                              <span className="relative h-10 w-10 shrink-0 overflow-hidden border border-ef-line bg-black">
-                                <Image src={materialIcon(m.name, m.icon)} alt="" fill sizes="40px" className="object-contain p-0.5" />
+                            <div key={i} className="flex items-center gap-1.5 border border-ef-line bg-ef-card px-1.5 py-1" style={CUT_SM}>
+                              <span className="relative h-8 w-8 shrink-0 overflow-hidden border border-ef-line bg-black">
+                                <Image src={materialIcon(m.name, m.icon)} alt="" fill sizes="32px" className="object-contain p-0.5" />
                               </span>
                               <span className="min-w-0 flex-1">
-                                <span className="block truncate text-xs font-bold text-ef-ink">{m.name}</span>
-                                <span className="block font-mono text-xs font-black" style={{ color: PRIMARY }}>×{m.count}</span>
+                                <span className="block truncate text-[11px] font-bold text-ef-ink">{m.name}</span>
+                                <span className="block font-mono text-[11px] font-black" style={{ color: PRIMARY }}>×{m.count}</span>
                               </span>
                             </div>
                           ))}
@@ -377,6 +412,7 @@ export default async function WeaponDetailPage({
                   >
                     <span className="relative h-12 w-12 shrink-0 overflow-hidden border border-ef-line bg-black">
                       <Image src={o.avatar} alt={o.name} fill sizes="48px" className="object-cover object-top transition duration-300 group-hover:scale-105" />
+                      <span className="absolute bottom-0 right-0 bg-black/80 px-1 font-mono text-[8px] font-bold leading-tight" style={{ color: ACCENT }}>{o.rarity}★</span>
                     </span>
                     <span className="w-full truncate text-center text-[10px] font-bold leading-tight text-ef-ink">{o.name}</span>
                   </Link>

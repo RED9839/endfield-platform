@@ -155,22 +155,6 @@ function FilterGroup({ title, children, last = false }: { title: string; childre
   );
 }
 
-// 작은 라벨 뱃지 — 카드 정보(유형/시리즈/주·부 능력치). 길어지면 줄바꿈, 카드 안 깨짐.
-function Badge({ children, icon, tone = "muted" }: { children: ReactNode; icon?: string; tone?: "muted" | "accent" }) {
-  return (
-    <span
-      className="inline-flex max-w-full items-center gap-1 border px-1.5 py-0.5 font-mono text-[9px] font-black uppercase tracking-wide"
-      style={
-        tone === "accent"
-          ? { ...CUT_SM, borderColor: `${PRIMARY}55`, background: `${PRIMARY}14`, color: PRIMARY }
-          : { ...CUT_SM, borderColor: "#2a2a2a", background: "#0b0b0b", color: "#cfcfcf" }
-      }
-    >
-      {icon ? <span className="relative h-3 w-3 shrink-0"><Image src={icon} alt="" fill sizes="12px" className="object-contain" /></span> : null}
-      <span className="truncate">{children}</span>
-    </span>
-  );
-}
 
 const WeaponCard = memo(function WeaponCard({ weapon }: { weapon: WeaponListItem }) {
   const rarity = getWeaponRarity(weapon);
@@ -178,6 +162,8 @@ const WeaponCard = memo(function WeaponCard({ weapon }: { weapon: WeaponListItem
   const typeLabel = getWeaponTypeLabel(weapon);
   const seriesText = getWeaponSeriesText(weapon);
   const image = getWeaponImage(weapon);
+  const [imgError, setImgError] = useState(false);
+  const typeIcon = weaponTypeIconMap[type];
 
   return (
     <Link
@@ -185,15 +171,23 @@ const WeaponCard = memo(function WeaponCard({ weapon }: { weapon: WeaponListItem
       className={`group flex h-full flex-col overflow-hidden border border-ef-line bg-ef-card ${HOVER}`}
       style={CUT}
     >
-      {/* 이미지 영역 — 통일된 높이, object-contain 으로 무기 아트가 잘리거나 패널 밖으로 튀지 않게 */}
-      <div className="relative aspect-[4/3] w-full shrink-0 overflow-hidden border-b border-ef-line bg-black">
-        <Image
-          src={image}
-          alt={weapon.name}
-          fill
-          sizes="(max-width: 640px) 50vw, 240px"
-          className="object-contain p-2 transition duration-300 group-hover:scale-[1.05]"
-        />
+      {/* 이미지 영역 — object-contain. 이미지 없거나 로딩 실패 시 placeholder(검은 빈 박스 금지) */}
+      <div className="relative aspect-[4/3] w-full shrink-0 overflow-hidden border-b border-ef-line bg-ef-card2">
+        {/* placeholder(항상 배경) */}
+        <span className="absolute inset-0 flex flex-col items-center justify-center gap-1 text-ef-line">
+          {typeIcon ? <span className="relative h-8 w-8 opacity-20"><Image src={typeIcon} alt="" fill sizes="32px" className="object-contain" /></span> : null}
+          <span className="font-mono text-[8px] font-black uppercase tracking-[0.2em] text-ef-muted/40">Weapon</span>
+        </span>
+        {!imgError ? (
+          <Image
+            src={image}
+            alt={weapon.name}
+            fill
+            sizes="(max-width: 640px) 50vw, 240px"
+            className="object-contain p-2 transition duration-300 group-hover:scale-[1.05]"
+            onError={() => setImgError(true)}
+          />
+        ) : null}
         <span className="pointer-events-none absolute left-0 top-0 h-0.5 w-full" style={{ background: `linear-gradient(90deg, ${PRIMARY}, transparent 60%)` }} />
         {/* 레어도 라벨 */}
         <span className="absolute right-1.5 top-1.5 rounded-[3px] border-[0.5px] px-1.5 py-0.5 font-mono text-[10px] font-bold leading-none backdrop-blur-[4px]" style={{ background: "rgba(0,0,0,0.85)", borderColor: "rgba(255,210,74,0.35)", color: ACCENT }}>
@@ -201,26 +195,28 @@ const WeaponCard = memo(function WeaponCard({ weapon }: { weapon: WeaponListItem
         </span>
       </div>
 
-      {/* 정보 영역 — 시선 계층: 1) 이름  2) 시리즈·타입 뱃지  3) 주/부 능력치(약화) */}
-      <div className="flex min-w-0 flex-1 flex-col p-2 sm:p-2.5">
-        {/* 1순위 — 이름(가장 강조) */}
+      {/* 정보 영역 — 계층: 1) 이름  2) 영문명  3) 주/부 능력치  4) 타입/시리즈 */}
+      <div className="flex min-w-0 flex-1 flex-col p-1.5 sm:p-2.5">
+        {/* 1순위 — 이름 */}
         <h3 className="line-clamp-1 text-[15px] font-black leading-tight sm:text-[16px]" style={{ color: ACCENT }}>{weapon.name}</h3>
-        {weapon.enName ? <p className="line-clamp-1 font-mono text-[8px] uppercase tracking-[0.1em] text-ef-muted/70 sm:text-[9px]">{weapon.enName}</p> : null}
+        {/* 2순위 — 영문명 */}
+        {weapon.enName ? <p className="line-clamp-1 font-mono text-[9px] uppercase tracking-[0.12em] text-ef-muted sm:text-[10px]">{weapon.enName}</p> : null}
 
-        {/* 2순위 — 시리즈 · 무기 타입(아이콘 포함) */}
-        <div className="mt-1.5 flex flex-wrap gap-1">
-          {seriesText ? <Badge tone="accent">{seriesText}</Badge> : null}
-          <Badge icon={weaponTypeIconMap[type]}>{typeLabel}</Badge>
-        </div>
-
-        {/* 3순위 — 주/부 능력치(작고 약하게) */}
+        {/* 3순위 — 주/부 능력치 */}
         {weapon.mainStatLabel || weapon.subStatLabel ? (
-          <p className="mt-1.5 line-clamp-1 font-mono text-[9px] leading-tight text-ef-muted">
-            <span className="text-ef-muted/60">주</span> {weapon.mainStatLabel ?? "-"}
+          <p className="mt-1.5 line-clamp-1 text-[10px] font-bold leading-tight text-ef-ink/90">
+            <span className="font-mono text-[9px] text-ef-muted">주</span> {weapon.mainStatLabel ?? "-"}
             <span className="mx-1 text-ef-line">·</span>
-            <span className="text-ef-muted/60">부</span> {weapon.subStatLabel ?? "-"}
+            <span className="font-mono text-[9px] text-ef-muted">부</span> {weapon.subStatLabel ?? "-"}
           </p>
         ) : null}
+
+        {/* 4순위 — 무기 타입 · 시리즈(가장 약하게) */}
+        <div className="mt-auto flex flex-wrap items-center gap-1 pt-1.5">
+          {typeIcon ? <span className="relative h-3.5 w-3.5 shrink-0 opacity-80"><Image src={typeIcon} alt={typeLabel} fill sizes="14px" className="object-contain" /></span> : null}
+          <span className="font-mono text-[9px] font-bold uppercase tracking-wide text-ef-muted">{typeLabel}</span>
+          {seriesText ? <><span className="text-ef-line">·</span><span className="font-mono text-[9px] font-bold uppercase tracking-wide" style={{ color: `${PRIMARY}cc` }}>{seriesText}</span></> : null}
+        </div>
       </div>
     </Link>
   );
