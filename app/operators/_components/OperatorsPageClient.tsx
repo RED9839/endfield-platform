@@ -244,12 +244,13 @@ const OperatorCard = memo(function OperatorCard({
       <span className="pointer-events-none absolute left-1.5 top-1.5 h-5 w-5 border-l-2 border-t-2" style={{ borderColor: `${elColor}cc` }} />
       <span className="pointer-events-none absolute right-1.5 top-1.5 h-5 w-5 border-r-2 border-t-2" style={{ borderColor: `${elColor}66` }} />
 
-      {/* 6성만 미니멀 표시(배경·테두리·배지 없음) — 한눈에 식별 */}
-      {operator.rarity === 6 ? (
-        <span className="pointer-events-none absolute right-2 top-2 font-mono text-[11px] font-bold leading-none tracking-tight drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]" style={{ color: ACCENT }}>
-          6★
-        </span>
-      ) : null}
+      {/* 레어도 라벨 — 실제 rarity 기반(6/5/4★). 코너 장식 아래에 작은 라벨로 배치(겹침 방지) */}
+      <span
+        className="pointer-events-none absolute right-2 top-[26px] rounded border px-1.5 py-0.5 font-mono text-[11px] font-bold leading-none"
+        style={{ background: "rgba(0,0,0,0.65)", borderColor: "rgba(255,210,74,0.4)", color: ACCENT }}
+      >
+        {operator.rarity}★
+      </span>
 
       <div className="absolute inset-0 bg-gradient-to-t from-black via-black/45 to-transparent" />
 
