@@ -201,20 +201,25 @@ const WeaponCard = memo(function WeaponCard({ weapon }: { weapon: WeaponListItem
         </span>
       </div>
 
-      {/* 정보 영역 */}
-      <div className="flex min-w-0 flex-1 flex-col p-2.5">
-        <h3 className="line-clamp-1 text-[14px] font-black leading-tight sm:text-[15px]" style={{ color: ACCENT }}>{weapon.name}</h3>
-        {weapon.enName ? <p className="mt-[1px] line-clamp-1 font-mono text-[9px] uppercase tracking-[0.12em] text-ef-muted">{weapon.enName}</p> : null}
+      {/* 정보 영역 — 시선 계층: 1) 이름  2) 시리즈·타입 뱃지  3) 주/부 능력치(약화) */}
+      <div className="flex min-w-0 flex-1 flex-col p-2 sm:p-2.5">
+        {/* 1순위 — 이름(가장 강조) */}
+        <h3 className="line-clamp-1 text-[15px] font-black leading-tight sm:text-[16px]" style={{ color: ACCENT }}>{weapon.name}</h3>
+        {weapon.enName ? <p className="line-clamp-1 font-mono text-[8px] uppercase tracking-[0.1em] text-ef-muted/70 sm:text-[9px]">{weapon.enName}</p> : null}
 
-        <div className="mt-2 flex flex-wrap gap-1">
-          <Badge icon={weaponTypeIconMap[type]}>{typeLabel}</Badge>
+        {/* 2순위 — 시리즈 · 무기 타입(아이콘 포함) */}
+        <div className="mt-1.5 flex flex-wrap gap-1">
           {seriesText ? <Badge tone="accent">{seriesText}</Badge> : null}
+          <Badge icon={weaponTypeIconMap[type]}>{typeLabel}</Badge>
         </div>
+
+        {/* 3순위 — 주/부 능력치(작고 약하게) */}
         {weapon.mainStatLabel || weapon.subStatLabel ? (
-          <div className="mt-1 flex flex-wrap gap-1">
-            {weapon.mainStatLabel ? <Badge>주 {weapon.mainStatLabel}</Badge> : null}
-            {weapon.subStatLabel ? <Badge>부 {weapon.subStatLabel}</Badge> : null}
-          </div>
+          <p className="mt-1.5 line-clamp-1 font-mono text-[9px] leading-tight text-ef-muted">
+            <span className="text-ef-muted/60">주</span> {weapon.mainStatLabel ?? "-"}
+            <span className="mx-1 text-ef-line">·</span>
+            <span className="text-ef-muted/60">부</span> {weapon.subStatLabel ?? "-"}
+          </p>
         ) : null}
       </div>
     </Link>

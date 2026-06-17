@@ -7,6 +7,7 @@ import {
   weaponDetails,
   type WeaponRarity,
 } from "@/data/weapons-detail-data";
+import { operatorSummaries } from "@/data/operators-summary-data";
 
 // ===== 오퍼레이터 상세/목록과 통일한 디자인 토큰 =====
 const PRIMARY = "#ff9a2f";
@@ -114,6 +115,10 @@ export default async function WeaponDetailPage({
 
   const skills = weapon.skills ?? [];
   const breakthrough = [...(weapon.breakthrough ?? [])].sort((a, b) => a.stage - b.stage);
+  // 사용 오퍼레이터 — 무기→오퍼레이터 직접 연결 데이터가 없어 동일 무기 유형으로 연결(없으면 섹션 숨김).
+  const relatedOperators = operatorSummaries
+    .filter((o) => o.weapon === weapon.weaponType)
+    .sort((a, b) => b.rarity - a.rarity);
 
   return (
     <main className="relative min-h-screen overflow-x-clip bg-ef-bg text-ef-ink">
@@ -136,9 +141,9 @@ export default async function WeaponDetailPage({
         {/* ===== 요약 패널 — 좌 이미지 / 우 정보 (모바일: 이미지 위, 정보 아래) ===== */}
         <section className="overflow-hidden border border-ef-line bg-ef-card2" style={CUT}>
           <span className="block h-0.5 w-full" style={{ background: `linear-gradient(90deg, ${PRIMARY}, transparent 55%)` }} />
-          <div className="grid gap-4 p-3 sm:p-4 md:grid-cols-[300px_minmax(0,1fr)] md:gap-5 md:p-5">
-            {/* 이미지 */}
-            <div className="relative mx-auto aspect-square w-full max-w-[320px] overflow-hidden border border-ef-line bg-black md:mx-0" style={CUT}>
+          <div className="grid gap-4 p-3 sm:p-4 md:grid-cols-[260px_minmax(0,1fr)] md:gap-5 md:p-5">
+            {/* 이미지 — 정보보다 작게(최대 260px) */}
+            <div className="relative mx-auto aspect-square w-full max-w-[240px] overflow-hidden border border-ef-line bg-black md:mx-0 md:max-w-[260px]" style={CUT}>
               <Image src={heroImage} alt={weapon.name} fill priority sizes="(max-width:768px) 90vw, 320px" className="object-contain p-3" />
               <span className="pointer-events-none absolute left-2 top-2 h-6 w-6 border-l-2 border-t-2" style={{ borderColor: `${PRIMARY}aa` }} />
               <span className="pointer-events-none absolute bottom-2 right-2 h-6 w-6 border-b-2 border-r-2" style={{ borderColor: `${PRIMARY}66` }} />
@@ -147,7 +152,7 @@ export default async function WeaponDetailPage({
             {/* 정보 */}
             <div className="min-w-0">
               <p className="font-mono text-[11px] font-bold uppercase tracking-[0.22em] text-ef-muted">{weapon.enName}</p>
-              <h1 className="mt-1 break-keep text-3xl font-black leading-[0.95] tracking-tight text-white sm:text-4xl">{weapon.name}</h1>
+              <h1 className="mt-1 break-keep text-2xl font-black leading-[0.95] tracking-tight text-white sm:text-4xl">{weapon.name}</h1>
 
               <div className="mt-3 flex flex-wrap gap-1.5">
                 <Badge icon={rarityIcon} tone="accent">{rarityLabelMap[weapon.rarity]}</Badge>
@@ -178,16 +183,19 @@ export default async function WeaponDetailPage({
           <section className="min-w-0">
             <SectionLabel en="Weapon Stats" />
             <div className="overflow-hidden border border-ef-line bg-ef-card2 p-3 sm:p-4" style={CUT}>
-              {/* 무기 공격력(최대) 강조 */}
-              <div className="mb-3 flex items-end justify-between gap-3 border-b border-ef-line pb-3">
-                <div>
-                  <p className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-ef-muted">무기 공격력 · Lv.90</p>
-                  <p className="mt-1 font-mono text-[40px] font-black leading-none" style={{ color: PRIMARY }}>{maxAttack}</p>
+              {/* 공격력 / 주 능력치 / 부 능력치 한 카드에 정리 */}
+              <div className="mb-3 grid grid-cols-3 gap-2 border-b border-ef-line pb-3">
+                <div className="border border-ef-line bg-ef-card p-2.5" style={CUT_SM}>
+                  <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">공격력 · Lv.90</p>
+                  <p className="mt-1 font-mono text-2xl font-black leading-none sm:text-[32px]" style={{ color: PRIMARY }}>{maxAttack}</p>
                 </div>
-                <div className="text-right">
-                  <p className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-ef-muted">주 / 부</p>
-                  <p className="mt-1 text-sm font-black" style={{ color: ACCENT }}>{weapon.mainStatLabel ?? "-"}</p>
-                  <p className="text-[11px] font-bold text-ef-muted">{weapon.subStatLabel ?? "-"}</p>
+                <div className="border border-ef-line bg-ef-card p-2.5" style={CUT_SM}>
+                  <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">주 능력치</p>
+                  <p className="mt-1 break-keep text-sm font-black leading-tight sm:text-base" style={{ color: ACCENT }}>{weapon.mainStatLabel ?? "-"}</p>
+                </div>
+                <div className="border border-ef-line bg-ef-card p-2.5" style={CUT_SM}>
+                  <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">부 능력치</p>
+                  <p className="mt-1 break-keep text-sm font-black leading-tight text-ef-ink sm:text-base">{weapon.subStatLabel ?? "-"}</p>
                 </div>
               </div>
 
@@ -219,28 +227,49 @@ export default async function WeaponDetailPage({
           <section className="min-w-0">
             <SectionLabel en="Weapon Skills" />
             <div className="grid grid-cols-1 items-stretch gap-2 lg:grid-cols-2">
-              {skills.map((skill) => (
-                <div key={skill.key} className="flex flex-col border border-ef-line bg-ef-card2 p-3" style={CUT}>
-                  <div className="flex items-center gap-2.5">
-                    <span className="relative h-10 w-10 shrink-0 overflow-hidden border border-ef-line bg-black">{skill.icon ? <Image src={skill.icon} alt="" fill sizes="40px" className="object-contain p-1" /> : null}</span>
-                    <div className="min-w-0">
-                      {skill.typeLabel ? <span className="inline-flex items-center border px-2 py-0.5 font-mono text-[10px] font-black uppercase tracking-wide" style={{ borderColor: `${PRIMARY}66`, background: `${PRIMARY}1a`, color: PRIMARY }}>{skill.typeLabel}</span> : null}
-                      <p className="mt-1 truncate text-sm font-black text-ef-ink">{skill.name}</p>
+              {skills.map((skill) => {
+                const ranks = (skill.levelValues ?? []).map((lv) => ({
+                  rank: lv.rank,
+                  value: lv.stats?.[0]?.value ?? (lv.description?.match(/[+\-]?\d+(?:\.\d+)?%?/)?.[0] ?? ""),
+                }));
+                return (
+                  <div key={skill.key} className="flex flex-col border border-ef-line bg-ef-card2 p-2.5 sm:p-3" style={CUT}>
+                    <div className="flex items-center gap-2.5">
+                      {/* 아이콘은 실제 존재할 때만(빈 검은 박스 금지) */}
+                      {skill.icon ? <span className="relative h-10 w-10 shrink-0 overflow-hidden border border-ef-line bg-black"><Image src={skill.icon} alt="" fill sizes="40px" className="object-contain p-1" /></span> : null}
+                      <div className="min-w-0">
+                        {skill.typeLabel ? <span className="inline-flex items-center border px-2 py-0.5 font-mono text-[10px] font-black uppercase tracking-wide" style={{ borderColor: `${PRIMARY}66`, background: `${PRIMARY}1a`, color: PRIMARY }}>{skill.typeLabel}</span> : null}
+                        <p className="mt-1 truncate text-sm font-black text-ef-ink">{skill.name}</p>
+                      </div>
                     </div>
-                  </div>
-                  {skill.description ? <p className="mt-2.5 max-w-[68ch] break-keep text-xs leading-6 text-ef-muted">{highlightNums(skill.description)}</p> : null}
-                  {skill.meta?.length ? (
-                    <div className="mt-2.5 grid grid-cols-1 gap-1.5 border-t border-ef-line pt-2.5 min-[420px]:grid-cols-2">
-                      {skill.meta.map((mt, i) => (
-                        <div key={i} className="flex items-center justify-between gap-2 border border-ef-line bg-ef-card px-2.5 py-1" style={CUT_SM}>
-                          <span className="min-w-0 truncate text-[11px] font-bold text-ef-muted">{mt.label}</span>
-                          <span className="shrink-0 font-mono text-xs font-black tabular-nums" style={{ color: PRIMARY }}>{mt.value}</span>
+                    {skill.description ? <p className="mt-2.5 max-w-[68ch] break-keep text-xs leading-6 text-ef-muted">{highlightNums(skill.description)}</p> : null}
+                    {skill.meta?.length ? (
+                      <div className="mt-2.5 grid grid-cols-1 gap-1.5 border-t border-ef-line pt-2.5 min-[420px]:grid-cols-2">
+                        {skill.meta.map((mt, i) => (
+                          <div key={i} className="flex items-center justify-between gap-2 border border-ef-line bg-ef-card px-2.5 py-1" style={CUT_SM}>
+                            <span className="min-w-0 truncate text-[11px] font-bold text-ef-muted">{mt.label}</span>
+                            <span className="shrink-0 font-mono text-xs font-black tabular-nums" style={{ color: PRIMARY }}>{mt.value}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
+                    {/* 랭크별 수치(R1~Rn) — 데이터 있을 때만 */}
+                    {ranks.some((r) => r.value !== "") ? (
+                      <div className="mt-2.5 border-t border-ef-line pt-2.5">
+                        <p className="mb-1.5 font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">랭크별 효과</p>
+                        <div className="flex flex-wrap gap-1">
+                          {ranks.map((r, i) => (
+                            <span key={i} className="inline-flex items-center gap-1 border border-ef-line bg-ef-card px-1.5 py-0.5 font-mono text-[10px] leading-none" style={CUT_SM}>
+                              <span className="text-ef-muted">R{r.rank}</span>
+                              <span className="font-black tabular-nums" style={{ color: ACCENT }}>{r.value}</span>
+                            </span>
+                          ))}
                         </div>
-                      ))}
-                    </div>
-                  ) : null}
-                </div>
-              ))}
+                      </div>
+                    ) : null}
+                  </div>
+                );
+              })}
             </div>
           </section>
         ) : null}
@@ -249,7 +278,7 @@ export default async function WeaponDetailPage({
         {breakthrough.length ? (
           <section className="min-w-0">
             <SectionLabel en="Breakthrough" />
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-1.5 sm:gap-2">
               {breakthrough.map((stage) => {
                 const isBase = stage.stage === 0;
                 const hasMats = stage.materials.length > 0;
@@ -261,7 +290,7 @@ export default async function WeaponDetailPage({
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="block text-xs font-black text-ef-ink">{isBase ? "기본 상태" : `${stage.stage}단계 돌파`}</span>
-                        <span className="font-mono text-[10px] uppercase tracking-wide text-ef-muted">필요 Lv.{stage.requiredLevel}{isBase ? " · 재료 없음" : ""}</span>
+                        <span className="font-mono text-[10px] uppercase tracking-wide text-ef-muted">필요 Lv.{stage.requiredLevel}</span>
                       </span>
                       <span className="shrink-0 font-mono text-[11px] font-black text-ef-muted transition-transform group-open:rotate-180" style={{ color: PRIMARY }}>▼</span>
                     </summary>
@@ -277,7 +306,7 @@ export default async function WeaponDetailPage({
                         </ul>
                       ) : null}
                       {hasMats ? (
-                        <div className="mt-3 grid grid-cols-1 gap-1.5 border-t border-ef-line pt-3 min-[420px]:grid-cols-2">
+                        <div className="mt-3 grid grid-cols-1 gap-1.5 border-t border-ef-line pt-3 min-[420px]:grid-cols-2 lg:grid-cols-3">
                           {stage.materials.map((m, i) => (
                             <div key={i} className="flex items-center gap-2 border border-ef-line bg-ef-card px-2 py-1.5" style={CUT_SM}>
                               <span className="relative h-10 w-10 shrink-0 overflow-hidden border border-ef-line bg-black">
@@ -295,6 +324,30 @@ export default async function WeaponDetailPage({
                   </details>
                 );
               })}
+            </div>
+          </section>
+        ) : null}
+
+        {/* ===== 사용 오퍼레이터 — 동일 무기 유형 연결(데이터 없으면 숨김) ===== */}
+        {relatedOperators.length ? (
+          <section className="min-w-0">
+            <SectionLabel en="Operators" action={<span className="font-mono text-[10px] font-black uppercase tracking-wide text-ef-muted">{typeLabel} · {relatedOperators.length}</span>} />
+            <div className="overflow-hidden border border-ef-line bg-ef-card2 p-3 sm:p-4" style={CUT}>
+              <div className="grid grid-cols-3 gap-2 min-[480px]:grid-cols-4 sm:grid-cols-6 lg:grid-cols-8">
+                {relatedOperators.map((o) => (
+                  <Link
+                    key={o.slug}
+                    href={`/operators/${o.slug}`}
+                    className="group flex flex-col items-center gap-1 border border-ef-line bg-ef-card p-2 transition duration-200 hover:-translate-y-0.5 hover:border-[#ffd24a]/70 hover:shadow-[0_6px_18px_rgba(0,0,0,0.45)]"
+                    style={CUT_SM}
+                  >
+                    <span className="relative h-12 w-12 shrink-0 overflow-hidden border border-ef-line bg-black">
+                      <Image src={o.avatar} alt={o.name} fill sizes="48px" className="object-cover object-top transition duration-300 group-hover:scale-105" />
+                    </span>
+                    <span className="w-full truncate text-center text-[10px] font-bold leading-tight text-ef-ink">{o.name}</span>
+                  </Link>
+                ))}
+              </div>
             </div>
           </section>
         ) : null}
