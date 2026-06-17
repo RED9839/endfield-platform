@@ -39,19 +39,18 @@ const weaponTypeIconMap: Record<string, string> = {
 
 const TABLE_LEVELS = [1, 20, 40, 60, 80, 90];
 
-// 인게임 공식 분류 — 능력치는 힘/민첩/지능/의지뿐, 그 외(공격력·오리지늄 아츠 강도 등)는 속성.
-// 라벨 자체로 판별(main/sub 순서 무관).
-const ABILITY_STATS = new Set(["힘", "민첩", "지능", "의지"]);
+// 인게임 공식 분류(필터 기준) — 능력치: 힘/민첩/지능/의지/주요 능력치. 그 외는 속성.
+// main/sub 순서와 무관하게 라벨로 판별, 같은 분류면 합쳐서 표시.
+const ABILITY_STATS = new Set(["힘", "민첩", "지능", "의지", "주요 능력치"]);
 function classifyStats(main?: string, sub?: string): { attribute: string; ability: string } {
-  let attribute = "";
-  let ability = "";
+  const attrs: string[] = [];
+  const abils: string[] = [];
   for (const v of [main, sub]) {
     const t = (v ?? "").trim();
     if (!t) continue;
-    if (ABILITY_STATS.has(t)) ability ||= t;
-    else attribute ||= t;
+    (ABILITY_STATS.has(t) ? abils : attrs).push(t);
   }
-  return { attribute, ability };
+  return { attribute: attrs.join(" · "), ability: abils.join(" · ") };
 }
 
 function materialIcon(name: string, icon?: string) {
