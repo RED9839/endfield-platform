@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { farmStages } from "@/data/farming/farm-stages";
 import type { EliteStage, MaterialCostItem, OperatorDetail, PotentialDetail, TalentDetail, TrustBonus } from "@/data/operators-transformers";
@@ -23,7 +23,7 @@ const weaponLabelMap: Record<string, string> = { sword: "한손검", greatsword:
 const CUT = { clipPath: "polygon(0 0, calc(100% - 13px) 0, 100% 13px, 100% 100%, 13px 100%, 0 calc(100% - 13px))" };
 const ACCENT = "#ffd24a";
 // 공용 호버: 노란 테두리 + 내부 5% 노란 틴트(기존 배경 유지) + 미세 상승. 모든 카드/칩 통일(0.2s).
-const HOVER = "transition duration-200 hover:-translate-y-0.5 hover:border-[#ffd24a]/55 hover:shadow-[inset_0_0_0_999px_rgba(255,210,74,0.05),0_4px_14px_rgba(0,0,0,0.4)]";
+const HOVER = "transition duration-200 hover:-translate-y-0.5 hover:border-[#ffd24a]/70 hover:shadow-[inset_0_0_0_999px_rgba(255,210,74,0.05),0_6px_18px_rgba(0,0,0,0.45)]";
 
 // 스킬 타입 태그 — [일반 공격]/[배틀 스킬] 등 시각 강조 pill.
 function SkillTag({ children }: { children: React.ReactNode }) {
@@ -51,7 +51,7 @@ function highlightNums(text: string): React.ReactNode {
   return parts;
 }
 
-type ModuleId = "build" | "data" | "skill" | "material" | "gallery";
+type ModuleId = "build" | "data" | "skill" | "material";
 
 // 세팅 목록 항목(/api/operator-settings 응답).
 type BuildItem = {
@@ -330,7 +330,7 @@ function TalentList({ talents }: { talents: TalentDetail[] }) {
       {talents.map((tlt, i) => {
         const isOpen = open === i;
         return (
-          <button key={i} type="button" onClick={() => setOpen(isOpen ? -1 : i)} className={`flex min-h-[96px] flex-col border border-ef-line bg-ef-card2 p-2.5 text-left ${HOVER} sm:cursor-default`} style={CUT}>
+          <button key={i} type="button" onClick={() => setOpen(isOpen ? -1 : i)} className={`flex min-h-[92px] flex-col border border-ef-line bg-ef-card2 p-2 text-left ${HOVER} sm:cursor-default sm:p-2.5`} style={CUT}>
             <div className="flex items-center gap-2.5">
               <span className="relative h-9 w-9 shrink-0 overflow-hidden border border-ef-line bg-black">{tlt.icon ? <Image src={tlt.icon} alt="" fill sizes="36px" className="object-contain p-0.5" /> : null}</span>
               <div className="min-w-0 flex-1">
@@ -350,7 +350,7 @@ function TalentList({ talents }: { talents: TalentDetail[] }) {
 // 정예화(Elite) 카드 — MATERIAL/DATA 공용. 높이 통일(min-h-220).
 function EliteCard({ stage, description, materials }: EliteStage) {
   return (
-    <div className={`flex min-h-[220px] flex-col border border-ef-line bg-ef-card2 p-2.5 ${HOVER}`} style={CUT}>
+    <div className={`flex h-full min-h-[200px] flex-col border border-ef-line bg-ef-card2 p-2.5 ${HOVER}`} style={CUT}>
       <p className="font-mono text-[11px] font-black uppercase tracking-wide" style={{ color: PRIMARY }}>{stage}</p>
       {description ? <p className="mt-0.5 break-keep text-[11px] leading-5 text-ef-muted">{description}</p> : null}
       {materials.length ? (
@@ -367,11 +367,11 @@ function PotentialList({ items }: { items: PotentialDetail[] }) {
   return (
     <div className="grid grid-cols-1 items-stretch gap-2 sm:grid-cols-2">
       {items.map((p, i) => (
-        <div key={i} className={`flex min-h-[88px] gap-2.5 border border-ef-line bg-ef-card2 p-2.5 ${HOVER}`} style={CUT}>
+        <div key={i} className={`flex min-h-[72px] gap-2.5 border border-ef-line bg-ef-card2 p-2 ${HOVER} sm:p-2.5`} style={CUT}>
           <span className="relative h-9 w-9 shrink-0 overflow-hidden border border-ef-line bg-black"><Image src={`/icons/potential/${i + 1}.webp`} alt="" fill sizes="36px" className="object-contain p-0.5" /></span>
           <div className="min-w-0">
             <p className="text-xs font-black text-ef-ink">{p.title}</p>
-            <p className="mt-1 break-keep text-[11px] leading-5 text-ef-muted">{highlightNums(p.description)}</p>
+            <p className="mt-0.5 break-keep text-[11px] leading-5 text-ef-muted">{highlightNums(p.description)}</p>
           </div>
         </div>
       ))}
@@ -379,66 +379,17 @@ function PotentialList({ items }: { items: PotentialDetail[] }) {
   );
 }
 
-// 신뢰도 보너스(Trust) 그리드 — 컴팩트 카드, 수치 강조.
+// 신뢰도 보너스(Trust) 그리드 — 다른 DATA 카드와 통일된 높이/구조(좌측 액센트 바 + 헤더 + 값).
 function TrustGrid({ items }: { items: TrustBonus[] }) {
   return (
     <div className="grid grid-cols-2 items-stretch gap-2 sm:grid-cols-3 lg:grid-cols-4">
       {items.map((t) => (
-        <div key={t.level} className={`flex min-h-[68px] flex-col justify-center gap-1 border border-ef-line bg-ef-card2 p-2.5 text-center ${HOVER}`} style={CUT}>
+        <div key={t.level} className={`relative flex min-h-[88px] flex-col justify-center gap-1.5 overflow-hidden border border-ef-line bg-ef-card2 p-3 pl-4 text-center ${HOVER}`} style={CUT}>
+          <span className="absolute left-0 top-0 h-full w-1" style={{ background: PRIMARY }} />
           <span className="font-mono text-[9px] font-black uppercase tracking-[0.18em] text-ef-muted">Trust Lv.{t.level}</span>
-          <span className="break-keep text-sm font-black text-ef-ink">{highlightNums(t.label)}</span>
+          <span className="break-keep text-base font-black text-ef-ink">{highlightNums(t.label)}</span>
         </div>
       ))}
-    </div>
-  );
-}
-
-// GALLERY — 가용 일러스트(풀/아바타) 메이슨리 그리드 + 라이트박스(ESC/좌우/스와이프). 공통 레이아웃 유지.
-function Gallery({ images, alt }: { images: string[]; alt: string }) {
-  const [idx, setIdx] = useState<number | null>(null);
-  const open = idx !== null;
-  const go = (d: number) => setIdx((cur) => (cur === null ? cur : (cur + d + images.length) % images.length));
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setIdx(null);
-      else if (e.key === "ArrowRight") setIdx((c) => (c === null ? c : (c + 1) % images.length));
-      else if (e.key === "ArrowLeft") setIdx((c) => (c === null ? c : (c - 1 + images.length) % images.length));
-    };
-    window.addEventListener("keydown", onKey);
-    document.body.style.overflow = "hidden";
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      document.body.style.overflow = "";
-    };
-  }, [open, images.length]);
-  const startX = useRef(0);
-  return (
-    <div className="min-w-0">
-      <div className="columns-2 gap-2 sm:columns-3 min-[1920px]:columns-4 [&>*]:mb-2">
-        {images.map((src, i) => (
-          <button key={i} type="button" onClick={() => setIdx(i)} className={`group relative block w-full break-inside-avoid overflow-hidden border border-ef-line bg-black ${HOVER}`} style={CUT}>
-            <Image src={src} alt={`${alt} ${i + 1}`} width={600} height={900} sizes="(max-width:640px) 50vw, 300px" className="h-auto w-full object-cover transition duration-300 group-hover:scale-[1.03]" />
-            <span className="pointer-events-none absolute right-1.5 top-1.5 border border-ef-line bg-black/70 px-1.5 py-0.5 font-mono text-[9px] font-black text-ef-muted">{String(i + 1).padStart(2, "0")}</span>
-          </button>
-        ))}
-      </div>
-
-      {open && idx !== null ? (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/92 p-4 backdrop-blur-sm" onClick={() => setIdx(null)} role="dialog" aria-modal="true">
-          <button type="button" onClick={() => setIdx(null)} className="absolute right-4 top-4 z-10 inline-flex h-10 w-10 items-center justify-center border border-ef-line bg-black/60 font-mono text-lg font-black text-ef-ink transition hover:border-ef-accent/50" aria-label="닫기">✕</button>
-          {images.length > 1 ? (
-            <>
-              <button type="button" onClick={(e) => { e.stopPropagation(); go(-1); }} className="absolute left-3 top-1/2 z-10 inline-flex h-12 w-12 -translate-y-1/2 items-center justify-center border border-ef-line bg-black/60 font-mono text-xl font-black text-ef-ink transition hover:border-ef-accent/50" aria-label="이전">‹</button>
-              <button type="button" onClick={(e) => { e.stopPropagation(); go(1); }} className="absolute right-3 top-1/2 z-10 inline-flex h-12 w-12 -translate-y-1/2 items-center justify-center border border-ef-line bg-black/60 font-mono text-xl font-black text-ef-ink transition hover:border-ef-accent/50" aria-label="다음">›</button>
-            </>
-          ) : null}
-          <div className="relative flex max-h-[88vh] w-full max-w-[1100px] items-center justify-center" onClick={(e) => e.stopPropagation()} onTouchStart={(e) => { startX.current = e.touches[0].clientX; }} onTouchEnd={(e) => { const dx = e.changedTouches[0].clientX - startX.current; if (Math.abs(dx) > 50) go(dx < 0 ? 1 : -1); }}>
-            <Image src={images[idx]} alt={`${alt} ${idx + 1}`} width={1100} height={1500} sizes="100vw" className="h-auto max-h-[88vh] w-auto object-contain" priority />
-            <span className="absolute bottom-3 left-1/2 -translate-x-1/2 border border-ef-line bg-black/70 px-2.5 py-1 font-mono text-[10px] font-black tracking-wide text-ef-muted">{idx + 1} / {images.length}</span>
-          </div>
-        </div>
-      ) : null}
     </div>
   );
 }
@@ -568,11 +519,7 @@ export default function OperatorDetailView({
     { id: "data", label: "DATA" },
     { id: "skill", label: "SKILL" },
     { id: "material", label: "MATERIAL" },
-    { id: "gallery", label: "GALLERY" },
   ];
-
-  // GALLERY 이미지 — 가용 일러스트/아바타(중복 제거). 공통 레이아웃에서 object-fit 으로 표시.
-  const galleryImages = [...new Set([operator.fullImage, operator.fullImageSecondary, operator.avatar, operator.avatarSecondary].filter((s): s is string => !!s))];
 
   return (
     <main className="relative min-h-screen bg-ef-bg text-ef-ink">
@@ -987,12 +934,12 @@ export default function OperatorDetailView({
                           if (!agg.length) return null;
                           const s = operator.skills[k];
                           return (
-                            <div key={k} className={`flex min-h-[220px] flex-col border border-ef-line bg-ef-card2 p-2.5 ${HOVER}`} style={CUT}>
+                            <div key={k} className={`flex h-full min-h-[200px] flex-col border border-ef-line bg-ef-card2 p-2.5 ${HOVER}`} style={CUT}>
                               <div className="flex items-center gap-2">
                                 <span className="relative h-9 w-9 shrink-0 overflow-hidden border border-ef-line bg-black">{s.icon ? <Image src={s.icon} alt="" fill sizes="36px" className="object-contain p-0.5" /> : null}</span>
                                 <p className="min-w-0 truncate text-xs font-black text-ef-ink">{SKILL_LABELS[k]} <span className="text-ef-muted">· {s.name}</span></p>
                               </div>
-                              <div className="mt-2 grid grid-cols-1 gap-1.5 min-[480px]:grid-cols-2">
+                              <div className="mt-auto grid grid-cols-1 gap-1.5 pt-2 min-[480px]:grid-cols-2">
                                 {agg.map((m, j) => <MaterialChip key={j} name={m.name} icon={m.icon} count={m.total} />)}
                               </div>
                             </div>
@@ -1021,11 +968,11 @@ export default function OperatorDetailView({
                           const src = farmCategoryByMaterial.get(m.name);
                           const href = `/farming?requiredMaterials=${encodeURIComponent(JSON.stringify([{ name: m.name, amount: m.total }]))}`;
                           return (
-                            <Link key={j} href={href} title={`${m.name} 파밍 계산기로 보기`} className={`flex min-h-[64px] items-center gap-2.5 border border-ef-line bg-ef-card2 px-2.5 py-2 ${HOVER}`} style={CUT}>
+                            <Link key={j} href={href} title={`${m.name} · ${src ?? "특수 입수"}`} className={`flex h-[64px] items-center gap-2.5 border border-ef-line bg-ef-card2 px-2.5 py-2 ${HOVER}`} style={CUT}>
                               <span className="relative h-10 w-10 shrink-0 overflow-hidden border border-ef-line bg-black">{m.icon ? <Image src={m.icon} alt="" fill sizes="40px" className="object-contain p-0.5" /> : null}</span>
-                              <span className="min-w-0 flex-1">
-                                <span className="block break-keep text-[11px] font-bold leading-tight text-ef-ink">{m.name}</span>
-                                <span className="mt-1 inline-block max-w-full truncate border px-1.5 py-0.5 font-mono text-[9px] font-black uppercase tracking-wide" style={{ borderColor: `${PRIMARY}55`, background: `${PRIMARY}14`, color: PRIMARY }}>{src ?? "특수 입수"}</span>
+                              <span className="flex min-w-0 flex-1 flex-col gap-1">
+                                <span className="truncate text-[11px] font-bold leading-tight text-ef-ink">{m.name}</span>
+                                <span className="block h-[18px] w-fit max-w-full truncate border px-1.5 font-mono text-[9px] font-black uppercase leading-[16px] tracking-wide" style={{ borderColor: `${PRIMARY}55`, background: `${PRIMARY}14`, color: PRIMARY }}>{src ?? "특수 입수"}</span>
                               </span>
                             </Link>
                           );
@@ -1036,12 +983,6 @@ export default function OperatorDetailView({
                 </div>
               );
             })() : null}
-            {activeModule === "gallery" ? (
-              <div className="min-w-0">
-                <SectionLabel en="Gallery" action={<span className="font-mono text-[10px] font-black uppercase tracking-wide text-ef-muted">{galleryImages.length} ILLUST</span>} />
-                {galleryImages.length ? <Gallery images={galleryImages} alt={operator.name} /> : <Placeholder title="No Illustrations" note="이 오퍼레이터의 일러스트가 아직 없습니다." />}
-              </div>
-            ) : null}
           </div>
         </div>
       </div>

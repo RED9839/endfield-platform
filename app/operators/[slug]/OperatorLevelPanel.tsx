@@ -274,12 +274,12 @@ export default function OperatorLevelPanel({
 
   return (
     <div className="grid min-w-0 gap-3">
-      {/* LEVEL SYNCHRONIZATION */}
-      <div className="relative overflow-hidden border border-ef-line bg-ef-card2 p-4" style={CUT}>
-        <div className="flex flex-wrap items-end justify-between gap-3">
+      {/* LEVEL SYNCHRONIZATION — 높이 압축(약 -18%): 패딩·LV·버튼 영역 축소 */}
+      <div className="relative overflow-hidden border border-ef-line bg-ef-card2 p-3" style={CUT}>
+        <div className="flex flex-wrap items-end justify-between gap-2">
           <div>
             <TechHeader accent={accent}>Level Synchronization</TechHeader>
-            <div className="mt-2 flex items-end gap-2">
+            <div className="mt-1.5 flex items-end gap-2">
               {isEditing ? (
                 <input
                   autoFocus
@@ -293,7 +293,7 @@ export default function OperatorLevelPanel({
                       setIsEditing(false);
                     }
                   }}
-                  className="h-12 w-28 border border-ef-line bg-ef-bg px-3 font-mono text-3xl font-black text-ef-ink outline-none"
+                  className="h-9 w-20 border border-ef-line bg-ef-bg px-2 font-mono text-2xl font-black text-ef-ink outline-none"
                   style={{ borderColor: `${accent}66` }}
                 />
               ) : (
@@ -303,12 +303,12 @@ export default function OperatorLevelPanel({
                     setInputValue(String(level));
                     setIsEditing(true);
                   }}
-                  className="font-mono text-[44px] font-black leading-none text-white transition hover:opacity-80"
+                  className="font-mono text-[32px] font-black leading-none text-white transition hover:opacity-80"
                 >
                   LV {String(level).padStart(2, "0")}
                 </button>
               )}
-              <span className="pb-1 font-mono text-xs font-black text-ef-muted">/ 90</span>
+              <span className="pb-0.5 font-mono text-[11px] font-black text-ef-muted">/ 90</span>
             </div>
           </div>
 
@@ -318,13 +318,13 @@ export default function OperatorLevelPanel({
               setInputValue(String(level));
               setIsEditing(true);
             }}
-            className="inline-flex min-h-9 items-center border border-ef-line bg-ef-card px-3 font-mono text-[11px] font-black uppercase tracking-wide text-ef-muted transition hover:border-ef-accent/40 hover:text-ef-accent-soft"
+            className="inline-flex min-h-7 items-center border border-ef-line/70 bg-ef-card px-2 font-mono text-[9px] font-bold uppercase tracking-wide text-ef-muted transition hover:border-ef-accent/40 hover:text-ef-accent-soft"
           >
             Manual Input
           </button>
         </div>
 
-        <div className="mt-4 grid grid-cols-3 gap-1.5 sm:grid-cols-6">
+        <div className="mt-2.5 grid grid-cols-6 gap-1.5">
           {LEVEL_MARKS.map((mark) => {
             const active = mark === level;
             return (
@@ -332,7 +332,7 @@ export default function OperatorLevelPanel({
                 key={mark}
                 type="button"
                 onClick={() => selectLevel(mark)}
-                className="h-11 border font-mono text-sm font-black transition"
+                className="h-8 border font-mono text-xs font-black transition sm:text-sm"
                 style={{
                   background: active ? `${accent}24` : "#0b0b0b",
                   borderColor: active ? accent : "#202020",
