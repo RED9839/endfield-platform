@@ -39,6 +39,21 @@ const weaponTypeIconMap: Record<string, string> = {
 
 const TABLE_LEVELS = [1, 20, 40, 60, 80, 90];
 
+// 인게임 공식 분류 — 능력치는 힘/민첩/지능/의지뿐, 그 외(공격력·오리지늄 아츠 강도 등)는 속성.
+// 라벨 자체로 판별(main/sub 순서 무관).
+const ABILITY_STATS = new Set(["힘", "민첩", "지능", "의지"]);
+function classifyStats(main?: string, sub?: string): { attribute: string; ability: string } {
+  let attribute = "";
+  let ability = "";
+  for (const v of [main, sub]) {
+    const t = (v ?? "").trim();
+    if (!t) continue;
+    if (ABILITY_STATS.has(t)) ability ||= t;
+    else attribute ||= t;
+  }
+  return { attribute, ability };
+}
+
 function materialIcon(name: string, icon?: string) {
   return icon || `/materials/${encodeURIComponent(name)}.webp`;
 }
@@ -115,6 +130,7 @@ export default async function WeaponDetailPage({
 
   const skills = weapon.skills ?? [];
   const breakthrough = [...(weapon.breakthrough ?? [])].sort((a, b) => a.stage - b.stage);
+  const { attribute: attrStat, ability: abilityStat } = classifyStats(weapon.mainStatLabel, weapon.subStatLabel);
 
   return (
     <main className="relative min-h-screen overflow-x-clip bg-ef-bg text-ef-ink">
@@ -154,15 +170,15 @@ export default async function WeaponDetailPage({
                 <Badge icon={rarityIcon} tone="accent">{rarityLabelMap[weapon.rarity]}</Badge>
               </div>
 
-              {/* 정보 카드 — 주/부 능력치 + 무기 유형 + 시리즈(뱃지 → 카드로 존재감 강화) */}
+              {/* 정보 카드 — 인게임 분류: 속성(mainStatLabel) / 능력치(subStatLabel) + 무기 유형 + 시리즈 */}
               <div className="mt-3 grid grid-cols-2 gap-2">
                 <div className="border border-ef-line bg-ef-card p-2.5" style={CUT_SM}>
-                  <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">주 능력치</p>
-                  <p className="mt-0.5 truncate text-sm font-black" style={{ color: ACCENT }}>{weapon.mainStatLabel ?? "-"}</p>
+                  <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">속성</p>
+                  <p className="mt-0.5 truncate text-sm font-black" style={{ color: ACCENT }}>{attrStat || "-"}</p>
                 </div>
                 <div className="border border-ef-line bg-ef-card p-2.5" style={CUT_SM}>
-                  <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">부 능력치</p>
-                  <p className="mt-0.5 truncate text-sm font-black text-ef-ink">{weapon.subStatLabel ?? "-"}</p>
+                  <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">능력치</p>
+                  <p className="mt-0.5 truncate text-sm font-black text-ef-ink">{abilityStat || "-"}</p>
                 </div>
                 <div className="flex items-center gap-2 border border-ef-line bg-ef-card p-2.5" style={CUT_SM}>
                   {typeIcon ? <span className="relative h-5 w-5 shrink-0"><Image src={typeIcon} alt="" fill sizes="20px" className="object-contain" /></span> : null}
@@ -196,12 +212,12 @@ export default async function WeaponDetailPage({
                   <p className="font-mono text-xl font-black leading-tight sm:text-2xl" style={{ color: PRIMARY }}>{maxAttack}</p>
                 </div>
                 <div className="border border-ef-line bg-ef-card px-2 py-1.5" style={CUT_SM}>
-                  <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">주 능력치</p>
-                  <p className="break-keep text-sm font-black leading-tight" style={{ color: ACCENT }}>{weapon.mainStatLabel ?? "-"}</p>
+                  <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">속성</p>
+                  <p className="break-keep text-sm font-black leading-tight" style={{ color: ACCENT }}>{attrStat || "-"}</p>
                 </div>
                 <div className="border border-ef-line bg-ef-card px-2 py-1.5" style={CUT_SM}>
-                  <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">부 능력치</p>
-                  <p className="break-keep text-sm font-black leading-tight text-ef-ink">{weapon.subStatLabel ?? "-"}</p>
+                  <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">능력치</p>
+                  <p className="break-keep text-sm font-black leading-tight text-ef-ink">{abilityStat || "-"}</p>
                 </div>
                 <div className="border border-ef-line bg-ef-card px-2 py-1.5" style={CUT_SM}>
                   <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">무기 유형</p>

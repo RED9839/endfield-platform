@@ -6,7 +6,7 @@ import WeaponsPageClient, {
 
 export default function WeaponsPage() {
   const weapons: WeaponListItem[] = weaponSummaries.map((weapon) => {
-    // 목록 카드에 주/부 능력치도 표기 → 상세 데이터에서 안전하게 보강(없으면 undefined).
+    // 목록 카드에 속성(mainStatLabel)/능력치(subStatLabel)도 표기 → 상세 데이터에서 보강(없으면 undefined).
     const detail = getWeaponDetailBySlug(weapon.slug);
     return {
       slug: weapon.slug,

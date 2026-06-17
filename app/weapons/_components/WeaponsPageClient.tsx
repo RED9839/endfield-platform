@@ -78,6 +78,21 @@ const seriesOptions = [
   "억제", "의료", "잔혹", "추격", "효율", "흐름", "강공",
 ];
 
+// 인게임 공식 분류 — 능력치는 힘/민첩/지능/의지뿐, 그 외 스탯(공격력·오리지늄 아츠 강도 등)은 모두 속성.
+// 데이터의 main/sub 순서와 무관하게 라벨 자체로 속성/능력치를 판별한다.
+const ABILITY_STATS = new Set(["힘", "민첩", "지능", "의지"]);
+function classifyStats(main?: string, sub?: string): { attribute: string; ability: string } {
+  let attribute = "";
+  let ability = "";
+  for (const v of [main, sub]) {
+    const t = (v ?? "").trim();
+    if (!t) continue;
+    if (ABILITY_STATS.has(t)) ability ||= t;
+    else attribute ||= t;
+  }
+  return { attribute, ability };
+}
+
 function getWeaponType(weapon: WeaponListItem) {
   return weapon.weaponType ?? "";
 }
@@ -202,12 +217,16 @@ const WeaponCard = memo(function WeaponCard({ weapon }: { weapon: WeaponListItem
       <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/80 to-transparent p-2.5 pt-10">
         <h3 className="line-clamp-1 text-[15px] font-black leading-tight sm:text-base" style={{ color: ACCENT }}>{weapon.name}</h3>
         {weapon.enName ? <p className="line-clamp-1 font-mono text-[9px] uppercase tracking-[0.12em] text-ef-muted">{weapon.enName}</p> : null}
-        {weapon.mainStatLabel || weapon.subStatLabel ? (
-          <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] font-bold leading-tight">
-            <span><span className="font-mono text-[9px] text-ef-muted">주 </span><span className="text-ef-ink">{weapon.mainStatLabel ?? "-"}</span></span>
-            <span><span className="font-mono text-[9px] text-ef-muted">부 </span><span className="text-ef-ink">{weapon.subStatLabel ?? "-"}</span></span>
-          </div>
-        ) : null}
+        {/* 인게임 분류로 판별: 속성 / 능력치 (라벨 자체로 구분, main/sub 순서 무관) */}
+        {weapon.mainStatLabel || weapon.subStatLabel ? (() => {
+          const { attribute, ability } = classifyStats(weapon.mainStatLabel, weapon.subStatLabel);
+          return (
+            <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] font-bold leading-tight">
+              {attribute ? <span><span className="font-mono text-[9px] text-ef-muted">속성 </span><span className="text-ef-ink">{attribute}</span></span> : null}
+              {ability ? <span><span className="font-mono text-[9px] text-ef-muted">능력치 </span><span className="text-ef-ink">{ability}</span></span> : null}
+            </div>
+          );
+        })() : null}
       </div>
     </Link>
   );
