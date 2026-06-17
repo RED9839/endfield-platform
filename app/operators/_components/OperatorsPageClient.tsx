@@ -244,10 +244,10 @@ const OperatorCard = memo(function OperatorCard({
       <span className="pointer-events-none absolute left-1.5 top-1.5 h-5 w-5 border-l-2 border-t-2" style={{ borderColor: `${elColor}cc` }} />
       <span className="pointer-events-none absolute right-1.5 top-1.5 h-5 w-5 border-r-2 border-t-2" style={{ borderColor: `${elColor}66` }} />
 
-      {/* 레어도 라벨 — 실제 rarity 기반(6/5/4★). 코너 장식 아래에 작은 라벨로 배치(겹침 방지) */}
+      {/* 레어도 전용 라벨 — 실제 rarity 기반(6/5/4★ 동일 디자인·동일 색). 코너 장식 아래에 배치(겹침 방지) */}
       <span
-        className="pointer-events-none absolute right-2 top-[26px] rounded border px-1.5 py-0.5 font-mono text-[11px] font-bold leading-none"
-        style={{ background: "rgba(0,0,0,0.65)", borderColor: "rgba(255,210,74,0.4)", color: ACCENT }}
+        className="pointer-events-none absolute right-2 top-[26px] rounded-[3px] border px-1.5 py-0.5 font-mono text-[11px] font-bold leading-none backdrop-blur-[4px]"
+        style={{ background: "rgba(0,0,0,0.85)", borderColor: "rgba(255,210,74,0.35)", color: ACCENT }}
       >
         {operator.rarity}★
       </span>
