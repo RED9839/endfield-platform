@@ -1,3 +1,4 @@
+import { gearSummaries } from "@/data/gear-summary-data";
 import { operatorSummaries } from "@/data/operators-summary-data";
 import { weaponSummaries } from "@/data/weapons-summary-data";
 import {
@@ -6,6 +7,35 @@ import {
   getGroupedPageWindow,
 } from "@/lib/operator-settings/pagination";
 import { prisma } from "@/lib/prisma";
+
+// 장비 슬러그 → 세트명.
+const gearSetBySlug = new Map(
+  gearSummaries.map((gear) => [gear.slug, gear.setName]),
+);
+
+// 메인 슬롯 4개 장비(갑옷/장갑/부품1/부품2)에서 같은 세트가 3개 이상이면 활성 세트로 본다.
+// 세팅 에디터의 getActiveSetEffect 와 동일한 임계값(>= 3).
+function getActiveGearSet(slots: any): string {
+  const form = slots?.main?.form ?? {};
+  const slugs = [
+    form.armorSlug,
+    form.glovesSlug,
+    form.kit1Slug,
+    form.kit2Slug,
+  ]
+    .map((slug: unknown) => String(slug ?? "").trim())
+    .filter(Boolean);
+
+  const counts = new Map<string, number>();
+  for (const slug of slugs) {
+    const setName = gearSetBySlug.get(slug);
+    if (!setName || setName === "세트 없음") continue;
+    counts.set(setName, (counts.get(setName) ?? 0) + 1);
+  }
+
+  const active = [...counts.entries()].find(([, count]) => count >= 3);
+  return active?.[0] ?? "";
+}
 
 // 오퍼레이터 세팅 목록 조회 로직. API 라우트(GET)와 서버 페이지 프리페치가 공유한다.
 
@@ -139,6 +169,8 @@ function toListResponseItem(setting: OperatorSettingListItem) {
         .map((slug) => String(slug ?? "").trim())
         .filter(Boolean),
       mainWeaponSlug: String(slots?.main?.form?.weaponSlug ?? ""),
+      // 활성 세트(4슬롯 중 같은 세트 3개 이상). 없으면 빈 문자열.
+      gearSetName: getActiveGearSet(slots),
     },
   };
 }
