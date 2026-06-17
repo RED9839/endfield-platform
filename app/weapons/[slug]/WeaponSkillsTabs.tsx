@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useState, type ReactNode } from "react";
 import type { WeaponSkillPanel } from "@/data/weapons-detail-data";
 
@@ -66,12 +65,9 @@ function SkillCard({ skill }: { skill: WeaponSkillPanel }) {
 
   return (
     <div className="flex flex-col border border-ef-line bg-ef-card2 p-2.5 sm:p-3" style={CUT}>
-      <div className="flex items-center gap-2.5">
-        {skill.icon ? <span className="relative h-10 w-10 shrink-0 overflow-hidden border border-ef-line bg-black"><Image src={skill.icon} alt="" fill sizes="40px" className="object-contain p-1" /></span> : null}
-        <div className="min-w-0">
-          {(() => { const c = skillCategory(skill); return c ? <span className="inline-flex items-center border px-2 py-0.5 font-mono text-[10px] font-black uppercase tracking-wide" style={{ borderColor: `${PRIMARY}66`, background: `${PRIMARY}1a`, color: PRIMARY }}>{CAT_DISPLAY[c] ?? c}</span> : null; })()}
-          <p className="mt-1 break-keep text-sm font-black text-ef-ink">{skill.name}</p>
-        </div>
+      <div className="min-w-0">
+        {(() => { const c = skillCategory(skill); return c ? <span className="inline-flex items-center border px-2 py-0.5 font-mono text-[10px] font-black uppercase tracking-wide" style={{ borderColor: `${PRIMARY}66`, background: `${PRIMARY}1a`, color: PRIMARY }}>{CAT_DISPLAY[c] ?? c}</span> : null; })()}
+        <p className="mt-1 break-keep text-sm font-black text-ef-ink">{skill.name}</p>
       </div>
 
       {effect ? (
@@ -160,7 +156,6 @@ export default function WeaponSkillsTabs({ skills }: { skills: WeaponSkillPanel[
                 ? { ...CUT_SM, borderColor: ACCENT, background: "rgba(255,210,74,0.2)", color: "#ffffff", boxShadow: "inset 0 -2px 0 0 #ff9a2f, 0 0 14px rgba(255,210,74,0.18)" }
                 : { ...CUT_SM, borderColor: "#202020", background: "#0b0b0b", color: "#a0a0a0" }}
             >
-              {s.icon ? <span className="relative h-3.5 w-3.5 shrink-0 overflow-hidden"><Image src={s.icon} alt="" fill sizes="14px" className="object-contain" /></span> : null}
               {tabLabel(s)}
             </button>
           );
