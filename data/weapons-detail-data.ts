@@ -509,21 +509,28 @@ export function getWeaponStatTags(weapon: WeaponDetail): {
   attribute: string;
   series: string;
 } {
-  let ability = "";
-  let attribute = "";
+  const abilities: string[] = [];
+  const attributes: string[] = [];
   let series = "";
   for (const sk of weapon.skills ?? []) {
     const labels = (sk.meta ?? []).map((m) => String(m.label));
     const val = (label: string) =>
       String((sk.meta ?? []).find((m) => String(m.label) === label)?.value ?? "").trim();
-    // 우선순위: 시리즈 > 능력치 > 속성 (시리즈 스킬도 속성 meta(피해 타입)를 가지므로 속성으로 오분류 방지)
+    // 우선순위: 시리즈 > 능력치 > 속성. 시리즈 스킬은 속성 meta(피해 타입)를 가지므로 속성으로 세지 않음.
+    // 능력치/속성 스킬이 여러 개일 수 있으므로 전부 누적(예: 능력치 지능·치명타 확률).
     if (labels.includes("시리즈 스킬")) {
       if (!series) series = val("시리즈 스킬");
     } else if (labels.includes("능력치")) {
-      if (!ability) ability = val("능력치");
+      const v = val("능력치");
+      if (v) abilities.push(v);
     } else if (labels.includes("속성")) {
-      if (!attribute) attribute = val("속성");
+      const v = val("속성");
+      if (v) attributes.push(v);
     }
   }
-  return { ability, attribute, series: series || (weapon.series ?? "") };
+  return {
+    ability: [...new Set(abilities)].join(" · "),
+    attribute: [...new Set(attributes)].join(" · "),
+    series: series || (weapon.series ?? ""),
+  };
 }
