@@ -8,6 +8,7 @@ import {
   type WeaponRarity,
 } from "@/data/weapons-detail-data";
 import { operatorSummaries } from "@/data/operators-summary-data";
+import WeaponSkillsTabs from "./WeaponSkillsTabs";
 
 // ===== 오퍼레이터 상세/목록과 통일한 디자인 토큰 =====
 const PRIMARY = "#ff9a2f";
@@ -38,13 +39,6 @@ const weaponTypeIconMap: Record<string, string> = {
 };
 
 const TABLE_LEVELS = [1, 20, 40, 60, 80, 90];
-
-// 스킬 분류 라벨 — 오퍼레이터 톤에 맞춰 표기 통일.
-const skillTypeDisplayMap: Record<string, string> = {
-  능력치: "무기 효과",
-  속성: "속성 효과",
-  "시리즈 스킬": "시리즈 스킬",
-};
 
 // 사용 오퍼레이터 카드용 — 속성/클래스 라벨·색.
 const elementIconMap: Record<string, string> = {
@@ -275,104 +269,8 @@ export default async function WeaponDetailPage({
         {skills.length ? (
           <section className="min-w-0">
             <SectionLabel en="Weapon Skills" />
-            {/* items-start: 카드가 내용 길이에 맞춰 자연 높이 → 단순/시리즈 카드 간 빈 공간·불균형 제거 */}
-            <div className="grid grid-cols-1 items-start gap-2 lg:grid-cols-2">
-              {skills.map((skill) => {
-                const levelValues = skill.levelValues ?? [];
-                const lastDesc = [...levelValues].reverse().find((l) => l.description)?.description?.trim() ?? "";
-                const effect = (skill.description?.trim() || "") || ((lastDesc.includes("\n") || lastDesc.length > 24) ? lastDesc : "");
-                const ranks = levelValues
-                  .map((lv) => ({ rank: lv.rank, value: lv.stats?.[0]?.value ?? (lv.description?.match(/[+\-]?\d+(?:\.\d+)?%?/)?.[0] ?? "") }))
-                  .filter((r) => r.value !== "");
-                const compareRows = (skill.compareRows ?? []).filter((row) => row.values?.length);
-                const maxStats = ([...levelValues].reverse().find((l) => l.stats?.length)?.stats ?? []).filter((s) => s.value !== undefined && s.value !== null && String(s.value).trim() !== "");
-                const finalValue = ranks.length ? ranks[ranks.length - 1].value : "";
-                const isSeries = compareRows.length > 1 || maxStats.length > 1;
-                // 효과 정보 셀 — 시리즈: 최대랭크 라벨별 수치 / 단순: 효과 대상 + 최종 수치 (데이터 기반, 생성 없음)
-                const infoCells = isSeries
-                  ? maxStats.map((s) => ({ label: s.label, value: String(s.value) }))
-                  : [
-                      ...((skill.meta?.[0]?.value != null && String(skill.meta[0].value).trim() !== "") ? [{ label: "효과 대상", value: String(skill.meta[0].value) }] : []),
-                      ...(finalValue ? [{ label: "최종 수치", value: String(finalValue) }] : []),
-                    ];
-                // 메타 텍스트 행(시리즈 보조: 속성/시리즈 등) — 시리즈 카드에서만, 수치 셀과 중복 방지
-                const metaRows = isSeries ? (skill.meta ?? []).filter((m) => String(m.value).trim() !== "") : [];
-                return (
-                  <div key={skill.key} className="flex flex-col border border-ef-line bg-ef-card2 p-2.5 sm:p-3" style={CUT}>
-                    <div className="flex items-center gap-2.5">
-                      {skill.icon ? <span className="relative h-10 w-10 shrink-0 overflow-hidden border border-ef-line bg-black"><Image src={skill.icon} alt="" fill sizes="40px" className="object-contain p-1" /></span> : null}
-                      <div className="min-w-0">
-                        {skill.typeLabel ? <span className="inline-flex items-center border px-2 py-0.5 font-mono text-[10px] font-black uppercase tracking-wide" style={{ borderColor: `${PRIMARY}66`, background: `${PRIMARY}1a`, color: PRIMARY }}>{skillTypeDisplayMap[skill.typeLabel] ?? skill.typeLabel}</span> : null}
-                        <p className="mt-1 break-keep text-sm font-black text-ef-ink">{skill.name}</p>
-                      </div>
-                    </div>
-
-                    {/* 효과 설명(프로즈) — 데이터 있을 때만 */}
-                    {effect ? (
-                      <div className="mt-2.5">
-                        <p className="mb-1 font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">효과 설명</p>
-                        <p className="whitespace-pre-line break-keep text-[13px] leading-6 text-ef-muted">{highlightNums(effect)}</p>
-                      </div>
-                    ) : null}
-
-                    {/* 효과 정보 — 라벨별 수치 셀(시리즈: 다중 / 단순: 효과 대상·최종 수치) */}
-                    {infoCells.length ? (
-                      <div className={`mt-2.5 grid gap-1.5 ${infoCells.length >= 3 ? "grid-cols-2 min-[420px]:grid-cols-3" : "grid-cols-2"}`}>
-                        {infoCells.map((c, i) => (
-                          <div key={i} className="border border-ef-line bg-ef-card px-2 py-1.5" style={CUT_SM}>
-                            <p className="truncate font-mono text-[9px] font-bold uppercase tracking-wide text-ef-muted">{c.label}</p>
-                            <p className="mt-0.5 break-keep font-mono text-sm font-black tabular-nums" style={{ color: ACCENT }}>{c.value}</p>
-                          </div>
-                        ))}
-                      </div>
-                    ) : null}
-
-                    {/* 메타(시리즈 보조 텍스트) */}
-                    {metaRows.length ? (
-                      <div className="mt-2.5 flex flex-col gap-1 border-t border-ef-line pt-2.5">
-                        {metaRows.map((mt, i) => (
-                          <div key={i} className="flex items-center justify-between gap-3 text-[12px]">
-                            <span className="shrink-0 font-mono text-[10px] font-bold uppercase tracking-wide text-ef-muted">{mt.label}</span>
-                            <span className="min-w-0 truncate text-right font-black" style={{ color: ACCENT }}>{mt.value}</span>
-                          </div>
-                        ))}
-                      </div>
-                    ) : null}
-
-                    {/* 강화 수치 — 시리즈: 라벨별 R1~Rn / 단순: 한 줄. 자동 줄바꿈 */}
-                    {compareRows.length > 1 ? (
-                      <div className="mt-2.5 flex flex-col gap-2 border-t border-ef-line pt-2.5">
-                        {compareRows.map((row, ri) => (
-                          <div key={ri}>
-                            <p className="mb-1 font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">{row.label} · 강화 수치</p>
-                            <div className="flex flex-wrap gap-1">
-                              {row.values.map((v, i) => (
-                                <span key={i} className="inline-flex items-center gap-1 border border-ef-line bg-ef-card px-1.5 py-0.5 font-mono text-[10px] leading-none" style={CUT_SM}>
-                                  <span className="text-ef-muted">R{i + 1}</span>
-                                  <span className="font-black tabular-nums" style={{ color: ACCENT }}>{v}</span>
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : ranks.length ? (
-                      <div className="mt-2.5 border-t border-ef-line pt-2.5">
-                        <p className="mb-1.5 font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">강화 수치 · R1~R{ranks.length}</p>
-                        <div className="flex flex-wrap gap-1">
-                          {ranks.map((r, i) => (
-                            <span key={i} className="inline-flex items-center gap-1 border border-ef-line bg-ef-card px-1.5 py-0.5 font-mono text-[10px] leading-none" style={CUT_SM}>
-                              <span className="text-ef-muted">R{r.rank}</span>
-                              <span className="font-black tabular-nums" style={{ color: ACCENT }}>{r.value}</span>
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    ) : null}
-                  </div>
-                );
-              })}
-            </div>
+            {/* 탭 구조(클라이언트) — 선택된 스킬만 표시. 기본=시리즈 스킬. 동시 펼침 방지로 세로 공간 절약 */}
+            <WeaponSkillsTabs skills={skills} />
           </section>
         ) : null}
 
