@@ -93,12 +93,13 @@ const weaponIconMap: Record<WeaponType, string> = {
   artsunit: "/icons/weapons/artsunit.webp",
 };
 
+// 엔드필드 인게임 기준 속성 컬러(코너 포인트). 전기=보라 → 노란색 계열로 통일.
 const elementColorMap: Record<OperatorElement, string> = {
-  physical: "#d6dae3",
-  cryo: "#4fa3ff",
-  heat: "#ff8a1f",
-  nature: "#3ecf8e",
-  electric: "#c084fc",
+  physical: "#d5d5d5",
+  cryo: "#59d4ff",
+  heat: "#ff6b4a",
+  nature: "#8dff57",
+  electric: "#ffd24a",
 };
 
 const classOrderMap: Record<OperatorClass, number> = {
@@ -185,7 +186,7 @@ function FilterGroup({
 
 function OperatorInfoIcon({ src, alt }: { src: string; alt: string }) {
   return (
-    <span className="relative h-[18px] w-[18px] shrink-0" title={alt}>
+    <span className="relative h-4 w-4 shrink-0 sm:h-[18px] sm:w-[18px]" title={alt}>
       <Image src={src} alt={alt} fill sizes="18px" className="object-contain" />
     </span>
   );
@@ -204,7 +205,7 @@ const OperatorCard = memo(function OperatorCard({
     <Link
       href={`/operators/${operator.slug}`}
       className={`group relative block overflow-hidden border border-ef-line bg-ef-card ${HOVER}`}
-      style={{ ...CUT, aspectRatio: "170 / 238" }}
+      style={{ ...CUT, aspectRatio: "170 / 228" }}
     >
       {isAdminSplit ? (
         <>
@@ -251,22 +252,19 @@ const OperatorCard = memo(function OperatorCard({
 
       <div className="absolute inset-0 bg-gradient-to-t from-black via-black/45 to-transparent" />
 
-      {/* 하단 정보 — 이름/영문명 + 라벨 행(속성·직군·무기) */}
-      <div className="absolute bottom-0 left-0 w-full p-2.5 sm:p-3">
-        <h3 className="line-clamp-1 text-[15px] font-black leading-[1.1] sm:text-[17px]" style={{ color: ACCENT }}>
+      {/* 하단 정보 — 이름/영문명 + 아이콘 행(속성·직군·무기). 직군 텍스트는 아이콘과 중복이라 제거 */}
+      <div className="absolute bottom-0 left-0 w-full p-2 sm:p-3">
+        <h3 className="line-clamp-1 text-[14px] font-black leading-[1.1] sm:text-[17px]" style={{ color: ACCENT }}>
           {operator.name}
         </h3>
-        <p className="mt-[2px] line-clamp-1 font-mono text-[9px] uppercase tracking-[0.14em] text-ef-muted sm:text-[10px]">
+        <p className="mt-[1px] line-clamp-1 font-mono text-[8px] uppercase tracking-[0.12em] text-ef-muted sm:mt-[2px] sm:text-[10px] sm:tracking-[0.14em]">
           {operator.enName}
         </p>
 
-        <div className="mt-2 flex items-center gap-2 border-t border-ef-line/60 pt-1.5">
+        <div className="mt-1.5 flex items-center gap-1.5 border-t border-ef-line/60 pt-1.5 sm:gap-2">
           <OperatorInfoIcon src={elementIconMap[operator.element]} alt={elementLabelMap[operator.element]} />
           <OperatorInfoIcon src={classIconMap[operator.class]} alt={classLabelMap[operator.class]} />
           <OperatorInfoIcon src={weaponIconMap[operator.weapon]} alt={weaponLabelMap[operator.weapon]} />
-          <span className="ml-auto truncate font-mono text-[9px] font-bold uppercase tracking-wide text-ef-muted">
-            {classLabelMap[operator.class]}
-          </span>
         </div>
       </div>
     </Link>
@@ -363,24 +361,22 @@ export default function OperatorsPageClient({
       </div>
 
       <div className="relative z-10 mx-auto max-w-[1720px] px-3 pb-16 sm:px-6 lg:px-7">
-        {/* HEADER 패널 */}
-        <header className="relative overflow-hidden border border-ef-line bg-ef-card2 p-4 sm:p-5" style={CUT}>
+        {/* HEADER 패널 — 세로 공간 축소(디자인 유지) */}
+        <header className="relative overflow-hidden border border-ef-line bg-ef-card2 p-3 sm:px-5 sm:py-3.5" style={CUT}>
           <span className="block h-0.5 w-full" style={{ background: `linear-gradient(90deg, ${PRIMARY}, transparent 55%)`, position: "absolute", left: 0, top: 0 }} />
-          <div className="flex items-end justify-between gap-3">
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="h-4 w-1" style={{ background: PRIMARY }} />
-                <span className="font-mono text-[11px] font-black uppercase tracking-[0.22em] text-ef-accent-soft">Operator Index</span>
-              </div>
-              <h1 className="mt-2 text-3xl font-black tracking-tight text-white sm:text-4xl">오퍼레이터</h1>
-              <p className="mt-1 font-mono text-[11px] uppercase tracking-[0.18em] text-ef-muted">
-                Total <span className="font-black" style={{ color: ACCENT }}>{sortedOperators.length}</span> / {operators.length} Units
-              </p>
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <div className="flex items-center gap-2">
+              <span className="h-4 w-1" style={{ background: PRIMARY }} />
+              <h1 className="text-2xl font-black tracking-tight text-white sm:text-3xl">오퍼레이터</h1>
             </div>
+            <span className="font-mono text-[10px] font-black uppercase tracking-[0.22em] text-ef-accent-soft">Operator Index</span>
+            <p className="ml-auto font-mono text-[11px] uppercase tracking-[0.18em] text-ef-muted">
+              Total <span className="font-black" style={{ color: ACCENT }}>{sortedOperators.length}</span> / {operators.length}
+            </p>
           </div>
         </header>
 
-        <div className="mt-3 grid min-w-0 gap-3 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-5">
+        <div className="mt-3 grid min-w-0 gap-3 lg:grid-cols-[232px_minmax(0,1fr)] lg:gap-4">
           {/* ===== 검색 / 필터 ===== */}
           <aside
             className="sticky top-2 z-40 flex min-w-0 max-w-full self-start flex-col overflow-hidden border border-ef-line bg-ef-card lg:top-3 lg:max-h-[calc(100vh-24px)]"
