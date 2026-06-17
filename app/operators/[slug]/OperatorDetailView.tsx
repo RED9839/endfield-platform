@@ -2,15 +2,13 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { farmStages } from "@/data/farming/farm-stages";
-import type { MaterialCostItem, OperatorDetail } from "@/data/operators-transformers";
+import type { EliteStage, MaterialCostItem, OperatorDetail, PotentialDetail, TalentDetail, TrustBonus } from "@/data/operators-transformers";
 
 import HeroSlider from "./HeroSlider";
 import OperatorLevelPanel from "./OperatorLevelPanel";
-import PotentialPanel from "./PotentialPanel";
-import TrustBonusPanel from "./TrustBonusPanel";
 
 type OperatorRef = { slug: string; name: string; enName: string; avatar: string; element: string };
 type WeaponRef = { slug: string; name: string; image: string };
@@ -23,9 +21,37 @@ const classLabelMap: Record<string, string> = { vanguard: "뱅가드", guard: "�
 const weaponLabelMap: Record<string, string> = { sword: "한손검", greatsword: "양손검", polearm: "장병기", handcannon: "권총", artsunit: "아츠 유닛" };
 
 const CUT = { clipPath: "polygon(0 0, calc(100% - 13px) 0, 100% 13px, 100% 100%, 13px 100%, 0 calc(100% - 13px))" };
+const ACCENT = "#ffd24a";
+// 공용 호버: 노란 테두리 + 내부 5% 노란 틴트(기존 배경 유지) + 미세 상승. 모든 카드/칩 통일(0.2s).
+const HOVER = "transition duration-200 hover:-translate-y-0.5 hover:border-[#ffd24a]/55 hover:shadow-[inset_0_0_0_999px_rgba(255,210,74,0.05),0_4px_14px_rgba(0,0,0,0.4)]";
+
+// 스킬 타입 태그 — [일반 공격]/[배틀 스킬] 등 시각 강조 pill.
+function SkillTag({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="inline-flex items-center border px-2 py-0.5 font-mono text-[10px] font-black uppercase tracking-wide" style={{ borderColor: `${PRIMARY}66`, background: `${PRIMARY}1a`, color: PRIMARY }}>
+      {children}
+    </span>
+  );
+}
+
+// 설명 내 수치(+12%, x1.5, 30 등)를 노란색으로 강조 — DATA 잠재/신뢰도 가독성.
+function highlightNums(text: string): React.ReactNode {
+  const matches = [...text.matchAll(/([+\-x×]?\s*\d+(?:\.\d+)?%?)/gi)];
+  if (!matches.length) return text;
+  const parts: React.ReactNode[] = [];
+  let last = 0;
+  matches.forEach((m, i) => {
+    const v = m[0];
+    const s = m.index ?? 0;
+    if (s > last) parts.push(text.slice(last, s));
+    parts.push(<span key={i} className="font-black" style={{ color: ACCENT }}>{v.replace(/\s+/g, "")}</span>);
+    last = s + v.length;
+  });
+  if (last < text.length) parts.push(text.slice(last));
+  return parts;
+}
 
 type ModuleId = "build" | "data" | "skill" | "material" | "gallery";
-type DataSub = "attr" | "trust" | "potential";
 
 // 세팅 목록 항목(/api/operator-settings 응답).
 type BuildItem = {
@@ -134,10 +160,12 @@ function Meta({ children }: { children: React.ReactNode }) {
 }
 function SectionLabel({ en, num, action, sub }: { en: string; num?: string; action?: React.ReactNode; sub?: boolean }) {
   return (
-    <div className={`flex items-center gap-2 ${sub ? "mb-1.5" : "mb-2"}`}>
-      <span className={sub ? "h-2.5 w-0.5" : "h-3.5 w-1"} style={{ background: sub ? "#5a5a5a" : PRIMARY }} />
+    <div className={`flex items-center gap-2 ${sub ? "mb-1.5" : "mb-2.5"}`}>
+      <span className={sub ? "h-2.5 w-0.5" : "h-4 w-1"} style={{ background: sub ? "#5a5a5a" : PRIMARY }} />
       {num ? <span className="font-mono text-xs font-black tabular-nums" style={{ color: PRIMARY }}>{num}</span> : null}
-      <span className={`font-mono font-black uppercase ${sub ? "text-[10px] tracking-[0.2em] text-ef-muted" : "text-[11px] tracking-[0.22em] text-ef-accent-soft"}`}>{en}</span>
+      <span className={`font-mono font-black uppercase ${sub ? "text-[10px] tracking-[0.2em] text-ef-muted" : "text-[13px] tracking-[0.2em] text-white"}`}>{en}</span>
+      {/* 메인 섹션만 라벨 우측으로 얇은 구분선 — 서브 섹션과 위계 차이 */}
+      {!sub ? <span className="ml-2 hidden h-px flex-1 bg-gradient-to-r from-ef-line to-transparent sm:block" /> : null}
       {action ? <span className="ml-auto">{action}</span> : null}
     </div>
   );
@@ -284,12 +312,133 @@ const farmCategoryByMaterial: Map<string, string> = (() => {
 // 재료 칩(아이콘 + 이름 + 개수). MATERIAL 탭 공용.
 function MaterialChip({ name, icon, count, large }: { name: string; icon: string; count: number | string; large?: boolean }) {
   return (
-    <div className={`flex items-center gap-2 border border-ef-line bg-ef-card2 ${large ? "px-2.5 py-2 min-[2560px]:py-2.5" : "px-2 py-1.5"}`} style={CUT}>
-      <span className={`relative shrink-0 overflow-hidden border border-ef-line bg-black ${large ? "h-11 w-11 min-[2560px]:h-12 min-[2560px]:w-12" : "h-8 w-8"}`}>{icon ? <Image src={icon} alt="" fill sizes={large ? "48px" : "32px"} className="object-contain p-0.5" /> : null}</span>
+    <div className={`flex items-center gap-2 border border-ef-line bg-ef-card2 ${HOVER} ${large ? "min-h-[60px] px-2.5 py-2 min-[2560px]:py-2.5" : "min-h-[56px] px-2 py-1.5"}`} style={CUT}>
+      <span className={`relative shrink-0 overflow-hidden border border-ef-line bg-black ${large ? "h-11 w-11 min-[2560px]:h-12 min-[2560px]:w-12" : "h-10 w-10"}`}>{icon ? <Image src={icon} alt="" fill sizes={large ? "48px" : "40px"} className="object-contain p-0.5" /> : null}</span>
       <span className="min-w-0 flex-1">
-        <span className={`block truncate font-bold leading-tight text-ef-ink ${large ? "text-xs min-[2560px]:text-sm" : "text-[11px]"}`}>{name}</span>
-        <span className={`block font-mono font-black leading-tight ${large ? "text-sm min-[2560px]:text-base" : "text-[11px]"}`} style={{ color: PRIMARY }}>×{count}</span>
+        <span className={`block truncate font-bold leading-tight text-ef-ink ${large ? "text-xs min-[2560px]:text-sm" : "text-xs"}`}>{name}</span>
+        <span className={`block font-mono font-black leading-tight ${large ? "text-sm min-[2560px]:text-base" : "text-xs"}`} style={{ color: PRIMARY }}>×{count}</span>
       </span>
+    </div>
+  );
+}
+
+// 재능(Talents) 카드 목록 — 카드 높이 통일. 모바일: 기본 1개만 펼침(탭 토글) / PC(sm+): 전부 펼침.
+function TalentList({ talents }: { talents: TalentDetail[] }) {
+  const [open, setOpen] = useState(0);
+  return (
+    <div className="grid grid-cols-1 items-stretch gap-2 sm:grid-cols-2">
+      {talents.map((tlt, i) => {
+        const isOpen = open === i;
+        return (
+          <button key={i} type="button" onClick={() => setOpen(isOpen ? -1 : i)} className={`flex min-h-[96px] flex-col border border-ef-line bg-ef-card2 p-2.5 text-left ${HOVER} sm:cursor-default`} style={CUT}>
+            <div className="flex items-center gap-2.5">
+              <span className="relative h-9 w-9 shrink-0 overflow-hidden border border-ef-line bg-black">{tlt.icon ? <Image src={tlt.icon} alt="" fill sizes="36px" className="object-contain p-0.5" /> : null}</span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-xs font-black text-ef-ink">{tlt.name}</p>
+                {tlt.unlock ? <p className="truncate font-mono text-[9px] font-bold uppercase tracking-wide" style={{ color: PRIMARY }}>{tlt.unlock}</p> : null}
+              </div>
+              {tlt.description ? <span className="shrink-0 font-mono text-[10px] font-black sm:hidden" style={{ color: isOpen ? "#ffb347" : "#5a5a5a" }}>{isOpen ? "▲" : "▼"}</span> : null}
+            </div>
+            {tlt.description ? <p className={`mt-1.5 overflow-hidden break-keep text-[11px] leading-5 text-ef-muted transition-all duration-200 ease-out sm:line-clamp-none sm:max-h-none sm:opacity-100 ${isOpen ? "max-h-96 opacity-100" : "line-clamp-2 max-h-10 opacity-90"}`}>{tlt.description}</p> : null}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+// 정예화(Elite) 카드 — MATERIAL/DATA 공용. 높이 통일(min-h-220).
+function EliteCard({ stage, description, materials }: EliteStage) {
+  return (
+    <div className={`flex min-h-[220px] flex-col border border-ef-line bg-ef-card2 p-2.5 ${HOVER}`} style={CUT}>
+      <p className="font-mono text-[11px] font-black uppercase tracking-wide" style={{ color: PRIMARY }}>{stage}</p>
+      {description ? <p className="mt-0.5 break-keep text-[11px] leading-5 text-ef-muted">{description}</p> : null}
+      {materials.length ? (
+        <div className="mt-auto grid grid-cols-1 gap-1.5 pt-2 min-[480px]:grid-cols-2">
+          {materials.map((m, j) => <MaterialChip key={j} name={m.name} icon={m.icon} count={m.count} />)}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+// 잠재능력(Potential) 카드 목록 — 카드 높이 통일, 수치 강조.
+function PotentialList({ items }: { items: PotentialDetail[] }) {
+  return (
+    <div className="grid grid-cols-1 items-stretch gap-2 sm:grid-cols-2">
+      {items.map((p, i) => (
+        <div key={i} className={`flex min-h-[88px] gap-2.5 border border-ef-line bg-ef-card2 p-2.5 ${HOVER}`} style={CUT}>
+          <span className="relative h-9 w-9 shrink-0 overflow-hidden border border-ef-line bg-black"><Image src={`/icons/potential/${i + 1}.webp`} alt="" fill sizes="36px" className="object-contain p-0.5" /></span>
+          <div className="min-w-0">
+            <p className="text-xs font-black text-ef-ink">{p.title}</p>
+            <p className="mt-1 break-keep text-[11px] leading-5 text-ef-muted">{highlightNums(p.description)}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// 신뢰도 보너스(Trust) 그리드 — 컴팩트 카드, 수치 강조.
+function TrustGrid({ items }: { items: TrustBonus[] }) {
+  return (
+    <div className="grid grid-cols-2 items-stretch gap-2 sm:grid-cols-3 lg:grid-cols-4">
+      {items.map((t) => (
+        <div key={t.level} className={`flex min-h-[68px] flex-col justify-center gap-1 border border-ef-line bg-ef-card2 p-2.5 text-center ${HOVER}`} style={CUT}>
+          <span className="font-mono text-[9px] font-black uppercase tracking-[0.18em] text-ef-muted">Trust Lv.{t.level}</span>
+          <span className="break-keep text-sm font-black text-ef-ink">{highlightNums(t.label)}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// GALLERY — 가용 일러스트(풀/아바타) 메이슨리 그리드 + 라이트박스(ESC/좌우/스와이프). 공통 레이아웃 유지.
+function Gallery({ images, alt }: { images: string[]; alt: string }) {
+  const [idx, setIdx] = useState<number | null>(null);
+  const open = idx !== null;
+  const go = (d: number) => setIdx((cur) => (cur === null ? cur : (cur + d + images.length) % images.length));
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setIdx(null);
+      else if (e.key === "ArrowRight") setIdx((c) => (c === null ? c : (c + 1) % images.length));
+      else if (e.key === "ArrowLeft") setIdx((c) => (c === null ? c : (c - 1 + images.length) % images.length));
+    };
+    window.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [open, images.length]);
+  const startX = useRef(0);
+  return (
+    <div className="min-w-0">
+      <div className="columns-2 gap-2 sm:columns-3 min-[1920px]:columns-4 [&>*]:mb-2">
+        {images.map((src, i) => (
+          <button key={i} type="button" onClick={() => setIdx(i)} className={`group relative block w-full break-inside-avoid overflow-hidden border border-ef-line bg-black ${HOVER}`} style={CUT}>
+            <Image src={src} alt={`${alt} ${i + 1}`} width={600} height={900} sizes="(max-width:640px) 50vw, 300px" className="h-auto w-full object-cover transition duration-300 group-hover:scale-[1.03]" />
+            <span className="pointer-events-none absolute right-1.5 top-1.5 border border-ef-line bg-black/70 px-1.5 py-0.5 font-mono text-[9px] font-black text-ef-muted">{String(i + 1).padStart(2, "0")}</span>
+          </button>
+        ))}
+      </div>
+
+      {open && idx !== null ? (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/92 p-4 backdrop-blur-sm" onClick={() => setIdx(null)} role="dialog" aria-modal="true">
+          <button type="button" onClick={() => setIdx(null)} className="absolute right-4 top-4 z-10 inline-flex h-10 w-10 items-center justify-center border border-ef-line bg-black/60 font-mono text-lg font-black text-ef-ink transition hover:border-ef-accent/50" aria-label="닫기">✕</button>
+          {images.length > 1 ? (
+            <>
+              <button type="button" onClick={(e) => { e.stopPropagation(); go(-1); }} className="absolute left-3 top-1/2 z-10 inline-flex h-12 w-12 -translate-y-1/2 items-center justify-center border border-ef-line bg-black/60 font-mono text-xl font-black text-ef-ink transition hover:border-ef-accent/50" aria-label="이전">‹</button>
+              <button type="button" onClick={(e) => { e.stopPropagation(); go(1); }} className="absolute right-3 top-1/2 z-10 inline-flex h-12 w-12 -translate-y-1/2 items-center justify-center border border-ef-line bg-black/60 font-mono text-xl font-black text-ef-ink transition hover:border-ef-accent/50" aria-label="다음">›</button>
+            </>
+          ) : null}
+          <div className="relative flex max-h-[88vh] w-full max-w-[1100px] items-center justify-center" onClick={(e) => e.stopPropagation()} onTouchStart={(e) => { startX.current = e.touches[0].clientX; }} onTouchEnd={(e) => { const dx = e.changedTouches[0].clientX - startX.current; if (Math.abs(dx) > 50) go(dx < 0 ? 1 : -1); }}>
+            <Image src={images[idx]} alt={`${alt} ${idx + 1}`} width={1100} height={1500} sizes="100vw" className="h-auto max-h-[88vh] w-auto object-contain" priority />
+            <span className="absolute bottom-3 left-1/2 -translate-x-1/2 border border-ef-line bg-black/70 px-2.5 py-1 font-mono text-[10px] font-black tracking-wide text-ef-muted">{idx + 1} / {images.length}</span>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -315,14 +464,12 @@ export default function OperatorDetailView({
   const maxLevel = Array.isArray(operator.levelStats) && operator.levelStats.length ? Math.max(...operator.levelStats.map((r) => r.level)) : 90;
 
   const [activeModule, setActiveModule] = useState<ModuleId>("build");
-  const [dataSub, setDataSub] = useState<DataSub>("attr");
   // BUILD 탭 = 세팅 목록(커뮤니티/유저 등록 세팅). USER SETTINGS 탭 = 선택한 세팅 상세.
   const [builds, setBuilds] = useState<BuildItem[]>([]);
   const [buildsLoading, setBuildsLoading] = useState(true);
   const [buildsExpanded, setBuildsExpanded] = useState(false); // 모바일: 상위 5개 외 펼침
   const [skillKey, setSkillKey] = useState<"normalAttack" | "battleSkill" | "comboSkill" | "ultimate">("normalAttack"); // SKILL 탭 선택 스킬
   const [skillLvl, setSkillLvl] = useState<number | null>(null); // SKILL LEVEL TABLE 선택 레벨 인덱스(null=마지막/M3)
-  const [openTalent, setOpenTalent] = useState<number | null>(null); // TALENT 펼친 카드
   const [selectedId, setSelectedId] = useState<string | null>(null); // 선택 세팅 상세
   const [selForm, setSelForm] = useState<Record<string, unknown> | null>(null);
   const [selCycle, setSelCycle] = useState<unknown[]>([]);
@@ -386,6 +533,12 @@ export default function OperatorDetailView({
     };
   }, [selectedId, operator.slug]);
 
+  // 탭 전환 시 항상 최상단으로 스크롤 — 긴 탭에서 내려본 뒤 짧은 탭(SKILL/MATERIAL)으로 바꾸면
+  // 좌측 히어로(데스크톱 sticky / 모바일 일반 흐름)가 뷰포트 밖에 남아 "배경 그리드만 보이는" 현상을 차단.
+  useEffect(() => {
+    if (typeof window !== "undefined") window.scrollTo({ top: 0 });
+  }, [activeModule]);
+
   const operatorBySlug = new Map(operators.map((o) => [o.slug, o]));
   const weaponBySlug = new Map(weapons.map((w) => [w.slug, w]));
   const gearBySlug = new Map(gears.map((g) => [g.slug, g]));
@@ -417,14 +570,14 @@ export default function OperatorDetailView({
     { id: "material", label: "MATERIAL" },
     { id: "gallery", label: "GALLERY" },
   ];
-  const dataSubs: { id: DataSub; label: string; show: boolean }[] = [
-    { id: "attr", label: "능력치", show: true },
-    { id: "trust", label: "신뢰도", show: operator.trustBonus.length > 0 },
-    { id: "potential", label: "잠재", show: operator.potential.length > 0 },
-  ];
+
+  // GALLERY 이미지 — 가용 일러스트/아바타(중복 제거). 공통 레이아웃에서 object-fit 으로 표시.
+  const galleryImages = [...new Set([operator.fullImage, operator.fullImageSecondary, operator.avatar, operator.avatarSecondary].filter((s): s is string => !!s))];
 
   return (
     <main className="relative min-h-screen bg-ef-bg text-ef-ink">
+      {/* 레벨/탤런트 전환용 페이드 키프레임(클라이언트 전역 주입) */}
+      <style>{`@keyframes efFade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}`}</style>
       <div className="pointer-events-none fixed inset-0 z-0 opacity-[0.022] [background-image:radial-gradient(circle,#ffd24a_1px,transparent_1px)] [background-size:22px_22px]" />
 
       {/* TOP HUD */}
@@ -441,10 +594,10 @@ export default function OperatorDetailView({
       </div>
 
       {/* 2컬럼: 좌 HERO(일러스트) / 우 MODULE(목록+상세). max-width 없이 확장. 비율 ~1919=50:50 / 1920=45:55 / 2560=42:58(우측 빌드 영역 확대). */}
-      <div className="relative z-10 lg:grid lg:gap-6 lg:px-7 min-[1024px]:grid-cols-[minmax(0,50%)_minmax(0,50%)] min-[1920px]:grid-cols-[minmax(0,45%)_minmax(0,55%)] min-[1920px]:gap-7 min-[1920px]:px-10 min-[2560px]:grid-cols-[minmax(0,42%)_minmax(0,58%)]">
-        {/* ===== LEFT: HERO COLUMN — sticky 풀하이트(모니터가 클수록 더 크고 길어짐) ===== */}
+      <div className="relative z-10 lg:grid lg:gap-6 lg:px-7 min-[1024px]:grid-cols-[minmax(0,50%)_minmax(0,50%)] min-[1920px]:grid-cols-[minmax(0,45%)_minmax(0,55%)] min-[1920px]:gap-7 min-[1920px]:px-10 min-[2560px]:grid-cols-[860px_minmax(0,1fr)]">
+        {/* ===== LEFT: HERO COLUMN — sticky 풀하이트. 2560px+ 에서는 폭을 860px로 고정해 캐릭터 영역을 키우지 않고 우측 정보만 확장 ===== */}
         <div className="lg:sticky lg:top-3 lg:self-start">
-          <section className="relative flex h-[69vh] max-h-[86vh] min-h-[480px] flex-col overflow-hidden sm:h-[60vh] sm:max-h-[78vh] lg:h-[calc(100vh-1.5rem)] lg:max-h-none lg:border lg:border-ef-line" style={CUT}>
+          <section className="relative flex h-[69vh] max-h-[86vh] min-h-[480px] flex-col overflow-hidden bg-black sm:h-[60vh] sm:max-h-[78vh] lg:h-[calc(100vh-1.5rem)] lg:max-h-none lg:border lg:border-ef-line" style={CUT}>
             <div className="absolute inset-0">
               {isAdminSlider ? (
                 <HeroSlider images={adminSlides} alt={operator.name} enName={operator.enName} />
@@ -622,18 +775,48 @@ export default function OperatorDetailView({
               </div>
             ) : null}
 
-            {/* ===== DATA MODULE (성장정보 이동: MAX LV/정예화/주능력치) ===== */}
+            {/* ===== DATA MODULE — BUILD/SKILL/MATERIAL 와 동일한 카드 디자인 언어로 통일(스탯/재능/잠재/신뢰도/정예화) ===== */}
             {activeModule === "data" ? (
-              <div>
-                <div className="mb-3 flex gap-1.5 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                  {dataSubs.filter((s) => s.show).map((s) => {
-                    const isActive = s.id === dataSub;
-                    return (<button key={s.id} type="button" onClick={() => setDataSub(s.id)} className="inline-flex min-h-9 shrink-0 items-center border px-4 text-xs font-black transition" style={{ ...CUT, background: isActive ? `${PRIMARY}22` : "#0b0b0b", borderColor: isActive ? PRIMARY : "#202020", color: isActive ? "#fff" : "#a0a0a0" }}>{s.label}</button>);
-                  })}
+              <div className="flex flex-col gap-4 min-[2560px]:gap-5">
+                {/* BASIC STATS — 레벨 동기화 + 주/보조 능력치 + 능력치 매트릭스 */}
+                <div className="min-w-0">
+                  <SectionLabel en="Basic Stats" />
+                  <OperatorLevelPanel name={operator.name} enName={operator.enName} avatar={operator.avatar} element={operator.element} operatorClass={operator.class} weapon={operator.weapon} rarity={operator.rarity} mainStatLabel={operator.mainStatLabel ?? ""} subStatLabel={operator.subStatLabel ?? ""} levelStats={operator.levelStats} />
                 </div>
-                {dataSub === "attr" ? (<><SectionLabel en="Attribute Data" /><OperatorLevelPanel name={operator.name} enName={operator.enName} avatar={operator.avatar} element={operator.element} operatorClass={operator.class} weapon={operator.weapon} rarity={operator.rarity} mainStatLabel={operator.mainStatLabel ?? ""} subStatLabel={operator.subStatLabel ?? ""} levelStats={operator.levelStats} /></>) : null}
-                {dataSub === "trust" && operator.trustBonus.length ? (<><SectionLabel en="Trust Data" /><TrustBonusPanel items={operator.trustBonus} /></>) : null}
-                {dataSub === "potential" && operator.potential.length ? (<><SectionLabel en="Potential Data" /><PotentialPanel items={operator.potential} /></>) : null}
+
+                {/* TALENTS — 재능 카드(높이 통일) */}
+                {operator.talents.length ? (
+                  <div className="min-w-0">
+                    <SectionLabel en="Talents" />
+                    <TalentList talents={operator.talents} />
+                  </div>
+                ) : null}
+
+                {/* POTENTIAL — 잠재능력 카드 */}
+                {operator.potential.length ? (
+                  <div className="min-w-0">
+                    <SectionLabel en="Potential" />
+                    <PotentialList items={operator.potential} />
+                  </div>
+                ) : null}
+
+                {/* TRUST BONUS — 신뢰도 보너스 */}
+                {operator.trustBonus.length ? (
+                  <div className="min-w-0">
+                    <SectionLabel en="Trust Bonus" />
+                    <TrustGrid items={operator.trustBonus} />
+                  </div>
+                ) : null}
+
+                {/* ELITE INFO — 정예화 단계 + 재료 */}
+                {operator.elite.length ? (
+                  <div className="min-w-0 mb-0">
+                    <SectionLabel en="Elite Info" />
+                    <div className="grid grid-cols-1 items-stretch gap-2 sm:grid-cols-2">
+                      {operator.elite.map((e, i) => <EliteCard key={i} stage={e.stage} description={e.description} materials={e.materials} />)}
+                    </div>
+                  </div>
+                ) : null}
               </div>
             ) : null}
 
@@ -657,7 +840,7 @@ export default function OperatorDetailView({
                         const isSel = key === skillKey;
                         const cost = s.meta?.find((mt) => mt.value !== undefined);
                         return (
-                          <button key={key} type="button" onClick={() => { setSkillKey(key); setSkillLvl(null); setOpenTalent(null); }} className="flex flex-col items-center gap-1.5 border p-2.5 text-center transition" style={{ ...CUT, borderColor: isSel ? "#ffb347" : "#202020", background: isSel ? "rgba(255,170,60,0.12)" : "#0b0b0b", boxShadow: isSel ? "0 0 16px rgba(255,170,60,0.16)" : undefined }}>
+                          <button key={key} type="button" onClick={() => { setSkillKey(key); setSkillLvl(null); }} className={`flex flex-col items-center gap-1.5 border p-2.5 text-center ${isSel ? "" : `border-ef-line bg-ef-card ${HOVER}`}`} style={isSel ? { ...CUT, borderColor: "#ffb347", background: "rgba(255,170,60,0.12)", boxShadow: "0 0 16px rgba(255,170,60,0.16)" } : CUT}>
                             <span className="relative h-12 w-12 overflow-hidden border bg-black" style={{ borderColor: isSel ? "#ffb347" : "#202020" }}>{s.icon ? <Image src={s.icon} alt="" fill sizes="48px" className="object-contain p-1" /> : null}</span>
                             <span className="font-mono text-[9px] font-black uppercase tracking-wide" style={{ color: isSel ? "#ffb347" : "#a0a0a0" }}>{label}</span>
                             <span className="line-clamp-2 text-[11px] font-black leading-tight text-ef-ink">{s.name}</span>
@@ -673,21 +856,21 @@ export default function OperatorDetailView({
                     <SectionLabel en="Skill Detail" />
                     <div className="overflow-hidden border bg-ef-card" style={{ ...CUT, borderColor: `${PRIMARY}55` }}>
                       <span className="block h-0.5 w-full" style={{ background: `linear-gradient(90deg, ${PRIMARY}, transparent 55%)` }} />
-                      <div className="p-3 sm:p-4">
-                        <div className="flex items-center gap-3">
-                          <span className="relative h-12 w-12 shrink-0 overflow-hidden border border-ef-line bg-black sm:h-14 sm:w-14">{sk.icon ? <Image src={sk.icon} alt="" fill sizes="56px" className="object-contain p-1" /> : null}</span>
+                      <div className="p-2.5 sm:p-3">
+                        <div className="flex items-center gap-2.5">
+                          <span className="relative h-11 w-11 shrink-0 overflow-hidden border border-ef-line bg-black sm:h-12 sm:w-12">{sk.icon ? <Image src={sk.icon} alt="" fill sizes="48px" className="object-contain p-1" /> : null}</span>
                           <div className="min-w-0">
-                            <p className="font-mono text-[10px] font-black uppercase tracking-wide" style={{ color: PRIMARY }}>{sk.typeLabel}</p>
-                            <p className="truncate text-base font-black text-ef-ink sm:text-lg">{sk.name}</p>
+                            <SkillTag>{sk.typeLabel}</SkillTag>
+                            <p className="mt-1 truncate text-sm font-black text-ef-ink sm:text-base">{sk.name}</p>
                           </div>
                         </div>
-                        {sk.summary ? <p className="mt-3 whitespace-pre-line break-keep text-xs leading-6 text-ef-muted">{sk.summary}</p> : null}
+                        {sk.summary ? <p className="mt-2.5 max-w-[68ch] whitespace-pre-line break-keep text-xs leading-6 text-ef-muted">{sk.summary}</p> : null}
                         {sk.meta?.length ? (
-                          <div className="mt-3 grid grid-cols-1 gap-1.5 border-t border-ef-line pt-3 sm:grid-cols-2">
+                          <div className="mt-2.5 grid grid-cols-1 gap-1.5 border-t border-ef-line pt-2.5 sm:grid-cols-2">
                             {sk.meta.map((mt, i) => (
-                              <div key={i} className="flex items-center justify-between gap-2 border border-ef-line bg-ef-card2 px-2.5 py-1.5" style={CUT}>
+                              <div key={i} className="flex items-center justify-between gap-2 border border-ef-line bg-ef-card2 px-2.5 py-1" style={CUT}>
                                 <span className="min-w-0 truncate text-[11px] font-bold text-ef-muted">{mt.label}</span>
-                                {mt.value !== undefined ? <span className="shrink-0 font-mono text-xs font-black" style={{ color: PRIMARY }}>{mt.value}</span> : null}
+                                {mt.value !== undefined ? <span className="shrink-0 font-mono text-xs font-black tabular-nums" style={{ color: PRIMARY }}>{mt.value}</span> : null}
                               </div>
                             ))}
                           </div>
@@ -712,14 +895,14 @@ export default function OperatorDetailView({
                             );
                           })}
                         </div>
-                        <div className="mt-2 border border-ef-line bg-ef-card2 p-3" style={CUT}>
+                        <div key={curIdx} className="mt-2 flex min-h-[168px] flex-col border border-ef-line bg-ef-card2 p-2.5" style={{ ...CUT, animation: "efFade 180ms ease-out" }}>
                           <p className="font-mono text-[11px] font-black uppercase tracking-wide" style={{ color: PRIMARY }}>LEVEL {lv.level}</p>
                           {lv.stats?.length ? (
                             <div className="mt-2 grid grid-cols-1 gap-1 border-t border-ef-line pt-2 sm:grid-cols-2">
                               {lv.stats.map((st, i) => (
                                 <div key={i} className="flex items-center justify-between gap-2 border border-ef-line bg-black px-2 py-1 text-[11px]" style={CUT}>
                                   <span className="min-w-0 truncate text-ef-muted">{st.label}</span>
-                                  <span className="shrink-0 font-mono font-black text-ef-ink">{st.value}</span>
+                                  <span className="shrink-0 text-right font-mono font-black tabular-nums text-ef-ink">{st.value}</span>
                                 </div>
                               ))}
                             </div>
@@ -730,38 +913,21 @@ export default function OperatorDetailView({
                     );
                   })() : null}
 
-                  {/* TALENTS — 헤더(아이콘·이름·해금) + 설명(클릭 펼침). 기본 2줄 클램프로 카드 높이 통일 */}
+                  {/* TALENTS — 재능 카드(공용 TalentList: 모바일 1개 펼침 / PC 전부 펼침, 높이 통일) */}
                   {operator.talents.length ? (
                     <div className="min-w-0">
                       <SectionLabel en="Talents" sub />
-                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                        {operator.talents.map((tlt, i) => {
-                          const open = openTalent === i;
-                          return (
-                            <button key={i} type="button" onClick={() => setOpenTalent(open ? null : i)} className="flex flex-col border border-ef-line bg-ef-card2 p-2.5 text-left transition hover:border-ef-accent/40" style={CUT}>
-                              <div className="flex items-center gap-2.5">
-                                <span className="relative h-9 w-9 shrink-0 overflow-hidden border border-ef-line bg-black">{tlt.icon ? <Image src={tlt.icon} alt="" fill sizes="36px" className="object-contain p-0.5" /> : null}</span>
-                                <div className="min-w-0 flex-1">
-                                  <p className="truncate text-xs font-black text-ef-ink">{tlt.name}</p>
-                                  {tlt.unlock ? <p className="truncate font-mono text-[9px] font-bold uppercase tracking-wide" style={{ color: PRIMARY }}>{tlt.unlock}</p> : null}
-                                </div>
-                                {tlt.description ? <span className="shrink-0 font-mono text-[10px] font-black" style={{ color: open ? "#ffb347" : "#5a5a5a" }}>{open ? "▲" : "▼"}</span> : null}
-                              </div>
-                              {tlt.description ? <p className={`mt-1.5 break-keep text-[11px] leading-5 text-ef-muted ${open ? "" : "line-clamp-2"}`}>{tlt.description}</p> : null}
-                            </button>
-                          );
-                        })}
-                      </div>
+                      <TalentList talents={operator.talents} />
                     </div>
                   ) : null}
 
-                  {/* INFRASTRUCTURE — 기반시설 스킬 카드 */}
+                  {/* INFRASTRUCTURE — 기반시설 스킬 카드. 높이 통일 + 호버 */}
                   {operator.infrastructureSkills.length ? (
                     <div className="min-w-0 mb-0">
                       <SectionLabel en="Infrastructure" sub />
-                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                      <div className="grid grid-cols-1 items-stretch gap-2 sm:grid-cols-2">
                         {operator.infrastructureSkills.map((g, i) => (
-                          <div key={i} className="border border-ef-line bg-ef-card2 p-2.5" style={CUT}>
+                          <div key={i} className={`flex min-h-[120px] flex-col border border-ef-line bg-ef-card2 p-2.5 ${HOVER}`} style={CUT}>
                             <div className="flex items-center gap-2">
                               <span className="relative h-8 w-8 shrink-0 overflow-hidden border border-ef-line bg-black">{g.icon ? <Image src={g.icon} alt="" fill sizes="32px" className="object-contain p-0.5" /> : null}</span>
                               <p className="truncate text-xs font-black text-ef-ink">{g.name}</p>
@@ -801,20 +967,12 @@ export default function OperatorDetailView({
               if (!hasAny) return <div className="min-w-0"><SectionLabel en="Materials" /><Placeholder title="No Material Data" note="이 오퍼레이터의 재료 데이터가 아직 없습니다." /></div>;
               return (
                 <div className="flex flex-col gap-4 min-[2560px]:gap-5">
-                  {/* OPERATOR UPGRADE — 정예화 재료 */}
+                  {/* OPERATOR UPGRADE — 정예화 재료(공용 EliteCard) */}
                   {operator.elite.length ? (
                     <div className="min-w-0">
                       <SectionLabel en="Operator Upgrade" />
-                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                        {operator.elite.map((e, i) => (
-                          <div key={i} className="flex min-h-[220px] flex-col border border-ef-line bg-ef-card2 p-2.5" style={CUT}>
-                            <p className="font-mono text-[11px] font-black uppercase tracking-wide" style={{ color: PRIMARY }}>{e.stage}</p>
-                            {e.description ? <p className="mt-0.5 break-keep text-[11px] leading-5 text-ef-muted">{e.description}</p> : null}
-                            <div className="mt-2 grid grid-cols-1 gap-1.5 min-[480px]:grid-cols-2">
-                              {e.materials.map((m, j) => <MaterialChip key={j} name={m.name} icon={m.icon} count={m.count} />)}
-                            </div>
-                          </div>
-                        ))}
+                      <div className="grid grid-cols-1 items-stretch gap-2 sm:grid-cols-2">
+                        {operator.elite.map((e, i) => <EliteCard key={i} stage={e.stage} description={e.description} materials={e.materials} />)}
                       </div>
                     </div>
                   ) : null}
@@ -823,15 +981,15 @@ export default function OperatorDetailView({
                   {hasSkillMats ? (
                     <div className="min-w-0">
                       <SectionLabel en="Skill Upgrade" />
-                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                      <div className="grid grid-cols-1 items-stretch gap-2 sm:grid-cols-2">
                         {SKILL_KEYS.map((k) => {
                           const agg = aggregateMaterials(skillMats(operator.skills[k]));
                           if (!agg.length) return null;
                           const s = operator.skills[k];
                           return (
-                            <div key={k} className="flex min-h-[220px] flex-col border border-ef-line bg-ef-card2 p-2.5" style={CUT}>
+                            <div key={k} className={`flex min-h-[220px] flex-col border border-ef-line bg-ef-card2 p-2.5 ${HOVER}`} style={CUT}>
                               <div className="flex items-center gap-2">
-                                <span className="relative h-7 w-7 shrink-0 overflow-hidden border border-ef-line bg-black">{s.icon ? <Image src={s.icon} alt="" fill sizes="28px" className="object-contain p-0.5" /> : null}</span>
+                                <span className="relative h-9 w-9 shrink-0 overflow-hidden border border-ef-line bg-black">{s.icon ? <Image src={s.icon} alt="" fill sizes="36px" className="object-contain p-0.5" /> : null}</span>
                                 <p className="min-w-0 truncate text-xs font-black text-ef-ink">{SKILL_LABELS[k]} <span className="text-ef-muted">· {s.name}</span></p>
                               </div>
                               <div className="mt-2 grid grid-cols-1 gap-1.5 min-[480px]:grid-cols-2">
@@ -844,38 +1002,46 @@ export default function OperatorDetailView({
                     </div>
                   ) : null}
 
-                  {/* TOTAL + FARMING — 1920px+ 2열 배치(세로 길이 단축, 공간 활용) */}
+                  {/* TOTAL MATERIALS — 전체 합산. 1920px↑ 3열 / 2560px↑ 4열로 세로 길이 단축, 카드 높이 통일 */}
                   {total.length ? (
-                    <div className="flex flex-col gap-4 min-[1920px]:grid min-[1920px]:grid-cols-2 min-[1920px]:items-start min-[1920px]:gap-5 min-[2560px]:gap-6">
-                      {/* TOTAL MATERIALS — 큰 칩, 카드 높이 통일 */}
-                      <div className="min-w-0">
-                        <SectionLabel en="Total Materials" />
-                        <div className="grid grid-cols-1 items-stretch gap-1.5 min-[480px]:grid-cols-2 lg:grid-cols-3 min-[1920px]:grid-cols-2 min-[2560px]:grid-cols-3">
-                          {total.map((m, j) => <MaterialChip key={j} name={m.name} icon={m.icon} count={m.total} large />)}
-                        </div>
+                    <div className="min-w-0">
+                      <SectionLabel en="Total Materials" />
+                      <div className="grid grid-cols-1 items-stretch gap-1.5 min-[480px]:grid-cols-2 min-[1024px]:grid-cols-2 min-[1920px]:grid-cols-3 min-[2560px]:grid-cols-4">
+                        {total.map((m, j) => <MaterialChip key={j} name={m.name} icon={m.icon} count={m.total} large />)}
                       </div>
-                      {/* FARMING MATERIALS — 재료 획득처 배지 */}
-                      <div className="min-w-0 mb-0">
-                        <SectionLabel en="Farming Materials" action={<Link href="/farming" className="-my-1 inline-flex items-center px-2 py-1 font-mono text-[10px] font-black uppercase tracking-wide text-ef-accent-soft transition duration-200 hover:translate-x-0.5 hover:brightness-125">파밍 →</Link>} />
-                        <div className="flex flex-wrap gap-1.5">
-                          {total.map((m, j) => {
-                            const src = farmCategoryByMaterial.get(m.name);
-                            return (
-                              <span key={j} className="inline-flex items-center gap-1.5 border border-ef-line bg-ef-card2 px-2 py-1 min-[2560px]:px-2.5 min-[2560px]:py-1.5" style={CUT}>
-                                <span className="relative h-5 w-5 shrink-0 overflow-hidden border border-ef-line bg-black min-[2560px]:h-6 min-[2560px]:w-6">{m.icon ? <Image src={m.icon} alt="" fill sizes="24px" className="object-contain p-0.5" /> : null}</span>
-                                <span className="text-[11px] font-bold text-ef-ink min-[2560px]:text-xs">{m.name}</span>
-                                <span className="font-mono text-[9px] font-black uppercase tracking-wide" style={{ color: PRIMARY }}>[{src ?? "특수 입수"}]</span>
+                    </div>
+                  ) : null}
+
+                  {/* FARMING MATERIALS — 2줄 구조 카드(아이콘 / 재료명 / 획득처 태그). 클릭 시 파밍 계산기로 전달. 긴 텍스트도 레이아웃 유지(grid) */}
+                  {total.length ? (
+                    <div className="min-w-0 mb-0">
+                      <SectionLabel en="Farming Materials" action={<Link href="/farming" className="-my-1 inline-flex items-center px-2 py-1 font-mono text-[10px] font-black uppercase tracking-wide text-ef-accent-soft transition duration-200 hover:translate-x-0.5 hover:brightness-125">파밍 계산기 →</Link>} />
+                      <div className="grid grid-cols-2 items-stretch gap-2 min-[480px]:grid-cols-3 lg:grid-cols-2 min-[1440px]:grid-cols-3 min-[1920px]:grid-cols-4 min-[2560px]:grid-cols-5">
+                        {total.map((m, j) => {
+                          const src = farmCategoryByMaterial.get(m.name);
+                          const href = `/farming?requiredMaterials=${encodeURIComponent(JSON.stringify([{ name: m.name, amount: m.total }]))}`;
+                          return (
+                            <Link key={j} href={href} title={`${m.name} 파밍 계산기로 보기`} className={`flex min-h-[64px] items-center gap-2.5 border border-ef-line bg-ef-card2 px-2.5 py-2 ${HOVER}`} style={CUT}>
+                              <span className="relative h-10 w-10 shrink-0 overflow-hidden border border-ef-line bg-black">{m.icon ? <Image src={m.icon} alt="" fill sizes="40px" className="object-contain p-0.5" /> : null}</span>
+                              <span className="min-w-0 flex-1">
+                                <span className="block break-keep text-[11px] font-bold leading-tight text-ef-ink">{m.name}</span>
+                                <span className="mt-1 inline-block max-w-full truncate border px-1.5 py-0.5 font-mono text-[9px] font-black uppercase tracking-wide" style={{ borderColor: `${PRIMARY}55`, background: `${PRIMARY}14`, color: PRIMARY }}>{src ?? "특수 입수"}</span>
                               </span>
-                            );
-                          })}
-                        </div>
+                            </Link>
+                          );
+                        })}
                       </div>
                     </div>
                   ) : null}
                 </div>
               );
             })() : null}
-            {activeModule === "gallery" ? (<div><SectionLabel en="Gallery" /><Placeholder title="GALLERY — Phase 3" note="프로필·일러스트·보이스를 Phase 3에서 비주얼 우선으로 구현합니다." /></div>) : null}
+            {activeModule === "gallery" ? (
+              <div className="min-w-0">
+                <SectionLabel en="Gallery" action={<span className="font-mono text-[10px] font-black uppercase tracking-wide text-ef-muted">{galleryImages.length} ILLUST</span>} />
+                {galleryImages.length ? <Gallery images={galleryImages} alt={operator.name} /> : <Placeholder title="No Illustrations" note="이 오퍼레이터의 일러스트가 아직 없습니다." />}
+              </div>
+            ) : null}
           </div>
         </div>
       </div>
