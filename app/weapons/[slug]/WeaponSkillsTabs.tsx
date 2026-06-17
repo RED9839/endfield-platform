@@ -15,14 +15,18 @@ const CUT_SM = {
     "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))",
 };
 
-const skillTypeDisplayMap: Record<string, string> = {
-  능력치: "무기 효과",
-  속성: "속성 효과",
-  "시리즈 스킬": "시리즈 스킬",
-};
+// 무기 스킬 분류는 typeLabel("무기 스킬")이 아니라 meta[0].label(능력치/속성/시리즈 스킬)에 들어있다.
+const CATS = ["능력치", "속성", "시리즈 스킬"] as const;
+const CAT_ORDER: Record<string, number> = { 능력치: 0, 속성: 1, "시리즈 스킬": 2 };
+const CAT_DISPLAY: Record<string, string> = { 능력치: "능력치", 속성: "속성", "시리즈 스킬": "시리즈" };
 
+function skillCategory(skill: WeaponSkillPanel): string {
+  const m = (skill.meta ?? []).find((x) => CATS.includes(String(x.label) as (typeof CATS)[number]));
+  return m ? String(m.label) : (skill.typeLabel ?? "");
+}
 function tabLabel(skill: WeaponSkillPanel) {
-  return (skill.typeLabel && skillTypeDisplayMap[skill.typeLabel]) || skill.typeLabel || skill.name;
+  const c = skillCategory(skill);
+  return CAT_DISPLAY[c] ?? c ?? skill.name;
 }
 
 function highlightNums(text: string): ReactNode {
@@ -65,7 +69,7 @@ function SkillCard({ skill }: { skill: WeaponSkillPanel }) {
       <div className="flex items-center gap-2.5">
         {skill.icon ? <span className="relative h-10 w-10 shrink-0 overflow-hidden border border-ef-line bg-black"><Image src={skill.icon} alt="" fill sizes="40px" className="object-contain p-1" /></span> : null}
         <div className="min-w-0">
-          {skill.typeLabel ? <span className="inline-flex items-center border px-2 py-0.5 font-mono text-[10px] font-black uppercase tracking-wide" style={{ borderColor: `${PRIMARY}66`, background: `${PRIMARY}1a`, color: PRIMARY }}>{skillTypeDisplayMap[skill.typeLabel] ?? skill.typeLabel}</span> : null}
+          {(() => { const c = skillCategory(skill); return c ? <span className="inline-flex items-center border px-2 py-0.5 font-mono text-[10px] font-black uppercase tracking-wide" style={{ borderColor: `${PRIMARY}66`, background: `${PRIMARY}1a`, color: PRIMARY }}>{CAT_DISPLAY[c] ?? c}</span> : null; })()}
           <p className="mt-1 break-keep text-sm font-black text-ef-ink">{skill.name}</p>
         </div>
       </div>
@@ -132,18 +136,19 @@ function SkillCard({ skill }: { skill: WeaponSkillPanel }) {
   );
 }
 
-// 무기 스킬 탭 — 오퍼레이터 스킬 오버뷰처럼 탭 선택 시 해당 스킬만 표시. 기본=시리즈 스킬(가장 중요).
+// 무기 스킬 탭 — 능력치 → 속성 → 시리즈 순. 기본 선택=시리즈(가장 중요).
 export default function WeaponSkillsTabs({ skills }: { skills: WeaponSkillPanel[] }) {
-  const seriesIdx = skills.findIndex((s) => s.typeLabel === "시리즈 스킬");
-  const [sel, setSel] = useState(seriesIdx >= 0 ? seriesIdx : Math.max(0, skills.length - 1));
-  if (!skills.length) return null;
-  const cur = Math.min(sel, skills.length - 1);
+  const ordered = [...skills].sort((a, b) => (CAT_ORDER[skillCategory(a)] ?? 9) - (CAT_ORDER[skillCategory(b)] ?? 9));
+  const seriesIdx = ordered.findIndex((s) => skillCategory(s) === "시리즈 스킬");
+  const [sel, setSel] = useState(seriesIdx >= 0 ? seriesIdx : Math.max(0, ordered.length - 1));
+  if (!ordered.length) return null;
+  const cur = Math.min(sel, ordered.length - 1);
 
   return (
     <div className="min-w-0">
       {/* 탭 — 선택된 스킬만 아래에 표시(세로 공간 절약). 모바일 줄바꿈 */}
       <div className="mb-2 flex flex-wrap gap-1.5">
-        {skills.map((s, i) => {
+        {ordered.map((s, i) => {
           const isSel = i === cur;
           return (
             <button
@@ -161,7 +166,7 @@ export default function WeaponSkillsTabs({ skills }: { skills: WeaponSkillPanel[
           );
         })}
       </div>
-      <SkillCard skill={skills[cur]} />
+      <SkillCard skill={ordered[cur]} />
     </div>
   );
 }

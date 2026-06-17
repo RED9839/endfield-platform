@@ -169,22 +169,22 @@ export default async function WeaponDetailPage({
                 <Badge icon={rarityIcon} tone="accent">{rarityLabelMap[weapon.rarity]}</Badge>
               </div>
 
-              {/* 정보 카드 — 인게임 분류: 속성(mainStatLabel) / 능력치(subStatLabel) + 무기 유형 + 시리즈 */}
+              {/* 정보 카드 — 무기 유형 → 능력치 → 속성 → 시리즈 순 */}
               <div className="mt-3 grid grid-cols-2 gap-2">
-                <div className="border border-ef-line bg-ef-card p-2.5" style={CUT_SM}>
-                  <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">속성</p>
-                  <p className="mt-0.5 truncate text-sm font-black" style={{ color: ACCENT }}>{attrStat || "-"}</p>
-                </div>
-                <div className="border border-ef-line bg-ef-card p-2.5" style={CUT_SM}>
-                  <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">능력치</p>
-                  <p className="mt-0.5 truncate text-sm font-black text-ef-ink">{abilityStat || "-"}</p>
-                </div>
                 <div className="flex items-center gap-2 border border-ef-line bg-ef-card p-2.5" style={CUT_SM}>
                   {typeIcon ? <span className="relative h-5 w-5 shrink-0"><Image src={typeIcon} alt="" fill sizes="20px" className="object-contain" /></span> : null}
                   <span className="min-w-0">
                     <span className="block font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">무기 유형</span>
                     <span className="mt-0.5 block truncate text-sm font-black text-ef-ink">{typeLabel}</span>
                   </span>
+                </div>
+                <div className="border border-ef-line bg-ef-card p-2.5" style={CUT_SM}>
+                  <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">능력치</p>
+                  <p className="mt-0.5 truncate text-sm font-black text-ef-ink">{abilityStat || "-"}</p>
+                </div>
+                <div className="border border-ef-line bg-ef-card p-2.5" style={CUT_SM}>
+                  <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">속성</p>
+                  <p className="mt-0.5 truncate text-sm font-black" style={{ color: ACCENT }}>{attrStat || "-"}</p>
                 </div>
                 <div className="border border-ef-line bg-ef-card p-2.5" style={CUT_SM}>
                   <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">시리즈</p>
@@ -204,19 +204,11 @@ export default async function WeaponDetailPage({
           <section className="min-w-0">
             <SectionLabel en="Weapon Stats" />
             <div className="overflow-hidden border border-ef-line bg-ef-card2 p-3 sm:p-4" style={CUT}>
-              {/* 공격력 / 주 / 부 / 무기 유형 / 시리즈 — 5개 스탯 카드(압축) */}
+              {/* 공격력 / 무기 유형 / 능력치 / 속성 / 시리즈 — 5개 스탯 카드(압축) */}
               <div className="mb-2.5 grid grid-cols-2 gap-1.5 border-b border-ef-line pb-2.5 min-[520px]:grid-cols-3 lg:grid-cols-5">
                 <div className="border border-ef-line bg-ef-card px-2 py-1.5" style={CUT_SM}>
                   <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">공격력 · Lv.90</p>
                   <p className="font-mono text-xl font-black leading-tight sm:text-2xl" style={{ color: PRIMARY }}>{maxAttack}</p>
-                </div>
-                <div className="border border-ef-line bg-ef-card px-2 py-1.5" style={CUT_SM}>
-                  <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">속성</p>
-                  <p className="break-keep text-sm font-black leading-tight" style={{ color: ACCENT }}>{attrStat || "-"}</p>
-                </div>
-                <div className="border border-ef-line bg-ef-card px-2 py-1.5" style={CUT_SM}>
-                  <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">능력치</p>
-                  <p className="break-keep text-sm font-black leading-tight text-ef-ink">{abilityStat || "-"}</p>
                 </div>
                 <div className="border border-ef-line bg-ef-card px-2 py-1.5" style={CUT_SM}>
                   <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">무기 유형</p>
@@ -224,6 +216,14 @@ export default async function WeaponDetailPage({
                     {typeIcon ? <span className="relative h-4 w-4 shrink-0"><Image src={typeIcon} alt="" fill sizes="16px" className="object-contain" /></span> : null}
                     {typeLabel}
                   </p>
+                </div>
+                <div className="border border-ef-line bg-ef-card px-2 py-1.5" style={CUT_SM}>
+                  <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">능력치</p>
+                  <p className="break-keep text-sm font-black leading-tight text-ef-ink">{abilityStat || "-"}</p>
+                </div>
+                <div className="border border-ef-line bg-ef-card px-2 py-1.5" style={CUT_SM}>
+                  <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">속성</p>
+                  <p className="break-keep text-sm font-black leading-tight" style={{ color: ACCENT }}>{attrStat || "-"}</p>
                 </div>
                 <div className="border border-ef-line bg-ef-card px-2 py-1.5" style={CUT_SM}>
                   <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">시리즈</p>

@@ -71,6 +71,14 @@ const rarityLabelMap: Record<number, string> = {
   3: "3성",
 };
 
+// 레어도별 카드 테두리 색(인게임 등급 색감).
+const rarityBorderMap: Record<number, string> = {
+  6: "#ff8a1f",
+  5: "#f0c94a",
+  4: "#9a63ff",
+  3: "#4fa3ff",
+};
+
 const rarityOptions = [6, 5, 4, 3];
 
 const seriesOptions = [
@@ -178,12 +186,13 @@ const WeaponCard = memo(function WeaponCard({ weapon }: { weapon: WeaponListItem
   const image = getWeaponImage(weapon);
   const [imgError, setImgError] = useState(false);
   const typeIcon = weaponTypeIconMap[type];
+  const rarityBorder = rarityBorderMap[rarity] ?? "#202020";
 
   return (
     <Link
       href={`/weapons/${weapon.slug}`}
-      className={`group relative block overflow-hidden border border-ef-line bg-ef-card2 ${HOVER}`}
-      style={{ ...CUT, aspectRatio: "170 / 205" }}
+      className={`group relative block overflow-hidden border bg-ef-card2 ${HOVER}`}
+      style={{ ...CUT, aspectRatio: "170 / 205", borderColor: `${rarityBorder}99` }}
     >
       {/* 무기 이미지 — 카드 전면(상단 ~75%). object-contain 으로 잘리지 않게, 오퍼레이터 카드처럼 크게.
           이미지 없거나 로딩 실패 시에만 무기 타입 전용 아이콘 placeholder(검은 빈 박스 금지) */}
@@ -222,8 +231,8 @@ const WeaponCard = memo(function WeaponCard({ weapon }: { weapon: WeaponListItem
           const { attribute, ability } = classifyStats(weapon.mainStatLabel, weapon.subStatLabel);
           return (
             <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] font-bold leading-tight">
-              {attribute ? <span><span className="font-mono text-[9px] text-ef-muted">속성 </span><span className="text-ef-ink">{attribute}</span></span> : null}
               {ability ? <span><span className="font-mono text-[9px] text-ef-muted">능력치 </span><span className="text-ef-ink">{ability}</span></span> : null}
+              {attribute ? <span><span className="font-mono text-[9px] text-ef-muted">속성 </span><span className="text-ef-ink">{attribute}</span></span> : null}
             </div>
           );
         })() : null}
