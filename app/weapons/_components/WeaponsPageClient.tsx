@@ -188,33 +188,24 @@ const WeaponCard = memo(function WeaponCard({ weapon }: { weapon: WeaponListItem
           />
         ) : null}
         <span className="pointer-events-none absolute left-0 top-0 h-0.5 w-full" style={{ background: `linear-gradient(90deg, ${PRIMARY}, transparent 60%)` }} />
-        {/* 레어도 라벨 */}
-        <span className="absolute right-1.5 top-1.5 rounded-[3px] border-[0.5px] px-1.5 py-0.5 font-mono text-[10px] font-bold leading-none backdrop-blur-[4px]" style={{ background: "rgba(0,0,0,0.85)", borderColor: "rgba(255,210,74,0.35)", color: ACCENT }}>
+        {/* 레어도 뱃지 — 오퍼레이터 카드 방식(강화) */}
+        <span className="absolute right-2 top-2 rounded-[3px] border px-2 py-0.5 font-mono text-[11px] font-black leading-none backdrop-blur-[4px]" style={{ background: "rgba(0,0,0,0.82)", borderColor: `${ACCENT}80`, color: ACCENT }}>
           {rarity}★
         </span>
       </div>
 
-      {/* 정보 영역 — 계층: 1) 이름  2) 영문명  3) 주 능력치  4) 부 능력치  5) 무기 유형 (시리즈는 상세에서) */}
-      <div className="flex min-w-0 flex-1 flex-col p-1.5 sm:p-2.5">
-        {/* 1순위 — 이름 */}
-        <h3 className="line-clamp-1 text-[15px] font-black leading-tight sm:text-[16px]" style={{ color: ACCENT }}>{weapon.name}</h3>
-        {/* 2순위 — 영문명 */}
-        {weapon.enName ? <p className="line-clamp-1 font-mono text-[9px] uppercase tracking-[0.12em] text-ef-muted sm:text-[10px]">{weapon.enName}</p> : null}
+      {/* 정보 영역 — 도감 카드: 이름 / 영문명 / 주·부 능력치 (유형·시리즈는 상세에서) */}
+      <div className="flex min-w-0 flex-1 flex-col p-2 sm:p-3">
+        <h3 className="line-clamp-1 text-base font-black leading-tight sm:text-[17px]" style={{ color: ACCENT }}>{weapon.name}</h3>
+        {weapon.enName ? <p className="mt-0.5 line-clamp-1 font-mono text-[10px] uppercase tracking-[0.12em] text-ef-muted">{weapon.enName}</p> : null}
 
-        {/* 3·4순위 — 주/부 능력치 */}
+        {/* 주/부 능력치 — 하단, 한 줄 정리 */}
         {weapon.mainStatLabel || weapon.subStatLabel ? (
-          <p className="mt-1.5 line-clamp-1 text-[10px] font-bold leading-tight text-ef-ink/90">
-            <span className="font-mono text-[9px] text-ef-muted">주</span> {weapon.mainStatLabel ?? "-"}
-            <span className="mx-1 text-ef-line">·</span>
-            <span className="font-mono text-[9px] text-ef-muted">부</span> {weapon.subStatLabel ?? "-"}
-          </p>
+          <div className="mt-auto flex flex-wrap items-center gap-x-2 gap-y-0.5 border-t border-ef-line/60 pt-2 text-[11px] font-bold leading-tight">
+            <span><span className="font-mono text-[9px] text-ef-muted">주 </span><span className="text-ef-ink">{weapon.mainStatLabel ?? "-"}</span></span>
+            <span><span className="font-mono text-[9px] text-ef-muted">부 </span><span className="text-ef-ink">{weapon.subStatLabel ?? "-"}</span></span>
+          </div>
         ) : null}
-
-        {/* 5순위 — 무기 유형 */}
-        <div className="mt-auto flex items-center gap-1 pt-1.5">
-          {typeIcon ? <span className="relative h-3.5 w-3.5 shrink-0 opacity-80"><Image src={typeIcon} alt={typeLabel} fill sizes="14px" className="object-contain" /></span> : null}
-          <span className="font-mono text-[9px] font-bold uppercase tracking-wide text-ef-muted">{typeLabel}</span>
-        </div>
       </div>
     </Link>
   );
@@ -388,7 +379,7 @@ export default function WeaponsPageClient({ weapons }: { weapons: WeaponListItem
             </div>
 
             {sortedWeapons.length > 0 ? (
-              <div className="grid grid-cols-2 items-stretch gap-2 min-[480px]:grid-cols-3 sm:gap-3 md:grid-cols-[repeat(auto-fill,minmax(180px,1fr))]">
+              <div className="grid grid-cols-2 items-stretch gap-2.5 min-[480px]:grid-cols-3 sm:gap-3 md:grid-cols-[repeat(auto-fill,minmax(206px,1fr))]">
                 {sortedWeapons.map((weapon) => (
                   <WeaponCard key={weapon.slug} weapon={weapon} />
                 ))}

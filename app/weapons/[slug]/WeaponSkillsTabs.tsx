@@ -150,9 +150,9 @@ export default function WeaponSkillsTabs({ skills }: { skills: WeaponSkillPanel[
               key={s.key}
               type="button"
               onClick={() => setSel(i)}
-              className="inline-flex items-center gap-1.5 border px-3 py-1.5 font-mono text-[11px] font-black uppercase tracking-wide transition duration-150"
+              className="inline-flex items-center gap-1.5 border px-3 py-2 font-mono text-[11px] font-black uppercase tracking-wide transition duration-150"
               style={isSel
-                ? { ...CUT_SM, borderColor: "#ffb347", background: "rgba(255,170,60,0.14)", color: "#ffffff" }
+                ? { ...CUT_SM, borderColor: ACCENT, background: "rgba(255,210,74,0.2)", color: "#ffffff", boxShadow: "inset 0 -2px 0 0 #ff9a2f, 0 0 14px rgba(255,210,74,0.18)" }
                 : { ...CUT_SM, borderColor: "#202020", background: "#0b0b0b", color: "#a0a0a0" }}
             >
               {s.icon ? <span className="relative h-3.5 w-3.5 shrink-0 overflow-hidden"><Image src={s.icon} alt="" fill sizes="14px" className="object-contain" /></span> : null}

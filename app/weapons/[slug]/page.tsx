@@ -7,7 +7,6 @@ import {
   weaponDetails,
   type WeaponRarity,
 } from "@/data/weapons-detail-data";
-import { operatorSummaries } from "@/data/operators-summary-data";
 import WeaponSkillsTabs from "./WeaponSkillsTabs";
 
 // ===== 오퍼레이터 상세/목록과 통일한 디자인 토큰 =====
@@ -39,27 +38,6 @@ const weaponTypeIconMap: Record<string, string> = {
 };
 
 const TABLE_LEVELS = [1, 20, 40, 60, 80, 90];
-
-// 사용 오퍼레이터 카드용 — 속성/클래스 라벨·색.
-const elementIconMap: Record<string, string> = {
-  physical: "/icons/elements/physical.webp",
-  cryo: "/icons/elements/cryo.webp",
-  heat: "/icons/elements/heat.webp",
-  nature: "/icons/elements/nature.webp",
-  electric: "/icons/elements/electric.webp",
-};
-const classIconMap: Record<string, string> = {
-  vanguard: "/icons/classes/vanguard.webp",
-  guard: "/icons/classes/guard.webp",
-  defender: "/icons/classes/defender.webp",
-  supporter: "/icons/classes/supporter.webp",
-  caster: "/icons/classes/caster.webp",
-  striker: "/icons/classes/striker.webp",
-};
-const classLabelMap: Record<string, string> = {
-  vanguard: "뱅가드", guard: "가드", defender: "디펜더",
-  supporter: "서포터", caster: "캐스터", striker: "스트라이커",
-};
 
 function materialIcon(name: string, icon?: string) {
   return icon || `/materials/${encodeURIComponent(name)}.webp`;
@@ -137,10 +115,6 @@ export default async function WeaponDetailPage({
 
   const skills = weapon.skills ?? [];
   const breakthrough = [...(weapon.breakthrough ?? [])].sort((a, b) => a.stage - b.stage);
-  // 사용 오퍼레이터 — 무기→오퍼레이터 직접 연결 데이터가 없어 동일 무기 유형으로 연결(없으면 섹션 숨김).
-  const relatedOperators = operatorSummaries
-    .filter((o) => o.weapon === weapon.weaponType)
-    .sort((a, b) => b.rarity - a.rarity);
 
   return (
     <main className="relative min-h-screen overflow-x-clip bg-ef-bg text-ef-ink">
@@ -324,43 +298,6 @@ export default async function WeaponDetailPage({
                   </details>
                 );
               })}
-            </div>
-          </section>
-        ) : null}
-
-        {/* ===== 사용 오퍼레이터 — 동일 무기 유형 연결(데이터 없으면 숨김) ===== */}
-        {relatedOperators.length ? (
-          <section className="min-w-0">
-            <SectionLabel en="Operators" action={<span className="font-mono text-[10px] font-black uppercase tracking-wide text-ef-muted">{typeLabel} · {relatedOperators.length}</span>} />
-            <div className="overflow-hidden border border-ef-line bg-ef-card2 p-3 sm:p-4" style={CUT}>
-              {/* 오퍼레이터 목록 카드와 동일 스타일: avatar + 이름 + 레어도 + 속성 + 클래스 */}
-              <div className="grid grid-cols-3 items-stretch gap-2 min-[480px]:grid-cols-4 sm:grid-cols-5 lg:grid-cols-6">
-                {relatedOperators.map((o) => {
-                  const elIcon = elementIconMap[o.element];
-                  const clsIcon = classIconMap[o.class];
-                  return (
-                    <Link
-                      key={o.slug}
-                      href={`/operators/${o.slug}`}
-                      className="group flex flex-col overflow-hidden border border-ef-line bg-ef-card transition duration-200 hover:-translate-y-0.5 hover:border-[#ffd24a]/70 hover:shadow-[0_6px_18px_rgba(0,0,0,0.45)]"
-                      style={CUT_SM}
-                    >
-                      <div className="relative aspect-square w-full overflow-hidden border-b border-ef-line bg-black">
-                        <Image src={o.avatar} alt={o.name} fill sizes="120px" className="object-cover object-top transition duration-300 group-hover:scale-105" />
-                        <span className="absolute right-1 top-1 rounded-[3px] border-[0.5px] px-1 font-mono text-[8px] font-bold leading-tight backdrop-blur-[3px]" style={{ background: "rgba(0,0,0,0.8)", borderColor: "rgba(255,210,74,0.35)", color: ACCENT }}>{o.rarity}★</span>
-                      </div>
-                      <div className="flex min-w-0 flex-col gap-1 p-1.5">
-                        <span className="truncate text-[11px] font-black leading-tight" style={{ color: ACCENT }}>{o.name}</span>
-                        <div className="flex items-center gap-1">
-                          {elIcon ? <span className="relative h-3.5 w-3.5 shrink-0"><Image src={elIcon} alt="" fill sizes="14px" className="object-contain" /></span> : null}
-                          {clsIcon ? <span className="relative h-3.5 w-3.5 shrink-0"><Image src={clsIcon} alt="" fill sizes="14px" className="object-contain" /></span> : null}
-                          <span className="truncate font-mono text-[8px] font-bold uppercase tracking-wide text-ef-muted">{classLabelMap[o.class] ?? o.class}</span>
-                        </div>
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
             </div>
           </section>
         ) : null}
