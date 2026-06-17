@@ -219,9 +219,6 @@ const WeaponCard = memo(function WeaponCard({ weapon }: { weapon: WeaponListItem
           <span className="relative h-4 w-4"><Image src={typeIcon} alt={typeLabel} fill sizes="16px" className="object-contain" /></span>
         </span>
       ) : null}
-      <span className="absolute right-2 top-2 rounded-[3px] border px-2 py-0.5 font-mono text-[11px] font-black leading-none backdrop-blur-[4px]" style={{ background: "rgba(0,0,0,0.82)", borderColor: `${ACCENT}80`, color: ACCENT }}>
-        {rarity}★
-      </span>
 
       {/* 하단 그라데이션 + 정보(오퍼레이터 카드 구조): 이름 / 영문명 / 주·부 */}
       <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/80 to-transparent p-2.5 pt-10">
