@@ -205,7 +205,7 @@ const OperatorCard = memo(function OperatorCard({
     <Link
       href={`/operators/${operator.slug}`}
       className={`group relative block overflow-hidden border border-ef-line bg-ef-card ${HOVER}`}
-      style={{ ...CUT, aspectRatio: "170 / 228" }}
+      style={{ ...CUT, aspectRatio: "170 / 205" }}
     >
       {isAdminSplit ? (
         <>
@@ -240,28 +240,22 @@ const OperatorCard = memo(function OperatorCard({
         />
       )}
 
-      {/* 상단 그라데이션 + 코너 브래킷(속성 색) — 상세 히어로 톤 */}
+      {/* 코너 브래킷(속성 색) — 상세 히어로 톤. 레어도 배지는 제거(시각 노이즈 감소, 등급은 필터로) */}
       <span className="pointer-events-none absolute left-1.5 top-1.5 h-5 w-5 border-l-2 border-t-2" style={{ borderColor: `${elColor}cc` }} />
       <span className="pointer-events-none absolute right-1.5 top-1.5 h-5 w-5 border-r-2 border-t-2" style={{ borderColor: `${elColor}66` }} />
 
-      {/* 희귀도 라벨(우상단) */}
-      <span className="absolute right-2 top-2 flex items-center gap-1 border border-ef-line bg-black/70 px-1.5 py-0.5" style={CUT_SM}>
-        <span className="relative h-3 w-3"><Image src={rarityIconMap[operator.rarity]} alt={`${operator.rarity}성`} fill sizes="12px" className="object-contain" /></span>
-        <span className="font-mono text-[9px] font-black tabular-nums" style={{ color: ACCENT }}>{operator.rarity}★</span>
-      </span>
-
       <div className="absolute inset-0 bg-gradient-to-t from-black via-black/45 to-transparent" />
 
-      {/* 하단 정보 — 이름/영문명 + 아이콘 행(속성·직군·무기). 직군 텍스트는 아이콘과 중복이라 제거 */}
-      <div className="absolute bottom-0 left-0 w-full p-2 sm:p-3">
-        <h3 className="line-clamp-1 text-[14px] font-black leading-[1.1] sm:text-[17px]" style={{ color: ACCENT }}>
+      {/* 하단 정보 — 이름 / 영문명 / 아이콘 행(속성·직군·무기). 직군 텍스트·레어도 제거로 압축 */}
+      <div className="absolute bottom-0 left-0 w-full p-2 sm:p-2.5">
+        <h3 className="line-clamp-1 text-[15px] font-black leading-[1.1] sm:text-[17px]" style={{ color: ACCENT }}>
           {operator.name}
         </h3>
-        <p className="mt-[1px] line-clamp-1 font-mono text-[8px] uppercase tracking-[0.12em] text-ef-muted sm:mt-[2px] sm:text-[10px] sm:tracking-[0.14em]">
+        <p className="mt-[1px] line-clamp-1 font-mono text-[8px] uppercase tracking-[0.12em] text-ef-muted sm:text-[10px] sm:tracking-[0.14em]">
           {operator.enName}
         </p>
 
-        <div className="mt-1.5 flex items-center gap-1.5 border-t border-ef-line/60 pt-1.5 sm:gap-2">
+        <div className="mt-1.5 flex items-center gap-1.5 sm:gap-2">
           <OperatorInfoIcon src={elementIconMap[operator.element]} alt={elementLabelMap[operator.element]} />
           <OperatorInfoIcon src={classIconMap[operator.class]} alt={classLabelMap[operator.class]} />
           <OperatorInfoIcon src={weaponIconMap[operator.weapon]} alt={weaponLabelMap[operator.weapon]} />
@@ -496,7 +490,7 @@ export default function OperatorsPageClient({
             </div>
 
             {sortedOperators.length > 0 ? (
-              <div className="grid grid-cols-2 gap-2.5 min-[480px]:grid-cols-3 sm:gap-3 md:grid-cols-[repeat(auto-fill,minmax(160px,1fr))]">
+              <div className="grid grid-cols-2 gap-2 min-[480px]:grid-cols-3 sm:gap-3 md:grid-cols-[repeat(auto-fill,minmax(160px,1fr))]">
                 {sortedOperators.map((operator) => (
                   <OperatorCard key={operator.slug} operator={operator} />
                 ))}
