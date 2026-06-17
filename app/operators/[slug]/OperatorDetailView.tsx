@@ -4,15 +4,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-import type { OperatorDetail } from "@/data/operators-transformers";
+import { farmStages } from "@/data/farming/farm-stages";
+import type { MaterialCostItem, OperatorDetail } from "@/data/operators-transformers";
 
-import ElitePanel from "./ElitePanel";
 import HeroSlider from "./HeroSlider";
-import InfrastructureSkillPanel from "./InfrastructureSkillPanel";
 import OperatorLevelPanel from "./OperatorLevelPanel";
-import OperatorSkillsDeck from "./OperatorSkillsDeck";
 import PotentialPanel from "./PotentialPanel";
-import TalentPanel from "./TalentPanel";
 import TrustBonusPanel from "./TrustBonusPanel";
 
 type OperatorRef = { slug: string; name: string; enName: string; avatar: string; element: string };
@@ -135,12 +132,12 @@ function cycleSkillShortLabel(step: CycleStep): string {
 function Meta({ children }: { children: React.ReactNode }) {
   return <span className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">{children}</span>;
 }
-function SectionLabel({ en, num, action }: { en: string; num?: string; action?: React.ReactNode }) {
+function SectionLabel({ en, num, action, sub }: { en: string; num?: string; action?: React.ReactNode; sub?: boolean }) {
   return (
-    <div className="mb-2 flex items-center gap-2">
-      <span className="h-3.5 w-1" style={{ background: PRIMARY }} />
+    <div className={`flex items-center gap-2 ${sub ? "mb-1.5" : "mb-2"}`}>
+      <span className={sub ? "h-2.5 w-0.5" : "h-3.5 w-1"} style={{ background: sub ? "#5a5a5a" : PRIMARY }} />
       {num ? <span className="font-mono text-xs font-black tabular-nums" style={{ color: PRIMARY }}>{num}</span> : null}
-      <span className="font-mono text-[11px] font-black uppercase tracking-[0.22em] text-ef-accent-soft">{en}</span>
+      <span className={`font-mono font-black uppercase ${sub ? "text-[10px] tracking-[0.2em] text-ef-muted" : "text-[11px] tracking-[0.22em] text-ef-accent-soft"}`}>{en}</span>
       {action ? <span className="ml-auto">{action}</span> : null}
     </div>
   );
@@ -253,6 +250,50 @@ function activeGearSetName(gears: GearRef[]): string {
   return "";
 }
 
+// ===== MATERIAL 탭 유틸 =====
+function parseCount(c: string | number): number {
+  const n = typeof c === "number" ? c : parseInt(String(c).replace(/[^\d]/g, ""), 10);
+  return Number.isFinite(n) ? n : 0;
+}
+// 여러 재료 비용 배열 합산 → 이름별 총합(아이콘 유지). 총합 내림차순.
+function aggregateMaterials(...lists: (MaterialCostItem[] | undefined)[]): { name: string; icon: string; total: number }[] {
+  const map = new Map<string, { name: string; icon: string; total: number }>();
+  for (const list of lists)
+    for (const it of list ?? []) {
+      const prev = map.get(it.name);
+      if (prev) prev.total += parseCount(it.count);
+      else map.set(it.name, { name: it.name, icon: it.icon, total: parseCount(it.count) });
+    }
+  return [...map.values()].sort((a, b) => b.total - a.total);
+}
+// 스킬의 강화 재료(전 레벨) 평탄화. 데이터에 따라 upgradeMaterials 또는 upgradeCosts.
+function skillMats(s: { upgradeCosts?: { materials: MaterialCostItem[] }[] }): MaterialCostItem[] {
+  const u = s as { upgradeMaterials?: { materials: MaterialCostItem[] }[]; upgradeCosts?: { materials: MaterialCostItem[] }[] };
+  return (u.upgradeMaterials ?? u.upgradeCosts ?? []).flatMap((x) => x.materials ?? []);
+}
+// 재료명 → 파밍 획득처 카테고리(farmStages 스테이지명에서 "N레벨/· …" 접미 제거).
+const farmCategoryByMaterial: Map<string, string> = (() => {
+  const m = new Map<string, string>();
+  for (const s of farmStages) {
+    if (m.has(s.material)) continue;
+    const cat = s.name.replace(/\s*\d+\s*레벨.*$/, "").replace(/\s*·.*$/, "").trim();
+    m.set(s.material, cat || s.name);
+  }
+  return m;
+})();
+// 재료 칩(아이콘 + 이름 + 개수). MATERIAL 탭 공용.
+function MaterialChip({ name, icon, count, large }: { name: string; icon: string; count: number | string; large?: boolean }) {
+  return (
+    <div className={`flex items-center gap-2 border border-ef-line bg-ef-card2 ${large ? "px-2.5 py-2 min-[2560px]:py-2.5" : "px-2 py-1.5"}`} style={CUT}>
+      <span className={`relative shrink-0 overflow-hidden border border-ef-line bg-black ${large ? "h-11 w-11 min-[2560px]:h-12 min-[2560px]:w-12" : "h-8 w-8"}`}>{icon ? <Image src={icon} alt="" fill sizes={large ? "48px" : "32px"} className="object-contain p-0.5" /> : null}</span>
+      <span className="min-w-0 flex-1">
+        <span className={`block truncate font-bold leading-tight text-ef-ink ${large ? "text-xs min-[2560px]:text-sm" : "text-[11px]"}`}>{name}</span>
+        <span className={`block font-mono font-black leading-tight ${large ? "text-sm min-[2560px]:text-base" : "text-[11px]"}`} style={{ color: PRIMARY }}>×{count}</span>
+      </span>
+    </div>
+  );
+}
+
 export default function OperatorDetailView({
   operator,
   operators,
@@ -279,6 +320,9 @@ export default function OperatorDetailView({
   const [builds, setBuilds] = useState<BuildItem[]>([]);
   const [buildsLoading, setBuildsLoading] = useState(true);
   const [buildsExpanded, setBuildsExpanded] = useState(false); // 모바일: 상위 5개 외 펼침
+  const [skillKey, setSkillKey] = useState<"normalAttack" | "battleSkill" | "comboSkill" | "ultimate">("normalAttack"); // SKILL 탭 선택 스킬
+  const [skillLvl, setSkillLvl] = useState<number | null>(null); // SKILL LEVEL TABLE 선택 레벨 인덱스(null=마지막/M3)
+  const [openTalent, setOpenTalent] = useState<number | null>(null); // TALENT 펼친 카드
   const [selectedId, setSelectedId] = useState<string | null>(null); // 선택 세팅 상세
   const [selForm, setSelForm] = useState<Record<string, unknown> | null>(null);
   const [selCycle, setSelCycle] = useState<unknown[]>([]);
@@ -381,7 +425,7 @@ export default function OperatorDetailView({
 
   return (
     <main className="relative min-h-screen bg-ef-bg text-ef-ink">
-      <div className="pointer-events-none fixed inset-0 z-0 opacity-[0.04] [background-image:radial-gradient(circle,#ffd24a_1px,transparent_1px)] [background-size:22px_22px]" />
+      <div className="pointer-events-none fixed inset-0 z-0 opacity-[0.022] [background-image:radial-gradient(circle,#ffd24a_1px,transparent_1px)] [background-size:22px_22px]" />
 
       {/* TOP HUD */}
       <div className="relative z-30 flex items-center justify-between px-4 py-2.5 sm:px-6 lg:px-7 min-[1920px]:px-10">
@@ -409,7 +453,7 @@ export default function OperatorDetailView({
               )}
             </div>
             <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,5,5,0.3)_0%,transparent_22%,transparent_64%,rgba(5,5,5,0.74)_87%,#0b0b0b_100%)]" />
-            <div className="pointer-events-none absolute inset-0 opacity-[0.05] [background-image:linear-gradient(#fff_1px,transparent_1px),linear-gradient(90deg,#fff_1px,transparent_1px)] [background-size:50px_50px]" />
+            <div className="pointer-events-none absolute inset-0 opacity-[0.035] [background-image:linear-gradient(#fff_1px,transparent_1px),linear-gradient(90deg,#fff_1px,transparent_1px)] [background-size:50px_50px]" />
             <span className="pointer-events-none absolute left-3 top-3 h-7 w-7 border-l-2 border-t-2" style={{ borderColor: `${elColor}99` }} />
             <span className="pointer-events-none absolute right-3 top-3 h-7 w-7 border-r-2 border-t-2" style={{ borderColor: `${elColor}55` }} />
 
@@ -593,17 +637,244 @@ export default function OperatorDetailView({
               </div>
             ) : null}
 
-            {/* ===== SKILL MODULE ===== */}
-            {activeModule === "skill" ? (
-              <div className="grid gap-4">
-                <div><SectionLabel en="Combat Skill" /><OperatorSkillsDeck accentColor={PRIMARY} skills={[operator.skills.normalAttack, operator.skills.battleSkill, operator.skills.comboSkill, operator.skills.ultimate]} /></div>
-                {operator.talents.length ? (<div><SectionLabel en="Talent" /><TalentPanel items={operator.talents} accentColor={PRIMARY} /></div>) : null}
-                {operator.infrastructureSkills.length ? (<div><SectionLabel en="Infrastructure" /><InfrastructureSkillPanel groups={operator.infrastructureSkills} accentColor={PRIMARY} /></div>) : null}
-                {operator.elite.length ? (<div><SectionLabel en="Elite" /><ElitePanel elite={operator.elite} /></div>) : null}
-              </div>
-            ) : null}
+            {/* ===== SKILL MODULE — BUILD 디자인 카드 시스템(OVERVIEW → DETAIL → LEVEL) ===== */}
+            {activeModule === "skill" ? (() => {
+              const SKILL_LIST = [
+                { key: "normalAttack", label: "기본 공격" },
+                { key: "battleSkill", label: "배틀 스킬" },
+                { key: "comboSkill", label: "연계 스킬" },
+                { key: "ultimate", label: "궁극기" },
+              ] as const;
+              const sk = operator.skills[skillKey];
+              return (
+                <div className="flex flex-col gap-4 min-[2560px]:gap-5">
+                  {/* SKILL OVERVIEW — 4개 스킬 카드(모바일 2×2 / PC 4열). 클릭 시 아래 상세 갱신 */}
+                  <div className="min-w-0">
+                    <SectionLabel en="Skill Overview" />
+                    <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
+                      {SKILL_LIST.map(({ key, label }) => {
+                        const s = operator.skills[key];
+                        const isSel = key === skillKey;
+                        const cost = s.meta?.find((mt) => mt.value !== undefined);
+                        return (
+                          <button key={key} type="button" onClick={() => { setSkillKey(key); setSkillLvl(null); setOpenTalent(null); }} className="flex flex-col items-center gap-1.5 border p-2.5 text-center transition" style={{ ...CUT, borderColor: isSel ? "#ffb347" : "#202020", background: isSel ? "rgba(255,170,60,0.12)" : "#0b0b0b", boxShadow: isSel ? "0 0 16px rgba(255,170,60,0.16)" : undefined }}>
+                            <span className="relative h-12 w-12 overflow-hidden border bg-black" style={{ borderColor: isSel ? "#ffb347" : "#202020" }}>{s.icon ? <Image src={s.icon} alt="" fill sizes="48px" className="object-contain p-1" /> : null}</span>
+                            <span className="font-mono text-[9px] font-black uppercase tracking-wide" style={{ color: isSel ? "#ffb347" : "#a0a0a0" }}>{label}</span>
+                            <span className="line-clamp-2 text-[11px] font-black leading-tight text-ef-ink">{s.name}</span>
+                            {cost ? <span className="font-mono text-[9px] font-bold text-ef-muted">{cost.label} {cost.value}</span> : null}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
 
-            {activeModule === "material" ? (<div><SectionLabel en="Material Requirements" /><Placeholder title="MATERIAL — Phase 3" note="정예화·스킬 재료 총합과 파밍 계산기 연계를 Phase 3에서 구현합니다." /></div>) : null}
+                  {/* SKILL DETAIL — 선택 스킬 상세 */}
+                  <div className="min-w-0">
+                    <SectionLabel en="Skill Detail" />
+                    <div className="overflow-hidden border bg-ef-card" style={{ ...CUT, borderColor: `${PRIMARY}55` }}>
+                      <span className="block h-0.5 w-full" style={{ background: `linear-gradient(90deg, ${PRIMARY}, transparent 55%)` }} />
+                      <div className="p-3 sm:p-4">
+                        <div className="flex items-center gap-3">
+                          <span className="relative h-12 w-12 shrink-0 overflow-hidden border border-ef-line bg-black sm:h-14 sm:w-14">{sk.icon ? <Image src={sk.icon} alt="" fill sizes="56px" className="object-contain p-1" /> : null}</span>
+                          <div className="min-w-0">
+                            <p className="font-mono text-[10px] font-black uppercase tracking-wide" style={{ color: PRIMARY }}>{sk.typeLabel}</p>
+                            <p className="truncate text-base font-black text-ef-ink sm:text-lg">{sk.name}</p>
+                          </div>
+                        </div>
+                        {sk.summary ? <p className="mt-3 whitespace-pre-line break-keep text-xs leading-6 text-ef-muted">{sk.summary}</p> : null}
+                        {sk.meta?.length ? (
+                          <div className="mt-3 grid grid-cols-1 gap-1.5 border-t border-ef-line pt-3 sm:grid-cols-2">
+                            {sk.meta.map((mt, i) => (
+                              <div key={i} className="flex items-center justify-between gap-2 border border-ef-line bg-ef-card2 px-2.5 py-1.5" style={CUT}>
+                                <span className="min-w-0 truncate text-[11px] font-bold text-ef-muted">{mt.label}</span>
+                                {mt.value !== undefined ? <span className="shrink-0 font-mono text-xs font-black" style={{ color: PRIMARY }}>{mt.value}</span> : null}
+                              </div>
+                            ))}
+                          </div>
+                        ) : null}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* SKILL LEVEL TABLE — 레벨 선택 칩 + 선택 레벨 1개만 표시(기본 M3). 스크롤 길이 최소화 */}
+                  {sk.levelValues?.length ? (() => {
+                    const lastIdx = sk.levelValues.length - 1;
+                    const curIdx = skillLvl == null ? lastIdx : Math.min(skillLvl, lastIdx);
+                    const lv = sk.levelValues[curIdx];
+                    return (
+                      <div className="min-w-0">
+                        <SectionLabel en="Skill Level Table" sub />
+                        <div className="flex flex-wrap gap-1">
+                          {sk.levelValues.map((l, i) => {
+                            const on = i === curIdx;
+                            return (
+                              <button key={l.level} type="button" onClick={() => setSkillLvl(i)} className="min-w-[40px] border px-2 py-1 text-center font-mono text-[11px] font-black transition" style={{ ...CUT, borderColor: on ? "#ffb347" : "#202020", background: on ? "rgba(255,170,60,0.14)" : "#0b0b0b", color: on ? "#ffb347" : "#a0a0a0" }}>{/^[Mm]/.test(l.level) ? l.level : `Lv${l.level}`}</button>
+                            );
+                          })}
+                        </div>
+                        <div className="mt-2 border border-ef-line bg-ef-card2 p-3" style={CUT}>
+                          <p className="font-mono text-[11px] font-black uppercase tracking-wide" style={{ color: PRIMARY }}>LEVEL {lv.level}</p>
+                          {lv.stats?.length ? (
+                            <div className="mt-2 grid grid-cols-1 gap-1 border-t border-ef-line pt-2 sm:grid-cols-2">
+                              {lv.stats.map((st, i) => (
+                                <div key={i} className="flex items-center justify-between gap-2 border border-ef-line bg-black px-2 py-1 text-[11px]" style={CUT}>
+                                  <span className="min-w-0 truncate text-ef-muted">{st.label}</span>
+                                  <span className="shrink-0 font-mono font-black text-ef-ink">{st.value}</span>
+                                </div>
+                              ))}
+                            </div>
+                          ) : null}
+                          {lv.description ? <p className="mt-2 break-keep text-[11px] leading-5 text-ef-muted">{lv.description}</p> : null}
+                        </div>
+                      </div>
+                    );
+                  })() : null}
+
+                  {/* TALENTS — 헤더(아이콘·이름·해금) + 설명(클릭 펼침). 기본 2줄 클램프로 카드 높이 통일 */}
+                  {operator.talents.length ? (
+                    <div className="min-w-0">
+                      <SectionLabel en="Talents" sub />
+                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                        {operator.talents.map((tlt, i) => {
+                          const open = openTalent === i;
+                          return (
+                            <button key={i} type="button" onClick={() => setOpenTalent(open ? null : i)} className="flex flex-col border border-ef-line bg-ef-card2 p-2.5 text-left transition hover:border-ef-accent/40" style={CUT}>
+                              <div className="flex items-center gap-2.5">
+                                <span className="relative h-9 w-9 shrink-0 overflow-hidden border border-ef-line bg-black">{tlt.icon ? <Image src={tlt.icon} alt="" fill sizes="36px" className="object-contain p-0.5" /> : null}</span>
+                                <div className="min-w-0 flex-1">
+                                  <p className="truncate text-xs font-black text-ef-ink">{tlt.name}</p>
+                                  {tlt.unlock ? <p className="truncate font-mono text-[9px] font-bold uppercase tracking-wide" style={{ color: PRIMARY }}>{tlt.unlock}</p> : null}
+                                </div>
+                                {tlt.description ? <span className="shrink-0 font-mono text-[10px] font-black" style={{ color: open ? "#ffb347" : "#5a5a5a" }}>{open ? "▲" : "▼"}</span> : null}
+                              </div>
+                              {tlt.description ? <p className={`mt-1.5 break-keep text-[11px] leading-5 text-ef-muted ${open ? "" : "line-clamp-2"}`}>{tlt.description}</p> : null}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {/* INFRASTRUCTURE — 기반시설 스킬 카드 */}
+                  {operator.infrastructureSkills.length ? (
+                    <div className="min-w-0 mb-0">
+                      <SectionLabel en="Infrastructure" sub />
+                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                        {operator.infrastructureSkills.map((g, i) => (
+                          <div key={i} className="border border-ef-line bg-ef-card2 p-2.5" style={CUT}>
+                            <div className="flex items-center gap-2">
+                              <span className="relative h-8 w-8 shrink-0 overflow-hidden border border-ef-line bg-black">{g.icon ? <Image src={g.icon} alt="" fill sizes="32px" className="object-contain p-0.5" /> : null}</span>
+                              <p className="truncate text-xs font-black text-ef-ink">{g.name}</p>
+                            </div>
+                            <div className="mt-1.5 flex flex-col gap-1.5 border-t border-ef-line pt-1.5">
+                              {g.levels.map((lv, j) => (
+                                <div key={j} className="min-w-0">
+                                  <p className="font-mono text-[9px] font-black uppercase tracking-wide" style={{ color: PRIMARY }}>{lv.tier} · {lv.unlockText}</p>
+                                  <p className="break-keep text-[11px] leading-5 text-ef-muted">{lv.description}</p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })() : null}
+
+            {/* ===== MATERIAL MODULE — 정예화 / 스킬 / 총합 / 파밍 카드 ===== */}
+            {activeModule === "material" ? (() => {
+              const SKILL_KEYS = ["normalAttack", "battleSkill", "comboSkill", "ultimate"] as const;
+              const SKILL_LABELS: Record<(typeof SKILL_KEYS)[number], string> = { normalAttack: "기본 공격", battleSkill: "배틀 스킬", comboSkill: "연계 스킬", ultimate: "궁극기" };
+              const rm = operator.requiredMaterials;
+              const total = aggregateMaterials(
+                operator.elite.flatMap((e) => e.materials),
+                ...SKILL_KEYS.map((k) => skillMats(operator.skills[k])),
+                ...(rm?.levelUp ?? []).map((x) => x.materials),
+                ...(rm?.trustBonus ?? []).map((x) => x.materials),
+                ...(rm?.infrastructure ?? []).map((x) => x.materials),
+                ...(rm?.talents ?? []).map((x) => x.materials),
+              );
+              const hasSkillMats = SKILL_KEYS.some((k) => skillMats(operator.skills[k]).length);
+              const hasAny = operator.elite.length || total.length;
+              if (!hasAny) return <div className="min-w-0"><SectionLabel en="Materials" /><Placeholder title="No Material Data" note="이 오퍼레이터의 재료 데이터가 아직 없습니다." /></div>;
+              return (
+                <div className="flex flex-col gap-4 min-[2560px]:gap-5">
+                  {/* OPERATOR UPGRADE — 정예화 재료 */}
+                  {operator.elite.length ? (
+                    <div className="min-w-0">
+                      <SectionLabel en="Operator Upgrade" />
+                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                        {operator.elite.map((e, i) => (
+                          <div key={i} className="flex min-h-[220px] flex-col border border-ef-line bg-ef-card2 p-2.5" style={CUT}>
+                            <p className="font-mono text-[11px] font-black uppercase tracking-wide" style={{ color: PRIMARY }}>{e.stage}</p>
+                            {e.description ? <p className="mt-0.5 break-keep text-[11px] leading-5 text-ef-muted">{e.description}</p> : null}
+                            <div className="mt-2 grid grid-cols-1 gap-1.5 min-[480px]:grid-cols-2">
+                              {e.materials.map((m, j) => <MaterialChip key={j} name={m.name} icon={m.icon} count={m.count} />)}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {/* SKILL UPGRADE — 스킬별 강화 재료(전 레벨 합산) */}
+                  {hasSkillMats ? (
+                    <div className="min-w-0">
+                      <SectionLabel en="Skill Upgrade" />
+                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                        {SKILL_KEYS.map((k) => {
+                          const agg = aggregateMaterials(skillMats(operator.skills[k]));
+                          if (!agg.length) return null;
+                          const s = operator.skills[k];
+                          return (
+                            <div key={k} className="flex min-h-[220px] flex-col border border-ef-line bg-ef-card2 p-2.5" style={CUT}>
+                              <div className="flex items-center gap-2">
+                                <span className="relative h-7 w-7 shrink-0 overflow-hidden border border-ef-line bg-black">{s.icon ? <Image src={s.icon} alt="" fill sizes="28px" className="object-contain p-0.5" /> : null}</span>
+                                <p className="min-w-0 truncate text-xs font-black text-ef-ink">{SKILL_LABELS[k]} <span className="text-ef-muted">· {s.name}</span></p>
+                              </div>
+                              <div className="mt-2 grid grid-cols-1 gap-1.5 min-[480px]:grid-cols-2">
+                                {agg.map((m, j) => <MaterialChip key={j} name={m.name} icon={m.icon} count={m.total} />)}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {/* TOTAL + FARMING — 1920px+ 2열 배치(세로 길이 단축, 공간 활용) */}
+                  {total.length ? (
+                    <div className="flex flex-col gap-4 min-[1920px]:grid min-[1920px]:grid-cols-2 min-[1920px]:items-start min-[1920px]:gap-5 min-[2560px]:gap-6">
+                      {/* TOTAL MATERIALS — 큰 칩, 카드 높이 통일 */}
+                      <div className="min-w-0">
+                        <SectionLabel en="Total Materials" />
+                        <div className="grid grid-cols-1 items-stretch gap-1.5 min-[480px]:grid-cols-2 lg:grid-cols-3 min-[1920px]:grid-cols-2 min-[2560px]:grid-cols-3">
+                          {total.map((m, j) => <MaterialChip key={j} name={m.name} icon={m.icon} count={m.total} large />)}
+                        </div>
+                      </div>
+                      {/* FARMING MATERIALS — 재료 획득처 배지 */}
+                      <div className="min-w-0 mb-0">
+                        <SectionLabel en="Farming Materials" action={<Link href="/farming" className="-my-1 inline-flex items-center px-2 py-1 font-mono text-[10px] font-black uppercase tracking-wide text-ef-accent-soft transition duration-200 hover:translate-x-0.5 hover:brightness-125">파밍 →</Link>} />
+                        <div className="flex flex-wrap gap-1.5">
+                          {total.map((m, j) => {
+                            const src = farmCategoryByMaterial.get(m.name);
+                            return (
+                              <span key={j} className="inline-flex items-center gap-1.5 border border-ef-line bg-ef-card2 px-2 py-1 min-[2560px]:px-2.5 min-[2560px]:py-1.5" style={CUT}>
+                                <span className="relative h-5 w-5 shrink-0 overflow-hidden border border-ef-line bg-black min-[2560px]:h-6 min-[2560px]:w-6">{m.icon ? <Image src={m.icon} alt="" fill sizes="24px" className="object-contain p-0.5" /> : null}</span>
+                                <span className="text-[11px] font-bold text-ef-ink min-[2560px]:text-xs">{m.name}</span>
+                                <span className="font-mono text-[9px] font-black uppercase tracking-wide" style={{ color: PRIMARY }}>[{src ?? "특수 입수"}]</span>
+                              </span>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })() : null}
             {activeModule === "gallery" ? (<div><SectionLabel en="Gallery" /><Placeholder title="GALLERY — Phase 3" note="프로필·일러스트·보이스를 Phase 3에서 비주얼 우선으로 구현합니다." /></div>) : null}
           </div>
         </div>
