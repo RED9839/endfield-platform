@@ -160,7 +160,6 @@ const WeaponCard = memo(function WeaponCard({ weapon }: { weapon: WeaponListItem
   const rarity = getWeaponRarity(weapon);
   const type = getWeaponType(weapon);
   const typeLabel = getWeaponTypeLabel(weapon);
-  const seriesText = getWeaponSeriesText(weapon);
   const image = getWeaponImage(weapon);
   const [imgError, setImgError] = useState(false);
   const typeIcon = weaponTypeIconMap[type];
@@ -171,20 +170,20 @@ const WeaponCard = memo(function WeaponCard({ weapon }: { weapon: WeaponListItem
       className={`group flex h-full flex-col overflow-hidden border border-ef-line bg-ef-card ${HOVER}`}
       style={CUT}
     >
-      {/* 이미지 영역 — object-contain. 이미지 없거나 로딩 실패 시 placeholder(검은 빈 박스 금지) */}
-      <div className="relative aspect-[4/3] w-full shrink-0 overflow-hidden border-b border-ef-line bg-ef-card2">
+      {/* 아이콘 영역 — 오퍼레이터 avatar 처럼 정사각형 균일 프레임(object-contain, 동일 여백). 이미지 없으면 placeholder */}
+      <div className="relative aspect-square w-full shrink-0 overflow-hidden border-b border-ef-line bg-ef-card2">
         {/* placeholder(항상 배경) */}
-        <span className="absolute inset-0 flex flex-col items-center justify-center gap-1 text-ef-line">
-          {typeIcon ? <span className="relative h-8 w-8 opacity-20"><Image src={typeIcon} alt="" fill sizes="32px" className="object-contain" /></span> : null}
-          <span className="font-mono text-[8px] font-black uppercase tracking-[0.2em] text-ef-muted/40">Weapon</span>
+        <span className="absolute inset-0 flex flex-col items-center justify-center gap-1">
+          {typeIcon ? <span className="relative h-9 w-9 opacity-20"><Image src={typeIcon} alt="" fill sizes="36px" className="object-contain" /></span> : null}
+          <span className="font-mono text-[8px] font-black uppercase tracking-[0.2em] text-ef-muted/40">Weapon Data</span>
         </span>
         {!imgError ? (
           <Image
             src={image}
             alt={weapon.name}
             fill
-            sizes="(max-width: 640px) 50vw, 240px"
-            className="object-contain p-2 transition duration-300 group-hover:scale-[1.05]"
+            sizes="(max-width: 640px) 50vw, 220px"
+            className="object-contain p-3 transition duration-300 group-hover:scale-[1.05]"
             onError={() => setImgError(true)}
           />
         ) : null}
@@ -195,14 +194,14 @@ const WeaponCard = memo(function WeaponCard({ weapon }: { weapon: WeaponListItem
         </span>
       </div>
 
-      {/* 정보 영역 — 계층: 1) 이름  2) 영문명  3) 주/부 능력치  4) 타입/시리즈 */}
+      {/* 정보 영역 — 계층: 1) 이름  2) 영문명  3) 주 능력치  4) 부 능력치  5) 무기 유형 (시리즈는 상세에서) */}
       <div className="flex min-w-0 flex-1 flex-col p-1.5 sm:p-2.5">
         {/* 1순위 — 이름 */}
         <h3 className="line-clamp-1 text-[15px] font-black leading-tight sm:text-[16px]" style={{ color: ACCENT }}>{weapon.name}</h3>
         {/* 2순위 — 영문명 */}
         {weapon.enName ? <p className="line-clamp-1 font-mono text-[9px] uppercase tracking-[0.12em] text-ef-muted sm:text-[10px]">{weapon.enName}</p> : null}
 
-        {/* 3순위 — 주/부 능력치 */}
+        {/* 3·4순위 — 주/부 능력치 */}
         {weapon.mainStatLabel || weapon.subStatLabel ? (
           <p className="mt-1.5 line-clamp-1 text-[10px] font-bold leading-tight text-ef-ink/90">
             <span className="font-mono text-[9px] text-ef-muted">주</span> {weapon.mainStatLabel ?? "-"}
@@ -211,11 +210,10 @@ const WeaponCard = memo(function WeaponCard({ weapon }: { weapon: WeaponListItem
           </p>
         ) : null}
 
-        {/* 4순위 — 무기 타입 · 시리즈(가장 약하게) */}
-        <div className="mt-auto flex flex-wrap items-center gap-1 pt-1.5">
+        {/* 5순위 — 무기 유형 */}
+        <div className="mt-auto flex items-center gap-1 pt-1.5">
           {typeIcon ? <span className="relative h-3.5 w-3.5 shrink-0 opacity-80"><Image src={typeIcon} alt={typeLabel} fill sizes="14px" className="object-contain" /></span> : null}
           <span className="font-mono text-[9px] font-bold uppercase tracking-wide text-ef-muted">{typeLabel}</span>
-          {seriesText ? <><span className="text-ef-line">·</span><span className="font-mono text-[9px] font-bold uppercase tracking-wide" style={{ color: `${PRIMARY}cc` }}>{seriesText}</span></> : null}
         </div>
       </div>
     </Link>
