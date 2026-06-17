@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import {
   getWeaponDetailBySlug,
+  getWeaponStatTags,
   weaponDetails,
   type WeaponRarity,
 } from "@/data/weapons-detail-data";
@@ -38,20 +39,6 @@ const weaponTypeIconMap: Record<string, string> = {
 };
 
 const TABLE_LEVELS = [1, 20, 40, 60, 80, 90];
-
-// 인게임 공식 분류(필터 기준) — 능력치: 힘/민첩/지능/의지/주요 능력치. 그 외는 속성.
-// main/sub 순서와 무관하게 라벨로 판별, 같은 분류면 합쳐서 표시.
-const ABILITY_STATS = new Set(["힘", "민첩", "지능", "의지", "주요 능력치"]);
-function classifyStats(main?: string, sub?: string): { attribute: string; ability: string } {
-  const attrs: string[] = [];
-  const abils: string[] = [];
-  for (const v of [main, sub]) {
-    const t = (v ?? "").trim();
-    if (!t) continue;
-    (ABILITY_STATS.has(t) ? abils : attrs).push(t);
-  }
-  return { attribute: attrs.join(" · "), ability: abils.join(" · ") };
-}
 
 function materialIcon(name: string, icon?: string) {
   return icon || `/materials/${encodeURIComponent(name)}.webp`;
@@ -129,7 +116,7 @@ export default async function WeaponDetailPage({
 
   const skills = weapon.skills ?? [];
   const breakthrough = [...(weapon.breakthrough ?? [])].sort((a, b) => a.stage - b.stage);
-  const { attribute: attrStat, ability: abilityStat } = classifyStats(weapon.mainStatLabel, weapon.subStatLabel);
+  const { attribute: attrStat, ability: abilityStat } = getWeaponStatTags(weapon);
 
   return (
     <main className="relative min-h-screen overflow-x-clip bg-ef-bg text-ef-ink">

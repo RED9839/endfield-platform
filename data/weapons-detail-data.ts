@@ -498,3 +498,32 @@ const weaponDetailBySlug = new Map(
 export function getWeaponDetailBySlug(slug: string) {
   return weaponDetailBySlug.get(slug);
 }
+
+// 무기의 능력치/속성/시리즈는 스킬 데이터가 ground-truth(각 스킬 meta.label 로 분류 명시).
+// mainStatLabel/subStatLabel 은 라벨이 모호(기초 공격력 vs 공격력%)하므로 skills 로 매칭한다.
+// - 능력치 스킬 meta {label:"능력치", value} → 능력치
+// - 속성   스킬 meta {label:"속성", value}   → 속성 (공격력%·오리지늄 아츠 강도 등; 기초 공격력은 스킬이 아니라 제외됨)
+// - 시리즈 스킬 meta {label:"시리즈 스킬", value} → 시리즈
+export function getWeaponStatTags(weapon: WeaponDetail): {
+  ability: string;
+  attribute: string;
+  series: string;
+} {
+  let ability = "";
+  let attribute = "";
+  let series = "";
+  for (const sk of weapon.skills ?? []) {
+    const labels = (sk.meta ?? []).map((m) => String(m.label));
+    const val = (label: string) =>
+      String((sk.meta ?? []).find((m) => String(m.label) === label)?.value ?? "").trim();
+    // 우선순위: 시리즈 > 능력치 > 속성 (시리즈 스킬도 속성 meta(피해 타입)를 가지므로 속성으로 오분류 방지)
+    if (labels.includes("시리즈 스킬")) {
+      if (!series) series = val("시리즈 스킬");
+    } else if (labels.includes("능력치")) {
+      if (!ability) ability = val("능력치");
+    } else if (labels.includes("속성")) {
+      if (!attribute) attribute = val("속성");
+    }
+  }
+  return { ability, attribute, series: series || (weapon.series ?? "") };
+}

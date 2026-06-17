@@ -1,13 +1,14 @@
 import { weaponSummaries } from "@/data/weapons-summary-data";
-import { getWeaponDetailBySlug } from "@/data/weapons-detail-data";
+import { getWeaponDetailBySlug, getWeaponStatTags } from "@/data/weapons-detail-data";
 import WeaponsPageClient, {
   type WeaponListItem,
 } from "./_components/WeaponsPageClient";
 
 export default function WeaponsPage() {
   const weapons: WeaponListItem[] = weaponSummaries.map((weapon) => {
-    // 목록 카드에 속성(mainStatLabel)/능력치(subStatLabel)도 표기 → 상세 데이터에서 보강(없으면 undefined).
+    // 능력치/속성은 라벨이 아니라 무기 스킬 데이터(ground-truth)로 매칭 → 기초 공격력은 속성으로 안 나옴.
     const detail = getWeaponDetailBySlug(weapon.slug);
+    const tags = detail ? getWeaponStatTags(detail) : { ability: "", attribute: "", series: "" };
     return {
       slug: weapon.slug,
       name: weapon.name,
@@ -16,8 +17,8 @@ export default function WeaponsPage() {
       weaponType: weapon.weaponType,
       rarity: weapon.rarity,
       series: weapon.series,
-      mainStatLabel: detail?.mainStatLabel,
-      subStatLabel: detail?.subStatLabel,
+      abilityStat: tags.ability,
+      attributeStat: tags.attribute,
     };
   });
 

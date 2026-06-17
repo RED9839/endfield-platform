@@ -26,8 +26,8 @@ export type WeaponListItem = {
   weaponType?: string;
   rarity?: number;
   series?: string;
-  mainStatLabel?: string;
-  subStatLabel?: string;
+  abilityStat?: string;
+  attributeStat?: string;
 };
 
 const weaponTypeLabelMap: Record<string, string> = {
@@ -85,21 +85,6 @@ const seriesOptions = [
   "고통", "골절", "기예", "방출", "분쇄", "사기", "어둠",
   "억제", "의료", "잔혹", "추격", "효율", "흐름", "강공",
 ];
-
-// 인게임 공식 분류(필터 기준) — 능력치: 힘/민첩/지능/의지/주요 능력치. 그 외(공격력·오리지늄 아츠 강도·
-// 각종 피해·치명타 확률·궁극기 충전 효율 등)는 모두 속성. main/sub 순서와 무관하게 라벨로 판별하며,
-// 두 라벨이 같은 분류면 합쳐서 표시(누락 방지).
-const ABILITY_STATS = new Set(["힘", "민첩", "지능", "의지", "주요 능력치"]);
-function classifyStats(main?: string, sub?: string): { attribute: string; ability: string } {
-  const attrs: string[] = [];
-  const abils: string[] = [];
-  for (const v of [main, sub]) {
-    const t = (v ?? "").trim();
-    if (!t) continue;
-    (ABILITY_STATS.has(t) ? abils : attrs).push(t);
-  }
-  return { attribute: attrs.join(" · "), ability: abils.join(" · ") };
-}
 
 function getWeaponType(weapon: WeaponListItem) {
   return weapon.weaponType ?? "";
@@ -224,16 +209,13 @@ const WeaponCard = memo(function WeaponCard({ weapon }: { weapon: WeaponListItem
       <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/80 to-transparent p-2.5 pt-10">
         <h3 className="line-clamp-1 text-[15px] font-black leading-tight sm:text-base" style={{ color: ACCENT }}>{weapon.name}</h3>
         {weapon.enName ? <p className="line-clamp-1 font-mono text-[9px] uppercase tracking-[0.12em] text-ef-muted">{weapon.enName}</p> : null}
-        {/* 인게임 분류로 판별: 속성 / 능력치 (라벨 자체로 구분, main/sub 순서 무관) */}
-        {weapon.mainStatLabel || weapon.subStatLabel ? (() => {
-          const { attribute, ability } = classifyStats(weapon.mainStatLabel, weapon.subStatLabel);
-          return (
-            <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] font-bold leading-tight">
-              {ability ? <span><span className="font-mono text-[9px] text-ef-muted">능력치 </span><span className="text-ef-ink">{ability}</span></span> : null}
-              {attribute ? <span><span className="font-mono text-[9px] text-ef-muted">속성 </span><span className="text-ef-ink">{attribute}</span></span> : null}
-            </div>
-          );
-        })() : null}
+        {/* 무기 스킬 데이터 기반 능력치 / 속성 (기초 공격력 제외) */}
+        {weapon.abilityStat || weapon.attributeStat ? (
+          <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] font-bold leading-tight">
+            {weapon.abilityStat ? <span><span className="font-mono text-[9px] text-ef-muted">능력치 </span><span className="text-ef-ink">{weapon.abilityStat}</span></span> : null}
+            {weapon.attributeStat ? <span><span className="font-mono text-[9px] text-ef-muted">속성 </span><span className="text-ef-ink">{weapon.attributeStat}</span></span> : null}
+          </div>
+        ) : null}
       </div>
     </Link>
   );
@@ -266,8 +248,8 @@ export default function WeaponsPageClient({ weapons }: { weapons: WeaponListItem
               weapon.enName ?? "",
               getWeaponTypeLabel(weapon),
               seriesText,
-              weapon.mainStatLabel ?? "",
-              weapon.subStatLabel ?? "",
+              weapon.abilityStat ?? "",
+              weapon.attributeStat ?? "",
             ]
               .join(" ")
               .toLowerCase(),
