@@ -191,8 +191,8 @@ const WeaponCard = memo(function WeaponCard({ weapon }: { weapon: WeaponListItem
   return (
     <Link
       href={`/weapons/${weapon.slug}`}
-      className={`group relative block overflow-hidden border bg-ef-card2 ${HOVER}`}
-      style={{ ...CUT, aspectRatio: "170 / 205", borderColor: `${rarityBorder}99` }}
+      className={`group relative block overflow-hidden border border-ef-line bg-ef-card2 ${HOVER}`}
+      style={{ ...CUT, aspectRatio: "170 / 205" }}
     >
       {/* 무기 이미지 — 카드 전면(상단 ~75%). object-contain 으로 잘리지 않게, 오퍼레이터 카드처럼 크게.
           이미지 없거나 로딩 실패 시에만 무기 타입 전용 아이콘 placeholder(검은 빈 박스 금지) */}
@@ -211,8 +211,9 @@ const WeaponCard = memo(function WeaponCard({ weapon }: { weapon: WeaponListItem
         </span>
       )}
 
-      {/* 코너 액센트 + 타입 아이콘(좌상단, 아이콘만) + 레어도 배지(우상단) — 오퍼레이터 카드 동일 위치 */}
-      <span className="pointer-events-none absolute left-0 top-0 h-0.5 w-full" style={{ background: `linear-gradient(90deg, ${PRIMARY}, transparent 60%)` }} />
+      {/* 코너 브래킷(레어도 색) — 오퍼레이터 카드와 동일한 프레임. 풀 박스 테두리 대신 ㄱ자 장식 */}
+      <span className="pointer-events-none absolute left-1.5 top-1.5 h-5 w-5 border-l-2 border-t-2" style={{ borderColor: `${rarityBorder}cc` }} />
+      <span className="pointer-events-none absolute right-1.5 top-1.5 h-5 w-5 border-r-2 border-t-2" style={{ borderColor: `${rarityBorder}cc` }} />
       {typeIcon ? (
         <span className="absolute left-2 top-2 flex h-7 w-7 items-center justify-center border border-ef-line bg-black/70 backdrop-blur-[3px]" style={CUT_SM} title={typeLabel}>
           <span className="relative h-4 w-4"><Image src={typeIcon} alt={typeLabel} fill sizes="16px" className="object-contain" /></span>
