@@ -214,7 +214,7 @@ function CycleStepChip({ step, order, className = "" }: { step: CycleStep; order
 // PARTY COMPOSITION 섹션(BUILD=대표 빌드 기준 / USER SETTINGS=내 세팅 기준 공용). party=[메인,서브1,서브2,서브3] 슬러그.
 function PartyComposition({ party, operatorBySlug }: { party: string[]; operatorBySlug: Map<string, OperatorRef> }) {
   return (
-    <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
+    <div className="grid grid-cols-4 gap-1.5 sm:gap-2 min-[1440px]:justify-start min-[1440px]:gap-3 min-[1440px]:[grid-template-columns:repeat(4,minmax(130px,200px))]">
       {(["메인", "서브 1", "서브 2", "서브 3"] as const).map((label, i) => {
         const slug = party[i];
         const m = slug ? operatorBySlug.get(slug) : undefined;
@@ -234,7 +234,7 @@ function PartyComposition({ party, operatorBySlug }: { party: string[]; operator
 
 // ROTATION / CYCLE 섹션 — 기본 1~6단계, 7단계+면 "전체 사이클 보기 (+N)" 토글. 펼침은 max-height+opacity 트랜지션(250ms).
 const CYCLE_CAP = 6;
-const CYCLE_GRID = "grid grid-cols-2 gap-x-2 gap-y-2 min-[390px]:grid-cols-3 sm:grid-cols-6 sm:gap-y-2.5 xl:grid-cols-6 xl:gap-x-3 xl:gap-y-3";
+const CYCLE_GRID = "grid grid-cols-2 gap-x-2 gap-y-2 min-[390px]:grid-cols-3 sm:grid-cols-6 sm:gap-y-2.5 xl:grid-cols-6 xl:gap-x-3 xl:gap-y-3 min-[1440px]:justify-start min-[1440px]:[grid-template-columns:repeat(6,minmax(0,108px))]";
 function RotationCycle({ steps }: { steps: CycleStep[] }) {
   const [expanded, setExpanded] = useState(false);
   if (!steps.length) return null;
@@ -527,8 +527,8 @@ export default function OperatorDetailView({
       <style>{`@keyframes efFade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}`}</style>
       <div className="pointer-events-none fixed inset-0 z-0 opacity-[0.022] [background-image:radial-gradient(circle,#ffd24a_1px,transparent_1px)] [background-size:22px_22px]" />
 
-      {/* TOP HUD */}
-      <div className="relative z-30 flex items-center justify-between px-4 py-2.5 sm:px-6 lg:px-7 min-[1920px]:px-10">
+      {/* TOP HUD — 본문과 동일한 중앙 정렬 최대폭(1720px) */}
+      <div className="relative z-30 flex items-center justify-between px-4 py-2.5 sm:px-6 lg:px-7 min-[1024px]:mx-auto min-[1024px]:w-full min-[1024px]:max-w-[1720px] min-[1920px]:px-10">
         <div className="flex items-center gap-2">
           <span className="h-3 w-3" style={{ background: PRIMARY }} />
           <span className="font-mono text-[10px] font-bold uppercase tracking-[0.3em] text-ef-muted">Operator File</span>
@@ -540,9 +540,11 @@ export default function OperatorDetailView({
         </div>
       </div>
 
-      {/* 2컬럼: 좌 HERO(일러스트) / 우 MODULE(목록+상세). max-width 없이 확장. 비율 ~1919=50:50 / 1920=45:55 / 2560=42:58(우측 빌드 영역 확대). */}
-      <div className="relative z-10 lg:grid lg:gap-6 lg:px-7 min-[1024px]:grid-cols-[minmax(0,50%)_minmax(0,50%)] min-[1920px]:grid-cols-[minmax(0,45%)_minmax(0,55%)] min-[1920px]:gap-7 min-[1920px]:px-10 min-[2560px]:grid-cols-[860px_minmax(0,1fr)]">
-        {/* ===== LEFT: HERO COLUMN — sticky 풀하이트. 2560px+ 에서는 폭을 860px로 고정해 캐릭터 영역을 키우지 않고 우측 정보만 확장 ===== */}
+      {/* 2컬럼: 좌 HERO(일러스트) / 우 MODULE(목록+상세).
+          초광폭 안정화: 전체 컨테이너 max-width 1720px + 중앙 정렬. 비율 1024~1439=50:50 / 1440px↑=44:56(fr) 고정.
+          1440px↑부터 좌(min 560) 우(min 720) minmax 로 과확장 방지 — 컨테이너 캡으로 우측이 ~960px 이상 늘어나지 않음. */}
+      <div className="relative z-10 lg:grid lg:gap-6 lg:px-7 min-[1024px]:mx-auto min-[1024px]:w-full min-[1024px]:max-w-[1720px] min-[1024px]:grid-cols-[minmax(0,50%)_minmax(0,50%)] min-[1440px]:grid-cols-[minmax(560px,0.9fr)_minmax(720px,1.1fr)] min-[1920px]:gap-7 min-[1920px]:px-10">
+        {/* ===== LEFT: HERO COLUMN — sticky 풀하이트 ===== */}
         <div className="lg:sticky lg:top-3 lg:self-start">
           <section className="relative flex h-[69vh] max-h-[86vh] min-h-[480px] flex-col overflow-hidden bg-black sm:h-[60vh] sm:max-h-[78vh] lg:h-[calc(100vh-1.5rem)] lg:max-h-none lg:border lg:border-ef-line" style={CUT}>
             <div className="absolute inset-0">
@@ -598,8 +600,8 @@ export default function OperatorDetailView({
           </section>
         </div>
 
-        {/* ===== RIGHT: MODULE STAGE ===== */}
-        <div className="px-3 pb-16 sm:px-6 lg:px-0 lg:pb-12">
+        {/* ===== RIGHT: MODULE STAGE — 내부 콘텐츠 max-width 로 초광폭 과확장 방지(좌측 정렬) ===== */}
+        <div className="px-3 pb-16 sm:px-6 lg:px-0 lg:pb-12 min-[1440px]:max-w-[1120px]">
           {/* 모듈 탭: 모바일/PC 모두 상단 Sticky — 콘텐츠(특히 ROTATION) 중간에 절대 끼어들지 않음 */}
           <nav className="sticky top-0 z-40 -mx-3 border-b border-ef-line bg-black px-3 backdrop-blur sm:-mx-6 sm:px-6 lg:mx-0 lg:mt-0 lg:bg-black/85 lg:px-0">
             <div className="mx-auto flex max-w-[1840px] items-center gap-1 overflow-x-auto py-1.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -953,7 +955,7 @@ export default function OperatorDetailView({
                   {total.length ? (
                     <div className="min-w-0">
                       <SectionLabel en="Total Materials" />
-                      <div className="grid grid-cols-1 items-stretch gap-1.5 min-[480px]:grid-cols-2 min-[1024px]:grid-cols-2 min-[1920px]:grid-cols-3 min-[2560px]:grid-cols-4">
+                      <div className="grid grid-cols-1 items-stretch gap-1.5 min-[480px]:grid-cols-2 min-[1024px]:grid-cols-2 min-[1920px]:grid-cols-3">
                         {total.map((m, j) => <MaterialChip key={j} name={m.name} icon={m.icon} count={m.total} large />)}
                       </div>
                     </div>
@@ -963,7 +965,7 @@ export default function OperatorDetailView({
                   {total.length ? (
                     <div className="min-w-0 mb-0">
                       <SectionLabel en="Farming Materials" action={<Link href="/farming" className="-my-1 inline-flex items-center px-2 py-1 font-mono text-[10px] font-black uppercase tracking-wide text-ef-accent-soft transition duration-200 hover:translate-x-0.5 hover:brightness-125">파밍 계산기 →</Link>} />
-                      <div className="grid grid-cols-2 items-stretch gap-2 min-[480px]:grid-cols-3 lg:grid-cols-2 min-[1440px]:grid-cols-3 min-[1920px]:grid-cols-4 min-[2560px]:grid-cols-5">
+                      <div className="grid grid-cols-2 items-stretch gap-2 min-[480px]:grid-cols-3 lg:grid-cols-2 min-[1440px]:grid-cols-3 min-[1920px]:grid-cols-4">
                         {total.map((m, j) => {
                           const src = farmCategoryByMaterial.get(m.name);
                           const href = `/farming?requiredMaterials=${encodeURIComponent(JSON.stringify([{ name: m.name, amount: m.total }]))}`;
