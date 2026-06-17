@@ -183,7 +183,7 @@ const WeaponCard = memo(function WeaponCard({ weapon }: { weapon: WeaponListItem
     <Link
       href={`/weapons/${weapon.slug}`}
       className={`group relative block overflow-hidden border border-ef-line bg-ef-card2 ${HOVER}`}
-      style={{ ...CUT, aspectRatio: "170 / 212" }}
+      style={{ ...CUT, aspectRatio: "170 / 205" }}
     >
       {/* 무기 이미지 — 카드 전면(상단 ~75%). object-contain 으로 잘리지 않게, 오퍼레이터 카드처럼 크게.
           이미지 없거나 로딩 실패 시에만 무기 타입 전용 아이콘 placeholder(검은 빈 박스 금지) */}
@@ -400,7 +400,7 @@ export default function WeaponsPageClient({ weapons }: { weapons: WeaponListItem
             </div>
 
             {sortedWeapons.length > 0 ? (
-              <div className="grid grid-cols-2 items-stretch gap-2.5 min-[480px]:grid-cols-3 sm:gap-3 md:grid-cols-[repeat(auto-fill,minmax(206px,1fr))]">
+              <div className="grid grid-cols-2 gap-2 min-[480px]:grid-cols-3 sm:gap-3 md:grid-cols-[repeat(auto-fill,minmax(160px,1fr))]">
                 {sortedWeapons.map((weapon) => (
                   <WeaponCard key={weapon.slug} weapon={weapon} />
                 ))}
