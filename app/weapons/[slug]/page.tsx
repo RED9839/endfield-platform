@@ -228,10 +228,16 @@ export default async function WeaponDetailPage({
             <SectionLabel en="Weapon Skills" />
             <div className="grid grid-cols-1 items-stretch gap-2 lg:grid-cols-2">
               {skills.map((skill) => {
-                const ranks = (skill.levelValues ?? []).map((lv) => ({
-                  rank: lv.rank,
-                  value: lv.stats?.[0]?.value ?? (lv.description?.match(/[+\-]?\d+(?:\.\d+)?%?/)?.[0] ?? ""),
-                }));
+                const levelValues = skill.levelValues ?? [];
+                // 효과 설명: 패널 description 우선 → 없으면 levelValues 중 '설명형 프로즈'(줄바꿈 or 충분히 긴 문장)만 사용.
+                // 능력치/속성처럼 "힘 +156" 같은 수치-only 는 효과 설명으로 쓰지 않고 숨김(임의 생성 금지).
+                const lastDesc = [...levelValues].reverse().find((l) => l.description)?.description?.trim() ?? "";
+                const effect = (skill.description?.trim() || "") || ((lastDesc.includes("\n") || lastDesc.length > 24) ? lastDesc : "");
+                // 강화 수치: 랭크별 핵심 수치(첫 stat 우선). 다중 stat 라벨은 compareRows 로 라벨별 행 표시.
+                const ranks = levelValues
+                  .map((lv) => ({ rank: lv.rank, value: lv.stats?.[0]?.value ?? (lv.description?.match(/[+\-]?\d+(?:\.\d+)?%?/)?.[0] ?? "") }))
+                  .filter((r) => r.value !== "");
+                const compareRows = (skill.compareRows ?? []).filter((row) => row.values?.length);
                 return (
                   <div key={skill.key} className="flex flex-col border border-ef-line bg-ef-card2 p-2.5 sm:p-3" style={CUT}>
                     <div className="flex items-center gap-2.5">
@@ -239,24 +245,52 @@ export default async function WeaponDetailPage({
                       {skill.icon ? <span className="relative h-10 w-10 shrink-0 overflow-hidden border border-ef-line bg-black"><Image src={skill.icon} alt="" fill sizes="40px" className="object-contain p-1" /></span> : null}
                       <div className="min-w-0">
                         {skill.typeLabel ? <span className="inline-flex items-center border px-2 py-0.5 font-mono text-[10px] font-black uppercase tracking-wide" style={{ borderColor: `${PRIMARY}66`, background: `${PRIMARY}1a`, color: PRIMARY }}>{skill.typeLabel}</span> : null}
-                        <p className="mt-1 truncate text-sm font-black text-ef-ink">{skill.name}</p>
+                        <p className="mt-1 break-keep text-sm font-black text-ef-ink">{skill.name}</p>
                       </div>
                     </div>
-                    {skill.description ? <p className="mt-2.5 max-w-[68ch] break-keep text-xs leading-6 text-ef-muted">{highlightNums(skill.description)}</p> : null}
+
+                    {/* 효과 설명 — 수치 칩보다 위. 멀티라인 줄바꿈, 핵심 수치 강조 */}
+                    {effect ? (
+                      <div className="mt-2.5">
+                        <p className="mb-1 font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">효과</p>
+                        <p className="whitespace-pre-line break-keep text-[13px] leading-6 text-ef-muted">{highlightNums(effect)}</p>
+                      </div>
+                    ) : null}
+
+                    {/* 메타 정보 — 데이터에 있는 항목만(시리즈/속성/피해 타입 등). 빈 값 숨김 */}
                     {skill.meta?.length ? (
-                      <div className="mt-2.5 grid grid-cols-1 gap-1.5 border-t border-ef-line pt-2.5 min-[420px]:grid-cols-2">
-                        {skill.meta.map((mt, i) => (
-                          <div key={i} className="flex items-center justify-between gap-2 border border-ef-line bg-ef-card px-2.5 py-1" style={CUT_SM}>
-                            <span className="min-w-0 truncate text-[11px] font-bold text-ef-muted">{mt.label}</span>
-                            <span className="shrink-0 font-mono text-xs font-black tabular-nums" style={{ color: PRIMARY }}>{mt.value}</span>
+                      <div className="mt-2.5 flex flex-col gap-1 border-t border-ef-line pt-2.5">
+                        {skill.meta
+                          .filter((mt) => mt.value !== undefined && mt.value !== null && String(mt.value).trim() !== "")
+                          .map((mt, i) => (
+                            <div key={i} className="flex items-center justify-between gap-3 text-[12px]">
+                              <span className="shrink-0 font-mono text-[10px] font-bold uppercase tracking-wide text-ef-muted">{mt.label}</span>
+                              <span className="min-w-0 truncate text-right font-black" style={{ color: ACCENT }}>{mt.value}</span>
+                            </div>
+                          ))}
+                      </div>
+                    ) : null}
+
+                    {/* 강화 수치 — 라벨이 여럿이면 compareRows 로 라벨별 R1~Rn, 단일이면 칩 한 줄. 자동 줄바꿈 */}
+                    {compareRows.length > 1 ? (
+                      <div className="mt-2.5 flex flex-col gap-2 border-t border-ef-line pt-2.5">
+                        {compareRows.map((row, ri) => (
+                          <div key={ri}>
+                            <p className="mb-1 font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">{row.label}</p>
+                            <div className="flex flex-wrap gap-1">
+                              {row.values.map((v, i) => (
+                                <span key={i} className="inline-flex items-center gap-1 border border-ef-line bg-ef-card px-1.5 py-0.5 font-mono text-[10px] leading-none" style={CUT_SM}>
+                                  <span className="text-ef-muted">R{i + 1}</span>
+                                  <span className="font-black tabular-nums" style={{ color: ACCENT }}>{v}</span>
+                                </span>
+                              ))}
+                            </div>
                           </div>
                         ))}
                       </div>
-                    ) : null}
-                    {/* 랭크별 수치(R1~Rn) — 데이터 있을 때만 */}
-                    {ranks.some((r) => r.value !== "") ? (
+                    ) : ranks.length ? (
                       <div className="mt-2.5 border-t border-ef-line pt-2.5">
-                        <p className="mb-1.5 font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">랭크별 효과</p>
+                        <p className="mb-1.5 font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">랭크별 수치</p>
                         <div className="flex flex-wrap gap-1">
                           {ranks.map((r, i) => (
                             <span key={i} className="inline-flex items-center gap-1 border border-ef-line bg-ef-card px-1.5 py-0.5 font-mono text-[10px] leading-none" style={CUT_SM}>
