@@ -221,30 +221,30 @@ export default async function WeaponDetailPage({
           <section className="min-w-0">
             <SectionLabel en="Weapon Stats" />
             <div className="overflow-hidden border border-ef-line bg-ef-card2 p-3 sm:p-4" style={CUT}>
-              {/* 공격력 / 주 / 부 / 무기 유형 / 시리즈 — 5개 스탯 카드 */}
-              <div className="mb-3 grid grid-cols-2 gap-2 border-b border-ef-line pb-3 min-[520px]:grid-cols-3 lg:grid-cols-5">
-                <div className="border border-ef-line bg-ef-card p-2.5" style={CUT_SM}>
+              {/* 공격력 / 주 / 부 / 무기 유형 / 시리즈 — 5개 스탯 카드(압축) */}
+              <div className="mb-2.5 grid grid-cols-2 gap-1.5 border-b border-ef-line pb-2.5 min-[520px]:grid-cols-3 lg:grid-cols-5">
+                <div className="border border-ef-line bg-ef-card px-2 py-1.5" style={CUT_SM}>
                   <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">공격력 · Lv.90</p>
-                  <p className="mt-1 font-mono text-2xl font-black leading-none sm:text-[28px]" style={{ color: PRIMARY }}>{maxAttack}</p>
+                  <p className="font-mono text-xl font-black leading-tight sm:text-2xl" style={{ color: PRIMARY }}>{maxAttack}</p>
                 </div>
-                <div className="border border-ef-line bg-ef-card p-2.5" style={CUT_SM}>
+                <div className="border border-ef-line bg-ef-card px-2 py-1.5" style={CUT_SM}>
                   <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">주 능력치</p>
-                  <p className="mt-1 break-keep text-sm font-black leading-tight" style={{ color: ACCENT }}>{weapon.mainStatLabel ?? "-"}</p>
+                  <p className="break-keep text-sm font-black leading-tight" style={{ color: ACCENT }}>{weapon.mainStatLabel ?? "-"}</p>
                 </div>
-                <div className="border border-ef-line bg-ef-card p-2.5" style={CUT_SM}>
+                <div className="border border-ef-line bg-ef-card px-2 py-1.5" style={CUT_SM}>
                   <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">부 능력치</p>
-                  <p className="mt-1 break-keep text-sm font-black leading-tight text-ef-ink">{weapon.subStatLabel ?? "-"}</p>
+                  <p className="break-keep text-sm font-black leading-tight text-ef-ink">{weapon.subStatLabel ?? "-"}</p>
                 </div>
-                <div className="border border-ef-line bg-ef-card p-2.5" style={CUT_SM}>
+                <div className="border border-ef-line bg-ef-card px-2 py-1.5" style={CUT_SM}>
                   <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">무기 유형</p>
-                  <p className="mt-1 flex items-center gap-1 break-keep text-sm font-black leading-tight text-ef-ink">
+                  <p className="flex items-center gap-1 break-keep text-sm font-black leading-tight text-ef-ink">
                     {typeIcon ? <span className="relative h-4 w-4 shrink-0"><Image src={typeIcon} alt="" fill sizes="16px" className="object-contain" /></span> : null}
                     {typeLabel}
                   </p>
                 </div>
-                <div className="border border-ef-line bg-ef-card p-2.5" style={CUT_SM}>
+                <div className="border border-ef-line bg-ef-card px-2 py-1.5" style={CUT_SM}>
                   <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">시리즈</p>
-                  <p className="mt-1 break-keep text-sm font-black leading-tight" style={{ color: PRIMARY }}>{weapon.series ?? "-"}</p>
+                  <p className="break-keep text-sm font-black leading-tight" style={{ color: PRIMARY }}>{weapon.series ?? "-"}</p>
                 </div>
               </div>
 
@@ -253,15 +253,15 @@ export default async function WeaponDetailPage({
                 <table className="w-full border-collapse text-left">
                   <thead>
                     <tr className="bg-black">
-                      <th className="border-b border-ef-line px-3 py-2 font-mono text-[10px] font-black uppercase tracking-wide" style={{ color: PRIMARY }}>Lv</th>
-                      <th className="border-b border-ef-line px-3 py-2 text-right font-mono text-[10px] font-black uppercase tracking-wide" style={{ color: PRIMARY }}>공격력</th>
+                      <th className="border-b border-ef-line px-3 py-1.5 font-mono text-[10px] font-black uppercase tracking-wide" style={{ color: PRIMARY }}>Lv</th>
+                      <th className="border-b border-ef-line px-3 py-1.5 text-right font-mono text-[10px] font-black uppercase tracking-wide" style={{ color: PRIMARY }}>공격력</th>
                     </tr>
                   </thead>
                   <tbody>
                     {tableRows.map((row, i) => (
                       <tr key={row.level} className={i % 2 ? "bg-ef-card" : "bg-ef-card2"}>
-                        <td className="border-b border-ef-line/60 px-3 py-2 font-mono text-xs font-black text-ef-ink tabular-nums">{row.level}</td>
-                        <td className="border-b border-ef-line/60 px-3 py-2 text-right font-mono text-sm font-black tabular-nums" style={{ color: ACCENT }}>{row.attack}</td>
+                        <td className="border-b border-ef-line/60 px-3 py-1 font-mono text-xs font-black text-ef-ink tabular-nums">{row.level}</td>
+                        <td className="border-b border-ef-line/60 px-3 py-1 text-right font-mono text-sm font-black tabular-nums" style={{ color: ACCENT }}>{row.attack}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -275,24 +275,31 @@ export default async function WeaponDetailPage({
         {skills.length ? (
           <section className="min-w-0">
             <SectionLabel en="Weapon Skills" />
-            <div className="grid grid-cols-1 items-stretch gap-2 lg:grid-cols-2">
+            {/* items-start: 카드가 내용 길이에 맞춰 자연 높이 → 단순/시리즈 카드 간 빈 공간·불균형 제거 */}
+            <div className="grid grid-cols-1 items-start gap-2 lg:grid-cols-2">
               {skills.map((skill) => {
                 const levelValues = skill.levelValues ?? [];
-                // 효과 설명: 패널 description 우선 → 없으면 levelValues 중 '설명형 프로즈'(줄바꿈 or 충분히 긴 문장)만 사용.
-                // 능력치/속성처럼 "힘 +156" 같은 수치-only 는 효과 설명으로 쓰지 않고 숨김(임의 생성 금지).
                 const lastDesc = [...levelValues].reverse().find((l) => l.description)?.description?.trim() ?? "";
                 const effect = (skill.description?.trim() || "") || ((lastDesc.includes("\n") || lastDesc.length > 24) ? lastDesc : "");
-                // 강화 수치: 랭크별 핵심 수치(첫 stat 우선). 다중 stat 라벨은 compareRows 로 라벨별 행 표시.
                 const ranks = levelValues
                   .map((lv) => ({ rank: lv.rank, value: lv.stats?.[0]?.value ?? (lv.description?.match(/[+\-]?\d+(?:\.\d+)?%?/)?.[0] ?? "") }))
                   .filter((r) => r.value !== "");
                 const compareRows = (skill.compareRows ?? []).filter((row) => row.values?.length);
-                // 효과 구획화 — 최대 랭크의 라벨별 수치(물리 피해 / 스킬 사용 시 / 최대 중첩 등). 데이터에 있는 것만.
-                const summaryStats = ([...levelValues].reverse().find((l) => l.stats?.length)?.stats ?? []).filter((s) => s.value !== undefined && s.value !== null && String(s.value).trim() !== "");
+                const maxStats = ([...levelValues].reverse().find((l) => l.stats?.length)?.stats ?? []).filter((s) => s.value !== undefined && s.value !== null && String(s.value).trim() !== "");
+                const finalValue = ranks.length ? ranks[ranks.length - 1].value : "";
+                const isSeries = compareRows.length > 1 || maxStats.length > 1;
+                // 효과 정보 셀 — 시리즈: 최대랭크 라벨별 수치 / 단순: 효과 대상 + 최종 수치 (데이터 기반, 생성 없음)
+                const infoCells = isSeries
+                  ? maxStats.map((s) => ({ label: s.label, value: String(s.value) }))
+                  : [
+                      ...((skill.meta?.[0]?.value != null && String(skill.meta[0].value).trim() !== "") ? [{ label: "효과 대상", value: String(skill.meta[0].value) }] : []),
+                      ...(finalValue ? [{ label: "최종 수치", value: String(finalValue) }] : []),
+                    ];
+                // 메타 텍스트 행(시리즈 보조: 속성/시리즈 등) — 시리즈 카드에서만, 수치 셀과 중복 방지
+                const metaRows = isSeries ? (skill.meta ?? []).filter((m) => String(m.value).trim() !== "") : [];
                 return (
                   <div key={skill.key} className="flex flex-col border border-ef-line bg-ef-card2 p-2.5 sm:p-3" style={CUT}>
                     <div className="flex items-center gap-2.5">
-                      {/* 아이콘은 실제 존재할 때만(빈 검은 박스 금지) */}
                       {skill.icon ? <span className="relative h-10 w-10 shrink-0 overflow-hidden border border-ef-line bg-black"><Image src={skill.icon} alt="" fill sizes="40px" className="object-contain p-1" /></span> : null}
                       <div className="min-w-0">
                         {skill.typeLabel ? <span className="inline-flex items-center border px-2 py-0.5 font-mono text-[10px] font-black uppercase tracking-wide" style={{ borderColor: `${PRIMARY}66`, background: `${PRIMARY}1a`, color: PRIMARY }}>{skillTypeDisplayMap[skill.typeLabel] ?? skill.typeLabel}</span> : null}
@@ -300,46 +307,44 @@ export default async function WeaponDetailPage({
                       </div>
                     </div>
 
-                    {/* 효과 설명 — 수치 칩보다 위. 멀티라인 줄바꿈, 핵심 수치 강조 */}
+                    {/* 효과 설명(프로즈) — 데이터 있을 때만 */}
                     {effect ? (
                       <div className="mt-2.5">
-                        <p className="mb-1 font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">효과</p>
+                        <p className="mb-1 font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">효과 설명</p>
                         <p className="whitespace-pre-line break-keep text-[13px] leading-6 text-ef-muted">{highlightNums(effect)}</p>
                       </div>
                     ) : null}
 
-                    {/* 효과 구획 요약 — 최대 랭크 기준 라벨별 수치(데이터 있을 때만) */}
-                    {summaryStats.length ? (
-                      <div className="mt-2.5 grid grid-cols-2 gap-1.5 min-[420px]:grid-cols-3">
-                        {summaryStats.map((st, i) => (
+                    {/* 효과 정보 — 라벨별 수치 셀(시리즈: 다중 / 단순: 효과 대상·최종 수치) */}
+                    {infoCells.length ? (
+                      <div className={`mt-2.5 grid gap-1.5 ${infoCells.length >= 3 ? "grid-cols-2 min-[420px]:grid-cols-3" : "grid-cols-2"}`}>
+                        {infoCells.map((c, i) => (
                           <div key={i} className="border border-ef-line bg-ef-card px-2 py-1.5" style={CUT_SM}>
-                            <p className="truncate font-mono text-[9px] font-bold uppercase tracking-wide text-ef-muted">{st.label}</p>
-                            <p className="mt-0.5 font-mono text-sm font-black tabular-nums" style={{ color: ACCENT }}>{st.value}</p>
+                            <p className="truncate font-mono text-[9px] font-bold uppercase tracking-wide text-ef-muted">{c.label}</p>
+                            <p className="mt-0.5 break-keep font-mono text-sm font-black tabular-nums" style={{ color: ACCENT }}>{c.value}</p>
                           </div>
                         ))}
                       </div>
                     ) : null}
 
-                    {/* 메타 정보 — 데이터에 있는 항목만(시리즈/속성/피해 타입 등). 빈 값 숨김 */}
-                    {skill.meta?.length ? (
+                    {/* 메타(시리즈 보조 텍스트) */}
+                    {metaRows.length ? (
                       <div className="mt-2.5 flex flex-col gap-1 border-t border-ef-line pt-2.5">
-                        {skill.meta
-                          .filter((mt) => mt.value !== undefined && mt.value !== null && String(mt.value).trim() !== "")
-                          .map((mt, i) => (
-                            <div key={i} className="flex items-center justify-between gap-3 text-[12px]">
-                              <span className="shrink-0 font-mono text-[10px] font-bold uppercase tracking-wide text-ef-muted">{mt.label}</span>
-                              <span className="min-w-0 truncate text-right font-black" style={{ color: ACCENT }}>{mt.value}</span>
-                            </div>
-                          ))}
+                        {metaRows.map((mt, i) => (
+                          <div key={i} className="flex items-center justify-between gap-3 text-[12px]">
+                            <span className="shrink-0 font-mono text-[10px] font-bold uppercase tracking-wide text-ef-muted">{mt.label}</span>
+                            <span className="min-w-0 truncate text-right font-black" style={{ color: ACCENT }}>{mt.value}</span>
+                          </div>
+                        ))}
                       </div>
                     ) : null}
 
-                    {/* 강화 수치 — 라벨이 여럿이면 compareRows 로 라벨별 R1~Rn, 단일이면 칩 한 줄. 자동 줄바꿈 */}
+                    {/* 강화 수치 — 시리즈: 라벨별 R1~Rn / 단순: 한 줄. 자동 줄바꿈 */}
                     {compareRows.length > 1 ? (
                       <div className="mt-2.5 flex flex-col gap-2 border-t border-ef-line pt-2.5">
                         {compareRows.map((row, ri) => (
                           <div key={ri}>
-                            <p className="mb-1 font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">{row.label}</p>
+                            <p className="mb-1 font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">{row.label} · 강화 수치</p>
                             <div className="flex flex-wrap gap-1">
                               {row.values.map((v, i) => (
                                 <span key={i} className="inline-flex items-center gap-1 border border-ef-line bg-ef-card px-1.5 py-0.5 font-mono text-[10px] leading-none" style={CUT_SM}>
@@ -353,12 +358,7 @@ export default async function WeaponDetailPage({
                       </div>
                     ) : ranks.length ? (
                       <div className="mt-2.5 border-t border-ef-line pt-2.5">
-                        {/* 최종 수치(최대 랭크) 강조 */}
-                        <div className="mb-2 flex items-center justify-between gap-2">
-                          <span className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">최종 수치</span>
-                          <span className="font-mono text-base font-black tabular-nums" style={{ color: PRIMARY }}>{ranks[ranks.length - 1].value}</span>
-                        </div>
-                        <p className="mb-1.5 font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">강화 단계</p>
+                        <p className="mb-1.5 font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">강화 수치 · R1~R{ranks.length}</p>
                         <div className="flex flex-wrap gap-1">
                           {ranks.map((r, i) => (
                             <span key={i} className="inline-flex items-center gap-1 border border-ef-line bg-ef-card px-1.5 py-0.5 font-mono text-[10px] leading-none" style={CUT_SM}>
@@ -386,7 +386,7 @@ export default async function WeaponDetailPage({
                 const hasMats = stage.materials.length > 0;
                 return (
                   <details key={stage.stage} open={isBase} className="group overflow-hidden border border-ef-line bg-ef-card2" style={CUT}>
-                    <summary className="flex cursor-pointer list-none items-center gap-3 px-3 py-2.5 [&::-webkit-details-marker]:hidden">
+                    <summary className="flex cursor-pointer list-none items-center gap-3 px-3 py-2 [&::-webkit-details-marker]:hidden">
                       <span className="inline-flex h-6 min-w-[42px] items-center justify-center border px-1.5 font-mono text-[11px] font-black" style={{ ...CUT_SM, borderColor: `${PRIMARY}66`, background: `${PRIMARY}1a`, color: PRIMARY }}>
                         {isBase ? "기본" : `T${stage.stage}`}
                       </span>

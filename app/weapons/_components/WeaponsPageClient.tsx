@@ -172,10 +172,10 @@ const WeaponCard = memo(function WeaponCard({ weapon }: { weapon: WeaponListItem
     >
       {/* 아이콘 영역 — 오퍼레이터 avatar 처럼 정사각형 균일 프레임(object-contain, 동일 여백). 이미지 없으면 placeholder */}
       <div className="relative aspect-square w-full shrink-0 overflow-hidden border-b border-ef-line bg-ef-card2">
-        {/* placeholder(항상 배경) */}
-        <span className="absolute inset-0 flex flex-col items-center justify-center gap-1">
-          {typeIcon ? <span className="relative h-9 w-9 opacity-20"><Image src={typeIcon} alt="" fill sizes="36px" className="object-contain" /></span> : null}
-          <span className="font-mono text-[8px] font-black uppercase tracking-[0.2em] text-ef-muted/40">Weapon Data</span>
+        {/* placeholder — 무기 타입 전용 아이콘을 또렷하게(검은 빈 박스/밋밋한 NO IMAGE 금지) */}
+        <span className="absolute inset-0 flex flex-col items-center justify-center gap-1.5">
+          {typeIcon ? <span className="relative h-12 w-12 opacity-45"><Image src={typeIcon} alt={typeLabel} fill sizes="48px" className="object-contain" /></span> : <span className="text-2xl opacity-30" style={{ color: PRIMARY }}>◆</span>}
+          <span className="font-mono text-[8px] font-black uppercase tracking-[0.22em] text-ef-muted/50">{typeLabel}</span>
         </span>
         {!imgError ? (
           <Image
