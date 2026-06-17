@@ -167,41 +167,43 @@ const WeaponCard = memo(function WeaponCard({ weapon }: { weapon: WeaponListItem
   return (
     <Link
       href={`/weapons/${weapon.slug}`}
-      className={`group flex h-full flex-col overflow-hidden border border-ef-line bg-ef-card ${HOVER}`}
-      style={CUT}
+      className={`group relative block overflow-hidden border border-ef-line bg-ef-card2 ${HOVER}`}
+      style={{ ...CUT, aspectRatio: "170 / 212" }}
     >
-      {/* 아이콘 영역 — 오퍼레이터 avatar 처럼 정사각형 균일 프레임(object-contain, 동일 여백). 이미지 없으면 placeholder */}
-      <div className="relative aspect-square w-full shrink-0 overflow-hidden border-b border-ef-line bg-ef-card2">
-        {/* placeholder — 무기 타입 전용 아이콘을 또렷하게(검은 빈 박스/밋밋한 NO IMAGE 금지) */}
-        <span className="absolute inset-0 flex flex-col items-center justify-center gap-1.5">
-          {typeIcon ? <span className="relative h-12 w-12 opacity-45"><Image src={typeIcon} alt={typeLabel} fill sizes="48px" className="object-contain" /></span> : <span className="text-2xl opacity-30" style={{ color: PRIMARY }}>◆</span>}
-          <span className="font-mono text-[8px] font-black uppercase tracking-[0.22em] text-ef-muted/50">{typeLabel}</span>
+      {/* 무기 이미지 — 카드 전면(상단 ~75%). object-contain 으로 잘리지 않게, 오퍼레이터 카드처럼 크게.
+          이미지 없거나 로딩 실패 시에만 무기 타입 전용 아이콘 placeholder(검은 빈 박스 금지) */}
+      {!imgError ? (
+        <Image
+          src={image}
+          alt={weapon.name}
+          fill
+          sizes="(max-width: 640px) 46vw, 220px"
+          className="object-contain p-2 pb-[34%] transition duration-300 group-hover:scale-[1.05]"
+          onError={() => setImgError(true)}
+        />
+      ) : (
+        <span className="absolute inset-0 flex items-center justify-center pb-[20%]">
+          {typeIcon ? <span className="relative h-16 w-16 opacity-35"><Image src={typeIcon} alt={typeLabel} fill sizes="64px" className="object-contain" /></span> : <span className="text-3xl opacity-25" style={{ color: PRIMARY }}>◆</span>}
         </span>
-        {!imgError ? (
-          <Image
-            src={image}
-            alt={weapon.name}
-            fill
-            sizes="(max-width: 640px) 50vw, 220px"
-            className="object-contain p-3 transition duration-300 group-hover:scale-[1.05]"
-            onError={() => setImgError(true)}
-          />
-        ) : null}
-        <span className="pointer-events-none absolute left-0 top-0 h-0.5 w-full" style={{ background: `linear-gradient(90deg, ${PRIMARY}, transparent 60%)` }} />
-        {/* 레어도 뱃지 — 오퍼레이터 카드 방식(강화) */}
-        <span className="absolute right-2 top-2 rounded-[3px] border px-2 py-0.5 font-mono text-[11px] font-black leading-none backdrop-blur-[4px]" style={{ background: "rgba(0,0,0,0.82)", borderColor: `${ACCENT}80`, color: ACCENT }}>
-          {rarity}★
+      )}
+
+      {/* 코너 액센트 + 타입 아이콘(좌상단, 아이콘만) + 레어도 배지(우상단) — 오퍼레이터 카드 동일 위치 */}
+      <span className="pointer-events-none absolute left-0 top-0 h-0.5 w-full" style={{ background: `linear-gradient(90deg, ${PRIMARY}, transparent 60%)` }} />
+      {typeIcon ? (
+        <span className="absolute left-2 top-2 flex h-7 w-7 items-center justify-center border border-ef-line bg-black/70 backdrop-blur-[3px]" style={CUT_SM} title={typeLabel}>
+          <span className="relative h-4 w-4"><Image src={typeIcon} alt={typeLabel} fill sizes="16px" className="object-contain" /></span>
         </span>
-      </div>
+      ) : null}
+      <span className="absolute right-2 top-2 rounded-[3px] border px-2 py-0.5 font-mono text-[11px] font-black leading-none backdrop-blur-[4px]" style={{ background: "rgba(0,0,0,0.82)", borderColor: `${ACCENT}80`, color: ACCENT }}>
+        {rarity}★
+      </span>
 
-      {/* 정보 영역 — 도감 카드: 이름 / 영문명 / 주·부 능력치 (유형·시리즈는 상세에서) */}
-      <div className="flex min-w-0 flex-1 flex-col p-2 sm:p-3">
-        <h3 className="line-clamp-1 text-base font-black leading-tight sm:text-[17px]" style={{ color: ACCENT }}>{weapon.name}</h3>
-        {weapon.enName ? <p className="mt-0.5 line-clamp-1 font-mono text-[10px] uppercase tracking-[0.12em] text-ef-muted">{weapon.enName}</p> : null}
-
-        {/* 주/부 능력치 — 하단, 한 줄 정리 */}
+      {/* 하단 그라데이션 + 정보(오퍼레이터 카드 구조): 이름 / 영문명 / 주·부 */}
+      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/80 to-transparent p-2.5 pt-10">
+        <h3 className="line-clamp-1 text-[15px] font-black leading-tight sm:text-base" style={{ color: ACCENT }}>{weapon.name}</h3>
+        {weapon.enName ? <p className="line-clamp-1 font-mono text-[9px] uppercase tracking-[0.12em] text-ef-muted">{weapon.enName}</p> : null}
         {weapon.mainStatLabel || weapon.subStatLabel ? (
-          <div className="mt-auto flex flex-wrap items-center gap-x-2 gap-y-0.5 border-t border-ef-line/60 pt-2 text-[11px] font-bold leading-tight">
+          <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] font-bold leading-tight">
             <span><span className="font-mono text-[9px] text-ef-muted">주 </span><span className="text-ef-ink">{weapon.mainStatLabel ?? "-"}</span></span>
             <span><span className="font-mono text-[9px] text-ef-muted">부 </span><span className="text-ef-ink">{weapon.subStatLabel ?? "-"}</span></span>
           </div>
