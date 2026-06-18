@@ -4,9 +4,16 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-const YELLOW_MAIN = "#ffd24a";
-const YELLOW_TEXT = "#ffdc70";
-const YELLOW_BORDER_SOFT = "rgba(255,196,74,0.10)";
+const PRIMARY = "#ff9a2f";
+const ACCENT = "#ffd24a";
+const CUT = {
+  clipPath:
+    "polygon(0 0, calc(100% - 13px) 0, 100% 13px, 100% 100%, 13px 100%, 0 calc(100% - 13px))",
+};
+const CUT_SM = {
+  clipPath:
+    "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))",
+};
 
 const settingTypeLabelMap: Record<string, string> = {
   solo: "단일",
@@ -166,7 +173,6 @@ export default function PopularOperatorSettingsPanel({
   operatorName,
   operators,
   weapons,
-  accent = "#ffd24a",
 }: {
   operatorSlug: string;
   operatorName: string;
@@ -227,23 +233,20 @@ export default function PopularOperatorSettingsPanel({
   return (
     <section
       className="relative mb-3 min-w-0 overflow-hidden border border-ef-line bg-ef-card p-3 sm:p-4"
-      style={{
-        clipPath:
-          "polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px))",
-      }}
+      style={CUT}
     >
       <span
         className="absolute left-0 top-0 h-0.5 w-full"
-        style={{ background: `linear-gradient(90deg, ${accent}, transparent 55%)` }}
+        style={{ background: `linear-gradient(90deg, ${PRIMARY}, transparent 55%)` }}
       />
       <div className="mb-3 flex items-end justify-between gap-2">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <span className="h-2.5 w-2.5 shrink-0" style={{ background: accent }} />
+            <span className="h-4 w-1 shrink-0" style={{ background: PRIMARY }} />
             <p className="font-mono text-[11px] font-black uppercase tracking-[0.26em] text-ef-accent-soft">
               Popular Settings
             </p>
-            <span className="border border-ef-line px-1.5 py-0.5 font-mono text-[9px] font-black text-ef-muted">
+            <span className="border border-ef-line px-1.5 py-0.5 font-mono text-[9px] font-black text-ef-muted" style={CUT_SM}>
               TOP 3
             </span>
           </div>
@@ -255,23 +258,24 @@ export default function PopularOperatorSettingsPanel({
         <Link
           href={`/settings?operators=${encodeURIComponent(operatorSlug)}`}
           className="inline-flex min-h-9 shrink-0 items-center border border-ef-line bg-ef-card2 px-3 text-xs font-black text-ef-muted transition hover:border-ef-accent/40 hover:text-ef-accent-soft"
+          style={CUT_SM}
         >
           전체 보기
         </Link>
       </div>
 
       {loading ? (
-        <div className="border border-ef-line bg-ef-card2 p-3 text-xs font-bold text-ef-muted">
+        <div className="border border-ef-line bg-ef-card2 p-3 text-xs font-bold text-ef-muted" style={CUT_SM}>
           인기 세팅을 불러오는 중입니다.
         </div>
       ) : settings.length === 0 ? (
-        <div className="border border-ef-line bg-ef-card2 p-3 text-xs text-ef-muted">
+        <div className="border border-ef-line bg-ef-card2 p-3 text-xs text-ef-muted" style={CUT_SM}>
           아직 등록된 {operatorName} 세팅이 없습니다.
           <div className="mt-2">
             <Link
               href="/settings/party"
-              className="inline-flex rounded-lg px-3 py-1.5 text-xs font-black text-black transition hover:brightness-110"
-              style={{ background: YELLOW_MAIN }}
+              className="inline-flex px-3 py-1.5 text-xs font-black text-black transition hover:brightness-110"
+              style={{ ...CUT_SM, background: PRIMARY }}
             >
               첫 세팅 등록하기
             </Link>
@@ -301,10 +305,7 @@ function SettingCard({ setting }: { setting: SettingCardItem }) {
     <Link
       href={`/settings/${setting.id}`}
       className="group block min-w-0 overflow-hidden border border-ef-line bg-black transition hover:-translate-y-0.5 hover:border-ef-accent/45"
-      style={{
-        clipPath:
-          "polygon(0 0, calc(100% - 9px) 0, 100% 9px, 100% 100%, 9px 100%, 0 calc(100% - 9px))",
-      }}
+      style={CUT_SM}
     >
       <div className="relative aspect-[4/3] overflow-hidden bg-black">
         <Image
@@ -333,11 +334,12 @@ function SettingCard({ setting }: { setting: SettingCardItem }) {
 
           <span
             className={[
-              "rounded border px-1 py-0.5 text-[8px] font-black backdrop-blur-sm sm:text-[9px]",
+              "border px-1 py-0.5 font-mono text-[8px] font-black uppercase tracking-wide backdrop-blur-sm sm:text-[9px]",
               setting.type === "solo"
-                ? "border-yellow-300/40 bg-yellow-300/15 text-yellow-200"
-                : "border-sky-300/40 bg-sky-300/15 text-sky-200",
+                ? "border-ef-accent/40 text-ef-accent"
+                : "border-sky-300/40 text-sky-200",
             ].join(" ")}
+            style={{ ...CUT_SM, background: setting.type === "solo" ? "rgba(255,210,74,0.15)" : "rgba(125,211,252,0.15)" }}
           >
             {settingTypeLabelMap[setting.type]}
           </span>
@@ -348,7 +350,8 @@ function SettingCard({ setting }: { setting: SettingCardItem }) {
             {setting.partyMembers.slice(0, 2).map((member) => (
               <div
                 key={member.operatorSlug}
-                className="relative h-6 w-6 overflow-hidden rounded border border-white/20 bg-black sm:h-7 sm:w-7"
+                className="relative h-6 w-6 overflow-hidden border border-ef-line bg-black sm:h-7 sm:w-7"
+                style={CUT_SM}
               >
                 <Image
                   src={member.image}
@@ -359,7 +362,7 @@ function SettingCard({ setting }: { setting: SettingCardItem }) {
                 />
 
                 {member.elementIcon ? (
-                  <Image src={member.elementIcon} alt="" width={10} height={10} className="absolute bottom-0 right-0 rounded-sm bg-black/80" />
+                  <Image src={member.elementIcon} alt="" width={10} height={10} className="absolute bottom-0 right-0 bg-black/80" />
                 ) : null}
               </div>
             ))}
@@ -367,7 +370,7 @@ function SettingCard({ setting }: { setting: SettingCardItem }) {
         ) : null}
 
         {setting.weaponImage ? (
-          <div className="absolute bottom-1.5 right-1.5 flex h-7 w-7 items-center justify-center rounded border border-white/15 bg-black/50 backdrop-blur-sm">
+          <div className="absolute bottom-1.5 right-1.5 flex h-7 w-7 items-center justify-center border border-ef-line bg-black/50 backdrop-blur-sm" style={CUT_SM}>
             <Image
               src={setting.weaponImage}
               alt={setting.weaponName}
@@ -385,14 +388,14 @@ function SettingCard({ setting }: { setting: SettingCardItem }) {
         </div>
       </div>
 
-      <div className="flex min-h-[68px] flex-col border-t border-yellow-500/10 bg-black p-2">
-        <h2 className="line-clamp-2 text-[10px] font-black leading-[14px] text-yellow-300 sm:text-[11px] sm:leading-[15px]">
+      <div className="flex min-h-[68px] flex-col border-t border-ef-line bg-ef-card2 p-2">
+        <h2 className="line-clamp-2 text-[10px] font-black leading-[14px] text-ef-accent sm:text-[11px] sm:leading-[15px]">
           {setting.title}
         </h2>
 
         <div className="mt-auto flex min-w-0 items-center justify-between gap-1 pt-1.5 text-[8px] font-bold sm:text-[9px]">
-          <span className="truncate text-zinc-300">{setting.nickname}</span>
-          <span className="shrink-0 text-[#ffdc70]">
+          <span className="truncate text-ef-muted">{setting.nickname}</span>
+          <span className="shrink-0 text-ef-accent-soft">
             추천 {setting.likes} · 조회 {setting.views}
           </span>
         </div>

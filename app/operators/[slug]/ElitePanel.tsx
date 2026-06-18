@@ -15,11 +15,15 @@ type EliteStage = {
   materials: EliteMaterial[];
 };
 
-const YELLOW_MAIN = "#ffd24a";
-const YELLOW_TEXT = "#ffdc70";
-const YELLOW_BORDER = "rgba(255,196,74,0.14)";
-const YELLOW_BORDER_SOFT = "rgba(255,196,74,0.10)";
-const YELLOW_BORDER_FAINT = "rgba(255,196,74,0.08)";
+const ACCENT = "#ffd24a";
+const CUT = {
+  clipPath:
+    "polygon(0 0, calc(100% - 13px) 0, 100% 13px, 100% 100%, 13px 100%, 0 calc(100% - 13px))",
+};
+const CUT_SM = {
+  clipPath:
+    "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))",
+};
 
 function FoldSection({
   title,
@@ -33,40 +37,18 @@ function FoldSection({
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
-    <div
-      style={{
-        marginTop: "14px",
-        border: `1px solid ${YELLOW_BORDER}`,
-        background: "#0a0d12",
-        borderRadius: "20px",
-      }}
-    >
+    <div className="mt-3.5 border border-ef-line bg-ef-card" style={CUT}>
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
-        style={{
-          width: "100%",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          padding: "13px 14px",
-          background: "transparent",
-          border: "none",
-          color: "#edf2f7",
-          fontSize: "13px",
-          fontWeight: 800,
-          letterSpacing: "0.08em",
-          cursor: "pointer",
-        }}
+        className="flex w-full items-center justify-between px-3.5 py-3 font-mono text-[12px] font-bold uppercase tracking-[0.16em] text-ef-ink"
       >
         <span>{title}</span>
-        <span style={{ color: YELLOW_MAIN }}>{isOpen ? "−" : "+"}</span>
+        <span style={{ color: ACCENT }}>{isOpen ? "−" : "+"}</span>
       </button>
 
       {isOpen ? (
-        <div style={{ borderTop: `1px solid ${YELLOW_BORDER_SOFT}` }}>
-          {children}
-        </div>
+        <div className="border-t border-ef-line">{children}</div>
       ) : null}
     </div>
   );
@@ -89,35 +71,14 @@ function MaterialIcon({
 }) {
   if (!src) {
     return (
-      <div
-        style={{
-          width: "26px",
-          height: "26px",
-          border: `1px solid ${YELLOW_BORDER_SOFT}`,
-          background: "#05070b",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          color: "#9ca3af",
-          fontSize: "8px",
-          fontWeight: 800,
-          flexShrink: 0,
-        }}
-      >
+      <div className="flex h-[26px] w-[26px] shrink-0 items-center justify-center border border-ef-line bg-black font-black text-ef-muted" style={{ fontSize: "8px" }}>
         I
       </div>
     );
   }
 
   return (
-    <div
-      style={{
-        position: "relative",
-        width: "26px",
-        height: "26px",
-        flexShrink: 0,
-      }}
-    >
+    <div className="relative h-[26px] w-[26px] shrink-0">
       <Image
         src={src}
         alt={alt}
@@ -138,36 +99,9 @@ export default function ElitePanel({ elite }: { elite: EliteStage[] }) {
   if (!current) return null;
 
   return (
-    <section
-      style={{
-        borderRadius: "20px",
-        background: "#06080c",
-        border: `1px solid ${YELLOW_BORDER}`,
-        padding: "16px",
-        boxShadow: "0 12px 28px rgba(0,0,0,0.28)",
-      }}
-    >
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "72px 1fr",
-          gap: "14px",
-          alignItems: "start",
-        }}
-      >
-        <div
-          style={{
-            width: "72px",
-            height: "72px",
-            border: `1px solid ${YELLOW_BORDER}`,
-            background: "#0c1016",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            overflow: "hidden",
-            borderRadius: "20px",
-          }}
-        >
+    <section className="border border-ef-line bg-ef-card2 p-4" style={CUT}>
+      <div className="grid items-start gap-3.5" style={{ gridTemplateColumns: "72px 1fr" }}>
+        <div className="flex h-[72px] w-[72px] items-center justify-center overflow-hidden border border-ef-line bg-ef-card" style={CUT_SM}>
           <div style={{ position: "relative", width: "64px", height: "64px" }}>
             <Image
               src={getEliteStageIcon(current.stage)}
@@ -180,37 +114,17 @@ export default function ElitePanel({ elite }: { elite: EliteStage[] }) {
         </div>
 
         <div>
-          <div
-            style={{
-              color: YELLOW_TEXT,
-              fontSize: "30px",
-              fontWeight: 900,
-            }}
-          >
+          <div className="font-mono text-3xl font-black tabular-nums" style={{ color: ACCENT }}>
             {current.stage}
           </div>
 
-          <div
-            style={{
-              marginTop: "10px",
-              color: "#d1d5db",
-              fontSize: "15px",
-              lineHeight: 1.8,
-            }}
-          >
+          <div className="mt-2.5 break-keep text-sm leading-7 text-ef-muted">
             {current.description}
           </div>
         </div>
       </div>
 
-      <div
-        style={{
-          display: "flex",
-          gap: "6px",
-          flexWrap: "wrap",
-          marginTop: "16px",
-        }}
-      >
+      <div className="mt-4 flex flex-wrap gap-1.5">
         {stages.map((stage, index) => {
           const active = selectedIndex === index;
 
@@ -218,17 +132,14 @@ export default function ElitePanel({ elite }: { elite: EliteStage[] }) {
             <button
               key={stage.stage}
               onClick={() => setSelectedIndex(index)}
-              style={{
-                padding: "6px 12px",
-                border: active
-                  ? `1px solid ${YELLOW_MAIN}`
-                  : `1px solid ${YELLOW_BORDER}`,
-                background: active ? "rgba(255,196,74,0.14)" : "#0c1016",
-                color: "#fff",
-                fontWeight: 800,
-                cursor: "pointer",
-                borderRadius: "20px",
-              }}
+              className={`border px-3 py-1.5 font-mono text-xs font-black uppercase tracking-wide transition ${
+                active ? "border-ef-accent text-white" : "border-ef-line bg-ef-card text-ef-muted"
+              }`}
+              style={
+                active
+                  ? { ...CUT_SM, background: "rgba(255,210,74,0.2)", boxShadow: "inset 0 -2px 0 0 #ff9a2f" }
+                  : CUT_SM
+              }
             >
               {stage.stage}
             </button>
@@ -238,87 +149,40 @@ export default function ElitePanel({ elite }: { elite: EliteStage[] }) {
 
       <FoldSection title="업그레이드 재료" defaultOpen={false}>
         <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
-            gap: "10px",
-            padding: "10px",
-            alignItems: "start",
-          }}
+          className="grid items-start gap-2.5 p-2.5"
+          style={{ gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))" }}
         >
           {stages.map((stage) => (
             <div
               key={stage.stage}
-              style={{
-                borderLeft: `1px solid ${YELLOW_BORDER}`,
-                paddingLeft: "10px",
-                minHeight: "100%",
-              }}
+              className="min-h-full border-l border-ef-line pl-2.5"
             >
-              <div
-                style={{
-                  color: YELLOW_TEXT,
-                  fontSize: "13px",
-                  fontWeight: 900,
-                  marginBottom: "8px",
-                }}
-              >
+              <div className="mb-2 font-mono text-[13px] font-black uppercase tracking-wide" style={{ color: ACCENT }}>
                 {stage.stage}
               </div>
 
               {stage.materials.length ? (
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "6px",
-                  }}
-                >
+                <div className="flex flex-col gap-1.5">
                   {stage.materials.map((material, index) => (
                     <div
                       key={`${stage.stage}-${index}`}
-                      style={{
-                        border: `1px solid ${YELLOW_BORDER_FAINT}`,
-                        background: "#0e131b",
-                        padding: "6px 8px",
-                        display: "grid",
-                        gridTemplateColumns: "26px 1fr auto",
-                        gap: "8px",
-                        alignItems: "center",
-                        borderRadius: "20px",
-                      }}
+                      className="grid items-center gap-2 border border-ef-line bg-ef-card2 px-2 py-1.5"
+                      style={{ ...CUT_SM, gridTemplateColumns: "26px 1fr auto" }}
                     >
                       <MaterialIcon src={material.icon} alt={material.name} />
 
-                      <div
-                        style={{
-                          color: "#f3f4f6",
-                          fontSize: "11px",
-                          lineHeight: 1.3,
-                          wordBreak: "keep-all",
-                        }}
-                      >
+                      <div className="break-keep text-[11px] leading-tight text-ef-ink">
                         {material.name}
                       </div>
 
-                      <div
-                        style={{
-                          color: YELLOW_MAIN,
-                          fontSize: "11px",
-                          fontWeight: 900,
-                          whiteSpace: "nowrap",
-                          paddingLeft: "6px",
-                        }}
-                      >
+                      <div className="whitespace-nowrap pl-1.5 font-mono text-[11px] font-black tabular-nums" style={{ color: ACCENT }}>
                         {material.count}
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div style={{ color: "#94a3b8", fontSize: "12px" }}>
-                  재료 데이터 없음
-                </div>
+                <div className="text-xs text-ef-muted">재료 데이터 없음</div>
               )}
             </div>
           ))}

@@ -71,7 +71,7 @@ export default function QuickSectionNav({ links, accent = "#ffd24a" }: Props) {
                 className={`text-xs font-black transition sm:text-sm ${
                   isActive
                     ? "text-white"
-                    : "text-zinc-300 group-hover:text-white"
+                    : "text-ef-muted group-hover:text-white"
                 }`}
               >
                 {item.label}

@@ -2,10 +2,15 @@ import Image from "next/image";
 import type { ReactNode } from "react";
 import type { PotentialDetail } from "@/data/operators-detail-data";
 
-const YELLOW_MAIN = "#ffd24a";
-const YELLOW_TEXT = "#ffdc70";
-const YELLOW_BORDER = "rgba(255,196,74,0.14)";
-const YELLOW_BORDER_SOFT = "rgba(255,196,74,0.10)";
+const ACCENT = "#ffd24a";
+const CUT = {
+  clipPath:
+    "polygon(0 0, calc(100% - 13px) 0, 100% 13px, 100% 100%, 13px 100%, 0 calc(100% - 13px))",
+};
+const CUT_SM = {
+  clipPath:
+    "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))",
+};
 
 function highlightAllNumbers(text: string): React.ReactNode {
   const matches = [...text.matchAll(/([+\-x×]?\s*\d+(?:\.\d+)?%?)/gi)];
@@ -24,13 +29,7 @@ function highlightAllNumbers(text: string): React.ReactNode {
     }
 
     parts.push(
-      <span
-        key={index}
-        style={{
-          color: YELLOW_MAIN,
-          fontWeight: 900,
-        }}
-      >
+      <span key={index} className="font-black" style={{ color: ACCENT }}>
         {value.replace(/\s+/g, "")}
       </span>
     );
@@ -47,14 +46,7 @@ function highlightAllNumbers(text: string): React.ReactNode {
 
 function CardShell({ children }: { children: ReactNode }) {
   return (
-    <section
-      style={{
-        borderRadius: "20px",
-        background: "#06080c",
-        border: `1px solid ${YELLOW_BORDER}`,
-        padding: "16px",
-      }}
-    >
+    <section className="border border-ef-line bg-ef-card2 p-4" style={CUT}>
       {children}
     </section>
   );
@@ -72,18 +64,7 @@ function PotentialIcon({
   alt: string;
 }) {
   return (
-    <div
-      style={{
-        width: "56px",
-        height: "56px",
-        position: "relative",
-        border: `1px solid ${YELLOW_BORDER}`,
-        background: "#0c1016",
-        overflow: "hidden",
-        flexShrink: 0,
-        borderRadius: "20px",
-      }}
-    >
+    <div className="relative h-14 w-14 shrink-0 overflow-hidden border border-ef-line bg-ef-card" style={CUT_SM}>
       <Image
         src={src}
         alt={alt}
@@ -104,48 +85,25 @@ export default function PotentialPanel({
 
   return (
     <CardShell>
-      <div style={{ display: "grid", gap: "10px" }}>
+      <div className="grid gap-2.5">
         {items.map((item, i) => (
           <div
             key={i}
-            style={{
-              padding: "12px 14px",
-              border: `1px solid ${YELLOW_BORDER}`,
-              background: "#0a0d12",
-              borderRadius: "20px",
-            }}
+            className="border border-ef-line bg-ef-card px-3.5 py-3"
+            style={CUT}
           >
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "56px 1fr",
-                gap: "12px",
-                alignItems: "start",
-              }}
-            >
+            <div className="grid items-start gap-3" style={{ gridTemplateColumns: "56px 1fr" }}>
               <PotentialIcon
                 src={getPotentialIcon(i)}
                 alt={item.title}
               />
 
               <div>
-                <div
-                  style={{
-                    fontWeight: 900,
-                    color: YELLOW_TEXT,
-                    marginBottom: "4px",
-                    fontSize: "16px",
-                  }}
-                >
+                <div className="mb-1 text-base font-black text-ef-ink">
                   {item.title}
                 </div>
 
-                <div
-                  style={{
-                    color: "#e5e7eb",
-                    lineHeight: 1.7,
-                  }}
-                >
+                <div className="break-keep leading-7 text-ef-muted">
                   {highlightAllNumbers(item.description)}
                 </div>
               </div>

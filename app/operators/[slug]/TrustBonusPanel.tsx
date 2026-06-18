@@ -1,6 +1,11 @@
 import type { TrustBonus } from "@/data/operators-detail-data";
 
-const YELLOW_MAIN = "#ffd24a";
+const PRIMARY = "#ff9a2f";
+const ACCENT = "#ffd24a";
+const CUT = {
+  clipPath:
+    "polygon(0 0, calc(100% - 13px) 0, 100% 13px, 100% 100%, 13px 100%, 0 calc(100% - 13px))",
+};
 
 function highlightAllNumbers(text: string): React.ReactNode {
   const matches = [...text.matchAll(/([+\-x×]?\s*\d+(?:\.\d+)?%?)/gi)];
@@ -17,7 +22,7 @@ function highlightAllNumbers(text: string): React.ReactNode {
     if (start > lastIndex) parts.push(text.slice(lastIndex, start));
 
     parts.push(
-      <span key={index} style={{ color: YELLOW_MAIN }} className="font-black">
+      <span key={index} style={{ color: ACCENT }} className="font-black">
         {value.replace(/\s+/g, "")}
       </span>
     );
@@ -33,27 +38,22 @@ export default function TrustBonusPanel({ items }: { items: TrustBonus[] }) {
   if (!items.length) return null;
 
   return (
-    <section className="relative min-w-0 overflow-hidden rounded-[22px] border border-yellow-500/15 bg-[#05070b] p-3 shadow-[0_14px_34px_rgba(0,0,0,0.24)] sm:p-4">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_0%,rgba(255,210,74,0.09),transparent_30%)]" />
-
-      <div className="relative grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
-        {items.map((item) => (
-          <div
-            key={item.level}
-            className="min-w-0 rounded-[18px] border border-white/10 bg-black/25 px-4 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]"
-          >
-            <div className="text-[11px] font-black tracking-[0.14em] text-zinc-500">
-              TRUST BONUS
-            </div>
-            <div className="mt-2 flex items-center justify-between gap-3">
-              <span className="text-sm font-black text-zinc-400">Lv.{item.level}</span>
-              <span className="break-keep text-lg font-black text-yellow-200">
-                {highlightAllNumbers(item.label)}
-              </span>
-            </div>
-          </div>
-        ))}
-      </div>
-    </section>
+    <div className="grid grid-cols-2 items-stretch gap-2 sm:grid-cols-3 lg:grid-cols-4">
+      {items.map((item) => (
+        <div
+          key={item.level}
+          className="relative flex min-h-[88px] flex-col justify-center gap-1.5 overflow-hidden border border-ef-line bg-ef-card2 p-3 pl-4 text-center"
+          style={CUT}
+        >
+          <span className="absolute left-0 top-0 h-full w-1" style={{ background: PRIMARY }} />
+          <span className="font-mono text-[10px] font-black uppercase tracking-[0.18em] text-ef-muted">
+            Trust Lv.{item.level}
+          </span>
+          <span className="break-keep text-base font-black text-ef-ink">
+            {highlightAllNumbers(item.label)}
+          </span>
+        </div>
+      ))}
+    </div>
   );
 }

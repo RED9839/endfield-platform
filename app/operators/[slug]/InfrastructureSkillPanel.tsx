@@ -20,11 +20,15 @@ type Props = {
   accentColor: string;
 };
 
-const YELLOW_MAIN = "#ffd24a";
-const YELLOW_TEXT = "#ffdc70";
-const YELLOW_BORDER = "rgba(255,196,74,0.14)";
-const BG = "#06080c";
-const BUTTON_BG = "#0c1016";
+const ACCENT = "#ffd24a";
+const CUT = {
+  clipPath:
+    "polygon(0 0, calc(100% - 13px) 0, 100% 13px, 100% 100%, 13px 100%, 0 calc(100% - 13px))",
+};
+const CUT_SM = {
+  clipPath:
+    "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))",
+};
 
 function tierToLevel(tier: "α" | "β" | "γ") {
   if (tier === "α") return 1;
@@ -77,10 +81,8 @@ function buildBidirectionalHighlight(
     parts.push(
       <span
         key={`num-${index}-${start}`}
-        style={{
-          color: shouldHighlight ? YELLOW_MAIN : "#d1d5db",
-          fontWeight: shouldHighlight ? 900 : 700,
-        }}
+        className={shouldHighlight ? "font-black" : "font-bold text-ef-muted"}
+        style={shouldHighlight ? { color: ACCENT } : undefined}
       >
         {currentValue}
       </span>
@@ -102,17 +104,15 @@ function buildBidirectionalHighlight(
 
 export default function InfrastructureSkillPanel({
   groups = [],
-  accentColor,
 }: Props) {
   if (!groups.length) return null;
 
   return (
-    <section style={{ display: "grid", gap: "14px" }}>
+    <section className="grid gap-3.5">
       {groups.map((group, index) => (
         <InfrastructureCard
           key={`${group.name}-${index}`}
           group={group}
-          accentColor={accentColor}
         />
       ))}
     </section>
@@ -121,10 +121,8 @@ export default function InfrastructureSkillPanel({
 
 function InfrastructureCard({
   group,
-  accentColor,
 }: {
   group: InfrastructureSkillGroup;
-  accentColor: string;
 }) {
   const sortedLevels = useMemo(() => {
     return [...group.levels].sort((a, b) => tierToLevel(a.tier) - tierToLevel(b.tier));
@@ -149,35 +147,9 @@ function InfrastructureCard({
   );
 
   return (
-    <section
-      style={{
-        borderRadius: "20px",
-        background: BG,
-        border: `1px solid ${YELLOW_BORDER}`,
-        padding: "16px",
-      }}
-    >
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "64px 1fr",
-          gap: "14px",
-          alignItems: "start",
-        }}
-      >
-        <div
-          style={{
-            width: "64px",
-            height: "64px",
-            border: `1px solid ${YELLOW_BORDER}`,
-            background: BUTTON_BG,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            overflow: "hidden",
-            borderRadius: "20px",
-          }}
-        >
+    <section className="border border-ef-line bg-ef-card2 p-4" style={CUT}>
+      <div className="grid items-start gap-3.5" style={{ gridTemplateColumns: "64px 1fr" }}>
+        <div className="flex h-16 w-16 items-center justify-center overflow-hidden border border-ef-line bg-ef-card" style={CUT_SM}>
           <div style={{ position: "relative", width: "56px", height: "56px" }}>
             <Image
               src={group.icon}
@@ -190,39 +162,17 @@ function InfrastructureCard({
         </div>
 
         <div>
-          <div
-            style={{
-              color: YELLOW_TEXT,
-              fontSize: "30px",
-              fontWeight: 900,
-              lineHeight: 1.1,
-            }}
-          >
+          <div className="text-3xl font-black leading-tight text-ef-ink">
             {group.name}
           </div>
 
-          <div
-            style={{
-              marginTop: "10px",
-              color: "#d1d5db",
-              fontSize: "15px",
-              lineHeight: 1.8,
-              whiteSpace: "pre-line",
-            }}
-          >
+          <div className="mt-2.5 whitespace-pre-line text-sm leading-7 text-ef-muted">
             {descriptionNodes}
           </div>
         </div>
       </div>
 
-      <div
-        style={{
-          display: "flex",
-          gap: "6px",
-          flexWrap: "wrap",
-          marginTop: "16px",
-        }}
-      >
+      <div className="mt-4 flex flex-wrap gap-1.5">
         {sortedLevels.map((level) => {
           const numericLevel = tierToLevel(level.tier);
           const active = selectedTier === level.tier;
@@ -232,19 +182,14 @@ function InfrastructureCard({
               key={`${group.name}-${level.tier}`}
               type="button"
               onClick={() => setSelectedTier(level.tier)}
-              style={{
-                minWidth: "58px",
-                height: "34px",
-                padding: "0 10px",
-                border: active
-                  ? `1px solid ${accentColor}`
-                  : `1px solid ${YELLOW_BORDER}`,
-                background: active ? "rgba(255,196,74,0.14)" : BUTTON_BG,
-                color: "#fff",
-                fontWeight: 800,
-                cursor: "pointer",
-                borderRadius: "20px",
-              }}
+              className={`flex h-[34px] min-w-[58px] items-center justify-center border px-2.5 font-mono text-xs font-black uppercase tracking-wide transition ${
+                active ? "border-ef-accent text-white" : "border-ef-line bg-ef-card text-ef-muted"
+              }`}
+              style={
+                active
+                  ? { ...CUT_SM, background: "rgba(255,210,74,0.2)", boxShadow: "inset 0 -2px 0 0 #ff9a2f" }
+                  : CUT_SM
+              }
             >
               Lv.{numericLevel}
             </button>

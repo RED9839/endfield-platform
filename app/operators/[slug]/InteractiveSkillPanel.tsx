@@ -3,6 +3,17 @@
 import Image from "next/image";
 import { Fragment, useMemo, useState, type ReactNode } from "react";
 
+const PRIMARY = "#ff9a2f";
+const ACCENT = "#ffd24a";
+const CUT = {
+  clipPath:
+    "polygon(0 0, calc(100% - 13px) 0, 100% 13px, 100% 100%, 13px 100%, 0 calc(100% - 13px))",
+};
+const CUT_SM = {
+  clipPath:
+    "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))",
+};
+
 type SkillStat = {
   label: string;
   value: string | number;
@@ -273,22 +284,23 @@ function FoldSection({
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
-    <div className="mt-4 min-w-0 overflow-hidden rounded-[18px] border border-white/10 bg-black/20 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]">
+    <div className="mt-4 min-w-0 overflow-hidden border border-ef-line bg-ef-card2" style={CUT}>
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
-        className="flex min-h-[58px] w-full items-center justify-between gap-3 px-4 py-3 text-left transition hover:bg-yellow-400/5"
+        className="flex min-h-[58px] w-full items-center justify-between gap-3 px-4 py-3 text-left transition hover:bg-white/[0.04]"
       >
-        <div className="min-w-0">
-          <span className="text-base font-black text-yellow-200">{title}</span>
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="h-4 w-1 shrink-0" style={{ background: PRIMARY }} />
+          <span className="font-mono text-sm font-black uppercase tracking-[0.16em] text-white">{title}</span>
           {subtitle ? (
-            <span className="ml-2 text-sm font-bold text-zinc-500">{subtitle}</span>
+            <span className="font-mono text-[11px] font-bold uppercase tracking-wide text-ef-muted">{subtitle}</span>
           ) : null}
         </div>
-        <span className="text-xl font-black text-zinc-200">{isOpen ? "⌃" : "⌄"}</span>
+        <span className="text-xl font-black text-ef-muted">{isOpen ? "⌃" : "⌄"}</span>
       </button>
 
-      {isOpen ? <div className="border-t border-white/10 p-3">{children}</div> : null}
+      {isOpen ? <div className="border-t border-ef-line p-3">{children}</div> : null}
     </div>
   );
 }
@@ -298,7 +310,7 @@ function MaterialIcon({ src, alt, size = "normal" }: { src?: string; alt: string
 
   if (!src) {
     return (
-      <div className={`flex ${boxClass} shrink-0 items-center justify-center rounded-xl border border-yellow-500/10 bg-[#05070b] text-[8px] font-black text-zinc-500`}>
+      <div className={`flex ${boxClass} shrink-0 items-center justify-center border border-ef-line bg-black text-[8px] font-black text-ef-muted`} style={CUT_SM}>
         I
       </div>
     );
@@ -313,37 +325,38 @@ function MaterialIcon({ src, alt, size = "normal" }: { src?: string; alt: string
 
 function MaterialBadge({ material }: { material: AggregatedMaterial }) {
   return (
-    <div className="flex min-w-[64px] flex-col items-center gap-1.5 rounded-2xl border border-white/10 bg-white/[0.025] px-2 py-2">
+    <div className="flex min-w-[64px] flex-col items-center gap-1.5 border border-ef-line bg-ef-card px-2 py-2" style={CUT_SM}>
       <MaterialIcon src={material.icon} alt={material.name} size="large" />
-      <div className="text-sm font-black leading-none text-zinc-200">{material.count}</div>
+      <div className="font-mono text-sm font-black leading-none tabular-nums" style={{ color: ACCENT }}>{material.count}</div>
     </div>
   );
 }
 
 function UpgradeColumn({ item }: { item: SkillUpgradeMaterial }) {
   return (
-    <div className="min-w-0 rounded-[18px] border border-yellow-500/10 bg-[#0b0f16] p-2.5">
-      <div className="mb-2 text-sm font-black text-yellow-200">{item.level}</div>
+    <div className="min-w-0 border border-ef-line bg-ef-card p-2.5" style={CUT}>
+      <div className="mb-2 font-mono text-sm font-black" style={{ color: PRIMARY }}>{item.level}</div>
 
       {item.materials.length ? (
         <div className="grid gap-1.5">
           {item.materials.map((material, index) => (
             <div
               key={`${item.level}-${material.name}-${index}`}
-              className="grid min-w-0 grid-cols-[28px_minmax(0,1fr)_auto] items-center gap-2 rounded-2xl border border-yellow-500/10 bg-black/35 px-2 py-1.5"
+              className="grid min-w-0 grid-cols-[28px_minmax(0,1fr)_auto] items-center gap-2 border border-ef-line bg-ef-card2 px-2 py-1.5"
+              style={CUT_SM}
             >
               <MaterialIcon src={material.icon} alt={material.name} />
-              <div className="min-w-0 break-keep text-xs font-bold leading-snug text-zinc-200">
+              <div className="min-w-0 break-keep text-xs font-bold leading-snug text-ef-ink">
                 {material.name}
               </div>
-              <div className="pl-1 text-xs font-black text-yellow-200">
+              <div className="pl-1 font-mono text-xs font-black tabular-nums" style={{ color: ACCENT }}>
                 {material.count}
               </div>
             </div>
           ))}
         </div>
       ) : (
-        <div className="text-xs font-bold text-zinc-500">재료 데이터 없음</div>
+        <div className="text-xs font-bold text-ef-muted">재료 데이터 없음</div>
       )}
     </div>
   );
@@ -354,16 +367,16 @@ function StatCard({ stat }: { stat: SkillStat }) {
   const statColor = statElement ? getElementColor(statElement) : "#d8e0ec";
 
   return (
-    <div className="min-w-0 rounded-[14px] border border-white/10 bg-white/[0.025] px-3 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]">
+    <div className="min-w-0 border border-ef-line bg-ef-card px-3 py-2.5" style={CUT_SM}>
       <div className="break-keep text-[11px] font-black leading-snug" style={{ color: statColor }}>
         {renderHighlightedText(stat.label)}
       </div>
-      <div className="mt-1 text-lg font-black leading-none text-yellow-200">{stat.value}</div>
+      <div className="mt-1 font-mono text-lg font-black leading-none tabular-nums" style={{ color: ACCENT }}>{stat.value}</div>
     </div>
   );
 }
 
-export default function InteractiveSkillPanel({ skill, accentColor }: Props) {
+export default function InteractiveSkillPanel({ skill }: Props) {
   const levels = useMemo(() => skill.levelValues ?? [], [skill.levelValues]);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const current = levels[selectedIndex] ?? levels[0];
@@ -392,33 +405,29 @@ export default function InteractiveSkillPanel({ skill, accentColor }: Props) {
     [skill, current]
   );
 
-  const iconBorderColor = detectedElement ? getElementColor(detectedElement) : "rgba(255,196,74,0.34)";
-  const iconGlowColor = detectedElement ? `${getElementColor(detectedElement)}55` : "rgba(255,196,74,0.22)";
+  const iconBorderColor = detectedElement ? getElementColor(detectedElement) : "#202020";
 
   if (!current) return null;
 
   return (
-    <section className="relative min-w-0 overflow-hidden rounded-[22px] border border-yellow-500/15 bg-[#05070b] shadow-[0_14px_34px_rgba(0,0,0,0.28)]">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_0%,rgba(255,210,74,0.10),transparent_30%),linear-gradient(135deg,rgba(255,255,255,0.03),rgba(255,255,255,0.004))]" />
-      <div className="pointer-events-none absolute right-0 top-0 h-28 w-28 bg-[repeating-linear-gradient(135deg,rgba(255,210,74,0.07)_0px,rgba(255,210,74,0.07)_2px,transparent_2px,transparent_8px)] opacity-25" />
-
+    <section className="relative min-w-0 overflow-hidden border border-ef-line bg-ef-card2" style={CUT}>
       <div className="relative p-3 sm:p-4">
         <div className="grid min-w-0 grid-cols-[64px_minmax(0,1fr)] gap-3 sm:grid-cols-[78px_minmax(0,1fr)] sm:gap-4">
           <div
-            className="relative flex h-16 w-16 items-center justify-center rounded-[20px] border bg-[#0b0f16] sm:h-[78px] sm:w-[78px]"
-            style={{ borderColor: iconBorderColor, boxShadow: `0 0 20px ${iconGlowColor}` }}
+            className="relative flex h-16 w-16 items-center justify-center border bg-black sm:h-[78px] sm:w-[78px]"
+            style={{ ...CUT_SM, borderColor: iconBorderColor }}
           >
             {skill.icon ? (
               <div className="relative h-14 w-14 sm:h-[68px] sm:w-[68px]">
                 <Image src={skill.icon} alt={skill.name} fill sizes="68px" className="object-contain" />
               </div>
             ) : (
-              <div className="text-xs font-black text-zinc-500">ICON</div>
+              <div className="text-xs font-black text-ef-muted">ICON</div>
             )}
           </div>
 
           <div className="min-w-0 self-center">
-            <div className="inline-flex rounded-full border border-yellow-400/20 bg-yellow-400/10 px-2.5 py-1 text-[11px] font-black text-yellow-200">
+            <div className="inline-flex items-center border px-2 py-0.5 font-mono text-[11px] font-black uppercase tracking-wide" style={{ ...CUT_SM, borderColor: `${PRIMARY}66`, background: `${PRIMARY}1a`, color: PRIMARY }}>
               {skill.typeLabel}
             </div>
 
@@ -428,7 +437,7 @@ export default function InteractiveSkillPanel({ skill, accentColor }: Props) {
           </div>
         </div>
 
-        <div className="mt-3 overflow-x-auto overscroll-x-contain border-b border-yellow-500/20 pb-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="mt-3 overflow-x-auto overscroll-x-contain border-b border-ef-line pb-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <div className="flex w-max items-center gap-1.5">
             {levels.map((level, index) => {
               const active = selectedIndex === index;
@@ -438,13 +447,10 @@ export default function InteractiveSkillPanel({ skill, accentColor }: Props) {
                   key={`${skill.name}-${level.level}`}
                   type="button"
                   onClick={() => setSelectedIndex(index)}
-                  className={[
-                    "min-h-8 min-w-[44px] rounded-md border px-3 text-xs font-black transition active:scale-[0.98]",
-                    active
-                      ? "border-yellow-300/80 bg-yellow-400/20 text-yellow-100 shadow-[0_0_14px_rgba(255,210,74,0.18)]"
-                      : "border-white/12 bg-black/35 text-zinc-300 hover:border-yellow-300/40 hover:text-yellow-100",
-                  ].join(" ")}
-                  style={active ? { borderColor: accentColor } : undefined}
+                  className="min-h-8 min-w-[44px] border px-3 font-mono text-xs font-black uppercase tracking-wide transition duration-150 active:scale-[0.98]"
+                  style={active
+                    ? { ...CUT_SM, borderColor: ACCENT, background: "rgba(255,210,74,0.2)", color: "#ffffff", boxShadow: "inset 0 -2px 0 0 #ff9a2f" }
+                    : { ...CUT_SM, borderColor: "#202020", background: "#0b0b0b", color: "#a0a0a0" }}
                 >
                   {level.level}
                 </button>
@@ -454,12 +460,12 @@ export default function InteractiveSkillPanel({ skill, accentColor }: Props) {
         </div>
 
         <div className="mt-3 grid gap-3 xl:grid-cols-[minmax(0,1.05fr)_minmax(360px,0.95fr)]">
-          <div className="min-w-0 rounded-[18px] border border-white/10 bg-black/20 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)]">
-            <div className="mb-4 flex items-center gap-2 text-base font-black text-yellow-200">
-              <span className="h-4 w-0.5 rounded-full bg-yellow-300" />
-              스킬 설명
+          <div className="min-w-0 border border-ef-line bg-ef-card p-4" style={CUT}>
+            <div className="mb-4 flex items-center gap-2">
+              <span className="h-4 w-1 shrink-0" style={{ background: PRIMARY }} />
+              <span className="font-mono text-sm font-black uppercase tracking-[0.16em] text-white">스킬 설명</span>
             </div>
-            <div className="break-keep text-sm font-semibold leading-[1.86] text-zinc-100 sm:text-[15px]">
+            <div className="break-keep text-sm font-semibold leading-[1.86] text-ef-ink sm:text-[15px]">
               {renderHighlightedText(current.description)}
             </div>
           </div>
@@ -473,11 +479,12 @@ export default function InteractiveSkillPanel({ skill, accentColor }: Props) {
           )}
         </div>
 
-        <div className="mt-3 grid gap-3 rounded-[18px] border border-white/10 bg-black/20 p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)] lg:grid-cols-[minmax(0,0.85fr)_minmax(320px,1fr)]">
+        <div className="mt-3 grid gap-3 border border-ef-line bg-ef-card p-3 lg:grid-cols-[minmax(0,0.85fr)_minmax(320px,1fr)]" style={CUT}>
           <div className="min-w-0">
-            <div className="mb-3 text-base font-black text-yellow-200">
-              강화 재료
-              <span className="ml-2 text-sm font-bold text-zinc-500">현재 레벨 {current.level} 기준</span>
+            <div className="mb-3 flex items-center gap-2">
+              <span className="h-4 w-1 shrink-0" style={{ background: PRIMARY }} />
+              <span className="font-mono text-sm font-black uppercase tracking-[0.16em] text-white">강화 재료</span>
+              <span className="font-mono text-[11px] font-bold uppercase tracking-wide text-ef-muted">현재 레벨 {current.level} 기준</span>
             </div>
 
             {currentUpgrade?.materials?.length ? (
@@ -490,16 +497,17 @@ export default function InteractiveSkillPanel({ skill, accentColor }: Props) {
                 ))}
               </div>
             ) : (
-              <div className="rounded-2xl border border-yellow-500/10 bg-[#070a0f] px-3 py-3 text-sm font-bold text-zinc-500">
+              <div className="border border-ef-line bg-ef-card2 px-3 py-3 text-sm font-bold text-ef-muted" style={CUT_SM}>
                 현재 선택한 레벨의 강화 재료 데이터가 없습니다.
               </div>
             )}
           </div>
 
-          <div className="min-w-0 border-white/10 pt-3 lg:border-l lg:pl-5 lg:pt-0">
-            <div className="mb-3 text-base font-black text-yellow-200">
-              전체 강화 재료
-              <span className="ml-2 text-sm font-bold text-zinc-500">최대 M3 기준</span>
+          <div className="min-w-0 border-ef-line pt-3 lg:border-l lg:pl-5 lg:pt-0">
+            <div className="mb-3 flex items-center gap-2">
+              <span className="h-4 w-1 shrink-0" style={{ background: PRIMARY }} />
+              <span className="font-mono text-sm font-black uppercase tracking-[0.16em] text-white">전체 강화 재료</span>
+              <span className="font-mono text-[11px] font-bold uppercase tracking-wide text-ef-muted">최대 M3 기준</span>
             </div>
             {totalMaterials.length ? (
               <div className="flex flex-wrap gap-3 sm:gap-4">
@@ -508,24 +516,24 @@ export default function InteractiveSkillPanel({ skill, accentColor }: Props) {
                 ))}
               </div>
             ) : (
-              <div className="text-sm font-bold text-zinc-500">재료 데이터 없음</div>
+              <div className="text-sm font-bold text-ef-muted">재료 데이터 없음</div>
             )}
           </div>
         </div>
 
         {!!skill.compareRows?.length && (
           <FoldSection title="레벨 비교" defaultOpen={false}>
-            <div className="max-w-full overflow-x-auto overscroll-x-contain rounded-2xl border border-white/10 bg-black/20">
+            <div className="max-w-full overflow-x-auto overscroll-x-contain border border-ef-line bg-ef-card" style={CUT_SM}>
               <table className="w-max min-w-full border-collapse text-sm">
                 <thead>
                   <tr>
-                    <th className="sticky left-0 z-20 min-w-[130px] border-b border-yellow-500/10 bg-[#0a0d12] p-3 text-left text-xs font-black text-zinc-400">
+                    <th className="sticky left-0 z-20 min-w-[130px] border-b border-ef-line bg-ef-card2 p-3 text-left font-mono text-xs font-black uppercase tracking-wide text-ef-muted">
                       항목
                     </th>
                     {levels.map((level) => (
                       <th
                         key={`${skill.name}-thead-${level.level}`}
-                        className="min-w-[86px] border-b border-yellow-500/10 p-3 text-center text-xs font-black text-zinc-400"
+                        className="min-w-[86px] border-b border-ef-line p-3 text-center font-mono text-xs font-black text-ef-muted"
                       >
                         {level.level}
                       </th>
@@ -541,7 +549,7 @@ export default function InteractiveSkillPanel({ skill, accentColor }: Props) {
                     return (
                       <tr key={`${skill.name}-${row.label}`}>
                         <td
-                          className="sticky left-0 z-10 min-w-[130px] border-b border-yellow-500/10 bg-[#0a0d12] p-3 text-xs font-black sm:text-sm"
+                          className="sticky left-0 z-10 min-w-[130px] border-b border-ef-line bg-ef-card2 p-3 text-xs font-black sm:text-sm"
                           style={{ color: rowColor }}
                         >
                           {renderHighlightedText(row.label)}
@@ -549,7 +557,7 @@ export default function InteractiveSkillPanel({ skill, accentColor }: Props) {
                         {row.values.map((value, index) => (
                           <td
                             key={`${skill.name}-${row.label}-${index}`}
-                            className="min-w-[86px] border-b border-yellow-500/10 p-3 text-center text-xs font-bold text-zinc-300 sm:text-sm"
+                            className="min-w-[86px] border-b border-ef-line p-3 text-center font-mono text-xs font-bold tabular-nums text-ef-ink sm:text-sm"
                           >
                             {value}
                           </td>
@@ -564,7 +572,7 @@ export default function InteractiveSkillPanel({ skill, accentColor }: Props) {
         )}
 
         <FoldSection title="레벨별 강화 재료" defaultOpen={false}>
-          <div className="grid gap-3 rounded-2xl border border-white/10 bg-black/20 p-3">
+          <div className="grid gap-3 border border-ef-line bg-ef-card p-3" style={CUT}>
             {!!upgradeRows.normal.length && (
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4">
                 {upgradeRows.normal.map((item) => (
@@ -582,7 +590,7 @@ export default function InteractiveSkillPanel({ skill, accentColor }: Props) {
             )}
 
             {!upgradeRows.normal.length && !upgradeRows.mastery.length ? (
-              <div className="text-xs font-bold text-zinc-500">재료 데이터 없음</div>
+              <div className="text-xs font-bold text-ef-muted">재료 데이터 없음</div>
             ) : null}
           </div>
         </FoldSection>

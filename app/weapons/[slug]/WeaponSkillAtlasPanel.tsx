@@ -44,17 +44,15 @@ type TextHighlightMatch = {
   text: string;
 };
 
-const YELLOW_MAIN = "#ffd24a";
-const YELLOW_TEXT = "#ffdc70";
-const YELLOW_BORDER = "rgba(255,196,74,0.14)";
-const YELLOW_BORDER_SOFT = "rgba(255,196,74,0.10)";
-
-const PANEL_BG = "#05070b";
-const PANEL_INNER_BG = "#071019";
-const PANEL_BUTTON_BG = "#0c1016";
-const PANEL_BORDER = YELLOW_BORDER;
-const PANEL_BORDER_SOFT = YELLOW_BORDER_SOFT;
-const PANEL_BORDER_FAINT = "rgba(255,196,74,0.08)";
+const ACCENT = "#ffd24a";
+const CUT = {
+  clipPath:
+    "polygon(0 0, calc(100% - 13px) 0, 100% 13px, 100% 100%, 13px 100%, 0 calc(100% - 13px))",
+};
+const CUT_SM = {
+  clipPath:
+    "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))",
+};
 
 function escapeRegExp(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -232,7 +230,7 @@ function renderHighlightedDescription(
       <span
         key={`value-${index}-${match.start}`}
         style={{
-          color: YELLOW_TEXT,
+          color: ACCENT,
           fontWeight: 900,
         }}
       >
@@ -266,38 +264,18 @@ function FoldSection({
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
-    <div
-      style={{
-        marginTop: "14px",
-        border: `1px solid ${PANEL_BORDER}`,
-        background: "#0a0d12",
-        borderRadius: "16px",
-      }}
-    >
+    <div className="mt-3.5 border border-ef-line bg-ef-card" style={CUT}>
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
-        style={{
-          width: "100%",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          padding: "13px 14px",
-          background: "transparent",
-          border: "none",
-          color: "#edf2f7",
-          fontSize: "13px",
-          fontWeight: 800,
-          letterSpacing: "0.08em",
-          cursor: "pointer",
-        }}
+        className="flex w-full cursor-pointer items-center justify-between bg-transparent px-3.5 py-3 font-mono text-[13px] font-black uppercase tracking-wide text-ef-ink"
       >
         <span>{title}</span>
-        <span style={{ color: YELLOW_TEXT }}>{isOpen ? "−" : "+"}</span>
+        <span style={{ color: ACCENT }}>{isOpen ? "−" : "+"}</span>
       </button>
 
       {isOpen ? (
-        <div style={{ borderTop: `1px solid ${PANEL_BORDER_SOFT}` }}>
+        <div className="border-t border-ef-line">
           {children}
         </div>
       ) : null}
@@ -408,48 +386,18 @@ export default function WeaponSkillAtlasPanel({ skill }: Props) {
       : null;
 
   return (
-    <section
-      style={{
-        borderRadius: "20px",
-        background: PANEL_BG,
-        border: `1px solid ${PANEL_BORDER}`,
-        padding: "16px",
-        boxShadow: "0 12px 28px rgba(0,0,0,0.28)",
-      }}
-    >
+    <section className="border border-ef-line bg-ef-card2 p-4" style={CUT}>
       <div>
-        <div
-          style={{
-            color: "#aeb8c7",
-            fontSize: "12px",
-            letterSpacing: "0.14em",
-            marginBottom: "6px",
-          }}
-        >
+        <div className="mb-1.5 font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-ef-muted">
           {normalizedTypeLabel}
         </div>
 
-        <div
-          style={{
-            color: YELLOW_TEXT,
-            fontSize: "30px",
-            fontWeight: 900,
-            lineHeight: 1.1,
-            wordBreak: "keep-all",
-          }}
-        >
+        <div className="break-keep text-3xl font-black leading-tight" style={{ color: ACCENT }}>
           {skill.name}
         </div>
       </div>
 
-      <div
-        style={{
-          display: "flex",
-          gap: "6px",
-          flexWrap: "wrap",
-          marginTop: "16px",
-        }}
-      >
+      <div className="mt-4 flex flex-wrap gap-1.5">
         {levels.map((level, index) => {
           const active = selectedIndex === index;
 
@@ -458,22 +406,10 @@ export default function WeaponSkillAtlasPanel({ skill }: Props) {
               key={`${skill.name}-${level.rank}`}
               type="button"
               onClick={() => setSelectedIndex(index)}
-              style={{
-                minWidth: "70px",
-                height: "34px",
-                padding: "0 10px",
-                border: active
-                  ? `1px solid ${YELLOW_TEXT}`
-                  : `1px solid ${PANEL_BORDER}`,
-                background: active ? "rgba(255,210,74,0.14)" : PANEL_BUTTON_BG,
-                color: "#f3f4f6",
-                fontWeight: 800,
-                cursor: "pointer",
-                borderRadius: "14px",
-                boxShadow: active
-                  ? "inset 0 0 0 1px rgba(255,210,74,0.10)"
-                  : "none",
-              }}
+              className="h-[34px] min-w-[70px] px-2.5 font-mono text-xs font-black uppercase tracking-wide transition"
+              style={active
+                ? { ...CUT_SM, borderWidth: 1, borderStyle: "solid", borderColor: ACCENT, background: "rgba(255,210,74,0.2)", color: "#ffffff", boxShadow: "inset 0 -2px 0 0 #ff9a2f" }
+                : { ...CUT_SM, borderWidth: 1, borderStyle: "solid", borderColor: "#202020", background: "#0b0b0b", color: "#a0a0a0" }}
             >
               Rank {level.rank}
             </button>
@@ -483,17 +419,8 @@ export default function WeaponSkillAtlasPanel({ skill }: Props) {
 
       {showDescription && (
         <div
-          style={{
-            marginTop: "12px",
-            border: `1px solid ${PANEL_BORDER_SOFT}`,
-            background: PANEL_INNER_BG,
-            padding: "14px 16px",
-            color: "#d1d5db",
-            fontSize: "15px",
-            lineHeight: 1.8,
-            whiteSpace: "pre-line",
-        borderRadius: "16px",
-          }}
+          className="mt-3 whitespace-pre-line break-keep border border-ef-line bg-ef-card px-4 py-3.5 text-[15px] leading-[1.8] text-ef-muted"
+          style={CUT_SM}
         >
           {descriptionNodes}
         </div>
@@ -501,40 +428,19 @@ export default function WeaponSkillAtlasPanel({ skill }: Props) {
 
       {showStats && (
         <div
-          style={{
-            marginTop: "12px",
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-            gap: "10px",
-          }}
+          className="mt-3 grid gap-2.5"
+          style={{ gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))" }}
         >
           {current.stats!.map((stat) => (
             <div
               key={`${skill.name}-${current.rank}-${stat.label}`}
-              style={{
-                border: `1px solid ${PANEL_BORDER_SOFT}`,
-                background: PANEL_INNER_BG,
-                padding: "12px",
-        borderRadius: "16px",
-              }}
+              className="border border-ef-line bg-ef-card p-3"
+              style={CUT_SM}
             >
-              <div
-                style={{
-                  color: "#9fb3c8",
-                  fontSize: "12px",
-                  marginBottom: "6px",
-                  fontWeight: 800,
-                }}
-              >
+              <div className="mb-1.5 font-mono text-[11px] font-bold uppercase tracking-wide text-ef-muted">
                 {stat.label}
               </div>
-              <div
-                style={{
-                  color: YELLOW_TEXT,
-                  fontSize: "20px",
-                  fontWeight: 900,
-                }}
-              >
+              <div className="font-mono text-xl font-black tabular-nums" style={{ color: ACCENT }}>
                 {stat.value}
               </div>
             </div>
@@ -544,42 +450,20 @@ export default function WeaponSkillAtlasPanel({ skill }: Props) {
 
       {showCompareRows && (
         <FoldSection title="Rank 비교" defaultOpen={false}>
-          <div
-            style={{
-              display: "grid",
-              gap: "10px",
-              padding: "12px",
-            }}
-          >
+          <div className="grid gap-2.5 p-3">
             {skill.compareRows!.map((row) => (
               <div
                 key={`${skill.name}-${row.label}`}
-                style={{
-                  border: `1px solid ${PANEL_BORDER_SOFT}`,
-                  background: PANEL_INNER_BG,
-                  borderRadius: "14px",
-                  overflow: "hidden",
-                }}
+                className="overflow-hidden border border-ef-line bg-ef-card2"
+                style={CUT_SM}
               >
-                <div
-                  style={{
-                    padding: "10px 12px",
-                    borderBottom: `1px solid ${PANEL_BORDER_FAINT}`,
-                    color: YELLOW_TEXT,
-                    fontSize: "13px",
-                    fontWeight: 900,
-                  }}
-                >
+                <div className="border-b border-ef-line px-3 py-2.5 font-mono text-[13px] font-black uppercase tracking-wide" style={{ color: ACCENT }}>
                   {row.label}
                 </div>
 
                 <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(92px, 1fr))",
-                    gap: "1px",
-                    background: PANEL_BORDER_FAINT,
-                  }}
+                  className="grid gap-px bg-ef-line"
+                  style={{ gridTemplateColumns: "repeat(auto-fit, minmax(92px, 1fr))" }}
                 >
                   {row.values.map((value, index) => {
                     const rank = levels[index]?.rank ?? index + 1;
@@ -587,31 +471,13 @@ export default function WeaponSkillAtlasPanel({ skill }: Props) {
                     return (
                       <div
                         key={`${skill.name}-${row.label}-${index}`}
-                        style={{
-                          background: PANEL_INNER_BG,
-                          padding: "10px",
-                          textAlign: "center",
-                        }}
+                        className="bg-ef-card2 p-2.5 text-center"
                       >
-                        <div
-                          style={{
-                            marginBottom: "4px",
-                            color: "#9fb3c8",
-                            fontSize: "11px",
-                            fontWeight: 800,
-                          }}
-                        >
+                        <div className="mb-1 font-mono text-[11px] font-bold uppercase tracking-wide text-ef-muted">
                           Rank {rank}
                         </div>
 
-                        <div
-                          style={{
-                            color: "#d1d5db",
-                            fontSize: "13px",
-                            fontWeight: 800,
-                            wordBreak: "keep-all",
-                          }}
-                        >
+                        <div className="break-keep font-mono text-[13px] font-black tabular-nums" style={{ color: ACCENT }}>
                           {value}
                         </div>
                       </div>
