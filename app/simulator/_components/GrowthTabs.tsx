@@ -47,18 +47,10 @@ export default function GrowthTabs({
               role="tab"
               aria-selected={selected}
               onClick={() => onChange(tab.key)}
-              className={`min-h-11 shrink-0 rounded-xl px-3 py-2 text-xs font-black transition ${
-                selected
-                  ? "bg-[#ffd24a] text-black"
-                  : "bg-black text-zinc-300 hover:text-yellow-200"
-              }`}
-              style={{
-                border: `1px solid ${
-                  selected
-                    ? "rgba(255,210,74,0.55)"
-                    : "rgba(255,196,74,0.10)"
-                }`,
-              }}
+              className="min-h-11 shrink-0 px-3 py-2 font-mono text-[11px] font-black uppercase tracking-wide transition duration-150"
+              style={selected
+                ? { clipPath: "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))", borderWidth: 1, borderStyle: "solid", borderColor: "#ffd24a", background: "rgba(255,210,74,0.2)", color: "#ffffff", boxShadow: "inset 0 -2px 0 0 #ff9a2f, 0 0 14px rgba(255,210,74,0.18)" }
+                : { clipPath: "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))", borderWidth: 1, borderStyle: "solid", borderColor: "#202020", background: "#0b0b0b", color: "#a0a0a0" }}
             >
               {tab.label}
             </button>

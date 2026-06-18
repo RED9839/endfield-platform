@@ -38,21 +38,13 @@ export default function MaterialTabs({
             key={tab.key}
             type="button"
             onClick={() => onChange(tab.key)}
-            className={`min-h-11 shrink-0 rounded-xl px-3 py-2 text-xs font-black transition ${
-              activeTab.key === tab.key
-                ? "bg-[#ffd24a] text-black"
-                : "bg-black text-zinc-300 hover:text-yellow-200"
-            }`}
-            style={{
-              border: `1px solid ${
-                activeTab.key === tab.key
-                  ? "rgba(255,210,74,0.55)"
-                  : "rgba(255,196,74,0.10)"
-              }`,
-            }}
+            className="min-h-11 shrink-0 px-3 py-2 font-mono text-[11px] font-black uppercase tracking-wide transition duration-150"
+            style={activeTab.key === tab.key
+              ? { clipPath: "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))", borderWidth: 1, borderStyle: "solid", borderColor: "#ffd24a", background: "rgba(255,210,74,0.2)", color: "#ffffff", boxShadow: "inset 0 -2px 0 0 #ff9a2f, 0 0 14px rgba(255,210,74,0.18)" }
+              : { clipPath: "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))", borderWidth: 1, borderStyle: "solid", borderColor: "#202020", background: "#0b0b0b", color: "#a0a0a0" }}
           >
             {tab.label}
-            <span className="ml-2 opacity-70">
+            <span className="ml-2 tabular-nums opacity-70">
               {tab.items.length.toLocaleString()}
             </span>
           </button>
@@ -60,13 +52,13 @@ export default function MaterialTabs({
       </div>
 
       {!activeTab.enabled ? (
-        <div className="rounded-2xl border border-yellow-500/10 bg-[#090d14] p-5 text-sm text-zinc-500">
+        <div className="border border-ef-line bg-ef-card p-5 text-sm text-ef-muted" style={{ clipPath: "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))" }}>
           {activeTab.emptyText}
         </div>
       ) : activeTab.items.length ? (
         <MaterialList items={activeTab.items} columns={4} />
       ) : (
-        <div className="rounded-2xl border border-yellow-500/10 bg-[#090d14] p-5 text-sm text-zinc-500">
+        <div className="border border-ef-line bg-ef-card p-5 text-sm text-ef-muted" style={{ clipPath: "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))" }}>
           계산된 필요 재화가 없습니다.
         </div>
       )}

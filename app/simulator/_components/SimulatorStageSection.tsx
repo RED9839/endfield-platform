@@ -31,7 +31,8 @@ function StageSelect({
     <select
       value={value}
       onChange={(e) => onChange(Number(e.target.value))}
-      className="h-11 rounded-xl border border-yellow-500/15 bg-black px-3 text-sm text-yellow-300 outline-none"
+      className="h-11 border border-ef-line bg-ef-card px-3 text-sm text-ef-accent outline-none focus:border-ef-accent/50"
+      style={{ clipPath: "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))" }}
     >
       {options.map((option) => (
         <option key={option} value={option}>
@@ -51,7 +52,7 @@ export default function SimulatorStageSection({
 }) {
   if (!items.length) {
     return (
-      <div className="text-sm text-zinc-500">
+      <div className="text-sm text-ef-muted">
         {emptyText ?? "등록된 데이터가 없습니다."}
       </div>
     );
@@ -71,11 +72,12 @@ export default function SimulatorStageSection({
         return (
           <div
             key={item.id}
-            className="rounded-2xl border border-yellow-500/10 bg-[#090d14] p-4"
+            className="border border-ef-line bg-ef-card p-4"
+            style={{ clipPath: "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))" }}
           >
             <div className="flex items-center gap-3">
               {item.icon ? (
-                <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-yellow-500/10 bg-black/40">
+                <div className="relative h-12 w-12 shrink-0 overflow-hidden border border-ef-line bg-black" style={{ clipPath: "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))" }}>
                   <Image
                     src={item.icon}
                     alt={item.title}
@@ -87,7 +89,7 @@ export default function SimulatorStageSection({
               ) : null}
 
               <div className="min-w-0">
-                <div className="truncate text-sm font-semibold" style={{ color: "#ffd24a" }}>
+                <div className="truncate text-sm font-black text-ef-ink">
                   {item.title}
                 </div>
               </div>
@@ -96,7 +98,7 @@ export default function SimulatorStageSection({
             <div className="mt-4 grid gap-3 md:grid-cols-2">
               <div className="grid gap-2">
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-xs font-semibold text-yellow-300">
+                  <span className="font-mono text-[11px] font-bold uppercase tracking-wide text-ef-accent-soft">
                     현재
                   </span>
                 </div>
@@ -111,7 +113,7 @@ export default function SimulatorStageSection({
 
               <div className="grid gap-2">
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-xs font-semibold text-yellow-300">
+                  <span className="font-mono text-[11px] font-bold uppercase tracking-wide text-ef-accent-soft">
                     목표
                   </span>
                 </div>

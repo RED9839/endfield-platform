@@ -118,9 +118,17 @@ function getWeaponHeroImage(weapon: SourceWeaponDetail | null) {
   );
 }
 
-const YELLOW_TEXT = "#ffdc70";
-const YELLOW_BORDER = "rgba(255,196,74,0.14)";
-const YELLOW_BORDER_SOFT = "rgba(255,196,74,0.10)";
+// ===== 오퍼레이터/무기/장비 상세와 통일한 Endfield SF 디자인 토큰 =====
+const PRIMARY = "#ff9a2f";
+const ACCENT = "#ffd24a";
+const CUT = {
+  clipPath:
+    "polygon(0 0, calc(100% - 13px) 0, 100% 13px, 100% 100%, 13px 100%, 0 calc(100% - 13px))",
+};
+const CUT_SM = {
+  clipPath:
+    "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))",
+};
 
 const SIMULATOR_OPERATOR_STORAGE_KEY = "simulator:selectedOperatorSlug";
 const SIMULATOR_WEAPON_STORAGE_KEY = "simulator:selectedWeaponSlug";
@@ -742,52 +750,44 @@ function OwnedMaterialBulkModal({
   }, [iconMap, search, valueMap, values]);
 
   return (
-    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/70 p-3 backdrop-blur-sm sm:p-4">
+    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/80 p-3 backdrop-blur-sm sm:p-4">
       <div
-        className="flex h-[92vh] w-[min(1180px,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-[22px] bg-[#05070b] shadow-[0_22px_90px_rgba(0,0,0,0.62)] sm:h-[90vh] sm:w-[min(1180px,calc(100vw-2rem))] sm:rounded-[32px]"
-        style={{ border: `1px solid ${YELLOW_BORDER}` }}
+        className="flex h-[92vh] w-[min(1180px,calc(100vw-1.5rem))] flex-col overflow-hidden border border-ef-line bg-ef-card2 sm:h-[90vh] sm:w-[min(1180px,calc(100vw-2rem))]"
+        style={CUT}
       >
-        <div
-          className="flex shrink-0 items-center justify-between gap-3 px-4 py-4 sm:gap-4 sm:px-7 sm:py-5"
-          style={{ borderBottom: `1px solid ${YELLOW_BORDER_SOFT}` }}
-        >
-          <div>
-            <p
-              className="text-[11px] font-black tracking-[0.24em]"
-              style={{ color: YELLOW_TEXT }}
-            >
-              보유 재화
-            </p>
+        <span className="block h-0.5 w-full shrink-0" style={{ background: `linear-gradient(90deg, ${PRIMARY}, transparent 55%)` }} />
+        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-ef-line px-4 py-4 sm:gap-4 sm:px-7 sm:py-5">
+          <div className="flex min-w-0 items-start gap-2">
+            <span className="mt-1 h-4 w-1 shrink-0" style={{ background: PRIMARY }} />
+            <div className="min-w-0">
+              <p className="font-mono text-[11px] font-bold uppercase tracking-[0.22em] text-ef-muted">
+                Material Inventory
+              </p>
 
-            <h3 className="mt-2 text-xl font-black tracking-[-0.04em] text-white sm:text-3xl sm:tracking-[-0.05em]">
-              보유 재화 입력
-            </h3>
+              <h3 className="mt-0.5 text-xl font-black tracking-tight text-white sm:text-2xl">
+                보유 재화 입력
+              </h3>
 
-            <p className="mt-1 text-xs leading-5 text-zinc-500 sm:text-sm">
-              현재 보유 중인 재화 수량을 입력합니다. 이 값은 성장 시뮬레이션과 재화 파밍 계산기에서 같이 사용됩니다.
-            </p>
+              <p className="mt-1 text-xs leading-5 text-ef-muted sm:text-sm">
+                현재 보유 중인 재화 수량을 입력합니다. 이 값은 성장 시뮬레이션과 재화 파밍 계산기에서 같이 사용됩니다.
+              </p>
+            </div>
           </div>
 
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-black text-xl font-black transition hover:bg-[#0b1018] sm:h-12 sm:w-12 sm:text-2xl"
-            style={{ border: `1px solid ${YELLOW_BORDER}`, color: YELLOW_TEXT }}
+            className="inline-flex h-10 w-10 shrink-0 items-center justify-center border border-ef-line bg-ef-card text-xl font-black text-ef-muted transition hover:border-ef-accent/50 hover:text-ef-accent-soft sm:h-11 sm:w-11"
+            style={CUT_SM}
             aria-label="보유 재화 입력창 닫기"
           >
             ×
           </button>
         </div>
 
-        <div
-          className="shrink-0 px-4 py-4 sm:px-7 sm:py-5"
-          style={{ borderBottom: `1px solid ${YELLOW_BORDER_SOFT}` }}
-        >
+        <div className="shrink-0 border-b border-ef-line px-4 py-4 sm:px-7 sm:py-5">
           <div className="space-y-2">
-            <p
-              className="text-[13px] font-semibold tracking-[0.24em]"
-              style={{ color: YELLOW_TEXT }}
-            >
+            <p className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-ef-muted">
               검색
             </p>
 
@@ -795,24 +795,25 @@ function OwnedMaterialBulkModal({
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="재화 검색"
-              className="h-12 w-full rounded-2xl border border-white/10 bg-[#071019] px-4 text-sm font-semibold text-white outline-none transition placeholder:text-zinc-600 focus:border-yellow-400/40"
+              className="h-12 w-full border border-ef-line bg-ef-card px-4 text-sm font-semibold text-white outline-none transition placeholder:text-ef-muted/70 focus:border-ef-accent/50"
+              style={CUT_SM}
             />
           </div>
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-7 sm:py-6">
           {list.length ? (
-            <div className="grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(180px,1fr))] sm:gap-4 sm:[grid-template-columns:repeat(auto-fill,minmax(250px,1fr))]">
+            <div className="grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(180px,1fr))] sm:gap-3 sm:[grid-template-columns:repeat(auto-fill,minmax(250px,1fr))]">
               {list.map((item) => (
                 <div
                   key={item.name}
-                  className="rounded-2xl bg-[#090d14] p-4"
-                  style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
+                  className="border border-ef-line bg-ef-card p-3.5"
+                  style={CUT_SM}
                 >
                   <div className="flex min-w-0 items-center gap-3">
                     <div
-                      className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-black/55"
-                      style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
+                      className="relative h-12 w-12 shrink-0 overflow-hidden border border-ef-line bg-black"
+                      style={CUT_SM}
                     >
                       <Image
                         src={item.icon ?? materialImage(item.name)}
@@ -826,11 +827,11 @@ function OwnedMaterialBulkModal({
                     <div className="min-w-0 flex-1">
                       <div
                         className="truncate text-sm font-black"
-                        style={{ color: YELLOW_TEXT }}
+                        style={{ color: ACCENT }}
                       >
                         {item.name}
                       </div>
-                      <div className="mt-0.5 text-xs text-zinc-500">
+                      <div className="mt-0.5 font-mono text-[10px] uppercase tracking-wide text-ef-muted">
                         현재 보유량
                       </div>
                     </div>
@@ -840,15 +841,15 @@ function OwnedMaterialBulkModal({
                     value={Number(item.count ?? 0)}
                     onChange={(value) => onChange(item.name, value)}
                     min={0}
-                    className="mt-4 h-11 rounded-xl border-yellow-500/15 bg-black text-yellow-300"
+                    className="mt-3.5 h-11 border-ef-line bg-black text-ef-accent"
                   />
                 </div>
               ))}
             </div>
           ) : (
             <div
-              className="flex min-h-[300px] items-center justify-center rounded-[24px] bg-black p-8 text-center text-sm text-zinc-500"
-              style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
+              className="flex min-h-[300px] items-center justify-center border border-ef-line bg-ef-card p-8 text-center text-sm text-ef-muted"
+              style={CUT}
             >
               조건에 맞는 재화가 없습니다.
             </div>
@@ -2037,54 +2038,58 @@ export default function SimulatorPage() {
   ];
 
   return (
-    <main className="min-h-screen overflow-x-clip bg-[#03060b] text-white">
-      <div className="mx-auto max-w-[1720px] px-3 py-3 pb-[calc(1.5rem+env(safe-area-inset-bottom))] sm:px-4 md:px-6 md:py-5 xl:px-8 xl:py-7">
-        <div className="grid gap-4 lg:gap-5">
+    <main className="relative min-h-screen overflow-x-clip bg-ef-bg text-ef-ink">
+      <div className="pointer-events-none fixed inset-0 z-0 opacity-[0.022] [background-image:radial-gradient(circle,#ffd24a_1px,transparent_1px)] [background-size:22px_22px]" />
+
+      {/* TOP HUD */}
+      <div className="relative z-30 mx-auto hidden max-w-[1720px] items-center justify-between px-4 py-2.5 md:flex md:px-6 xl:px-8">
+        <div className="flex items-center gap-2">
+          <span className="h-3 w-3" style={{ background: PRIMARY }} />
+          <span className="font-mono text-[11px] font-bold uppercase tracking-[0.3em] text-ef-muted">Growth Sim</span>
+          <span className="font-mono text-[11px] tracking-[0.2em] text-ef-muted/60">// 성장 시뮬레이션</span>
+        </div>
+      </div>
+
+      <div className="relative z-10 mx-auto max-w-[1720px] px-3 py-3 pb-[calc(1.5rem+env(safe-area-inset-bottom))] sm:px-4 md:px-6 md:pb-5 md:pt-1 xl:px-8">
+        <div className="grid gap-3 lg:gap-4">
           <header
-            className="relative overflow-hidden rounded-[22px] bg-[#05070b] p-4 shadow-[0_16px_48px_rgba(0,0,0,0.28)] sm:p-6"
-            style={{ border: `1px solid ${YELLOW_BORDER}` }}
+            className="relative overflow-hidden border border-ef-line bg-ef-card2 p-4 sm:p-5"
+            style={CUT}
           >
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-yellow-300/25" />
+            <span className="absolute inset-x-0 top-0 block h-0.5 w-full" style={{ background: `linear-gradient(90deg, ${PRIMARY}, transparent 55%)` }} />
             <div className="relative flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div className="min-w-0">
-                <p
-                  className="text-[10px] font-semibold tracking-[0.28em] sm:text-[11px] sm:tracking-[0.35em]"
-                  style={{ color: YELLOW_TEXT }}
-                >
-                  엔드필드 지원 플랫폼
+                <p className="font-mono text-[11px] font-bold uppercase tracking-[0.24em] text-ef-muted">
+                  Growth Simulation
                 </p>
 
-                <h1
-                  className="mt-2 text-2xl font-black tracking-tight sm:text-4xl"
-                  style={{ color: YELLOW_TEXT }}
-                >
+                <h1 className="mt-1.5 break-keep text-2xl font-black leading-[0.95] tracking-tight text-white sm:text-4xl">
                   성장 시뮬레이션
                 </h1>
-
-                <p className="mt-1 text-xs text-zinc-500 sm:text-sm">성장 시뮬레이션</p>
               </div>
 
               <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
                 <button
                   type="button"
                   onClick={() => setIsOwnedPanelOpen(true)}
-                  className="min-h-11 rounded-xl bg-[#ffd24a] px-3 py-2.5 text-xs font-black text-black transition hover:brightness-110 sm:px-4 sm:text-sm"
+                  className="min-h-11 px-3 py-2.5 text-xs font-black text-black transition hover:brightness-110 sm:px-4 sm:text-sm"
+                  style={{ ...CUT_SM, background: ACCENT }}
                 >
                   보유 재화 입력
                 </button>
                 <button
                   type="button"
                   onClick={handleGoFarmingCalculator}
-                  className="min-h-11 rounded-xl bg-black px-3 py-2.5 text-xs font-black text-yellow-200 transition hover:border-yellow-400/35 sm:px-4 sm:text-sm"
-                  style={{ border: `1px solid ${YELLOW_BORDER}` }}
+                  className="min-h-11 border border-ef-line bg-ef-card px-3 py-2.5 text-xs font-black text-ef-accent-soft transition hover:border-ef-accent/40 sm:px-4 sm:text-sm"
+                  style={CUT_SM}
                 >
                   파밍 계산기로 이동
                 </button>
                 <Link
                   href="/"
                   onClick={handleGoHome}
-                  className="col-span-2 flex min-h-11 items-center justify-center rounded-xl bg-black px-4 py-2.5 text-xs font-bold text-zinc-200 transition hover:border-yellow-400/30 hover:text-yellow-200 sm:col-auto sm:text-sm"
-                  style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
+                  className="col-span-2 flex min-h-11 items-center justify-center border border-ef-line bg-ef-card px-4 py-2.5 text-xs font-bold text-ef-muted transition hover:border-ef-accent/40 hover:text-ef-accent-soft sm:col-auto sm:text-sm"
+                  style={CUT_SM}
                 >
                   홈으로
                 </Link>
@@ -2096,29 +2101,30 @@ export default function SimulatorPage() {
             {dashboardStats.map((item) => (
               <div
                 key={item.label}
-                className="min-w-0 rounded-2xl bg-[#05070b] p-3 shadow-[0_10px_30px_rgba(0,0,0,0.22)] sm:p-4"
-                style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
+                className="min-w-0 border border-ef-line bg-ef-card2 p-3 sm:p-3.5"
+                style={CUT_SM}
               >
-                <p className="text-[10px] font-black tracking-[0.24em] text-zinc-500">
+                <p className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-ef-muted">
                   {item.label}
                 </p>
-                <p className="mt-2 truncate text-xl font-black tracking-[-0.05em] text-white sm:text-2xl">
+                <p className="mt-2 truncate font-mono text-xl font-black tabular-nums text-white sm:text-2xl">
                   {item.value}
                 </p>
-                <p className="mt-1 line-clamp-1 text-xs font-semibold text-zinc-500">
+                <p className="mt-1 line-clamp-1 text-[11px] text-ef-muted">
                   {item.sub}
                 </p>
               </div>
             ))}
           </section>
 
-          <nav className="sticky top-2 z-40 rounded-[18px] border border-yellow-500/15 bg-black/90 p-2 backdrop-blur lg:hidden">
+          <nav className="sticky top-2 z-40 border border-ef-line bg-ef-bg/95 p-2 backdrop-blur lg:hidden" style={CUT_SM}>
             <div className="mobile-scroll-row">
               {sectionLinks.map((item) => (
                 <a
                   key={item.href}
                   href={item.href}
-                  className="flex min-h-11 shrink-0 items-center rounded-xl border border-yellow-500/15 bg-[#05070b] px-3 py-2 text-xs font-black text-zinc-300 transition hover:border-yellow-400/40 hover:text-yellow-200 sm:text-sm"
+                  className="flex min-h-11 shrink-0 items-center border border-ef-line bg-ef-card px-3 font-mono text-[11px] font-black uppercase tracking-wide text-ef-muted transition hover:border-ef-accent/40 hover:text-ef-accent-soft"
+                  style={CUT_SM}
                 >
                   {item.label}
                 </a>
@@ -2128,10 +2134,11 @@ export default function SimulatorPage() {
 
           <section
             id="select"
-            className="relative scroll-mt-24 overflow-hidden rounded-[22px] bg-[#05070b] shadow-[0_16px_48px_rgba(0,0,0,0.28)]"
-            style={{ border: `1px solid ${YELLOW_BORDER}` }}
+            className="relative scroll-mt-24 overflow-hidden border border-ef-line bg-ef-card2"
+            style={CUT}
           >
-            <div className="relative min-h-[390px] overflow-hidden rounded-[22px] bg-[#020305] sm:min-h-[460px] md:min-h-[520px] xl:min-h-[580px]">
+            <span className="absolute inset-x-0 top-0 z-20 block h-0.5 w-full" style={{ background: `linear-gradient(90deg, ${PRIMARY}, transparent 55%)` }} />
+            <div className="relative min-h-[390px] overflow-hidden bg-black sm:min-h-[460px] md:min-h-[520px] xl:min-h-[580px]">
               {selectedOperator && selectedOperatorImage ? (
                 <Image
                   src={selectedOperatorImage}
@@ -2142,7 +2149,7 @@ export default function SimulatorPage() {
                   className="object-contain object-center"
                 />
               ) : (
-                <div className="absolute inset-4 flex items-center justify-center rounded-[22px] border border-yellow-500/10 bg-black/45 text-sm font-semibold text-zinc-500">
+                <div className="absolute inset-4 flex items-center justify-center border border-ef-line bg-ef-card text-sm font-semibold text-ef-muted" style={CUT_SM}>
                   오퍼레이터를 선택해 주세요
                 </div>
               )}
@@ -2159,7 +2166,8 @@ export default function SimulatorPage() {
                       selectedSlug: selectedOperatorSlug,
                     })
                   }
-                  className="inline-flex h-10 items-center justify-center rounded-2xl border border-yellow-500/25 bg-black/65 px-3 text-xs font-black text-yellow-200 backdrop-blur transition hover:border-yellow-400/50 hover:bg-black/80 sm:h-11 sm:px-4 sm:text-sm"
+                  className="inline-flex h-10 items-center justify-center border border-ef-line bg-black/65 px-3 font-mono text-[11px] font-black uppercase tracking-wide text-ef-accent-soft backdrop-blur transition hover:border-ef-accent/50 hover:bg-black/80 sm:h-11 sm:px-4"
+                  style={CUT_SM}
                 >
                   오퍼레이터 선택
                 </button>
@@ -2197,9 +2205,10 @@ export default function SimulatorPage() {
                       selectedSlug: selectedWeaponSlug,
                     });
                   }}
-                  className="group grid w-[112px] gap-2 rounded-2xl border border-yellow-500/25 bg-black/65 p-2.5 text-left text-white backdrop-blur transition hover:border-yellow-400/50 hover:bg-black/80 sm:w-[180px] sm:rounded-3xl sm:p-3"
+                  className="group grid w-[112px] gap-2 border border-ef-line bg-black/65 p-2.5 text-left text-white backdrop-blur transition hover:border-ef-accent/50 hover:bg-black/80 sm:w-[180px] sm:p-3"
+                  style={CUT_SM}
                 >
-                  <div className="relative h-[78px] overflow-hidden rounded-xl bg-black/70 sm:h-[120px] sm:rounded-2xl">
+                  <div className="relative h-[78px] overflow-hidden border border-ef-line bg-black sm:h-[120px]" style={CUT_SM}>
                     {selectedWeapon && selectedWeaponImage ? (
                       <Image
                         src={selectedWeaponImage}
@@ -2209,15 +2218,15 @@ export default function SimulatorPage() {
                         className="object-contain p-3"
                       />
                     ) : (
-                      <div className="flex h-full items-center justify-center text-xs font-bold text-zinc-500">
+                      <div className="flex h-full items-center justify-center text-xs font-bold text-ef-muted">
                         무기 없음
                       </div>
                     )}
                   </div>
 
                   <div>
-                    <p className="text-[11px] font-black tracking-[0.24em] text-yellow-300">
-                      무기
+                    <p className="font-mono text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: PRIMARY }}>
+                      Weapon
                     </p>
                     <h3 className="mt-1 line-clamp-1 text-base font-black text-white">
                       {selectedWeapon?.name ?? "무기 선택"}
@@ -2227,13 +2236,13 @@ export default function SimulatorPage() {
               </div>
 
               <div className="absolute bottom-4 left-4 right-[156px] z-20 max-w-[520px] sm:bottom-6 sm:left-6 sm:right-auto">
-                <p className="text-[11px] font-black tracking-[0.38em] text-yellow-300">
-                  오퍼레이터
+                <p className="font-mono text-[11px] font-bold uppercase tracking-[0.3em]" style={{ color: PRIMARY }}>
+                  Operator
                 </p>
-                <h1 className="mt-2 text-3xl font-black tracking-[-0.06em] text-white drop-shadow-[0_2px_16px_rgba(0,0,0,0.55)] sm:text-5xl md:text-6xl">
+                <h1 className="mt-2 break-keep text-3xl font-black tracking-tight text-white drop-shadow-[0_2px_16px_rgba(0,0,0,0.55)] sm:text-5xl md:text-6xl">
                   {selectedOperator?.name ?? "오퍼레이터 미선택"}
                 </h1>
-                <p className="mt-1 line-clamp-1 text-xs font-black uppercase tracking-[0.14em] text-zinc-400 sm:text-sm sm:tracking-[0.18em]">
+                <p className="mt-1 line-clamp-1 font-mono text-xs font-bold uppercase tracking-[0.14em] text-ef-muted sm:text-sm sm:tracking-[0.18em]">
                   {selectedOperator?.enName ?? "오퍼레이터 선택"}
                 </p>
               </div>
@@ -2321,7 +2330,7 @@ export default function SimulatorPage() {
                           onChangeWeaponTarget={setWeaponTargetLevel}
                         />
                       ) : (
-                        <div className="text-sm text-zinc-500">
+                        <div className="text-sm text-ef-muted">
                           오퍼레이터 또는 무기를 먼저 선택해 주세요.
                         </div>
                       )}
@@ -2350,7 +2359,7 @@ export default function SimulatorPage() {
                           }
                         />
                       ) : (
-                        <div className="text-sm text-zinc-500">
+                        <div className="text-sm text-ef-muted">
                           오퍼레이터를 먼저 선택해 주세요.
                         </div>
                       )}
@@ -2361,7 +2370,7 @@ export default function SimulatorPage() {
                       summary={weaponBreakthroughSummary}
                     >
                       {!selectedWeapon ? (
-                        <div className="text-sm text-zinc-500">
+                        <div className="text-sm text-ef-muted">
                           무기를 먼저 선택해 주세요.
                         </div>
                       ) : weaponBreakthroughItems.length ? (
@@ -2386,7 +2395,7 @@ export default function SimulatorPage() {
                           }
                         />
                       ) : (
-                        <div className="text-sm text-zinc-500">
+                        <div className="text-sm text-ef-muted">
                           등록된 무기 돌파 데이터가 없습니다.
                         </div>
                       )}
@@ -2409,7 +2418,7 @@ export default function SimulatorPage() {
                     onChangeTarget={handleCombatTargetChange}
                   />
                 ) : (
-                  <div className="text-sm text-zinc-500">
+                  <div className="text-sm text-ef-muted">
                     오퍼레이터를 먼저 선택해 주세요.
                   </div>
                 )}
@@ -2435,7 +2444,7 @@ export default function SimulatorPage() {
                     }))}
                   />
                 ) : (
-                  <div className="text-sm text-zinc-500">
+                  <div className="text-sm text-ef-muted">
                     오퍼레이터를 먼저 선택해 주세요.
                   </div>
                 )}
@@ -2498,7 +2507,7 @@ export default function SimulatorPage() {
                     )}
                   />
                 ) : (
-                  <div className="text-sm text-zinc-500">
+                  <div className="text-sm text-ef-muted">
                     오퍼레이터를 먼저 선택해 주세요.
                   </div>
                 )}
@@ -2528,12 +2537,12 @@ export default function SimulatorPage() {
                       }
                     />
                   ) : (
-                    <div className="text-sm text-zinc-500">
+                    <div className="text-sm text-ef-muted">
                       등록된 신뢰도 보너스 데이터가 없습니다.
                     </div>
                   )
                 ) : (
-                  <div className="text-sm text-zinc-500">
+                  <div className="text-sm text-ef-muted">
                     오퍼레이터를 먼저 선택해 주세요.
                   </div>
                 )}

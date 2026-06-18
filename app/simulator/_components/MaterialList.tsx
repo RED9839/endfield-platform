@@ -2,10 +2,11 @@
 
 import Image from "next/image";
 
-const YELLOW_MAIN = "#ffd24a";
-const YELLOW_BORDER = "rgba(255,196,74,0.14)";
-const YELLOW_BORDER_SOFT = "rgba(255,196,74,0.10)";
-const CARD_BG = "rgba(9,13,20,0.96)";
+const ACCENT = "#ffd24a";
+const CUT_SM = {
+  clipPath:
+    "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))",
+};
 
 type MaterialItem = {
   name: string;
@@ -34,13 +35,13 @@ export default function MaterialList({
       {items.map((item) => (
         <div
           key={item.name}
-          className="rounded-2xl border p-3 transition hover:border-yellow-400/25"
-          style={{ borderColor: YELLOW_BORDER_SOFT, background: CARD_BG }}
+          className="border border-ef-line bg-ef-card p-3 transition hover:border-ef-accent/30"
+          style={CUT_SM}
         >
           <div className="flex items-center gap-3">
             <div
-              className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl border bg-black/50"
-              style={{ borderColor: YELLOW_BORDER_SOFT }}
+              className="relative h-11 w-11 shrink-0 overflow-hidden border border-ef-line bg-black"
+              style={CUT_SM}
             >
               <Image
                 src={item.icon ?? `/materials/${item.name}.webp`}
@@ -52,8 +53,8 @@ export default function MaterialList({
             </div>
 
             <div className="min-w-0">
-              <div className="truncate text-sm font-semibold text-white">{item.name}</div>
-              <div className="mt-1 text-sm font-bold" style={{ color: YELLOW_MAIN }}>
+              <div className="truncate text-sm font-semibold text-ef-ink">{item.name}</div>
+              <div className="mt-1 font-mono text-sm font-bold tabular-nums" style={{ color: ACCENT }}>
                 {item.count.toLocaleString()}
               </div>
             </div>
@@ -62,16 +63,16 @@ export default function MaterialList({
           {typeof item.owned === "number" || typeof item.lacking === "number" ? (
             <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
               <div
-                className="rounded-xl border bg-black/40 px-3 py-2 text-zinc-400"
-                style={{ borderColor: YELLOW_BORDER_SOFT }}
+                className="border border-ef-line bg-ef-card2 px-3 py-2 text-ef-muted"
+                style={CUT_SM}
               >
-                보유 <span className="ml-1 font-semibold text-white">{(item.owned ?? 0).toLocaleString()}</span>
+                보유 <span className="ml-1 font-semibold tabular-nums text-ef-ink">{(item.owned ?? 0).toLocaleString()}</span>
               </div>
               <div
-                className="rounded-xl border bg-black/40 px-3 py-2 text-zinc-400"
-                style={{ borderColor: YELLOW_BORDER_SOFT }}
+                className="border border-ef-line bg-ef-card2 px-3 py-2 text-ef-muted"
+                style={CUT_SM}
               >
-                부족 <span className="ml-1 font-semibold" style={{ color: YELLOW_MAIN }}>{(item.lacking ?? 0).toLocaleString()}</span>
+                부족 <span className="ml-1 font-semibold tabular-nums" style={{ color: ACCENT }}>{(item.lacking ?? 0).toLocaleString()}</span>
               </div>
             </div>
           ) : null}

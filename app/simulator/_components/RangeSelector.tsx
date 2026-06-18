@@ -13,7 +13,8 @@ function RangeSelect({
     <select
       value={value}
       onChange={(event) => onChange(Number(event.target.value))}
-      className="h-11 rounded-xl border border-yellow-500/15 bg-black px-3 text-sm font-semibold text-yellow-300 outline-none transition focus:border-yellow-400/50"
+      className="h-11 border border-ef-line bg-ef-card px-3 text-sm font-semibold text-ef-accent outline-none transition focus:border-ef-accent/50"
+      style={{ clipPath: "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))" }}
     >
       {options.map((stage) => (
         <option key={stage} value={stage}>
@@ -48,7 +49,7 @@ export default function RangeSelector({
   return (
     <div className="grid gap-3 md:grid-cols-2">
       <div className="grid gap-2">
-        <div className="text-xs font-semibold text-yellow-300">
+        <div className="font-mono text-[11px] font-bold uppercase tracking-wide text-ef-accent-soft">
           {titleCurrent}
         </div>
         <RangeSelect
@@ -60,7 +61,7 @@ export default function RangeSelector({
       </div>
 
       <div className="grid gap-2">
-        <div className="text-xs font-semibold text-yellow-300">
+        <div className="font-mono text-[11px] font-bold uppercase tracking-wide text-ef-accent-soft">
           {titleTarget}
         </div>
         <RangeSelect
