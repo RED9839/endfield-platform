@@ -218,20 +218,20 @@ export default async function WeaponDetailPage({
                 </div>
               </div>
 
-              {/* 레벨별 능력치 표 */}
+              {/* 레벨별 능력치 표(레벨 비교) — 가독성 위해 폰트/행 높이 확대 */}
               <div className="overflow-hidden border border-ef-line" style={CUT_SM}>
                 <table className="w-full border-collapse text-left">
                   <thead>
                     <tr className="bg-black">
-                      <th className="border-b border-ef-line px-3 py-1.5 font-mono text-[11px] font-black uppercase tracking-wide" style={{ color: PRIMARY }}>Lv</th>
-                      <th className="border-b border-ef-line px-3 py-1.5 text-right font-mono text-[11px] font-black uppercase tracking-wide" style={{ color: PRIMARY }}>공격력</th>
+                      <th className="border-b border-ef-line px-3 py-2.5 font-mono text-xs font-black uppercase tracking-wide sm:text-[13px]" style={{ color: PRIMARY }}>Lv</th>
+                      <th className="border-b border-ef-line px-3 py-2.5 text-right font-mono text-xs font-black uppercase tracking-wide sm:text-[13px]" style={{ color: PRIMARY }}>공격력</th>
                     </tr>
                   </thead>
                   <tbody>
                     {tableRows.map((row, i) => (
                       <tr key={row.level} className={i % 2 ? "bg-ef-card" : "bg-ef-card2"}>
-                        <td className="border-b border-ef-line/60 px-3 py-1 font-mono text-xs font-black text-ef-ink tabular-nums">{row.level}</td>
-                        <td className="border-b border-ef-line/60 px-3 py-1 text-right font-mono text-sm font-black tabular-nums" style={{ color: ACCENT }}>{row.attack}</td>
+                        <td className="border-b border-ef-line/60 px-3 py-2 font-mono text-sm font-black text-ef-ink tabular-nums sm:text-base">{row.level}</td>
+                        <td className="border-b border-ef-line/60 px-3 py-2 text-right font-mono text-base font-black tabular-nums sm:text-lg" style={{ color: ACCENT }}>{row.attack}</td>
                       </tr>
                     ))}
                   </tbody>
