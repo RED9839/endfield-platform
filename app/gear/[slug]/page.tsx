@@ -168,10 +168,6 @@ export default async function GearDetailPage({
                 ) : null}
               </div>
 
-              {gear.summary || gear.description ? (
-                <p className="mt-3 break-keep text-xs leading-6 text-ef-muted">{gear.summary || gear.description}</p>
-              ) : null}
-
               {/* 세트 효과 — 설명칸 안으로 이동 */}
               {gear.setEffects?.length ? (
                 <div className="mt-3 border-t border-ef-line pt-3">
