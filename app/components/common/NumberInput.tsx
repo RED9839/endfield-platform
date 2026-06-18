@@ -1,7 +1,9 @@
 "use client";
 
-const YELLOW_MAIN = "#ffd24a";
-const YELLOW_BORDER = "rgba(255,196,74,0.14)";
+const CUT_SM = {
+  clipPath:
+    "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))",
+};
 
 export default function NumberInput({
   value,
@@ -32,8 +34,8 @@ export default function NumberInput({
 
   return (
     <div
-      className={`flex h-10 overflow-hidden rounded-xl border bg-black ${className}`}
-      style={{ borderColor: YELLOW_BORDER }}
+      className={`flex h-10 overflow-hidden border border-ef-line bg-ef-card ${className}`}
+      style={CUT_SM}
     >
       <input
         type="number"
@@ -43,26 +45,21 @@ export default function NumberInput({
         step={step}
         placeholder={placeholder}
         onChange={(event) => update(Number(event.target.value || 0))}
-        className="min-w-0 flex-1 bg-black px-3 text-right text-sm font-bold text-white outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+        className="min-w-0 flex-1 bg-transparent px-3 text-right text-sm font-bold text-ef-accent outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
       />
 
-      <div
-        className="flex w-8 flex-col border-l"
-        style={{ borderColor: YELLOW_BORDER }}
-      >
+      <div className="flex w-8 flex-col border-l border-ef-line">
         <button
           type="button"
           onClick={() => update(value + step)}
-          className="flex flex-1 items-center justify-center text-[9px] leading-none transition hover:bg-yellow-400/10"
-          style={{ color: YELLOW_MAIN }}
+          className="flex flex-1 items-center justify-center text-[9px] leading-none text-ef-accent transition hover:bg-ef-accent/10"
         >
           ▲
         </button>
         <button
           type="button"
           onClick={() => update(value - step)}
-          className="flex flex-1 items-center justify-center text-[9px] leading-none transition hover:bg-yellow-400/10"
-          style={{ color: YELLOW_MAIN }}
+          className="flex flex-1 items-center justify-center text-[9px] leading-none text-ef-accent transition hover:bg-ef-accent/10"
         >
           ▼
         </button>

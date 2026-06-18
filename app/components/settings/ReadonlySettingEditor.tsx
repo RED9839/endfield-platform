@@ -10,7 +10,7 @@ const SettingEditor = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex min-h-[520px] items-center justify-center rounded-[24px] border border-white/10 bg-[#05070b] text-sm font-bold text-zinc-500">
+      <div className="flex min-h-[520px] items-center justify-center border border-ef-line bg-ef-card2 text-sm font-bold text-ef-muted">
         설정 정보를 불러오는 중...
       </div>
     ),
@@ -158,7 +158,7 @@ export default function ReadonlySettingEditor({
 
   if (!ready) {
     return (
-      <div className="flex min-h-[520px] items-center justify-center rounded-[24px] border border-white/10 bg-[#05070b] text-sm font-bold text-zinc-500">
+      <div className="flex min-h-[520px] items-center justify-center border border-ef-line bg-ef-card2 text-sm font-bold text-ef-muted">
         세팅 정보를 불러오는 중...
       </div>
     );

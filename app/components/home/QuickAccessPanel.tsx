@@ -2,6 +2,12 @@
 
 import Link from "next/link";
 
+const PRIMARY = "#ff9a2f";
+const CUT_SM = {
+  clipPath:
+    "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))",
+};
+
 export type QuickAccessItem = {
   label: string;
   href: string;
@@ -30,19 +36,20 @@ export default function QuickAccessPanel({
           key={item.href}
           href={item.href}
           className={[
-            "group rounded-[18px] border border-yellow-500/15 bg-[#060b14] transition hover:border-yellow-500/35 hover:bg-[#0a1120]",
+            "group border border-ef-line bg-ef-card2 transition hover:border-ef-accent/40",
             compact
               ? "min-w-[138px] p-3.5 md:min-w-0 md:p-4"
               : "p-6",
           ].join(" ")}
+          style={CUT_SM}
         >
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <div
                 className={
                   compact
-                    ? "truncate text-base font-bold text-white"
-                    : "text-3xl font-bold text-white"
+                    ? "truncate text-base font-black text-white"
+                    : "text-3xl font-black text-white"
                 }
               >
                 {item.label}
@@ -51,8 +58,8 @@ export default function QuickAccessPanel({
               <p
                 className={
                   compact
-                    ? "mt-2 line-clamp-2 text-xs leading-5 text-zinc-400"
-                    : "mt-2 text-sm leading-6 text-zinc-400"
+                    ? "mt-2 line-clamp-2 text-xs leading-5 text-ef-muted"
+                    : "mt-2 text-sm leading-6 text-ef-muted"
                 }
               >
                 {item.description}
@@ -60,7 +67,7 @@ export default function QuickAccessPanel({
             </div>
 
             {!compact ? (
-              <div className="text-5xl font-black tracking-tight text-yellow-400/35">
+              <div className="font-mono text-5xl font-black tracking-tight tabular-nums" style={{ color: `${PRIMARY}59` }}>
                 {String(index + 1).padStart(2, "0")}
               </div>
             ) : null}
@@ -70,14 +77,14 @@ export default function QuickAccessPanel({
             <span
               className={
                 compact
-                  ? "text-sm font-bold text-yellow-400"
-                  : "text-xl font-bold text-yellow-400"
+                  ? "text-sm font-black text-ef-accent"
+                  : "text-xl font-black text-ef-accent"
               }
             >
               이동
             </span>
 
-            <span className="text-zinc-500 transition group-hover:translate-x-1 group-hover:text-yellow-400">
+            <span className="text-ef-muted transition group-hover:translate-x-1 group-hover:text-ef-accent">
               →
             </span>
           </div>

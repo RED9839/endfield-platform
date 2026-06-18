@@ -8,13 +8,24 @@ import type { CommonGearSlot } from "@/app/components/select/CommonSelectPanel";
 import EditorPanel from "./EditorPanel";
 import { useSettingEditorData } from "./useSettingEditorData";
 
+// ===== 오퍼레이터/무기/장비 상세와 통일한 Endfield SF 디자인 토큰 =====
+const PRIMARY = "#ff9a2f";
+const ACCENT = "#ffd24a";
+const CUT = {
+  clipPath:
+    "polygon(0 0, calc(100% - 13px) 0, 100% 13px, 100% 100%, 13px 100%, 0 calc(100% - 13px))",
+};
+const CUT_SM = {
+  clipPath:
+    "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))",
+};
 
 const CommonSelectPanel = dynamic(
   () => import("@/app/components/select/CommonSelectPanel"),
   {
     ssr: false,
     loading: () => (
-      <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/80 p-4 text-sm font-bold text-zinc-500 backdrop-blur-sm">
+      <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/80 p-4 text-sm font-bold text-ef-muted backdrop-blur-sm">
         선택 패널을 불러오는 중...
       </div>
     ),
@@ -2324,29 +2335,29 @@ export default function SettingsPage({ partyForms = [] }: SettingEditorProps) {
 
   if (!hydrated || !editorData) {
     return (
-      <main className="min-h-screen bg-[#050505] px-3 py-3 text-white sm:px-4 md:px-6 md:py-5">
+      <main className="min-h-screen bg-ef-bg px-3 py-3 text-ef-ink sm:px-4 md:px-6 md:py-5">
         <div className="mx-auto flex min-h-[60vh] max-w-[1800px] items-center justify-center">
-          <p className="text-sm font-bold text-zinc-500">세팅 불러오는 중...</p>
+          <p className="text-sm font-bold text-ef-muted">세팅 불러오는 중...</p>
         </div>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-[#050505] px-3 py-3 text-white sm:px-4 md:px-6 md:py-5">
+    <main className="min-h-screen bg-ef-bg px-3 py-3 text-ef-ink sm:px-4 md:px-6 md:py-5">
       <div className="mx-auto max-w-[1800px]">
-        <nav className="sticky top-2 z-40 mb-3 rounded-[18px] border border-yellow-500/15 bg-black/90 p-2 backdrop-blur xl:hidden">
+        <nav className="sticky top-2 z-40 mb-3 border border-ef-line bg-ef-bg/95 p-2 backdrop-blur xl:hidden" style={CUT_SM}>
           <div className="flex gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <a href="#operator-panel" className="shrink-0 rounded-xl border border-yellow-500/15 bg-[#05070b] px-3 py-2 text-xs font-black text-zinc-300 transition hover:border-yellow-400/40 hover:text-yellow-200">
+            <a href="#operator-panel" className="shrink-0 border border-ef-line bg-ef-card px-3 py-2 font-mono text-xs font-black uppercase tracking-wide text-ef-muted transition hover:border-ef-accent/40 hover:text-ef-accent-soft" style={CUT_SM}>
               오퍼레이터
             </a>
-            <a href="#weapon-panel" className="shrink-0 rounded-xl border border-yellow-500/15 bg-[#05070b] px-3 py-2 text-xs font-black text-zinc-300 transition hover:border-yellow-400/40 hover:text-yellow-200">
+            <a href="#weapon-panel" className="shrink-0 border border-ef-line bg-ef-card px-3 py-2 font-mono text-xs font-black uppercase tracking-wide text-ef-muted transition hover:border-ef-accent/40 hover:text-ef-accent-soft" style={CUT_SM}>
               무기
             </a>
-            <a href="#gear-panel" className="shrink-0 rounded-xl border border-yellow-500/15 bg-[#05070b] px-3 py-2 text-xs font-black text-zinc-300 transition hover:border-yellow-400/40 hover:text-yellow-200">
+            <a href="#gear-panel" className="shrink-0 border border-ef-line bg-ef-card px-3 py-2 font-mono text-xs font-black uppercase tracking-wide text-ef-muted transition hover:border-ef-accent/40 hover:text-ef-accent-soft" style={CUT_SM}>
               장비
             </a>
-            <a href="#final-stat-panel" className="shrink-0 rounded-xl border border-yellow-500/15 bg-[#05070b] px-3 py-2 text-xs font-black text-zinc-300 transition hover:border-yellow-400/40 hover:text-yellow-200">
+            <a href="#final-stat-panel" className="shrink-0 border border-ef-line bg-ef-card px-3 py-2 font-mono text-xs font-black uppercase tracking-wide text-ef-muted transition hover:border-ef-accent/40 hover:text-ef-accent-soft" style={CUT_SM}>
               최종 스탯
             </a>
           </div>
@@ -2514,7 +2525,8 @@ function OperatorPanel({
         <button
           type="button"
           onClick={onOpen}
-          className="relative h-[320px] overflow-hidden rounded-xl border border-white/10 bg-black sm:h-[380px] xl:h-[430px]"
+          className="relative h-[320px] overflow-hidden border border-ef-line bg-black sm:h-[380px] xl:h-[430px]"
+          style={CUT}
         >
           {operator ? (
             <Image
@@ -2530,10 +2542,10 @@ function OperatorPanel({
 
         <div>
           <button type="button" onClick={onOpen} className="text-left">
-            <h2 className="text-2xl font-black text-white sm:text-3xl">
+            <h2 className="text-2xl font-black tracking-tight text-white sm:text-3xl">
               {operator?.name ?? "오퍼레이터 선택"}
             </h2>
-            <p className="text-sm text-zinc-400">{operator?.enName}</p>
+            <p className="font-mono text-sm text-ef-muted">{operator?.enName}</p>
           </button>
 
           <div className="mt-4 grid grid-cols-2 gap-2 sm:gap-3">
@@ -2564,8 +2576,8 @@ function OperatorPanel({
       </div>
 
       <div className="mt-4 sm:mt-5">
-        <h3 className="mb-2 text-base font-black text-[#ffdc70] sm:mb-3 sm:text-lg">
-          전투 스킬 <span className="text-xs text-zinc-500">(레벨 선택)</span>
+        <h3 className="mb-2 text-base font-black text-white sm:mb-3 sm:text-lg">
+          전투 스킬 <span className="font-mono text-xs text-ef-muted">(레벨 선택)</span>
         </h3>
 
         <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-4">
@@ -2592,8 +2604,8 @@ function OperatorPanel({
         </div>
       </div>
 
-      <div className="mt-4 rounded-xl border border-yellow-500/15 bg-black/35 p-3 sm:mt-5 sm:p-4">
-        <h3 className="mb-2 text-base font-black text-[#ffdc70] sm:mb-3 sm:text-lg">잠재능력</h3>
+      <div className="mt-4 border border-ef-line bg-ef-card p-3 sm:mt-5 sm:p-4" style={CUT}>
+        <h3 className="mb-2 text-base font-black text-white sm:mb-3 sm:text-lg">잠재능력</h3>
         <OperatorBreakthroughSelect
           operator={operator}
           value={form.operatorBreakthroughRank}
@@ -2628,7 +2640,8 @@ function WeaponPanel({
         <button
           type="button"
           onClick={onOpen}
-          className="relative h-32 overflow-hidden rounded-xl bg-black sm:h-40"
+          className="relative h-32 overflow-hidden border border-ef-line bg-black sm:h-40"
+          style={CUT}
         >
           {weapon ? (
             <Image
@@ -2643,10 +2656,10 @@ function WeaponPanel({
 
         <div>
           <button type="button" onClick={onOpen} className="text-left">
-            <h2 className="text-xl font-black text-white sm:text-2xl">
+            <h2 className="text-xl font-black tracking-tight text-white sm:text-2xl">
               {weapon?.name ?? "무기 선택"}
             </h2>
-            <p className="mt-1 text-sm text-zinc-400">{weapon?.enName}</p>
+            <p className="mt-1 font-mono text-sm text-ef-muted">{weapon?.enName}</p>
           </button>
 
           <div className="mt-3">
@@ -2658,8 +2671,8 @@ function WeaponPanel({
             />
           </div>
 
-          <p className="mt-3 text-xs text-zinc-500">기초 공격력</p>
-          <p className="text-2xl font-black text-[#ffdc70] sm:text-3xl">
+          <p className="mt-3 font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-ef-muted">기초 공격력</p>
+          <p className="font-mono text-2xl font-black tabular-nums sm:text-3xl" style={{ color: ACCENT }}>
             {finalStats.weaponAttack}
           </p>
         </div>
@@ -2764,8 +2777,8 @@ function GearPanel({
       </div>
 
       {gearTotalRows.length > 0 ? (
-        <div className="mt-4 border-t border-white/10 pt-4">
-          <h3 className="mb-3 text-sm font-black text-[#ffdc70]">
+        <div className="mt-4 border-t border-ef-line pt-4">
+          <h3 className="mb-3 text-sm font-black text-white">
             장비 능력치 합산
           </h3>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-x-4">
@@ -3232,22 +3245,22 @@ function SetEffectPanel({
   return (
     <EditorPanel title="세트 효과">
       {setEffect ? (
-        <div className="rounded-xl border border-green-400/20 bg-green-400/5 p-4">
+        <div className="border border-green-400/30 bg-green-400/10 p-4" style={CUT}>
           <div className="flex items-center justify-between">
             <h3 className="text-xl font-black text-white">
               {setEffect.name} 세트 ({setEffect.count}개)
             </h3>
-            <span className="rounded-md bg-green-500/20 px-3 py-1 text-xs font-black text-green-300">
+            <span className="border border-green-500/40 bg-green-500/20 px-3 py-1 font-mono text-xs font-black uppercase tracking-wide text-green-300" style={CUT_SM}>
               활성
             </span>
           </div>
 
-          <p className="mt-3 text-sm leading-6 text-zinc-300">
+          <p className="mt-3 text-sm leading-6 text-ef-muted">
             {setEffect.description}
           </p>
         </div>
       ) : (
-        <div className="rounded-xl border border-white/10 bg-black/40 p-4 text-sm text-zinc-500">
+        <div className="border border-ef-line bg-ef-card p-4 text-sm text-ef-muted" style={CUT}>
           같은 세트 장비 3개 이상 장착 시 세트 효과가 활성화됩니다.
         </div>
       )}
@@ -3265,8 +3278,8 @@ function OperatorSkillCard({
   onChange: (value: SkillLevel) => void;
 }) {
   return (
-    <div className="rounded-xl border border-white/10 bg-black/45 p-2.5 sm:p-3">
-      <div className="relative h-16 rounded-lg bg-zinc-950 sm:h-20">
+    <div className="border border-ef-line bg-ef-card p-2.5 sm:p-3" style={CUT_SM}>
+      <div className="relative h-16 bg-black sm:h-20" style={CUT_SM}>
         {skill?.icon ? (
           <Image
             src={skill.icon}
@@ -3278,14 +3291,15 @@ function OperatorSkillCard({
         ) : null}
       </div>
 
-      <p className="mt-2 text-[11px] text-zinc-500 sm:text-xs">{skill?.typeLabel ?? "-"}</p>
+      <p className="mt-2 font-mono text-[11px] text-ef-muted sm:text-xs">{skill?.typeLabel ?? "-"}</p>
       <p className="truncate text-xs font-black text-white sm:text-sm">
         {skill?.name ?? "-"}
       </p>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value as SkillLevel)}
-        className="mt-2 w-full rounded-md border border-white/10 bg-black px-2 py-1 text-xs font-bold outline-none sm:text-sm"
+        className="mt-2 w-full border border-ef-line bg-ef-card px-2 py-1 text-xs font-bold text-ef-accent outline-none focus:border-ef-accent/50 sm:text-sm"
+        style={CUT_SM}
       >
         {SKILL_LEVELS.map((option) => (
           <option key={option} value={option}>
@@ -3304,7 +3318,7 @@ function highlightSignedNumbers(text: string) {
   return parts.map((part, index) => {
     if (/^[+\-]\d+(?:\.\d+)?%?$/.test(part)) {
       return (
-        <span key={index} className="font-black text-yellow-300">
+        <span key={index} className="font-mono font-black tabular-nums" style={{ color: ACCENT }}>
           {part}
         </span>
       );
@@ -3333,17 +3347,18 @@ function WeaponSkillSelect({
   const description = getSkillDescriptionText(skill, rank);
 
   return (
-    <div className="rounded-xl border border-white/10 bg-black/45 p-2.5 sm:p-3">
+    <div className="border border-ef-line bg-ef-card p-2.5 sm:p-3" style={CUT_SM}>
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_150px] sm:items-center sm:gap-3">
         <div>
           <p className="text-sm font-black text-white">{title}</p>
-          <p className="text-xs text-zinc-500">{skill?.name ?? "-"}</p>
+          <p className="text-xs text-ef-muted">{skill?.name ?? "-"}</p>
         </div>
 
         <select
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="rounded-md border border-white/10 bg-black px-3 py-2 text-xs font-bold outline-none sm:text-sm"
+          className="border border-ef-line bg-ef-card px-3 py-2 text-xs font-bold text-ef-accent outline-none focus:border-ef-accent/50 sm:text-sm"
+          style={CUT_SM}
         >
           {RANK_OPTIONS.map((rank) => (
             <option key={rank} value={rank}>
@@ -3353,13 +3368,13 @@ function WeaponSkillSelect({
         </select>
       </div>
 
-      <div className="mt-2 rounded-lg bg-[#08111a] px-3 py-2 text-sm">
+      <div className="mt-2 border border-ef-line bg-ef-card2 px-3 py-2 text-sm" style={CUT_SM}>
         {isSeriesSkill ? (
-          <p className="whitespace-pre-line text-xs leading-relaxed text-zinc-300">
+          <p className="whitespace-pre-line text-xs leading-relaxed text-ef-muted">
             {highlightSignedNumbers(description || "-")}
           </p>
         ) : (
-          <p className="font-black text-yellow-300">{summary || "-"}</p>
+          <p className="font-mono font-black tabular-nums" style={{ color: ACCENT }}>{summary || "-"}</p>
         )}
       </div>
     </div>
@@ -3384,13 +3399,13 @@ function GearSlotCard({
   const attribute = getGearValue(item, "attribute", levels.attribute);
 
   return (
-    <div className="min-w-0 rounded-xl border border-white/10 bg-black/45 p-2.5 sm:p-3">
+    <div className="min-w-0 border border-ef-line bg-ef-card p-2.5 sm:p-3" style={CUT_SM}>
       <button
         type="button"
         onClick={onSelect}
         className="grid w-full grid-cols-[56px_minmax(0,1fr)] items-center gap-2 text-left sm:grid-cols-[64px_minmax(0,1fr)] sm:gap-3"
       >
-        <div className="relative h-12 w-12 overflow-hidden rounded-lg bg-zinc-950 sm:h-14 sm:w-14">
+        <div className="relative h-12 w-12 overflow-hidden border border-ef-line bg-black sm:h-14 sm:w-14" style={CUT_SM}>
           {item ? (
             <Image
               src={item.image}
@@ -3403,13 +3418,13 @@ function GearSlotCard({
         </div>
 
         <div className="min-w-0">
-          <p className="text-xs text-zinc-500">{title}</p>
+          <p className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-ef-muted">{title}</p>
 
           <h3 className="truncate text-sm font-black text-white sm:text-base">
             {item?.name ?? `${title} 선택`}
           </h3>
 
-          <p className="mt-1 truncate text-xs font-bold text-yellow-300">
+          <p className="mt-1 truncate font-mono text-xs font-bold" style={{ color: ACCENT }}>
             Lv.{item?.raw?.level ?? "-"} · {item?.setName ?? "-"}
           </p>
         </div>
@@ -3455,15 +3470,16 @@ function GearLevelLine({
   onChange: (value: GearLevelKey) => void;
 }) {
   return (
-    <div className="grid min-w-0 grid-cols-1 gap-1 rounded-lg bg-white/[0.03] px-2.5 py-2 sm:grid-cols-[minmax(0,1fr)_96px] sm:items-center sm:gap-2">
-      <p className="min-w-0 truncate text-xs font-bold text-zinc-300">
-        {label}: <span className="text-yellow-300">{value}</span>
+    <div className="grid min-w-0 grid-cols-1 gap-1 border border-ef-line bg-ef-card2 px-2.5 py-2 sm:grid-cols-[minmax(0,1fr)_96px] sm:items-center sm:gap-2" style={CUT_SM}>
+      <p className="min-w-0 truncate text-xs font-bold text-ef-muted">
+        {label}: <span className="font-mono tabular-nums" style={{ color: ACCENT }}>{value}</span>
       </p>
 
       <select
         value={level}
         onChange={(e) => onChange(e.target.value as GearLevelKey)}
-        className="w-full rounded-md border border-white/10 bg-black px-2 py-1 text-xs font-bold outline-none sm:w-[96px]"
+        className="w-full border border-ef-line bg-ef-card px-2 py-1 text-xs font-bold text-ef-accent outline-none focus:border-ef-accent/50 sm:w-[96px]"
+        style={CUT_SM}
       >
         {GEAR_LEVEL_OPTIONS.map((option) => (
           <option key={option.value} value={option.value}>
@@ -3494,14 +3510,15 @@ function StatLine({
   const hasDetails = Boolean(onClick);
   const roleClass =
     role === "main"
-      ? "border-yellow-400/70 bg-yellow-400/5"
+      ? "border-ef-accent/70 bg-[rgba(255,210,74,0.08)]"
       : role === "sub"
-        ? "border-zinc-500/70 bg-white/[0.03]"
+        ? "border-ef-muted/60 bg-ef-card2"
         : "border-transparent";
 
   return (
     <div
-      className={`relative rounded-md border ${roleClass} overflow-visible`}
+      className={`relative border ${roleClass} overflow-visible`}
+      style={role ? CUT_SM : undefined}
       title={
         role === "main"
           ? "주요 능력치"
@@ -3531,13 +3548,13 @@ function StatLine({
               />
             </div>
           ) : null}
-          <span className="truncate text-xs text-zinc-400 sm:text-sm">{label}</span>
+          <span className="truncate text-xs text-ef-muted sm:text-sm">{label}</span>
           {role ? (
             <span
               className={
                 role === "main"
-                  ? "rounded-full border border-yellow-400/40 px-1.5 py-[1px] text-[10px] font-black text-yellow-300"
-                  : "rounded-full border border-zinc-500/50 px-1.5 py-[1px] text-[10px] font-black text-zinc-300"
+                  ? "border border-ef-accent/40 px-1.5 py-[1px] font-mono text-[10px] font-black uppercase tracking-wide text-ef-accent"
+                  : "border border-ef-muted/50 px-1.5 py-[1px] font-mono text-[10px] font-black uppercase tracking-wide text-ef-muted"
               }
             >
               {role === "main" ? "주" : "보조"}
@@ -3546,10 +3563,10 @@ function StatLine({
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
-          <span className="text-xs font-black text-[#ffdc70] sm:text-sm">{value}</span>
+          <span className="font-mono text-xs font-black tabular-nums sm:text-sm" style={{ color: ACCENT }}>{value}</span>
           {hasDetails ? (
             <span
-              className={`text-[10px] text-zinc-500 transition ${
+              className={`text-[10px] text-ef-muted transition ${
                 opened ? "rotate-180" : ""
               }`}
             >
@@ -3563,12 +3580,13 @@ function StatLine({
         <>
 
           <div
-            className="fixed inset-x-3 bottom-3 z-[90] max-h-[55vh] overflow-y-auto rounded-xl border border-yellow-500/20 bg-[#05070b] px-3 py-2 shadow-[0_14px_40px_rgba(0,0,0,0.55)] sm:absolute sm:bottom-auto sm:left-full sm:top-0 sm:ml-2 sm:w-[270px]"
+            className="fixed inset-x-3 bottom-3 z-[90] max-h-[55vh] overflow-y-auto border border-ef-line bg-ef-card2 px-3 py-2 sm:absolute sm:bottom-auto sm:left-full sm:top-0 sm:ml-2 sm:w-[270px]"
+            style={CUT}
             onClick={(event) => event.stopPropagation()}
           >
-          <div className="mb-2 flex items-center justify-between gap-2 border-b border-white/10 pb-2">
-            <span className="text-xs font-black text-yellow-300">{label} 증가 내역</span>
-            <span className="text-xs font-black text-[#ffdc70]">{value}</span>
+          <div className="mb-2 flex items-center justify-between gap-2 border-b border-ef-line pb-2">
+            <span className="text-xs font-black text-white">{label} 증가 내역</span>
+            <span className="font-mono text-xs font-black tabular-nums" style={{ color: ACCENT }}>{value}</span>
           </div>
 
           {details && details.length > 0 ? (
@@ -3580,13 +3598,13 @@ function StatLine({
                     key={`${label}-${detail.label}-${detail.value}`}
                     className="flex items-center justify-between gap-3 text-xs"
                   >
-                    <span className="min-w-0 truncate text-zinc-500">{detail.label}</span>
-                    <span className="shrink-0 font-black text-yellow-200">{detail.value}</span>
+                    <span className="min-w-0 truncate text-ef-muted">{detail.label}</span>
+                    <span className="shrink-0 font-mono font-black tabular-nums text-ef-accent-soft">{detail.value}</span>
                   </div>
                 ))}
             </div>
           ) : (
-            <p className="text-xs text-zinc-500">증가 내역이 없습니다.</p>
+            <p className="text-xs text-ef-muted">증가 내역이 없습니다.</p>
           )}
           </div>
         </>
@@ -3608,11 +3626,12 @@ function SelectBox({
 }) {
   return (
     <label className="grid gap-1">
-      <span className="text-xs text-zinc-500">{label}</span>
+      <span className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-ef-muted">{label}</span>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-md border border-white/10 bg-black px-3 py-2 text-xs font-black outline-none sm:text-sm"
+        className="w-full border border-ef-line bg-ef-card px-3 py-2 text-xs font-black text-ef-accent outline-none focus:border-ef-accent/50 sm:text-sm"
+        style={CUT_SM}
       >
         {options.map((option) => (
           <option key={option} value={option}>
@@ -3647,17 +3666,18 @@ function OperatorBreakthroughSelect({
 
   return (
     <div className="grid gap-3">
-      <span className="text-xs text-zinc-500">잠재능력</span>
+      <span className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-ef-muted">잠재능력</span>
 
       <div className="grid grid-cols-6 gap-1.5 sm:gap-2">
         <button
           type="button"
           onClick={() => onChange("0")}
+          style={CUT_SM}
           className={[
-            "flex h-9 items-center justify-center rounded-lg border bg-black/70 text-xs font-black transition sm:h-10",
+            "flex h-9 items-center justify-center border bg-ef-card text-xs font-black transition sm:h-10",
             value === "0"
-              ? "border-yellow-400 text-yellow-300 shadow-[0_0_14px_rgba(255,210,74,0.25)]"
-              : "border-white/10 text-zinc-400 hover:border-yellow-400/40",
+              ? "border-ef-accent bg-[rgba(255,210,74,0.2)] text-white"
+              : "border-ef-line text-ef-muted hover:border-ef-accent/40",
           ].join(" ")}
           title="잠재능력 미적용"
         >
@@ -3673,13 +3693,14 @@ function OperatorBreakthroughSelect({
               key={stage}
               type="button"
               onClick={() => onChange(String(stage))}
+              style={CUT_SM}
               className={[
-                "relative h-9 rounded-lg border bg-black/70 transition sm:h-10",
+                "relative h-9 border bg-ef-card transition sm:h-10",
                 selected
-                  ? "border-yellow-400 shadow-[0_0_14px_rgba(255,210,74,0.35)]"
+                  ? "border-ef-accent bg-[rgba(255,210,74,0.2)]"
                   : active
-                    ? "border-yellow-400/45"
-                    : "border-white/10 hover:border-yellow-400/40",
+                    ? "border-ef-accent/45"
+                    : "border-ef-line hover:border-ef-accent/40",
               ].join(" ")}
               title={getOperatorBreakthroughText(operator, String(stage))}
             >
@@ -3703,7 +3724,8 @@ function OperatorBreakthroughSelect({
           {activeDescriptions.map((item) => (
             <div
               key={item.stage}
-              className="grid grid-cols-[34px_1fr] items-start gap-2 rounded-lg border border-white/10 bg-black/35 p-2"
+              className="grid grid-cols-[34px_1fr] items-start gap-2 border border-ef-line bg-ef-card2 p-2"
+              style={CUT_SM}
             >
               <div className="relative h-7 w-7 shrink-0">
                 <Image
@@ -3715,8 +3737,8 @@ function OperatorBreakthroughSelect({
                 />
               </div>
 
-              <p className="text-xs leading-relaxed text-zinc-300">
-                <span className="mr-2 font-black text-yellow-300">
+              <p className="text-xs leading-relaxed text-ef-muted">
+                <span className="mr-2 font-black" style={{ color: ACCENT }}>
                   {item.stage}단계
                 </span>
                 {item.text}
@@ -3725,7 +3747,7 @@ function OperatorBreakthroughSelect({
           ))}
         </div>
       ) : (
-        <p className="rounded-lg border border-white/10 bg-black/35 p-2 text-xs text-zinc-500">
+        <p className="border border-ef-line bg-ef-card2 p-2 text-xs text-ef-muted" style={CUT_SM}>
           잠재능력 미적용
         </p>
       )}

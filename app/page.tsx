@@ -29,6 +29,18 @@ import { operatorSummaries } from "@/data/operators-summary-data";
 import { weaponSummaries } from "@/data/weapons-summary-data";
 import { defaultHomeFeaturedOperator } from "@/lib/home/featured-operators";
 
+// ===== 카탈로그 페이지와 통일한 Endfield SF 디자인 토큰 =====
+const PRIMARY = "#ff9a2f";
+const ACCENT = "#ffd24a";
+const CUT = {
+  clipPath:
+    "polygon(0 0, calc(100% - 13px) 0, 100% 13px, 100% 100%, 13px 100%, 0 calc(100% - 13px))",
+};
+const CUT_SM = {
+  clipPath:
+    "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))",
+};
+
 const navigationItems = [
   { label: "오퍼레이터", href: "/operators" },
   { label: "무기", href: "/weapons" },
@@ -120,7 +132,8 @@ function DataCard({
   return (
     <Link
       href={href}
-      className="group relative min-h-[190px] overflow-hidden rounded-[22px] border border-white/8 bg-[#080b10] transition hover:-translate-y-1 hover:border-yellow-300/30"
+      className="group relative min-h-[190px] overflow-hidden border border-ef-line bg-ef-card2 transition hover:-translate-y-1 hover:border-ef-accent/40"
+      style={CUT}
     >
       <Image
         src={image}
@@ -129,16 +142,16 @@ function DataCard({
         sizes="(max-width: 768px) 100vw, 33vw"
         className="object-contain object-right p-3 opacity-65 transition duration-500 group-hover:scale-105 group-hover:opacity-85"
       />
-      <div className="absolute inset-0 bg-[linear-gradient(90deg,#080b10_0%,rgba(8,11,16,0.94)_42%,rgba(8,11,16,0.12)_100%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(90deg,#0b0b0b_0%,rgba(11,11,11,0.94)_42%,rgba(11,11,11,0.12)_100%)]" />
       <div className="relative flex h-full max-w-[68%] flex-col p-5">
-        <p className="text-[10px] font-black tracking-[0.24em] text-yellow-300/70">
+        <p className="font-mono text-[10px] font-bold uppercase tracking-[0.24em] text-ef-muted">
           {eyebrow}
         </p>
         <h3 className="mt-3 text-lg font-black text-white">{title}</h3>
-        <p className="mt-2 line-clamp-2 text-xs leading-5 text-zinc-400">
+        <p className="mt-2 line-clamp-2 text-xs leading-5 text-ef-muted">
           {description}
         </p>
-        <span className="mt-auto inline-flex items-center gap-2 pt-5 text-xs font-black text-yellow-200">
+        <span className="mt-auto inline-flex items-center gap-2 pt-5 text-xs font-black text-ef-accent-soft">
           자세히 보기
           <ArrowRight className="h-3.5 w-3.5 transition group-hover:translate-x-1" />
         </span>
@@ -161,20 +174,23 @@ export default function HomePage() {
     <SessionProvider>
       <HomeProfileGate />
 
-      <main className="min-h-screen overflow-hidden bg-[#030405] text-white">
+      <main className="relative min-h-screen overflow-hidden bg-ef-bg text-ef-ink">
         <HomeMobileTopBar />
 
-      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_50%_-10%,rgba(250,204,21,0.08),transparent_35%)]" />
+      <div className="pointer-events-none fixed inset-0 z-0 opacity-[0.022] [background-image:radial-gradient(circle,#ffd24a_1px,transparent_1px)] [background-size:22px_22px]" />
 
-      <header className="relative z-30 hidden border-b border-white/8 bg-black/80 backdrop-blur-xl lg:block">
+      <header className="relative z-30 hidden border-b border-ef-line bg-ef-bg/80 backdrop-blur-xl lg:block">
         <div className="mx-auto flex h-16 max-w-[1840px] items-center gap-5 px-6">
-          <Link href="/" className="shrink-0">
-            <p className="text-[9px] font-black tracking-[0.35em] text-yellow-300/60">
-              ENDFIELD
-            </p>
-            <p className="text-base font-black tracking-tight text-white">
-              데이터 허브
-            </p>
+          <Link href="/" className="flex shrink-0 items-center gap-2">
+            <span className="h-7 w-1" style={{ background: PRIMARY }} />
+            <span>
+              <p className="font-mono text-[9px] font-bold uppercase tracking-[0.35em] text-ef-muted">
+                ENDFIELD
+              </p>
+              <p className="text-base font-black tracking-tight text-white">
+                데이터 허브
+              </p>
+            </span>
           </Link>
 
           <div className="min-w-0 flex-1 max-w-[560px]">
@@ -186,7 +202,8 @@ export default function HomePage() {
               <Link
                 key={item.href}
                 href={item.href}
-                className="rounded-lg px-3 py-2 text-xs font-bold text-zinc-400 transition hover:bg-white/5 hover:text-white"
+                className="px-3 py-2 text-xs font-bold text-ef-muted transition hover:text-ef-accent-soft"
+                style={CUT_SM}
               >
                 {item.label}
               </Link>
@@ -197,13 +214,14 @@ export default function HomePage() {
         </div>
       </header>
 
-      <div className="relative mx-auto max-w-[1840px] px-3 pb-24 pt-3 sm:px-4 sm:pt-5 md:px-6 lg:pb-12 lg:pt-6">
+      <div className="relative z-10 mx-auto max-w-[1840px] px-3 pb-24 pt-3 sm:px-4 sm:pt-5 md:px-6 lg:pb-12 lg:pt-6">
         <div className="relative z-30 mb-3 lg:hidden">
           <HomeSearchPanel compact />
         </div>
 
         <section className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(520px,1fr)]">
-          <div className="relative min-h-[420px] overflow-hidden rounded-[28px] border border-yellow-300/15 bg-black sm:min-h-[460px] xl:min-h-[480px]">
+          <div className="relative min-h-[420px] overflow-hidden border border-ef-line bg-black sm:min-h-[460px] xl:min-h-[480px]" style={CUT}>
+            <span className="absolute inset-x-0 top-0 z-20 block h-0.5 w-full" style={{ background: `linear-gradient(90deg, ${PRIMARY}, transparent 55%)` }} />
             <Image
               src={featured.heroImage}
               alt={featured.name}
@@ -219,13 +237,13 @@ export default function HomePage() {
               <p className="text-2xl font-black text-white drop-shadow-lg sm:text-3xl">
                 {featured.name}
               </p>
-              <p className="mt-1 text-xs font-black uppercase tracking-[0.22em] text-zinc-300 sm:text-sm">
+              <p className="mt-1 font-mono text-xs font-bold uppercase tracking-[0.22em] text-ef-muted sm:text-sm">
                 {featured.enName}
               </p>
             </div>
           </div>
 
-          <div className="min-h-[300px] overflow-hidden rounded-[28px] sm:min-h-[380px] xl:min-h-[480px]">
+          <div className="min-h-[300px] overflow-hidden sm:min-h-[380px] xl:min-h-[480px]" style={CUT}>
             <BannerSection initialData={initialHomeBannerData} />
           </div>
         </section>
@@ -237,18 +255,19 @@ export default function HomePage() {
               <Link
                 key={item.href}
                 href={item.href}
-                className="group rounded-[18px] border border-white/8 bg-[#07090d] p-4 transition hover:-translate-y-0.5 hover:border-yellow-300/25 hover:bg-[#0b0e14]"
+                className="group border border-ef-line bg-ef-card2 p-4 transition hover:-translate-y-0.5 hover:border-ef-accent/40"
+                style={CUT_SM}
               >
                 <div className="flex items-start justify-between gap-3">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-yellow-300/15 bg-yellow-300/8 text-yellow-200">
+                  <span className="flex h-9 w-9 items-center justify-center border border-ef-line bg-ef-card text-ef-accent" style={CUT_SM}>
                     <Icon className="h-4.5 w-4.5" />
                   </span>
-                  <ArrowRight className="h-4 w-4 text-zinc-700 transition group-hover:translate-x-1 group-hover:text-yellow-200" />
+                  <ArrowRight className="h-4 w-4 text-ef-muted transition group-hover:translate-x-1 group-hover:text-ef-accent" />
                 </div>
                 <h2 className="mt-4 text-sm font-black text-white">
                   {item.label}
                 </h2>
-                <p className="mt-1 line-clamp-1 text-[11px] text-zinc-500">
+                <p className="mt-1 line-clamp-1 text-[11px] text-ef-muted">
                   {item.description}
                 </p>
               </Link>
@@ -258,17 +277,20 @@ export default function HomePage() {
 
         <section className="mt-8">
           <div className="mb-4 flex items-end justify-between gap-4">
-            <div>
-              <p className="text-[10px] font-black tracking-[0.25em] text-yellow-300/60">
-                DISCOVER
-              </p>
-              <h2 className="mt-1 text-xl font-black sm:text-2xl">
-                지금 확인할 데이터
-              </h2>
+            <div className="flex items-center gap-2">
+              <span className="h-9 w-1" style={{ background: PRIMARY }} />
+              <div>
+                <p className="font-mono text-[10px] font-bold uppercase tracking-[0.25em] text-ef-muted">
+                  DISCOVER
+                </p>
+                <h2 className="mt-1 text-xl font-black sm:text-2xl">
+                  지금 확인할 데이터
+                </h2>
+              </div>
             </div>
             <Link
               href="/operators"
-              className="hidden items-center gap-2 text-xs font-black text-zinc-400 transition hover:text-yellow-200 sm:inline-flex"
+              className="hidden items-center gap-2 text-xs font-black text-ef-muted transition hover:text-ef-accent-soft sm:inline-flex"
             >
               전체 데이터 둘러보기
               <ArrowRight className="h-4 w-4" />
@@ -301,23 +323,24 @@ export default function HomePage() {
         </section>
 
         <section className="mt-8 grid gap-4 lg:grid-cols-[minmax(0,1.3fr)_minmax(320px,0.7fr)]">
-          <div className="relative overflow-hidden rounded-[24px] border border-yellow-300/15 bg-[#090b0f] p-6 sm:p-8">
-            <div className="absolute right-0 top-0 h-56 w-56 rounded-full bg-yellow-300/6 blur-3xl" />
+          <div className="relative overflow-hidden border border-ef-line bg-ef-card2 p-6 sm:p-8" style={CUT}>
+            <span className="absolute inset-x-0 top-0 block h-0.5 w-full" style={{ background: `linear-gradient(90deg, ${PRIMARY}, transparent 55%)` }} />
             <div className="relative">
-              <span className="flex h-11 w-11 items-center justify-center rounded-2xl border border-yellow-300/15 bg-yellow-300/8 text-yellow-200">
+              <span className="flex h-11 w-11 items-center justify-center border border-ef-line bg-ef-card text-ef-accent" style={CUT_SM}>
                 <Settings2 className="h-5 w-5" />
               </span>
               <h2 className="mt-5 text-2xl font-black">
                 나만의 세팅을 등록하세요
               </h2>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-400">
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-ef-muted">
                 오퍼레이터, 무기, 장비와 스킬 사이클을 구성해 나만의 세팅을
                 저장하고 다른 사용자와 공유할 수 있습니다.
               </p>
               <div className="mt-6 flex flex-wrap gap-2">
                 <Link
                   href="/settings/party"
-                  className="rounded-xl bg-[#ffd24a] px-5 py-3 text-sm font-black text-black"
+                  className="px-5 py-3 text-sm font-black text-black transition hover:brightness-110"
+                  style={{ ...CUT_SM, background: ACCENT }}
                 >
                   세팅 등록하기
                 </Link>
@@ -325,15 +348,18 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="rounded-[24px] border border-white/8 bg-[#07090d] p-6 sm:p-8">
+          <div className="border border-ef-line bg-ef-card2 p-6 sm:p-8" style={CUT}>
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[10px] font-black tracking-[0.25em] text-yellow-300/60">
-                  DATABASE
-                </p>
-                <h2 className="mt-1 text-lg font-black">데이터 현황</h2>
+              <div className="flex items-center gap-2">
+                <span className="h-8 w-1" style={{ background: PRIMARY }} />
+                <div>
+                  <p className="font-mono text-[10px] font-bold uppercase tracking-[0.25em] text-ef-muted">
+                    DATABASE
+                  </p>
+                  <h2 className="mt-1 text-lg font-black">데이터 현황</h2>
+                </div>
               </div>
-              <Database className="h-6 w-6 text-yellow-200/70" />
+              <Database className="h-6 w-6 text-ef-accent" />
             </div>
             <div className="mt-6 grid grid-cols-3 gap-2">
               {[
@@ -345,13 +371,14 @@ export default function HomePage() {
                 return (
                   <div
                     key={String(label)}
-                    className="rounded-2xl border border-white/7 bg-black/40 p-3 text-center"
+                    className="border border-ef-line bg-ef-card p-3 text-center"
+                    style={CUT_SM}
                   >
-                    <StatIcon className="mx-auto h-4 w-4 text-yellow-200/60" />
-                    <p className="mt-2 text-xl font-black text-white">
+                    <StatIcon className="mx-auto h-4 w-4 text-ef-accent" />
+                    <p className="mt-2 font-mono text-xl font-black tabular-nums" style={{ color: ACCENT }}>
                       {Number(count).toLocaleString()}
                     </p>
-                    <p className="mt-1 text-[10px] font-bold text-zinc-500">
+                    <p className="mt-1 font-mono text-[10px] font-bold uppercase tracking-wide text-ef-muted">
                       {String(label)}
                     </p>
                   </div>
@@ -361,13 +388,13 @@ export default function HomePage() {
           </div>
         </section>
 
-        <footer className="mt-10 flex flex-col gap-3 border-t border-white/8 py-6 text-xs text-zinc-600 sm:flex-row sm:items-center sm:justify-between">
+        <footer className="mt-10 flex flex-col gap-3 border-t border-ef-line py-6 text-xs text-ef-muted sm:flex-row sm:items-center sm:justify-between">
           <p>엔드필드 데이터 허브</p>
           <div className="flex gap-4">
-            <Link href="/operators" className="hover:text-zinc-300">
+            <Link href="/operators" className="hover:text-ef-accent-soft">
               데이터 탐색
             </Link>
-            <Link href="/settings" className="hover:text-zinc-300">
+            <Link href="/settings" className="hover:text-ef-accent-soft">
               유저 세팅
             </Link>
           </div>

@@ -1,7 +1,9 @@
 "use client";
 
-const YELLOW_MAIN = "#ffd24a";
-const YELLOW_BORDER = "rgba(255,196,74,0.18)";
+const CUT_SM = {
+  clipPath:
+    "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))",
+};
 
 export default function Checkbox({
   checked,
@@ -18,13 +20,10 @@ export default function Checkbox({
 }) {
   return (
     <label
-      className={`flex cursor-pointer items-start gap-3 rounded-2xl border px-4 py-3 transition ${
-        disabled ? "opacity-45" : "hover:border-yellow-400/35"
+      className={`flex cursor-pointer items-start gap-3 border border-ef-line bg-ef-card px-4 py-3 transition ${
+        disabled ? "opacity-45" : "hover:border-ef-accent/40"
       }`}
-      style={{
-        borderColor: YELLOW_BORDER,
-        background: "#090d14",
-      }}
+      style={CUT_SM}
     >
       <input
         type="checkbox"
@@ -34,20 +33,14 @@ export default function Checkbox({
         className="peer hidden"
       />
 
-      <span
-        className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border text-[12px] font-black transition peer-checked:border-yellow-400 peer-checked:bg-yellow-400 peer-checked:text-black"
-        style={{
-          borderColor: YELLOW_BORDER,
-          color: YELLOW_MAIN,
-        }}
-      >
+      <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center border border-ef-line text-[12px] font-black text-ef-accent transition peer-checked:border-ef-accent peer-checked:bg-ef-accent peer-checked:text-black">
         {checked ? "✓" : ""}
       </span>
 
       <span className="min-w-0">
-        <span className="block text-sm font-bold text-white">{label}</span>
+        <span className="block text-sm font-bold text-ef-ink">{label}</span>
         {description ? (
-          <span className="mt-0.5 block text-xs leading-5 text-zinc-500">
+          <span className="mt-0.5 block text-xs leading-5 text-ef-muted">
             {description}
           </span>
         ) : null}

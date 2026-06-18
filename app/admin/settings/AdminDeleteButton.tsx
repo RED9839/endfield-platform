@@ -1,5 +1,10 @@
 "use client";
 
+const CUT_SM = {
+  clipPath:
+    "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))",
+};
+
 export default function AdminDeleteButton() {
   return (
     <button
@@ -9,7 +14,8 @@ export default function AdminDeleteButton() {
           e.preventDefault();
         }
       }}
-      className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs font-black text-red-300 hover:bg-red-500/20"
+      className="border border-red-500/40 bg-red-500/10 px-3 py-2 text-xs font-black text-red-300 transition hover:bg-red-500/20"
+      style={CUT_SM}
     >
       세팅 삭제
     </button>

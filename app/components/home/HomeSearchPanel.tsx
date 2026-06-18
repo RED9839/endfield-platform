@@ -14,6 +14,12 @@ export type HomeSearchItem = {
   category: "operator" | "weapon" | "gear";
 };
 
+const ACCENT = "#ffd24a";
+const CUT_SM = {
+  clipPath:
+    "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))",
+};
+
 const categoryLabels = {
   operator: "오퍼레이터",
   weapon: "무기",
@@ -81,15 +87,14 @@ export default function HomeSearchPanel({
     <div className={compact ? "relative w-full" : "relative max-w-[620px]"}>
       <div
         className={[
-          "flex items-center border border-white/15 bg-black/70 shadow-[0_18px_50px_rgba(0,0,0,0.35)] backdrop-blur-xl transition focus-within:border-yellow-300/45",
-          compact
-            ? "h-10 rounded-xl p-1"
-            : "h-14 rounded-2xl p-1.5",
+          "flex items-center border border-ef-line bg-ef-card backdrop-blur-xl transition focus-within:border-ef-accent/50",
+          compact ? "h-10 p-1" : "h-14 p-1.5",
         ].join(" ")}
+        style={CUT_SM}
       >
         <Search
           className={[
-            "shrink-0 text-yellow-200/70",
+            "shrink-0 text-ef-accent",
             compact ? "ml-2.5 h-4 w-4" : "ml-3 h-5 w-5",
           ].join(" ")}
         />
@@ -106,7 +111,7 @@ export default function HomeSearchPanel({
           }}
           placeholder="오퍼레이터, 무기, 장비를 검색하세요"
           className={[
-            "min-w-0 flex-1 bg-transparent font-bold text-white outline-none placeholder:text-zinc-500",
+            "min-w-0 flex-1 bg-transparent font-bold text-white outline-none placeholder:text-ef-muted/70",
             compact ? "px-2.5 text-xs" : "px-3 text-sm",
           ].join(" ")}
           aria-label="통합 데이터 검색"
@@ -115,18 +120,17 @@ export default function HomeSearchPanel({
           type="button"
           onClick={submit}
           className={[
-            "h-full shrink-0 bg-[#ffd24a] font-black text-black transition hover:brightness-110",
-            compact
-              ? "rounded-lg px-3 text-[11px]"
-              : "rounded-xl px-4 text-xs sm:px-5",
+            "h-full shrink-0 font-black text-black transition hover:brightness-110",
+            compact ? "px-3 text-[11px]" : "px-4 text-xs sm:px-5",
           ].join(" ")}
+          style={{ ...CUT_SM, background: ACCENT }}
         >
           검색
         </button>
       </div>
 
       {focused && query.trim() ? (
-        <div className="absolute inset-x-0 top-[calc(100%+8px)] z-50 overflow-hidden rounded-2xl border border-yellow-300/20 bg-[#07090d]/98 p-2 shadow-2xl backdrop-blur-xl">
+        <div className="absolute inset-x-0 top-[calc(100%+8px)] z-50 overflow-hidden border border-ef-line bg-ef-card2/98 p-2 backdrop-blur-xl" style={CUT_SM}>
           {results.length ? (
             results.map((item) => (
               <button
@@ -134,9 +138,10 @@ export default function HomeSearchPanel({
                 type="button"
                 onMouseDown={(event) => event.preventDefault()}
                 onClick={() => router.push(item.href)}
-                className="flex w-full items-center gap-3 rounded-xl p-2 text-left transition hover:bg-white/6"
+                className="flex w-full items-center gap-3 p-2 text-left transition hover:bg-white/[0.04]"
+                style={CUT_SM}
               >
-                <span className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg border border-white/10 bg-black">
+                <span className="relative h-10 w-10 shrink-0 overflow-hidden border border-ef-line bg-black" style={CUT_SM}>
                   <Image
                     src={item.image}
                     alt=""
@@ -149,17 +154,17 @@ export default function HomeSearchPanel({
                   <span className="block truncate text-sm font-black text-white">
                     {item.name}
                   </span>
-                  <span className="mt-0.5 block truncate text-[11px] text-zinc-500">
+                  <span className="mt-0.5 block truncate text-[11px] text-ef-muted">
                     {item.subName}
                   </span>
                 </span>
-                <span className="rounded-full border border-yellow-300/15 bg-yellow-300/7 px-2 py-1 text-[9px] font-black text-yellow-200/80">
+                <span className="border border-ef-line bg-ef-card px-2 py-1 font-mono text-[9px] font-bold uppercase tracking-wide text-ef-accent-soft" style={CUT_SM}>
                   {categoryLabels[item.category]}
                 </span>
               </button>
             ))
           ) : (
-            <p className="px-3 py-4 text-center text-xs font-bold text-zinc-500">
+            <p className="px-3 py-4 text-center text-xs font-bold text-ef-muted">
               일치하는 데이터가 없습니다.
             </p>
           )}

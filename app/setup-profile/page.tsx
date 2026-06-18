@@ -3,6 +3,18 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 
+// ===== Endfield SF 디자인 토큰 =====
+const PRIMARY = "#ff9a2f";
+const ACCENT = "#ffd24a";
+const CUT = {
+  clipPath:
+    "polygon(0 0, calc(100% - 13px) 0, 100% 13px, 100% 100%, 13px 100%, 0 calc(100% - 13px))",
+};
+const CUT_SM = {
+  clipPath:
+    "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))",
+};
+
 export default async function SetupProfilePage({
   searchParams,
 }: {
@@ -13,9 +25,13 @@ export default async function SetupProfilePage({
 
   if (!session?.user?.id) {
     return (
-      <main className="min-h-screen bg-[#050505] px-3 py-8 text-white sm:px-4 sm:py-20">
-        <section className="mx-auto max-w-md rounded-2xl border border-yellow-500/15 bg-[#0a0d12] p-5 text-center sm:rounded-3xl sm:p-8">
-          <p className="text-sm text-zinc-300">로그인이 필요합니다.</p>
+      <main className="relative min-h-screen overflow-x-clip bg-ef-bg px-3 py-8 text-ef-ink sm:px-4 sm:py-20">
+        <div className="pointer-events-none fixed inset-0 z-0 opacity-[0.022] [background-image:radial-gradient(circle,#ffd24a_1px,transparent_1px)] [background-size:22px_22px]" />
+        <section
+          className="relative z-10 mx-auto max-w-md border border-ef-line bg-ef-card2 p-5 text-center sm:p-8"
+          style={CUT}
+        >
+          <p className="text-sm text-ef-muted">로그인이 필요합니다.</p>
         </section>
       </main>
     );
@@ -114,15 +130,31 @@ export default async function SetupProfilePage({
   }
 
   return (
-    <main className="min-h-screen bg-[#050505] px-3 py-8 pb-[calc(2rem+env(safe-area-inset-bottom))] text-white sm:px-4 sm:py-20">
-      <section className="mx-auto max-w-md rounded-2xl border border-yellow-500/15 bg-[#0a0d12] p-5 shadow-[0_20px_80px_rgba(0,0,0,0.45)] sm:rounded-3xl sm:p-8">
-        <p className="text-xs font-black uppercase tracking-[0.28em] text-yellow-300/80">
-          프로필 설정
-        </p>
-        <h1 className="mt-3 text-3xl font-black tracking-[-0.04em] text-[#ffdc70]">
+    <main className="relative min-h-screen overflow-x-clip bg-ef-bg px-3 py-8 pb-[calc(2rem+env(safe-area-inset-bottom))] text-ef-ink sm:px-4 sm:py-20">
+      <div className="pointer-events-none fixed inset-0 z-0 opacity-[0.022] [background-image:radial-gradient(circle,#ffd24a_1px,transparent_1px)] [background-size:22px_22px]" />
+
+      {/* TOP HUD */}
+      <div className="relative z-30 mx-auto mb-6 flex max-w-md items-center gap-2">
+        <span className="h-3 w-3" style={{ background: PRIMARY }} />
+        <span className="font-mono text-[11px] font-bold uppercase tracking-[0.3em] text-ef-muted">Setup</span>
+        <span className="font-mono text-[11px] tracking-[0.2em] text-ef-muted/60">// 프로필 설정</span>
+      </div>
+
+      <section
+        className="relative z-10 mx-auto max-w-md overflow-hidden border border-ef-line bg-ef-card2 p-5 sm:p-8"
+        style={CUT}
+      >
+        <span className="absolute inset-x-0 top-0 block h-0.5 w-full" style={{ background: `linear-gradient(90deg, ${PRIMARY}, transparent 55%)` }} />
+        <div className="flex items-center gap-2">
+          <span className="h-4 w-1" style={{ background: PRIMARY }} />
+          <p className="font-mono text-[11px] font-bold uppercase tracking-[0.22em] text-ef-muted">
+            프로필 설정
+          </p>
+        </div>
+        <h1 className="mt-3 text-3xl font-black tracking-tight text-white">
           닉네임 설정
         </h1>
-        <p className="mt-3 text-sm leading-6 text-zinc-400">
+        <p className="mt-3 text-sm leading-6 text-ef-muted">
           다른 유저에게 표시될 닉네임입니다. 닉네임은 중복 사용할 수 없습니다.
         </p>
 
@@ -146,16 +178,18 @@ export default async function SetupProfilePage({
             maxLength={16}
             defaultValue={params?.value ?? ""}
             placeholder="닉네임 입력"
-            className="h-12 w-full rounded-xl border border-white/10 bg-black/40 px-4 text-sm font-bold text-white outline-none transition placeholder:text-zinc-600 focus:border-yellow-400/40"
+            className="h-12 w-full border border-ef-line bg-ef-card px-4 text-sm font-bold text-white outline-none transition placeholder:text-ef-muted/70 focus:border-ef-accent/50"
+            style={CUT_SM}
           />
 
-          <p className="text-xs leading-5 text-zinc-500">
+          <p className="font-mono text-xs leading-5 text-ef-muted">
             2~16자, 한글/영문/숫자/밑줄(_) 사용 가능
           </p>
 
           <button
             type="submit"
-            className="h-12 w-full rounded-xl bg-[#ffd24a] text-sm font-black text-black transition hover:brightness-110"
+            className="h-12 w-full text-sm font-black text-black transition hover:brightness-110"
+            style={{ ...CUT_SM, background: ACCENT }}
           >
             시작하기
           </button>
@@ -167,7 +201,7 @@ export default async function SetupProfilePage({
 
 function ErrorMessage({ children }: { children: React.ReactNode }) {
   return (
-    <p className="mt-4 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm font-bold text-red-300">
+    <p className="mt-4 border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm font-bold text-red-300" style={CUT_SM}>
       {children}
     </p>
   );

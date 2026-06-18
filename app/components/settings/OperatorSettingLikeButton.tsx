@@ -2,6 +2,11 @@
 
 import { useState } from "react";
 
+const CUT_SM = {
+  clipPath:
+    "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))",
+};
+
 export default function OperatorSettingLikeButton({
   settingId,
   initialLiked = false,
@@ -43,11 +48,12 @@ export default function OperatorSettingLikeButton({
       type="button"
       disabled={pending}
       onClick={toggleLike}
+      style={CUT_SM}
       className={[
-        "rounded-xl border px-4 py-2 text-sm font-black transition disabled:opacity-60",
+        "border px-4 py-2 font-mono text-sm font-black uppercase tracking-wide transition disabled:opacity-60",
         liked
-          ? "border-yellow-300/50 bg-yellow-300/20 text-yellow-200 hover:bg-yellow-300/25"
-          : "border-white/10 bg-black text-zinc-200 hover:border-yellow-400/40 hover:text-yellow-300",
+          ? "border-ef-accent bg-[rgba(255,210,74,0.2)] text-white"
+          : "border-ef-line bg-ef-card text-ef-muted hover:border-ef-accent/40 hover:text-ef-accent-soft",
       ].join(" ")}
     >
       추천 {likeCount.toLocaleString()}

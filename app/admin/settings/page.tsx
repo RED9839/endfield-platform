@@ -4,6 +4,18 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 
+// ===== 카탈로그 상세와 통일한 Endfield SF 디자인 토큰 =====
+const PRIMARY = "#ff9a2f";
+const ACCENT = "#ffd24a";
+const CUT = {
+  clipPath:
+    "polygon(0 0, calc(100% - 13px) 0, 100% 13px, 100% 100%, 13px 100%, 0 calc(100% - 13px))",
+};
+const CUT_SM = {
+  clipPath:
+    "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))",
+};
+
 async function deleteSetting(formData: FormData) {
   "use server";
 
@@ -95,16 +107,33 @@ export default async function AdminSettingsPage({
   });
 
   return (
-    <main className="min-h-screen bg-[#050505] p-6 text-white">
-      <div className="mx-auto max-w-6xl">
+    <main className="relative min-h-screen overflow-x-clip bg-ef-bg p-4 text-ef-ink sm:p-6">
+      <div className="pointer-events-none fixed inset-0 z-0 opacity-[0.022] [background-image:radial-gradient(circle,#ffd24a_1px,transparent_1px)] [background-size:22px_22px]" />
+
+      {/* TOP HUD */}
+      <div className="relative z-30 mx-auto mb-3 flex max-w-6xl items-center gap-2">
+        <span className="h-3 w-3" style={{ background: PRIMARY }} />
+        <span className="font-mono text-[11px] font-bold uppercase tracking-[0.3em] text-ef-muted">
+          Admin · Settings
+        </span>
+        <span className="font-mono text-[11px] tracking-[0.2em] text-ef-muted/60">
+          // 세팅 관리
+        </span>
+      </div>
+
+      <div className="relative z-10 mx-auto max-w-6xl">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-3xl font-black text-[#ffdc70]">
-            세팅 관리
-          </h1>
+          <div className="flex items-center gap-2">
+            <span className="h-5 w-1" style={{ background: PRIMARY }} />
+            <h1 className="text-3xl font-black tracking-tight text-white">
+              세팅 관리
+            </h1>
+          </div>
 
           <Link
             href="/admin"
-            className="rounded-lg border border-zinc-700 px-3 py-2 text-sm font-bold hover:border-zinc-500"
+            className="border border-ef-line bg-ef-card px-3 py-2 text-sm font-bold text-ef-muted transition hover:border-ef-accent/40 hover:text-ef-accent-soft"
+            style={CUT_SM}
           >
             관리자 홈
           </Link>
@@ -112,25 +141,29 @@ export default async function AdminSettingsPage({
 
         <form
           method="GET"
-          className="mb-6 grid gap-3 rounded-2xl border border-zinc-800 bg-black/30 p-4 md:grid-cols-3"
+          className="mb-6 grid gap-3 border border-ef-line bg-ef-card2 p-4 md:grid-cols-3"
+          style={CUT}
         >
           <input
             name="q"
             defaultValue={q}
             placeholder="세팅 제목 검색"
-            className="rounded-lg border border-zinc-700 bg-black/40 px-3 py-2 text-sm outline-none focus:border-yellow-500"
+            className="border border-ef-line bg-ef-card px-3 py-2 text-sm text-ef-accent outline-none transition placeholder:text-ef-muted/70 focus:border-ef-accent/50"
+            style={CUT_SM}
           />
 
           <input
             name="author"
             defaultValue={author}
             placeholder="작성자 검색"
-            className="rounded-lg border border-zinc-700 bg-black/40 px-3 py-2 text-sm outline-none focus:border-yellow-500"
+            className="border border-ef-line bg-ef-card px-3 py-2 text-sm text-ef-accent outline-none transition placeholder:text-ef-muted/70 focus:border-ef-accent/50"
+            style={CUT_SM}
           />
 
           <button
             type="submit"
-            className="rounded-lg bg-yellow-500 px-3 py-2 text-sm font-black text-black hover:bg-yellow-400"
+            className="px-3 py-2 text-sm font-black text-black transition hover:brightness-110"
+            style={{ ...CUT_SM, background: ACCENT }}
           >
             검색
           </button>
@@ -140,30 +173,38 @@ export default async function AdminSettingsPage({
           {settings.map((setting) => (
             <div
               key={setting.id}
-              className="rounded-xl border border-zinc-800 bg-black/30 p-4"
+              className="border border-ef-line bg-ef-card2 p-4"
+              style={CUT}
             >
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div className="min-w-0 flex-1">
-                  <div className="font-bold text-white">
+                  <div className="font-black text-white">
                     {setting.title}
                   </div>
 
-                  <div className="mt-1 text-sm text-zinc-400">
+                  <div className="mt-1 text-sm text-ef-muted">
                     작성자 :{" "}
                     {setting.user?.nickname ??
                       setting.nickname ??
                       "알 수 없음"}
                   </div>
 
-                  <div className="mt-1 text-sm text-zinc-400">
-                    조회수 {setting.viewCount} · 추천수 {setting.likeCount}
+                  <div className="mt-1 text-sm text-ef-muted">
+                    조회수{" "}
+                    <span className="font-mono tabular-nums" style={{ color: ACCENT }}>
+                      {setting.viewCount}
+                    </span>{" "}
+                    · 추천수{" "}
+                    <span className="font-mono tabular-nums" style={{ color: ACCENT }}>
+                      {setting.likeCount}
+                    </span>
                   </div>
 
-                  <div className="mt-1 break-all text-xs text-zinc-500">
+                  <div className="mt-1 break-all font-mono text-xs text-ef-muted/70">
                     ID : {setting.id}
                   </div>
 
-                  <div className="mt-1 text-xs text-zinc-500">
+                  <div className="mt-1 font-mono text-xs text-ef-muted/70">
                     생성일 :{" "}
                     {setting.createdAt.toLocaleDateString("ko-KR")}
                   </div>
@@ -173,7 +214,8 @@ export default async function AdminSettingsPage({
                   <Link
                     href={`/settings/${setting.id}`}
                     target="_blank"
-                    className="rounded-lg border border-sky-500/30 bg-sky-500/10 px-3 py-2 text-xs font-black text-sky-300 hover:bg-sky-500/20"
+                    className="border border-ef-line bg-ef-card px-3 py-2 text-xs font-black text-ef-muted transition hover:border-ef-accent/40 hover:text-ef-accent-soft"
+                    style={CUT_SM}
                   >
                     상세 보기
                   </Link>
@@ -188,7 +230,8 @@ export default async function AdminSettingsPage({
                     <button
                       type="submit"
                       formAction={deleteSetting}
-                      className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs font-black text-red-300 hover:bg-red-500/20"
+                      className="border border-red-500/40 bg-red-500/10 px-3 py-2 text-xs font-black text-red-300 transition hover:bg-red-500/20"
+                      style={CUT_SM}
                     >
                       세팅 삭제
                     </button>
@@ -199,7 +242,10 @@ export default async function AdminSettingsPage({
           ))}
 
           {settings.length === 0 ? (
-            <div className="rounded-xl border border-zinc-800 bg-black/30 p-6 text-center text-sm text-zinc-400">
+            <div
+              className="border border-ef-line bg-ef-card2 p-6 text-center text-sm text-ef-muted"
+              style={CUT}
+            >
               검색 결과가 없습니다.
             </div>
           ) : null}

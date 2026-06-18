@@ -16,6 +16,18 @@ import OperatorSettingViewTracker from "@/app/components/settings/OperatorSettin
 import OperatorSettingLikeButton from "@/app/components/settings/OperatorSettingLikeButton";
 import ReadonlySettingEditor from "@/app/components/settings/ReadonlySettingEditor";
 
+// ===== Endfield SF 디자인 토큰 =====
+const PRIMARY = "#ff9a2f";
+const ACCENT = "#ffd24a";
+const CUT = {
+  clipPath:
+    "polygon(0 0, calc(100% - 13px) 0, 100% 13px, 100% 100%, 13px 100%, 0 calc(100% - 13px))",
+};
+const CUT_SM = {
+  clipPath:
+    "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))",
+};
+
 type SlotKey = "main" | "member1" | "member2" | "member3";
 
 type SlotSetting = {
@@ -162,8 +174,12 @@ export default async function OperatorSettingDetailPage({
 
   if (!selectedSlot?.form) {
     return (
-      <main className="min-h-screen bg-[var(--background)] px-3 py-3 text-white sm:px-4 md:px-6 md:py-5">
-        <div className="panel mx-auto max-w-[1840px] rounded-[20px] p-6 text-center text-sm font-bold text-zinc-500 sm:rounded-[24px] sm:p-10">
+      <main className="relative min-h-screen overflow-x-clip bg-ef-bg px-3 py-3 text-ef-ink sm:px-4 md:px-6 md:py-5">
+        <div className="pointer-events-none fixed inset-0 z-0 opacity-[0.022] [background-image:radial-gradient(circle,#ffd24a_1px,transparent_1px)] [background-size:22px_22px]" />
+        <div
+          className="relative z-10 mx-auto max-w-[1840px] border border-ef-line bg-ef-card2 p-6 text-center text-sm font-bold text-ef-muted sm:p-10"
+          style={CUT}
+        >
           등록된 세팅 정보가 없습니다.
         </div>
       </main>
@@ -203,30 +219,46 @@ export default async function OperatorSettingDetailPage({
     });
 
   return (
-    <main className="min-h-screen bg-[var(--background)] px-3 py-3 text-white sm:px-4 md:px-6 md:py-5">
+    <main className="relative min-h-screen overflow-x-clip bg-ef-bg px-3 py-3 text-ef-ink sm:px-4 md:px-6 md:py-5">
+      <div className="pointer-events-none fixed inset-0 z-0 opacity-[0.022] [background-image:radial-gradient(circle,#ffd24a_1px,transparent_1px)] [background-size:22px_22px]" />
       <OperatorSettingViewTracker settingId={setting.id} />
-      <div className="mx-auto max-w-[1840px]">
-        <header className="panel mb-3 rounded-[20px] p-4 sm:mb-5 sm:rounded-[24px]">
-          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
+      <div className="relative z-10 mx-auto max-w-[1840px]">
+        {/* TOP HUD */}
+        <div className="mb-2.5 flex items-center gap-2">
+          <span className="h-3 w-3" style={{ background: PRIMARY }} />
+          <span className="font-mono text-[11px] font-bold uppercase tracking-[0.3em] text-ef-muted">Setting File</span>
+          <span className="hidden font-mono text-[11px] tracking-[0.2em] text-ef-muted/60 sm:inline">{`// ID:${setting.id.slice(0, 8).toUpperCase()}`}</span>
+        </div>
+
+        <header
+          className="relative mb-3 overflow-hidden border border-ef-line bg-ef-card2 p-4 sm:mb-5"
+          style={CUT}
+        >
+          <span
+            className="absolute inset-x-0 top-0 block h-0.5 w-full"
+            style={{ background: `linear-gradient(90deg, ${PRIMARY}, transparent 55%)` }}
+          />
+          <div className="relative grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
             <div className="min-w-0">
               <div className="flex min-w-0 items-center gap-2">
                 <span
                   className={[
-                    "inline-flex h-7 w-[50px] shrink-0 items-center justify-center rounded-lg border text-[11px] font-black sm:w-[54px] sm:text-xs",
+                    "inline-flex h-7 w-[50px] shrink-0 items-center justify-center border font-mono text-[11px] font-black uppercase tracking-wide sm:w-[54px] sm:text-xs",
                     setting.type === "solo"
-                      ? "border-yellow-300/40 bg-yellow-300/15 text-yellow-200"
+                      ? "border-ef-accent/50 bg-[rgba(255,210,74,0.15)] text-ef-accent"
                       : "border-sky-300/40 bg-sky-300/15 text-sky-200",
                   ].join(" ")}
+                  style={CUT_SM}
                 >
                   {setting.type === "solo" ? "솔로" : "파티"}
                 </span>
 
-                <h1 className="min-w-0 truncate text-xl font-black tracking-tight text-[var(--yellow-text)] sm:text-3xl md:text-4xl">
+                <h1 className="min-w-0 truncate text-xl font-black tracking-tight text-white sm:text-3xl md:text-4xl">
                   {setting.title}
                 </h1>
               </div>
 
-              <p className="mt-2 whitespace-pre-wrap break-words text-xs font-semibold leading-5 text-zinc-200 sm:text-sm sm:leading-6 lg:pl-[62px]">
+              <p className="mt-2 whitespace-pre-wrap break-words text-xs font-semibold leading-5 text-ef-muted sm:text-sm sm:leading-6 lg:pl-[62px]">
                 {setting.description || "등록된 설명이 없습니다."}
               </p>
 
@@ -234,12 +266,12 @@ export default async function OperatorSettingDetailPage({
                 <span className="max-w-full truncate text-white">
                   {setting.nickname || "닉네임 없음"}
                 </span>
-                <span className="text-zinc-600">|</span>
-                <span className="text-[var(--yellow-text)]">
+                <span className="text-ef-line">|</span>
+                <span className="font-mono tabular-nums text-ef-accent">
                   추천수 {Number(setting.likeCount ?? 0).toLocaleString()}
                 </span>
-                <span className="text-zinc-600">|</span>
-                <span className="text-[var(--yellow-text)]">
+                <span className="text-ef-line">|</span>
+                <span className="font-mono tabular-nums text-ef-accent">
                   조회수 {Number(setting.viewCount ?? 0).toLocaleString()}
                 </span>
               </div>
@@ -250,12 +282,13 @@ export default async function OperatorSettingDetailPage({
                 <>
                   <Link
                     href={`/settings/party?edit=${setting.id}`}
-                    className="inline-flex h-9 min-w-[56px] items-center justify-center rounded-xl border border-[var(--yellow-border-soft)] bg-black px-3 text-xs font-black text-zinc-200 transition hover:bg-[var(--card-bg-hover)] hover:text-[var(--yellow-text)] sm:h-10 sm:min-w-[64px] sm:px-4 sm:text-sm"
+                    className="inline-flex h-9 min-w-[56px] items-center justify-center border border-ef-line bg-ef-card px-3 text-xs font-black text-ef-muted transition hover:border-ef-accent/40 hover:text-ef-accent-soft sm:h-10 sm:min-w-[64px] sm:px-4 sm:text-sm"
+                    style={CUT_SM}
                   >
                     수정
                   </Link>
 
-                  <div className="[&_button]:inline-flex [&_button]:h-9 [&_button]:min-w-[56px] [&_button]:items-center [&_button]:justify-center [&_button]:rounded-xl [&_button]:px-3 [&_button]:py-0 [&_button]:text-xs sm:[&_button]:h-10 sm:[&_button]:min-w-[64px] sm:[&_button]:px-4 sm:[&_button]:text-sm">
+                  <div className="[&_button]:inline-flex [&_button]:h-9 [&_button]:min-w-[56px] [&_button]:items-center [&_button]:justify-center [&_button]:px-3 [&_button]:py-0 [&_button]:text-xs sm:[&_button]:h-10 sm:[&_button]:min-w-[64px] sm:[&_button]:px-4 sm:[&_button]:text-sm">
                     <DeleteOperatorSettingButton id={setting.id} />
                   </div>
                 </>
@@ -269,7 +302,8 @@ export default async function OperatorSettingDetailPage({
 
               <Link
                 href="/settings"
-                className="inline-flex h-9 min-w-[56px] items-center justify-center rounded-xl border border-[var(--yellow-border-soft)] bg-black px-3 text-xs font-black text-zinc-200 transition hover:bg-[var(--card-bg-hover)] hover:text-[var(--yellow-text)] sm:h-10 sm:min-w-[64px] sm:px-4 sm:text-sm"
+                className="inline-flex h-9 min-w-[56px] items-center justify-center border border-ef-line bg-ef-card px-3 text-xs font-black text-ef-muted transition hover:border-ef-accent/40 hover:text-ef-accent-soft sm:h-10 sm:min-w-[64px] sm:px-4 sm:text-sm"
+                style={CUT_SM}
               >
                 목록
               </Link>
@@ -277,12 +311,16 @@ export default async function OperatorSettingDetailPage({
           </div>
         </header>
 
-        <nav className="sticky top-2 z-30 mb-3 rounded-[18px] border border-yellow-500/15 bg-black/90 p-2 backdrop-blur lg:hidden">
+        <nav
+          className="sticky top-2 z-30 mb-3 border border-ef-line bg-ef-bg/95 p-2 backdrop-blur lg:hidden"
+          style={CUT_SM}
+        >
           <div className="flex gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {registeredSlots.length > 1 ? (
               <a
                 href="#party"
-                className="shrink-0 rounded-xl border border-yellow-500/15 bg-[#05070b] px-3 py-2 text-xs font-black text-zinc-300 transition hover:border-yellow-400/40 hover:text-yellow-200"
+                className="shrink-0 border border-ef-line bg-ef-card px-3 py-2 font-mono text-[11px] font-black uppercase tracking-wide text-ef-muted transition hover:border-ef-accent/40 hover:text-ef-accent-soft"
+                style={CUT_SM}
               >
                 파티원
               </a>
@@ -291,7 +329,8 @@ export default async function OperatorSettingDetailPage({
             {cycle.length > 0 ? (
               <a
                 href="#cycle"
-                className="shrink-0 rounded-xl border border-yellow-500/15 bg-[#05070b] px-3 py-2 text-xs font-black text-zinc-300 transition hover:border-yellow-400/40 hover:text-yellow-200"
+                className="shrink-0 border border-ef-line bg-ef-card px-3 py-2 font-mono text-[11px] font-black uppercase tracking-wide text-ef-muted transition hover:border-ef-accent/40 hover:text-ef-accent-soft"
+                style={CUT_SM}
               >
                 사이클
               </a>
@@ -299,28 +338,32 @@ export default async function OperatorSettingDetailPage({
 
             <a
               href="#operator-panel"
-              className="shrink-0 rounded-xl border border-yellow-500/15 bg-[#05070b] px-3 py-2 text-xs font-black text-zinc-300 transition hover:border-yellow-400/40 hover:text-yellow-200"
+              className="shrink-0 border border-ef-line bg-ef-card px-3 py-2 font-mono text-[11px] font-black uppercase tracking-wide text-ef-muted transition hover:border-ef-accent/40 hover:text-ef-accent-soft"
+              style={CUT_SM}
             >
               오퍼레이터
             </a>
 
             <a
               href="#weapon-panel"
-              className="shrink-0 rounded-xl border border-yellow-500/15 bg-[#05070b] px-3 py-2 text-xs font-black text-zinc-300 transition hover:border-yellow-400/40 hover:text-yellow-200"
+              className="shrink-0 border border-ef-line bg-ef-card px-3 py-2 font-mono text-[11px] font-black uppercase tracking-wide text-ef-muted transition hover:border-ef-accent/40 hover:text-ef-accent-soft"
+              style={CUT_SM}
             >
               무기
             </a>
 
             <a
               href="#gear-panel"
-              className="shrink-0 rounded-xl border border-yellow-500/15 bg-[#05070b] px-3 py-2 text-xs font-black text-zinc-300 transition hover:border-yellow-400/40 hover:text-yellow-200"
+              className="shrink-0 border border-ef-line bg-ef-card px-3 py-2 font-mono text-[11px] font-black uppercase tracking-wide text-ef-muted transition hover:border-ef-accent/40 hover:text-ef-accent-soft"
+              style={CUT_SM}
             >
               장비
             </a>
 
             <a
               href="#final-stat-panel"
-              className="shrink-0 rounded-xl border border-yellow-500/15 bg-[#05070b] px-3 py-2 text-xs font-black text-zinc-300 transition hover:border-yellow-400/40 hover:text-yellow-200"
+              className="shrink-0 border border-ef-line bg-ef-card px-3 py-2 font-mono text-[11px] font-black uppercase tracking-wide text-ef-muted transition hover:border-ef-accent/40 hover:text-ef-accent-soft"
+              style={CUT_SM}
             >
               최종 스탯
             </a>
@@ -378,7 +421,11 @@ function PartyMemberPanel({
   registeredSlots: [SlotKey, SlotSetting | null][];
 }) {
   return (
-    <section id="party" className="panel mb-3 scroll-mt-24 rounded-[18px] p-2.5 sm:p-3">
+    <section
+      id="party"
+      className="mb-3 scroll-mt-24 border border-ef-line bg-ef-card2 p-2.5 sm:p-3"
+      style={CUT}
+    >
       <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
         {registeredSlots.map(([slotKey, slot]) => {
           const operator = getOperator(slot?.operatorSlug);
@@ -392,13 +439,14 @@ function PartyMemberPanel({
               key={slotKey}
               href={`/settings/${settingId}?slot=${slotKey}`}
               className={[
-                "group grid min-h-[66px] grid-cols-[48px_minmax(0,1fr)_48px] items-center gap-2 overflow-hidden rounded-[14px] border bg-black/55 p-2 transition sm:min-h-[70px] sm:grid-cols-[52px_minmax(0,1fr)_52px]",
+                "group grid min-h-[66px] grid-cols-[48px_minmax(0,1fr)_48px] items-center gap-2 overflow-hidden border bg-ef-card p-2 transition sm:min-h-[70px] sm:grid-cols-[52px_minmax(0,1fr)_52px]",
                 active
-                  ? "border-yellow-400/60 shadow-[0_0_18px_rgba(255,210,74,0.16)]"
-                  : "border-white/10 hover:border-yellow-400/35 hover:bg-black/75",
+                  ? "border-ef-accent/60"
+                  : "border-ef-line hover:border-ef-accent/35",
               ].join(" ")}
+              style={active ? { ...CUT_SM, boxShadow: "inset 0 -2px 0 0 #ff9a2f" } : CUT_SM}
             >
-              <div className="relative h-12 w-12 overflow-hidden rounded-xl bg-black sm:h-[52px] sm:w-[52px]">
+              <div className="relative h-12 w-12 overflow-hidden bg-black sm:h-[52px] sm:w-[52px]" style={CUT_SM}>
                 <Image
                   src={getOperatorImage(operator)}
                   alt={operator.name}
@@ -424,17 +472,21 @@ function PartyMemberPanel({
                 <div className="flex items-center gap-1.5">
                   <span
                     className={[
-                      "rounded-md border px-1.5 py-0.5 text-[10px] font-black",
+                      "border px-1.5 py-0.5 font-mono text-[10px] font-black uppercase tracking-wide",
                       active
-                        ? "border-yellow-300/40 bg-yellow-300/15 text-yellow-200"
-                        : "border-white/15 bg-white/5 text-zinc-300",
+                        ? "border-ef-accent/40 bg-[rgba(255,210,74,0.15)] text-ef-accent"
+                        : "border-ef-line bg-ef-card2 text-ef-muted",
                     ].join(" ")}
+                    style={CUT_SM}
                   >
                     {slotLabelMap[slotKey]}
                   </span>
 
                   {active ? (
-                    <span className="rounded-md border border-yellow-300/30 bg-yellow-300/10 px-1.5 py-0.5 text-[10px] font-black text-yellow-200">
+                    <span
+                      className="border border-ef-accent/30 bg-[rgba(255,210,74,0.1)] px-1.5 py-0.5 font-mono text-[10px] font-black uppercase tracking-wide text-ef-accent"
+                      style={CUT_SM}
+                    >
                       선택중
                     </span>
                   ) : null}
@@ -443,12 +495,12 @@ function PartyMemberPanel({
                 <h3 className="mt-1 truncate text-sm font-black text-white">
                   {operator.name}
                 </h3>
-                <p className="truncate text-[11px] font-bold text-zinc-500">
+                <p className="truncate font-mono text-[11px] font-bold text-ef-muted">
                   {operator.enName}
                 </p>
               </div>
 
-              <div className="flex h-12 w-12 items-center justify-center justify-self-end overflow-hidden rounded-xl border border-white/10 bg-black sm:h-[52px] sm:w-[52px]">
+              <div className="flex h-12 w-12 items-center justify-center justify-self-end overflow-hidden border border-ef-line bg-black sm:h-[52px] sm:w-[52px]" style={CUT_SM}>
                 {weapon ? (
                   <Image
                     src={getWeaponImage(weapon)}
@@ -458,7 +510,7 @@ function PartyMemberPanel({
                     className="object-contain p-1"
                   />
                 ) : (
-                  <span className="text-[10px] font-black text-zinc-600">무기</span>
+                  <span className="text-[10px] font-black text-ef-muted">무기</span>
                 )}
               </div>
             </Link>
@@ -473,10 +525,17 @@ function CycleViewPanel({ cycle }: { cycle: any[] }) {
   if (!cycle.length) return null;
 
   return (
-    <section id="cycle" className="panel mb-3 scroll-mt-24 rounded-[18px] p-3 sm:p-4">
-      <h2 className="mb-3 text-lg font-black text-[var(--yellow-text)] sm:mb-4 sm:text-xl">
-        운용 사이클
-      </h2>
+    <section
+      id="cycle"
+      className="relative mb-3 scroll-mt-24 overflow-hidden border border-ef-line bg-ef-card2 p-3 sm:p-4"
+      style={CUT}
+    >
+      <div className="mb-3 flex items-center gap-2 sm:mb-4">
+        <span className="h-4 w-1" style={{ background: PRIMARY }} />
+        <h2 className="text-lg font-black tracking-tight text-white sm:text-xl">
+          운용 사이클
+        </h2>
+      </div>
 
       <div className="flex max-w-full flex-wrap items-center gap-x-2 gap-y-8 overflow-visible pb-9 sm:gap-x-3">
         {resolveCycleStates(cycle).map(({ step, artsState, reactionState, physicalState }, index: number) => (
@@ -489,7 +548,7 @@ function CycleViewPanel({ cycle }: { cycle: any[] }) {
             />
 
             {index < cycle.length - 1 ? (
-              <span className="text-sm font-black text-yellow-300 sm:text-base">
+              <span className="text-sm font-black sm:text-base" style={{ color: PRIMARY }}>
                 →
               </span>
             ) : null}
@@ -545,11 +604,12 @@ function CycleViewIcon({
       title={`${step?.operatorName ?? "오퍼레이터"} - ${step?.skillName ?? "스킬"}`}
     >
       <span
-        className={`relative h-[72px] w-[72px] overflow-visible rounded-xl border-2 bg-black sm:h-20 sm:w-20 ${getElementBorderClass(
+        className={`relative h-[72px] w-[72px] overflow-visible border-2 bg-black sm:h-20 sm:w-20 ${getElementBorderClass(
         element,
       )}`}
+        style={CUT_SM}
       >
-        <span className="relative block h-full w-full overflow-hidden rounded-[10px]">
+        <span className="relative block h-full w-full overflow-hidden" style={CUT_SM}>
           <Image
             src={skillIcon}
             alt={step?.skillName ?? "스킬"}

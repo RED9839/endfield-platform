@@ -20,8 +20,14 @@ export type HomeBannerItem = {
   isExternalLinkEnabled?: boolean;
 };
 
-const YELLOW_BORDER = "border-yellow-500/15";
-const PANEL_BG = "bg-[#05070b]";
+const CUT = {
+  clipPath:
+    "polygon(0 0, calc(100% - 13px) 0, 100% 13px, 100% 100%, 13px 100%, 0 calc(100% - 13px))",
+};
+const CUT_SM = {
+  clipPath:
+    "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))",
+};
 
 function getLabel(kind: HomeBannerKind) {
   if (kind === "operator") return "특별 허가 헤드헌팅";
@@ -98,7 +104,8 @@ export default function HomeBannerHubPanel({
   if (!cur) {
     return (
       <section
-        className={`flex h-full w-full items-center justify-center rounded-[24px] border ${YELLOW_BORDER} ${PANEL_BG} text-sm text-zinc-400`}
+        className="flex h-full w-full items-center justify-center border border-ef-line bg-ef-card2 text-sm text-ef-muted"
+        style={CUT}
       >
         배너 없음
       </section>
@@ -112,21 +119,22 @@ export default function HomeBannerHubPanel({
   return (
     <section className="grid h-full w-full grid-rows-[52px_minmax(0,1fr)] gap-2 overflow-hidden">
       <div
-        className={`flex min-h-0 items-center justify-between overflow-hidden rounded-[18px] border ${YELLOW_BORDER} ${PANEL_BG} px-4`}
+        className="flex min-h-0 items-center justify-between overflow-hidden border border-ef-line bg-ef-card2 px-4"
+        style={CUT_SM}
       >
         <div className="flex min-w-0 flex-1 items-center gap-3 overflow-hidden">
           <span
             title={labelText}
-            className="max-w-[150px] shrink-0 truncate text-sm font-black text-yellow-300"
+            className="max-w-[150px] shrink-0 truncate text-sm font-black text-ef-accent"
           >
             {labelText}
           </span>
 
-          <span className="h-5 w-px shrink-0 bg-yellow-400/35" />
+          <span className="h-5 w-px shrink-0 bg-ef-line" />
 
           <h2
             title={cur.title}
-            className="min-w-0 flex-1 truncate text-sm font-black text-yellow-300"
+            className="min-w-0 flex-1 truncate text-sm font-black text-ef-accent"
           >
             {cur.title}
           </h2>
@@ -137,22 +145,22 @@ export default function HomeBannerHubPanel({
             <button
               type="button"
               onClick={movePrev}
-              className="text-yellow-300 transition hover:text-yellow-100"
+              className="text-ef-accent transition hover:text-ef-accent-soft"
               aria-label="이전 배너"
             >
               &lt;
             </button>
 
-            <span className="min-w-[48px] text-center text-zinc-400">
-              <span className="text-yellow-300">{safeIndex + 1}</span>
-              <span className="mx-1 text-zinc-600">/</span>
+            <span className="min-w-[48px] text-center font-mono text-ef-muted tabular-nums">
+              <span className="text-ef-accent">{safeIndex + 1}</span>
+              <span className="mx-1 text-ef-muted/60">/</span>
               <span>{items.length}</span>
             </span>
 
             <button
               type="button"
               onClick={moveNext}
-              className="text-yellow-300 transition hover:text-yellow-100"
+              className="text-ef-accent transition hover:text-ef-accent-soft"
               aria-label="다음 배너"
             >
               &gt;
@@ -162,7 +170,8 @@ export default function HomeBannerHubPanel({
       </div>
 
       <div
-        className={`relative flex h-full min-h-0 w-full items-center justify-center overflow-hidden rounded-[20px] border ${YELLOW_BORDER} bg-black`}
+        className="relative flex h-full min-h-0 w-full items-center justify-center overflow-hidden border border-ef-line bg-black"
+        style={CUT}
       >
         {!imageFailed ? (
           <a
@@ -173,7 +182,7 @@ export default function HomeBannerHubPanel({
             title={cur.title}
           >
             {!isLoaded ? (
-              <div className="absolute inset-0 flex items-center justify-center bg-black text-sm text-zinc-500">
+              <div className="absolute inset-0 flex items-center justify-center bg-black text-sm text-ef-muted">
                 배너 이미지를 불러오는 중입니다.
               </div>
             ) : null}
@@ -193,7 +202,7 @@ export default function HomeBannerHubPanel({
             />
           </a>
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-black text-sm text-zinc-500">
+          <div className="flex h-full w-full items-center justify-center bg-black text-sm text-ef-muted">
             이미지를 불러오지 못했습니다.
           </div>
         )}

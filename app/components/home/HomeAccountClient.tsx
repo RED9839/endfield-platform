@@ -5,6 +5,12 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useEffect } from "react";
 
+const ACCENT = "#ffd24a";
+const CUT_SM = {
+  clipPath:
+    "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))",
+};
+
 // 홈을 정적(CDN 캐시)으로 유지하기 위해 로그인 의존 UI만 클라이언트 조각으로 분리한다.
 // 세션 JWT가 nickname/role 을 담고 있어 별도 DB 조회 없이 useSession 만으로 충분하다.
 type HomeSessionUser = {
@@ -42,7 +48,7 @@ export function HomeHeaderAccountClient() {
 
   if (loading) {
     return (
-      <div className="ml-auto h-9 w-20 animate-pulse rounded-xl bg-white/5" />
+      <div className="ml-auto h-9 w-20 animate-pulse bg-ef-card2" style={CUT_SM} />
     );
   }
 
@@ -51,7 +57,8 @@ export function HomeHeaderAccountClient() {
       {user?.role === "ADMIN" ? (
         <Link
           href="/admin"
-          className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs font-black text-red-300 transition hover:bg-red-500/20"
+          className="border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs font-black text-red-300 transition hover:bg-red-500/20"
+          style={CUT_SM}
         >
           관리자 페이지
         </Link>
@@ -59,7 +66,8 @@ export function HomeHeaderAccountClient() {
 
       <Link
         href={user ? "/profile" : "/login"}
-        className="rounded-lg bg-[#ffd24a] px-4 py-2 text-xs font-black text-black shadow-[0_0_18px_rgba(255,210,74,0.18)] transition hover:brightness-110"
+        className="px-4 py-2 text-xs font-black text-black transition hover:brightness-110"
+        style={{ ...CUT_SM, background: ACCENT }}
       >
         {user ? "마이페이지" : "로그인"}
       </Link>
@@ -71,7 +79,7 @@ export function MobileAccountClient() {
   const { user, loading } = useHomeUser();
 
   if (loading) {
-    return <div className="h-9 w-20 animate-pulse rounded-xl bg-white/5" />;
+    return <div className="h-9 w-20 animate-pulse bg-ef-card2" style={CUT_SM} />;
   }
 
   return (
@@ -79,7 +87,8 @@ export function MobileAccountClient() {
       {user?.role === "ADMIN" ? (
         <Link
           href="/admin"
-          className="rounded-lg border border-red-500/30 bg-red-500/10 px-2.5 py-2 text-[10px] font-black text-red-300"
+          className="border border-red-500/30 bg-red-500/10 px-2.5 py-2 text-[10px] font-black text-red-300"
+          style={CUT_SM}
         >
           관리자
         </Link>
@@ -87,7 +96,8 @@ export function MobileAccountClient() {
 
       <Link
         href={user ? "/profile" : "/login"}
-        className="block max-w-[32vw] truncate rounded-xl bg-[#ffd24a] px-3 py-2 text-xs font-black text-black shadow-[0_0_18px_rgba(255,210,74,0.18)]"
+        className="block max-w-[32vw] truncate px-3 py-2 text-xs font-black text-black"
+        style={{ ...CUT_SM, background: ACCENT }}
       >
         {user ? "마이페이지" : "로그인"}
       </Link>

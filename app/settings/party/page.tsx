@@ -18,10 +18,17 @@ import {
   type SetStateAction,
 } from "react";
 
-const YELLOW_MAIN = "#ffd24a";
-const YELLOW_TEXT = "#ffdc70";
-const YELLOW_BORDER = "rgba(255,196,74,0.14)";
-const YELLOW_BORDER_SOFT = "rgba(255,196,74,0.10)";
+// ===== Endfield SF 디자인 토큰 =====
+const PRIMARY = "#ff9a2f";
+const ACCENT = "#ffd24a";
+const CUT = {
+  clipPath:
+    "polygon(0 0, calc(100% - 13px) 0, 100% 13px, 100% 100%, 13px 100%, 0 calc(100% - 13px))",
+};
+const CUT_SM = {
+  clipPath:
+    "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))",
+};
 
 const OPERATOR_SETTING_DRAFT_KEY = "endfield-operator-setting-draft-v2";
 const SOLO_EDITOR_STORAGE_KEY = "endfield-operator-setting-form-v1";
@@ -34,7 +41,10 @@ const SettingEditor = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex min-h-[520px] items-center justify-center rounded-[20px] border border-yellow-500/10 bg-black/30 text-sm font-bold text-zinc-500">
+      <div
+        className="flex min-h-[520px] items-center justify-center border border-ef-line bg-ef-card text-sm font-bold text-ef-muted"
+        style={CUT}
+      >
         설정 에디터를 불러오는 중...
       </div>
     ),
@@ -574,8 +584,8 @@ export default function OperatorSettingRegisterPage() {
 
   if (!hydrated || loadingEdit) {
     return (
-      <main className="min-h-screen bg-[#050505] px-3 py-3 text-white sm:px-4 md:px-6 md:py-5">
-        <div className="flex min-h-[60vh] items-center justify-center text-sm font-bold text-zinc-500">
+      <main className="min-h-screen bg-ef-bg px-3 py-3 text-ef-ink sm:px-4 md:px-6 md:py-5">
+        <div className="flex min-h-[60vh] items-center justify-center text-sm font-bold text-ef-muted">
           오퍼레이터 세팅 불러오는 중...
         </div>
       </main>
@@ -583,29 +593,35 @@ export default function OperatorSettingRegisterPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#050505] px-3 py-3 text-white sm:px-4 md:px-6 md:py-5">
-      <div className="mx-auto max-w-[1840px]">
+    <main className="relative min-h-screen overflow-x-clip bg-ef-bg px-3 py-3 text-ef-ink sm:px-4 md:px-6 md:py-5">
+      <div className="pointer-events-none fixed inset-0 z-0 opacity-[0.022] [background-image:radial-gradient(circle,#ffd24a_1px,transparent_1px)] [background-size:22px_22px]" />
+      <div className="relative z-10 mx-auto max-w-[1840px]">
+        {/* TOP HUD */}
+        <div className="mb-2.5 flex items-center gap-2">
+          <span className="h-3 w-3" style={{ background: PRIMARY }} />
+          <span className="font-mono text-[11px] font-bold uppercase tracking-[0.3em] text-ef-muted">Setting Editor</span>
+          <span className="hidden font-mono text-[11px] tracking-[0.2em] text-ef-muted/60 sm:inline">// 오퍼레이터 세팅</span>
+        </div>
+
         <header
-          className="mb-3 rounded-[20px] bg-[#05070b] p-4 shadow-[0_0_30px_rgba(250,204,21,0.04)] sm:mb-5 sm:rounded-[24px] sm:p-5"
-          style={{ border: `1px solid ${YELLOW_BORDER}` }}
+          className="relative mb-3 overflow-hidden border border-ef-line bg-ef-card2 p-4 sm:mb-5 sm:p-5"
+          style={CUT}
         >
-          <div className="flex items-end justify-between gap-3">
+          <span
+            className="absolute inset-x-0 top-0 block h-0.5 w-full"
+            style={{ background: `linear-gradient(90deg, ${PRIMARY}, transparent 55%)` }}
+          />
+          <div className="relative flex items-end justify-between gap-3">
             <div className="min-w-0">
-              <p
-                className="text-[10px] font-semibold tracking-[0.28em] sm:text-[11px] sm:tracking-[0.35em]"
-                style={{ color: YELLOW_TEXT }}
-              >
+              <p className="font-mono text-[11px] font-bold uppercase tracking-[0.24em] text-ef-muted">
                 엔드필드 지원 플랫폼
               </p>
 
-              <h1
-                className="mt-2 text-2xl font-black tracking-tight sm:text-4xl"
-                style={{ color: YELLOW_TEXT }}
-              >
+              <h1 className="mt-2 text-2xl font-black tracking-tight text-white sm:text-4xl">
                 {editId ? "오퍼레이터 세팅 수정" : "오퍼레이터 세팅 등록"}
               </h1>
 
-              <p className="mt-1 line-clamp-2 text-xs text-zinc-500 sm:text-sm">
+              <p className="mt-1 line-clamp-2 text-xs text-ef-muted sm:text-sm">
                 메인 세팅만 등록하면 단일 세팅, 파티원 세팅까지 등록하면 파티 세팅으로 저장됩니다.
               </p>
             </div>
@@ -614,8 +630,8 @@ export default function OperatorSettingRegisterPage() {
               <button
                 type="button"
                 onClick={resetDraft}
-                className="rounded-xl bg-black px-3 py-2 text-xs font-bold text-zinc-200 transition hover:bg-[#0b1018] sm:px-4 sm:text-sm"
-                style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
+                className="border border-ef-line bg-ef-card px-3 py-2 text-xs font-bold text-ef-muted transition hover:border-ef-accent/40 hover:text-ef-accent-soft sm:px-4 sm:text-sm"
+                style={CUT_SM}
               >
                 초기화
               </button>
@@ -624,16 +640,16 @@ export default function OperatorSettingRegisterPage() {
                 type="button"
                 onClick={saveOperatorSetting}
                 disabled={saving}
-                className="rounded-xl px-3 py-2 text-xs font-black text-black transition hover:brightness-110 disabled:cursor-wait disabled:opacity-60 sm:px-5 sm:text-sm"
-                style={{ background: YELLOW_MAIN }}
+                className="px-3 py-2 text-xs font-black text-black transition hover:brightness-110 disabled:cursor-wait disabled:opacity-60 sm:px-5 sm:text-sm"
+                style={{ ...CUT_SM, background: ACCENT }}
               >
                 {saving ? "저장 중" : editId ? "저장" : "저장"}
               </button>
 
               <Link
                 href={editId ? `/settings/${editId}` : "/settings"}
-                className="rounded-xl bg-black px-3 py-2 text-xs font-bold text-zinc-200 transition hover:bg-[#0b1018] sm:px-4 sm:text-sm"
-                style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
+                className="border border-ef-line bg-ef-card px-3 py-2 text-xs font-bold text-ef-muted transition hover:border-ef-accent/40 hover:text-ef-accent-soft sm:px-4 sm:text-sm"
+                style={CUT_SM}
                 onClick={() => {
                   if (typeof window !== "undefined" && editId) {
                     window.localStorage.removeItem(SOLO_EDITOR_STORAGE_KEY);
@@ -647,11 +663,15 @@ export default function OperatorSettingRegisterPage() {
           </div>
         </header>
 
-        <nav className="sticky top-2 z-40 mb-3 rounded-[18px] border border-yellow-500/15 bg-black/90 p-2 backdrop-blur lg:hidden">
+        <nav
+          className="sticky top-2 z-40 mb-3 border border-ef-line bg-ef-bg/95 p-2 backdrop-blur lg:hidden"
+          style={CUT_SM}
+        >
           <div className="flex gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <a
               href="#basic"
-              className="shrink-0 rounded-xl border border-yellow-500/15 bg-[#05070b] px-3 py-2 text-xs font-black text-zinc-300 transition hover:border-yellow-400/40 hover:text-yellow-200"
+              className="shrink-0 border border-ef-line bg-ef-card px-3 py-2 font-mono text-[11px] font-black uppercase tracking-wide text-ef-muted transition hover:border-ef-accent/40 hover:text-ef-accent-soft"
+              style={CUT_SM}
             >
               기본 정보
             </a>
@@ -659,14 +679,16 @@ export default function OperatorSettingRegisterPage() {
             <button
               type="button"
               onClick={() => setMobileModal("cycle")}
-              className="shrink-0 rounded-xl border border-yellow-500/15 bg-[#05070b] px-3 py-2 text-xs font-black text-zinc-300 transition hover:border-yellow-400/40 hover:text-yellow-200"
+              className="shrink-0 border border-ef-line bg-ef-card px-3 py-2 font-mono text-[11px] font-black uppercase tracking-wide text-ef-muted transition hover:border-ef-accent/40 hover:text-ef-accent-soft"
+              style={CUT_SM}
             >
               사이클 등록
             </button>
 
             <a
               href="#slots"
-              className="shrink-0 rounded-xl border border-yellow-500/15 bg-[#05070b] px-3 py-2 text-xs font-black text-zinc-300 transition hover:border-yellow-400/40 hover:text-yellow-200"
+              className="shrink-0 border border-ef-line bg-ef-card px-3 py-2 font-mono text-[11px] font-black uppercase tracking-wide text-ef-muted transition hover:border-ef-accent/40 hover:text-ef-accent-soft"
+              style={CUT_SM}
             >
               세팅 구성
             </a>
@@ -674,7 +696,8 @@ export default function OperatorSettingRegisterPage() {
             <button
               type="button"
               onClick={() => setMobileModal("preview")}
-              className="shrink-0 rounded-xl border border-yellow-500/15 bg-[#05070b] px-3 py-2 text-xs font-black text-zinc-300 transition hover:border-yellow-400/40 hover:text-yellow-200"
+              className="shrink-0 border border-ef-line bg-ef-card px-3 py-2 font-mono text-[11px] font-black uppercase tracking-wide text-ef-muted transition hover:border-ef-accent/40 hover:text-ef-accent-soft"
+              style={CUT_SM}
             >
               저장 미리보기
             </button>
@@ -683,12 +706,12 @@ export default function OperatorSettingRegisterPage() {
 
         <section
           id="basic"
-          className="mb-3 scroll-mt-24 rounded-[20px] bg-[#05070b] p-4 sm:mb-5 sm:rounded-[24px] sm:p-5"
-          style={{ border: `1px solid ${YELLOW_BORDER}` }}
+          className="mb-3 scroll-mt-24 border border-ef-line bg-ef-card2 p-4 sm:mb-5 sm:p-5"
+          style={CUT}
         >
           <div className="grid gap-3 lg:grid-cols-[360px_minmax(0,1fr)] lg:gap-4">
             <label className="grid gap-2">
-              <span className="text-[11px] font-black tracking-[0.2em] text-[#ffdc70] sm:text-xs">
+              <span className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-ef-muted sm:text-xs">
                 제목
               </span>
               <input
@@ -697,16 +720,17 @@ export default function OperatorSettingRegisterPage() {
                   setDraft((prev) => ({ ...prev, title: event.target.value }))
                 }
                 placeholder="오퍼레이터 세팅 제목"
-                className="h-10 rounded-xl border border-white/10 bg-black px-4 text-xs font-bold text-white outline-none placeholder:text-zinc-600 focus:border-yellow-400/40 sm:h-11 sm:text-sm"
+                className="h-10 border border-ef-line bg-ef-card px-4 text-xs font-bold text-ef-accent outline-none placeholder:text-ef-muted/70 focus:border-ef-accent/50 sm:h-11 sm:text-sm"
+                style={CUT_SM}
               />
             </label>
 
             <label className="grid content-start gap-2">
               <span className="flex items-center justify-between gap-3">
-                <span className="text-[11px] font-black tracking-[0.2em] text-[#ffdc70] sm:text-xs">
+                <span className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-ef-muted sm:text-xs">
                   설명
                 </span>
-                <span className="text-[10px] font-bold text-zinc-500 sm:text-[11px]">
+                <span className="font-mono text-[10px] font-bold tabular-nums text-ef-muted sm:text-[11px]">
                   {draft.description.length.toLocaleString()} /{" "}
                   {MAX_DESCRIPTION_LENGTH.toLocaleString()}
                 </span>
@@ -723,7 +747,8 @@ export default function OperatorSettingRegisterPage() {
                 maxLength={MAX_DESCRIPTION_LENGTH}
                 rows={3}
                 placeholder="세팅 운용 방식, 추천 상황, 핵심 옵션 등을 입력"
-                className="min-h-[76px] w-full resize-none rounded-xl border border-white/10 bg-black px-4 py-3 text-xs font-bold leading-5 text-white outline-none placeholder:text-zinc-600 focus:border-yellow-400/40 sm:min-h-[84px] sm:text-sm sm:leading-6"
+                className="min-h-[76px] w-full resize-none border border-ef-line bg-ef-card px-4 py-3 text-xs font-bold leading-5 text-ef-ink outline-none placeholder:text-ef-muted/70 focus:border-ef-accent/50 sm:min-h-[84px] sm:text-sm sm:leading-6"
+                style={CUT_SM}
               />
             </label>
           </div>
@@ -741,14 +766,17 @@ export default function OperatorSettingRegisterPage() {
         <section className="grid gap-3 lg:gap-5 xl:grid-cols-[minmax(0,1fr)_320px] 2xl:grid-cols-[minmax(0,1fr)_360px]">
           <div
             id="slots"
-            className="scroll-mt-24 rounded-[20px] bg-[#05070b] p-4 sm:rounded-[24px] sm:p-5"
-            style={{ border: `1px solid ${YELLOW_BORDER}` }}
+            className="scroll-mt-24 border border-ef-line bg-ef-card2 p-4 sm:p-5"
+            style={CUT}
           >
             <div className="mb-3 grid gap-1 sm:mb-4 sm:flex sm:items-center sm:justify-between">
-              <h2 className="text-lg font-black text-[#ffdc70] sm:text-xl">
-                세팅 구성
-              </h2>
-              <p className="text-xs font-bold text-zinc-500">
+              <div className="flex items-center gap-2">
+                <span className="h-4 w-1" style={{ background: PRIMARY }} />
+                <h2 className="text-lg font-black tracking-tight text-white sm:text-xl">
+                  세팅 구성
+                </h2>
+              </div>
+              <p className="text-xs font-bold text-ef-muted">
                 메인 오퍼레이터 등록 후 파티원 세팅을 추가할 수 있습니다.
               </p>
             </div>
@@ -798,11 +826,12 @@ export default function OperatorSettingRegisterPage() {
 
           <aside
             id="preview"
-            className="hidden h-fit scroll-mt-24 rounded-[20px] bg-[#05070b] p-4 sm:rounded-[24px] sm:p-5 xl:sticky xl:top-5 lg:block"
-            style={{ border: `1px solid ${YELLOW_BORDER}` }}
+            className="hidden h-fit scroll-mt-24 border border-ef-line bg-ef-card2 p-4 sm:p-5 xl:sticky xl:top-5 lg:block"
+            style={CUT}
           >
-            <div className="mb-3 flex items-center justify-between sm:mb-4">
-              <h2 className="text-lg font-black text-[#ffdc70] sm:text-xl">
+            <div className="mb-3 flex items-center gap-2 sm:mb-4">
+              <span className="h-4 w-1" style={{ background: PRIMARY }} />
+              <h2 className="text-lg font-black tracking-tight text-white sm:text-xl">
                 저장 미리보기
               </h2>
             </div>
@@ -875,26 +904,30 @@ function MobilePanelModal({
     <div className="fixed inset-0 z-[110] bg-black/80 p-3 backdrop-blur-sm lg:hidden">
       <div
         className={[
-          "mx-auto flex flex-col overflow-hidden rounded-[22px] bg-[#05070b]",
+          "mx-auto flex flex-col overflow-hidden border border-ef-line bg-ef-card2",
           compact
             ? "h-auto max-h-[82vh] max-w-[320px]"
             : cycle
               ? "h-auto max-h-[88vh] max-w-[720px]"
               : "h-full max-w-[720px]",
         ].join(" ")}
-        style={{ border: `1px solid ${YELLOW_BORDER}` }}
+        style={CUT}
       >
-        <div
-          className="flex shrink-0 items-center justify-between gap-3 px-4 py-3"
-          style={{ borderBottom: `1px solid ${YELLOW_BORDER_SOFT}` }}
-        >
-          <h2 className="truncate text-xl font-black text-[#ffdc70]">{title}</h2>
+        <span
+          className="block h-0.5 w-full shrink-0"
+          style={{ background: `linear-gradient(90deg, ${PRIMARY}, transparent 55%)` }}
+        />
+        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-ef-line px-4 py-3">
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="h-4 w-1 shrink-0" style={{ background: PRIMARY }} />
+            <h2 className="truncate text-xl font-black tracking-tight text-white">{title}</h2>
+          </div>
 
           <button
             type="button"
             onClick={onClose}
-            className="rounded-xl bg-black px-3 py-2 text-xs font-bold text-zinc-200 hover:text-yellow-300"
-            style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
+            className="border border-ef-line bg-ef-card px-3 py-2 text-xs font-bold text-ef-muted transition hover:border-ef-accent/40 hover:text-ef-accent-soft"
+            style={CUT_SM}
           >
             닫기
           </button>
@@ -922,27 +955,32 @@ function SettingEditorModal({
   return (
     <div className="fixed inset-0 z-[120] bg-black/80 p-0 backdrop-blur-sm sm:p-4">
       <div
-        className="mx-auto flex h-full max-w-[1760px] flex-col overflow-hidden rounded-none bg-[#05070b] sm:rounded-[24px]"
-        style={{ border: `1px solid ${YELLOW_BORDER}` }}
+        className="mx-auto flex h-full max-w-[1760px] flex-col overflow-hidden border border-ef-line bg-ef-card2"
+        style={CUT}
       >
-        <div
-          className="flex shrink-0 items-center justify-between gap-3 px-4 py-3 sm:px-5 sm:py-4"
-          style={{ borderBottom: `1px solid ${YELLOW_BORDER_SOFT}` }}
-        >
-          <div className="min-w-0">
-            <p className="text-[10px] font-semibold tracking-[0.28em] text-[#ffdc70] sm:text-[11px] sm:tracking-[0.35em]">
-              오퍼레이터 세팅
-            </p>
-            <h2 className="mt-1 truncate text-xl font-black text-[#ffdc70] sm:text-2xl">
-              {title}
-            </h2>
+        <span
+          className="block h-0.5 w-full shrink-0"
+          style={{ background: `linear-gradient(90deg, ${PRIMARY}, transparent 55%)` }}
+        />
+        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-ef-line px-4 py-3 sm:px-5 sm:py-4">
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="h-4 w-1 shrink-0" style={{ background: PRIMARY }} />
+            <div className="min-w-0">
+              <p className="font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-ef-muted sm:text-[11px]">
+                오퍼레이터 세팅
+              </p>
+              <h2 className="mt-0.5 truncate text-xl font-black tracking-tight text-white sm:text-2xl">
+                {title}
+              </h2>
+            </div>
           </div>
 
           <div className="flex shrink-0 gap-2">
             <button
               type="button"
               onClick={onApply}
-              className="rounded-xl bg-[#ffd24a] px-4 py-2 text-xs font-black text-black sm:px-5 sm:text-sm"
+              className="px-4 py-2 text-xs font-black text-black sm:px-5 sm:text-sm"
+              style={{ ...CUT_SM, background: ACCENT }}
             >
               적용
             </button>
@@ -950,8 +988,8 @@ function SettingEditorModal({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-xl bg-black px-3 py-2 text-xs font-bold text-zinc-200 hover:text-yellow-300 sm:px-4 sm:text-sm"
-              style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
+              className="border border-ef-line bg-ef-card px-3 py-2 text-xs font-bold text-ef-muted transition hover:border-ef-accent/40 hover:text-ef-accent-soft sm:px-4 sm:text-sm"
+              style={CUT_SM}
             >
               닫기
             </button>
@@ -1072,22 +1110,27 @@ function CycleRegisterPanel({
     <section
       id="cycle"
       className={[
-        "scroll-mt-24 rounded-[20px] bg-[#05070b]",
-        embedded ? "mb-0 p-0" : "mb-3 p-4 sm:mb-5 sm:rounded-[24px] sm:p-5",
+        "scroll-mt-24",
+        embedded
+          ? "mb-0 p-0"
+          : "mb-3 border border-ef-line bg-ef-card2 p-4 sm:mb-5 sm:p-5",
       ].join(" ")}
-      style={embedded ? undefined : { border: `1px solid ${YELLOW_BORDER}` }}
+      style={embedded ? undefined : CUT}
     >
       <div className="mb-3 flex items-start justify-between gap-3 sm:mb-4">
         {embedded ? (
-          <p className="min-w-0 text-xs font-bold text-zinc-500">
+          <p className="min-w-0 text-xs font-bold text-ef-muted">
             등록한 오퍼레이터 스킬 아이콘을 눌러 운용 순서를 만드세요.
           </p>
         ) : (
           <div className="min-w-0">
-            <h2 className="text-lg font-black text-[#ffdc70] sm:text-xl">
-              사이클 등록
-            </h2>
-            <p className="mt-1 text-xs font-bold text-zinc-500">
+            <div className="flex items-center gap-2">
+              <span className="h-4 w-1" style={{ background: PRIMARY }} />
+              <h2 className="text-lg font-black tracking-tight text-white sm:text-xl">
+                사이클 등록
+              </h2>
+            </div>
+            <p className="mt-1 text-xs font-bold text-ef-muted">
               등록한 오퍼레이터 스킬 아이콘을 눌러 운용 순서를 만드세요.
             </p>
           </div>
@@ -1096,7 +1139,8 @@ function CycleRegisterPanel({
         <button
           type="button"
           onClick={() => setDraft((prev) => ({ ...prev, cycle: [] }))}
-          className="shrink-0 rounded-xl border border-white/10 bg-black px-3 py-2 text-xs font-black text-zinc-300 hover:text-yellow-300"
+          className="shrink-0 border border-ef-line bg-ef-card px-3 py-2 text-xs font-black text-ef-muted transition hover:border-ef-accent/40 hover:text-ef-accent-soft"
+          style={CUT_SM}
         >
           초기화
         </button>
@@ -1108,10 +1152,11 @@ function CycleRegisterPanel({
             {slots.map((slot) => (
               <div
                 key={slot.slotKey}
-                className="rounded-2xl border border-white/10 bg-black/40 p-2.5"
+                className="border border-ef-line bg-ef-card p-2.5"
+                style={CUT_SM}
               >
                 <div className="mb-3 flex items-center gap-2">
-                  <div className="relative h-8 w-8 overflow-hidden rounded-full border border-white/10 bg-black">
+                  <div className="relative h-8 w-8 overflow-hidden rounded-full border border-ef-line bg-black">
                     <Image
                       src={getOperatorImage(slot.operator)}
                       alt={slot.operator.name}
@@ -1139,13 +1184,19 @@ function CycleRegisterPanel({
             ))}
           </div>
         ) : (
-          <div className="rounded-xl border border-white/10 bg-black/40 p-4 text-sm font-bold text-zinc-500">
+          <div
+            className="border border-ef-line bg-ef-card p-4 text-sm font-bold text-ef-muted"
+            style={CUT_SM}
+          >
             먼저 메인 오퍼레이터 세팅을 등록하세요.
           </div>
         )}
 
-        <div className="rounded-2xl border border-yellow-500/15 bg-black/45 p-3 sm:p-4">
-          <p className="mb-3 text-sm font-black text-[#ffdc70]">사이클 순서</p>
+        <div className="border border-ef-line bg-ef-card p-3 sm:p-4" style={CUT_SM}>
+          <div className="mb-3 flex items-center gap-2">
+            <span className="h-3.5 w-1" style={{ background: PRIMARY }} />
+            <p className="font-mono text-[11px] font-black uppercase tracking-[0.2em] text-white">사이클 순서</p>
+          </div>
 
           {draft.cycle?.length ? (
             <div className="flex items-center gap-x-2 gap-y-8 overflow-x-auto pb-9 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:flex-wrap">
@@ -1161,13 +1212,13 @@ function CycleRegisterPanel({
                   </button>
 
                   {index < draft.cycle.length - 1 ? (
-                    <span className="text-sm font-black text-yellow-300">→</span>
+                    <span className="text-sm font-black" style={{ color: PRIMARY }}>→</span>
                   ) : null}
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-sm font-bold text-zinc-600">
+            <p className="text-sm font-bold text-ef-muted">
               아직 등록된 사이클이 없습니다.
             </p>
           )}
@@ -1193,12 +1244,13 @@ function CycleSkillButton({
     <button
       type="button"
       onClick={onClick}
-      className={`relative h-[72px] w-[72px] shrink-0 overflow-visible rounded-xl border-2 bg-black transition hover:scale-105 sm:h-20 sm:w-20 ${getElementBorderClass(
+      className={`relative h-[72px] w-[72px] shrink-0 overflow-visible border-2 bg-black transition hover:scale-105 sm:h-20 sm:w-20 ${getElementBorderClass(
         element,
       )}`}
+      style={CUT_SM}
       title={`${operator.name} - ${item.label}`}
     >
-      <span className="relative block h-full w-full overflow-hidden rounded-[10px]">
+      <span className="relative block h-full w-full overflow-hidden" style={CUT_SM}>
         <Image
           src={item.skill.icon}
           alt={item.skill.name ?? item.label}
@@ -1258,11 +1310,12 @@ function CycleStepIcon({
   return (
     <span className="flex items-center gap-1.5">
       <span
-        className={`relative h-[72px] w-[72px] overflow-visible rounded-xl border-2 bg-black sm:h-20 sm:w-20 ${getElementBorderClass(
+        className={`relative h-[72px] w-[72px] overflow-visible border-2 bg-black sm:h-20 sm:w-20 ${getElementBorderClass(
         step.element,
       )}`}
+        style={CUT_SM}
       >
-        <span className="relative block h-full w-full overflow-hidden rounded-[10px]">
+        <span className="relative block h-full w-full overflow-hidden" style={CUT_SM}>
           <Image
             src={step.skillIcon}
             alt={step.skillName ?? "스킬"}
@@ -1339,7 +1392,7 @@ function PreviewCard({
   userNickname: string;
 }) {
   return (
-    <div className="mx-auto w-[300px] overflow-hidden rounded-[18px] border border-white/10 bg-black">
+    <div className="mx-auto w-[300px] overflow-hidden border border-ef-line bg-black" style={CUT}>
       <div className="relative aspect-[300/320] overflow-hidden bg-black">
         {mainOperator ? (
           <Image
@@ -1350,7 +1403,7 @@ function PreviewCard({
             className="object-cover object-center"
           />
         ) : (
-          <div className="flex h-full items-center justify-center px-4 text-center text-sm font-bold text-zinc-600">
+          <div className="flex h-full items-center justify-center px-4 text-center text-sm font-bold text-ef-muted">
             메인 오퍼레이터 세팅을 등록하세요
           </div>
         )}
@@ -1374,11 +1427,12 @@ function PreviewCard({
           {mainOperator ? (
             <span
               className={[
-                "rounded-md border px-2 py-1 text-[10px] font-black backdrop-blur-sm",
+                "border px-2 py-1 font-mono text-[10px] font-black uppercase tracking-wide backdrop-blur-sm",
                 settingType === "solo"
-                  ? "border-yellow-300/40 bg-yellow-300/15 text-yellow-200"
+                  ? "border-ef-accent/40 bg-[rgba(255,210,74,0.15)] text-ef-accent"
                   : "border-sky-300/40 bg-sky-300/15 text-sky-200",
               ].join(" ")}
+              style={CUT_SM}
             >
               {settingTypeLabelMap[settingType]}
             </span>
@@ -1390,7 +1444,8 @@ function PreviewCard({
             {memberOperators.map((operator: any) => (
               <div
                 key={operator.slug}
-                className="relative h-10 w-10 overflow-hidden rounded-md border border-white/20 bg-black sm:h-12 sm:w-12"
+                className="relative h-10 w-10 overflow-hidden border border-ef-line bg-black sm:h-12 sm:w-12"
+                style={CUT_SM}
               >
                 <Image
                   src={getOperatorImage(operator)}
@@ -1415,7 +1470,7 @@ function PreviewCard({
         ) : null}
 
         {mainWeapon ? (
-          <div className="absolute bottom-3 right-3 z-10 flex h-11 w-11 items-center justify-center rounded-md border border-white/15 bg-black/50 backdrop-blur-sm sm:h-12 sm:w-12">
+          <div className="absolute bottom-3 right-3 z-10 flex h-11 w-11 items-center justify-center border border-ef-line bg-black/50 backdrop-blur-sm sm:h-12 sm:w-12" style={CUT_SM}>
             <Image
               src={getWeaponImage(mainWeapon)}
               alt={mainWeapon.name ?? "무기"}
@@ -1433,19 +1488,19 @@ function PreviewCard({
         </div>
       </div>
 
-      <div className="flex min-h-[108px] flex-col border-t border-yellow-500/10 bg-black px-3 pb-3 pt-3 sm:min-h-[120px] sm:px-4">
-        <h3 className="line-clamp-2 text-[14px] font-black leading-5 text-yellow-300 sm:text-[15px]">
+      <div className="flex min-h-[108px] flex-col border-t border-ef-line bg-ef-card px-3 pb-3 pt-3 sm:min-h-[120px] sm:px-4">
+        <h3 className="line-clamp-2 text-[14px] font-black leading-5 text-ef-accent sm:text-[15px]">
           {draft.title || "오퍼레이터 세팅 제목"}
         </h3>
-        <p className="mt-1.5 line-clamp-2 text-[10px] leading-4 text-zinc-300 sm:text-[11px]">
+        <p className="mt-1.5 line-clamp-2 text-[10px] leading-4 text-ef-muted sm:text-[11px]">
           {draft.description || "세팅 설명이 여기에 표시됩니다."}
         </p>
         <div className="mt-auto flex flex-wrap items-center gap-1 pt-3 text-[10px] font-black sm:text-[11px]">
           <span className="text-white">{userNickname || "닉네임 없음"}</span>
-          <span className="text-zinc-600">|</span>
-          <span className="text-[#ffdc70]">추천 0</span>
-          <span className="text-zinc-600">|</span>
-          <span className="text-[#ffdc70]">조회수 0</span>
+          <span className="text-ef-line">|</span>
+          <span className="font-mono tabular-nums text-ef-accent">추천 0</span>
+          <span className="text-ef-line">|</span>
+          <span className="font-mono tabular-nums text-ef-accent">조회수 0</span>
         </div>
       </div>
     </div>
@@ -1474,10 +1529,11 @@ function OperatorSettingSlot({
   return (
     <div
       className={[
-        "overflow-hidden rounded-[16px] border bg-black sm:rounded-[18px]",
-        primary ? "border-yellow-400/30" : "border-white/10",
+        "overflow-hidden border bg-black",
+        primary ? "border-ef-accent/40" : "border-ef-line",
         disabled ? "opacity-45" : "",
       ].join(" ")}
+      style={CUT}
     >
       <div className="relative h-[142px] overflow-hidden bg-black sm:h-[170px]">
         {operator ? (
@@ -1489,7 +1545,7 @@ function OperatorSettingSlot({
             className="object-cover object-center"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center px-3 text-center text-sm font-black text-zinc-600">
+          <div className="flex h-full w-full items-center justify-center px-3 text-center text-sm font-black text-ef-muted">
             {disabled ? "메인 오퍼레이터 먼저 등록" : `${slotLabelMap[slot]} 세팅 등록`}
           </div>
         )}
@@ -1509,18 +1565,19 @@ function OperatorSettingSlot({
 
           <span
             className={[
-              "rounded-md border px-2 py-1 text-[10px] font-black backdrop-blur-sm",
+              "border px-2 py-1 font-mono text-[10px] font-black uppercase tracking-wide backdrop-blur-sm",
               primary
-                ? "border-yellow-300/40 bg-yellow-300/15 text-yellow-200"
-                : "border-white/20 bg-white/10 text-zinc-200",
+                ? "border-ef-accent/40 bg-[rgba(255,210,74,0.15)] text-ef-accent"
+                : "border-ef-line bg-black/60 text-ef-muted",
             ].join(" ")}
+            style={CUT_SM}
           >
             {slotBadgeLabelMap[slot]}
           </span>
         </div>
 
         {weapon ? (
-          <div className="absolute bottom-2 right-2 z-10 flex h-10 w-10 items-center justify-center rounded-md border border-white/15 bg-black/50 backdrop-blur-sm">
+          <div className="absolute bottom-2 right-2 z-10 flex h-10 w-10 items-center justify-center border border-ef-line bg-black/50 backdrop-blur-sm" style={CUT_SM}>
             <Image
               src={getWeaponImage(weapon)}
               alt={weapon.name ?? "무기"}
@@ -1536,19 +1593,19 @@ function OperatorSettingSlot({
             <h3 className="line-clamp-1 text-base font-black text-white drop-shadow sm:text-lg">
               {operator.name}
             </h3>
-            <p className="line-clamp-1 text-xs font-bold text-zinc-300 drop-shadow">
+            <p className="line-clamp-1 text-xs font-bold text-ef-muted drop-shadow">
               세팅 등록 완료
             </p>
           </div>
         ) : null}
       </div>
 
-      <div className="grid gap-2 border-t border-white/10 bg-black px-3 py-3 sm:flex sm:items-center sm:justify-between">
+      <div className="grid gap-2 border-t border-ef-line bg-ef-card px-3 py-3 sm:flex sm:items-center sm:justify-between">
         <div className="min-w-0">
-          <p className="truncate text-sm font-black text-[#ffdc70]">
+          <p className="truncate text-sm font-black text-ef-accent">
             {slotLabelMap[slot]}
           </p>
-          <p className="truncate text-xs text-zinc-500">
+          <p className="truncate text-xs text-ef-muted">
             {operator?.name ?? "미등록"}
           </p>
         </div>
@@ -1558,7 +1615,8 @@ function OperatorSettingSlot({
             <button
               type="button"
               onClick={onClear}
-              className="h-9 flex-1 rounded-lg border border-white/10 px-3 text-xs font-bold text-zinc-400 hover:border-yellow-400/40 hover:text-yellow-300 sm:flex-none"
+              className="h-9 flex-1 border border-ef-line px-3 text-xs font-bold text-ef-muted transition hover:border-ef-accent/40 hover:text-ef-accent-soft sm:flex-none"
+              style={CUT_SM}
             >
               해제
             </button>
@@ -1569,11 +1627,12 @@ function OperatorSettingSlot({
             onClick={onOpenSetting}
             disabled={disabled}
             className={[
-              "h-9 flex-1 rounded-lg px-3 text-xs font-black disabled:cursor-not-allowed sm:flex-none",
+              "h-9 flex-1 px-3 text-xs font-black disabled:cursor-not-allowed sm:flex-none",
               setting
-                ? "border border-white/10 text-zinc-200 hover:border-yellow-400/40 hover:text-yellow-300"
-                : "bg-[#ffd24a] text-black",
+                ? "border border-ef-line text-ef-muted transition hover:border-ef-accent/40 hover:text-ef-accent-soft"
+                : "text-black",
             ].join(" ")}
+            style={setting ? CUT_SM : { ...CUT_SM, background: ACCENT }}
           >
             세팅
           </button>

@@ -16,15 +16,19 @@ import type {
   SelectOperatorItem,
   SelectWeaponItem,
 } from "@/app/components/select/CommonSelectPanel";
-import {
-  YELLOW_BORDER,
-  YELLOW_BORDER_SOFT,
-  YELLOW_MAIN,
-  YELLOW_TEXT,
-} from "@/app/styles/styles";
 
-const FILTER_BG = "#071019";
-const FILTER_BORDER = "rgba(255, 204, 77, 0.18)";
+// ===== 오퍼레이터/무기/장비 목록과 통일한 Endfield SF 디자인 토큰 =====
+const PRIMARY = "#ff9a2f";
+const ACCENT = "#ffd24a";
+const CUT = {
+  clipPath:
+    "polygon(0 0, calc(100% - 13px) 0, 100% 13px, 100% 100%, 13px 100%, 0 calc(100% - 13px))",
+};
+const CUT_SM = {
+  clipPath:
+    "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))",
+};
+
 const MAX_OPERATOR_FILTERS = 4;
 const SETTINGS_PAGE_LIMIT = 24;
 
@@ -33,7 +37,7 @@ const CommonSelectPanel = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/80 p-4 text-sm font-bold text-zinc-500 backdrop-blur-sm">
+      <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/80 p-4 text-sm font-bold text-ef-muted backdrop-blur-sm">
         선택 패널을 불러오는 중...
       </div>
     ),
@@ -463,39 +467,31 @@ export default function SettingsPageClient({
   }
 
   return (
-    <main className="min-h-screen overflow-x-clip bg-[#050505] px-3 py-3 pb-[calc(1.5rem+env(safe-area-inset-bottom))] text-white sm:px-4 md:px-6 md:py-5">
-      <div className="mx-auto max-w-[1840px] overflow-x-clip">
+    <main className="relative min-h-screen overflow-x-clip bg-ef-bg px-3 py-3 pb-[calc(1.5rem+env(safe-area-inset-bottom))] text-ef-ink sm:px-4 md:px-6 md:py-5">
+      <div className="pointer-events-none fixed inset-0 z-0 opacity-[0.022] [background-image:radial-gradient(circle,#ffd24a_1px,transparent_1px)] [background-size:22px_22px]" />
+      <div className="relative z-10 mx-auto max-w-[1840px] overflow-x-clip">
         <header
-          className="mb-3 rounded-[20px] bg-[#05070b] p-4 shadow-[0_0_30px_rgba(250,204,21,0.04)] sm:mb-5 sm:rounded-[24px] sm:p-5"
-          style={{ border: `1px solid ${YELLOW_BORDER}` }}
+          className="relative mb-3 overflow-hidden border border-ef-line bg-ef-card2 p-4 sm:mb-5 sm:p-5"
+          style={CUT}
         >
+          <span className="absolute inset-x-0 top-0 block h-0.5 w-full" style={{ background: `linear-gradient(90deg, ${PRIMARY}, transparent 55%)` }} />
           <div className="flex items-start justify-between gap-3 max-[419px]:flex-col">
             <div className="min-w-0">
-              <p
-                className="text-[10px] font-semibold tracking-[0.28em] sm:text-[11px] sm:tracking-[0.35em]"
-                style={{ color: YELLOW_TEXT }}
-              >
-                엔드필드 지원 플랫폼
+              <p className="font-mono text-[11px] font-bold uppercase tracking-[0.24em] text-ef-muted">
+                User Settings
               </p>
 
-              <h1
-                className="mt-2 text-2xl font-black tracking-tight sm:text-4xl"
-                style={{ color: YELLOW_TEXT }}
-              >
+              <h1 className="mt-1.5 break-keep text-2xl font-black leading-[0.95] tracking-tight text-white sm:text-4xl">
                 오퍼레이터 세팅
               </h1>
-
-              <p className="mt-1 text-xs text-zinc-500 sm:text-sm">
-                유저 오퍼레이터 세팅 목록
-              </p>
             </div>
 
             <div className="grid shrink-0 grid-cols-2 gap-2 max-[419px]:w-full sm:flex sm:flex-wrap sm:justify-end">
               {isLoggedIn ? (
                 <Link
                   href="/settings/party"
-                  className="flex min-h-11 items-center justify-center rounded-xl px-3 py-2 text-xs font-black text-black transition hover:brightness-110 sm:px-5 sm:text-sm"
-                  style={{ background: YELLOW_MAIN }}
+                  className="flex min-h-11 items-center justify-center px-3 py-2 text-xs font-black text-black transition hover:brightness-110 sm:px-5 sm:text-sm"
+                  style={{ ...CUT_SM, background: ACCENT }}
                 >
                   <span className="sm:hidden">등록</span>
                   <span className="hidden sm:inline">오퍼레이터 세팅 등록</span>
@@ -503,7 +499,8 @@ export default function SettingsPageClient({
               ) : (
                 <Link
                   href="/login"
-                  className="flex min-h-11 items-center justify-center rounded-xl border border-white/10 bg-black px-3 py-2 text-xs font-black text-zinc-300 transition hover:border-yellow-400/40 hover:text-yellow-300 sm:px-5 sm:text-sm"
+                  className="flex min-h-11 items-center justify-center border border-ef-line bg-ef-card px-3 py-2 text-xs font-black text-ef-muted transition hover:border-ef-accent/40 hover:text-ef-accent-soft sm:px-5 sm:text-sm"
+                  style={CUT_SM}
                 >
                   <span className="sm:hidden">로그인</span>
                   <span className="hidden sm:inline">로그인 후 세팅 등록</span>
@@ -512,8 +509,8 @@ export default function SettingsPageClient({
 
               <Link
                 href="/"
-                className="flex min-h-11 items-center justify-center rounded-xl bg-black px-3 py-2 text-xs font-bold text-zinc-200 transition hover:bg-[#0b1018] sm:px-4 sm:text-sm"
-                style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
+                className="flex min-h-11 items-center justify-center border border-ef-line bg-ef-card px-3 py-2 text-xs font-bold text-ef-muted transition hover:border-ef-accent/40 hover:text-ef-accent-soft sm:px-4 sm:text-sm"
+                style={CUT_SM}
               >
                 홈
               </Link>
@@ -523,24 +520,20 @@ export default function SettingsPageClient({
 
         <div className="grid gap-3 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-5">
           <aside
-            className="sticky top-2 z-30 rounded-[18px] bg-[#05070b] shadow-[0_0_30px_rgba(250,204,21,0.04)] lg:top-5 lg:flex lg:max-h-[calc(100vh-40px)] lg:flex-col lg:overflow-hidden lg:rounded-[24px]"
-            style={{ border: `1px solid ${YELLOW_BORDER}` }}
+            className="sticky top-2 z-30 border border-ef-line bg-ef-card2 lg:top-5 lg:flex lg:max-h-[calc(100vh-40px)] lg:flex-col lg:overflow-hidden"
+            style={CUT}
           >
             <button
               type="button"
               onClick={() => setIsFilterOpen((prev) => !prev)}
-              className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left lg:hidden"
-              style={{ borderBottom: `1px solid ${YELLOW_BORDER_SOFT}` }}
+              className="flex w-full items-center justify-between gap-3 border-b border-ef-line px-4 py-3 text-left lg:hidden"
             >
               <span className="min-w-0">
-                <span
-                  className="block text-[11px] font-black tracking-[0.2em]"
-                  style={{ color: YELLOW_TEXT }}
-                >
-                  검색 / 필터
+                <span className="block font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-ef-muted">
+                  Search / Filter
                 </span>
 
-                <span className="mt-1 block truncate text-xs text-zinc-500">
+                <span className="mt-1 block truncate text-xs text-ef-muted">
                   닉네임, 제목, 오퍼레이터, 무기, 유형, 정렬
                   {activeFilterCount > 0 ? ` · 적용 ${activeFilterCount}` : ""}
                 </span>
@@ -548,7 +541,7 @@ export default function SettingsPageClient({
 
               <span
                 className={[
-                  "shrink-0 text-lg font-black text-yellow-300 transition-transform",
+                  "shrink-0 text-lg font-black text-ef-accent transition-transform",
                   isFilterOpen ? "rotate-180" : "",
                 ].join(" ")}
               >
@@ -559,14 +552,8 @@ export default function SettingsPageClient({
             <div
               className={isFilterOpen ? "block lg:block" : "hidden lg:block"}
             >
-              <div
-                className="shrink-0 bg-[#05070b] p-3 sm:p-4"
-                style={{ borderBottom: `1px solid ${YELLOW_BORDER_SOFT}` }}
-              >
-                <h2
-                  className="mb-2 text-[11px] font-black tracking-[0.2em]"
-                  style={{ color: YELLOW_TEXT }}
-                >
+              <div className="shrink-0 border-b border-ef-line p-3 sm:p-4">
+                <h2 className="mb-2 font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-ef-muted">
                   검색
                 </h2>
 
@@ -574,7 +561,8 @@ export default function SettingsPageClient({
                   value={keyword}
                   onChange={(event) => setKeyword(event.target.value)}
                   placeholder="닉네임 / 제목 / 오퍼레이터 검색"
-                  className="h-10 w-full rounded-xl border border-white/20 bg-[#071019] px-3 text-xs text-white outline-none placeholder:text-zinc-500 focus:border-yellow-400/50 sm:h-9"
+                  className="h-10 w-full border border-ef-line bg-ef-card px-3 text-xs text-white outline-none placeholder:text-ef-muted/70 focus:border-ef-accent/50 sm:h-9"
+                  style={CUT_SM}
                 />
               </div>
 
@@ -590,7 +578,8 @@ export default function SettingsPageClient({
                           setOperatorFilters([]);
                           setOperatorFilterNames({});
                         }}
-                        className="h-[36px] min-w-0 rounded-xl border border-white/10 bg-black px-3 text-left text-[11px] font-bold text-zinc-400 transition hover:border-yellow-400/40 hover:text-yellow-300 lg:h-[38px]"
+                        className="h-[36px] min-w-0 border border-ef-line bg-ef-card px-3 text-left text-[11px] font-bold text-ef-muted transition hover:border-ef-accent/40 hover:text-ef-accent-soft lg:h-[38px]"
+                        style={CUT_SM}
                       >
                         전체 선택 취소
                       </button>
@@ -600,11 +589,11 @@ export default function SettingsPageClient({
                           key={slug}
                           type="button"
                           onClick={() => removeOperatorFilter(slug)}
-                          className="h-[36px] min-w-0 rounded-xl border px-3 text-left text-[11px] font-black transition hover:bg-[#101923] lg:h-[38px] lg:w-full"
+                          className="h-[36px] min-w-0 border px-3 text-left text-[11px] font-black text-white transition hover:brightness-110 lg:h-[38px] lg:w-full"
                           style={{
-                            borderColor: YELLOW_MAIN,
-                            background: `${YELLOW_MAIN}22`,
-                            color: "#ffffff",
+                            ...CUT_SM,
+                            borderColor: ACCENT,
+                            background: `${ACCENT}22`,
                           }}
                           title="클릭하면 선택 취소"
                         >
@@ -620,16 +609,12 @@ export default function SettingsPageClient({
                     type="button"
                     onClick={() => setSelectPanel("operator")}
                     disabled={operatorFilters.length >= MAX_OPERATOR_FILTERS}
-                    className="h-[36px] min-w-0 rounded-xl border px-3 text-left text-[12px] font-black transition hover:bg-[#101923] disabled:cursor-not-allowed disabled:opacity-45 lg:h-[38px] lg:w-full"
-                    style={{
-                      borderColor: operatorFilters.length
-                        ? YELLOW_MAIN
-                        : FILTER_BORDER,
-                      background: operatorFilters.length
-                        ? `${YELLOW_MAIN}22`
-                        : FILTER_BG,
-                      color: operatorFilters.length ? "#ffffff" : "#d4d4d8",
-                    }}
+                    className="h-[36px] min-w-0 border px-3 text-left text-[12px] font-black transition hover:border-ef-accent/40 disabled:cursor-not-allowed disabled:opacity-45 lg:h-[38px] lg:w-full"
+                    style={
+                      operatorFilters.length
+                        ? { ...CUT_SM, borderColor: ACCENT, background: `${ACCENT}22`, color: "#ffffff" }
+                        : { ...CUT_SM, borderColor: "#202020", background: "#0b0b0b", color: "#a0a0a0" }
+                    }
                   >
                     <span className="block truncate">
                       {operatorFilters.length >= MAX_OPERATOR_FILTERS
@@ -647,7 +632,8 @@ export default function SettingsPageClient({
                         setWeaponFilter("");
                         setWeaponFilterName("");
                       }}
-                      className="h-[36px] min-w-0 rounded-xl border border-white/10 bg-black px-3 text-left text-[11px] font-bold text-zinc-400 transition hover:border-yellow-400/40 hover:text-yellow-300 lg:h-[38px]"
+                      className="h-[36px] min-w-0 border border-ef-line bg-ef-card px-3 text-left text-[11px] font-bold text-ef-muted transition hover:border-ef-accent/40 hover:text-ef-accent-soft lg:h-[38px]"
+                      style={CUT_SM}
                     >
                       선택 취소
                     </button>
@@ -656,12 +642,12 @@ export default function SettingsPageClient({
                   <button
                     type="button"
                     onClick={() => setSelectPanel("weapon")}
-                    className="h-[36px] min-w-0 rounded-xl border px-3 text-left text-[12px] font-black transition hover:bg-[#101923] lg:h-[38px] lg:w-full"
-                    style={{
-                      borderColor: weaponFilter ? YELLOW_MAIN : FILTER_BORDER,
-                      background: weaponFilter ? `${YELLOW_MAIN}22` : FILTER_BG,
-                      color: weaponFilter ? "#ffffff" : "#d4d4d8",
-                    }}
+                    className="h-[36px] min-w-0 border px-3 text-left text-[12px] font-black transition hover:border-ef-accent/40 lg:h-[38px] lg:w-full"
+                    style={
+                      weaponFilter
+                        ? { ...CUT_SM, borderColor: ACCENT, background: `${ACCENT}22`, color: "#ffffff" }
+                        : { ...CUT_SM, borderColor: "#202020", background: "#0b0b0b", color: "#a0a0a0" }
+                    }
                   >
                     <span className="block truncate">
                       {weaponFilterName || "무기 선택"}
@@ -709,30 +695,27 @@ export default function SettingsPageClient({
           </aside>
 
           <section
-            className="min-w-0 rounded-[20px] bg-[#05070b] p-3 shadow-[0_0_30px_rgba(250,204,21,0.04)] lg:rounded-[24px]"
-            style={{ border: `1px solid ${YELLOW_BORDER}` }}
+            className="min-w-0 border border-ef-line bg-ef-card2 p-3"
+            style={CUT}
           >
-            <div
-              className="mb-3 flex flex-wrap items-center justify-between gap-2 pb-3"
-              style={{ borderBottom: `1px solid ${YELLOW_BORDER_SOFT}` }}
-            >
-              <p className="text-sm text-zinc-400">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-ef-line pb-3">
+              <p className="text-sm text-ef-muted">
                 총{" "}
-                <span className="font-black" style={{ color: YELLOW_TEXT }}>
+                <span className="font-mono font-black tabular-nums" style={{ color: ACCENT }}>
                   {totalCount}
                 </span>
                 개 세팅
               </p>
 
               {settings.length > 0 ? (
-                <p className="text-xs text-zinc-500">
-                  <span style={{ color: YELLOW_TEXT }}>{settings.length}</span>개 표시 중
+                <p className="text-xs text-ef-muted">
+                  <span className="font-mono tabular-nums" style={{ color: ACCENT }}>{settings.length}</span>개 표시 중
                 </p>
               ) : null}
             </div>
 
             {loading ? (
-              <div className="flex h-[300px] items-center justify-center rounded-[18px] border border-white/10 bg-black text-sm text-zinc-500 sm:h-[420px]">
+              <div className="flex h-[300px] items-center justify-center border border-ef-line bg-ef-card text-sm text-ef-muted sm:h-[420px]" style={CUT_SM}>
                 세팅 목록 불러오는 중...
               </div>
             ) : settings.length > 0 ? (
@@ -749,8 +732,8 @@ export default function SettingsPageClient({
                       type="button"
                       onClick={() => loadSettings(page + 1, "append")}
                       disabled={loadingMore}
-                      className="rounded-xl px-5 py-2.5 text-sm font-black text-black transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
-                      style={{ background: YELLOW_MAIN }}
+                      className="px-5 py-2.5 text-sm font-black text-black transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+                      style={{ ...CUT_SM, background: ACCENT }}
                     >
                       {loadingMore ? "불러오는 중..." : "더 보기"}
                     </button>
@@ -758,7 +741,7 @@ export default function SettingsPageClient({
                 ) : null}
               </>
             ) : (
-              <div className="flex h-[300px] items-center justify-center rounded-[18px] border border-white/10 bg-black text-sm text-zinc-500 sm:h-[420px]">
+              <div className="flex h-[300px] items-center justify-center border border-ef-line bg-ef-card text-sm text-ef-muted sm:h-[420px]" style={CUT_SM}>
                 조건에 맞는 세팅이 없습니다.
               </div>
             )}
@@ -802,7 +785,8 @@ function SettingCard({ setting }: { setting: SettingItem }) {
   return (
     <Link
       href={`/settings/${setting.id}`}
-      className="group block w-full overflow-hidden rounded-[16px] border border-white/10 bg-black transition hover:-translate-y-1 hover:border-yellow-400/40 sm:rounded-[18px]"
+      className="group block w-full overflow-hidden border border-ef-line bg-ef-card2 transition hover:-translate-y-1 hover:border-ef-accent/40"
+      style={CUT_SM}
     >
       <div className="relative aspect-[220/255] overflow-hidden bg-black">
         <Image
@@ -831,11 +815,12 @@ function SettingCard({ setting }: { setting: SettingItem }) {
 
           <span
             className={[
-              "rounded-md border px-1.5 py-1 text-[9px] font-black backdrop-blur-sm sm:px-2 sm:text-[10px]",
+              "border px-1.5 py-1 font-mono text-[9px] font-black uppercase backdrop-blur-sm sm:px-2 sm:text-[10px]",
               setting.type === "solo"
-                ? "border-yellow-300/40 bg-yellow-300/15 text-yellow-200"
+                ? "border-ef-accent/40 bg-ef-accent/15 text-ef-accent"
                 : "border-sky-300/40 bg-sky-300/15 text-sky-200",
             ].join(" ")}
+            style={CUT_SM}
           >
             {settingTypeLabelMap[setting.type]}
           </span>
@@ -846,7 +831,8 @@ function SettingCard({ setting }: { setting: SettingItem }) {
             {setting.partyMembers.slice(0, 3).map((member) => (
               <div
                 key={member.operatorSlug}
-                className="relative h-8 w-8 overflow-hidden rounded-md border border-white/20 bg-black sm:h-10 sm:w-10"
+                className="relative h-8 w-8 overflow-hidden border border-ef-line bg-black sm:h-10 sm:w-10"
+                style={CUT_SM}
               >
                 <Image
                   src={member.image}
@@ -871,7 +857,7 @@ function SettingCard({ setting }: { setting: SettingItem }) {
         ) : null}
 
         {setting.weaponImage ? (
-          <div className="absolute bottom-2 right-2 flex h-9 w-9 items-center justify-center rounded-md border border-white/15 bg-black/50 backdrop-blur-sm sm:h-10 sm:w-10">
+          <div className="absolute bottom-2 right-2 flex h-9 w-9 items-center justify-center border border-ef-line bg-black/50 backdrop-blur-sm sm:h-10 sm:w-10" style={CUT_SM}>
             <Image
               src={setting.weaponImage}
               alt={setting.weaponName}
@@ -889,28 +875,28 @@ function SettingCard({ setting }: { setting: SettingItem }) {
         </div>
       </div>
 
-      <div className="flex min-h-[146px] flex-col border-t border-yellow-500/10 bg-black px-2.5 pb-2 pt-2 sm:min-h-[158px] sm:px-3">
-        <h2 className="line-clamp-2 text-[12px] font-black leading-[17px] text-yellow-300 sm:text-[13px] sm:leading-[18px]">
+      <div className="flex min-h-[146px] flex-col border-t border-ef-line bg-ef-card px-2.5 pb-2 pt-2 sm:min-h-[158px] sm:px-3">
+        <h2 className="line-clamp-2 text-[12px] font-black leading-[17px] text-ef-accent sm:text-[13px] sm:leading-[18px]">
           {setting.title}
         </h2>
 
-        <p className="mt-1 line-clamp-5 break-words text-[10px] leading-[16px] text-zinc-300 sm:text-[11px] sm:leading-[17px]">
+        <p className="mt-1 line-clamp-5 break-words text-[10px] leading-[16px] text-ef-muted sm:text-[11px] sm:leading-[17px]">
           {setting.description}
         </p>
 
         <div className="mt-auto flex flex-wrap items-center gap-1 pt-2 text-[9px] font-black sm:text-[10px]">
-          <span className="max-w-full truncate text-white">
+          <span className="max-w-full truncate text-ef-ink">
             {setting.nickname}
           </span>
           {setting.isDefaultSetting ? (
-            <span className="rounded border border-yellow-300/30 bg-yellow-300/10 px-1 text-yellow-200">
+            <span className="border border-ef-accent/30 bg-ef-accent/10 px-1 font-mono uppercase text-ef-accent" style={CUT_SM}>
               기본 세팅
             </span>
           ) : null}
-          <span className="text-zinc-600">|</span>
-          <span className="text-[#ffdc70]">추천 {setting.likes}</span>
-          <span className="text-zinc-600">|</span>
-          <span className="text-[#ffdc70]">조회 {setting.views}</span>
+          <span className="text-ef-muted/50">|</span>
+          <span className="font-mono tabular-nums text-ef-accent-soft">추천 {setting.likes}</span>
+          <span className="text-ef-muted/50">|</span>
+          <span className="font-mono tabular-nums text-ef-accent-soft">조회 {setting.views}</span>
         </div>
       </div>
     </Link>
@@ -930,14 +916,14 @@ function FilterButton({
     <button
       type="button"
       onClick={onClick}
-      className="flex h-[36px] min-w-0 shrink-0 items-center gap-2 rounded-xl border px-3 text-left text-[12px] font-bold transition hover:bg-[#101923] lg:h-[38px] lg:w-full"
-      style={{
-        borderColor: active ? YELLOW_MAIN : FILTER_BORDER,
-        background: active ? `${YELLOW_MAIN}22` : FILTER_BG,
-        color: active ? "#ffffff" : "#d4d4d8",
-      }}
+      className="flex h-[36px] min-w-0 shrink-0 items-center gap-2 border px-3 text-left text-[12px] font-bold transition hover:border-ef-accent/40 lg:h-[38px] lg:w-full"
+      style={
+        active
+          ? { ...CUT_SM, borderColor: ACCENT, background: `${ACCENT}22`, color: "#ffffff" }
+          : { ...CUT_SM, borderColor: "#202020", background: "#0b0b0b", color: "#a0a0a0" }
+      }
     >
-      <span className="shrink-0" style={{ color: YELLOW_MAIN }}>
+      <span className="shrink-0" style={{ color: active ? ACCENT : PRIMARY }}>
         ◆
       </span>
       <span className="min-w-0 truncate">{label}</span>
@@ -956,10 +942,7 @@ function FilterGroup({
 }) {
   return (
     <div className={last ? "" : "mb-4 lg:mb-5"}>
-      <h2
-        className="mb-2 text-[11px] font-black tracking-[0.2em]"
-        style={{ color: YELLOW_TEXT }}
-      >
+      <h2 className="mb-2 font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-ef-muted">
         {title}
       </h2>
 
