@@ -75,7 +75,7 @@ function SectionLabel({ en, action }: { en: string; action?: ReactNode }) {
 function Badge({ children, icon, tone = "muted" }: { children: ReactNode; icon?: string; tone?: "muted" | "accent" }) {
   return (
     <span
-      className="inline-flex items-center gap-1.5 border px-2 py-1 font-mono text-[10px] font-black uppercase tracking-wide"
+      className="inline-flex items-center gap-1.5 border px-2 py-1 font-mono text-[11px] font-black uppercase tracking-wide"
       style={
         tone === "accent"
           ? { ...CUT_SM, borderColor: `${PRIMARY}66`, background: `${PRIMARY}1a`, color: PRIMARY }
@@ -126,8 +126,8 @@ export default async function WeaponDetailPage({
       <div className="relative z-30 mx-auto flex max-w-[1280px] items-center justify-between px-3 py-2.5 sm:px-6">
         <div className="flex items-center gap-2">
           <span className="h-3 w-3" style={{ background: PRIMARY }} />
-          <span className="font-mono text-[10px] font-bold uppercase tracking-[0.3em] text-ef-muted">Weapon File</span>
-          <span className="hidden font-mono text-[10px] tracking-[0.2em] text-ef-muted/60 sm:inline">{`// ID:${weapon.slug.toUpperCase()}`}</span>
+          <span className="font-mono text-[11px] font-bold uppercase tracking-[0.3em] text-ef-muted">Weapon File</span>
+          <span className="hidden font-mono text-[11px] tracking-[0.2em] text-ef-muted/60 sm:inline">{`// ID:${weapon.slug.toUpperCase()}`}</span>
         </div>
         <div className="flex items-center gap-2">
           <Link href="/weapons" className="inline-flex min-h-9 items-center border border-ef-line bg-black/55 px-3 text-xs font-bold text-ef-muted backdrop-blur transition hover:border-ef-accent/40 hover:text-ef-accent-soft" style={CUT}>목록</Link>
@@ -161,20 +161,20 @@ export default async function WeaponDetailPage({
                 <div className="flex items-center gap-2 border border-ef-line bg-ef-card p-2.5" style={CUT_SM}>
                   {typeIcon ? <span className="relative h-5 w-5 shrink-0"><Image src={typeIcon} alt="" fill sizes="20px" className="object-contain" /></span> : null}
                   <span className="min-w-0">
-                    <span className="block font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">무기 유형</span>
+                    <span className="block font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-ef-muted">무기 유형</span>
                     <span className="mt-0.5 block truncate text-sm font-black text-ef-ink">{typeLabel}</span>
                   </span>
                 </div>
                 <div className="border border-ef-line bg-ef-card p-2.5" style={CUT_SM}>
-                  <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">능력치</p>
+                  <p className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-ef-muted">능력치</p>
                   <p className="mt-0.5 truncate text-sm font-black text-ef-ink">{abilityStat || "-"}</p>
                 </div>
                 <div className="border border-ef-line bg-ef-card p-2.5" style={CUT_SM}>
-                  <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">속성</p>
+                  <p className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-ef-muted">속성</p>
                   <p className="mt-0.5 truncate text-sm font-black" style={{ color: ACCENT }}>{attrStat || "-"}</p>
                 </div>
                 <div className="border border-ef-line bg-ef-card p-2.5" style={CUT_SM}>
-                  <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">시리즈</p>
+                  <p className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-ef-muted">시리즈</p>
                   <p className="mt-0.5 truncate text-sm font-black" style={{ color: PRIMARY }}>{weapon.series ?? "-"}</p>
                 </div>
               </div>
@@ -194,26 +194,26 @@ export default async function WeaponDetailPage({
               {/* 공격력 / 무기 유형 / 능력치 / 속성 / 시리즈 — 5개 스탯 카드(압축) */}
               <div className="mb-2.5 grid grid-cols-2 gap-1.5 border-b border-ef-line pb-2.5 min-[520px]:grid-cols-3 lg:grid-cols-5">
                 <div className="border border-ef-line bg-ef-card px-2 py-1.5" style={CUT_SM}>
-                  <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">공격력 · Lv.90</p>
+                  <p className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-ef-muted">공격력 · Lv.90</p>
                   <p className="font-mono text-xl font-black leading-tight sm:text-2xl" style={{ color: PRIMARY }}>{maxAttack}</p>
                 </div>
                 <div className="border border-ef-line bg-ef-card px-2 py-1.5" style={CUT_SM}>
-                  <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">무기 유형</p>
+                  <p className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-ef-muted">무기 유형</p>
                   <p className="flex items-center gap-1 break-keep text-sm font-black leading-tight text-ef-ink">
                     {typeIcon ? <span className="relative h-4 w-4 shrink-0"><Image src={typeIcon} alt="" fill sizes="16px" className="object-contain" /></span> : null}
                     {typeLabel}
                   </p>
                 </div>
                 <div className="border border-ef-line bg-ef-card px-2 py-1.5" style={CUT_SM}>
-                  <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">능력치</p>
+                  <p className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-ef-muted">능력치</p>
                   <p className="break-keep text-sm font-black leading-tight text-ef-ink">{abilityStat || "-"}</p>
                 </div>
                 <div className="border border-ef-line bg-ef-card px-2 py-1.5" style={CUT_SM}>
-                  <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">속성</p>
+                  <p className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-ef-muted">속성</p>
                   <p className="break-keep text-sm font-black leading-tight" style={{ color: ACCENT }}>{attrStat || "-"}</p>
                 </div>
                 <div className="border border-ef-line bg-ef-card px-2 py-1.5" style={CUT_SM}>
-                  <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">시리즈</p>
+                  <p className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-ef-muted">시리즈</p>
                   <p className="break-keep text-sm font-black leading-tight" style={{ color: PRIMARY }}>{weapon.series ?? "-"}</p>
                 </div>
               </div>
@@ -223,8 +223,8 @@ export default async function WeaponDetailPage({
                 <table className="w-full border-collapse text-left">
                   <thead>
                     <tr className="bg-black">
-                      <th className="border-b border-ef-line px-3 py-1.5 font-mono text-[10px] font-black uppercase tracking-wide" style={{ color: PRIMARY }}>Lv</th>
-                      <th className="border-b border-ef-line px-3 py-1.5 text-right font-mono text-[10px] font-black uppercase tracking-wide" style={{ color: PRIMARY }}>공격력</th>
+                      <th className="border-b border-ef-line px-3 py-1.5 font-mono text-[11px] font-black uppercase tracking-wide" style={{ color: PRIMARY }}>Lv</th>
+                      <th className="border-b border-ef-line px-3 py-1.5 text-right font-mono text-[11px] font-black uppercase tracking-wide" style={{ color: PRIMARY }}>공격력</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -266,7 +266,7 @@ export default async function WeaponDetailPage({
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="block text-xs font-black text-ef-ink">{isBase ? "기본 상태" : `${stage.stage}단계 돌파`}</span>
-                        <span className="font-mono text-[10px] uppercase tracking-wide text-ef-muted">필요 Lv.{stage.requiredLevel}</span>
+                        <span className="font-mono text-[11px] uppercase tracking-wide text-ef-muted">필요 Lv.{stage.requiredLevel}</span>
                       </span>
                       <span className="shrink-0 font-mono text-[11px] font-black text-ef-muted transition-transform group-open:rotate-180" style={{ color: PRIMARY }}>▼</span>
                     </summary>
@@ -274,7 +274,7 @@ export default async function WeaponDetailPage({
                       {stage.bonuses.length ? (
                         <ul className="flex flex-col gap-1">
                           {stage.bonuses.map((b, i) => (
-                            <li key={i} className="flex gap-2 break-keep text-[11px] leading-5 text-ef-muted">
+                            <li key={i} className="flex gap-2 break-keep text-xs leading-5 text-ef-muted">
                               <span className="mt-1 h-1 w-1 shrink-0" style={{ background: PRIMARY }} />
                               <span>{highlightNums(b)}</span>
                             </li>

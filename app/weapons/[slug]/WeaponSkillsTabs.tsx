@@ -66,14 +66,14 @@ function SkillCard({ skill }: { skill: WeaponSkillPanel }) {
   return (
     <div className="flex flex-col border border-ef-line bg-ef-card2 p-2.5 sm:p-3" style={CUT}>
       <div className="min-w-0">
-        {(() => { const c = skillCategory(skill); return c ? <span className="inline-flex items-center border px-2 py-0.5 font-mono text-[10px] font-black uppercase tracking-wide" style={{ borderColor: `${PRIMARY}66`, background: `${PRIMARY}1a`, color: PRIMARY }}>{CAT_DISPLAY[c] ?? c}</span> : null; })()}
+        {(() => { const c = skillCategory(skill); return c ? <span className="inline-flex items-center border px-2 py-0.5 font-mono text-[11px] font-black uppercase tracking-wide" style={{ borderColor: `${PRIMARY}66`, background: `${PRIMARY}1a`, color: PRIMARY }}>{CAT_DISPLAY[c] ?? c}</span> : null; })()}
         <p className="mt-1 break-keep text-sm font-black text-ef-ink">{skill.name}</p>
       </div>
 
       {effect ? (
         <div className="mt-2.5">
-          <p className="mb-1 font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">효과 설명</p>
-          <p className="whitespace-pre-line break-keep text-[13px] leading-6 text-ef-muted">{highlightNums(effect)}</p>
+          <p className="mb-1 font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-ef-muted">효과 설명</p>
+          <p className="whitespace-pre-line break-keep text-sm leading-6 text-ef-muted">{highlightNums(effect)}</p>
         </div>
       ) : null}
 
@@ -81,7 +81,7 @@ function SkillCard({ skill }: { skill: WeaponSkillPanel }) {
         <div className={`mt-2.5 grid gap-1.5 ${infoCells.length >= 3 ? "grid-cols-2 min-[420px]:grid-cols-3" : "grid-cols-2"}`}>
           {infoCells.map((c, i) => (
             <div key={i} className="border border-ef-line bg-ef-card px-2 py-1.5" style={CUT_SM}>
-              <p className="truncate font-mono text-[9px] font-bold uppercase tracking-wide text-ef-muted">{c.label}</p>
+              <p className="truncate font-mono text-[10px] font-bold uppercase tracking-wide text-ef-muted">{c.label}</p>
               <p className="mt-0.5 break-keep font-mono text-sm font-black tabular-nums" style={{ color: ACCENT }}>{c.value}</p>
             </div>
           ))}
@@ -92,7 +92,7 @@ function SkillCard({ skill }: { skill: WeaponSkillPanel }) {
         <div className="mt-2.5 flex flex-col gap-1 border-t border-ef-line pt-2.5">
           {metaRows.map((mt, i) => (
             <div key={i} className="flex items-center justify-between gap-3 text-[12px]">
-              <span className="shrink-0 font-mono text-[10px] font-bold uppercase tracking-wide text-ef-muted">{mt.label}</span>
+              <span className="shrink-0 font-mono text-[11px] font-bold uppercase tracking-wide text-ef-muted">{mt.label}</span>
               <span className="min-w-0 truncate text-right font-black" style={{ color: ACCENT }}>{mt.value}</span>
             </div>
           ))}
@@ -103,10 +103,10 @@ function SkillCard({ skill }: { skill: WeaponSkillPanel }) {
         <div className="mt-2.5 flex flex-col gap-2 border-t border-ef-line pt-2.5">
           {compareRows.map((row, ri) => (
             <div key={ri}>
-              <p className="mb-1 font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">{row.label} · 강화 수치</p>
+              <p className="mb-1 font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-ef-muted">{row.label} · 강화 수치</p>
               <div className="flex flex-wrap gap-1">
                 {row.values.map((v, i) => (
-                  <span key={i} className="inline-flex items-center gap-1 border border-ef-line bg-ef-card px-1.5 py-0.5 font-mono text-[10px] leading-none" style={CUT_SM}>
+                  <span key={i} className="inline-flex items-center gap-1 border border-ef-line bg-ef-card px-1.5 py-0.5 font-mono text-[11px] leading-none" style={CUT_SM}>
                     <span className="text-ef-muted">R{i + 1}</span>
                     <span className="font-black tabular-nums" style={{ color: ACCENT }}>{v}</span>
                   </span>
@@ -117,10 +117,10 @@ function SkillCard({ skill }: { skill: WeaponSkillPanel }) {
         </div>
       ) : ranks.length ? (
         <div className="mt-2.5 border-t border-ef-line pt-2.5">
-          <p className="mb-1.5 font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">강화 수치 · R1~R{ranks.length}</p>
+          <p className="mb-1.5 font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-ef-muted">강화 수치 · R1~R{ranks.length}</p>
           <div className="flex flex-wrap gap-1">
             {ranks.map((r, i) => (
-              <span key={i} className="inline-flex items-center gap-1 border border-ef-line bg-ef-card px-1.5 py-0.5 font-mono text-[10px] leading-none" style={CUT_SM}>
+              <span key={i} className="inline-flex items-center gap-1 border border-ef-line bg-ef-card px-1.5 py-0.5 font-mono text-[11px] leading-none" style={CUT_SM}>
                 <span className="text-ef-muted">R{r.rank}</span>
                 <span className="font-black tabular-nums" style={{ color: ACCENT }}>{r.value}</span>
               </span>
