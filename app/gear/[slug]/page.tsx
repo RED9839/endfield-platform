@@ -1,96 +1,91 @@
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import type { ReactNode } from "react";
 import { gearDetails, getGearDetailBySlug } from "@/data/gear-detail-data";
-import type { GearDetail } from "@/data/gear-types";
-import GearHeroPanel from "./GearHeroPanel";
-import GearAbilityPanel from "./GearAbilityPanel";
-import GearAttributePanel from "./GearAttributePanel";
-import GearUpgradeComparePanel from "./GearUpgradeComparePanel";
+import type { GearDetail, GearStatLine } from "@/data/gear-types";
 
-const YELLOW_TEXT = "#ffdc70";
-const YELLOW_BORDER = "rgba(255,196,74,0.14)";
-const YELLOW_BORDER_SOFT = "rgba(255,196,74,0.10)";
+// ===== 오퍼레이터/무기 상세와 통일한 디자인 토큰 =====
+const PRIMARY = "#ff9a2f";
+const ACCENT = "#ffd24a";
+const CUT = {
+  clipPath:
+    "polygon(0 0, calc(100% - 13px) 0, 100% 13px, 100% 100%, 13px 100%, 0 calc(100% - 13px))",
+};
+const CUT_SM = {
+  clipPath:
+    "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))",
+};
 
 const categoryLabelMap: Record<GearDetail["category"], string> = {
   armor: "방어구",
   gloves: "보호 장갑",
   kit: "부품",
 };
+const categoryIconMap: Record<GearDetail["category"], string> = {
+  armor: "/icons/Gear/armor.webp",
+  gloves: "/icons/Gear/gloves.webp",
+  kit: "/icons/Gear/kit.webp",
+};
+const qualityColorMap: Record<number, string> = { 5: "#f0c94a", 4: "#9a63ff", 3: "#4fa3ff", 2: "#84cc16", 1: "#9ca3af" };
+const qualityLabelMap: Record<number, string> = { 5: "노란색 품질", 4: "보라색 품질", 3: "파란색 품질", 2: "초록색 품질", 1: "회색 품질" };
 
-function DetailSection({
-  id,
-  title,
-  children,
-  defaultOpen = false,
-}: {
-  id: string;
-  title: string;
-  children: React.ReactNode;
-  defaultOpen?: boolean;
-}) {
+function SectionLabel({ en, action }: { en: string; action?: ReactNode }) {
   return (
-    <details
-      id={id}
-      open={defaultOpen}
-      className="group scroll-mt-24 overflow-hidden rounded-[20px] border border-yellow-500/15 bg-[#05070b] shadow-[0_0_30px_rgba(250,204,21,0.035)] lg:rounded-[24px]"
-    >
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 lg:px-5 lg:py-4 [&::-webkit-details-marker]:hidden">
-        <span
-          className="text-base font-black tracking-tight lg:text-[22px]"
-          style={{ color: YELLOW_TEXT }}
-        >
-          {title}
-        </span>
-
-        <span className="shrink-0 text-lg font-black text-yellow-300 transition-transform group-open:rotate-180">
-          ▼
-        </span>
-      </summary>
-
-      <div
-        className="px-3 pb-4 lg:px-5 lg:pb-5"
-        style={{ borderTop: `1px solid ${YELLOW_BORDER_SOFT}` }}
-      >
-        {children}
-      </div>
-    </details>
+    <div className="mb-2.5 flex items-center gap-2">
+      <span className="h-4 w-1" style={{ background: PRIMARY }} />
+      <span className="font-mono text-[13px] font-black uppercase tracking-[0.2em] text-white">{en}</span>
+      <span className="ml-2 hidden h-px flex-1 bg-gradient-to-r from-ef-line to-transparent sm:block" />
+      {action ? <span className="ml-auto">{action}</span> : null}
+    </div>
   );
 }
 
-function StaticDetailSection({
-  id,
-  title,
-  children,
-}: {
-  id: string;
-  title: string;
-  children: React.ReactNode;
-}) {
+function Badge({ children, icon, tone = "muted" }: { children: ReactNode; icon?: string; tone?: "muted" | "accent" }) {
   return (
-    <section
-      id={id}
-      className="scroll-mt-24 overflow-hidden rounded-[20px] border border-yellow-500/15 bg-[#05070b] shadow-[0_0_30px_rgba(250,204,21,0.035)] lg:rounded-[24px]"
+    <span
+      className="inline-flex items-center gap-1.5 border px-2 py-1 font-mono text-[11px] font-black uppercase tracking-wide"
+      style={
+        tone === "accent"
+          ? { ...CUT_SM, borderColor: `${PRIMARY}66`, background: `${PRIMARY}1a`, color: PRIMARY }
+          : { ...CUT_SM, borderColor: "#2a2a2a", background: "#0b0b0b", color: "#cfcfcf" }
+      }
     >
-      <div className="px-4 py-3 lg:px-5 lg:py-4">
-        <h2
-          className="text-base font-black tracking-tight lg:text-[22px]"
-          style={{ color: YELLOW_TEXT }}
-        >
-          {title}
-        </h2>
-      </div>
-
-      <div
-        className="px-3 pb-4 lg:px-5 lg:pb-5"
-        style={{ borderTop: `1px solid ${YELLOW_BORDER_SOFT}` }}
-      >
-        {children}
-      </div>
-    </section>
+      {icon ? <span className="relative h-3.5 w-3.5 shrink-0"><Image src={icon} alt="" fill sizes="14px" className="object-contain" /></span> : null}
+      {children}
+    </span>
   );
 }
 
-// 정적 데이터 기반이므로 빌드 시 모든 슬러그를 프리렌더(SSG)한다 → CDN 캐시.
+// 능력치/속성 한 줄 — 라벨 + 강화 단계별 수치(기본/+1/+2/+3)
+function StatLineCard({ line }: { line: GearStatLine }) {
+  const steps = [
+    { label: "기본", value: line.values.base },
+    { label: "+1", value: line.values.level1 },
+    { label: "+2", value: line.values.level2 },
+    { label: "+3", value: line.values.level3 },
+  ].filter((s) => s.value != null && String(s.value).trim() !== "");
+  const finalValue = steps.length ? steps[steps.length - 1].value : "";
+  return (
+    <div className="flex flex-col border border-ef-line bg-ef-card2 p-3" style={CUT}>
+      <div className="flex items-center justify-between gap-2">
+        <p className="min-w-0 break-keep text-sm font-black text-ef-ink">{line.label}</p>
+        {finalValue ? <span className="shrink-0 font-mono text-base font-black tabular-nums" style={{ color: ACCENT }}>{finalValue}</span> : null}
+      </div>
+      {steps.length > 1 ? (
+        <div className="mt-2.5 flex flex-wrap gap-1 border-t border-ef-line pt-2.5">
+          {steps.map((s, i) => (
+            <span key={i} className="inline-flex items-center gap-1 border border-ef-line bg-ef-card px-1.5 py-0.5 font-mono text-[11px] leading-none" style={CUT_SM}>
+              <span className="text-ef-muted">{s.label}</span>
+              <span className="font-black tabular-nums" style={{ color: ACCENT }}>{s.value}</span>
+            </span>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export function generateStaticParams() {
   return gearDetails.map((gear) => ({ slug: gear.slug }));
 }
@@ -102,107 +97,99 @@ export default async function GearDetailPage({
 }) {
   const { slug } = await params;
   const gear = getGearDetailBySlug(slug);
-
   if (!gear) notFound();
 
-  const sectionLinks = [
-    { href: "#summary", label: "요약" },
-    { href: "#ability", label: "능력치" },
-    { href: "#upgrade", label: "강화 비교" },
-  ];
+  const typeLabel = categoryLabelMap[gear.category];
+  const typeIcon = categoryIconMap[gear.category];
+  const qColor = qualityColorMap[gear.quality] ?? "#9ca3af";
+  const statLines: GearStatLine[] = [gear.ability1, ...(gear.ability2 ? [gear.ability2] : []), gear.attribute];
 
   return (
-    <main className="min-h-screen bg-[#050505] px-3 py-3 text-white sm:px-4 md:px-6 md:py-5">
-      <div className="mx-auto max-w-[1840px]">
-        <header
-          className="mb-3 rounded-[20px] bg-[#05070b] p-4 shadow-[0_0_30px_rgba(250,204,21,0.04)] sm:mb-5 sm:rounded-[24px] sm:p-5"
-          style={{ border: `1px solid ${YELLOW_BORDER}` }}
-        >
-          <div className="flex items-end justify-between gap-3">
-            <div className="min-w-0">
-              <p
-                className="text-[10px] font-semibold tracking-[0.28em] sm:text-[11px] sm:tracking-[0.35em]"
-                style={{ color: YELLOW_TEXT }}
-              >
-                엔드필드 지원 플랫폼
-              </p>
+    <main className="relative min-h-screen overflow-x-clip bg-ef-bg text-ef-ink">
+      <div className="pointer-events-none fixed inset-0 z-0 opacity-[0.022] [background-image:radial-gradient(circle,#ffd24a_1px,transparent_1px)] [background-size:22px_22px]" />
 
-              <h1
-                className="mt-2 text-2xl font-black tracking-tight sm:text-4xl"
-                style={{ color: YELLOW_TEXT }}
-              >
-                장비
-              </h1>
-
-              <p className="mt-1 text-xs text-zinc-500 sm:text-sm">
-                장비 상세 정보
-              </p>
-            </div>
-
-            <div className="flex shrink-0 gap-2">
-              <Link
-                href="/gear"
-                className="rounded-xl bg-black px-3 py-2 text-xs font-bold text-zinc-200 transition hover:bg-[#0b1018] sm:px-4 sm:text-sm"
-                style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
-              >
-                목록
-              </Link>
-
-              <Link
-                href="/"
-                className="rounded-xl bg-black px-3 py-2 text-xs font-bold text-zinc-200 transition hover:bg-[#0b1018] sm:px-4 sm:text-sm"
-                style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
-              >
-                홈
-              </Link>
-            </div>
-          </div>
-        </header>
-
-        <nav className="sticky top-2 z-30 mb-3 rounded-[18px] border border-yellow-500/15 bg-black/90 p-2 backdrop-blur lg:top-5 lg:hidden">
-          <div className="flex gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            {sectionLinks.map((item) => (
-              <a
-                key={item.href}
-                href={item.href}
-                className="shrink-0 rounded-xl border border-yellow-500/15 bg-[#05070b] px-3 py-2 text-xs font-black text-zinc-300 transition hover:border-yellow-400/40 hover:text-yellow-200 sm:text-sm"
-              >
-                {item.label}
-              </a>
-            ))}
-          </div>
-        </nav>
-
-        <div className="grid gap-3 lg:gap-5">
-          <section id="summary" className="scroll-mt-24">
-            <GearHeroPanel
-              gear={gear}
-              categoryLabel={categoryLabelMap[gear.category]}
-            />
-          </section>
-
-          <DetailSection id="ability" title="능력치 / 속성" defaultOpen>
-            <div
-              className={
-                gear.ability2
-                  ? "grid gap-3 lg:gap-5 xl:grid-cols-3"
-                  : "grid gap-3 lg:gap-5 xl:grid-cols-2"
-              }
-            >
-              <GearAbilityPanel title="능력치 1" block={gear.ability1} />
-
-              {gear.ability2 ? (
-                <GearAbilityPanel title="능력치 2" block={gear.ability2} />
-              ) : null}
-
-              <GearAttributePanel block={gear.attribute} />
-            </div>
-          </DetailSection>
-
-          <StaticDetailSection id="upgrade" title="강화 비교">
-            <GearUpgradeComparePanel gear={gear} />
-          </StaticDetailSection>
+      {/* TOP HUD */}
+      <div className="relative z-30 mx-auto flex max-w-[1280px] items-center justify-between px-3 py-2.5 sm:px-6">
+        <div className="flex items-center gap-2">
+          <span className="h-3 w-3" style={{ background: PRIMARY }} />
+          <span className="font-mono text-[11px] font-bold uppercase tracking-[0.3em] text-ef-muted">Gear File</span>
+          <span className="hidden font-mono text-[11px] tracking-[0.2em] text-ef-muted/60 sm:inline">{`// ID:${gear.slug.toUpperCase()}`}</span>
         </div>
+        <div className="flex items-center gap-2">
+          <Link href="/gear" className="inline-flex min-h-9 items-center border border-ef-line bg-black/55 px-3 text-xs font-bold text-ef-muted backdrop-blur transition hover:border-ef-accent/40 hover:text-ef-accent-soft" style={CUT}>목록</Link>
+          <Link href="/" className="inline-flex min-h-9 items-center border border-ef-line bg-black/55 px-3 text-xs font-bold text-ef-muted backdrop-blur transition hover:border-ef-accent/40 hover:text-ef-accent-soft" style={CUT}>홈</Link>
+        </div>
+      </div>
+
+      <div className="relative z-10 mx-auto flex max-w-[1280px] flex-col gap-3 px-3 pb-16 sm:gap-4 sm:px-6">
+        {/* ===== 요약 패널 — 좌 이미지 / 우 정보 ===== */}
+        <section className="overflow-hidden border border-ef-line bg-ef-card2" style={CUT}>
+          <span className="block h-0.5 w-full" style={{ background: `linear-gradient(90deg, ${qColor}, transparent 55%)` }} />
+          <div className="grid gap-4 p-3 sm:p-4 md:grid-cols-[240px_minmax(0,1fr)] md:gap-5 md:p-5">
+            {/* 이미지 */}
+            <div className="relative mx-auto aspect-square w-full max-w-[220px] overflow-hidden border bg-black md:mx-0 md:max-w-[240px]" style={{ ...CUT, borderColor: `${qColor}66` }}>
+              <Image src={gear.image} alt={gear.name} fill priority sizes="(max-width:768px) 90vw, 240px" className="object-contain p-3" />
+              <span className="pointer-events-none absolute left-2 top-2 h-6 w-6 border-l-2 border-t-2" style={{ borderColor: `${qColor}cc` }} />
+              <span className="pointer-events-none absolute bottom-2 right-2 h-6 w-6 border-b-2 border-r-2" style={{ borderColor: `${qColor}88` }} />
+            </div>
+
+            {/* 정보 */}
+            <div className="min-w-0">
+              <p className="font-mono text-[11px] font-bold uppercase tracking-[0.22em] text-ef-muted">{gear.enName}</p>
+              <h1 className="mt-1 break-keep text-2xl font-black leading-[0.95] tracking-tight text-white sm:text-4xl">{gear.name}</h1>
+
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                <Badge tone="accent">{qualityLabelMap[gear.quality]}</Badge>
+                <Badge icon={typeIcon}>{typeLabel}</Badge>
+                <Badge>Lv {gear.level}</Badge>
+              </div>
+
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                {gear.setName && gear.setName !== "세트 없음" ? (
+                  <Link href={`/gear?set=${encodeURIComponent(gear.setName)}`} className="border border-ef-line bg-ef-card p-2.5 transition hover:border-ef-accent/50" style={CUT_SM}>
+                    <p className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-ef-muted">세트</p>
+                    <p className="mt-0.5 truncate text-sm font-black" style={{ color: PRIMARY }}>{gear.setName}</p>
+                  </Link>
+                ) : null}
+                {gear.baseStat?.label ? (
+                  <div className="border border-ef-line bg-ef-card p-2.5" style={CUT_SM}>
+                    <p className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-ef-muted">{gear.baseStat.label}</p>
+                    <p className="mt-0.5 truncate text-sm font-black" style={{ color: ACCENT }}>{gear.baseStat.value}</p>
+                  </div>
+                ) : null}
+              </div>
+
+              {gear.summary || gear.description ? (
+                <p className="mt-3 break-keep text-xs leading-6 text-ef-muted">{gear.summary || gear.description}</p>
+              ) : null}
+            </div>
+          </div>
+        </section>
+
+        {/* ===== 능력치 / 속성 (강화 단계별 수치) ===== */}
+        {statLines.length ? (
+          <section className="min-w-0">
+            <SectionLabel en="Stats" />
+            <div className="grid grid-cols-1 items-start gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {statLines.map((line, i) => <StatLineCard key={i} line={line} />)}
+            </div>
+          </section>
+        ) : null}
+
+        {/* ===== 세트 효과 ===== */}
+        {gear.setEffects?.length ? (
+          <section className="min-w-0">
+            <SectionLabel en="Set Effect" action={gear.setName && gear.setName !== "세트 없음" ? <Link href={`/gear?set=${encodeURIComponent(gear.setName)}`} className="font-mono text-[10px] font-black uppercase tracking-wide text-ef-accent-soft transition hover:brightness-125">{gear.setName} →</Link> : undefined} />
+            <div className="grid grid-cols-1 items-stretch gap-2 sm:grid-cols-2">
+              {gear.setEffects.map((eff, i) => (
+                <div key={i} className="flex flex-col border border-ef-line bg-ef-card2 p-3" style={CUT}>
+                  <span className="inline-flex w-fit items-center border px-2 py-0.5 font-mono text-[11px] font-black uppercase tracking-wide" style={{ borderColor: `${PRIMARY}66`, background: `${PRIMARY}1a`, color: PRIMARY }}>{eff.pieces}세트</span>
+                  <p className="mt-2 break-keep text-xs leading-6 text-ef-muted">{eff.description}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        ) : null}
       </div>
     </main>
   );

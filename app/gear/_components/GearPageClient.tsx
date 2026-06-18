@@ -34,11 +34,19 @@ export type GearListItem = {
   attributeLabel: string;
 };
 
-const YELLOW_MAIN = "#ffd24a";
-const YELLOW_TEXT = "#ffdc70";
-const YELLOW_BORDER = "rgba(255,196,74,0.14)";
-const YELLOW_BORDER_SOFT = "rgba(255,196,74,0.10)";
-const FILTER_BG = "#071019";
+// ===== 상세/오퍼레이터/무기 페이지와 통일한 디자인 토큰 =====
+const PRIMARY = "#ff9a2f";
+const ACCENT = "#ffd24a";
+const CUT = {
+  clipPath:
+    "polygon(0 0, calc(100% - 13px) 0, 100% 13px, 100% 100%, 13px 100%, 0 calc(100% - 13px))",
+};
+const CUT_SM = {
+  clipPath:
+    "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))",
+};
+const HOVER =
+  "transition duration-200 hover:-translate-y-0.5 hover:border-[#ffd24a]/70 hover:shadow-[inset_0_0_0_999px_rgba(255,210,74,0.05),0_6px_18px_rgba(0,0,0,0.45)]";
 
 const categoryLabelMap: Record<GearCategory, string> = {
   armor: "방어구",
@@ -52,6 +60,7 @@ const categoryOrderMap: Record<GearCategory, number> = {
   kit: 2,
 };
 
+// 품질(레어도) 색 — 카드 코너 브래킷 / 필터 활성색.
 const qualityColorMap: Record<GearQuality, string> = {
   5: "#f0c94a",
   4: "#9a63ff",
@@ -82,29 +91,10 @@ const abilityIconMap: Record<GearAbilityKey, string> = {
 };
 
 const setTypeOptions: GearSetName[] = [
-  "개척",
-  "응룡 50식",
-  "본 크러셔",
-  "조류의 물결",
-  "청파",
-  "M. I. 경찰용",
-  "고검의 잔향",
-  "식양의 흐름",
-  "열 작업용",
-  "생체 보조",
-  "검술사",
-  "경량 초자연",
-  "펄스식",
-  "식양의 숨결",
-  "순행 전달자",
-  "아부레이의 메아리",
-  "중장갑 전달자",
-  "재앙 방호",
-  "침식 방호",
-  "침식 차단",
-  "통합 중량형 모델",
-  "통합 경량형 모델",
-  "세트 없음",
+  "개척", "응룡 50식", "본 크러셔", "조류의 물결", "청파", "M. I. 경찰용",
+  "고검의 잔향", "식양의 흐름", "열 작업용", "생체 보조", "검술사", "경량 초자연",
+  "펄스식", "식양의 숨결", "순행 전달자", "아부레이의 메아리", "중장갑 전달자",
+  "재앙 방호", "침식 방호", "침식 차단", "통합 중량형 모델", "통합 경량형 모델", "세트 없음",
 ];
 
 const levelOptions: GearLevel[] = [70, 50, 36, 28, 20, 10];
@@ -157,56 +147,57 @@ function toggleAbilityFilter(
   if (current.includes(nextAbility)) {
     return current.filter((ability) => ability !== nextAbility);
   }
-
   return [...current, nextAbility].slice(-limit);
 }
 
+// 섹션 라벨 — 상세 SectionLabel(sub) 스타일.
+function GroupLabel({ children }: { children: ReactNode }) {
+  return (
+    <div className="mb-2 flex items-center gap-2">
+      <span className="h-3 w-0.5" style={{ background: PRIMARY }} />
+      <span className="font-mono text-[10px] font-black uppercase tracking-[0.2em] text-ef-muted">
+        {children}
+      </span>
+    </div>
+  );
+}
+
+// 필터 칩 — 상세 칩 스타일(샤프 + CUT). 선택 시 노란색(또는 품질 색)으로 명확.
 function FilterButton({
   active,
   label,
   onClick,
   iconSrc,
-  color = YELLOW_MAIN,
-  colored = false,
+  color,
 }: {
   active: boolean;
   label: string;
   onClick: () => void;
   iconSrc?: string;
   color?: string;
-  colored?: boolean;
 }) {
-  const pointColor = colored ? color : YELLOW_MAIN;
-
+  const point = color ?? ACCENT;
   return (
     <button
       type="button"
       onClick={onClick}
-      className="group flex h-[34px] max-w-full items-center justify-start gap-1.5 rounded-lg border px-2.5 text-left text-[11px] font-bold transition hover:bg-[#101923] lg:h-[38px] lg:w-full lg:gap-2 lg:rounded-xl lg:px-3 lg:text-[12px]"
-      style={{
-        borderColor: active
-          ? pointColor
-          : colored
-            ? `${pointColor}88`
-            : "rgba(255, 196, 74, 0.18)",
-        background: active ? `${pointColor}22` : FILTER_BG,
-        color: active ? "#ffffff" : "#d4d4d8",
-      }}
+      className={`group flex h-9 items-center gap-1.5 border px-2.5 text-left font-mono text-[11px] font-bold transition duration-150 lg:w-full lg:gap-2 lg:px-3 ${
+        active ? "" : "hover:border-[#ffd24a]/60 hover:text-ef-ink"
+      }`}
+      style={
+        active
+          ? { ...CUT_SM, borderColor: point, background: `${point}26`, color: "#ffffff" }
+          : { ...CUT_SM, borderColor: "#202020", background: "#0b0b0b", color: "#a0a0a0" }
+      }
     >
       {iconSrc ? (
         <span className="relative h-3.5 w-3.5 shrink-0">
           <Image src={iconSrc} alt="" fill sizes="14px" className="object-contain" />
         </span>
       ) : (
-        <span
-          className="flex h-3.5 w-3.5 shrink-0 items-center justify-center text-[9px]"
-          style={{ color: pointColor }}
-        >
-          ◆
-        </span>
+        <span className="flex h-3.5 w-3.5 shrink-0 items-center justify-center text-[9px]" style={{ color: active ? point : "#5a5a5a" }}>◆</span>
       )}
-
-      <span className="min-w-0 truncate leading-none">{label}</span>
+      <span className="min-w-0 flex-1 truncate leading-none">{label}</span>
     </button>
   );
 }
@@ -223,19 +214,13 @@ function FilterGroup({
   grid?: boolean;
 }) {
   return (
-    <div className={last ? "" : "mb-4 lg:mb-5"}>
-      <h2
-        className="mb-2 text-[11px] font-black tracking-[0.2em]"
-        style={{ color: YELLOW_TEXT }}
-      >
-        {title}
-      </h2>
-
+    <div className={last ? "min-w-0 max-w-full" : "mb-4 min-w-0 max-w-full lg:mb-5"}>
+      <GroupLabel>{title}</GroupLabel>
       <div
         className={
           grid
-            ? "grid min-w-0 max-w-full grid-cols-[repeat(auto-fit,minmax(72px,1fr))] gap-2 lg:grid-cols-1"
-            : "flex min-w-0 max-w-full flex-wrap gap-2 pb-1 lg:flex-col lg:flex-nowrap lg:pb-0"
+            ? "grid min-w-0 max-w-full grid-cols-[repeat(auto-fit,minmax(72px,1fr))] gap-1.5 lg:grid-cols-1"
+            : "flex min-w-0 max-w-full flex-wrap gap-1.5 pb-1 lg:flex-col lg:flex-nowrap lg:pb-0"
         }
       >
         {children}
@@ -244,129 +229,59 @@ function FilterGroup({
   );
 }
 
-function GearChip({
-  children,
-  color,
-  muted = false,
-}: {
-  children: ReactNode;
-  color?: string;
-  muted?: boolean;
-}) {
-  const chipColor = color ?? YELLOW_MAIN;
-
-  return (
-    <span
-      className="inline-flex h-[20px] max-w-full items-center gap-1 rounded-md bg-black px-2 text-[11px] font-black leading-none"
-      style={{
-        border: muted
-          ? "1px solid rgba(255,255,255,0.24)"
-          : `1px solid ${chipColor}`,
-        color: muted ? "#e5e7eb" : chipColor,
-      }}
-    >
-      {children}
-    </span>
-  );
-}
-
-function GearIconOnlyChip({
-  iconSrc,
-  label,
-}: {
-  iconSrc: string;
-  label: string;
-}) {
-  return (
-    <span
-      className="inline-flex h-[20px] w-[20px] shrink-0 items-center justify-center rounded-md bg-black"
-      style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
-      title={label}
-    >
-      <span className="relative h-4 w-4">
-        <Image src={iconSrc} alt={label} fill sizes="16px" className="object-contain" />
-      </span>
-    </span>
-  );
-}
-
-function GearCategoryLevelChip({ gear }: { gear: GearListItem }) {
-  const qualityColor = qualityColorMap[gear.quality];
-
-  return (
-    <GearChip color={qualityColor}>
-      <span className="relative h-4 w-4 shrink-0">
-        <Image
-          src={categoryIconMap[gear.category]}
-          alt={categoryLabelMap[gear.category]}
-          fill
-          sizes="16px"
-          className="object-contain"
-        />
-      </span>
-
-      <span className="opacity-70">·</span>
-      <span>레벨 {gear.level}</span>
-    </GearChip>
-  );
-}
-
 const GearCard = memo(function GearCard({ gear }: { gear: GearListItem }) {
+  const [imgError, setImgError] = useState(false);
+  const qColor = qualityColorMap[gear.quality] ?? "#202020";
+  const catIcon = categoryIconMap[gear.category];
+
   return (
     <Link
       href={`/gear/${gear.slug}`}
-      className="catalog-card group relative block overflow-hidden rounded-[16px] bg-black transition md:hover:-translate-y-1 md:hover:border-yellow-400/35 sm:rounded-[18px]"
-      style={{
-        border: `1px solid ${YELLOW_BORDER}`,
-        width: "100%",
-        aspectRatio: "170 / 238",
-      }}
+      className={`group relative block overflow-hidden border border-ef-line bg-ef-card2 ${HOVER}`}
+      style={{ ...CUT, aspectRatio: "170 / 205" }}
     >
-      <Image
-        src={gear.image}
-        alt={gear.name}
-        fill
-        sizes="(max-width: 640px) 46vw, 170px"
-        className="object-cover object-center transition duration-300 group-hover:scale-105"
-      />
+      {/* 장비 이미지 — object-contain(잘림 방지). 없으면 유형 아이콘 placeholder */}
+      {!imgError ? (
+        <Image
+          src={gear.image}
+          alt={gear.name}
+          fill
+          sizes="(max-width: 640px) 46vw, 220px"
+          className="object-contain p-2 pb-[36%] transition duration-300 group-hover:scale-[1.05]"
+          onError={() => setImgError(true)}
+        />
+      ) : (
+        <span className="absolute inset-0 flex items-center justify-center pb-[22%]">
+          {catIcon ? <span className="relative h-14 w-14 opacity-35"><Image src={catIcon} alt={categoryLabelMap[gear.category]} fill sizes="56px" className="object-contain" /></span> : null}
+        </span>
+      )}
 
-      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/55 to-transparent" />
+      {/* 품질 코너 브래킷(레어도 색) */}
+      <span className="pointer-events-none absolute left-1.5 top-1.5 h-5 w-5 border-l-2 border-t-2" style={{ borderColor: `${qColor}cc` }} />
+      <span className="pointer-events-none absolute right-1.5 top-1.5 h-5 w-5 border-r-2 border-t-2" style={{ borderColor: `${qColor}cc` }} />
+      {/* 유형 아이콘 배지(좌상단) + 레벨(우상단) */}
+      {catIcon ? (
+        <span className="absolute left-2 top-2 flex h-7 w-7 items-center justify-center border border-ef-line bg-black/70 backdrop-blur-[3px]" style={CUT_SM} title={categoryLabelMap[gear.category]}>
+          <span className="relative h-4 w-4"><Image src={catIcon} alt="" fill sizes="16px" className="object-contain" /></span>
+        </span>
+      ) : null}
+      <span className="absolute right-2 top-2 rounded-[3px] border-[0.5px] px-1.5 py-0.5 font-mono text-[10px] font-bold leading-none backdrop-blur-[4px]" style={{ background: "rgba(0,0,0,0.82)", borderColor: `${qColor}aa`, color: qColor }}>
+        Lv{gear.level}
+      </span>
 
-      <div className="absolute bottom-0 left-0 w-full p-2.5 sm:p-3">
-        <h3 className="line-clamp-2 text-[13px] font-black text-yellow-300 sm:text-[14px]">
-          {gear.name}
-        </h3>
-
-        <p className="mt-1 line-clamp-1 text-[10px] text-zinc-300">
-          {gear.enName}
-        </p>
-
-        <div className="mt-2 flex flex-col gap-1">
-          <div className="flex h-[20px] flex-nowrap items-center gap-1 overflow-hidden">
-            <GearCategoryLevelChip gear={gear} />
-
-            {gear.abilityTypes.map((abilityType) => {
-              const abilityOption = abilityOptions.find(
-                (option) => option.key === abilityType,
-              );
-              const iconSrc = abilityIconMap[abilityType];
-
-              return abilityOption && iconSrc ? (
-                <GearIconOnlyChip
-                  key={abilityType}
-                  iconSrc={iconSrc}
-                  label={abilityOption.label}
-                />
-              ) : null;
-            })}
-          </div>
-
-          <div className="flex h-[20px] items-center overflow-hidden">
-            <GearChip color={YELLOW_MAIN}>
-              <span className="truncate">{gear.attributeLabel}</span>
-            </GearChip>
-          </div>
+      {/* 하단 그라데이션 + 정보: 이름 / 영문명 / 세트 · 능력치 / 속성 */}
+      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/80 to-transparent p-2.5 pt-10">
+        <h3 className="line-clamp-1 text-[15px] font-black leading-tight sm:text-base" style={{ color: ACCENT }}>{gear.name}</h3>
+        {gear.enName ? <p className="line-clamp-1 font-mono text-[9px] uppercase tracking-[0.1em] text-ef-muted">{gear.enName}</p> : null}
+        <div className="mt-1.5 flex items-center gap-1.5">
+          {gear.setName && gear.setName !== "세트 없음" ? <span className="truncate font-mono text-[10px] font-bold uppercase tracking-wide" style={{ color: `${PRIMARY}cc` }}>{gear.setName}</span> : null}
+          {gear.abilityTypes.length ? (
+            <span className="ml-auto flex shrink-0 items-center gap-0.5">
+              {gear.abilityTypes.map((a) => abilityIconMap[a] ? <span key={a} className="relative h-3.5 w-3.5"><Image src={abilityIconMap[a]} alt={abilityLabelMap[a]} fill sizes="14px" className="object-contain" /></span> : null)}
+            </span>
+          ) : null}
         </div>
+        {gear.attributeLabel ? <p className="mt-0.5 line-clamp-1 text-[11px] font-bold text-ef-ink/90">{gear.attributeLabel}</p> : null}
       </div>
     </Link>
   );
@@ -387,14 +302,14 @@ export default function GearPageClient({ gears }: { gears: GearListItem[] }) {
   const [keyword, setKeyword] = useState("");
   const [category, setCategory] = useState<GearCategory | "all">("all");
   const [setName, setSetName] = useState<GearSetName | "all">(initialSetName);
-  const [attributeFilter, setAttributeFilter] =
-    useState<GearAttributeKey | "all">("all");
+  const [attributeFilter, setAttributeFilter] = useState<GearAttributeKey | "all">("all");
   const [abilityFilters, setAbilityFilters] = useState<GearAbilityKey[]>([]);
   const [quality, setQuality] = useState<GearQuality | "all">("all");
   const [level, setLevel] = useState<GearLevel | "all">("all");
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [visibleCount, setVisibleCount] = useState(GEAR_PAGE_SIZE);
   const deferredKeyword = useDeferredValue(keyword);
+
   const indexedGears = useMemo(
     () =>
       gears
@@ -413,30 +328,18 @@ export default function GearPageClient({ gears }: { gears: GearListItem[] }) {
             .toLowerCase(),
         }))
         .sort((left, right) => {
-          if (right.gear.quality !== left.gear.quality) {
-            return right.gear.quality - left.gear.quality;
+          if (right.gear.quality !== left.gear.quality) return right.gear.quality - left.gear.quality;
+          const lc = categoryOrderMap[left.gear.category] ?? 999;
+          const rc = categoryOrderMap[right.gear.category] ?? 999;
+          if (lc !== rc) return lc - rc;
+          const ls = setTypeOptions.indexOf(left.gear.setName);
+          const rs = setTypeOptions.indexOf(right.gear.setName);
+          if (ls !== rs) {
+            if (ls === -1) return 1;
+            if (rs === -1) return -1;
+            return ls - rs;
           }
-
-          const leftCategoryOrder = categoryOrderMap[left.gear.category] ?? 999;
-          const rightCategoryOrder = categoryOrderMap[right.gear.category] ?? 999;
-
-          if (leftCategoryOrder !== rightCategoryOrder) {
-            return leftCategoryOrder - rightCategoryOrder;
-          }
-
-          const leftSetOrder = setTypeOptions.indexOf(left.gear.setName);
-          const rightSetOrder = setTypeOptions.indexOf(right.gear.setName);
-
-          if (leftSetOrder !== rightSetOrder) {
-            if (leftSetOrder === -1) return 1;
-            if (rightSetOrder === -1) return -1;
-            return leftSetOrder - rightSetOrder;
-          }
-
-          if (right.gear.level !== left.gear.level) {
-            return right.gear.level - left.gear.level;
-          }
-
+          if (right.gear.level !== left.gear.level) return right.gear.level - left.gear.level;
           return left.gear.name.localeCompare(right.gear.name, "ko");
         }),
     [gears],
@@ -444,32 +347,16 @@ export default function GearPageClient({ gears }: { gears: GearListItem[] }) {
 
   const sortedGears = useMemo(() => {
     const normalizedKeyword = deferredKeyword.trim().toLowerCase();
-
     return indexedGears
       .filter(({ gear, searchText }) => {
-        const matchesKeyword =
-          normalizedKeyword === "" || searchText.includes(normalizedKeyword);
+        const matchesKeyword = normalizedKeyword === "" || searchText.includes(normalizedKeyword);
         const matchesCategory = category === "all" || gear.category === category;
         const matchesSet = setName === "all" || gear.setName === setName;
-        const matchesAttribute =
-          attributeFilter === "all" || gear.attributeTypes.includes(attributeFilter);
-        const matchesAbility =
-          abilityFilters.length === 0 ||
-          abilityFilters.every((abilityFilter) =>
-            gear.abilityTypes.includes(abilityFilter),
-          );
+        const matchesAttribute = attributeFilter === "all" || gear.attributeTypes.includes(attributeFilter);
+        const matchesAbility = abilityFilters.length === 0 || abilityFilters.every((a) => gear.abilityTypes.includes(a));
         const matchesQuality = quality === "all" || gear.quality === quality;
         const matchesLevel = level === "all" || gear.level === level;
-
-        return (
-          matchesKeyword &&
-          matchesCategory &&
-          matchesSet &&
-          matchesAttribute &&
-          matchesAbility &&
-          matchesQuality &&
-          matchesLevel
-        );
+        return matchesKeyword && matchesCategory && matchesSet && matchesAttribute && matchesAbility && matchesQuality && matchesLevel;
       })
       .map(({ gear }) => gear);
   }, [indexedGears, deferredKeyword, category, setName, attributeFilter, abilityFilters, quality, level]);
@@ -479,10 +366,7 @@ export default function GearPageClient({ gears }: { gears: GearListItem[] }) {
     setVisibleCount(GEAR_PAGE_SIZE);
   }, [deferredKeyword, category, setName, attributeFilter, abilityFilters, quality, level]);
 
-  const visibleGears = useMemo(
-    () => sortedGears.slice(0, visibleCount),
-    [sortedGears, visibleCount],
-  );
+  const visibleGears = useMemo(() => sortedGears.slice(0, visibleCount), [sortedGears, visibleCount]);
 
   const activeFilterCount = [
     keyword.trim() ? 1 : 0,
@@ -495,105 +379,63 @@ export default function GearPageClient({ gears }: { gears: GearListItem[] }) {
   ].reduce((sum, value) => sum + value, 0);
 
   return (
-    <main className="min-h-screen overflow-x-clip bg-[#050505] px-3 py-3 pb-[calc(1.5rem+env(safe-area-inset-bottom))] text-white sm:px-4 md:px-6 md:py-5">
-      <div className="mx-auto max-w-[1840px] overflow-x-clip">
-        <header
-          className="mb-3 rounded-[20px] bg-[#05070b] p-4 shadow-[0_0_30px_rgba(250,204,21,0.04)] sm:mb-5 sm:rounded-[24px] sm:p-5"
-          style={{ border: `1px solid ${YELLOW_BORDER}` }}
-        >
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <p
-                className="text-[10px] font-semibold tracking-[0.28em] sm:text-[11px] sm:tracking-[0.35em]"
-                style={{ color: YELLOW_TEXT }}
-              >
-                엔드필드 지원 플랫폼
-              </p>
+    <main className="relative min-h-screen overflow-x-clip bg-ef-bg text-ef-ink">
+      <div className="pointer-events-none fixed inset-0 z-0 opacity-[0.022] [background-image:radial-gradient(circle,#ffd24a_1px,transparent_1px)] [background-size:22px_22px]" />
 
-              <h1
-                className="mt-2 text-2xl font-black tracking-tight sm:text-4xl"
-                style={{ color: YELLOW_TEXT }}
-              >
-                장비
-              </h1>
+      {/* TOP HUD */}
+      <div className="relative z-30 mx-auto flex max-w-[1720px] items-center justify-between px-3 py-2.5 sm:px-6 lg:px-7">
+        <div className="flex items-center gap-2">
+          <span className="h-3 w-3" style={{ background: PRIMARY }} />
+          <span className="font-mono text-[10px] font-bold uppercase tracking-[0.3em] text-ef-muted">Gear Index</span>
+          <span className="hidden font-mono text-[10px] tracking-[0.2em] text-ef-muted/60 sm:inline">{`// ${gears.length} UNITS`}</span>
+        </div>
+        <Link href="/" className="inline-flex min-h-9 items-center border border-ef-line bg-black/55 px-3 text-xs font-bold text-ef-muted backdrop-blur transition hover:border-ef-accent/40 hover:text-ef-accent-soft" style={CUT}>홈</Link>
+      </div>
 
-              <p className="mt-1 text-xs text-zinc-500 sm:text-sm">장비 목록</p>
+      <div className="relative z-10 mx-auto max-w-[1720px] px-3 pb-16 sm:px-6 lg:px-7">
+        {/* HEADER 패널 */}
+        <header className="relative overflow-hidden border border-ef-line bg-ef-card2 p-3 sm:px-5 sm:py-3.5" style={CUT}>
+          <span className="absolute left-0 top-0 block h-0.5 w-full" style={{ background: `linear-gradient(90deg, ${PRIMARY}, transparent 55%)` }} />
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <div className="flex items-center gap-2">
+              <span className="h-4 w-1" style={{ background: PRIMARY }} />
+              <h1 className="text-2xl font-black tracking-tight text-white sm:text-3xl">장비</h1>
             </div>
-
-            <Link
-              href="/"
-              className="flex min-h-11 shrink-0 items-center rounded-xl bg-black px-3 py-2 text-xs font-bold text-zinc-200 transition hover:bg-[#0b1018] hover:text-yellow-300 sm:px-4 sm:text-sm"
-              style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
-            >
-              홈으로
-            </Link>
+            <span className="font-mono text-[10px] font-black uppercase tracking-[0.22em] text-ef-accent-soft">Gear Index</span>
+            <p className="ml-auto font-mono text-[11px] uppercase tracking-[0.18em] text-ef-muted">
+              Total <span className="font-black" style={{ color: ACCENT }}>{sortedGears.length}</span> / {gears.length}
+            </p>
           </div>
         </header>
 
-        <div className="grid min-w-0 max-w-full gap-3 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-5">
-          <aside
-            className="sticky top-2 z-40 flex min-w-0 max-w-full self-start flex-col overflow-hidden rounded-[18px] bg-[#05070b] shadow-[0_0_30px_rgba(250,204,21,0.04)] lg:top-5 lg:h-[calc(100vh-40px)] lg:max-h-[calc(100vh-40px)] lg:rounded-[24px]"
-            style={{ border: `1px solid ${YELLOW_BORDER}` }}
-          >
+        <div className="mt-3 grid min-w-0 gap-3 lg:grid-cols-[232px_minmax(0,1fr)] lg:gap-4">
+          {/* ===== 검색 / 필터 ===== */}
+          <aside className="sticky top-2 z-40 flex min-w-0 max-w-full self-start flex-col overflow-hidden border border-ef-line bg-ef-card lg:top-3 lg:max-h-[calc(100vh-24px)]" style={CUT}>
             <button
               type="button"
               onClick={() => setIsFilterOpen((prev) => !prev)}
-              className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left lg:hidden"
-              style={{ borderBottom: `1px solid ${YELLOW_BORDER_SOFT}` }}
+              className="flex w-full min-w-0 items-center justify-between gap-2 border-b border-ef-line px-3 py-2.5 text-left lg:hidden"
             >
               <span className="min-w-0">
-                <span
-                  className="block text-[11px] font-black tracking-[0.2em]"
-                  style={{ color: YELLOW_TEXT }}
-                >
-                  검색 / 필터
-                </span>
-
-                <span className="mt-1 block truncate text-xs text-zinc-500">
-                  유형, 세트, 속성, 능력치, 품질, 레벨
-                  {activeFilterCount > 0 ? ` · 적용 ${activeFilterCount}` : ""}
+                <span className="block font-mono text-[10px] font-black uppercase tracking-[0.18em] text-ef-accent-soft">Search / Filter</span>
+                <span className="mt-0.5 block truncate text-[11px] text-ef-muted">
+                  유형 · 세트 · 속성 · 능력치 · 품질 · 레벨{activeFilterCount > 0 ? ` · 적용 ${activeFilterCount}` : ""}
                 </span>
               </span>
-
-              <span
-                className={[
-                  "shrink-0 text-lg font-black text-yellow-300 transition-transform",
-                  isFilterOpen ? "rotate-180" : "",
-                ].join(" ")}
-              >
-                ▼
-              </span>
+              <span className={`shrink-0 font-mono text-sm font-black transition-transform ${isFilterOpen ? "rotate-180" : ""}`} style={{ color: ACCENT }}>▼</span>
             </button>
 
-            <div
-              className={[
-                "min-w-0 max-w-full overflow-hidden lg:flex lg:min-h-0 lg:flex-1 lg:flex-col",
-                isFilterOpen
-                  ? "flex max-h-[70dvh] min-h-0 flex-1 flex-col"
-                  : "hidden lg:flex",
-              ].join(" ")}
-            >
-              <div
-                className="min-w-0 shrink-0 bg-[#05070b] p-3 sm:p-4"
-                style={{ borderBottom: `1px solid ${YELLOW_BORDER_SOFT}` }}
-              >
-                <h2
-                  className="mb-2 text-[11px] font-black tracking-[0.2em]"
-                  style={{ color: YELLOW_TEXT }}
-                >
-                  검색
-                </h2>
-
+            <div className={`min-w-0 max-w-full overflow-hidden lg:flex lg:min-h-0 lg:flex-1 lg:flex-col ${isFilterOpen ? "flex max-h-[70dvh] min-h-0 flex-1 flex-col" : "hidden lg:flex"}`}>
+              <div className="min-w-0 shrink-0 border-b border-ef-line bg-ef-card p-3 sm:p-4">
+                <GroupLabel>Search</GroupLabel>
                 <div className="relative">
-                  <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-zinc-500">
-                    ⌕
-                  </span>
-
+                  <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-ef-muted">⌕</span>
                   <input
                     value={keyword}
                     onChange={(event) => setKeyword(event.target.value)}
-                    placeholder="이름 / 세트 검색"
-                    className="h-10 w-full max-w-full rounded-xl border border-white/20 bg-[#071019] pl-9 pr-3 text-xs text-white outline-none transition placeholder:text-zinc-500 focus:border-yellow-400/50 sm:h-9"
+                    placeholder="이름 / 세트 / 속성 검색"
+                    className="h-10 w-full border border-ef-line bg-black pl-9 pr-3 text-xs text-ef-ink outline-none transition placeholder:text-ef-muted/70 focus:border-ef-accent/50"
+                    style={CUT_SM}
                   />
                 </div>
               </div>
@@ -608,123 +450,85 @@ export default function GearPageClient({ gears }: { gears: GearListItem[] }) {
 
                 <FilterGroup title="세트 유형" grid>
                   <FilterButton active={setName === "all"} label="전체" onClick={() => setSetName("all")} />
-                  {setTypeOptions.map((setTypeOption) => (
-                    <FilterButton
-                      key={setTypeOption}
-                      active={setName === setTypeOption}
-                      label={setTypeOption}
-                      onClick={() => setSetName(setTypeOption)}
-                    />
+                  {setTypeOptions.map((s) => (
+                    <FilterButton key={s} active={setName === s} label={s} onClick={() => setSetName(s)} />
                   ))}
                 </FilterGroup>
 
                 <FilterGroup title="속성" grid>
                   <FilterButton active={attributeFilter === "all"} label="전체" onClick={() => setAttributeFilter("all")} />
-                  {attributeOptions.map((attributeOption) => (
-                    <FilterButton
-                      key={attributeOption.key}
-                      active={attributeFilter === attributeOption.key}
-                      label={attributeOption.label}
-                      onClick={() => setAttributeFilter(attributeOption.key)}
-                    />
+                  {attributeOptions.map((a) => (
+                    <FilterButton key={a.key} active={attributeFilter === a.key} label={a.label} onClick={() => setAttributeFilter(a.key)} />
                   ))}
                 </FilterGroup>
 
                 <FilterGroup title={`능력치 (${abilityFilters.length}/2)`}>
                   <FilterButton active={abilityFilters.length === 0} label="전체" onClick={() => setAbilityFilters([])} />
-                  {abilityOptions.map((abilityOption) => (
+                  {abilityOptions.map((a) => (
                     <FilterButton
-                      key={abilityOption.key}
-                      active={abilityFilters.includes(abilityOption.key)}
-                      label={abilityOption.label}
-                      iconSrc={abilityIconMap[abilityOption.key]}
-                      onClick={() =>
-                        setAbilityFilters((prev) =>
-                          toggleAbilityFilter(prev, abilityOption.key, 2),
-                        )
-                      }
+                      key={a.key}
+                      active={abilityFilters.includes(a.key)}
+                      label={a.label}
+                      iconSrc={abilityIconMap[a.key]}
+                      onClick={() => setAbilityFilters((prev) => toggleAbilityFilter(prev, a.key, 2))}
                     />
                   ))}
                 </FilterGroup>
 
                 <FilterGroup title="품질">
                   <FilterButton active={quality === "all"} label="전체" onClick={() => setQuality("all")} />
-                  {[5, 4, 3, 2, 1].map((qualityOption) => (
-                    <FilterButton
-                      key={qualityOption}
-                      active={quality === qualityOption}
-                      label={qualityLabelMap[qualityOption as GearQuality]}
-                      colored
-                      color={qualityColorMap[qualityOption as GearQuality]}
-                      onClick={() => setQuality(qualityOption as GearQuality)}
-                    />
+                  {[5, 4, 3, 2, 1].map((q) => (
+                    <FilterButton key={q} active={quality === q} label={qualityLabelMap[q as GearQuality]} color={qualityColorMap[q as GearQuality]} onClick={() => setQuality(q as GearQuality)} />
                   ))}
                 </FilterGroup>
 
                 <FilterGroup title="장비 레벨" last>
                   <FilterButton active={level === "all"} label="전체" onClick={() => setLevel("all")} />
-                  {levelOptions.map((levelOption) => (
-                    <FilterButton
-                      key={levelOption}
-                      active={level === levelOption}
-                      label={`레벨 ${levelOption}`}
-                      onClick={() => setLevel(levelOption)}
-                    />
+                  {levelOptions.map((l) => (
+                    <FilterButton key={l} active={level === l} label={`레벨 ${l}`} onClick={() => setLevel(l)} />
                   ))}
                 </FilterGroup>
               </div>
             </div>
           </aside>
 
-          <section
-            className="min-w-0 rounded-[20px] bg-[#05070b] p-3 shadow-[0_0_30px_rgba(250,204,21,0.04)] lg:rounded-[24px]"
-            style={{ border: `1px solid ${YELLOW_BORDER}` }}
-          >
-            <div
-              className="mb-3 flex items-center justify-between pb-3"
-              style={{ borderBottom: `1px solid ${YELLOW_BORDER_SOFT}` }}
-            >
-              <p className="text-sm text-zinc-400">
-                총{" "}
-                <span className="font-black" style={{ color: YELLOW_TEXT }}>
-                  {sortedGears.length}
-                </span>
-                개
+          {/* ===== 카드 그리드 ===== */}
+          <section className="min-w-0 overflow-hidden border border-ef-line bg-ef-card2 p-3 sm:p-4" style={CUT}>
+            <div className="mb-3 flex items-center justify-between border-b border-ef-line pb-2.5">
+              <div className="flex items-center gap-2">
+                <span className="h-3.5 w-1" style={{ background: PRIMARY }} />
+                <span className="font-mono text-[11px] font-black uppercase tracking-[0.22em] text-ef-accent-soft">Units</span>
+              </div>
+              <p className="font-mono text-[11px] text-ef-muted">
+                <span className="font-black" style={{ color: ACCENT }}>{sortedGears.length}</span> 개
               </p>
             </div>
 
             {sortedGears.length > 0 ? (
               <>
-                <div className="grid grid-cols-1 gap-3 min-[360px]:grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(150px,170px))] sm:justify-between">
+                <div className="grid grid-cols-2 gap-2 min-[480px]:grid-cols-3 sm:gap-3 md:grid-cols-[repeat(auto-fill,minmax(160px,1fr))]">
                   {visibleGears.map((gear) => (
                     <GearCard key={gear.slug} gear={gear} />
                   ))}
                 </div>
 
-                {visibleCount < sortedGears.length && (
+                {visibleCount < sortedGears.length ? (
                   <div className="mt-4 flex justify-center">
                     <button
                       type="button"
-                      onClick={() =>
-                        setVisibleCount((count) => count + GEAR_PAGE_SIZE)
-                      }
-                      className="rounded-lg px-5 py-2 text-sm font-semibold transition hover:bg-[#101923]"
-                      style={{
-                        border: "1px solid rgba(255,196,74,0.3)",
-                        color: YELLOW_TEXT,
-                      }}
+                      onClick={() => setVisibleCount((count) => count + GEAR_PAGE_SIZE)}
+                      className="border px-5 py-2 font-mono text-xs font-black uppercase tracking-wide transition hover:brightness-110"
+                      style={{ ...CUT_SM, borderColor: `${PRIMARY}66`, background: `${PRIMARY}1a`, color: PRIMARY }}
                     >
                       더 보기 ({sortedGears.length - visibleCount}개 남음)
                     </button>
                   </div>
-                )}
+                ) : null}
               </>
             ) : (
-              <div
-                className="flex min-h-[260px] items-center justify-center rounded-[20px] bg-black p-6 text-center text-sm text-zinc-500"
-                style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
-              >
-                등록된 장비 데이터가 없습니다.
+              <div className="flex min-h-[260px] flex-col items-center justify-center border border-dashed border-ef-line bg-ef-card p-6 text-center" style={CUT}>
+                <p className="font-mono text-[11px] font-black uppercase tracking-[0.22em] text-ef-muted">No Results</p>
+                <p className="mt-2 text-xs text-ef-muted/70">조건에 맞는 장비가 없습니다.</p>
               </div>
             )}
           </section>
