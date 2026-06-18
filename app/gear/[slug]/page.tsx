@@ -67,19 +67,28 @@ function StatLineCard({ line }: { line: GearStatLine }) {
   ].filter((s) => s.value != null && String(s.value).trim() !== "");
   const finalValue = steps.length ? steps[steps.length - 1].value : "";
   return (
-    <div className="flex flex-col border border-ef-line bg-ef-card2 p-3" style={CUT}>
+    <div className="flex flex-col border border-ef-line bg-ef-card2 p-3.5" style={CUT}>
       <div className="flex items-center justify-between gap-2">
-        <p className="min-w-0 break-keep text-sm font-black text-ef-ink">{line.label}</p>
-        {finalValue ? <span className="shrink-0 font-mono text-base font-black tabular-nums" style={{ color: ACCENT }}>{finalValue}</span> : null}
+        <p className="min-w-0 break-keep text-base font-black text-ef-ink">{line.label}</p>
+        {finalValue ? <span className="shrink-0 font-mono text-xl font-black tabular-nums" style={{ color: ACCENT }}>{finalValue}</span> : null}
       </div>
       {steps.length > 1 ? (
-        <div className="mt-2.5 flex flex-wrap gap-1 border-t border-ef-line pt-2.5">
-          {steps.map((s, i) => (
-            <span key={i} className="inline-flex items-center gap-1 border border-ef-line bg-ef-card px-1.5 py-0.5 font-mono text-[11px] leading-none" style={CUT_SM}>
-              <span className="text-ef-muted">{s.label}</span>
-              <span className="font-black tabular-nums" style={{ color: ACCENT }}>{s.value}</span>
-            </span>
-          ))}
+        <div className="mt-3 grid gap-1.5 border-t border-ef-line pt-3" style={{ gridTemplateColumns: `repeat(${steps.length}, minmax(0, 1fr))` }}>
+          {steps.map((s, i) => {
+            const isFinal = i === steps.length - 1;
+            return (
+              <div
+                key={i}
+                className="flex flex-col items-center gap-1 border px-1 py-2"
+                style={isFinal
+                  ? { ...CUT_SM, borderColor: `${ACCENT}55`, background: `${ACCENT}14` }
+                  : { ...CUT_SM, borderColor: "#222", background: "#0b0b0b" }}
+              >
+                <span className="font-mono text-[12px] font-bold uppercase tracking-wide text-ef-muted">{s.label}</span>
+                <span className="break-keep text-center font-mono text-[15px] font-black leading-none tabular-nums" style={{ color: ACCENT }}>{s.value}</span>
+              </div>
+            );
+          })}
         </div>
       ) : null}
     </div>
