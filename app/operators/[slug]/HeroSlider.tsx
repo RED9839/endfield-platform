@@ -6,7 +6,6 @@ import { useState } from "react";
 type Props = {
   images: string[];
   alt: string;
-  enName: string;
 };
 
 const HERO_IMAGE_SIZES =
@@ -32,7 +31,7 @@ const navButtonStyle: React.CSSProperties = {
   borderRadius: "20px",
 };
 
-export default function HeroSlider({ images, alt, enName }: Props) {
+export default function HeroSlider({ images, alt }: Props) {
   const validImages = images.filter(Boolean);
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -54,13 +53,14 @@ export default function HeroSlider({ images, alt, enName }: Props) {
 
   return (
     <div className="relative h-full w-full">
+      {/* 다른 오퍼레이터 히어로와 동일하게 꽉 채워서 크게 표시(object-cover + scale) */}
       <Image
         src={currentImage}
         alt={alt}
         fill
         priority
         sizes={HERO_IMAGE_SIZES}
-        className="object-contain object-bottom drop-shadow-[0_24px_42px_rgba(0,0,0,0.68)]"
+        className="scale-[1.08] object-cover object-[center_6%]"
       />
 
       {validImages.length > 1 && (
@@ -85,15 +85,6 @@ export default function HeroSlider({ images, alt, enName }: Props) {
         </>
       )}
 
-      <div className="pointer-events-none absolute left-[10%] bottom-12 z-[2] max-w-[70%] sm:bottom-16 lg:bottom-24">
-        <div className="break-keep text-[clamp(54px,9vw,104px)] font-black leading-none tracking-tight text-white drop-shadow-[0_8px_24px_rgba(0,0,0,0.8)]">
-          {alt}
-        </div>
-
-        <div className="mt-4 break-words text-base font-bold text-zinc-200 drop-shadow-[0_4px_12px_rgba(0,0,0,0.75)] sm:text-xl">
-          {enName}
-        </div>
-      </div>
     </div>
   );
 }

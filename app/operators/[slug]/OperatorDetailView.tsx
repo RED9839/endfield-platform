@@ -28,7 +28,7 @@ const HOVER = "transition duration-200 hover:-translate-y-0.5 hover:border-[#ffd
 // 스킬 타입 태그 — [일반 공격]/[배틀 스킬] 등 시각 강조 pill.
 function SkillTag({ children }: { children: React.ReactNode }) {
   return (
-    <span className="inline-flex items-center border px-2 py-0.5 font-mono text-[10px] font-black uppercase tracking-wide" style={{ borderColor: `${PRIMARY}66`, background: `${PRIMARY}1a`, color: PRIMARY }}>
+    <span className="inline-flex items-center border px-2 py-0.5 font-mono text-[11px] font-black uppercase tracking-wide" style={{ borderColor: `${PRIMARY}66`, background: `${PRIMARY}1a`, color: PRIMARY }}>
       {children}
     </span>
   );
@@ -156,14 +156,14 @@ function cycleSkillShortLabel(step: CycleStep): string {
 }
 
 function Meta({ children }: { children: React.ReactNode }) {
-  return <span className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-ef-muted">{children}</span>;
+  return <span className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-ef-muted">{children}</span>;
 }
 function SectionLabel({ en, num, action, sub }: { en: string; num?: string; action?: React.ReactNode; sub?: boolean }) {
   return (
     <div className={`flex items-center gap-2 ${sub ? "mb-1.5" : "mb-2.5"}`}>
       <span className={sub ? "h-2.5 w-0.5" : "h-4 w-1"} style={{ background: sub ? "#5a5a5a" : PRIMARY }} />
       {num ? <span className="font-mono text-xs font-black tabular-nums" style={{ color: PRIMARY }}>{num}</span> : null}
-      <span className={`font-mono font-black uppercase ${sub ? "text-[10px] tracking-[0.2em] text-ef-muted" : "text-[13px] tracking-[0.2em] text-white"}`}>{en}</span>
+      <span className={`font-mono font-black uppercase ${sub ? "text-[11px] tracking-[0.2em] text-ef-muted" : "text-[13px] tracking-[0.2em] text-white"}`}>{en}</span>
       {/* 메인 섹션만 라벨 우측으로 얇은 구분선 — 서브 섹션과 위계 차이 */}
       {!sub ? <span className="ml-2 hidden h-px flex-1 bg-gradient-to-r from-ef-line to-transparent sm:block" /> : null}
       {action ? <span className="ml-auto">{action}</span> : null}
@@ -204,8 +204,8 @@ function CycleStepChip({ step, order, className = "" }: { step: CycleStep; order
       </span>
       {/* 라벨 영역 — min-height 고정으로 모든 카드 높이 동일. 모바일 짧은 라벨 1줄 강제 / sm+ 전체 라벨 2줄까지 */}
       <span className="flex min-h-[14px] w-full items-start justify-center sm:min-h-[26px]">
-        <span className="block w-full truncate text-center text-[10px] font-black leading-tight text-ef-ink sm:hidden">{shortLabel}</span>
-        <span className="hidden w-full text-center text-[10px] font-black leading-tight text-ef-ink sm:line-clamp-2">{label}</span>
+        <span className="block w-full truncate text-center text-[11px] font-black leading-tight text-ef-ink sm:hidden">{shortLabel}</span>
+        <span className="hidden w-full text-center text-[11px] font-black leading-tight text-ef-ink sm:line-clamp-2">{label}</span>
       </span>
     </span>
   );
@@ -223,8 +223,8 @@ function PartyComposition({ party, operatorBySlug }: { party: string[]; operator
             <span className="relative mx-auto block h-11 w-11 overflow-hidden border border-ef-line bg-black sm:h-12 sm:w-12 lg:h-[60px] lg:w-[60px]">
               {slug ? <Image src={m?.avatar ?? `/operators/${slug}/avatar.webp`} alt="" fill sizes="64px" className="object-cover object-top" /> : <span className="flex h-full w-full items-center justify-center text-base font-black text-ef-muted">+</span>}
             </span>
-            <p className="mt-0.5 truncate font-mono text-[9px] font-black uppercase tracking-wide leading-none lg:mt-1.5 lg:text-[10px]" style={{ color: i === 0 ? PRIMARY : "#a0a0a0" }}>{label}</p>
-            <p className="mt-0.5 truncate text-[10px] font-bold leading-none text-ef-muted lg:mt-1 lg:text-xs lg:leading-tight">{m?.name ?? "빈 슬롯"}</p>
+            <p className="mt-0.5 truncate font-mono text-[10px] font-black uppercase tracking-wide leading-none lg:mt-1.5 lg:text-[11px]" style={{ color: i === 0 ? PRIMARY : "#a0a0a0" }}>{label}</p>
+            <p className="mt-0.5 truncate text-[11px] font-bold leading-none text-ef-muted lg:mt-1 lg:text-xs lg:leading-tight">{m?.name ?? "빈 슬롯"}</p>
           </div>
         );
       })}
@@ -335,11 +335,11 @@ function TalentList({ talents }: { talents: TalentDetail[] }) {
               <span className="relative h-9 w-9 shrink-0 overflow-hidden border border-ef-line bg-black">{tlt.icon ? <Image src={tlt.icon} alt="" fill sizes="36px" className="object-contain p-0.5" /> : null}</span>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-xs font-black text-ef-ink">{tlt.name}</p>
-                {tlt.unlock ? <p className="truncate font-mono text-[9px] font-bold uppercase tracking-wide" style={{ color: PRIMARY }}>{tlt.unlock}</p> : null}
+                {tlt.unlock ? <p className="truncate font-mono text-[10px] font-bold uppercase tracking-wide" style={{ color: PRIMARY }}>{tlt.unlock}</p> : null}
               </div>
-              {tlt.description ? <span className="shrink-0 font-mono text-[10px] font-black sm:hidden" style={{ color: isOpen ? "#ffb347" : "#5a5a5a" }}>{isOpen ? "▲" : "▼"}</span> : null}
+              {tlt.description ? <span className="shrink-0 font-mono text-[11px] font-black sm:hidden" style={{ color: isOpen ? "#ffb347" : "#5a5a5a" }}>{isOpen ? "▲" : "▼"}</span> : null}
             </div>
-            {tlt.description ? <p className={`mt-1.5 overflow-hidden break-keep text-[11px] leading-5 text-ef-muted transition-all duration-200 ease-out sm:line-clamp-none sm:max-h-none sm:opacity-100 ${isOpen ? "max-h-96 opacity-100" : "line-clamp-2 max-h-10 opacity-90"}`}>{tlt.description}</p> : null}
+            {tlt.description ? <p className={`mt-1.5 overflow-hidden break-keep text-xs leading-5 text-ef-muted transition-all duration-200 ease-out sm:line-clamp-none sm:max-h-none sm:opacity-100 ${isOpen ? "max-h-96 opacity-100" : "line-clamp-2 max-h-10 opacity-90"}`}>{tlt.description}</p> : null}
           </button>
         );
       })}
@@ -352,7 +352,7 @@ function EliteCard({ stage, description, materials }: EliteStage) {
   return (
     <div className={`flex h-full min-h-[200px] flex-col border border-ef-line bg-ef-card2 p-2.5 ${HOVER}`} style={CUT}>
       <p className="font-mono text-[11px] font-black uppercase tracking-wide" style={{ color: PRIMARY }}>{stage}</p>
-      {description ? <p className="mt-0.5 break-keep text-[11px] leading-5 text-ef-muted">{description}</p> : null}
+      {description ? <p className="mt-0.5 break-keep text-xs leading-5 text-ef-muted">{description}</p> : null}
       {materials.length ? (
         <div className="mt-auto grid grid-cols-1 gap-1.5 pt-2 min-[480px]:grid-cols-2">
           {materials.map((m, j) => <MaterialChip key={j} name={m.name} icon={m.icon} count={m.count} />)}
@@ -371,7 +371,7 @@ function PotentialList({ items }: { items: PotentialDetail[] }) {
           <span className="relative h-9 w-9 shrink-0 overflow-hidden border border-ef-line bg-black"><Image src={`/icons/potential/${i + 1}.webp`} alt="" fill sizes="36px" className="object-contain p-0.5" /></span>
           <div className="min-w-0">
             <p className="text-xs font-black text-ef-ink">{p.title}</p>
-            <p className="mt-0.5 break-keep text-[11px] leading-5 text-ef-muted">{highlightNums(p.description)}</p>
+            <p className="mt-0.5 break-keep text-xs leading-5 text-ef-muted">{highlightNums(p.description)}</p>
           </div>
         </div>
       ))}
@@ -386,7 +386,7 @@ function TrustGrid({ items }: { items: TrustBonus[] }) {
       {items.map((t) => (
         <div key={t.level} className={`relative flex min-h-[88px] flex-col justify-center gap-1.5 overflow-hidden border border-ef-line bg-ef-card2 p-3 pl-4 text-center ${HOVER}`} style={CUT}>
           <span className="absolute left-0 top-0 h-full w-1" style={{ background: PRIMARY }} />
-          <span className="font-mono text-[9px] font-black uppercase tracking-[0.18em] text-ef-muted">Trust Lv.{t.level}</span>
+          <span className="font-mono text-[10px] font-black uppercase tracking-[0.18em] text-ef-muted">Trust Lv.{t.level}</span>
           <span className="break-keep text-base font-black text-ef-ink">{highlightNums(t.label)}</span>
         </div>
       ))}
@@ -423,6 +423,7 @@ export default function OperatorDetailView({
   const [skillLvl, setSkillLvl] = useState<number | null>(null); // SKILL LEVEL TABLE 선택 레벨 인덱스(null=마지막/M3)
   const [selectedId, setSelectedId] = useState<string | null>(null); // 선택 세팅 상세
   const [selForm, setSelForm] = useState<Record<string, unknown> | null>(null);
+  const [selIsMain, setSelIsMain] = useState(true); // 현재 오퍼레이터가 이 세팅의 메인인지(서브면 그 멤버 정보 표시)
   const [selCycle, setSelCycle] = useState<unknown[]>([]);
   const [selParty, setSelParty] = useState<string[]>([]);
 
@@ -430,7 +431,7 @@ export default function OperatorDetailView({
   useEffect(() => {
     let mounted = true;
     setBuildsLoading(true);
-    const params = new URLSearchParams({ operators: operator.slug, sort: "popular", limit: "12", page: "1" });
+    const params = new URLSearchParams({ operators: operator.slug, sort: "popular", limit: "5", page: "1" });
     fetch(`/api/operator-settings?${params.toString()}`, { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
@@ -463,12 +464,20 @@ export default function OperatorDetailView({
         if (!mounted) return;
         const slots = detail?.setting?.slots;
         if (slots) {
-          const members = [slots.member1?.operatorSlug, slots.member2?.operatorSlug, slots.member3?.operatorSlug].map((x: unknown) => String(x ?? "").trim()).filter(Boolean);
-          setSelParty([String(slots.main?.operatorSlug ?? operator.slug), ...members].filter(Boolean).slice(0, 4));
-          setSelForm((slots.main?.form ?? null) as Record<string, unknown> | null);
+          type Slot = { operatorSlug?: string; form?: Record<string, unknown> } | undefined;
+          const slotKeys = ["main", "member1", "member2", "member3"] as const;
+          const slugOf = (s: Slot) => String(s?.operatorSlug ?? (s?.form?.operatorSlug as string) ?? "").trim();
+          const mainSlug = slugOf(slots.main);
+          const members = [slots.member1, slots.member2, slots.member3].map(slugOf).filter(Boolean);
+          setSelParty([mainSlug || operator.slug, ...members].filter(Boolean).slice(0, 4));
+          // 현재 오퍼레이터가 차지한 슬롯의 form 을 사용 → 서브 멤버면 그 멤버의 무기/장비 표시(메인 정보 혼동 방지).
+          const mySlot = (slotKeys.map((k) => slots[k] as Slot).find((s) => slugOf(s) === operator.slug)) ?? (slots.main as Slot);
+          setSelIsMain(mainSlug === operator.slug || !mainSlug);
+          setSelForm((mySlot?.form ?? null) as Record<string, unknown> | null);
         } else {
           setSelParty([]);
           setSelForm(null);
+          setSelIsMain(true);
         }
         setSelCycle(Array.isArray(detail?.setting?.cycle) ? detail.setting.cycle : []);
       })
@@ -477,6 +486,7 @@ export default function OperatorDetailView({
           setSelForm(null);
           setSelCycle([]);
           setSelParty([]);
+          setSelIsMain(true);
         }
       });
     return () => {
@@ -497,7 +507,8 @@ export default function OperatorDetailView({
   // USER SETTINGS 탭 = 선택한 세팅 상세.
   const selected = builds.find((b) => b.id === selectedId) ?? null;
   const selWeapon = (() => {
-    const slug = (selForm?.weaponSlug as string) ?? selected?.slotsSummary?.mainWeaponSlug;
+    // 서브 멤버일 땐 그 멤버의 form 만 사용(메인 무기 fallback 금지 → 혼동 방지).
+    const slug = (selForm?.weaponSlug as string) ?? (selIsMain ? selected?.slotsSummary?.mainWeaponSlug : undefined);
     return slug ? weaponBySlug.get(slug) : undefined;
   })();
   const selGears = [selForm?.armorSlug, selForm?.glovesSlug, selForm?.kit1Slug, selForm?.kit2Slug]
@@ -506,7 +517,8 @@ export default function OperatorDetailView({
     .map((s) => gearBySlug.get(s))
     .filter((g): g is GearRef => Boolean(g))
     .slice(0, 4);
-  const selSetName = selected?.slotsSummary?.gearSetName || activeGearSetName(selGears);
+  // 메인일 때만 미리 계산된 세트명 사용, 서브는 그 멤버 장비로 계산.
+  const selSetName = activeGearSetName(selGears) || (selIsMain ? (selected?.slotsSummary?.gearSetName ?? "") : "");
   const selPartyResolved = selParty.length ? selParty : selected ? [operator.slug] : [];
   const selCycleSteps = (selCycle as CycleStep[]).filter((s) => s && typeof s === "object");
   const selAuthor = selected?.userNickname ?? selected?.nickname ?? "익명";
@@ -531,8 +543,8 @@ export default function OperatorDetailView({
       <div className="relative z-30 flex items-center justify-between px-4 py-2.5 sm:px-6 lg:px-7 min-[1024px]:mx-auto min-[1024px]:w-full min-[1024px]:max-w-[1720px] min-[1920px]:px-10">
         <div className="flex items-center gap-2">
           <span className="h-3 w-3" style={{ background: PRIMARY }} />
-          <span className="font-mono text-[10px] font-bold uppercase tracking-[0.3em] text-ef-muted">Operator File</span>
-          <span className="hidden font-mono text-[10px] tracking-[0.2em] text-ef-muted/60 sm:inline">{`// ID:${operator.slug.toUpperCase()}`}</span>
+          <span className="font-mono text-[11px] font-bold uppercase tracking-[0.3em] text-ef-muted">Operator File</span>
+          <span className="hidden font-mono text-[11px] tracking-[0.2em] text-ef-muted/60 sm:inline">{`// ID:${operator.slug.toUpperCase()}`}</span>
         </div>
         <div className="flex items-center gap-2">
           <Link href="/operators" className="inline-flex min-h-9 items-center border border-ef-line bg-black/55 px-3 text-xs font-bold text-ef-muted backdrop-blur transition hover:border-ef-accent/40 hover:text-ef-accent-soft" style={CUT}>목록</Link>
@@ -549,7 +561,7 @@ export default function OperatorDetailView({
           <section className="relative flex h-[69vh] max-h-[86vh] min-h-[480px] flex-col overflow-hidden bg-black sm:h-[60vh] sm:max-h-[78vh] lg:h-[calc(100vh-1.5rem)] lg:max-h-none lg:border lg:border-ef-line" style={CUT}>
             <div className="absolute inset-0">
               {isAdminSlider ? (
-                <HeroSlider images={adminSlides} alt={operator.name} enName={operator.enName} />
+                <HeroSlider images={adminSlides} alt={operator.name} />
               ) : (
                 <Image src={heroImage} alt={operator.name} fill priority sizes="(max-width:1024px) 100vw, 900px" className="scale-[1.08] object-cover object-[center_6%]" />
               )}
@@ -570,28 +582,28 @@ export default function OperatorDetailView({
               {/* 3) 프로필 패널 — 이름과 더 분리(모바일 48px / PC 32px)해 텍스트 충돌 감소·일러 감상 영역 확보. 보조 요소: 더 투명·약한 blur·얇은 1px 구분선, 박스 프레임 금지 */}
               <div className="mt-12 w-full max-w-[min(440px,calc(100vw-2rem))] border border-ef-line/70 bg-ef-card/65 backdrop-blur-sm sm:mt-8" style={CUT}>
                 <div className="flex items-center justify-between gap-2 border-b border-ef-line/70 px-3 py-1">
-                  <span className="font-mono text-[9px] font-black uppercase tracking-[0.2em] text-ef-muted">Operator Profile</span>
+                  <span className="font-mono text-[10px] font-black uppercase tracking-[0.2em] text-ef-muted">Operator Profile</span>
                   <span className="text-sm tracking-widest text-ef-accent">{"★".repeat(operator.rarity)}</span>
                 </div>
                 {/* 모바일: 라벨 위·값 아래(가독성) / sm+: 라벨·값 한 줄 */}
                 <div className="grid grid-cols-2">
                   <div className="flex min-w-0 flex-col gap-0.5 border-b border-r border-ef-line/70 px-3 py-1 sm:flex-row sm:items-center sm:gap-1.5">
-                    <span className="shrink-0 text-[10px] font-bold uppercase tracking-wide text-ef-muted">속성</span>
+                    <span className="shrink-0 text-[11px] font-bold uppercase tracking-wide text-ef-muted">속성</span>
                     <span className="flex min-w-0 items-center gap-1 text-[13px] font-black text-ef-ink sm:text-xs">
                       <span className="relative h-3.5 w-3.5 shrink-0 sm:h-3 sm:w-3"><Image src={elementIcon} alt="" fill sizes="14px" className="object-contain" /></span>
                       <span className="truncate">{elementLabel}</span>
                     </span>
                   </div>
                   <div className="flex min-w-0 flex-col gap-0.5 border-b border-ef-line/70 px-3 py-1 sm:flex-row sm:items-center sm:gap-1.5">
-                    <span className="shrink-0 text-[10px] font-bold uppercase tracking-wide text-ef-muted">직군</span>
+                    <span className="shrink-0 text-[11px] font-bold uppercase tracking-wide text-ef-muted">직군</span>
                     <span className="min-w-0 truncate text-[13px] font-black text-ef-ink sm:text-xs">{classLabelMap[operator.class] ?? operator.class}</span>
                   </div>
                   <div className="flex min-w-0 flex-col gap-0.5 border-r border-ef-line/70 px-3 py-1 sm:flex-row sm:items-center sm:gap-1.5">
-                    <span className="shrink-0 text-[10px] font-bold uppercase tracking-wide text-ef-muted">무기</span>
+                    <span className="shrink-0 text-[11px] font-bold uppercase tracking-wide text-ef-muted">무기</span>
                     <span className="min-w-0 truncate text-[13px] font-black text-ef-ink sm:text-xs">{weaponLabelMap[operator.weapon] ?? operator.weapon}</span>
                   </div>
                   <div className="flex min-w-0 flex-col gap-0.5 px-3 py-1 sm:flex-row sm:items-center sm:gap-1.5">
-                    <span className="shrink-0 text-[10px] font-bold uppercase tracking-wide text-ef-muted">성장</span>
+                    <span className="shrink-0 text-[11px] font-bold uppercase tracking-wide text-ef-muted">성장</span>
                     <span className="min-w-0 truncate text-[13px] font-black sm:text-xs" style={{ color: PRIMARY }}>MAX {maxLevel} · 정예 {operator.elite.length}</span>
                   </div>
                 </div>
@@ -609,7 +621,7 @@ export default function OperatorDetailView({
                 const isActive = m.id === activeModule;
                 return (
                   <button key={m.id} type="button" onClick={() => setActiveModule(m.id)} className="group relative inline-flex min-h-12 flex-1 shrink-0 items-center justify-center gap-1 px-1.5 sm:gap-1.5 sm:px-2.5 lg:min-h-11 lg:flex-none lg:justify-start lg:px-3.5" style={isActive ? { background: `${PRIMARY}22` } : undefined}>
-                    <span className="hidden font-mono text-[10px] font-bold sm:inline" style={{ color: isActive ? PRIMARY : "#a0a0a0" }}>{String(index + 1).padStart(2, "0")}</span>
+                    <span className="hidden font-mono text-[11px] font-bold sm:inline" style={{ color: isActive ? PRIMARY : "#a0a0a0" }}>{String(index + 1).padStart(2, "0")}</span>
                     <span className={`whitespace-nowrap font-mono text-[11px] font-black tracking-tight transition sm:text-xs sm:tracking-wide ${isActive ? "text-white" : "text-zinc-400 group-hover:text-white"}`}>{m.label}</span>
                     <span className={`absolute inset-x-2 bottom-0 h-0.5 transition ${isActive ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`} style={{ background: PRIMARY }} />
                   </button>
@@ -624,7 +636,7 @@ export default function OperatorDetailView({
               <div className="flex flex-col gap-4 min-[2560px]:gap-5">
                 {/* COMMUNITY BUILDS — 커뮤니티 세팅 목록. 제목 우측 "전체 보기 →". 모바일은 상위 5개 + 펼치기(데스크톱은 전체) */}
                 <div className="min-w-0">
-                  <SectionLabel en="Community Builds" action={<Link href={`/settings?operators=${encodeURIComponent(operator.slug)}`} className="-my-1 inline-flex items-center px-2 py-1 font-mono text-[10px] font-black uppercase tracking-wide text-ef-accent-soft transition duration-200 hover:translate-x-0.5 hover:brightness-125">전체 보기 →</Link>} />
+                  <SectionLabel en="Community Builds" action={<Link href={`/settings?operators=${encodeURIComponent(operator.slug)}`} className="-my-1 inline-flex items-center px-2 py-1 font-mono text-[11px] font-black uppercase tracking-wide text-ef-accent-soft transition duration-200 hover:translate-x-0.5 hover:brightness-125">전체 보기 →</Link>} />
                   {buildsLoading ? (
                     <div className="grid gap-2">{[0, 1, 2, 3, 4, 5].map((i) => <div key={i} className="h-14 animate-pulse bg-ef-card2" style={CUT} />)}</div>
                   ) : builds.length > 0 ? (
@@ -651,7 +663,7 @@ export default function OperatorDetailView({
                                   {b.slotsSummary?.gearSetName ? <span className="truncate" style={{ color: PRIMARY }}>· {b.slotsSummary.gearSetName}</span> : null}
                                 </span>
                               </span>
-                              <span className="shrink-0 font-mono text-[10px] font-black uppercase tracking-wide" style={{ color: isSel ? "#ffb347" : "#a0a0a0" }}>상세 →</span>
+                              <span className="shrink-0 font-mono text-[11px] font-black uppercase tracking-wide" style={{ color: isSel ? "#ffb347" : "#a0a0a0" }}>상세 →</span>
                             </button>
                           );
                         })}
@@ -679,7 +691,9 @@ export default function OperatorDetailView({
                           <div className="flex items-start justify-between gap-2">
                             <div className="min-w-0">
                               <p className="truncate text-sm font-black text-ef-ink">{selected.title}</p>
-                              <p className="font-mono text-[10px] font-bold uppercase tracking-wide text-ef-muted">by {selAuthor} · {(selected.type === "party") ? "PARTY" : "SOLO"}</p>
+                              <p className="font-mono text-[11px] font-bold uppercase tracking-wide text-ef-muted">by {selAuthor} · {(selected.type === "party") ? "PARTY" : "SOLO"}</p>
+                              {/* 현재 보고 있는 정보가 누구 것인지 명시(서브 멤버 혼동 방지) */}
+                              <p className="mt-0.5 text-[11px] font-black"><span style={{ color: PRIMARY }}>{operator.name}</span><span className="ml-1 font-mono text-[11px] font-bold uppercase tracking-wide text-ef-muted">· {selIsMain ? "메인" : "서브"} 기준</span></p>
                             </div>
                             <span className="shrink-0 text-sm font-black" style={{ color: PRIMARY }}>♥ {selected.likeCount ?? 0}</span>
                           </div>
@@ -700,7 +714,7 @@ export default function OperatorDetailView({
                             <div><Meta>Sub Stat</Meta><p className="mt-0.5 truncate text-xs font-black text-ef-ink">{operator.subStatLabel || "-"}</p></div>
                           </div>
                           <div className="mt-1.5 border-t border-ef-line pt-1.5 sm:mt-3 sm:pt-2.5">
-                            <Link href={`/settings/${selected.id}`} className="font-mono text-[10px] font-black uppercase tracking-wide transition hover:brightness-125" style={{ color: PRIMARY }}>전체 세팅 페이지 →</Link>
+                            <Link href={`/settings/${selected.id}`} className="font-mono text-[11px] font-black uppercase tracking-wide transition hover:brightness-125" style={{ color: PRIMARY }}>전체 세팅 페이지 →</Link>
                           </div>
                         </div>
                       </div>
@@ -791,9 +805,9 @@ export default function OperatorDetailView({
                         return (
                           <button key={key} type="button" onClick={() => { setSkillKey(key); setSkillLvl(null); }} className={`flex flex-col items-center gap-1.5 border p-2.5 text-center ${isSel ? "" : `border-ef-line bg-ef-card ${HOVER}`}`} style={isSel ? { ...CUT, borderColor: "#ffb347", background: "rgba(255,170,60,0.12)", boxShadow: "0 0 16px rgba(255,170,60,0.16)" } : CUT}>
                             <span className="relative h-12 w-12 overflow-hidden border bg-black" style={{ borderColor: isSel ? "#ffb347" : "#202020" }}>{s.icon ? <Image src={s.icon} alt="" fill sizes="48px" className="object-contain p-1" /> : null}</span>
-                            <span className="font-mono text-[9px] font-black uppercase tracking-wide" style={{ color: isSel ? "#ffb347" : "#a0a0a0" }}>{label}</span>
+                            <span className="font-mono text-[10px] font-black uppercase tracking-wide" style={{ color: isSel ? "#ffb347" : "#a0a0a0" }}>{label}</span>
                             <span className="line-clamp-2 text-[11px] font-black leading-tight text-ef-ink">{s.name}</span>
-                            {cost ? <span className="font-mono text-[9px] font-bold text-ef-muted">{cost.label} {cost.value}</span> : null}
+                            {cost ? <span className="font-mono text-[10px] font-bold text-ef-muted">{cost.label} {cost.value}</span> : null}
                           </button>
                         );
                       })}
@@ -813,7 +827,7 @@ export default function OperatorDetailView({
                             <p className="mt-1 truncate text-sm font-black text-ef-ink sm:text-base">{sk.name}</p>
                           </div>
                         </div>
-                        {sk.summary ? <p className="mt-2.5 max-w-[68ch] whitespace-pre-line break-keep text-xs leading-6 text-ef-muted">{sk.summary}</p> : null}
+                        {sk.summary ? <p className="mt-2.5 max-w-[68ch] whitespace-pre-line break-keep text-[13px] leading-6 text-ef-muted">{sk.summary}</p> : null}
                         {sk.meta?.length ? (
                           <div className="mt-2.5 grid grid-cols-1 gap-1.5 border-t border-ef-line pt-2.5 sm:grid-cols-2">
                             {sk.meta.map((mt, i) => (
@@ -856,7 +870,7 @@ export default function OperatorDetailView({
                               ))}
                             </div>
                           ) : null}
-                          {lv.description ? <p className="mt-2 break-keep text-[11px] leading-5 text-ef-muted">{lv.description}</p> : null}
+                          {lv.description ? <p className="mt-2 break-keep text-xs leading-5 text-ef-muted">{lv.description}</p> : null}
                         </div>
                       </div>
                     );
@@ -884,8 +898,8 @@ export default function OperatorDetailView({
                             <div className="mt-1.5 flex flex-col gap-1.5 border-t border-ef-line pt-1.5">
                               {g.levels.map((lv, j) => (
                                 <div key={j} className="min-w-0">
-                                  <p className="font-mono text-[9px] font-black uppercase tracking-wide" style={{ color: PRIMARY }}>{lv.tier} · {lv.unlockText}</p>
-                                  <p className="break-keep text-[11px] leading-5 text-ef-muted">{lv.description}</p>
+                                  <p className="font-mono text-[10px] font-black uppercase tracking-wide" style={{ color: PRIMARY }}>{lv.tier} · {lv.unlockText}</p>
+                                  <p className="break-keep text-xs leading-5 text-ef-muted">{lv.description}</p>
                                 </div>
                               ))}
                             </div>
@@ -964,7 +978,7 @@ export default function OperatorDetailView({
                   {/* FARMING MATERIALS — 2줄 구조 카드(아이콘 / 재료명 / 획득처 태그). 클릭 시 파밍 계산기로 전달. 긴 텍스트도 레이아웃 유지(grid) */}
                   {total.length ? (
                     <div className="min-w-0 mb-0">
-                      <SectionLabel en="Farming Materials" action={<Link href="/farming" className="-my-1 inline-flex items-center px-2 py-1 font-mono text-[10px] font-black uppercase tracking-wide text-ef-accent-soft transition duration-200 hover:translate-x-0.5 hover:brightness-125">파밍 계산기 →</Link>} />
+                      <SectionLabel en="Farming Materials" action={<Link href="/farming" className="-my-1 inline-flex items-center px-2 py-1 font-mono text-[11px] font-black uppercase tracking-wide text-ef-accent-soft transition duration-200 hover:translate-x-0.5 hover:brightness-125">파밍 계산기 →</Link>} />
                       <div className="grid grid-cols-2 items-stretch gap-2 min-[480px]:grid-cols-3 lg:grid-cols-2 min-[1440px]:grid-cols-3 min-[1920px]:grid-cols-4">
                         {total.map((m, j) => {
                           const src = farmCategoryByMaterial.get(m.name);
@@ -974,7 +988,7 @@ export default function OperatorDetailView({
                               <span className="relative h-10 w-10 shrink-0 overflow-hidden border border-ef-line bg-black">{m.icon ? <Image src={m.icon} alt="" fill sizes="40px" className="object-contain p-0.5" /> : null}</span>
                               <span className="flex min-w-0 flex-1 flex-col gap-1">
                                 <span className="truncate text-[11px] font-bold leading-tight text-ef-ink">{m.name}</span>
-                                <span className="block h-[18px] w-fit max-w-full truncate border px-1.5 font-mono text-[9px] font-black uppercase leading-[16px] tracking-wide" style={{ borderColor: `${PRIMARY}55`, background: `${PRIMARY}14`, color: PRIMARY }}>{src ?? "특수 입수"}</span>
+                                <span className="block h-[18px] w-fit max-w-full truncate border px-1.5 font-mono text-[10px] font-black uppercase leading-[16px] tracking-wide" style={{ borderColor: `${PRIMARY}55`, background: `${PRIMARY}14`, color: PRIMARY }}>{src ?? "특수 입수"}</span>
                               </span>
                             </Link>
                           );
