@@ -171,6 +171,27 @@ export default async function GearDetailPage({
               {gear.summary || gear.description ? (
                 <p className="mt-3 break-keep text-xs leading-6 text-ef-muted">{gear.summary || gear.description}</p>
               ) : null}
+
+              {/* 세트 효과 — 설명칸 안으로 이동 */}
+              {gear.setEffects?.length ? (
+                <div className="mt-3 border-t border-ef-line pt-3">
+                  <div className="mb-2 flex items-center gap-2">
+                    <span className="h-3.5 w-1" style={{ background: PRIMARY }} />
+                    <span className="font-mono text-[11px] font-black uppercase tracking-[0.2em] text-white">Set Effect</span>
+                    {gear.setName && gear.setName !== "세트 없음" ? (
+                      <Link href={`/gear?set=${encodeURIComponent(gear.setName)}`} className="ml-auto font-mono text-[10px] font-black uppercase tracking-wide text-ef-accent-soft transition hover:brightness-125">{gear.setName} →</Link>
+                    ) : null}
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    {gear.setEffects.map((eff, i) => (
+                      <div key={i} className="border border-ef-line bg-ef-card p-2.5" style={CUT_SM}>
+                        <span className="inline-flex w-fit items-center border px-2 py-0.5 font-mono text-[11px] font-black uppercase tracking-wide" style={{ borderColor: `${PRIMARY}66`, background: `${PRIMARY}1a`, color: PRIMARY }}>{eff.pieces}세트</span>
+                        <p className="mt-2 break-keep text-xs leading-6 text-ef-muted">{eff.description}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
             </div>
           </div>
         </section>
@@ -181,21 +202,6 @@ export default async function GearDetailPage({
             <SectionLabel en="Stats" />
             <div className="grid grid-cols-1 items-start gap-2 sm:grid-cols-2 lg:grid-cols-3">
               {statLines.map((line, i) => <StatLineCard key={i} line={line} />)}
-            </div>
-          </section>
-        ) : null}
-
-        {/* ===== 세트 효과 ===== */}
-        {gear.setEffects?.length ? (
-          <section className="min-w-0">
-            <SectionLabel en="Set Effect" action={gear.setName && gear.setName !== "세트 없음" ? <Link href={`/gear?set=${encodeURIComponent(gear.setName)}`} className="font-mono text-[10px] font-black uppercase tracking-wide text-ef-accent-soft transition hover:brightness-125">{gear.setName} →</Link> : undefined} />
-            <div className="grid grid-cols-1 items-stretch gap-2 sm:grid-cols-2">
-              {gear.setEffects.map((eff, i) => (
-                <div key={i} className="flex flex-col border border-ef-line bg-ef-card2 p-3" style={CUT}>
-                  <span className="inline-flex w-fit items-center border px-2 py-0.5 font-mono text-[11px] font-black uppercase tracking-wide" style={{ borderColor: `${PRIMARY}66`, background: `${PRIMARY}1a`, color: PRIMARY }}>{eff.pieces}세트</span>
-                  <p className="mt-2 break-keep text-xs leading-6 text-ef-muted">{eff.description}</p>
-                </div>
-              ))}
             </div>
           </section>
         ) : null}
