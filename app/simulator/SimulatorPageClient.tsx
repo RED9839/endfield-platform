@@ -959,6 +959,9 @@ export default function SimulatorPage() {
   const operatorRestoreAppliedRef = useRef(false);
   const weaponRestoreAppliedRef = useRef(false);
   const simulatorRestoreAppliedRef = useRef(false);
+  // 사용자가 직접 오퍼레이터/무기를 고른 경우, 상세 로딩 후 항상 최고 단계로 맞춘다(저장값 무시).
+  const pendingOperatorMaxRef = useRef(false);
+  const pendingWeaponMaxRef = useRef(false);
   const operatorBySlug = useMemo(
     () => new Map(operators.map((operator) => [operator.slug, operator])),
     [operators],
@@ -1182,6 +1185,7 @@ export default function SimulatorPage() {
     };
 
     operatorRestoreAppliedRef.current = false;
+    pendingOperatorMaxRef.current = true;
     setSelectedOperatorSlug(slug);
     writeSimulatorSelectOperatorContext(slug);
     setOperatorCurrentLevel(1);
@@ -1191,6 +1195,7 @@ export default function SimulatorPage() {
 
   const handleWeaponSelect = (slug: string) => {
     weaponRestoreAppliedRef.current = false;
+    pendingWeaponMaxRef.current = true;
     setSelectedWeaponSlug(slug);
     setWeaponCurrentLevel(1);
     setWeaponTargetLevel(90);
@@ -1258,6 +1263,24 @@ export default function SimulatorPage() {
       ? {}
       : buildMaxRangeMap(getInfrastructureGroups(selectedOperator));
 
+    // 사용자가 방금 직접 선택했다면 상세 로딩 완료 후 무조건 최고 단계로(저장값 무시).
+    if (pendingOperatorMaxRef.current) {
+      if ((selectedOperator as any)?.slug !== selectedOperatorSlug) return;
+      setEliteRange({ current: 0, target: nextEliteMax });
+      setTrustRange({ current: 0, target: nextTrustMax });
+      setTalentRanges(nextTalentRanges);
+      setInfrastructureRanges(nextInfrastructureRanges);
+      setCombatSkillState({
+        normal: { current: "1", target: "M3" },
+        combo: { current: "1", target: "M3" },
+        battle: { current: "1", target: "M3" },
+        ultimate: { current: "1", target: "M3" },
+      });
+      pendingOperatorMaxRef.current = false;
+      operatorRestoreAppliedRef.current = true;
+      return;
+    }
+
     const storedFormState = readLocalSimulatorFormState();
     if (
       !operatorRestoreAppliedRef.current &&
@@ -1312,6 +1335,15 @@ export default function SimulatorPage() {
         (item: WeaponBreakthroughItem) => item.stage
       )
     );
+
+    // 사용자가 방금 직접 선택했다면 상세 로딩 완료 후 무조건 최고 단계로(저장값 무시).
+    if (pendingWeaponMaxRef.current) {
+      if ((selectedWeapon as any)?.slug !== selectedWeaponSlug) return;
+      setWeaponBreakthroughRange({ current: 0, target: nextBreakthroughMax });
+      pendingWeaponMaxRef.current = false;
+      weaponRestoreAppliedRef.current = true;
+      return;
+    }
 
     const storedFormState = readLocalSimulatorFormState();
     if (
