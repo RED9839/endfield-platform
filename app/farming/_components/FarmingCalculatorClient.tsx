@@ -8,15 +8,11 @@ import Checkbox from "@/app/components/common/Checkbox";
 import NumberInput from "@/app/components/common/NumberInput";
 import {
   ADVANCED_BOX_NAME,
-  CARD_BG,
   FARMABLE_MATERIAL_NAMES,
   MATERIALS,
   MATERIAL_ORDER,
   ORIGINIUM_COST_TABLE,
   RECOVERY_ITEMS,
-  YELLOW_BORDER,
-  YELLOW_BORDER_SOFT,
-  YELLOW_MAIN,
   type DiscountKey,
 } from "@/data/farming/farm-data";
 import {
@@ -36,8 +32,18 @@ import { applyOwnedMaterials, type OwnedMaterialMap } from "@/app/simulator/_lib
 
 const FARMING_STATE_KEY = "endfield:farming-page-state";
 const USER_MATERIAL_INVENTORY_API = "/api/user/material-inventory";
-const YELLOW_TEXT = "#ffdc70";
-const PANEL_BG = "#05070b";
+
+// ===== 오퍼레이터/무기/장비 상세와 통일한 Endfield SF 디자인 토큰 =====
+const PRIMARY = "#ff9a2f";
+const ACCENT = "#ffd24a";
+const CUT = {
+  clipPath:
+    "polygon(0 0, calc(100% - 13px) 0, 100% 13px, 100% 100%, 13px 100%, 0 calc(100% - 13px))",
+};
+const CUT_SM = {
+  clipPath:
+    "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))",
+};
 
 type ModalMode = "target" | "owned" | null;
 
@@ -252,19 +258,13 @@ function Panel({
 }) {
   return (
     <section
-      className="relative overflow-hidden rounded-[22px] bg-[#05070b] p-4 shadow-[0_12px_36px_rgba(0,0,0,0.24)]"
-      style={{ border: `1px solid ${YELLOW_BORDER}` }}
+      className="relative overflow-hidden border border-ef-line bg-ef-card2 p-3.5 sm:p-4"
+      style={CUT}
     >
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-yellow-300/20" />
-      <div className="relative mb-3 flex items-end justify-between gap-3">
-        <div>
-          <h2
-            className="text-lg font-black tracking-[-0.04em]"
-            style={{ color: YELLOW_MAIN }}
-          >
-            {title}
-          </h2>
-        </div>
+      <div className="mb-3 flex items-center gap-2">
+        <span className="h-4 w-1" style={{ background: PRIMARY }} />
+        <h2 className="break-keep text-base font-black tracking-tight text-white">{title}</h2>
+        <span className="ml-2 hidden h-px flex-1 bg-gradient-to-r from-ef-line to-transparent sm:block" />
       </div>
       <div className="relative">{children}</div>
     </section>
@@ -281,16 +281,13 @@ function SummaryCard({
   suffix?: string;
 }) {
   return (
-    <div
-      className="min-h-[100px] rounded-2xl border bg-[#090d14] p-4"
-      style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
-    >
-      <div className="text-[10px] font-black tracking-[0.18em] text-zinc-500">
+    <div className="min-h-[92px] border border-ef-line bg-ef-card p-3.5" style={CUT_SM}>
+      <div className="font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-ef-muted">
         {label}
       </div>
       <div
-        className="mt-3 text-2xl font-black leading-none tracking-[-0.05em] sm:text-3xl"
-        style={{ color: YELLOW_MAIN }}
+        className="mt-2.5 font-mono text-2xl font-black leading-none tabular-nums sm:text-3xl"
+        style={{ color: ACCENT }}
       >
         {Math.max(0, Math.ceil(value)).toLocaleString()}
         {suffix ? <span className="ml-1 text-sm">{suffix}</span> : null}
@@ -337,61 +334,57 @@ function MaterialBulkModal({
   const isTarget = mode === "target";
 
   return (
-    <div className="fixed inset-0 z-[120] flex items-end justify-center bg-black/75 p-0 backdrop-blur-sm sm:items-center sm:p-4">
+    <div className="fixed inset-0 z-[120] flex items-end justify-center bg-black/80 p-0 backdrop-blur-sm sm:items-center sm:p-4">
       <div
-        className="flex h-[92vh] w-full flex-col overflow-hidden rounded-t-[24px] bg-[#05070b] shadow-[0_22px_90px_rgba(0,0,0,0.62)] sm:h-[90vh] sm:w-[min(1180px,calc(100vw-2rem))] sm:rounded-[32px]"
-        style={{ border: `1px solid ${YELLOW_BORDER}` }}
+        className="flex h-[92vh] w-full flex-col overflow-hidden border border-ef-line bg-ef-card2 sm:h-[90vh] sm:w-[min(1180px,calc(100vw-2rem))]"
+        style={CUT}
       >
-        <div
-          className="flex shrink-0 items-center justify-between gap-3 px-4 py-4 sm:gap-4 sm:px-7 sm:py-5"
-          style={{ borderBottom: `1px solid ${YELLOW_BORDER_SOFT}` }}
-        >
-          <div>
-            <p
-              className="text-[11px] font-black tracking-[0.24em]"
-              style={{ color: YELLOW_TEXT }}
-            >
-              {isTarget ? "목표 재화" : "보유 재화"}
-            </p>
-            <h3 className="mt-1 text-xl font-black tracking-[-0.05em] text-white sm:mt-2 sm:text-3xl">
-              {isTarget ? "목표 재화 입력" : "보유 재화 입력"}
-            </h3>
+        <span className="block h-0.5 w-full shrink-0" style={{ background: `linear-gradient(90deg, ${PRIMARY}, transparent 55%)` }} />
+        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-ef-line px-4 py-4 sm:gap-4 sm:px-7 sm:py-5">
+          <div className="flex items-center gap-2">
+            <span className="h-4 w-1" style={{ background: PRIMARY }} />
+            <div>
+              <p className="font-mono text-[11px] font-bold uppercase tracking-[0.22em] text-ef-muted">
+                {isTarget ? "Target" : "Owned"}
+              </p>
+              <h3 className="mt-0.5 text-xl font-black tracking-tight text-white sm:text-2xl">
+                {isTarget ? "목표 재화 입력" : "보유 재화 입력"}
+              </h3>
+            </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-black text-xl font-black transition hover:bg-[#0b1018] sm:h-12 sm:w-12 sm:rounded-full sm:text-2xl"
-            style={{ border: `1px solid ${YELLOW_BORDER}`, color: YELLOW_TEXT }}
+            className="inline-flex h-10 w-10 shrink-0 items-center justify-center border border-ef-line bg-ef-card text-xl font-black text-ef-muted transition hover:border-ef-accent/50 hover:text-ef-accent-soft sm:h-11 sm:w-11"
+            style={CUT_SM}
             aria-label="입력창 닫기"
           >
             ×
           </button>
         </div>
 
-        <div
-          className="shrink-0 px-4 py-3 sm:px-7 sm:py-5"
-          style={{ borderBottom: `1px solid ${YELLOW_BORDER_SOFT}` }}
-        >
+        <div className="shrink-0 border-b border-ef-line px-4 py-3 sm:px-7 sm:py-4">
           <input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="재화 검색"
-            className="h-10 w-full rounded-xl border border-white/10 bg-[#071019] px-4 text-xs font-semibold text-white outline-none transition placeholder:text-zinc-600 focus:border-yellow-400/40 sm:h-12 sm:rounded-2xl sm:text-sm"
+            className="h-10 w-full border border-ef-line bg-ef-card px-4 text-xs font-semibold text-white outline-none transition placeholder:text-ef-muted/70 focus:border-ef-accent/50 sm:h-12 sm:text-sm"
+            style={CUT_SM}
           />
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3 sm:px-7 sm:py-6">
-          <div className="grid grid-cols-1 gap-2 sm:gap-4 sm:[grid-template-columns:repeat(auto-fill,minmax(250px,1fr))]">
+          <div className="grid grid-cols-1 gap-2 sm:gap-3 sm:[grid-template-columns:repeat(auto-fill,minmax(250px,1fr))]">
             {list.map((item) => (
               <div
                 key={item.name}
-                className="rounded-2xl bg-[#090d14] p-4"
-                style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
+                className="border border-ef-line bg-ef-card p-3.5"
+                style={CUT_SM}
               >
                 <div className="flex min-w-0 items-center gap-3">
                   <div
-                    className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-black/55"
-                    style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
+                    className="relative h-12 w-12 shrink-0 overflow-hidden border border-ef-line bg-black"
+                    style={CUT_SM}
                   >
                     <Image
                       src={materialImage(item.name)}
@@ -402,10 +395,10 @@ function MaterialBulkModal({
                     />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm font-black" style={{ color: YELLOW_TEXT }}>
+                    <div className="truncate text-sm font-black" style={{ color: ACCENT }}>
                       {item.name}
                     </div>
-                    <div className="mt-0.5 text-xs text-zinc-500">
+                    <div className="mt-0.5 font-mono text-[10px] uppercase tracking-wide text-ef-muted">
                       {isTarget ? "목표 수량" : "현재 보유량"}
                     </div>
                   </div>
@@ -414,7 +407,7 @@ function MaterialBulkModal({
                   value={item.amount}
                   onChange={(value) => onChange(item.name, value)}
                   min={0}
-                  className="mt-4 h-11 rounded-xl border-yellow-500/15 bg-black text-yellow-300"
+                  className="mt-3.5 h-11 border-ef-line bg-black text-ef-accent"
                 />
               </div>
             ))}
@@ -436,32 +429,30 @@ function MobileSettingsModal({
   children: React.ReactNode;
 }) {
   return (
-    <div className="fixed inset-0 z-[130] flex items-end justify-center bg-black/75 p-0 backdrop-blur-sm sm:items-center sm:p-4">
+    <div className="fixed inset-0 z-[130] flex items-end justify-center bg-black/80 p-0 backdrop-blur-sm sm:items-center sm:p-4">
       <div
-        className="flex h-[86vh] w-full flex-col overflow-hidden rounded-t-[24px] bg-[#05070b] shadow-[0_22px_90px_rgba(0,0,0,0.62)] sm:h-auto sm:max-h-[88vh] sm:w-[min(760px,calc(100vw-2rem))] sm:rounded-[28px]"
-        style={{ border: `1px solid ${YELLOW_BORDER}` }}
+        className="flex h-[86vh] w-full flex-col overflow-hidden border border-ef-line bg-ef-card2 sm:h-auto sm:max-h-[88vh] sm:w-[min(760px,calc(100vw-2rem))]"
+        style={CUT}
       >
-        <div
-          className="flex shrink-0 items-center justify-between gap-3 px-4 py-4 sm:px-6 sm:py-5"
-          style={{ borderBottom: `1px solid ${YELLOW_BORDER_SOFT}` }}
-        >
-          <div className="min-w-0">
-            <p
-              className="text-[10px] font-black tracking-[0.24em] sm:text-[11px]"
-              style={{ color: YELLOW_TEXT }}
-            >
-              FARMING SETTINGS
-            </p>
-            <h3 className="mt-1 truncate text-xl font-black text-white sm:text-2xl">
-              {title}
-            </h3>
+        <span className="block h-0.5 w-full shrink-0" style={{ background: `linear-gradient(90deg, ${PRIMARY}, transparent 55%)` }} />
+        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-ef-line px-4 py-4 sm:px-6 sm:py-5">
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="h-4 w-1 shrink-0" style={{ background: PRIMARY }} />
+            <div className="min-w-0">
+              <p className="font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-ef-muted sm:text-[11px]">
+                Farming Settings
+              </p>
+              <h3 className="mt-0.5 truncate text-xl font-black text-white sm:text-2xl">
+                {title}
+              </h3>
+            </div>
           </div>
 
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-black text-xl font-black transition hover:bg-[#0b1018]"
-            style={{ border: `1px solid ${YELLOW_BORDER}`, color: YELLOW_TEXT }}
+            className="inline-flex h-10 w-10 shrink-0 items-center justify-center border border-ef-line bg-ef-card text-xl font-black text-ef-muted transition hover:border-ef-accent/50 hover:text-ef-accent-soft"
+            style={CUT_SM}
             aria-label="설정창 닫기"
           >
             ×
@@ -479,19 +470,19 @@ function MobileSettingsModal({
 function SmallMaterialRow({ item }: { item: MaterialAmount }) {
   return (
     <div
-      className="flex items-center justify-between gap-3 rounded-2xl bg-[#090d14] p-3"
-      style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
+      className="flex items-center justify-between gap-3 border border-ef-line bg-ef-card p-3"
+      style={CUT_SM}
     >
       <div className="flex min-w-0 items-center gap-3">
         <div
-          className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl bg-black"
-          style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
+          className="relative h-10 w-10 shrink-0 overflow-hidden border border-ef-line bg-black"
+          style={CUT_SM}
         >
           <Image src={materialImage(item.name)} alt={item.name} fill sizes="40px" className="object-contain p-1" />
         </div>
-        <span className="truncate text-sm font-bold text-zinc-200">{item.name}</span>
+        <span className="truncate text-sm font-bold text-ef-ink">{item.name}</span>
       </div>
-      <span className="text-sm font-black" style={{ color: YELLOW_TEXT }}>
+      <span className="font-mono text-sm font-black tabular-nums" style={{ color: ACCENT }}>
         {item.amount.toLocaleString()}
       </span>
     </div>
@@ -642,47 +633,47 @@ function FarmingCalculatorClientContent() {
 
 
   const tokenSettingsContent = (
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 <div
-                  className="flex items-center gap-3 rounded-2xl border p-3"
-                  style={{ border: `1px solid ${YELLOW_BORDER_SOFT}`, background: CARD_BG }}
+                  className="flex items-center gap-3 border border-ef-line bg-ef-card p-3"
+                  style={CUT_SM}
                 >
-                  <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl border bg-black" style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}>
+                  <div className="relative h-11 w-11 shrink-0 overflow-hidden border border-ef-line bg-black" style={CUT_SM}>
                     <Image src={materialImage(ADVANCED_BOX_NAME)} alt={ADVANCED_BOX_NAME} fill sizes="44px" className="object-contain p-1" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm font-bold text-white">{ADVANCED_BOX_NAME}</div>
+                    <div className="truncate text-sm font-bold text-ef-ink">{ADVANCED_BOX_NAME}</div>
                   </div>
                   <div className="w-[88px] sm:w-[96px]">
                     <NumberInput value={settings.advancedBoxCount} onChange={(value) => updateSettings({ advancedBoxCount: value })} min={0} />
                   </div>
                 </div>
 
-                <div className="grid gap-3 rounded-2xl bg-black p-4" style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}>
+                <div className="grid gap-3 border border-ef-line bg-ef-card p-4" style={CUT_SM}>
                   <Checkbox checked={settings.useToken} onChange={(checked) => updateSettings({ useToken: checked, useAllToken: checked ? settings.useAllToken : false })} label="통합 징표 사용" />
                   <Checkbox checked={settings.useAllToken} onChange={(checked) => updateSettings({ useAllToken: checked, useToken: checked ? true : settings.useToken })} label="보유 통합 징표 전부 사용" />
                 </div>
 
                 <div
-                  className="flex items-center gap-3 rounded-2xl border p-3"
-                  style={{ border: `1px solid ${YELLOW_BORDER_SOFT}`, background: CARD_BG }}
+                  className="flex items-center gap-3 border border-ef-line bg-ef-card p-3"
+                  style={CUT_SM}
                 >
-                  <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl border bg-black" style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}>
+                  <div className="relative h-11 w-11 shrink-0 overflow-hidden border border-ef-line bg-black" style={CUT_SM}>
                     <Image src={materialImage("통합 징표")} alt="통합 징표" fill sizes="44px" className="object-contain p-1" />
                   </div>
-                  <div className="min-w-0 flex-1"><div className="text-sm font-bold text-white">보유 통합 징표</div></div>
+                  <div className="min-w-0 flex-1"><div className="text-sm font-bold text-ef-ink">보유 통합 징표</div></div>
                   <div className="w-[88px] sm:w-[96px]"><NumberInput value={settings.ownedToken} onChange={(value) => updateSettings({ ownedToken: value })} min={0} /></div>
                 </div>
 
-                <div className="rounded-2xl border" style={{ border: `1px solid ${YELLOW_BORDER_SOFT}`, background: CARD_BG }}>
+                <div className="border border-ef-line bg-ef-card" style={CUT_SM}>
                   <button type="button" onClick={() => setDiscountOpen((prev) => !prev)} className="flex w-full items-center justify-between px-4 py-3 text-left">
-                    <span className="block text-sm font-black text-white">할인 품목 설정</span>
-                    <span style={{ color: YELLOW_MAIN }}>{discountOpen ? "▲" : "▼"}</span>
+                    <span className="block text-sm font-black text-ef-ink">할인 품목 설정</span>
+                    <span style={{ color: PRIMARY }}>{discountOpen ? "▲" : "▼"}</span>
                   </button>
                   {discountOpen ? (
-                    <div className="grid gap-3 border-t border-yellow-500/10 p-4">
+                    <div className="grid gap-2.5 border-t border-ef-line p-4">
                       {settings.discounts.map((discount, index) => (
-                        <div key={discount.name} className="grid grid-cols-[minmax(0,1fr)_86px] items-center gap-3 rounded-2xl border p-3" style={{ borderColor: YELLOW_BORDER_SOFT, background: PANEL_BG }}>
+                        <div key={discount.name} className="grid grid-cols-[minmax(0,1fr)_86px] items-center gap-3 border border-ef-line bg-ef-card2 p-3" style={CUT_SM}>
                           <Checkbox checked={discount.enabled} onChange={(checked) => {
                             const next = [...settings.discounts];
                             next[index] = { ...next[index], enabled: checked, stock: checked ? next[index].stock : 0 };
@@ -703,32 +694,32 @@ function FarmingCalculatorClientContent() {
   );
 
   const sanitySettingsContent = (
-              <div className="space-y-3">
-                <div className="grid gap-3 rounded-2xl bg-black p-4" style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}>
+              <div className="space-y-2.5">
+                <div className="grid gap-3 border border-ef-line bg-ef-card p-4" style={CUT_SM}>
                   <Checkbox checked={settings.useDailyQuest} onChange={(checked) => updateSettings({ useDailyQuest: checked })} label="일일 업무 보상 포함" />
                   <Checkbox checked={settings.useWeeklyQuest === true} onChange={(checked) => updateSettings({ useWeeklyQuest: checked })} label="주간 업무 보상 포함" />
                   <Checkbox checked={settings.hasMonthlyCard} onChange={(checked) => updateSettings({ hasMonthlyCard: checked })} label="월정액 구매 중" />
                 </div>
 
-                <div className="flex items-center gap-3 rounded-2xl border p-3" style={{ border: `1px solid ${YELLOW_BORDER_SOFT}`, background: CARD_BG }}>
-                  <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl border bg-black" style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}>
+                <div className="flex items-center gap-3 border border-ef-line bg-ef-card p-3" style={CUT_SM}>
+                  <div className="relative h-11 w-11 shrink-0 overflow-hidden border border-ef-line bg-black" style={CUT_SM}>
                     <Image src={materialImage("파생 오리지늄")} alt="파생 오리지늄" fill sizes="44px" className="object-contain p-1" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="text-sm font-bold text-white">파생 오리지늄 회복</div>
-                    <div className="text-xs text-zinc-500">소모 {ORIGINIUM_COST_TABLE.slice(0, settings.dailyOriginiumRefreshCount).reduce((sum, value) => sum + value, 0)}개 / 일</div>
+                    <div className="text-sm font-bold text-ef-ink">파생 오리지늄 회복</div>
+                    <div className="font-mono text-[11px] text-ef-muted">소모 {ORIGINIUM_COST_TABLE.slice(0, settings.dailyOriginiumRefreshCount).reduce((sum, value) => sum + value, 0)}개 / 일</div>
                   </div>
                   <div className="w-[88px] sm:w-[96px]"><NumberInput value={settings.dailyOriginiumRefreshCount} onChange={(value) => updateSettings({ dailyOriginiumRefreshCount: Math.min(value, ORIGINIUM_COST_TABLE.length) })} min={0} max={ORIGINIUM_COST_TABLE.length} /></div>
                 </div>
 
                 {RECOVERY_ITEMS.map((item) => (
-                  <div key={item.name} className="flex items-center gap-3 rounded-2xl border p-3" style={{ borderColor: YELLOW_BORDER_SOFT, background: CARD_BG }}>
-                    <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl border bg-black" style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}>
+                  <div key={item.name} className="flex items-center gap-3 border border-ef-line bg-ef-card p-3" style={CUT_SM}>
+                    <div className="relative h-11 w-11 shrink-0 overflow-hidden border border-ef-line bg-black" style={CUT_SM}>
                       <Image src={materialImage(item.name)} alt={item.name} fill sizes="44px" className="object-contain p-1" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="text-sm font-bold text-white">{item.name}</div>
-                      <div className="text-xs text-zinc-500">{item.sanity} 이성 회복</div>
+                      <div className="text-sm font-bold text-ef-ink">{item.name}</div>
+                      <div className="font-mono text-[11px] text-ef-muted">{item.sanity} 이성 회복</div>
                     </div>
                     <div className="w-[88px] sm:w-[96px]"><NumberInput value={settings.recovery[item.name] ?? 0} onChange={(value) => updateSettings({ recovery: { ...settings.recovery, [item.name]: value } })} min={0} /></div>
                   </div>
@@ -737,51 +728,60 @@ function FarmingCalculatorClientContent() {
   );
 
   return (
-    <main className="min-h-screen overflow-x-clip bg-[#03060b] text-white">
-      <div className="mx-auto w-full max-w-[1720px] px-3 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-[76px] sm:px-4 md:px-6 md:py-5 xl:px-8 xl:py-7">
-        <section
-          className="relative overflow-hidden rounded-[22px] bg-[#05070b] p-4 shadow-[0_16px_48px_rgba(0,0,0,0.28)] sm:p-6"
-          style={{ border: `1px solid ${YELLOW_BORDER}` }}
-        >
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-yellow-300/25" />
+    <main className="relative min-h-screen overflow-x-clip bg-ef-bg text-ef-ink">
+      <div className="pointer-events-none fixed inset-0 z-0 opacity-[0.022] [background-image:radial-gradient(circle,#ffd24a_1px,transparent_1px)] [background-size:22px_22px]" />
+
+      {/* TOP HUD */}
+      <div className="relative z-30 mx-auto hidden max-w-[1720px] items-center justify-between px-4 py-2.5 md:flex md:px-6 xl:px-8">
+        <div className="flex items-center gap-2">
+          <span className="h-3 w-3" style={{ background: PRIMARY }} />
+          <span className="font-mono text-[11px] font-bold uppercase tracking-[0.3em] text-ef-muted">Farming Calc</span>
+          <span className="font-mono text-[11px] tracking-[0.2em] text-ef-muted/60">// 재화 파밍 계산기</span>
+        </div>
+      </div>
+
+      <div className="relative z-10 mx-auto w-full max-w-[1720px] px-3 pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-[76px] sm:px-4 md:px-6 md:pb-5 md:pt-1 xl:px-8">
+        <section className="relative overflow-hidden border border-ef-line bg-ef-card2 p-4 sm:p-5" style={CUT}>
+          <span className="absolute inset-x-0 top-0 block h-0.5 w-full" style={{ background: `linear-gradient(90deg, ${PRIMARY}, transparent 55%)` }} />
           <div className="relative flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div className="min-w-0">
-              <p className="text-[10px] font-black tracking-[0.22em] sm:text-[11px] sm:tracking-[0.24em]" style={{ color: YELLOW_TEXT }}>
-                엔드필드 지원 플랫폼
+              <p className="font-mono text-[11px] font-bold uppercase tracking-[0.24em] text-ef-muted">
+                Farming Calculator
               </p>
-              <h1 className="mt-2 truncate text-2xl font-black tracking-[-0.06em] sm:text-4xl" style={{ color: YELLOW_TEXT }}>
+              <h1 className="mt-1.5 break-keep text-2xl font-black leading-[0.95] tracking-tight text-white sm:text-4xl">
                 재화 파밍 계산기
               </h1>
             </div>
-            <div className="grid shrink-0 grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-3 lg:justify-end">
+            <div className="grid shrink-0 grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-2 lg:justify-end">
               <button
                 type="button"
                 onClick={() => setModalMode("target")}
-                className="rounded-xl bg-[#ffd24a] px-4 py-2.5 text-xs font-black text-black transition hover:brightness-110 sm:text-sm"
+                className="px-4 py-2.5 text-xs font-black text-black transition hover:brightness-110 sm:text-sm"
+                style={{ ...CUT_SM, background: ACCENT }}
               >
                 목표 재화 입력
               </button>
               <button
                 type="button"
                 onClick={() => setModalMode("owned")}
-                className="rounded-xl bg-black px-4 py-2.5 text-xs font-black text-yellow-200 transition hover:border-yellow-400/35 sm:text-sm"
-                style={{ border: `1px solid ${YELLOW_BORDER}` }}
+                className="border border-ef-line bg-ef-card px-4 py-2.5 text-xs font-black text-ef-accent-soft transition hover:border-ef-accent/40 sm:text-sm"
+                style={CUT_SM}
               >
                 보유 재화 입력
               </button>
               <button
                 type="button"
                 onClick={moveToSimulator}
-                className="rounded-xl bg-black px-4 py-2.5 text-xs font-bold text-zinc-200 transition hover:border-yellow-400/30 hover:text-yellow-200 sm:text-sm"
-                style={{ border: `1px solid ${YELLOW_BORDER}` }}
+                className="border border-ef-line bg-ef-card px-4 py-2.5 text-xs font-bold text-ef-muted transition hover:border-ef-accent/40 hover:text-ef-accent-soft sm:text-sm"
+                style={CUT_SM}
               >
                 성장 시뮬레이션 이동
               </button>
               <button
                 type="button"
                 onClick={resetAndGoHome}
-                className="rounded-xl bg-black px-4 py-2.5 text-xs font-bold text-zinc-200 transition hover:border-yellow-400/30 hover:text-yellow-200 sm:text-sm"
-                style={{ border: `1px solid ${YELLOW_BORDER}` }}
+                className="border border-ef-line bg-ef-card px-4 py-2.5 text-xs font-bold text-ef-muted transition hover:border-ef-accent/40 hover:text-ef-accent-soft sm:text-sm"
+                style={CUT_SM}
               >
                 홈으로
               </button>
@@ -789,20 +789,20 @@ function FarmingCalculatorClientContent() {
           </div>
         </section>
 
-        <section className="mt-3 grid grid-cols-2 gap-2 sm:gap-3 lg:mt-5 xl:grid-cols-4">
+        <section className="mt-3 grid grid-cols-2 gap-2 sm:gap-3 lg:mt-4 xl:grid-cols-4">
           {farmingDashboardStats.map((item) => (
             <div
               key={item.label}
-              className="min-w-0 rounded-2xl bg-[#05070b] p-3 shadow-[0_10px_30px_rgba(0,0,0,0.22)] sm:p-4"
-              style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
+              className="min-w-0 border border-ef-line bg-ef-card2 p-3 sm:p-3.5"
+              style={CUT_SM}
             >
-              <p className="text-[10px] font-black tracking-[0.24em] text-zinc-500">
+              <p className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-ef-muted">
                 {item.label}
               </p>
-              <p className="mt-2 truncate text-xl font-black tracking-[-0.05em] text-white sm:text-2xl">
+              <p className="mt-2 truncate font-mono text-xl font-black tabular-nums text-white sm:text-2xl">
                 {item.value}
               </p>
-              <p className="mt-1 line-clamp-1 text-xs font-semibold text-zinc-500">
+              <p className="mt-1 line-clamp-1 text-[11px] text-ef-muted">
                 {item.sub}
               </p>
             </div>
@@ -810,17 +810,17 @@ function FarmingCalculatorClientContent() {
         </section>
 
         <section className="mt-3 grid items-start gap-3 lg:mt-5 lg:gap-5 xl:grid-cols-[460px_minmax(0,1fr)]">
-          <aside className="space-y-3 lg:sticky lg:top-5 lg:space-y-5">
+          <aside className="space-y-3 lg:sticky lg:top-5 lg:space-y-4">
             <section
-              className="fixed left-3 right-3 top-3 z-50 rounded-[18px] bg-[#05070b]/95 p-2 shadow-[0_0_24px_rgba(0,0,0,0.45)] backdrop-blur lg:hidden"
-              style={{ border: `1px solid ${YELLOW_BORDER}` }}
+              className="fixed left-3 right-3 top-3 z-50 border border-ef-line bg-ef-bg/95 p-2 backdrop-blur lg:hidden"
+              style={CUT_SM}
             >
               <div className="flex items-center gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 <button
                   type="button"
                   onClick={() => setModalMode("target")}
-                  className="h-9 shrink-0 rounded-xl bg-black px-3 text-[11px] font-black text-zinc-200 transition hover:bg-[#0b1018] hover:text-yellow-200"
-                  style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
+                  className="h-9 shrink-0 border border-ef-line bg-ef-card px-3 font-mono text-[11px] font-black uppercase tracking-wide text-ef-muted transition hover:border-ef-accent/40 hover:text-ef-accent-soft"
+                  style={CUT_SM}
                 >
                   목표 재화
                 </button>
@@ -828,8 +828,8 @@ function FarmingCalculatorClientContent() {
                 <button
                   type="button"
                   onClick={() => setModalMode("owned")}
-                  className="h-9 shrink-0 rounded-xl bg-black px-3 text-[11px] font-black text-zinc-200 transition hover:bg-[#0b1018] hover:text-yellow-200"
-                  style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
+                  className="h-9 shrink-0 border border-ef-line bg-ef-card px-3 font-mono text-[11px] font-black uppercase tracking-wide text-ef-muted transition hover:border-ef-accent/40 hover:text-ef-accent-soft"
+                  style={CUT_SM}
                 >
                   보유 재화
                 </button>
@@ -837,8 +837,8 @@ function FarmingCalculatorClientContent() {
                 <button
                   type="button"
                   onClick={() => setMobileSettingsModal("token")}
-                  className="h-9 shrink-0 rounded-xl bg-black px-3 text-[11px] font-black text-zinc-200 transition hover:bg-[#0b1018] hover:text-yellow-200"
-                  style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
+                  className="h-9 shrink-0 border border-ef-line bg-ef-card px-3 font-mono text-[11px] font-black uppercase tracking-wide text-ef-muted transition hover:border-ef-accent/40 hover:text-ef-accent-soft"
+                  style={CUT_SM}
                 >
                   통합 징표
                 </button>
@@ -846,8 +846,8 @@ function FarmingCalculatorClientContent() {
                 <button
                   type="button"
                   onClick={() => setMobileSettingsModal("sanity")}
-                  className="h-9 shrink-0 rounded-xl bg-black px-3 text-[11px] font-black text-zinc-200 transition hover:bg-[#0b1018] hover:text-yellow-200"
-                  style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
+                  className="h-9 shrink-0 border border-ef-line bg-ef-card px-3 font-mono text-[11px] font-black uppercase tracking-wide text-ef-muted transition hover:border-ef-accent/40 hover:text-ef-accent-soft"
+                  style={CUT_SM}
                 >
                   이성 회복
                 </button>
@@ -860,18 +860,18 @@ function FarmingCalculatorClientContent() {
                   <button
                     type="button"
                     onClick={() => setModalMode("target")}
-                    className="rounded-xl bg-black px-3 py-2.5 text-left transition hover:bg-[#0b1018]"
-                    style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
+                    className="border border-ef-line bg-ef-card px-3 py-2.5 text-left transition hover:border-ef-accent/40"
+                    style={CUT_SM}
                   >
-                    <span className="text-[13px] font-black text-white">목표 재화 입력</span>
+                    <span className="text-[13px] font-black text-ef-ink">목표 재화 입력</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => setModalMode("owned")}
-                    className="rounded-xl bg-black px-3 py-2.5 text-left transition hover:bg-[#0b1018]"
-                    style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}
+                    className="border border-ef-line bg-ef-card px-3 py-2.5 text-left transition hover:border-ef-accent/40"
+                    style={CUT_SM}
                   >
-                    <span className="text-[13px] font-black text-white">보유 재화 입력</span>
+                    <span className="text-[13px] font-black text-ef-ink">보유 재화 입력</span>
                   </button>
                 </div>
               </Panel>
@@ -905,30 +905,30 @@ function FarmingCalculatorClientContent() {
             <Panel title="추천 이성 소모처">
               <div className="grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(260px,1fr))]">
                 {result.stagePlans.length ? result.stagePlans.map((plan) => (
-                  <div key={`${plan.stageId}-${plan.material}`} className="rounded-2xl bg-[#090d14] p-4" style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}>
+                  <div key={`${plan.stageId}-${plan.material}`} className="border border-ef-line bg-ef-card p-3.5" style={CUT_SM}>
                     <div className="flex items-center gap-3">
-                      <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl bg-black" style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}>
+                      <div className="relative h-11 w-11 shrink-0 overflow-hidden border border-ef-line bg-black" style={CUT_SM}>
                         <Image src={materialImage(plan.material)} alt={plan.material} fill sizes="44px" className="object-contain p-1" />
                       </div>
                       <div className="min-w-0">
-                        <div className="truncate text-sm font-black text-white">{plan.material}</div>
-                        <div className="truncate text-xs text-zinc-500">{plan.stageName}</div>
+                        <div className="truncate text-sm font-black text-ef-ink">{plan.material}</div>
+                        <div className="truncate text-xs text-ef-muted">{plan.stageName}</div>
                       </div>
                     </div>
-                    <div className="mt-3 grid grid-cols-3 gap-2 text-center text-xs">
-                      <div className="rounded-xl bg-black p-2"><div className="text-zinc-500">1회 획득</div><b style={{ color: YELLOW_TEXT }}>{plan.rewardPerRun}</b></div>
-                      <div className="rounded-xl bg-black p-2"><div className="text-zinc-500">필요 횟수</div><b style={{ color: YELLOW_TEXT }}>{plan.runs}</b></div>
-                      <div className="rounded-xl bg-black p-2"><div className="text-zinc-500">필요 이성</div><b style={{ color: YELLOW_TEXT }}>{plan.sanity}</b></div>
+                    <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+                      <div className="border border-ef-line bg-ef-card2 p-2" style={CUT_SM}><div className="font-mono text-[10px] uppercase tracking-wide text-ef-muted">1회 획득</div><b className="font-mono tabular-nums" style={{ color: ACCENT }}>{plan.rewardPerRun}</b></div>
+                      <div className="border border-ef-line bg-ef-card2 p-2" style={CUT_SM}><div className="font-mono text-[10px] uppercase tracking-wide text-ef-muted">필요 횟수</div><b className="font-mono tabular-nums" style={{ color: ACCENT }}>{plan.runs}</b></div>
+                      <div className="border border-ef-line bg-ef-card2 p-2" style={CUT_SM}><div className="font-mono text-[10px] uppercase tracking-wide text-ef-muted">필요 이성</div><b className="font-mono tabular-nums" style={{ color: ACCENT }}>{plan.sanity}</b></div>
                     </div>
                   </div>
-                )) : <p className="rounded-2xl bg-black p-5 text-sm text-zinc-500" style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}>필요한 파밍 재화가 없습니다.</p>}
+                )) : <p className="border border-ef-line bg-ef-card p-5 text-sm text-ef-muted" style={CUT_SM}>필요한 파밍 재화가 없습니다.</p>}
               </div>
             </Panel>
 
             <Panel title="통합 징표 · 상자 사용 결과">
               <div className="grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(260px,1fr))]">
                 {result.tokenUses.length === 0 && result.advancedBoxUses.length === 0 ? (
-                  <p className="rounded-2xl bg-black p-5 text-sm text-zinc-500" style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}>사용한 통합 징표 또는 고급 육성 선택 상자가 없습니다.</p>
+                  <p className="border border-ef-line bg-ef-card p-5 text-sm text-ef-muted" style={CUT_SM}>사용한 통합 징표 또는 고급 육성 선택 상자가 없습니다.</p>
                 ) : (
                   <>
                     {result.advancedBoxUses.map((use) => (
@@ -944,7 +944,7 @@ function FarmingCalculatorClientContent() {
 
             <Panel title="부족한 재화">
               <div className="grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(250px,1fr))]">
-                {result.shortage.length ? result.shortage.map((item) => <SmallMaterialRow key={item.name} item={item} />) : <p className="rounded-2xl bg-black p-5 text-sm text-zinc-500" style={{ border: `1px solid ${YELLOW_BORDER_SOFT}` }}>부족한 재화가 없습니다.</p>}
+                {result.shortage.length ? result.shortage.map((item) => <SmallMaterialRow key={item.name} item={item} />) : <p className="border border-ef-line bg-ef-card p-5 text-sm text-ef-muted" style={CUT_SM}>부족한 재화가 없습니다.</p>}
               </div>
             </Panel>
           </section>
@@ -983,7 +983,7 @@ function FarmingCalculatorClientContent() {
 
 export default function FarmingCalculatorClient() {
   return (
-    <Suspense fallback={<main className="min-h-screen bg-[#03060b] text-white" />}>
+    <Suspense fallback={<main className="min-h-screen bg-ef-bg text-ef-ink" />}>
       <FarmingCalculatorClientContent />
     </Suspense>
   );
