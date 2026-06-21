@@ -44,7 +44,7 @@ export default function MaterialList({
               style={CUT_SM}
             >
               <Image
-                src={item.icon ?? `/materials/${item.name}.webp`}
+                src={item.icon ?? `/items/${item.name}.webp`}
                 alt={item.name}
                 fill
                 sizes="44px"

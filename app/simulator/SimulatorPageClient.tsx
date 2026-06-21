@@ -501,7 +501,7 @@ function toSimMaterials(items: any[] = []) {
         count: parseSimulatorAmount(item?.count ?? item?.amount ?? item?.quantity ?? 0),
         icon:
           item?.icon ??
-          (name ? `/materials/${name}.webp` : undefined),
+          (name ? `/items/${name}.webp` : undefined),
       };
     })
     .filter((item) => item.name && item.count > 0);
@@ -636,7 +636,7 @@ function getStageCurrencyMaterial(source: any) {
     {
       name: "탈로시안 화폐",
       count: currency,
-      icon: "/materials/탈로시안 화폐.webp",
+      icon: "/items/탈로시안 화폐.webp",
     },
   ];
 }
@@ -664,7 +664,7 @@ function mergeUniqueSimMaterials(...groups: SimulatorMaterial[]) {
     items.push({
       name,
       count,
-      icon: item.icon ?? `/materials/${name}.webp`,
+      icon: item.icon ?? `/items/${name}.webp`,
     });
   }
 
@@ -696,7 +696,7 @@ function formatRangeSummary(label: string, current: number, target: number) {
 
 
 function materialImage(name: string) {
-  return `/materials/${name}.webp`;
+  return `/items/${name}.webp`;
 }
 
 type OwnedMaterialModalItem = {
@@ -1582,7 +1582,7 @@ export default function SimulatorPage() {
       items.unshift({
         name: "탈로시안 화폐",
         count: currencyTotal,
-        icon: "/materials/탈로시안 화폐.webp",
+        icon: "/items/탈로시안 화폐.webp",
       });
     }
 
@@ -1683,7 +1683,7 @@ export default function SimulatorPage() {
 
     const masterItems = MATERIAL_ORDER.map((name) => ({
       name,
-      icon: iconMap.get(name) ?? `/materials/${name}.webp`,
+      icon: iconMap.get(name) ?? `/items/${name}.webp`,
       owned: ownedMaterials[name] ?? 0,
     }));
 
@@ -1691,7 +1691,7 @@ export default function SimulatorPage() {
       .filter((item) => !materialOrderSet.has(item.name))
       .map((item) => ({
         name: item.name,
-        icon: item.icon ?? `/materials/${item.name}.webp`,
+        icon: item.icon ?? `/items/${item.name}.webp`,
         owned: ownedMaterials[item.name] ?? 0,
       }));
 

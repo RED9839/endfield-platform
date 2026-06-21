@@ -95,7 +95,7 @@ const HIDDEN_OWNED_MATERIALS = new Set([
 ]);
 
 function materialImage(name: string) {
-  return `/materials/${name}.webp`;
+  return `/items/${name}.webp`;
 }
 
 function orderIndex(name: string) {

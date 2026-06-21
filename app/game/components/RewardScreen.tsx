@@ -1,14 +1,39 @@
 import { useState } from "react";
 import Image from "next/image";
-import { ArrowRight, PackageOpen, Search } from "lucide-react";
+import { ArrowRight, Coins, FlaskConical, Gem, HeartPulse, PackageOpen, RefreshCw, Search, Trash2 } from "lucide-react";
 
+import { buildDeck, cardRarity, cardRemovalCost, MIN_DECK_SIZE, previewCardFromToken } from "../data/cards";
+import type { CardRarity } from "../data/cards";
+import { getRelic } from "../data/relics";
+import { getPotion } from "../data/potions";
 import {
   getGameGear,
+  getGearBuyValue,
   getGearPrimaryStatLine,
   getGearSellValue,
   getGameSetEffectDescription,
 } from "../data/game-gears";
-import type { PartyMember, RunGear } from "../types/game";
+import type { DeckCard, Element, PartyMember, RunGear, SkillKind } from "../types/game";
+
+const ELEMENT_COLOR: Record<Element, string> = { physical: "#d4d4d8", heat: "#fb923c", electric: "#a78bfa", cryo: "#67e8f9", nature: "#86efac" };
+const KIND_LABEL: Record<SkillKind, string> = { attack: "기본", "battle-skill": "배틀", "link-skill": "연계", ultimate: "궁극" };
+const RARITY_TONE: Record<CardRarity, { label: string; color: string }> = {
+  normal: { label: "NORMAL", color: "#9ca3af" },
+  rare: { label: "RARE", color: "#4fa3ff" },
+  epic: { label: "EPIC", color: "#c084fc" },
+};
+
+// ===== 카탈로그(장비/오퍼레이터/무기)와 통일한 Endfield SF 디자인 토큰 =====
+const PRIMARY = "#ff9a2f";
+const ACCENT = "#ffd24a";
+const CUT = {
+  clipPath:
+    "polygon(0 0, calc(100% - 13px) 0, 100% 13px, 100% 100%, 13px 100%, 0 calc(100% - 13px))",
+};
+const CUT_SM = {
+  clipPath:
+    "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))",
+};
 
 function categoryLabel(category: string) {
   if (category === "armor") return "방어구";
@@ -22,54 +47,40 @@ function effectLine(gear: RunGear) {
   return `기본 옵션 · ${gear.attributeLabel}`;
 }
 
+// 품질(레어도) 색 — 장비 카탈로그와 동일 팔레트. 게임플레이 의미 색이므로 보존한다.
 function rarityTone(quality: number) {
   if (quality >= 5) {
     return {
       label: "LEGEND",
-      accent: "bg-amber-300",
-      badge: "border-amber-200/40 bg-amber-200/[0.12] text-amber-100",
-      name: "text-amber-300",
+      color: "#f0c94a",
       plate: "bg-[linear-gradient(135deg,#5e3a1e_0%,#b57a2e_48%,#f2c66b_100%)]",
-      strip: "bg-amber-300/85 text-black",
     };
   }
   if (quality === 4) {
     return {
       label: "EPIC",
-      accent: "bg-violet-300",
-      badge: "border-violet-200/40 bg-violet-200/[0.12] text-violet-100",
-      name: "text-violet-200",
+      color: "#9a63ff",
       plate: "bg-[linear-gradient(135deg,#342451_0%,#6847a8_52%,#b894ff_100%)]",
-      strip: "bg-violet-300/85 text-black",
     };
   }
   if (quality === 3) {
     return {
       label: "RARE",
-      accent: "bg-cyan-300",
-      badge: "border-cyan-200/40 bg-cyan-200/[0.12] text-cyan-100",
-      name: "text-cyan-200",
+      color: "#4fa3ff",
       plate: "bg-[linear-gradient(135deg,#1e4053_0%,#2d7fa0_52%,#8be4ff_100%)]",
-      strip: "bg-cyan-300/85 text-black",
     };
   }
   if (quality === 2) {
     return {
       label: "UNCOMMON",
-      accent: "bg-emerald-300",
-      badge: "border-emerald-200/40 bg-emerald-200/[0.12] text-emerald-100",
-      name: "text-emerald-200",
+      color: "#84cc16",
       plate: "bg-[linear-gradient(135deg,#244435_0%,#3a7f5a_52%,#8de0ad_100%)]",
-      strip: "bg-emerald-300/85 text-black",
     };
   }
   return {
     label: "COMMON",
-    accent: "bg-zinc-300",
-    badge: "border-zinc-200/30 bg-zinc-200/[0.10] text-zinc-100",
-    name: "text-zinc-100",
+    color: "#9ca3af",
     plate: "bg-[linear-gradient(135deg,#34363a_0%,#5f6268_52%,#a7abb3_100%)]",
-    strip: "bg-zinc-300/85 text-black",
   };
 }
 
@@ -79,17 +90,68 @@ export default function RewardScreen({
   credits,
   onEquip,
   onSkip,
+  mode = "reward",
+  onBuyHeal,
+  healCost = 45,
+  healAmount = 32,
+  deck = [],
+  cardsRemoved = 0,
+  onRemoveCard,
+  cardOffers = [],
+  onTakeCard,
+  onSkipCard,
+  onRerollCard,
+  cardRerolls = 0,
+  factionName,
+  pendingRelic,
+  shopRelics = [],
+  shopPotions = [],
+  ownedRelics = [],
+  potionCount = 0,
+  onBuyRelic,
+  onBuyPotion,
 }: {
   gearSlugs: string[];
   party: PartyMember[];
   credits: number;
   onEquip: (gearSlug: string, operatorId: string) => void;
   onSkip: () => void;
+  mode?: "reward" | "shop";
+  onBuyHeal?: () => void;
+  healCost?: number;
+  healAmount?: number;
+  deck?: DeckCard[];
+  cardsRemoved?: number;
+  onRemoveCard?: (uid: string) => void;
+  cardOffers?: string[];
+  onTakeCard?: (token: string) => void;
+  onSkipCard?: () => void;
+  onRerollCard?: () => void;
+  cardRerolls?: number;
+  factionName?: string;
+  pendingRelic?: string;
+  shopRelics?: string[];
+  shopPotions?: string[];
+  ownedRelics?: string[];
+  potionCount?: number;
+  onBuyRelic?: (relicId: string) => void;
+  onBuyPotion?: (potionId: string) => void;
 }) {
   const [selectedGearSlug, setSelectedGearSlug] = useState<string | null>(null);
   const selectedGear = selectedGearSlug ? getGameGear(selectedGearSlug) : null;
+  const isShop = mode === "shop";
 
   function equipGear(gear: RunGear, member: PartyMember, currentGear?: RunGear) {
+    if (isShop) {
+      const price = getGearBuyValue(gear);
+      if (credits < price) return;
+      const refund = currentGear ? `\n기존 ${currentGear.name}은(는) ${getGearSellValue(currentGear)} 크레딧에 자동 판매됩니다.` : "";
+      const confirmed = window.confirm(`${gear.name}을(를) ${price} 크레딧에 구매해 ${member.name}에게 장착할까요?${refund}`);
+      if (!confirmed) return;
+      onEquip(gear.slug, member.id);
+      setSelectedGearSlug(null);
+      return;
+    }
     if (currentGear) {
       const confirmed = window.confirm(
         `${member.name}의 ${currentGear.name}을(를) 교체할까요?\n기존 장비는 ${getGearSellValue(currentGear)} 크레딧에 자동 판매됩니다.`,
@@ -101,57 +163,205 @@ export default function RewardScreen({
   }
 
   return (
-    <section className="mx-auto flex min-h-[620px] w-full max-w-6xl flex-col justify-center px-4 py-10 sm:px-6">
-      <div className="rounded-[28px] border border-white/10 bg-[#05080b]/90 p-5 shadow-2xl shadow-cyan-950/20 sm:p-7">
-        <div className="flex flex-col gap-4 border-b border-white/10 pb-5 sm:flex-row sm:items-end sm:justify-between">
+    <section className="relative mx-auto flex min-h-[620px] w-full max-w-6xl flex-col justify-center px-4 py-10 sm:px-6">
+      <div className="pointer-events-none fixed inset-0 z-0 opacity-[0.022] [background-image:radial-gradient(circle,#ffd24a_1px,transparent_1px)] [background-size:22px_22px]" />
+      <div className="relative z-10 overflow-hidden border border-ef-line bg-ef-card2 p-5 sm:p-7" style={CUT}>
+        <span className="absolute inset-x-0 top-0 block h-0.5 w-full" style={{ background: `linear-gradient(90deg, ${PRIMARY}, transparent 55%)` }} />
+        <div className="flex flex-col gap-4 border-b border-ef-line pb-5 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <div className="flex items-center gap-3">
-              <span className="grid h-11 w-11 place-items-center rounded-2xl border border-amber-300/30 bg-amber-300/[0.08]">
-                <PackageOpen className="h-5 w-5 text-amber-200" />
+              <span className="grid h-11 w-11 place-items-center border border-ef-line bg-ef-card" style={{ ...CUT_SM, color: ACCENT }}>
+                <PackageOpen className="h-5 w-5" />
               </span>
               <div>
-                <p className="text-[10px] font-black tracking-[0.35em] text-cyan-200/60">
-                  OPERATION COMPLETE
+                <p className="font-mono text-[11px] font-bold uppercase tracking-[0.24em] text-ef-muted">
+                  {isShop ? "Supply Depot" : "Operation Complete"} <span className="text-ef-muted/60">// {isShop ? "델랑 보급소" : "작전 완료"}</span>
                 </p>
-                <h1 className="mt-1 text-3xl font-black text-white">전술 장비 회수</h1>
+                <h1 className="mt-1 text-3xl font-black text-white">{isShop ? "전술 보급" : "전술 장비 회수"}</h1>
               </div>
             </div>
-            <p className="mt-4 text-sm text-zinc-400">
-              {credits} 크레딧 확보. 회수한 장비 하나를 선택해 오퍼레이터에게 장착하세요.
+            <p className="mt-4 text-sm text-ef-muted">
+              {isShop ? (
+                <>보유 <span className="font-mono font-black tabular-nums text-ef-accent">{credits}</span> 크레딧. 장비를 구매하거나 정비로 파티를 회복하세요.</>
+              ) : (
+                <><span className="font-mono font-black tabular-nums text-ef-accent">{credits}</span> 크레딧 확보. 회수한 장비 하나를 선택해 오퍼레이터에게 장착하세요.</>
+              )}
             </p>
           </div>
           <div className="flex items-center gap-3">
-            <button type="button" onClick={onSkip} className="flex items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm font-black text-zinc-200 transition hover:border-amber-200/40 hover:bg-amber-200/[0.08]">
-              맵으로 이동
+            {isShop && onBuyHeal && (
+              <button
+                type="button"
+                onClick={onBuyHeal}
+                disabled={credits < healCost}
+                className="flex items-center gap-2 border px-4 py-3 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-40"
+                style={{ ...CUT_SM, borderColor: `${PRIMARY}55`, color: "#7fd4a3", background: `${PRIMARY}0d` }}
+                title="파티 전원 회복"
+              >
+                <HeartPulse className="h-4 w-4" />
+                정비 +{healAmount}
+                <span className="font-mono text-[11px] tabular-nums text-ef-accent">-{healCost}</span>
+              </button>
+            )}
+            <button type="button" onClick={onSkip} className="flex items-center gap-2 border border-ef-line bg-ef-card px-4 py-3 text-sm font-bold text-ef-muted transition hover:border-ef-accent/40 hover:text-ef-accent-soft" style={CUT_SM}>
+              {isShop ? "상점 나가기" : "맵으로 이동"}
               <ArrowRight className="h-4 w-4" />
             </button>
-            <div className="rounded-2xl border border-cyan-300/20 bg-cyan-300/[0.05] px-4 py-3 text-right">
-              <p className="text-[10px] font-black tracking-[0.25em] text-cyan-100/50">RECOVERED</p>
-              <p className="mt-1 text-2xl font-black text-cyan-100">{gearSlugs.length}</p>
+            <div className="border border-ef-line bg-ef-card px-4 py-3 text-right" style={CUT_SM}>
+              <p className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-ef-muted">{isShop ? "CREDITS" : "RECOVERED"}</p>
+              <p className="mt-1 font-mono text-2xl font-black tabular-nums" style={{ color: ACCENT }}>{isShop ? credits : gearSlugs.length}</p>
             </div>
           </div>
         </div>
 
+        {/* 유물 드랍 배너(엘리트) */}
+        {!isShop && pendingRelic && getRelic(pendingRelic) && (
+          <div className="mt-5 flex items-center gap-3 border bg-ef-card p-4" style={{ ...CUT, borderColor: `${ACCENT}55` }}>
+            <Gem className="h-6 w-6 shrink-0" style={{ color: ACCENT }} />
+            <div>
+              <p className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-ef-muted">유물 획득</p>
+              <p className="text-base font-black" style={{ color: ACCENT }}>{getRelic(pendingRelic)!.name}</p>
+              <p className="text-xs text-ef-muted">{getRelic(pendingRelic)!.description}</p>
+            </div>
+          </div>
+        )}
+
+        {/* 전술 카드 보상(슬더스식 카드 픽) */}
+        {!isShop && onTakeCard && cardOffers.length > 0 && (
+          <div className="mt-5 border border-ef-line bg-ef-card p-5" style={CUT}>
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-ef-line pb-3">
+              <div className="flex items-center gap-2">
+                <span className="h-4 w-1" style={{ background: PRIMARY }} />
+                <p className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-ef-muted">New Card // 카드 습득{factionName ? ` · ${factionName}` : ""}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                {onRerollCard && (() => {
+                  const rerollCost = 25 + cardRerolls * 20;
+                  const can = credits >= rerollCost;
+                  return (
+                    <button type="button" disabled={!can} onClick={onRerollCard} className="inline-flex items-center gap-1.5 border bg-ef-card2 px-3 py-1.5 font-mono text-[11px] font-bold transition disabled:cursor-not-allowed disabled:opacity-40" style={{ ...CUT_SM, borderColor: `${PRIMARY}55`, color: "#fdba74" }}>
+                      <RefreshCw className="h-3.5 w-3.5" /> 리롤 <span className="inline-flex items-center gap-0.5 tabular-nums" style={{ color: can ? ACCENT : "#fca5a5" }}><Coins className="h-3 w-3" />{rerollCost}</span>
+                    </button>
+                  );
+                })()}
+                <button type="button" onClick={onSkipCard} className="border border-ef-line bg-ef-card2 px-3 py-1.5 font-mono text-[11px] font-bold text-ef-muted transition hover:text-ef-accent-soft" style={CUT_SM}>
+                  받지 않기
+                </button>
+              </div>
+            </div>
+            <p className="mt-3 text-[11px] text-ef-muted">세력 풀에서 한 장을 골라 덱에 영구 추가합니다. 등급이 높을수록 강력하고 드뭅니다.</p>
+            <div className="mt-3 grid gap-2 sm:grid-cols-3">
+              {cardOffers.map((token) => {
+                const card = previewCardFromToken(token, party);
+                if (!card) return null;
+                const col = ELEMENT_COLOR[card.element];
+                const rarity = RARITY_TONE[cardRarity(token)];
+                return (
+                  <button
+                    key={token}
+                    type="button"
+                    onClick={() => onTakeCard(token)}
+                    className="relative flex flex-col border bg-ef-card2 p-3 pt-5 text-left transition hover:-translate-y-0.5"
+                    style={{ ...CUT_SM, borderColor: `${rarity.color}88` }}
+                  >
+                    <span className="absolute left-0 top-0 px-1.5 py-0.5 font-mono text-[8px] font-black uppercase tracking-wide text-black" style={{ background: rarity.color }}>{rarity.label}</span>
+                    <span className="flex items-center justify-between">
+                      <span className="flex h-6 w-6 items-center justify-center border font-mono text-xs font-black text-black" style={{ ...CUT_SM, background: ACCENT, borderColor: ACCENT }}>{card.cost}</span>
+                      <span className="font-mono text-[8px] uppercase" style={{ color: col }}>{card.target === "all-enemies" ? "전체" : card.target === "party" ? "파티" : "단일"}</span>
+                    </span>
+                    <span className="mt-2 truncate text-sm font-black text-white">{card.name}</span>
+                    <span className="truncate font-mono text-[9px] text-ef-muted">{card.operatorName}</span>
+                    <span className="mt-0.5 font-mono text-[10px] font-bold" style={{ color: ACCENT }}>{card.effectLine}</span>
+                    <span className="mt-1 font-mono text-[9px] font-black tabular-nums" style={{ color: PRIMARY }}>{card.stagger > 0 ? `◇${card.stagger}` : ""}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* 상점: 유물 / 포션 매물 */}
+        {isShop && (onBuyRelic || onBuyPotion) && (shopRelics.length > 0 || shopPotions.length > 0) && (
+          <div className="mt-5 grid gap-3 lg:grid-cols-2">
+            {onBuyRelic && (
+              <div className="border border-ef-line bg-ef-card p-4" style={CUT}>
+                <div className="mb-2 flex items-center gap-2"><Gem className="h-4 w-4" style={{ color: ACCENT }} /><p className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-ef-muted">유물</p></div>
+                <div className="space-y-2">
+                  {shopRelics.length === 0 && <p className="text-[11px] text-ef-muted">매진</p>}
+                  {shopRelics.map((id) => {
+                    const relic = getRelic(id);
+                    if (!relic) return null;
+                    const owned = ownedRelics.includes(id);
+                    const afford = credits >= relic.price && !owned;
+                    return (
+                      <button key={id} type="button" disabled={!afford} onClick={() => onBuyRelic(id)} className="flex w-full items-center gap-3 border border-ef-line bg-ef-card2 p-3 text-left transition hover:border-ef-accent/40 disabled:cursor-not-allowed disabled:opacity-40" style={CUT_SM}>
+                        <Gem className="h-4 w-4 shrink-0" style={{ color: ACCENT }} />
+                        <span className="min-w-0 flex-1">
+                          <span className="block text-sm font-black text-white">{relic.name}</span>
+                          <span className="block text-[10px] leading-4 text-ef-muted">{relic.description}</span>
+                        </span>
+                        <span className="inline-flex items-center gap-1 font-mono text-xs font-black tabular-nums" style={{ color: afford ? ACCENT : "#fca5a5" }}><Coins className="h-3 w-3" />{owned ? "보유" : relic.price}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+            {onBuyPotion && (
+              <div className="border border-ef-line bg-ef-card p-4" style={CUT}>
+                <div className="mb-2 flex items-center gap-2"><FlaskConical className="h-4 w-4" style={{ color: ACCENT }} /><p className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-ef-muted">포션 ({potionCount}/3)</p></div>
+                <div className="space-y-2">
+                  {shopPotions.length === 0 && <p className="text-[11px] text-ef-muted">매진</p>}
+                  {shopPotions.map((id, i) => {
+                    const potion = getPotion(id);
+                    if (!potion) return null;
+                    const afford = credits >= potion.price && potionCount < 3;
+                    return (
+                      <button key={`${id}-${i}`} type="button" disabled={!afford} onClick={() => onBuyPotion(id)} className="flex w-full items-center gap-3 border border-ef-line bg-ef-card2 p-3 text-left transition hover:border-ef-accent/40 disabled:cursor-not-allowed disabled:opacity-40" style={CUT_SM}>
+                        <span className="relative h-9 w-9 shrink-0 overflow-hidden border" style={{ ...CUT_SM, borderColor: `${potion.color}55` }}>
+                          {potion.image ? <Image src={potion.image} alt="" fill sizes="36px" className="object-contain p-0.5" /> : <FlaskConical className="m-auto h-4 w-4" style={{ color: potion.color }} />}
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block text-sm font-black text-white">{potion.name}</span>
+                          <span className="block text-[10px] leading-4 text-ef-muted">{potion.description}</span>
+                        </span>
+                        <span className="inline-flex items-center gap-1 font-mono text-xs font-black tabular-nums" style={{ color: afford ? ACCENT : "#fca5a5" }}><Coins className="h-3 w-3" />{potionCount >= 3 ? "가득" : potion.price}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {isShop && gearSlugs.length === 0 && (
+          <div className="mt-6 border border-ef-line bg-ef-card p-6 text-center text-sm text-ef-muted" style={CUT}>
+            재고 소진 — 상점을 나가 다음 지점으로 이동하세요.
+          </div>
+        )}
         <div className="mt-5 space-y-3">
           {gearSlugs.map((slug) => {
             const gear = getGameGear(slug);
             const selected = selectedGearSlug === gear.slug;
             const rarity = rarityTone(gear.quality);
+            const price = getGearBuyValue(gear);
+            const affordable = credits >= price;
             return (
               <button
                 key={gear.slug}
                 type="button"
                 onClick={() => setSelectedGearSlug(gear.slug)}
-                className={`group relative flex w-full overflow-hidden rounded-[18px] border text-left transition hover:-translate-y-0.5 ${
-                  selected
-                    ? "border-cyan-200/70 bg-cyan-200/[0.08] shadow-lg shadow-cyan-950/30"
-                    : "border-white/10 bg-white/[0.035] hover:border-amber-200/50 hover:bg-amber-200/[0.045]"
-                }`}
+                className="group relative flex w-full overflow-hidden border text-left transition hover:-translate-y-0.5"
+                style={{
+                  ...CUT,
+                  borderColor: selected ? ACCENT : "#202020",
+                  background: selected ? `${ACCENT}14` : "#0b0b0b",
+                }}
               >
                 <span
-                  className={`absolute left-0 top-0 h-full w-1 ${
-                    selected ? "bg-cyan-200" : rarity.accent
-                  }`}
+                  className="absolute left-0 top-0 h-full w-1"
+                  style={{ background: selected ? ACCENT : rarity.color }}
                 />
                 <span className={`relative h-32 w-32 shrink-0 overflow-hidden ${rarity.plate} sm:h-36 sm:w-36`}>
                   <span className="absolute inset-5 rotate-45 border border-white/20" />
@@ -163,35 +373,43 @@ export default function RewardScreen({
                     sizes="144px"
                     className="object-contain p-5 drop-shadow-[0_10px_18px_rgba(0,0,0,0.45)]"
                   />
-                  <span className={`absolute bottom-0 left-0 right-0 h-7 px-2 py-1 text-[10px] font-black tracking-[0.22em] ${rarity.strip}`}>
+                  {/* 품질 코너 브래킷(레어도 색) */}
+                  <span className="pointer-events-none absolute left-1.5 top-1.5 h-5 w-5 border-l-2 border-t-2" style={{ borderColor: rarity.color }} />
+                  <span className="pointer-events-none absolute right-1.5 top-1.5 h-5 w-5 border-r-2 border-t-2" style={{ borderColor: rarity.color }} />
+                  <span className="absolute bottom-0 left-0 right-0 h-7 px-2 py-1 font-mono text-[10px] font-black uppercase tracking-[0.22em] text-black" style={{ background: `${rarity.color}d9` }}>
                     {rarity.label}
                   </span>
                 </span>
 
                 <span className="flex min-w-0 flex-1 flex-col justify-center px-4 py-4 sm:px-6">
                   <span className="flex flex-wrap items-center gap-2">
-                    <span className={`inline-flex rounded-md border px-2 py-1 text-[10px] font-black ${rarity.badge}`}>
+                    <span className="inline-flex border px-2 py-1 font-mono text-[10px] font-black uppercase tracking-wide" style={{ ...CUT_SM, borderColor: `${rarity.color}66`, background: `${rarity.color}1a`, color: rarity.color }}>
                       레어도 {gear.quality}
                     </span>
-                    <span className="inline-flex rounded-md border border-white/10 bg-white/[0.04] px-2 py-1 text-[10px] font-black text-zinc-200">
+                    <span className="inline-flex border border-ef-line bg-ef-card px-2 py-1 font-mono text-[10px] font-black text-ef-muted" style={CUT_SM}>
                       {categoryLabel(gear.category)}
                     </span>
-                    <span className="text-[10px] font-black tracking-[0.18em] text-cyan-100/45">
+                    <span className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-ef-muted">
                       LV.{gear.level}
                     </span>
+                    {isShop && (
+                      <span className="ml-auto inline-flex items-center gap-1 border px-2 py-1 font-mono text-[11px] font-black tabular-nums" style={{ ...CUT_SM, borderColor: affordable ? `${ACCENT}66` : "#f8717166", background: affordable ? `${ACCENT}14` : "#f871711a", color: affordable ? ACCENT : "#fca5a5" }}>
+                        <Coins className="h-3 w-3" />{price}
+                      </span>
+                    )}
                   </span>
-                  <span className={`mt-2 line-clamp-1 text-xl font-black ${rarity.name}`}>
+                  <span className="mt-2 line-clamp-1 text-xl font-black" style={{ color: rarity.color }}>
                     {gear.name}
                   </span>
-                  <span className="mt-1 text-xs font-bold text-cyan-100/65">{gear.setName} 세트</span>
+                  <span className="mt-1 font-mono text-xs font-bold uppercase tracking-wide" style={{ color: `${PRIMARY}cc` }}>{gear.setName} 세트</span>
                   <span className="mt-4 grid gap-2 text-sm sm:grid-cols-[160px_1fr]">
                     <span className="font-black text-white">{getGearPrimaryStatLine(gear)}</span>
-                    <span className="leading-6 text-zinc-300">{effectLine(gear)}</span>
+                    <span className="leading-6 text-ef-muted">{effectLine(gear)}</span>
                   </span>
                 </span>
 
-                <span className="hidden w-14 shrink-0 place-items-start justify-center border-l border-white/10 bg-black/20 pt-4 sm:grid">
-                  <span className="grid h-9 w-9 place-items-center rounded-lg border border-white/10 bg-white/[0.04] text-zinc-300 transition group-hover:border-cyan-200/50 group-hover:text-cyan-100">
+                <span className="hidden w-14 shrink-0 place-items-start justify-center border-l border-ef-line bg-black/20 pt-4 sm:grid">
+                  <span className="grid h-9 w-9 place-items-center border border-ef-line bg-ef-card text-ef-muted transition group-hover:border-ef-accent/50 group-hover:text-ef-accent-soft" style={CUT_SM}>
                     <Search className="h-4 w-4" />
                   </span>
                 </span>
@@ -200,13 +418,70 @@ export default function RewardScreen({
           })}
         </div>
 
+        {isShop && onRemoveCard && (() => {
+          const cards = buildDeck(party, deck);
+          const removeCost = cardRemovalCost(cardsRemoved);
+          const deckAtMin = cards.length <= MIN_DECK_SIZE;
+          const canAfford = credits >= removeCost;
+          return (
+            <div className="mt-6 border border-ef-line bg-ef-card p-5" style={CUT}>
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-ef-line pb-3">
+                <div className="flex items-center gap-2">
+                  <span className="h-4 w-1" style={{ background: PRIMARY }} />
+                  <p className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-ef-muted">Deck Refit // 카드 정리</p>
+                </div>
+                <div className="flex items-center gap-3 text-xs">
+                  <span className="font-mono text-ef-muted">덱 {cards.length}장</span>
+                  <span className="inline-flex items-center gap-1 border px-2.5 py-1 font-mono font-black tabular-nums" style={{ ...CUT_SM, borderColor: canAfford && !deckAtMin ? `${ACCENT}66` : "#f8717166", background: canAfford && !deckAtMin ? `${ACCENT}14` : "#f871711a", color: canAfford && !deckAtMin ? ACCENT : "#fca5a5" }}>
+                    <Trash2 className="h-3 w-3" />다음 삭제 {removeCost}
+                  </span>
+                </div>
+              </div>
+              <p className="mt-3 text-[11px] text-ef-muted">
+                {deckAtMin ? "최소 덱 크기에 도달해 더 삭제할 수 없습니다." : "카드를 골라 영구 삭제하면 덱이 얇아져 핵심 카드를 더 자주 뽑습니다. 삭제할수록 비용이 비싸집니다."}
+              </p>
+              <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+                {cards.map((card) => {
+                  const col = ELEMENT_COLOR[card.element];
+                  const disabled = deckAtMin || !canAfford;
+                  return (
+                    <button
+                      key={card.uid}
+                      type="button"
+                      disabled={disabled}
+                      onClick={() => {
+                        if (window.confirm(`'${card.name}' 카드를 ${removeCost} 크레딧에 영구 삭제할까요?`)) onRemoveCard(card.uid);
+                      }}
+                      className="group relative flex items-center gap-2 border bg-ef-card2 p-2 text-left transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0"
+                      style={{ ...CUT_SM, borderColor: `${col}55` }}
+                    >
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center border font-mono text-xs font-black text-black" style={{ ...CUT_SM, background: ACCENT, borderColor: ACCENT }}>{card.cost}</span>
+                      <span className="min-w-0 flex-1">
+                        <span className="flex items-center gap-1">
+                          <span className="truncate text-xs font-black text-white">{card.name}</span>
+                          <span className="ml-auto font-mono text-[8px] uppercase" style={{ color: col }}>{KIND_LABEL[card.kind]}</span>
+                        </span>
+                        <span className="truncate font-mono text-[9px] text-ef-muted">{card.operatorName}</span>
+                      </span>
+                      <Trash2 className="h-3.5 w-3.5 shrink-0 text-ef-muted transition group-hover:text-red-300" />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })()}
+
         {selectedGear && (
-          <div className="mt-6 rounded-[24px] border border-cyan-200/15 bg-[#080d12] p-5">
-            <p className="text-[10px] font-black tracking-[0.3em] text-cyan-200/60">
-              EQUIP TARGET
-            </p>
+          <div className="mt-6 border border-ef-line bg-ef-card p-5" style={CUT}>
+            <div className="flex items-center gap-2">
+              <span className="h-4 w-1" style={{ background: PRIMARY }} />
+              <p className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-ef-muted">
+                Equip Target
+              </p>
+            </div>
             <h2 className="mt-2 text-xl font-black text-white">
-              {selectedGear.name} 장착 대상 선택
+              {selectedGear.name} {isShop ? `구매 · ${getGearBuyValue(selectedGear)} 크레딧` : "장착 대상 선택"}
             </h2>
             <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               {party.map((member) => {
@@ -215,29 +490,32 @@ export default function RewardScreen({
                     ? member.gear.armor
                     : selectedGear.category === "gloves"
                       ? member.gear.gloves
-                      : member.gear.kit1 && member.gear.kit2
-                        ? member.gear.kit1
-                        : undefined;
+                      : member.gear.kit1;
+                const unaffordable = isShop && credits < getGearBuyValue(selectedGear);
                 return (
                   <button
                     key={member.id}
                     type="button"
                     onClick={() => equipGear(selectedGear, member, currentGear)}
-                    className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-left transition hover:border-cyan-300/40 hover:bg-cyan-300/[0.06]"
+                    disabled={unaffordable}
+                    className="border border-ef-line bg-ef-card2 p-4 text-left transition hover:border-ef-accent/40 hover:bg-ef-accent/[0.06] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-ef-line"
+                    style={CUT_SM}
                   >
                     <div className="flex items-center gap-3">
-                      <span className="relative h-12 w-12 overflow-hidden rounded-xl bg-zinc-900">
+                      <span className="relative h-12 w-12 overflow-hidden border border-ef-line bg-black" style={CUT_SM}>
                         <Image src={member.image} alt="" fill sizes="48px" className="object-cover" />
                       </span>
                       <div className="min-w-0">
                         <p className="truncate text-sm font-black text-white">{member.name}</p>
-                        <p className="text-[10px] font-bold text-zinc-500">{member.className} · {member.role}</p>
+                        <p className="text-[10px] font-bold text-ef-muted">{member.className} · {member.role}</p>
                       </div>
                     </div>
-                    <p className="mt-3 text-[10px] leading-4 text-zinc-500">
-                      {currentGear
-                        ? `${currentGear.name} 교체 · 판매 +${getGearSellValue(currentGear)}`
-                        : "빈 슬롯에 장착"}
+                    <p className="mt-3 text-[10px] leading-4 text-ef-muted">
+                      {unaffordable
+                        ? "크레딧 부족"
+                        : currentGear
+                          ? `${currentGear.name} 교체 · 판매 +${getGearSellValue(currentGear)}`
+                          : "빈 슬롯에 장착"}
                     </p>
                   </button>
                 );

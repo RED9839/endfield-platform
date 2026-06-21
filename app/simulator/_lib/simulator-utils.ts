@@ -36,7 +36,7 @@ export const OPERATOR_CURRENT_LEVEL_OPTIONS = [1, 20, 40, 60, 80] as const;
 export const OPERATOR_TARGET_LEVEL_OPTIONS = [20, 40, 60, 80, 90] as const;
 
 function getDefaultMaterialIcon(name: string) {
-  return `/materials/${name}.webp`;
+  return `/items/${name}.webp`;
 }
 
 export function normalizeMaterialName(name: string): string {

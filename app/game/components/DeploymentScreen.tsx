@@ -1,127 +1,268 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
-import { ArrowRight, ChevronRight, Crosshair, Eye, Shield } from "lucide-react";
-import { startingParty } from "../data/operators";
-import type { Operator } from "../types/game";
+import { ArrowRight, Check, RotateCcw, Shield, Users } from "lucide-react";
 
-const operatorAccents = [
-  "from-yellow-200 via-yellow-400 to-cyan-300",
-  "from-yellow-300 via-orange-300 to-white",
-  "from-cyan-300 via-yellow-300 to-white",
-  "from-yellow-300 via-orange-400 to-red-400",
-];
+import { allOperators } from "../data/operators";
+import type { Element, Operator, OperatorClass } from "../types/game";
 
-const deploymentImages: Record<string, string> = {
-  endministrator: "/operators/endministrator/full2.webp",
-  perlica: "/operators/perlica/full.webp",
-  chenqianyu: "/operators/chenqianyu/full.webp",
-  ardelia: "/operators/ardelia/full.webp",
+const TEAM_SIZE = 4;
+
+// 직군 패시브(직군 공통 베이스라인) 라벨 — useRunState의 CLASS_PASSIVE와 동일 개념.
+const CLASS_PASSIVE_LABEL: Record<OperatorClass, string> = {
+  "가드": "불균형 적 피해+",
+  "디펜더": "파티 보호막",
+  "캐스터": "이상 적 피해+",
+  "스트라이커": "치명타 확률+",
+  "서포터": "파티 회복",
+  "뱅가드": "불균형 시 에너지+",
+};
+
+const PRIMARY = "#ff9a2f";
+const ACCENT = "#ffd24a";
+const CUT = {
+  clipPath:
+    "polygon(0 0, calc(100% - 13px) 0, 100% 13px, 100% 100%, 13px 100%, 0 calc(100% - 13px))",
+};
+const CUT_SM = {
+  clipPath:
+    "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))",
+};
+
+// 속성별 의미 색상 보존 — 카드 상단 액센트 바 + 칩 테두리에 사용
+const elementMeta: Record<Element, { label: string; color: string }> = {
+  physical: { label: "물리", color: "#c7cdd6" },
+  heat: { label: "열기", color: "#ff8a4c" },
+  electric: { label: "전기", color: "#a78bfa" },
+  cryo: { label: "냉기", color: "#67e8f9" },
+  nature: { label: "자연", color: "#86efac" },
 };
 
 function StatChip({ label, value }: { label: string; value: string | number }) {
   return (
-    <span className="rounded-xl border border-yellow-200/15 bg-black/55 px-2 py-2 text-center shadow-inner shadow-yellow-200/5">
-      <span className="block text-[9px] font-black tracking-[0.2em] text-yellow-100/45">{label}</span>
-      <span className="mt-1 block text-sm font-black text-white">{value}</span>
+    <span className="block border border-ef-line bg-ef-card px-2 py-1.5 text-center" style={CUT_SM}>
+      <span className="block font-mono text-[8px] font-bold uppercase tracking-[0.18em] text-ef-muted">{label}</span>
+      <span className="mt-0.5 block font-mono text-xs font-black tabular-nums text-ef-ink">{value}</span>
     </span>
   );
 }
 
-function OperatorCard({ operator, index }: { operator: Operator; index: number }) {
-  const accent = operatorAccents[index % operatorAccents.length];
-  const selected = index === 0;
-  const image = deploymentImages[operator.id] ?? operator.image;
+function RosterCard({
+  operator,
+  order,
+  locked,
+  onToggle,
+}: {
+  operator: Operator;
+  order: number;
+  locked: boolean;
+  onToggle: () => void;
+}) {
+  const selected = order > 0;
+  const element = elementMeta[operator.element];
 
   return (
-    <article
-      className={`group relative min-h-[900px] w-full overflow-hidden rounded-[38px] border p-4 backdrop-blur-xl transition duration-300 hover:-translate-y-1 ${
+    <button
+      type="button"
+      onClick={onToggle}
+      disabled={locked}
+      aria-pressed={selected}
+      style={CUT}
+      className={`group relative flex flex-col overflow-hidden border p-3 text-left transition duration-200 ${
         selected
-          ? "border-yellow-200/80 bg-yellow-200/[0.04] shadow-[0_0_58px_rgba(250,204,21,0.2)]"
-          : "border-white/12 bg-zinc-950/48 shadow-[0_26px_70px_rgba(0,0,0,0.32)] hover:border-yellow-200/45"
+          ? "border-ef-accent bg-ef-accent/[0.06]"
+          : locked
+            ? "cursor-not-allowed border-ef-line bg-ef-card opacity-40"
+            : "border-ef-line bg-ef-card2 hover:-translate-y-1 hover:border-ef-accent/45"
       }`}
     >
-      <div className={`absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r ${accent}`} />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_46%,rgba(250,204,21,0.12),transparent_42%)]" />
-      <div className="absolute inset-4 rounded-[32px] border border-yellow-100/10" />
-      <div className="absolute left-1/2 top-1/2 h-[430px] w-[430px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-yellow-200/16 bg-yellow-200/5" />
-      <div className="absolute left-1/2 top-1/2 h-80 w-80 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/10" />
+      <div className="absolute inset-x-0 top-0 h-1" style={{ background: `linear-gradient(90deg, ${element.color}, transparent 70%)` }} />
 
-      <div className="relative z-20 flex items-start justify-between gap-3 bg-transparent">
-        <div className="grid gap-2">
-          <span className="flex h-11 w-11 items-center justify-center rounded-xl border border-yellow-100/15 bg-black/35 text-yellow-100 shadow-lg shadow-black/20 backdrop-blur-sm">
-            <Crosshair className="h-5 w-5" />
-          </span>
-          <span className="rounded-lg border border-yellow-100/20 bg-black/50 px-3 py-1 text-xl font-black leading-none text-white backdrop-blur-sm">
-            {String(index + 1).padStart(2, "0")}
-          </span>
-        </div>
+      {selected && (
+        <span className="absolute right-3 top-3 z-20 flex h-8 w-8 items-center justify-center border border-ef-accent/70 bg-ef-bg/85 font-mono text-sm font-black tabular-nums text-ef-accent" style={CUT_SM}>
+          {order}
+        </span>
+      )}
 
-        <button type="button" className="flex h-12 w-12 items-center justify-center rounded-full border border-yellow-100/20 bg-white/8 text-white shadow-lg backdrop-blur-sm transition hover:bg-yellow-100/15" aria-label={`${operator.name} 상세 보기`}>
-          <Eye className="h-5 w-5" />
-        </button>
+      <div className="relative mt-2 h-52 overflow-hidden border border-ef-line bg-black" style={CUT_SM}>
+        <Image
+          src={operator.image}
+          alt={operator.name}
+          fill
+          sizes="(min-width: 1280px) 22vw, (min-width: 640px) 33vw, 50vw"
+          className={`object-contain object-bottom transition duration-300 ${
+            selected ? "scale-105" : "group-hover:scale-105"
+          }`}
+        />
       </div>
 
-      <div className="absolute inset-x-4 top-4 bottom-4 z-10 overflow-hidden rounded-[30px]">
-        <div className="absolute left-1/2 top-1/2 h-96 w-full -translate-x-1/2 -translate-y-1/2 rounded-full bg-yellow-300/10 blur-3xl" />
-        <Image src={image} alt={operator.name} fill quality={100} sizes="(min-width: 1536px) 25vw, (min-width: 768px) 50vw, 100vw" className="scale-[1.72] object-contain object-center drop-shadow-[0_34px_46px_rgba(0,0,0,0.78)] transition duration-500 group-hover:scale-[1.78]" priority={index === 0} />
-      </div>
-
-      <div className="absolute inset-x-4 bottom-4 z-20 rounded-[28px] border border-yellow-100/12 bg-black/76 p-4 shadow-[0_18px_38px_rgba(0,0,0,0.34)] backdrop-blur-xl">
-        <div className="min-w-0">
-          <p className="text-[10px] font-black tracking-[0.28em] text-yellow-100/45">OPERATOR</p>
-          <h3 className="mt-1 truncate text-3xl font-black tracking-tight text-white">{operator.name}</h3>
-          <p className="mt-1 truncate text-xs font-bold text-white/45">{operator.className} / {operator.role}</p>
+      <div className="relative z-10 mt-2">
+        <div className="flex items-center justify-between gap-2">
+          <p className="font-mono text-[9px] font-bold uppercase tracking-[0.24em] text-ef-muted">OPERATOR</p>
+          <span
+            className="border px-2 py-0.5 font-mono text-[9px] font-black uppercase tracking-wide"
+            style={{ ...CUT_SM, borderColor: `${element.color}66`, background: `${element.color}1a`, color: element.color }}
+          >
+            {element.label}
+          </span>
         </div>
+        <h3 className="mt-1 truncate text-xl font-black text-white">{operator.name}</h3>
+        <p className="truncate text-[11px] font-bold text-ef-muted">
+          {operator.className} · {operator.role}
+        </p>
 
-        <div className="mt-4 grid grid-cols-3 gap-2">
+        <div className="mt-3 grid grid-cols-3 gap-1.5">
           <StatChip label="ATK" value={operator.attack} />
-          <StatChip label="SPD" value={operator.speed} />
+          <StatChip label="CRIT" value={`${Math.round(operator.critRate * 100)}%`} />
           <StatChip label="HP" value={operator.maxHp} />
         </div>
 
-        <div className="mt-4 flex items-center justify-between gap-3 border-t border-yellow-100/10 pt-3">
-          <span className="flex items-center gap-2 text-[10px] font-black tracking-[0.2em] text-white/35">
-            <Shield className="h-4 w-4 text-yellow-200/55" />
-            DEPLOY READY
-          </span>
-          <button type="button" className="flex items-center gap-1 text-xs font-black text-yellow-100/80">
-            교체 <ChevronRight className="h-4 w-4" />
-          </button>
+        <div className="mt-2 space-y-0.5 border-t border-ef-line pt-2">
+          <p className="truncate font-mono text-[9px] text-ef-muted">
+            <span className="font-bold text-ef-accent-soft">직군 패시브</span> · {CLASS_PASSIVE_LABEL[operator.className] ?? "-"}
+          </p>
+          <p className="truncate font-mono text-[9px] text-ef-muted">
+            <span className="font-bold text-ef-accent-soft">재능</span> · {operator.passiveName}
+          </p>
         </div>
       </div>
-    </article>
+    </button>
   );
 }
 
-export default function DeploymentScreen({ onStart }: { onStart: () => void }) {
-  return (
-    <section className="relative min-h-[calc(100vh-64px)] overflow-hidden bg-black px-4 py-6 text-white sm:px-7">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_16%,rgba(250,204,21,0.18),transparent_31%),radial-gradient(circle_at_82%_12%,rgba(34,211,238,0.12),transparent_34%),linear-gradient(135deg,#050505_0%,#111009_48%,#000000_100%)]" />
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(250,204,21,0.055)_1px,transparent_1px),linear-gradient(rgba(255,255,255,0.035)_1px,transparent_1px)] bg-[size:56px_56px] opacity-35" />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-72 bg-gradient-to-t from-black to-transparent" />
+export default function DeploymentScreen({
+  onConfirm,
+  initialSelected = [],
+}: {
+  onConfirm: (ids: string[]) => void;
+  initialSelected?: string[];
+}) {
+  const [selected, setSelected] = useState<string[]>(() =>
+    initialSelected.filter((id) => allOperators.some((operator) => operator.id === id)).slice(0, TEAM_SIZE),
+  );
 
-      <div className="relative mx-auto max-w-[1880px]">
+  const ready = selected.length === TEAM_SIZE;
+  const atCapacity = selected.length >= TEAM_SIZE;
+
+  function toggle(id: string) {
+    setSelected((prev) => {
+      if (prev.includes(id)) return prev.filter((item) => item !== id);
+      if (prev.length >= TEAM_SIZE) return prev;
+      return [...prev, id];
+    });
+  }
+
+  const slots = Array.from({ length: TEAM_SIZE }, (_, index) => {
+    const id = selected[index];
+    return id ? allOperators.find((operator) => operator.id === id) : undefined;
+  });
+
+  return (
+    <section className="relative min-h-[calc(100vh-64px)] overflow-hidden bg-ef-bg px-4 pb-32 pt-6 text-ef-ink sm:px-7">
+      <div className="pointer-events-none absolute inset-0 z-0 opacity-[0.022] [background-image:radial-gradient(circle,#ffd24a_1px,transparent_1px)] [background-size:22px_22px]" />
+
+      <div className="relative mx-auto max-w-[1500px]">
         <header className="mb-7 flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
           <div>
-            <p className="text-[10px] font-black tracking-[0.42em] text-yellow-100/55">ENDFIELD FIELD OPERATION</p>
-            <h1 className="mt-3 text-4xl font-black tracking-tight text-white sm:text-5xl">오퍼레이터 선택</h1>
+            <div className="flex items-center gap-2">
+              <span className="h-4 w-1" style={{ background: PRIMARY }} />
+              <p className="font-mono text-[10px] font-bold uppercase tracking-[0.42em] text-ef-muted">
+                Field Operation
+              </p>
+            </div>
+            <h1 className="mt-3 text-4xl font-black tracking-tight text-white sm:text-5xl">
+              오퍼레이터 편성
+            </h1>
+            <p className="mt-2 text-sm font-bold text-ef-muted">
+              로스터에서 오퍼레이터 {TEAM_SIZE}명을 선택해 작전 팀을 구성하세요.
+            </p>
           </div>
-          <div className="rounded-full border border-yellow-100/20 bg-yellow-100/8 px-5 py-3 text-sm font-black text-yellow-100 shadow-[0_0_30px_rgba(250,204,21,0.12)] backdrop-blur-xl">TEAM 04 / READY</div>
+          <div
+            className={`flex items-center gap-2 border px-5 py-3 font-mono text-sm font-black uppercase tracking-[0.18em] tabular-nums transition ${
+              ready
+                ? "border-ef-accent/40 bg-ef-accent/10 text-ef-accent"
+                : "border-ef-line bg-ef-card text-ef-muted"
+            }`}
+            style={CUT_SM}
+          >
+            <Users className="h-4 w-4" />
+            TEAM {selected.length} / {TEAM_SIZE}
+          </div>
         </header>
 
-        <div className="grid gap-0 md:grid-cols-2 2xl:grid-cols-4">
-          {startingParty.map((operator, index) => <OperatorCard key={operator.id} operator={operator} index={index} />)}
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
+          {allOperators.map((operator) => {
+            const order = selected.indexOf(operator.id) + 1;
+            const locked = atCapacity && order === 0;
+            return (
+              <RosterCard
+                key={operator.id}
+                operator={operator}
+                order={order}
+                locked={locked}
+                onToggle={() => toggle(operator.id)}
+              />
+            );
+          })}
         </div>
+      </div>
 
-        <div className="mt-6 flex flex-col gap-3 rounded-[28px] border border-yellow-100/10 bg-black/55 p-4 backdrop-blur-xl md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-[10px] font-black tracking-[0.3em] text-yellow-100/45">DEPLOYMENT CONTROL</p>
-            <p className="mt-1 text-sm font-bold text-white/55">오퍼레이터 4명을 확인하고 선택한 작전 구역으로 진입합니다.</p>
+      {/* 하단 편성 컨트롤 바 */}
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-ef-line bg-ef-bg/90 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-[1500px] flex-col gap-3 px-4 py-3 sm:px-7 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-2">
+            {slots.map((operator, index) => (
+              <div
+                key={operator?.id ?? `slot-${index}`}
+                style={CUT_SM}
+                className={`relative h-12 w-12 overflow-hidden border ${
+                  operator ? "border-ef-accent/60 bg-ef-card" : "border-dashed border-ef-line bg-ef-card"
+                }`}
+                title={operator?.name ?? "빈 슬롯"}
+              >
+                {operator ? (
+                  <Image src={operator.image} alt={operator.name} fill sizes="48px" className="object-cover object-top" />
+                ) : (
+                  <span className="flex h-full items-center justify-center font-mono text-sm font-black tabular-nums text-ef-muted/40">
+                    {index + 1}
+                  </span>
+                )}
+              </div>
+            ))}
+            <p className="ml-2 hidden text-xs font-bold text-ef-muted sm:block">
+              {ready ? "편성 완료. 작전을 시작할 수 있습니다." : `${TEAM_SIZE - selected.length}명 더 선택하세요.`}
+            </p>
           </div>
+
           <div className="flex gap-3">
-            <button type="button" className="rounded-2xl border border-white/15 bg-white/8 px-6 py-3 text-sm font-black text-white/70 transition hover:bg-white/12">편성 초기화</button>
-            <button type="button" onClick={onStart} className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-yellow-200 via-yellow-400 to-amber-500 px-7 py-3 text-sm font-black text-black shadow-[0_0_42px_rgba(250,204,21,0.26)] transition hover:-translate-y-0.5 hover:brightness-110">작전 시작 <ArrowRight className="h-5 w-5" /></button>
+            <button
+              type="button"
+              onClick={() => setSelected([])}
+              disabled={selected.length === 0}
+              className="flex items-center gap-2 border border-ef-line bg-ef-card px-5 py-3 text-sm font-black text-ef-muted transition hover:border-ef-accent/40 hover:text-ef-accent-soft disabled:opacity-30"
+              style={CUT_SM}
+            >
+              <RotateCcw className="h-4 w-4" />
+              초기화
+            </button>
+            <button
+              type="button"
+              onClick={() => ready && onConfirm(selected)}
+              disabled={!ready}
+              className="flex items-center gap-2 px-7 py-3 text-sm font-black text-black transition hover:brightness-110 disabled:cursor-not-allowed disabled:border disabled:border-ef-line disabled:bg-ef-card disabled:text-ef-muted/50"
+              style={ready ? { ...CUT_SM, background: ACCENT } : CUT_SM}
+            >
+              {ready ? (
+                <>
+                  작전 시작 <ArrowRight className="h-5 w-5" />
+                </>
+              ) : (
+                <>
+                  <Shield className="h-4 w-4" /> {selected.length}/{TEAM_SIZE} 선택됨
+                </>
+              )}
+            </button>
           </div>
         </div>
       </div>

@@ -271,7 +271,7 @@ function normalizeMaterialItem(item: any): RawMaterialItem | null {
   return {
     name,
     count,
-    icon: item?.icon ?? `/materials/${name}.webp`,
+    icon: item?.icon ?? `/items/${name}.webp`,
   };
 }
 
@@ -300,7 +300,7 @@ function getStageCurrencyMaterial(stage: any): RawMaterialItem[] {
 
   if (!currency) return [];
 
-  return [{ name: "탈로시안 화폐", count: currency, icon: "/materials/탈로시안 화폐.webp" }];
+  return [{ name: "탈로시안 화폐", count: currency, icon: "/items/탈로시안 화폐.webp" }];
 }
 
 function normalizeMaterialList(items: any[] = []) {

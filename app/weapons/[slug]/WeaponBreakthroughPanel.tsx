@@ -28,7 +28,7 @@ const CUT_SM = {
 };
 
 function makeMaterialIconPath(name: string) {
-  return `/materials/${encodeURIComponent(name)}.webp`;
+  return `/items/${encodeURIComponent(name)}.webp`;
 }
 
 function MaterialIcon({ src, alt }: { src?: string; alt: string }) {

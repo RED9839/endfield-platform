@@ -121,9 +121,9 @@ export const lonebarge: SourceWeaponDetail = {
       stage: 1,
       requiredLevel: 20,
       materials: [
-        { name: "탈로시안 화폐", count: 2200, icon: "/materials/탈로시안 화폐.webp" },
-        { name: "모형 틀", count: 5, icon: "/materials/모형 틀.webp" },
-        { name: "연한 흑암석", count: 3, icon: "/materials/연한 흑암석.webp" },
+        { name: "탈로시안 화폐", count: 2200, icon: "/items/탈로시안 화폐.webp" },
+        { name: "모형 틀", count: 5, icon: "/items/모형 틀.webp" },
+        { name: "연한 흑암석", count: 3, icon: "/items/연한 흑암석.webp" },
       ],
       bonuses: [
         "의지 증가 · 대: 2/5",
@@ -135,9 +135,9 @@ export const lonebarge: SourceWeaponDetail = {
       stage: 2,
       requiredLevel: 40,
       materials: [
-        { name: "탈로시안 화폐", count: 8500, icon: "/materials/탈로시안 화폐.webp" },
-        { name: "모형 틀", count: 18, icon: "/materials/모형 틀.webp" },
-        { name: "일반 흑암석", count: 5, icon: "/materials/일반 흑암석.webp" },
+        { name: "탈로시안 화폐", count: 8500, icon: "/items/탈로시안 화폐.webp" },
+        { name: "모형 틀", count: 18, icon: "/items/모형 틀.webp" },
+        { name: "일반 흑암석", count: 5, icon: "/items/일반 흑암석.webp" },
       ],
       bonuses: [
         "의지 증가 · 대: 2/6",
@@ -149,9 +149,9 @@ export const lonebarge: SourceWeaponDetail = {
       stage: 3,
       requiredLevel: 60,
       materials: [
-        { name: "탈로시안 화폐", count: 25000, icon: "/materials/탈로시안 화폐.webp" },
-        { name: "중형 모형 틀", count: 20, icon: "/materials/중형 모형 틀.webp" },
-        { name: "진한 흑암석", count: 5, icon: "/materials/진한 흑암석.webp" },
+        { name: "탈로시안 화폐", count: 25000, icon: "/items/탈로시안 화폐.webp" },
+        { name: "중형 모형 틀", count: 20, icon: "/items/중형 모형 틀.webp" },
+        { name: "진한 흑암석", count: 5, icon: "/items/진한 흑암석.webp" },
       ],
       bonuses: [
         "의지 증가 · 대: 3/8",
@@ -163,10 +163,10 @@ export const lonebarge: SourceWeaponDetail = {
       stage: 4,
       requiredLevel: 80,
       materials: [
-        { name: "탈로시안 화폐", count: 90000, icon: "/materials/탈로시안 화폐.webp" },
-        { name: "중형 모형 틀", count: 30, icon: "/materials/중형 모형 틀.webp" },
-        { name: "초거리 빛 반사 파이프", count: 16, icon: "/materials/초거리 빛 반사 파이프.webp" },
-        { name: "화염석", count: 8, icon: "/materials/화염석.webp" },
+        { name: "탈로시안 화폐", count: 90000, icon: "/items/탈로시안 화폐.webp" },
+        { name: "중형 모형 틀", count: 30, icon: "/items/중형 모형 틀.webp" },
+        { name: "초거리 빛 반사 파이프", count: 16, icon: "/items/초거리 빛 반사 파이프.webp" },
+        { name: "화염석", count: 8, icon: "/items/화염석.webp" },
       ],
       bonuses: [
         "의지 증가 · 대: 3/9",

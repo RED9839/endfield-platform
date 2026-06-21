@@ -1,844 +1,365 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import {
-  BatteryCharging,
-  Crosshair,
-  Package,
-  Link2,
-  Shield,
-  Sparkles,
-  Swords,
-  X,
-  Zap,
-} from "lucide-react";
+import { useState } from "react";
+import { Battery, Crosshair, FlaskConical, Flame, Gem, HeartPulse, Layers, Shield, SkipForward, Swords, Trash2, TrendingUp, Zap } from "lucide-react";
 
-import { getActiveThreePieceSets, getEquippedGears } from "../data/game-gears";
-import type {
-  BattleEnemy,
-  BattleState,
-  EnemyStatus,
-  PartyMember,
-  SkillKind,
-} from "../types/game";
+import { getRelic } from "../data/relics";
+import { getPotion, potionNeedsTarget } from "../data/potions";
+import { getEnemyWeakness } from "../data/enemy-traits";
 
-const ARTS_ATTACHMENT_STATUSES: EnemyStatus[] = [
-  "originium-crystal",
-  "electric-attachment",
-  "corrosion",
-];
+const ELEMENT_NAME: Record<Element, string> = { physical: "물리", heat: "열기", electric: "전기", cryo: "냉기", nature: "자연" };
+import type { BattleEnemy, BattleState, Card, Element, EnemyMechanic, PartyMember, SkillKind } from "../types/game";
 
-const operatorFullArt: Record<string, string> = {
-  endministrator: "/operators/endministrator/full1.webp",
-  perlica: "/operators/perlica/full.webp",
-  chenqianyu: "/operators/chenqianyu/full.webp",
-  ardelia: "/operators/ardelia/full.webp",
+// 유물/포션 아이콘 키 → lucide 컴포넌트
+const ICON_MAP: Record<string, typeof Zap> = { battery: Battery, zap: Zap, crosshair: Crosshair, "trending-up": TrendingUp, shield: Shield, layers: Layers, "heart-pulse": HeartPulse, flame: Flame };
+
+const PRIMARY = "#ff9a2f";
+const ACCENT = "#ffd24a";
+const CUT = { clipPath: "polygon(0 0, calc(100% - 13px) 0, 100% 13px, 100% 100%, 13px 100%, 0 calc(100% - 13px))" };
+const CUT_SM = { clipPath: "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))" };
+
+// 원소색(게임플레이 의미색 보존)
+const elementColor: Record<Element, string> = {
+  physical: "#d4d4d8",
+  heat: "#fb923c",
+  electric: "#a78bfa",
+  cryo: "#67e8f9",
+  nature: "#86efac",
 };
+const kindLabel: Record<SkillKind, string> = { attack: "기본", "battle-skill": "배틀", "link-skill": "연계", ultimate: "궁극" };
 
-function operatorArt(member: PartyMember) {
-  return operatorFullArt[member.id] ?? member.image;
-}
-
-function OperatorBattleArt({
-  member,
-  sizes,
-  className = "",
-}: {
-  member: PartyMember;
-  sizes: string;
-  className?: string;
-}) {
-  if (member.id === "endministrator") {
-    return (
-      <div className={`absolute inset-0 flex items-end justify-center ${className}`}>
-        <div className="operator-idle-sprite h-full max-w-full" aria-hidden="true" />
-      </div>
-    );
-  }
-
-  return (
-    <Image
-      src={operatorArt(member)}
-      alt=""
-      fill
-      sizes={sizes}
-      className={className}
-      priority
-    />
-  );
-}
-
-function HealthBar({
-  value,
-  max,
-  tone = "ally",
-}: {
-  value: number;
-  max: number;
-  tone?: "ally" | "enemy";
-}) {
-  const width = Math.max(0, Math.min(100, (value / max) * 100));
-  return (
-    <div className="h-2 overflow-hidden rounded-full bg-black/70 ring-1 ring-white/8">
-      <div
-        className={`h-full rounded-full transition-all ${
-          tone === "enemy"
-            ? "bg-gradient-to-r from-red-600 to-orange-400"
-            : "bg-gradient-to-r from-emerald-400 to-lime-300"
-        }`}
-        style={{ width: `${width}%` }}
-      />
-    </div>
-  );
-}
-
-function ActionGauge({ value, enemy = false }: { value: number; enemy?: boolean }) {
-  const width = Math.max(0, Math.min(100, value));
-  return (
-    <div className="h-1.5 overflow-hidden rounded-full bg-black/60">
-      <div
-        className={enemy ? "h-full bg-red-400" : "h-full bg-cyan-300"}
-        style={{ width: `${width}%` }}
-      />
-    </div>
-  );
-}
-
-function statusLabel(status: EnemyStatus) {
-  if (status === "originium-crystal") return "오리지늄 결정";
-  if (status === "electric-attachment") return "전기 부착";
+function statusLabel(status: string) {
+  if (status === "combustion") return "연소";
+  if (status === "shock") return "감전";
+  if (status === "freeze") return "동결";
   if (status === "corrosion") return "부식";
-  if (status === "defense-break") return "방어 불능";
-  return "감전";
+  if (status === "defense-break") return "불균형";
+  if (status === "armor-break") return "관통";
+  return status;
 }
 
-function hasArtsAttachment(enemy: BattleEnemy) {
-  return enemy.statuses.some((status) => ARTS_ATTACHMENT_STATUSES.includes(status));
-}
+// 적 상시 특성(전투에서 의미 있는 것만 노출). 색: 방어형=청록 / 위협형=적 / 보조형=주황.
+const TRAIT_INFO: Partial<Record<EnemyMechanic, { label: string; tone: "def" | "threat" | "support" }>> = {
+  armored: { label: "장갑", tone: "def" },
+  shield: { label: "방패", tone: "def" },
+  "boss-shield": { label: "결계", tone: "def" },
+  evasive: { label: "회피", tone: "def" },
+  reflect: { label: "반사", tone: "threat" },
+  revive: { label: "부활", tone: "threat" },
+  enrage: { label: "격노", tone: "threat" },
+  charge: { label: "차지", tone: "threat" },
+  "self-destruct": { label: "자폭", tone: "threat" },
+  ranged: { label: "원거리", tone: "threat" },
+  poison: { label: "독성", tone: "threat" },
+  healer: { label: "치유", tone: "support" },
+  summoner: { label: "지원", tone: "support" },
+};
+const TRAIT_TONE: Record<"def" | "threat" | "support", string> = { def: "#67e8f9", threat: "#fca5a5", support: "#fbbf24" };
+const TRAIT_ORDER = Object.keys(TRAIT_INFO) as EnemyMechanic[];
 
-function canUseLinkSkill(member: PartyMember, battle: BattleState, target?: BattleEnemy) {
-  const linkTarget =
-    target ??
-    (battle.linkWindow?.targetEnemyId
-      ? battle.enemies.find(
-          (enemy) => enemy.id === battle.linkWindow?.targetEnemyId && enemy.hp > 0,
-        )
-      : battle.enemies.find((enemy) => enemy.hp > 0));
-  if (!linkTarget) return false;
-
-  if (member.linkCondition === "ally-link-damage") {
-    return (
-      battle.linkWindow?.trigger === "ally-link-damage" &&
-      battle.linkWindow.sourceOperatorId !== member.id
-    );
-  }
-  if (member.linkCondition === "strong-hit") {
-    return battle.linkWindow?.trigger === "strong-hit";
-  }
-  if (member.linkCondition === "defense-break") {
-    return linkTarget.statuses.includes("defense-break");
-  }
-  if (member.linkCondition === "strong-hit-vs-clean") {
-    return (
-      battle.linkWindow?.trigger === "strong-hit" &&
-      !linkTarget.statuses.includes("defense-break") &&
-      !hasArtsAttachment(linkTarget)
-    );
-  }
-  return battle.linkWindow?.trigger === "ally-hit";
-}
-
-function EnemyUnit({
-  enemy,
-  selected,
-  onSelect,
-}: {
-  enemy: BattleEnemy;
-  selected: boolean;
-  onSelect: () => void;
-}) {
+function Bar({ value, max, color, height = "h-2" }: { value: number; max: number; color: string; height?: string }) {
+  const pct = Math.max(0, Math.min(100, (value / Math.max(1, max)) * 100));
   return (
-    <button
-      type="button"
-      disabled={enemy.hp <= 0}
-      onClick={onSelect}
-      className={`group relative flex h-[310px] min-w-0 flex-col justify-end rounded-[30px] border px-3 pb-4 transition ${
-        enemy.hp <= 0
-          ? "border-white/5 opacity-25 grayscale"
-          : selected
-            ? "border-yellow-300/80 bg-yellow-300/[0.06] shadow-[0_0_42px_rgba(250,204,21,0.2)]"
-            : "border-transparent hover:border-red-200/35 hover:bg-red-300/[0.035]"
-      }`}
-    >
-      {selected && enemy.hp > 0 && (
-        <div className="absolute left-1/2 top-1 z-20 -translate-x-1/2">
-          <span className="flex items-center gap-1 rounded-full border border-yellow-200/60 bg-black/80 px-3 py-1 text-[10px] font-black text-yellow-100">
-            <Crosshair className="h-3 w-3" /> TARGET
-          </span>
-          <span className="mx-auto block h-5 w-px bg-yellow-300/70" />
-        </div>
-      )}
-
-      <div className="absolute inset-x-0 top-4 h-[215px]">
-        {enemy.image ? (
-          <Image
-            src={enemy.image}
-            alt=""
-            fill
-            sizes="260px"
-            className={`object-contain drop-shadow-[0_18px_24px_rgba(0,0,0,0.7)] transition ${
-              selected ? "scale-110" : "group-hover:scale-105"
-            }`}
-          />
-        ) : (
-          <Shield className="mx-auto mt-16 h-20 w-20 text-red-100/20" />
-        )}
-      </div>
-
-      <div className="relative z-10 rounded-2xl border border-white/10 bg-black/78 p-3 text-left backdrop-blur-md">
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
-            <p className="truncate text-sm font-black text-white">{enemy.name}</p>
-            <p className="text-[9px] font-black tracking-[0.18em] text-red-200/50">
-              {enemy.boss ? "BOSS" : enemy.elite ? "ELITE" : "ENEMY"} · SPD {enemy.speed}
-            </p>
-          </div>
-          <span className="rounded-md bg-red-500/80 px-2 py-1 text-[9px] font-black">
-            {enemy.hp}/{enemy.maxHp}
-          </span>
-        </div>
-        <div className="mt-2">
-          <HealthBar value={enemy.hp} max={enemy.maxHp} tone="enemy" />
-          <div className="mt-1.5">
-            <ActionGauge value={enemy.actionGauge} enemy />
-          </div>
-        </div>
-        {enemy.statuses.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-1">
-            {enemy.statuses.map((status) => (
-              <span
-                key={status}
-                className="rounded-full border border-cyan-200/20 bg-cyan-300/10 px-2 py-0.5 text-[8px] font-black text-cyan-100"
-              >
-                {statusLabel(status)}
-              </span>
-            ))}
-          </div>
-        )}
-      </div>
-    </button>
+    <div className={`${height} w-full overflow-hidden border border-ef-line bg-black/60`}>
+      <div className="h-full transition-all" style={{ width: `${pct}%`, background: color }} />
+    </div>
   );
 }
 
-function PartyUnit({
-  member,
-  active,
-  index,
-  onSelect,
-}: {
-  member: PartyMember;
-  active: boolean;
-  index: number;
-  onSelect: () => void;
-}) {
+function EnemyCard({ enemy, selected, onSelect }: { enemy: BattleEnemy; selected: boolean; onSelect: () => void }) {
+  const dead = enemy.hp <= 0;
+  const broken = enemy.statuses.includes("defense-break");
+  const tg = enemy.telegraph;
+  const until = Math.max(0, enemy.actionEvery - enemy.actionGauge); // 행동까지 사용해야 할 카드 수
   return (
     <button
       type="button"
       onClick={onSelect}
-      className={`relative h-[350px] min-w-0 transition ${
-        member.hp <= 0 ? "opacity-25 grayscale" : active ? "scale-105" : "opacity-80"
-      } hover:brightness-110`}
-      style={{ transform: `translateY(${index % 2 === 0 ? 8 : -8}px)` }}
+      disabled={dead}
+      className={`group relative w-[180px] shrink-0 border bg-ef-card2 p-3 text-left transition ${dead ? "opacity-25 grayscale" : selected ? "-translate-y-1" : "hover:-translate-y-0.5"}`}
+      style={{ ...CUT_SM, borderColor: selected && !dead ? ACCENT : "#202020" }}
     >
-      <OperatorBattleArt
-        member={member}
-        sizes="240px"
-        className="object-contain object-bottom drop-shadow-[0_18px_24px_rgba(0,0,0,0.75)]"
-      />
-      {active && (
-        <div className="absolute inset-x-4 bottom-1 h-8 rounded-[50%] bg-cyan-300/20 blur-lg" />
+      {selected && !dead && (
+        <span className="absolute -top-2 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1 border px-2 py-0.5 font-mono text-[9px] font-black uppercase tracking-wide text-black" style={{ ...CUT_SM, background: ACCENT }}>
+          <Crosshair className="h-3 w-3" /> TARGET
+        </span>
       )}
-      <div className="absolute inset-x-1 bottom-0 rounded-xl border border-white/10 bg-black/78 px-3 py-2 backdrop-blur-md">
-        <div className="mb-1 flex items-center justify-between gap-2">
-          <p className="truncate text-xs font-black text-white">{member.name}</p>
-          <span className="text-[9px] font-black text-cyan-100/65">SPD {member.speed}</span>
-        </div>
-        <HealthBar value={member.hp} max={member.maxHp} />
+      {/* 카드 템포 카운트다운: 이 적이 행동하기까지 사용해야 할 카드 수 */}
+      {!dead && (
+        <span
+          className="absolute left-2 top-2 z-10 flex items-center gap-1 border bg-black/80 px-1.5 py-0.5 font-mono text-[9px] font-black tabular-nums"
+          style={{ ...CUT_SM, borderColor: until <= 1 ? "#f8717188" : "#3a4250", color: until <= 1 ? "#fca5a5" : "#cbd5e1" }}
+          title="이 적이 행동하기까지 사용해야 하는 카드 수"
+        >
+          <Layers className="h-3 w-3" /> {until <= 0 ? "행동!" : `${until}장 후`}
+        </span>
+      )}
+      {/* 텔레그래프(다음 행동 예고) */}
+      {!dead && tg && (
+        <span
+          className="absolute right-2 top-2 z-10 flex items-center gap-1 border bg-black/80 px-1.5 py-0.5 font-mono text-[10px] font-black tabular-nums"
+          style={{ ...CUT_SM, borderColor: tg.kind === "stunned" ? "#fb923c" : "#f87171", color: tg.kind === "stunned" ? "#fb923c" : "#fca5a5" }}
+          title="다음 적 행동"
+        >
+          {tg.kind === "stunned" ? <Zap className="h-3 w-3" /> : <Swords className="h-3 w-3" />} {tg.label}
+        </span>
+      )}
+      <div className="relative mx-auto h-24 w-24">
+        {enemy.image ? <Image src={enemy.image} alt={enemy.name} fill sizes="96px" className="object-contain" /> : <Shield className="mx-auto mt-6 h-12 w-12 text-red-200/30" />}
+      </div>
+      <p className="mt-1 truncate text-sm font-black text-white">{enemy.name}</p>
+      {!dead && (() => {
+        const weak = getEnemyWeakness(enemy.faction);
+        return weak ? (
+          <p className="mt-0.5 font-mono text-[9px] font-bold" style={{ color: elementColor[weak] }}>
+            약점 · {ELEMENT_NAME[weak]}
+          </p>
+        ) : null;
+      })()}
+      {!dead && (() => {
+        const traits = TRAIT_ORDER.filter((m) => enemy.mechanics.includes(m)).slice(0, 4);
+        return traits.length > 0 ? (
+          <div className="mt-1 flex flex-wrap gap-1">
+            {traits.map((m) => {
+              const info = TRAIT_INFO[m]!;
+              return (
+                <span key={m} className="border px-1 py-px font-mono text-[8px] font-black uppercase tracking-wide" style={{ ...CUT_SM, borderColor: `${TRAIT_TONE[info.tone]}55`, color: TRAIT_TONE[info.tone], background: `${TRAIT_TONE[info.tone]}12` }}>{info.label}</span>
+              );
+            })}
+          </div>
+        ) : null;
+      })()}
+      <div className="mt-1 flex items-center justify-between font-mono text-[10px] font-bold tabular-nums text-ef-muted">
+        <span>HP</span><span>{enemy.hp}/{enemy.maxHp}</span>
+      </div>
+      <Bar value={enemy.hp} max={enemy.maxHp} color="#f43f5e" />
+      {enemy.staggerHp > 0 && (
         <div className="mt-1.5">
-          <ActionGauge value={member.actionGauge} />
-        </div>
-      </div>
-    </button>
-  );
-}
-
-function SkillButton({
-  label,
-  name,
-  icon,
-  cost,
-  tone,
-  disabled,
-  onClick,
-}: {
-  label: string;
-  name: string;
-  icon: string;
-  cost: string;
-  tone: "normal" | "battle" | "link" | "ultimate";
-  disabled: boolean;
-  onClick: () => void;
-}) {
-  const tones = {
-    normal: "border-white/20 from-zinc-800 to-zinc-950 text-white",
-    battle: "border-cyan-300/35 from-cyan-900 to-slate-950 text-cyan-100",
-    link: "border-violet-300/35 from-violet-900 to-slate-950 text-violet-100",
-    ultimate: "border-yellow-300/40 from-amber-800 to-zinc-950 text-yellow-100",
-  };
-
-  return (
-    <button
-      type="button"
-      disabled={disabled}
-      onClick={onClick}
-      className={`group relative h-[116px] min-w-0 overflow-hidden rounded-2xl border bg-gradient-to-br p-3 text-left shadow-xl transition hover:-translate-y-2 hover:brightness-125 disabled:translate-y-0 disabled:opacity-25 ${tones[tone]}`}
-    >
-      <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-white/8 blur-2xl" />
-      <div className="flex items-start justify-between gap-2">
-        <span className="relative h-12 w-12 overflow-hidden rounded-xl border border-white/15 bg-black/40">
-          <Image src={icon} alt="" fill sizes="48px" className="object-contain p-1" />
-        </span>
-        <span className="rounded-full border border-current/20 bg-black/35 px-2 py-1 text-[9px] font-black">
-          {cost}
-        </span>
-      </div>
-      <p className="mt-2 text-[9px] font-black tracking-[0.18em] opacity-55">{label}</p>
-      <p className="truncate text-sm font-black">{name}</p>
-    </button>
-  );
-}
-
-function OperatorDetail({ member }: { member: PartyMember }) {
-  const gears = getEquippedGears(member.gear);
-  const sets = getActiveThreePieceSets(member.gear);
-  const stats = [
-    ["HP", `${member.hp}/${member.maxHp}`],
-    ["ATK", member.attack],
-    ["DEF", member.defense],
-    ["SPD", member.speed],
-    ["EVA", `${member.evasion}%`],
-    ["ULT", `${member.ultimateCharge}%`],
-  ];
-
-  return (
-    <>
-      <div className="flex items-center gap-4">
-        <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl border border-cyan-200/20 bg-black/50">
-          <Image src={member.image} alt="" fill sizes="80px" className="object-cover" />
-        </div>
-        <div className="min-w-0">
-          <p className="text-[9px] font-black tracking-[0.24em] text-cyan-200/50">
-            OPERATOR DATA
-          </p>
-          <h3 className="truncate text-2xl font-black text-white">{member.name}</h3>
-          <p className="text-xs font-bold text-zinc-500">
-            {member.className} · {member.role}
-          </p>
-        </div>
-      </div>
-
-      <div className="mt-5 grid grid-cols-3 gap-2">
-        {stats.map(([label, value]) => (
-          <div key={label} className="rounded-xl border border-white/8 bg-white/[0.04] px-3 py-2">
-            <p className="text-[8px] font-black tracking-[0.16em] text-zinc-600">{label}</p>
-            <p className="mt-1 text-sm font-black text-zinc-100">{value}</p>
+          <div className="mb-0.5 flex items-center justify-between font-mono text-[8px] font-bold uppercase tracking-wide">
+            <span className={broken ? "text-orange-300" : "text-ef-muted"}>{broken ? "● BREAK" : "STAGGER"}</span>
+            <span className="tabular-nums text-ef-muted">{Math.round(enemy.stagger)}/{enemy.staggerHp}</span>
           </div>
-        ))}
-      </div>
-
-      <div className="mt-4 rounded-2xl border border-violet-300/15 bg-violet-300/[0.055] p-4">
-        <div className="flex items-center gap-2">
-          {member.passiveIcon && (
-            <span className="relative h-10 w-10 overflow-hidden rounded-xl bg-black/40">
-              <Image src={member.passiveIcon} alt="" fill sizes="40px" className="object-contain" />
-            </span>
-          )}
-          <div>
-            <p className="text-[9px] font-black tracking-[0.18em] text-violet-200/50">PASSIVE</p>
-            <p className="text-sm font-black text-violet-50">{member.passiveName}</p>
-          </div>
+          <Bar value={enemy.stagger} max={enemy.staggerHp} color={broken ? "#ff5d5d" : "#ff9a2f"} height="h-1.5" />
         </div>
-        <p className="mt-3 text-xs leading-5 text-zinc-400">{member.passiveDescription}</p>
-        {member.passiveStacks > 0 && (
-          <p className="mt-2 text-[10px] font-black text-violet-200">
-            현재 스택 {member.passiveStacks}
-          </p>
-        )}
-      </div>
-
-      <div className="mt-4">
-        <div className="flex items-center justify-between">
-          <p className="text-[9px] font-black tracking-[0.2em] text-zinc-500">EQUIPMENT</p>
-          <Package className="h-4 w-4 text-zinc-600" />
+      )}
+      {enemy.physBreakStacks > 0 && (
+        <div className="mt-1 flex items-center gap-1">
+          <span className="font-mono text-[8px] font-bold uppercase text-sky-300/80">취약</span>
+          <span className="flex gap-0.5">{Array.from({ length: 4 }, (_, k) => <span key={k} className="text-[9px] leading-none" style={{ color: k < enemy.physBreakStacks ? "#7dd3fc" : "#33415580" }}>◆</span>)}</span>
         </div>
-        <div className="mt-2 grid grid-cols-4 gap-2">
-          {[member.gear.armor, member.gear.gloves, member.gear.kit1, member.gear.kit2].map(
-            (gear, index) => (
-              <div
-                key={gear?.slug ?? `empty-${index}`}
-                className="relative h-16 overflow-hidden rounded-xl border border-white/8 bg-black/35"
-                title={gear?.name ?? "빈 장비 슬롯"}
-              >
-                {gear ? (
-                  <>
-                    <Image src={gear.image} alt="" fill sizes="64px" className="object-contain p-2" />
-                    <span className="absolute bottom-1 right-1 rounded bg-black/75 px-1 text-[8px] font-black text-yellow-100">
-                      Q{gear.quality}
-                    </span>
-                  </>
-                ) : (
-                  <span className="flex h-full items-center justify-center text-lg font-black text-zinc-800">-</span>
-                )}
-              </div>
-            ),
-          )}
-        </div>
-        <p className="mt-2 text-[10px] font-bold text-zinc-600">
-          장착 {gears.length}/4 {sets.length > 0 ? `· 활성 세트 ${sets.join(", ")}` : ""}
-        </p>
-      </div>
-    </>
-  );
-}
-
-function EnemyDetail({ enemy }: { enemy: BattleEnemy }) {
-  const stats = [
-    ["HP", `${enemy.hp}/${enemy.maxHp}`],
-    ["ATK", enemy.attack],
-    ["DEF", enemy.defense],
-    ["SPD", enemy.speed],
-    ["RANGE", enemy.range],
-    ["WEIGHT", enemy.weight],
-  ];
-
-  return (
-    <>
-      <div className="flex items-center gap-4">
-        <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-2xl border border-red-200/20 bg-black/50">
-          {enemy.image ? (
-            <Image src={enemy.image} alt="" fill sizes="96px" className="object-contain p-1" />
-          ) : (
-            <Shield className="m-6 h-12 w-12 text-red-100/20" />
-          )}
-        </div>
-        <div className="min-w-0">
-          <p className="text-[9px] font-black tracking-[0.24em] text-red-200/50">ENEMY DATA</p>
-          <h3 className="truncate text-2xl font-black text-white">{enemy.name}</h3>
-          <p className="text-xs font-bold text-zinc-500">
-            {enemy.faction ?? "Unknown"} · {enemy.tier ?? "Normal"}
-          </p>
-        </div>
-      </div>
-
-      <div className="mt-5 grid grid-cols-3 gap-2">
-        {stats.map(([label, value]) => (
-          <div key={label} className="rounded-xl border border-white/8 bg-white/[0.04] px-3 py-2">
-            <p className="text-[8px] font-black tracking-[0.16em] text-zinc-600">{label}</p>
-            <p className="mt-1 text-sm font-black text-zinc-100">{value}</p>
-          </div>
-        ))}
-      </div>
-
-      <div className="mt-4">
-        <p className="text-[9px] font-black tracking-[0.2em] text-red-200/50">COMBAT SKILLS</p>
-        <div className="mt-2 space-y-2">
-          {enemy.traits.length > 0 ? (
-            enemy.traits.map((trait, index) => (
-              <div key={`${enemy.id}-trait-${index}`} className="rounded-xl border border-red-200/10 bg-red-300/[0.045] p-3">
-                <p className="text-[9px] font-black text-red-200/55">SKILL {index + 1}</p>
-                <p className="mt-1 text-xs leading-5 text-zinc-300">{trait}</p>
-              </div>
-            ))
-          ) : (
-            <p className="rounded-xl border border-white/8 bg-white/[0.035] p-3 text-xs text-zinc-500">
-              특수 전투 스킬 없음
-            </p>
-          )}
-        </div>
-      </div>
-
-      <div className="mt-4">
-        <p className="text-[9px] font-black tracking-[0.2em] text-zinc-500">MECHANICS</p>
-        <div className="mt-2 flex flex-wrap gap-1.5">
-          {enemy.mechanics.map((mechanic) => (
-            <span
-              key={mechanic}
-              className="rounded-full border border-red-200/15 bg-red-300/[0.06] px-2.5 py-1 text-[9px] font-black uppercase text-red-100/75"
-            >
-              {mechanic.replaceAll("-", " ")}
-            </span>
+      )}
+      {enemy.statuses.length > 0 && (
+        <div className="mt-1.5 flex flex-wrap gap-1">
+          {enemy.statuses.map((s) => (
+            <span key={s} className="border border-ef-line bg-black/40 px-1.5 py-0.5 text-[8px] font-black text-ef-accent-soft" style={CUT_SM}>{statusLabel(s)}</span>
           ))}
         </div>
-        {enemy.statuses.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            {enemy.statuses.map((status) => (
-              <span
-                key={status}
-                className="rounded-full border border-cyan-200/15 bg-cyan-300/[0.06] px-2.5 py-1 text-[9px] font-black text-cyan-100"
-              >
-                {statusLabel(status)}
-              </span>
-            ))}
-          </div>
-        )}
+      )}
+    </button>
+  );
+}
+
+function PartyCard({ member }: { member: PartyMember }) {
+  const dead = member.hp <= 0;
+  return (
+    <div className={`w-[150px] shrink-0 border border-ef-line bg-ef-card p-2.5 ${dead ? "opacity-30 grayscale" : ""}`} style={CUT_SM}>
+      <div className="flex items-center gap-2">
+        <span className="relative h-10 w-10 shrink-0 overflow-hidden border border-ef-line bg-black" style={{ ...CUT_SM, borderColor: `${elementColor[member.element]}66` }}>
+          {member.image ? <Image src={member.image} alt={member.name} fill sizes="40px" className="object-cover object-top" /> : null}
+        </span>
+        <div className="min-w-0">
+          <p className="truncate text-xs font-black text-white">{member.name}</p>
+          <p className="font-mono text-[9px] uppercase tracking-wide" style={{ color: elementColor[member.element] }}>{member.className}</p>
+        </div>
       </div>
-    </>
+      <div className="mt-1.5 flex items-center justify-between font-mono text-[10px] font-bold tabular-nums text-ef-muted">
+        <span>HP</span><span>{member.hp}/{member.maxHp}{member.shield > 0 ? ` (+${member.shield})` : ""}</span>
+      </div>
+      <Bar value={member.hp} max={member.maxHp} color="#34d399" />
+      {member.shield > 0 && (
+        <div className="mt-1 flex items-center gap-1 font-mono text-[9px] font-bold text-cyan-300"><Shield className="h-3 w-3" /> 보호막 {member.shield}</div>
+      )}
+    </div>
+  );
+}
+
+function HandCard({ card, playable, onPlay }: { card: Card; playable: boolean; onPlay: () => void }) {
+  const col = elementColor[card.element];
+  return (
+    <button
+      type="button"
+      onClick={onPlay}
+      disabled={!playable}
+      className={`relative flex h-[180px] w-[132px] shrink-0 flex-col border bg-gradient-to-b from-ef-card2 to-ef-bg p-2.5 text-left transition ${playable ? "hover:-translate-y-3" : "cursor-not-allowed opacity-40"}`}
+      style={{ ...CUT_SM, borderColor: playable ? `${col}99` : "#202020" }}
+    >
+      <div className="flex items-start justify-between">
+        <span className="flex h-7 w-7 items-center justify-center border font-mono text-sm font-black tabular-nums text-black" style={{ ...CUT_SM, background: ACCENT, borderColor: ACCENT }}>{card.cost}</span>
+        <span className="border border-ef-line bg-black/50 px-1.5 py-0.5 font-mono text-[8px] font-black uppercase" style={{ ...CUT_SM, color: col }}>{kindLabel[card.kind]}</span>
+      </div>
+      <div className="relative mx-auto mt-1 h-12 w-12">
+        {card.icon ? <Image src={card.icon} alt="" fill sizes="48px" className="object-contain" /> : null}
+      </div>
+      <p className="mt-1 line-clamp-2 text-[11px] font-black leading-tight text-white">{card.name}</p>
+      <p className="font-mono text-[8px] uppercase tracking-wide text-ef-muted">{card.operatorName}</p>
+      <div className="mt-auto border-t border-ef-line pt-1">
+        <div className="flex items-center justify-between">
+          <span className="font-mono text-[8px] uppercase text-ef-muted">{card.target === "all-enemies" ? "전체" : card.target === "party" ? "파티" : "단일"}</span>
+          {card.stagger > 0 && (
+            <span className="font-mono text-[8px] font-black tabular-nums" style={{ color: PRIMARY }} title="불균형치">◇{card.stagger}</span>
+          )}
+        </div>
+        <p className="mt-0.5 line-clamp-2 font-mono text-[9px] font-bold leading-tight" style={{ color: card.effect ? "#7fd4a3" : ACCENT }}>{card.effectLine}</p>
+      </div>
+    </button>
   );
 }
 
 export default function BattleScreen({
   party,
   battle,
-  sp,
-  maxSp,
-  cp,
-  maxCp,
-  onTick,
-  onAction,
+  relics = [],
+  potions = [],
+  onPlayCard,
+  onEndTurn,
+  onUsePotion,
 }: {
   party: PartyMember[];
   battle: BattleState;
-  sp: number;
-  maxSp: number;
-  cp: number;
-  maxCp: number;
-  onTick: () => void;
-  onAction: (operatorId: string, kind: SkillKind, targetEnemyId?: string) => void;
+  relics?: string[];
+  potions?: string[];
+  onPlayCard: (uid: string, targetEnemyId?: string) => void;
+  onEndTurn: () => void;
+  onUsePotion?: (potionId: string, targetEnemyId?: string) => void;
 }) {
-  const livingEnemies = battle.enemies.filter((enemy) => enemy.hp > 0);
-  const [selectedEnemyId, setSelectedEnemyId] = useState(livingEnemies[0]?.id);
-  const [detailSelection, setDetailSelection] = useState<
-    { side: "party" | "enemy"; id: string } | undefined
-  >();
-  const activeMember =
-    battle.activeSide === "party"
-      ? party.find((member) => member.id === battle.activeUnitId)
-      : undefined;
-  const activeEnemy =
-    battle.activeSide === "enemy"
-      ? battle.enemies.find((enemy) => enemy.id === battle.activeUnitId)
-      : undefined;
+  const living = battle.enemies.filter((e) => e.hp > 0);
+  const [selRaw, setSel] = useState<string | undefined>(living[0]?.id);
+  const selectedId = living.some((e) => e.id === selRaw) ? selRaw : living[0]?.id;
 
-  useEffect(() => {
-    const timer = window.setInterval(onTick, 250);
-    return () => window.clearInterval(timer);
-  }, [onTick]);
-
-  useEffect(() => {
-    if (!livingEnemies.some((enemy) => enemy.id === selectedEnemyId)) {
-      setSelectedEnemyId(livingEnemies[0]?.id);
-    }
-  }, [livingEnemies, selectedEnemyId]);
-
-  const selectedEnemy =
-    battle.enemies.find((enemy) => enemy.id === selectedEnemyId && enemy.hp > 0) ??
-    livingEnemies[0];
-  const detailMember =
-    detailSelection?.side === "party"
-      ? party.find((member) => member.id === detailSelection.id)
-      : undefined;
-  const detailEnemy =
-    detailSelection?.side === "enemy"
-      ? battle.enemies.find((enemy) => enemy.id === detailSelection.id)
-      : undefined;
-  const timeline = useMemo(() => battle.timeline.slice(0, 8), [battle.timeline]);
-  const canAct = Boolean(activeMember && selectedEnemy);
-  const linkReady = activeMember
-    ? canUseLinkSkill(activeMember, battle, selectedEnemy)
-    : false;
-
-  const act = (kind: SkillKind) => {
-    if (!activeMember || !selectedEnemy) return;
-    onAction(activeMember.id, kind, selectedEnemy.id);
+  const play = (card: Card) => {
+    if (battle.energy < card.cost) return;
+    onPlayCard(card.uid, selectedId);
   };
 
   return (
-    <section className="relative min-h-[calc(100vh-64px)] overflow-hidden bg-[#05080b] text-white">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_52%_18%,rgba(56,189,248,0.16),transparent_30%),linear-gradient(180deg,#152833_0%,#0b151c_45%,#040608_100%)]" />
-      <div className="absolute inset-x-0 bottom-0 h-[44%] bg-[linear-gradient(180deg,transparent,rgba(2,8,12,0.2)),repeating-linear-gradient(90deg,rgba(255,255,255,0.035)_0,rgba(255,255,255,0.035)_1px,transparent_1px,transparent_84px)]" />
-      <div className="absolute inset-x-0 bottom-[31%] h-px bg-gradient-to-r from-transparent via-cyan-100/18 to-transparent" />
-
-      <div className="relative mx-auto flex min-h-[calc(100vh-64px)] max-w-[1800px] flex-col px-4 py-4 sm:px-7">
-        <header className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-[10px] font-black tracking-[0.38em] text-cyan-100/45">
-              FIELD COMBAT
-            </p>
-            <h1 className="mt-1 text-3xl font-black">교전 {battle.turn}</h1>
-            <p className="mt-1 text-xs font-bold text-zinc-400">
-              {activeMember
-                ? `${activeMember.name} 행동 선택`
-                : activeEnemy
-                  ? `${activeEnemy.name} 행동 중`
-                  : "행동 순서 계산 중"}
-            </p>
+    <section className="relative min-h-[calc(100vh-64px)] overflow-hidden bg-ef-bg px-4 py-5 text-ef-ink sm:px-7">
+      <div className="pointer-events-none fixed inset-0 z-0 opacity-[0.022] [background-image:radial-gradient(circle,#ffd24a_1px,transparent_1px)] [background-size:22px_22px]" />
+      <div className="relative z-10 mx-auto flex max-w-[1500px] flex-col gap-4">
+        {/* HUD */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <span className="h-4 w-1" style={{ background: PRIMARY }} />
+            <span className="font-mono text-sm font-black uppercase tracking-[0.2em] text-white">교전</span>
+            <span className="font-mono text-[11px] tracking-[0.2em] text-ef-muted">// {battle.turn}턴</span>
+            {/* 유물 */}
+            {relics.length > 0 && (
+              <span className="ml-2 flex items-center gap-1">
+                {relics.map((id) => {
+                  const relic = getRelic(id);
+                  if (!relic) return null;
+                  const Icon = ICON_MAP[relic.icon] ?? Gem;
+                  return (
+                    <span key={id} className="flex h-7 w-7 items-center justify-center border bg-ef-card" style={{ ...CUT_SM, borderColor: `${ACCENT}55`, color: ACCENT }} title={`${relic.name} — ${relic.description}`}>
+                      <Icon className="h-3.5 w-3.5" />
+                    </span>
+                  );
+                })}
+              </span>
+            )}
+            {/* 소비 아이템 전투 버프 */}
+            {(battle.dmgBuffPct || battle.critBuff || battle.partyRegen) && (
+              <span className="ml-1 flex items-center gap-1">
+                {battle.dmgBuffPct ? <span className="border px-1.5 py-0.5 font-mono text-[9px] font-black" style={{ ...CUT_SM, borderColor: "#fb923c66", color: "#fb923c" }}>피해 +{Math.round(battle.dmgBuffPct * 100)}%</span> : null}
+                {battle.critBuff ? <span className="border px-1.5 py-0.5 font-mono text-[9px] font-black" style={{ ...CUT_SM, borderColor: "#f8717166", color: "#fca5a5" }}>치명 +{Math.round(battle.critBuff * 100)}%</span> : null}
+                {battle.partyRegen ? <span className="border px-1.5 py-0.5 font-mono text-[9px] font-black" style={{ ...CUT_SM, borderColor: "#67e8f966", color: "#67e8f9" }}>재생 {battle.partyRegen.turns}T</span> : null}
+              </span>
+            )}
           </div>
-          <div className="flex gap-2">
-            <div className="flex items-center gap-2 rounded-xl border border-cyan-300/20 bg-black/45 px-4 py-2">
-              <BatteryCharging className="h-4 w-4 text-cyan-300" />
-              <span className="text-xs font-black">SP {sp}/{maxSp}</span>
-            </div>
-            <div className="flex items-center gap-2 rounded-xl border border-violet-300/20 bg-black/45 px-4 py-2">
-              <Link2 className="h-4 w-4 text-violet-300" />
-              <span className="text-xs font-black">CP {cp}/{maxCp}</span>
-            </div>
-          </div>
-        </header>
-
-        <div className="mt-3 grid flex-1 gap-3 xl:grid-cols-[90px_minmax(0,1fr)]">
-          <aside className="hidden rounded-2xl border border-white/8 bg-black/35 p-2 xl:block">
-            <p className="mb-3 text-center text-[9px] font-black tracking-[0.2em] text-zinc-500">
-              TURN
-            </p>
-            <div className="space-y-2">
-              {timeline.map((entry, index) => (
-                <div
-                  key={`${entry.side}-${entry.id}-${index}`}
-                  className={`relative overflow-hidden rounded-xl border p-1.5 ${
-                    index === 0
-                      ? entry.side === "enemy"
-                        ? "border-red-300/50 bg-red-400/14"
-                        : "border-cyan-300/50 bg-cyan-300/14"
-                      : "border-white/8 bg-white/[0.035]"
-                  }`}
-                >
-                  <div className="relative mx-auto h-11 w-11 overflow-hidden rounded-lg bg-black/50">
-                    {entry.side === "party" ? (
-                      <Image
-                        src={party.find((member) => member.id === entry.id)?.image ?? party[0].image}
-                        alt=""
-                        fill
-                        sizes="44px"
-                        className="object-cover"
-                      />
-                    ) : (
-                      battle.enemies.find((enemy) => enemy.id === entry.id)?.image && (
-                        <Image
-                          src={battle.enemies.find((enemy) => enemy.id === entry.id)?.image ?? ""}
-                          alt=""
-                          fill
-                          sizes="44px"
-                          className="object-contain"
-                        />
-                      )
-                    )}
-                  </div>
-                  <p className="mt-1 truncate text-center text-[8px] font-black text-white/65">
-                    {Math.floor(entry.gauge)}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </aside>
-
-          <div className="flex min-w-0 flex-col">
-            <div className="grid min-h-[430px] flex-1 items-end gap-5 lg:grid-cols-[minmax(360px,0.9fr)_minmax(480px,1.1fr)]">
-              <div className="grid grid-cols-4 items-end gap-1">
-                {party.map((member, index) => (
-                  <PartyUnit
-                    key={member.id}
-                    member={member}
-                    index={index}
-                    active={battle.activeSide === "party" && battle.activeUnitId === member.id}
-                    onSelect={() => setDetailSelection({ side: "party", id: member.id })}
-                  />
+          <div className="flex items-center gap-3">
+            {/* 에너지 */}
+            <span className="flex items-center gap-1.5 border border-ef-line bg-ef-card px-3 py-2" style={CUT_SM} title="에너지">
+              <Zap className="h-4 w-4" style={{ color: ACCENT }} />
+              <span className="flex gap-1">
+                {Array.from({ length: battle.maxEnergy }, (_, k) => (
+                  <span key={k} className="h-3 w-3 border" style={{ borderColor: ACCENT, background: k < battle.energy ? ACCENT : "transparent" }} />
                 ))}
-              </div>
-
-              <div className={`grid items-end gap-3 ${
-                battle.enemies.length >= 4 ? "grid-cols-4" : battle.enemies.length === 3 ? "grid-cols-3" : "grid-cols-2"
-              }`}>
-                {battle.enemies.map((enemy) => (
-                  <EnemyUnit
-                    key={enemy.id}
-                    enemy={enemy}
-                    selected={enemy.id === selectedEnemy?.id}
-                    onSelect={() => {
-                      setSelectedEnemyId(enemy.id);
-                      setDetailSelection({ side: "enemy", id: enemy.id });
-                    }}
-                  />
-                ))}
-              </div>
-            </div>
-
-            <div className="mt-2 grid gap-3 lg:grid-cols-[310px_minmax(0,1fr)_260px]">
-              <div className="relative min-h-[150px] overflow-hidden rounded-[26px] border border-cyan-200/15 bg-black/65">
-                {activeMember ? (
-                  <>
-                    <div className="absolute bottom-0 left-0 h-full w-36">
-                      <OperatorBattleArt
-                        member={activeMember}
-                        sizes="144px"
-                        className="object-contain object-bottom"
-                      />
-                    </div>
-                    <div className="ml-32 p-4">
-                      <p className="text-[9px] font-black tracking-[0.2em] text-cyan-200/50">
-                        ACTIVE OPERATOR
-                      </p>
-                      <p className="mt-1 text-xl font-black">{activeMember.name}</p>
-                      <p className="mt-1 text-xs font-bold text-zinc-500">
-                        {activeMember.className} · {activeMember.role}
-                      </p>
-                      <div className="mt-3">
-                        <HealthBar value={activeMember.hp} max={activeMember.maxHp} />
-                        <p className="mt-1 text-[10px] font-black text-zinc-400">
-                          HP {activeMember.hp}/{activeMember.maxHp} · 궁극기 {activeMember.ultimateCharge}%
-                        </p>
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <div className="flex h-full items-center justify-center text-sm font-black text-zinc-500">
-                    적 행동 처리 중
-                  </div>
-                )}
-              </div>
-
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                <SkillButton
-                  label="기본공격"
-                  name={activeMember?.normalAttackName ?? "-"}
-                  icon={activeMember?.normalAttackIcon ?? party[0].normalAttackIcon}
-                  cost="SP +1"
-                  tone="normal"
-                  disabled={!canAct}
-                  onClick={() => act("attack")}
-                />
-                <SkillButton
-                  label="배틀스킬"
-                  name={activeMember?.battleSkillName ?? "-"}
-                  icon={activeMember?.battleSkillIcon ?? party[0].battleSkillIcon}
-                  cost={`SP ${activeMember?.battleSkillCost ?? 0}`}
-                  tone="battle"
-                  disabled={!canAct || !activeMember || sp < activeMember.battleSkillCost}
-                  onClick={() => act("battle-skill")}
-                />
-                <SkillButton
-                  label="연계스킬"
-                  name={activeMember?.linkSkillName ?? "-"}
-                  icon={activeMember?.linkSkillIcon ?? party[0].linkSkillIcon}
-                  cost={`CP ${activeMember?.linkSkillCost ?? 0}`}
-                  tone="link"
-                  disabled={
-                    !canAct ||
-                    !activeMember ||
-                    cp < activeMember.linkSkillCost ||
-                    !linkReady
-                  }
-                  onClick={() => act("link-skill")}
-                />
-                <SkillButton
-                  label="궁극기"
-                  name={activeMember?.ultimateName ?? "-"}
-                  icon={activeMember?.ultimateIcon ?? party[0].ultimateIcon}
-                  cost={`${activeMember?.ultimateCharge ?? 0}%`}
-                  tone="ultimate"
-                  disabled={!canAct || !activeMember || activeMember.ultimateCharge < 100}
-                  onClick={() => act("ultimate")}
-                />
-              </div>
-
-              <div className="rounded-[24px] border border-white/10 bg-black/60 p-4">
-                <div className="flex items-center gap-2">
-                  <Crosshair className="h-4 w-4 text-yellow-300" />
-                  <p className="text-[9px] font-black tracking-[0.2em] text-zinc-500">
-                    SELECTED TARGET
-                  </p>
-                </div>
-                <p className="mt-2 truncate text-lg font-black text-white">
-                  {selectedEnemy?.name ?? "대상 없음"}
-                </p>
-                <p className="mt-1 text-[10px] font-bold text-red-200/50">
-                  적을 클릭해서 공격 대상을 변경
-                </p>
-                {selectedEnemy && (
-                  <div className="mt-3">
-                    <HealthBar
-                      value={selectedEnemy.hp}
-                      max={selectedEnemy.maxHp}
-                      tone="enemy"
-                    />
-                    <div className="mt-2 flex items-center justify-between text-[10px] font-black text-zinc-400">
-                      <span>HP {selectedEnemy.hp}/{selectedEnemy.maxHp}</span>
-                      <span className="flex items-center gap-1">
-                        <Zap className="h-3 w-3" /> {selectedEnemy.speed}
-                      </span>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="mt-3 flex min-h-10 items-center gap-3 overflow-hidden rounded-xl border border-white/8 bg-black/48 px-4">
-              <Sparkles className="h-4 w-4 shrink-0 text-yellow-300/60" />
-              <p className="truncate text-xs font-bold text-zinc-400">
-                {battle.log[0] ?? "전투가 시작되었습니다."}
-              </p>
-              <Swords className="ml-auto h-4 w-4 shrink-0 text-white/20" />
-            </div>
+              </span>
+              <span className="font-mono text-xs font-black tabular-nums" style={{ color: ACCENT }}>{battle.energy}/{battle.maxEnergy}</span>
+            </span>
+            <span className="flex items-center gap-1 border border-ef-line bg-ef-card px-3 py-2 font-mono text-[11px] font-bold tabular-nums text-ef-muted" style={CUT_SM} title="덱 / 버린 더미">
+              <Layers className="h-3.5 w-3.5" /> {battle.drawPile.length}
+              <Trash2 className="ml-2 h-3.5 w-3.5" /> {battle.discardPile.length}
+            </span>
+            <button
+              type="button"
+              onClick={onEndTurn}
+              className="flex items-center gap-2 border px-5 py-2 font-mono text-xs font-black uppercase tracking-wide text-black transition hover:brightness-110"
+              style={{ ...CUT_SM, background: ACCENT, borderColor: ACCENT }}
+            >
+              <SkipForward className="h-4 w-4" /> 턴 종료
+            </button>
           </div>
         </div>
-      </div>
 
-      {(detailMember || detailEnemy) && (
-        <aside className="absolute bottom-24 right-4 z-50 max-h-[72vh] w-[min(430px,calc(100vw-32px))] overflow-y-auto rounded-[28px] border border-white/12 bg-[#080b0f]/96 p-5 shadow-[0_28px_90px_rgba(0,0,0,0.65)] backdrop-blur-xl sm:right-7">
-          <button
-            type="button"
-            onClick={() => setDetailSelection(undefined)}
-            className="absolute right-4 top-4 z-10 flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-black/45 text-zinc-400 transition hover:text-white"
-            aria-label="상세 정보 닫기"
-          >
-            <X className="h-4 w-4" />
-          </button>
-          {detailMember ? <OperatorDetail member={detailMember} /> : detailEnemy ? <EnemyDetail enemy={detailEnemy} /> : null}
-        </aside>
-      )}
+        {/* 적 */}
+        <div className="flex flex-wrap items-start gap-3">
+          {battle.enemies.map((enemy) => (
+            <EnemyCard key={enemy.id} enemy={enemy} selected={enemy.id === selectedId} onSelect={() => setSel(enemy.id)} />
+          ))}
+        </div>
 
-      <div className="absolute bottom-4 right-4 z-50 flex items-center gap-2 rounded-2xl border border-white/12 bg-black/80 p-2 shadow-[0_16px_50px_rgba(0,0,0,0.55)] backdrop-blur-xl sm:right-7">
-        {party.map((member) => {
-          const active = battle.activeSide === "party" && battle.activeUnitId === member.id;
-          const selected =
-            detailSelection?.side === "party" && detailSelection.id === member.id;
-          return (
-            <button
-              key={member.id}
-              type="button"
-              onClick={() => setDetailSelection({ side: "party", id: member.id })}
-              className={`relative h-12 w-12 overflow-hidden rounded-xl border transition hover:-translate-y-1 ${
-                selected
-                  ? "border-yellow-300 shadow-[0_0_18px_rgba(250,204,21,0.35)]"
-                  : active
-                    ? "border-cyan-300 shadow-[0_0_18px_rgba(103,232,249,0.28)]"
-                    : "border-white/12"
-              } ${member.hp <= 0 ? "grayscale opacity-35" : ""}`}
-              title={`${member.name} 상세 정보`}
-            >
-              <Image src={member.image} alt="" fill sizes="48px" className="object-cover" />
-              <span
-                className="absolute inset-x-0 bottom-0 bg-emerald-400/90"
-                style={{
-                  height: `${Math.max(0, member.hp / member.maxHp) * 4}px`,
-                }}
-              />
-              {active && (
-                <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-cyan-300 shadow-[0_0_8px_#67e8f9]" />
-              )}
-            </button>
-          );
-        })}
+        {/* 전투 로그 */}
+        <div className="border border-ef-line bg-ef-card px-3 py-2" style={CUT_SM}>
+          <p className="truncate font-mono text-[11px] text-ef-muted">{battle.log[0] ?? "전투 시작."}</p>
+        </div>
+
+        {/* 파티 + 포션 */}
+        <div className="flex flex-wrap items-stretch gap-2">
+          {party.map((member) => <PartyCard key={member.id} member={member} />)}
+          {onUsePotion && potions.length > 0 && (
+            <div className="flex items-center gap-2 border border-ef-line bg-ef-card px-3" style={CUT_SM}>
+              <span className="font-mono text-[9px] font-bold uppercase tracking-wide text-ef-muted">포션</span>
+              {potions.map((id, i) => {
+                const potion = getPotion(id);
+                if (!potion) return null;
+                return (
+                  <button
+                    key={`${id}-${i}`}
+                    type="button"
+                    onClick={() => onUsePotion(id, potionNeedsTarget(id) ? selectedId : undefined)}
+                    className="relative h-10 w-10 overflow-hidden border bg-black/40 transition hover:-translate-y-0.5"
+                    style={{ ...CUT_SM, borderColor: `${potion.color}66` }}
+                    title={`${potion.name} — ${potion.description}${potionNeedsTarget(id) ? " (선택 적 대상)" : ""}`}
+                  >
+                    {potion.image ? (
+                      <Image src={potion.image} alt={potion.name} fill sizes="40px" className="object-contain p-0.5" />
+                    ) : (
+                      <FlaskConical className="m-auto h-4 w-4" style={{ color: potion.color }} />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* 손패 */}
+        <div className="border border-ef-line bg-ef-card2 p-3" style={CUT}>
+          <div className="mb-2 flex items-center gap-2">
+            <span className="h-3.5 w-1" style={{ background: PRIMARY }} />
+            <span className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-ef-muted">손패 · 카드를 쓸수록 적이 빨리 행동 (◇=불균형치)</span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {battle.hand.length === 0 ? (
+              <p className="py-6 text-center text-sm text-ef-muted">손패가 없습니다. 턴을 종료하세요.</p>
+            ) : (
+              battle.hand.map((card) => (
+                <HandCard key={card.uid} card={card} playable={battle.energy >= card.cost} onPlay={() => play(card)} />
+              ))
+            )}
+          </div>
+        </div>
       </div>
     </section>
   );

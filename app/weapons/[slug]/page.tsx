@@ -41,7 +41,7 @@ const weaponTypeIconMap: Record<string, string> = {
 const TABLE_LEVELS = [1, 20, 40, 60, 80, 90];
 
 function materialIcon(name: string, icon?: string) {
-  return icon || `/materials/${encodeURIComponent(name)}.webp`;
+  return icon || `/items/${encodeURIComponent(name)}.webp`;
 }
 
 // 설명 내 수치(+12%, x1.5, 30 등) 노란색 강조.

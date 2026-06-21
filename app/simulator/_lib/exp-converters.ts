@@ -28,9 +28,9 @@ function convertRecordExpToItems(totalExp: number): RawMaterialItem[] {
   remain -= midRecord * 1000;
   const lowRecord = Math.ceil(remain / 200);
 
-  if (lowRecord > 0) items.push({ name: "초급 작전 기록", count: lowRecord, icon: "/materials/초급 작전 기록.webp" });
-  if (midRecord > 0) items.push({ name: "중급 작전 기록", count: midRecord, icon: "/materials/중급 작전 기록.webp" });
-  if (highRecord > 0) items.push({ name: "고급 작전 기록", count: highRecord, icon: "/materials/고급 작전 기록.webp" });
+  if (lowRecord > 0) items.push({ name: "초급 작전 기록", count: lowRecord, icon: "/items/초급 작전 기록.webp" });
+  if (midRecord > 0) items.push({ name: "중급 작전 기록", count: midRecord, icon: "/items/중급 작전 기록.webp" });
+  if (highRecord > 0) items.push({ name: "고급 작전 기록", count: highRecord, icon: "/items/고급 작전 기록.webp" });
 
   return items;
 }
@@ -43,8 +43,8 @@ function convertCarrierExpToItems(totalExp: number): RawMaterialItem[] {
   remain -= highCarrier * 10000;
   const lowCarrier = Math.floor(remain / 1000);
 
-  if (lowCarrier > 0) items.push({ name: "초급 인지 매개체", count: lowCarrier, icon: "/materials/초급 인지 매개체.webp" });
-  if (highCarrier > 0) items.push({ name: "고급 인지 매개체", count: highCarrier, icon: "/materials/고급 인지 매개체.webp" });
+  if (lowCarrier > 0) items.push({ name: "초급 인지 매개체", count: lowCarrier, icon: "/items/초급 인지 매개체.webp" });
+  if (highCarrier > 0) items.push({ name: "고급 인지 매개체", count: highCarrier, icon: "/items/고급 인지 매개체.webp" });
 
   return items;
 }
@@ -77,9 +77,9 @@ export function convertWeaponExpToItems(totalExp: number): RawMaterialItem[] {
   remain -= kitCount * 1000;
   const unitCount = Math.ceil(remain / 200);
 
-  if (unitCount > 0) items.push({ name: "무기 점검 유닛", count: unitCount, icon: "/materials/무기 점검 유닛.webp" });
-  if (kitCount > 0) items.push({ name: "무기 점검 장치", count: kitCount, icon: "/materials/무기 점검 장치.webp" });
-  if (setCount > 0) items.push({ name: "무기 점검 세트", count: setCount, icon: "/materials/무기 점검 세트.webp" });
+  if (unitCount > 0) items.push({ name: "무기 점검 유닛", count: unitCount, icon: "/items/무기 점검 유닛.webp" });
+  if (kitCount > 0) items.push({ name: "무기 점검 장치", count: kitCount, icon: "/items/무기 점검 장치.webp" });
+  if (setCount > 0) items.push({ name: "무기 점검 세트", count: setCount, icon: "/items/무기 점검 세트.webp" });
 
   return items;
 }
