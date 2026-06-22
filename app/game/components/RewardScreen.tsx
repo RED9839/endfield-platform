@@ -43,7 +43,7 @@ function categoryLabel(category: string) {
 
 function effectLine(gear: RunGear) {
   const setEffect = getGameSetEffectDescription(gear.setName);
-  if (setEffect !== "세트 효과 없음") return setEffect.replace("3세트:", "3세트 효과 ·");
+  if (setEffect !== "세트 효과 없음") return setEffect.replace("2세트:", "2세트 효과 ·");
   return `기본 옵션 · ${gear.attributeLabel}`;
 }
 
