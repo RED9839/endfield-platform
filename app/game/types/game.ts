@@ -3,6 +3,7 @@ export type Screen =
   | "map"
   | "battle"
   | "reward"
+  | "promote"
   | "shop"
   | "event"
   | "camp"
@@ -250,7 +251,7 @@ export type DeckCard = {
   src: "basic" | "operator" | "tactical";
   ref: string; // basic: 카드 키 / operator: operatorId / tactical: tacticalId
   kind?: SkillKind | "util"; // operator일 때 스킬 종류('util'=직군 유틸 카드)
-  upgraded?: boolean; // 강화 여부(위력 +30%)
+  eliteLevel?: 0 | 1 | 2; // 정예화 단계(0=기본, 1차, 2차) — 위력·불균형치 강화
 };
 
 export type CardTarget = "enemy" | "all-enemies" | "party";
@@ -271,6 +272,7 @@ export type Card = {
   // 비피해/특수 효과: 실드·회복·에너지·드로우 / 셋업(아츠 부착)·버프(피해 증가)·대응(적 행동 지연)
   effect?: "shield" | "heal" | "energy" | "draw" | "setup" | "buff" | "delay";
   tactical?: boolean; // 전술 카드(오퍼 무관, 중립 효과)
+  eliteLevel?: number; // 정예화 단계(0/1/2) — 표시·강화 판정용
 };
 
 export type BattleState = {
@@ -300,8 +302,9 @@ export type RunState = {
   relics: string[]; // 보유 유물 id (상시 패시브)
   potions: string[]; // 보유 포션 id (전투 중 소비)
   pendingCardOffers: string[]; // 전투 보상 카드 습득 선택지(세력 드래프트 토큰)
-  cardRerolls: number; // 이번 보상에서 리롤한 횟수(리롤 비용 상승용)
   pendingRelic?: string; // 엘리트/보스 유물 드랍(표시용)
+  pendingPromotes?: number; // 정예/보스 처치 보상: 카드 정예화 가능 횟수(하이리스크 하이리턴)
+  repairUsed?: boolean; // 정비소(상점) 1회 무료 휴식/강화 사용 여부
   shopRelics: string[]; // 상점 유물 매물
   shopPotions: string[]; // 상점 포션 매물
   visitedNodes: string[];
@@ -328,15 +331,17 @@ export type RunActions = {
   endTurn: () => void;
   equipRewardGear: (gearSlug: string, operatorId: string) => void;
   buyGear: (gearSlug: string, operatorId: string) => void;
-  buyHeal: () => void;
   removeCard: (uid: string) => void;
   takeCardOffer: (token: string) => void;
   skipCardOffer: () => void;
-  rerollCardOffers: () => void;
   usePotion: (potionId: string, targetEnemyId?: string) => void;
   buyRelic: (relicId: string) => void;
   buyPotion: (potionId: string) => void;
   upgradeCard: (uid: string) => void;
+  promoteCard: (uid: string) => void;
+  skipPromote: () => void;
+  repairRest: () => void;
+  repairUpgrade: (uid: string) => void;
   skipReward: () => void;
   resolveEvent: (choiceId: string) => void;
   rest: (mode: "heal" | "train") => void;

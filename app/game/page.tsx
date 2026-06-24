@@ -96,8 +96,6 @@ export default function GamePage() {
           cardOffers={run.pendingCardOffers}
           onTakeCard={run.takeCardOffer}
           onSkipCard={run.skipCardOffer}
-          onRerollCard={run.rerollCardOffers}
-          cardRerolls={run.cardRerolls}
           factionName={factions[run.factionIndex]?.name}
           pendingRelic={run.pendingRelic}
         />
@@ -110,7 +108,9 @@ export default function GamePage() {
           credits={run.credits}
           onEquip={run.buyGear}
           onSkip={run.skipReward}
-          onBuyHeal={run.buyHeal}
+          repairUsed={run.repairUsed}
+          onRepairRest={run.repairRest}
+          onRepairUpgrade={run.repairUpgrade}
           deck={run.deck}
           cardsRemoved={run.cardsRemoved}
           onRemoveCard={run.removeCard}
@@ -131,6 +131,17 @@ export default function GamePage() {
           party={run.party}
           deck={run.deck}
           onUpgrade={run.upgradeCard}
+        />
+      )}
+      {run.screen === "promote" && (
+        <CampScreen
+          mode="promote"
+          promotesLeft={run.pendingPromotes ?? 0}
+          onRest={run.rest}
+          party={run.party}
+          deck={run.deck}
+          onUpgrade={run.promoteCard}
+          onSkip={run.skipPromote}
         />
       )}
       {run.screen === "summary" && (

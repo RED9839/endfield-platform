@@ -78,12 +78,13 @@ const wildFor = (layer) => WILD[layer];
 const layerOf = (floor) => (floor <= 7 ? "outer" : floor <= 14 ? "core" : "deep");
 const rewardTierOf = (floor, type) => (type === "boss" ? "boss" : type === "elite" ? (floor <= 7 ? "mid" : floor <= 14 ? "late" : "elite") : floor <= 7 ? "early" : floor <= 14 ? "mid" : "late");
 
+// 정비소(shop) = 상점 구매 + 1회 무료 휴식/강화. 캠프는 정비소로 통합.
 const PLAN = [
   ["battle", "battle"], ["battle", "event"], ["battle", "battle"], ["shop"],
-  ["battle", "elite"], ["battle", "event"], ["camp"], ["battle", "battle"],
+  ["battle", "elite"], ["battle", "event"], ["shop"], ["battle", "battle"],
   ["elite", "event"], ["shop"], ["battle", "battle"], ["elite"],
-  ["battle", "event"], ["camp"], ["battle", "elite"], ["battle", "event"],
-  ["shop"], ["elite", "battle"], ["camp"], ["boss"],
+  ["battle", "event"], ["shop"], ["battle", "elite"], ["battle", "event"],
+  ["shop"], ["elite", "battle"], ["shop"], ["boss"],
 ];
 const COLS = [0, 4, 2, 1, 3];
 const titleOf = (type, short) => type === "boss" ? `${short} 심층부 · 최종` : type === "elite" ? "정예 교전" : type === "event" ? "조우 신호" : type === "shop" ? "델랑 보급소" : type === "camp" ? "전선 캠프" : "교전";

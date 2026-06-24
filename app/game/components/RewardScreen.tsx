@@ -1,6 +1,6 @@
 import { useState } from "react";
 import Image from "next/image";
-import { ArrowRight, Coins, FlaskConical, Gem, HeartPulse, PackageOpen, RefreshCw, Search, Trash2 } from "lucide-react";
+import { ArrowRight, Coins, FlaskConical, Gem, HeartPulse, PackageOpen, Search, Sparkles, Trash2 } from "lucide-react";
 
 import { buildDeck, cardRarity, cardRemovalCost, MIN_DECK_SIZE, previewCardFromToken } from "../data/cards";
 import type { CardRarity } from "../data/cards";
@@ -91,17 +91,12 @@ export default function RewardScreen({
   onEquip,
   onSkip,
   mode = "reward",
-  onBuyHeal,
-  healCost = 45,
-  healAmount = 32,
   deck = [],
   cardsRemoved = 0,
   onRemoveCard,
   cardOffers = [],
   onTakeCard,
   onSkipCard,
-  onRerollCard,
-  cardRerolls = 0,
   factionName,
   pendingRelic,
   shopRelics = [],
@@ -110,6 +105,9 @@ export default function RewardScreen({
   potionCount = 0,
   onBuyRelic,
   onBuyPotion,
+  repairUsed = false,
+  onRepairRest,
+  onRepairUpgrade,
 }: {
   gearSlugs: string[];
   party: PartyMember[];
@@ -117,17 +115,12 @@ export default function RewardScreen({
   onEquip: (gearSlug: string, operatorId: string) => void;
   onSkip: () => void;
   mode?: "reward" | "shop";
-  onBuyHeal?: () => void;
-  healCost?: number;
-  healAmount?: number;
   deck?: DeckCard[];
   cardsRemoved?: number;
   onRemoveCard?: (uid: string) => void;
   cardOffers?: string[];
   onTakeCard?: (token: string) => void;
   onSkipCard?: () => void;
-  onRerollCard?: () => void;
-  cardRerolls?: number;
   factionName?: string;
   pendingRelic?: string;
   shopRelics?: string[];
@@ -136,10 +129,16 @@ export default function RewardScreen({
   potionCount?: number;
   onBuyRelic?: (relicId: string) => void;
   onBuyPotion?: (potionId: string) => void;
+  repairUsed?: boolean;
+  onRepairRest?: () => void;
+  onRepairUpgrade?: (uid: string) => void;
 }) {
+  const [repairPicking, setRepairPicking] = useState(false);
   const [selectedGearSlug, setSelectedGearSlug] = useState<string | null>(null);
   const selectedGear = selectedGearSlug ? getGameGear(selectedGearSlug) : null;
   const isShop = mode === "shop";
+  // 선명한 기억(정예 보상): 파티 스킬 전체를 확정 선택(랜덤·리롤 없음). 일반은 흐릿한 기억(랜덤 3장).
+  const vivid = cardOffers.length > 4;
 
   function equipGear(gear: RunGear, member: PartyMember, currentGear?: RunGear) {
     if (isShop) {
@@ -189,19 +188,23 @@ export default function RewardScreen({
             </p>
           </div>
           <div className="flex items-center gap-3">
-            {isShop && onBuyHeal && (
-              <button
-                type="button"
-                onClick={onBuyHeal}
-                disabled={credits < healCost}
-                className="flex items-center gap-2 border px-4 py-3 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-40"
-                style={{ ...CUT_SM, borderColor: `${PRIMARY}55`, color: "#7fd4a3", background: `${PRIMARY}0d` }}
-                title="파티 전원 회복"
-              >
-                <HeartPulse className="h-4 w-4" />
-                정비 +{healAmount}
-                <span className="font-mono text-[11px] tabular-nums text-ef-accent">-{healCost}</span>
-              </button>
+            {/* 정비소 1회 무료: 휴식 or 강화 */}
+            {isShop && (onRepairRest || onRepairUpgrade) && (
+              repairUsed ? (
+                <span className="flex items-center gap-2 border px-4 py-3 text-sm font-bold" style={{ ...CUT_SM, borderColor: `${ACCENT}55`, color: ACCENT, background: `${ACCENT}0d` }} title="이번 정비소에서 정비 완료">
+                  <Sparkles className="h-4 w-4" /> 정비 완료
+                </span>
+              ) : (
+                <span className="flex items-center gap-1.5">
+                  <span className="font-mono text-[9px] font-bold uppercase tracking-wide text-ef-muted">정비 1회</span>
+                  <button type="button" onClick={onRepairRest} className="flex items-center gap-1.5 border px-3 py-3 text-sm font-bold transition hover:brightness-110" style={{ ...CUT_SM, borderColor: "#34d39955", color: "#7fd4a3", background: "#34d3990d" }} title="파티 전원 +28 회복">
+                    <HeartPulse className="h-4 w-4" /> 휴식
+                  </button>
+                  <button type="button" onClick={() => setRepairPicking((v) => !v)} className="flex items-center gap-1.5 border px-3 py-3 text-sm font-bold transition hover:brightness-110" style={{ ...CUT_SM, borderColor: `${ACCENT}55`, color: ACCENT, background: `${ACCENT}0d`, ...(repairPicking ? { background: `${ACCENT}22` } : {}) }} title="카드 1장 정예화">
+                    <Sparkles className="h-4 w-4" /> 강화
+                  </button>
+                </span>
+              )
             )}
             <button type="button" onClick={onSkip} className="flex items-center gap-2 border border-ef-line bg-ef-card px-4 py-3 text-sm font-bold text-ef-muted transition hover:border-ef-accent/40 hover:text-ef-accent-soft" style={CUT_SM}>
               {isShop ? "상점 나가기" : "맵으로 이동"}
@@ -213,6 +216,41 @@ export default function RewardScreen({
             </div>
           </div>
         </div>
+
+        {/* 정비소 강화: 정예화할 카드 선택(1회) */}
+        {isShop && repairPicking && !repairUsed && onRepairUpgrade && (
+          <div className="mt-5 border bg-ef-card2 p-4" style={{ ...CUT, borderColor: `${ACCENT}55` }}>
+            <p className="mb-3 flex items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: ACCENT }}>
+              <Sparkles className="h-3.5 w-3.5" /> 정예화할 카드 선택 · 1회 (오퍼 컨셉 강화)
+            </p>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+              {buildDeck(party, deck).map((card) => {
+                const col = ELEMENT_COLOR[card.element];
+                const lv = card.eliteLevel ?? 0;
+                const maxed = lv >= 2;
+                const tag = lv >= 2 ? "정예 II" : lv === 1 ? "정예 I" : null;
+                return (
+                  <button
+                    key={card.uid}
+                    type="button"
+                    disabled={maxed}
+                    onClick={() => onRepairUpgrade(card.uid)}
+                    title={maxed ? "최대 정예화" : `정예화 ${lv}차 → ${lv + 1}차`}
+                    className="flex flex-col border bg-ef-card p-2.5 text-left transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-40"
+                    style={{ ...CUT_SM, borderColor: maxed ? `${ACCENT}aa` : `${col}66` }}
+                  >
+                    <span className="flex items-center justify-between">
+                      <span className="flex h-5 w-5 items-center justify-center border font-mono text-[10px] font-black text-black" style={{ ...CUT_SM, background: ACCENT, borderColor: ACCENT }}>{card.cost}</span>
+                      {tag ? <span className="font-mono text-[8px] font-black uppercase" style={{ color: ACCENT }}>{tag}</span> : <span className="font-mono text-[8px] uppercase" style={{ color: col }}>{KIND_LABEL[card.kind]}</span>}
+                    </span>
+                    <span className="mt-1.5 truncate text-xs font-black text-white">{card.name}</span>
+                    <span className="truncate font-mono text-[8px] text-ef-muted">{card.operatorName}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* 유물 드랍 배너(엘리트) */}
         {!isShop && pendingRelic && getRelic(pendingRelic) && (
@@ -232,18 +270,9 @@ export default function RewardScreen({
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-ef-line pb-3">
               <div className="flex items-center gap-2">
                 <span className="h-4 w-1" style={{ background: PRIMARY }} />
-                <p className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-ef-muted">New Card // 카드 습득{factionName ? ` · ${factionName}` : ""}</p>
+                <p className="font-mono text-[11px] font-bold uppercase tracking-[0.2em]" style={{ color: vivid ? ACCENT : undefined }}>{vivid ? `선명한 기억 // 스킬 확정 선택${factionName ? ` · ${factionName}` : ""}` : `흐릿한 기억 // 카드 습득${factionName ? ` · ${factionName}` : ""}`}</p>
               </div>
               <div className="flex items-center gap-2">
-                {onRerollCard && (() => {
-                  const rerollCost = 25 + cardRerolls * 20;
-                  const can = credits >= rerollCost;
-                  return (
-                    <button type="button" disabled={!can} onClick={onRerollCard} className="inline-flex items-center gap-1.5 border bg-ef-card2 px-3 py-1.5 font-mono text-[11px] font-bold transition disabled:cursor-not-allowed disabled:opacity-40" style={{ ...CUT_SM, borderColor: `${PRIMARY}55`, color: "#fdba74" }}>
-                      <RefreshCw className="h-3.5 w-3.5" /> 리롤 <span className="inline-flex items-center gap-0.5 tabular-nums" style={{ color: can ? ACCENT : "#fca5a5" }}><Coins className="h-3 w-3" />{rerollCost}</span>
-                    </button>
-                  );
-                })()}
                 <button type="button" onClick={onSkipCard} className="border border-ef-line bg-ef-card2 px-3 py-1.5 font-mono text-[11px] font-bold text-ef-muted transition hover:text-ef-accent-soft" style={CUT_SM}>
                   받지 않기
                 </button>

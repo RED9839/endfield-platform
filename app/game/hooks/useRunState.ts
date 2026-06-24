@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 
-import { buildDeck, cardRemovalCost, cardRewardPool, deckCardFromToken, MIN_DECK_SIZE, startingDeck } from "../data/cards";
+import { buildDeck, cardRemovalCost, cardRewardPool, deckCardFromToken, MAX_ELITE, MIN_DECK_SIZE, startingDeck } from "../data/cards";
 import { getEnemies } from "../data/enemies";
 import { computeBattleDrop, getEnemyWeakness, WEAKNESS_AMP } from "../data/enemy-traits";
 import { events } from "../data/events";
@@ -43,10 +43,6 @@ import type {
 const ENERGY_PER_TURN = 3;
 const HAND_SIZE = 5;
 const EVASION_CAP = 25;
-const SHOP_HEAL_COST = 45;
-const SHOP_HEAL_AMOUNT = 32;
-const REROLL_BASE = 25; // 카드 습득 리롤 기본 비용
-const REROLL_STEP = 20; // 리롤마다 상승
 // 아츠 부착 4종(원소 이상). 같은 원소 재부착=버스트, 다른 원소=반응.
 const ARTS_INFLICTIONS: EnemyStatus[] = ["combustion", "shock", "freeze", "corrosion"];
 // 원소 → 아츠 부착(물리는 취약 스택으로 별도 처리)
@@ -86,18 +82,19 @@ function freshParty(operatorIds?: string[]): PartyMember[] {
 function initialState(): RunState {
   // CZN식: 런마다 랜덤 세력(카오스) 1개를 골라 그 세력의 외곽→중심부→심층부 필드를 진행
   const factionIndex = Math.floor(Math.random() * factions.length);
+  const party = freshParty();
+  const sd = startingDeck(0, party);
   return {
     screen: "deployment",
     factionIndex,
-    party: freshParty(),
+    party,
     collectedGears: [],
-    deck: startingDeck(0).deck,
-    deckSeq: startingDeck(0).seq,
+    deck: sd.deck,
+    deckSeq: sd.seq,
     cardsRemoved: 0,
     relics: [],
     potions: [],
     pendingCardOffers: [],
-    cardRerolls: 0,
     shopRelics: [],
     shopPotions: [],
     visitedNodes: [],
@@ -382,19 +379,21 @@ function hasPassive(m: PartyMember, mech: PassiveMechanic): boolean {
   return CLASS_PASSIVE[m.className] === mech || m.passiveMechanic === mech;
 }
 
-function getPassiveDamageBonus(actor: PartyMember, target: BattleEnemy, kind: SkillKind) {
+function getPassiveDamageBonus(actor: PartyMember, target: BattleEnemy, kind: SkillKind, elite = 0) {
   let bonus = 1;
+  const e = 1 + 0.3 * elite; // 정예화: 오퍼 핵심 재능(패시브) 효과를 단계마다 +30% 강화
   const broken = target.statuses.includes("defense-break");
   const afflicted = broken || target.statuses.some((s) => ARTS_STATUSES.includes(s));
   const vulnerable = target.physBreakStacks > 0; // 취약(Vulnerable) 스택
   const stacks = Math.min(5, actor.passiveStacks);
   for (const { mech, scale } of passiveList(actor)) {
-    if (mech === "vs-broken" && broken) bonus += 0.2 * scale;
-    if (mech === "vs-status" && afflicted) bonus += 0.15 * scale;
-    if (mech === "crystal-burst" && vulnerable) bonus += 0.22 * scale; // 관리자: 취약 적 특화
-    if (mech === "blade-stacks" && kind !== "attack") bonus += stacks * 0.06 * scale;
-    if (mech === "essence-collapse") bonus += stacks * 0.06 * scale; // 본질 붕괴: 분쇄 누적 공격력
-    if (mech === "flat-power") bonus += 0.08 * scale;
+    if (mech === "vs-broken" && broken) bonus += 0.2 * scale * e; // 불균형 적 특화
+    if (mech === "vs-status" && afflicted) bonus += 0.15 * scale * e; // 아츠/이상 적 특화
+    if (mech === "crystal-burst" && vulnerable) bonus += 0.22 * scale * e; // 취약 적 특화
+    if (mech === "blade-stacks" && kind !== "attack") bonus += stacks * 0.06 * scale * e; // 누적 강타
+    if (mech === "essence-collapse") bonus += stacks * 0.06 * scale * e; // 본질 붕괴
+    if (mech === "flat-power") bonus += 0.08 * scale * e; // 상시 화력
+    if (mech === "team-amp") bonus += 0.05 * scale * elite; // 디버퍼/버퍼: 정예화 시 증폭 카드 강화
   }
   return bonus;
 }
@@ -415,31 +414,31 @@ function hasArtsAttachment(enemy: BattleEnemy) {
   return enemy.statuses.some((status) => ARTS_ATTACHMENT_STATUSES.includes(status));
 }
 
-function applySkillMechanic(actor: PartyMember, target: BattleEnemy, baseDamage: number, kind: SkillKind) {
+function applySkillMechanic(actor: PartyMember, target: BattleEnemy, baseDamage: number, kind: SkillKind, elite = 0) {
   let damage = baseDamage;
   let statuses = target.statuses;
   const notes: string[] = [];
   // (장비 세트 피해 배수는 getSetDamageBonus에서 일괄 처리)
-  // 콤보형(combo-strike): 비기본 스킬 추가 피해(부착 없음)
+  // 콤보형(combo-strike): 비기본 스킬 추가 피해. 정예화 시 강화(+5%/단계).
   if (actor.skillMechanic === "combo-strike" && kind !== "attack") {
-    damage += Math.ceil(baseDamage * 0.18);
+    damage += Math.ceil(baseDamage * (0.18 + 0.05 * elite));
     notes.push("연계 강타");
   }
 
   // ===== 엔드필드 아츠 부착 / 반응 (배틀·연계·궁극 스킬) =====
-  // 아츠 오퍼: 자기 원소 부착. 다른 원소가 이미 있으면 아츠 반응(소모 + 반응 피해 + 새 부착).
+  // 아츠 오퍼: 자기 원소 부착. 정예화 컨셉 = 아츠 반응/버스트 피해 강화.
   const infl = ELEMENT_INFLICTION[actor.element];
   if (infl && kind !== "attack") {
     const other = statuses.find((s) => ARTS_INFLICTIONS.includes(s) && s !== infl);
     if (other) {
-      // 아츠 반응: 두 부착을 소모하고 반응 피해 + 새 원소(반응 효과) 적용
+      // 아츠 반응: 두 부착을 소모하고 반응 피해 + 새 원소(반응 효과) 적용. 정예화 +10%/단계.
       statuses = addStatus(withoutStatus(statuses, other), infl);
-      damage += Math.ceil(baseDamage * 0.4);
-      notes.push(`아츠 반응 ${INFLICTION_LABEL[other]}→${INFLICTION_LABEL[infl]}`);
+      damage += Math.ceil(baseDamage * (0.4 + 0.1 * elite));
+      notes.push(`아츠 반응 ${INFLICTION_LABEL[other]}→${INFLICTION_LABEL[infl]}${elite ? "↑" : ""}`);
     } else if (statuses.includes(infl)) {
-      // 같은 원소 재부착 → 아츠 버스트(추가 피해)
-      damage += Math.ceil(baseDamage * 0.25);
-      notes.push(`${INFLICTION_LABEL[infl]} 버스트`);
+      // 같은 원소 재부착 → 아츠 버스트. 정예화 +8%/단계.
+      damage += Math.ceil(baseDamage * (0.25 + 0.08 * elite));
+      notes.push(`${INFLICTION_LABEL[infl]} 버스트${elite ? "↑" : ""}`);
     } else {
       statuses = addStatus(statuses, infl);
       notes.push(`${INFLICTION_LABEL[infl]} 부착`);
@@ -531,7 +530,10 @@ function finishBattle(current: RunState, battle: BattleState): RunState {
   // 포션 드랍: 드랍 가치가 높을수록(고티어) 잘 나온다.
   const wantPotion = current.potions.length < MAX_POTIONS && (drop.value >= 50 ? seed % 2 === 0 : seed % 4 === 0);
   const potions = wantPotion ? [...current.potions, pickPotions(1, seed)[0]] : current.potions;
-  if (node.type === "boss") return { ...current, battle, battlesWon: won, credits: current.credits + drop.credits, potions, screen: "summary", result: "victory" };
+  // 정예화 보상(하이리스크 하이리턴): 정예 노드 또는 Elite/Boss 티어 적을 처치하면 카드 정예화 1회 획득.
+  const promoteEarned = node.type === "elite" || node.type === "boss" || battle.enemies.some((e) => e.boss || e.tier === "Elite" || e.tier === "Boss") ? 1 : 0;
+  const pendingPromotes = (current.pendingPromotes ?? 0) + promoteEarned;
+  if (node.type === "boss") return { ...current, battle, battlesWon: won, credits: current.credits + drop.credits, potions, pendingPromotes, screen: "summary", result: "victory" };
   // 유물 드랍: Elite/Boss 티어 적이 있으면.
   const grantedRelic = drop.wantRelic ? pickRelics(current.relics, 1, seed)[0] : undefined;
   const relics = grantedRelic ? [...current.relics, grantedRelic] : current.relics;
@@ -543,10 +545,10 @@ function finishBattle(current: RunState, battle: BattleState): RunState {
     potions,
     relics,
     pendingRelic: grantedRelic,
+    pendingPromotes,
     screen: "reward",
     pendingGearSlugs: chooseGearRewards(won, drop.gearCount, drop.gearTier),
-    pendingCardOffers: cardRewardPool(current.party, current.factionIndex, seed),
-    cardRerolls: 0,
+    pendingCardOffers: cardRewardPool(current.party, current.factionIndex, seed, node.type === "elite"),
   };
 }
 // 전술 카드(중립): 오퍼 스탯/세트/치명 없이 고정 효과. 에너지/드로우/보호막/회복/피해.
@@ -640,13 +642,17 @@ function playCardOnState(current: RunState, uid: string, targetEnemyId?: string)
   const aoe = card.target === "all-enemies";
   const targetIds = new Set(aoe ? battle.enemies.filter((e) => e.hp > 0).map((e) => e.id) : [target.id]);
   const kind = card.kind;
+  // 정예화 단계(0/1/2): 단순 딜이 아니라 오퍼 컨셉 강화에 쓰인다(강타·빌더·갑옷파괴·치명·아츠).
+  const elite = card.eliteLevel ?? 0;
   // 재능 crit-surge(자신 치명 +12%) · team-amp(파티 오라, 생존 보유자당 +6% 카드 피해) — 2층 패시브 합산
   const critSurge = passiveList(actor).reduce((s, p) => s + (p.mech === "crit-surge" ? 0.12 * p.scale : 0), 0);
+  // 정예화 컨셉: 치명형(crit-surge) 카드는 정예화마다 치명 확률 +6%
+  const eliteCrit = hasPassive(actor, "crit-surge") ? elite * 0.06 : 0;
   const teamAmp = current.party.filter((m) => m.hp > 0 && hasPassive(m, "team-amp")).length * 0.06;
   // 유물 효과 + 소비 아이템 전투 버프 + 재능 + 장비 세트 합산
   const setCrit = getSetCrit(actor);
   const setStagger = getSetStagger(actor);
-  const isCrit = rollCrit(actor, `${battle.turn}:${card.uid}`, fx.critBonus + (battle.critBuff ?? 0) + critSurge + setCrit.rate);
+  const isCrit = rollCrit(actor, `${battle.turn}:${card.uid}`, fx.critBonus + (battle.critBuff ?? 0) + critSurge + eliteCrit + setCrit.rate);
   const dmgMult = 1 + fx.damageMult + (battle.dmgBuffPct ?? 0) + teamAmp;
   // 연타(連打): 보유 스택만큼 배틀 스킬 +30~75% / 궁극 +20~50% (소모형)
   const multiHitStacks = Math.min(4, battle.multiHit ?? 0);
@@ -663,11 +669,11 @@ function playCardOnState(current: RunState, uid: string, targetEnemyId?: string)
     if (!targetIds.has(enemy.id) || enemy.hp <= 0) return enemy;
     const mech = kind === "attack"
       ? { damage: card.power, statuses: enemy.statuses, notes: [] as string[] }
-      : applySkillMechanic(actor, enemy, card.power, kind);
+      : applySkillMechanic(actor, enemy, card.power, kind, elite);
     // 상태이상 받피증 + 장비 세트 보정(모든 카드) → 재능 보정
     mech.damage = Math.ceil(mech.damage * getStatusBonus(actor, enemy));
     mech.damage = Math.ceil(mech.damage * getSetDamageBonus(actor, enemy, kind));
-    mech.damage = Math.ceil(mech.damage * getPassiveDamageBonus(actor, enemy, kind));
+    mech.damage = Math.ceil(mech.damage * getPassiveDamageBonus(actor, enemy, kind, elite));
     const armorBroken = enemy.statuses.includes("armor-break") && actor.element === "physical"; // 관통(Breach) 받피증
     const linkCombo = kind === "link-skill" && enemy.statuses.includes("defense-break");
     const shatter = actor.element === "physical" && enemy.statuses.includes("freeze"); // 쇄빙(Shatter)
@@ -702,11 +708,12 @@ function playCardOnState(current: RunState, uid: string, targetEnemyId?: string)
     if (hp > 0 && actor.element === "physical" && kind !== "attack") {
       const anomaly = actor.physAnomaly ?? (actor.physBreak === "consume" ? "crush" : actor.physBreak === "build" ? "launch" : undefined);
       if (anomaly === "launch" || anomaly === "knockdown") {
-        const add = PHYS_BREAK_BUILD[kind];
+        // 정예화 컨셉(빌더): 2차 시 방어 불능 +1 추가 적립
+        const add = PHYS_BREAK_BUILD[kind] + (elite >= 2 ? 1 : 0);
         if (add > 0) {
           const wasVuln = physBreakStacks > 0;
           physBreakStacks = Math.min(MAX_PHYS_BREAK_STACKS, physBreakStacks + add);
-          noteSet.add(`취약 ${physBreakStacks}`);
+          noteSet.add(`취약 ${physBreakStacks}${elite >= 2 ? "↑" : ""}`);
           if (wasVuln) { // 방어 불능 적에게 띄우기/넘어뜨리기 발동 → 추가 물리 + 불균형 10 + 행동 지연
             const bonus = Math.ceil(card.power * 0.2);
             hp = Math.max(0, hp - bonus);
@@ -717,17 +724,19 @@ function playCardOnState(current: RunState, uid: string, targetEnemyId?: string)
           }
         }
       } else if (anomaly === "crush" && physBreakStacks > 0) {
-        const crush = Math.ceil(card.power * 0.5 * physBreakStacks); // 강타: 스택 전소모 대량 물리
+        // 정예화 컨셉(강타): 스택당 계수 0.5 → 0.6 → 0.7
+        const crush = Math.ceil(card.power * (0.5 + 0.1 * elite) * physBreakStacks);
         hp = Math.max(0, hp - crush);
         totalDamage += crush;
         physBreakStacks = 0;
         crushedAny = true; // 본질 붕괴 트리거
-        noteSet.add(`강타 ${crush}`);
+        noteSet.add(`강타 ${crush}${elite ? "↑" : ""}`);
       } else if (anomaly === "armor-break" && physBreakStacks > 0) {
-        const ab = Math.ceil(card.power * 0.25 * physBreakStacks); // 갑옷 파괴: 중간 물리 + 관통(받피증)
+        // 정예화 컨셉(갑옷 파괴): 계수·관통 지속 강화
+        const ab = Math.ceil(card.power * (0.25 + 0.05 * elite) * physBreakStacks);
         hp = Math.max(0, hp - ab);
         totalDamage += ab;
-        armorBreakTurns = 2 + physBreakStacks;
+        armorBreakTurns = 2 + physBreakStacks + elite; // 정예화: 관통 지속 +1턴/단계
         statuses = addStatus(statuses, "armor-break");
         physBreakStacks = 0;
         crushedAny = true;
@@ -739,14 +748,16 @@ function playCardOnState(current: RunState, uid: string, targetEnemyId?: string)
   const revival = reviveEnemies(damaged);
   revival.notes.forEach((n) => noteSet.add(n));
   const after = revival.enemies;
-  // 처형: 불균형 돌파 시 에너지 회복. energy-surge 재능 +1, breakEnergy 세트 +1.
+  // 처형: 불균형 돌파 시 에너지 회복. energy-surge 재능 +1(정예화 2차 시 +2), breakEnergy 세트 +1.
   const surge = hasPassive(actor, "energy-surge");
   const gearSurge = hasBreakEnergySet(actor);
-  const breakEnergy = brokeAny ? 1 + (surge ? 1 : 0) + (gearSurge ? 1 : 0) : 0;
+  const breakEnergy = brokeAny ? 1 + (surge ? 1 + (elite >= 2 ? 1 : 0) : 0) + (gearSurge ? 1 : 0) : 0;
   const energyBonus = breakEnergy;
   if (reflectDmg > 0) noteSet.add(`반사 -${reflectDmg}`);
   if (brokeAny) noteSet.add(`처형 — 에너지 +${breakEnergy}`);
-  const pe = passivePlayEffect(actor, kind); // 재능: support-heal / guardian-shield
+  const peRaw = passivePlayEffect(actor, kind); // 재능: support-heal / guardian-shield
+  // 정예화 컨셉(서포터): 재능 회복·보호막 +20%/단계
+  const pe = { heal: Math.round(peRaw.heal * (1 + 0.2 * elite)), shield: Math.round(peRaw.shield * (1 + 0.2 * elite)) };
   if (pe.heal > 0) noteSet.add(`재능 회복 +${pe.heal}`);
   if (pe.shield > 0) noteSet.add(`재능 보호막 +${pe.shield}`);
   // 연타: 소모 시 0, 부여 오퍼(아케쿠리 등)가 스킬 사용 시 +1 (다음 배틀/궁극에 적용)
@@ -899,7 +910,11 @@ function endTurnOnState(current: RunState): RunState {
 export function useRunState(): RunState & RunActions {
   const [state, setState] = useState<RunState>(initialState);
   const startRun = useCallback(() => setState(initialState()), []);
-  const confirmDeployment = useCallback((operatorIds: string[]) => setState((current) => ({ ...current, party: freshParty(operatorIds), screen: "map", availableNodes: current.availableNodes.length > 0 ? current.availableNodes : getFactionStart(current.factionIndex) })), []);
+  const confirmDeployment = useCallback((operatorIds: string[]) => setState((current) => {
+    const party = freshParty(operatorIds);
+    const sd = startingDeck(0, party); // 시작 덱을 선택한 파티의 기본 카드(기본공격+방어)로 재구성
+    return { ...current, party, deck: sd.deck, deckSeq: sd.seq, screen: "map", availableNodes: current.availableNodes.length > 0 ? current.availableNodes : getFactionStart(current.factionIndex) };
+  }), []);
   const abandonRun = useCallback(() => setState((current) => ({ ...current, screen: "summary", result: "abandoned" })), []);
 
   const enterNode = useCallback((nodeId: string) => {
@@ -913,7 +928,8 @@ export function useRunState(): RunState & RunActions {
       }
       if (node.type === "shop") {
         const seed = current.visitedNodes.length + current.battlesWon + 5;
-        return { ...base, screen: "shop", pendingGearSlugs: chooseGearRewards(current.battlesWon + 1, 4, node.rewardTier ?? "mid"), shopRelics: pickRelics(current.relics, 2, seed), shopPotions: pickPotions(2, seed) };
+        // 정비소: 상점 구매 + 1회 무료 휴식/강화(repairUsed 리셋)
+        return { ...base, screen: "shop", repairUsed: false, pendingGearSlugs: chooseGearRewards(current.battlesWon + 1, 4, node.rewardTier ?? "mid"), shopRelics: pickRelics(current.relics, 2, seed), shopPotions: pickPotions(2, seed) };
       }
       if (node.type === "camp") return { ...base, screen: "camp" };
       const fx = getRelicEffects(current.relics);
@@ -967,16 +983,6 @@ export function useRunState(): RunState & RunActions {
     setState((current) => (current.screen === "reward" ? { ...current, pendingCardOffers: [] } : current));
   }, []);
 
-  // 카드 리롤: 크레딧을 내고 습득 후보 3장을 다시 뽑는다. 리롤할수록 비싸짐.
-  const rerollCardOffers = useCallback(() => {
-    setState((current) => {
-      if (current.screen !== "reward" || current.pendingCardOffers.length === 0) return current;
-      const cost = REROLL_BASE + current.cardRerolls * REROLL_STEP;
-      if (current.credits < cost) return current;
-      const seed = current.battlesWon * 17 + current.visitedNodes.length + (current.cardRerolls + 1) * 101;
-      return { ...current, credits: current.credits - cost, cardRerolls: current.cardRerolls + 1, pendingCardOffers: cardRewardPool(current.party, current.factionIndex, seed) };
-    });
-  }, []);
 
   // 상점 구매: 크레딧을 차감하고 장착(기존 장비는 판매 환급). 화면을 떠나지 않아 여러 번 구매 가능.
   const buyGear = useCallback((gearSlug: string, operatorId: string) => {
@@ -999,11 +1005,23 @@ export function useRunState(): RunState & RunActions {
     });
   }, []);
 
-  // 상점 정비: 크레딧으로 파티 회복 1회(상점에 머무름).
-  const buyHeal = useCallback(() => {
+
+  // 정비소 1회 무료 휴식(회복) — 휴식/강화 중 하나만 가능
+  const repairRest = useCallback(() => {
     setState((current) => {
-      if (current.screen !== "shop" || current.credits < SHOP_HEAL_COST) return current;
-      return { ...current, credits: current.credits - SHOP_HEAL_COST, party: healParty(current.party, SHOP_HEAL_AMOUNT) };
+      if (current.screen !== "shop" || current.repairUsed) return current;
+      return { ...current, party: healParty(current.party, 28), repairUsed: true };
+    });
+  }, []);
+  // 정비소 1회 무료 강화(카드 정예화) — 휴식/강화 중 하나만 가능
+  const repairUpgrade = useCallback((uid: string) => {
+    setState((current) => {
+      if (current.screen !== "shop" || current.repairUsed) return current;
+      const entry = current.deck.find((d) => d.uid === uid);
+      const lv = entry?.eliteLevel ?? 0;
+      if (!entry || lv >= MAX_ELITE) return current;
+      const next = (lv + 1) as 1 | 2;
+      return { ...current, deck: current.deck.map((d) => (d.uid === uid ? { ...d, eliteLevel: next } : d)), repairUsed: true };
     });
   }, []);
 
@@ -1095,18 +1113,38 @@ export function useRunState(): RunState & RunActions {
     });
   }, []);
 
-  // 캠프 카드 강화(위력 +30%). 이미 강화된 카드는 불가.
+  // 캠프 카드 정예화. 이미 2차면 불가.
   const upgradeCard = useCallback((uid: string) => {
     setState((current) => {
       if (current.screen !== "camp") return current;
       const entry = current.deck.find((d) => d.uid === uid);
-      if (!entry || entry.upgraded) return current;
-      return { ...current, deck: current.deck.map((d) => (d.uid === uid ? { ...d, upgraded: true } : d)), screen: "map", availableNodes: getMapNode(current.currentNodeId ?? "").next };
+      const lv = entry?.eliteLevel ?? 0;
+      if (!entry || lv >= MAX_ELITE) return current; // 이미 2차 정예화면 불가
+      const next = (lv + 1) as 1 | 2;
+      return { ...current, deck: current.deck.map((d) => (d.uid === uid ? { ...d, eliteLevel: next } : d)), screen: "map", availableNodes: getMapNode(current.currentNodeId ?? "").next };
     });
   }, []);
 
+  // 정예 보상 정예화: 보유 토큰(pendingPromotes)만큼 카드 정예화. 다 쓰면 맵으로.
+  const promoteCard = useCallback((uid: string) => {
+    setState((current) => {
+      if (current.screen !== "promote") return current;
+      const entry = current.deck.find((d) => d.uid === uid);
+      const lv = entry?.eliteLevel ?? 0;
+      if (!entry || lv >= MAX_ELITE) return current;
+      const next = (lv + 1) as 1 | 2;
+      const left = (current.pendingPromotes ?? 1) - 1;
+      const deck = current.deck.map((d) => (d.uid === uid ? { ...d, eliteLevel: next } : d));
+      if (left > 0) return { ...current, deck, pendingPromotes: left };
+      return { ...current, deck, pendingPromotes: 0, screen: "map", availableNodes: current.currentNodeId ? getMapNode(current.currentNodeId).next : getFactionStart(current.factionIndex) };
+    });
+  }, []);
+  const skipPromote = useCallback(() => {
+    setState((current) => ({ ...current, pendingPromotes: 0, screen: "map", availableNodes: current.currentNodeId ? getMapNode(current.currentNodeId).next : getFactionStart(current.factionIndex) }));
+  }, []);
+
   const skipReward = useCallback(() => {
-    setState((current) => ({ ...current, pendingGearSlugs: [], pendingCardOffers: [], pendingRelic: undefined, shopRelics: [], shopPotions: [], screen: "map", availableNodes: current.currentNodeId ? getMapNode(current.currentNodeId).next : getFactionStart(current.factionIndex), battle: undefined, eventId: undefined, sp: current.maxSp }));
+    setState((current) => ({ ...current, pendingGearSlugs: [], pendingCardOffers: [], pendingRelic: undefined, shopRelics: [], shopPotions: [], screen: (current.pendingPromotes ?? 0) > 0 ? "promote" : "map", availableNodes: current.currentNodeId ? getMapNode(current.currentNodeId).next : getFactionStart(current.factionIndex), battle: undefined, eventId: undefined, sp: current.maxSp }));
   }, []);
 
   const resolveEvent = useCallback((choiceId: string) => {
@@ -1131,5 +1169,5 @@ export function useRunState(): RunState & RunActions {
     setState((current) => ({ ...current, screen: "map", availableNodes: current.currentNodeId ? getMapNode(current.currentNodeId).next : getFactionStart(current.factionIndex) }));
   }, []);
 
-  return { ...state, startRun, confirmDeployment, abandonRun, enterNode, playCard, endTurn, equipRewardGear, takeCardOffer, skipCardOffer, rerollCardOffers, usePotion, buyGear, buyHeal, removeCard, buyRelic, buyPotion, upgradeCard, skipReward, resolveEvent, rest, continueToMap };
+  return { ...state, startRun, confirmDeployment, abandonRun, enterNode, playCard, endTurn, equipRewardGear, takeCardOffer, skipCardOffer, usePotion, buyGear, removeCard, buyRelic, buyPotion, upgradeCard, promoteCard, skipPromote, repairRest, repairUpgrade, skipReward, resolveEvent, rest, continueToMap };
 }

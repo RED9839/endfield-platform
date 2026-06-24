@@ -12,9 +12,16 @@ export const CARD_REMOVE_STEP = 35;
 export function cardRemovalCost(removedCount: number): number {
   return CARD_REMOVE_BASE + removedCount * CARD_REMOVE_STEP;
 }
-export const MIN_DECK_SIZE = 6;
-export const UPGRADE_POWER_MULT = 1.3;
-const up = (n: number, on: boolean) => (on ? Math.ceil(n * UPGRADE_POWER_MULT) : n);
+export const MIN_DECK_SIZE = 5;
+// ===== 정예화(Elite Promotion): 카드 강화 0차(기본)/1차/2차 =====
+// 엔드필드 정예화 컨셉을 카드로. 위력 + 불균형치(콤보 엔진)를 단계별로 강화한다.
+export const MAX_ELITE = 2;
+// 정예화는 단순 딜증가가 아니라 오퍼 컨셉 강화(전투 로직에서 아키타입별 보너스). 플랫 위력은 완만하게.
+export const ELITE_POWER = [1, 1.2, 1.4]; // 단계별 위력 배수
+export const ELITE_STAGGER = [1, 1.2, 1.4]; // 단계별 불균형치 배수(빌더 컨셉)
+const upPow = (n: number, lv = 0) => Math.ceil(n * (ELITE_POWER[lv] ?? 1));
+const upStag = (n: number, lv = 0) => Math.round(n * (ELITE_STAGGER[lv] ?? 1));
+export const eliteSuffix = (lv = 0) => (lv >= 2 ? "++" : lv === 1 ? "+" : "");
 
 // ===== 기본 카드(시작 덱: 공격/방어) =====
 // 오퍼와 무관한 중립 카드. 고정 위력, 치명/패시브 없음. 약하지만 안정적 — 오퍼 스킬 습득의 발판.
@@ -23,12 +30,12 @@ export const BASIC_CARDS: Record<string, BasicDef> = {
   "basic:strike": { name: "공격", element: "physical", cost: 1, power: 12, stagger: CARD_STAGGER.attack, target: "enemy" },
   "basic:defend": { name: "방어", element: "cryo", cost: 1, power: 12, stagger: 0, effect: "shield", target: "party" },
 };
-// 시작 덱 구성(공격 5 · 방어 4)
-export const STARTING_DECK_SPECS: string[] = ["basic:strike", "basic:strike", "basic:strike", "basic:strike", "basic:strike", "basic:defend", "basic:defend", "basic:defend", "basic:defend"];
+// 시작 덱(공격 4 · 방어 2 = 6장). 4명 파티 드래프트로 덱이 커지므로 시작은 슬림하게 → 덱 순환·핵심 카드 빈도↑
+export const STARTING_DECK_SPECS: string[] = ["basic:strike", "basic:strike", "basic:strike", "basic:strike", "basic:defend", "basic:defend"];
 
-export function makeBasicCard(ref: string, uid: string, upgraded = false): Card {
+export function makeBasicCard(ref: string, uid: string, elite = 0): Card {
   const def = BASIC_CARDS[ref];
-  const power = up(def.power, upgraded);
+  const power = upPow(def.power, elite);
   return {
     uid,
     operatorId: "basic",
@@ -37,23 +44,24 @@ export function makeBasicCard(ref: string, uid: string, upgraded = false): Card 
     kind: "attack",
     cost: def.cost,
     power,
-    stagger: def.stagger,
-    name: upgraded ? `${def.name}+` : def.name,
+    stagger: upStag(def.stagger, elite),
+    name: `${def.name}${eliteSuffix(elite)}`,
     icon: "",
     description: "기본 카드",
     effectLine: def.effect === "shield" ? `파티 보호막 +${power}` : `${power} 피해`,
     target: def.target,
     effect: def.effect,
     tactical: true,
+    eliteLevel: elite,
   };
 }
 
 // ===== 오퍼레이터 스킬 카드(습득) =====
-export function makeCard(op: PartyMember, kind: SkillKind, uid: string, upgraded = false): Card {
+export function makeCard(op: PartyMember, kind: SkillKind, uid: string, elite = 0): Card {
   const basePower = kind === "attack" ? op.attack : kind === "battle-skill" ? op.battleSkillPower : kind === "link-skill" ? op.linkSkillPower : op.ultimatePower;
-  const power = up(basePower, upgraded);
+  const power = upPow(basePower, elite);
   const rawName = kind === "attack" ? op.normalAttackName : kind === "battle-skill" ? op.battleSkillName : kind === "link-skill" ? op.linkSkillName : op.ultimateName;
-  const name = upgraded ? `${rawName}+` : rawName;
+  const name = `${rawName}${eliteSuffix(elite)}`;
   const icon = kind === "attack" ? op.normalAttackIcon : kind === "battle-skill" ? op.battleSkillIcon : kind === "link-skill" ? op.linkSkillIcon : op.ultimateIcon;
   const description = kind === "attack" ? op.normalAttackDescription : kind === "battle-skill" ? op.battleSkillDescription : kind === "link-skill" ? op.linkSkillDescription : op.ultimateDescription;
   // 광역 판정(오퍼 컨셉): 궁극=기본 광역(ultSingle 예외) · 배틀/연계=플래그 또는 전기 연계
@@ -72,7 +80,7 @@ export function makeCard(op: PartyMember, kind: SkillKind, uid: string, upgraded
           : kind === "battle-skill"
             ? `${power} · 불균형 누적${op.physBreak === "build" ? " · 취약+" : op.physBreak === "consume" ? " · 분쇄" : ""}`
             : `${power} 피해`;
-  return { uid, operatorId: op.id, operatorName: op.name, element: op.element, kind, cost: CARD_COST[kind], power, stagger: effect ? 0 : CARD_STAGGER[kind], name, icon, description, effectLine, target: aoe ? "all-enemies" : effect ? "party" : "enemy", effect };
+  return { uid, operatorId: op.id, operatorName: op.name, element: op.element, kind, cost: CARD_COST[kind], power, stagger: effect ? 0 : upStag(CARD_STAGGER[kind], elite), name, icon, description, effectLine, target: aoe ? "all-enemies" : effect ? "party" : "enemy", effect, eliteLevel: elite };
 }
 
 // ===== 전술 카드(습득) =====
@@ -119,9 +127,9 @@ export const TACTICAL_CARDS: Record<string, TacticalDef> = {
   "tac-f4-step": { id: "tac-f4-step", name: "운보", element: "physical", cost: 1, power: 0, effect: "delay", target: "party", description: "구름 위를 걷듯 적의 진격을 흘려보낸다.", effectLine: "모든 적 행동 지연", faction: 4, rarity: "normal" },
 };
 
-export function makeTacticalCard(id: string, uid: string, upgraded = false): Card {
+export function makeTacticalCard(id: string, uid: string, elite = 0): Card {
   const def = TACTICAL_CARDS[id];
-  const power = def.effect ? def.power : up(def.power, upgraded);
+  const power = def.effect ? def.power : upPow(def.power, elite);
   return {
     uid,
     operatorId: "tactical",
@@ -130,8 +138,9 @@ export function makeTacticalCard(id: string, uid: string, upgraded = false): Car
     kind: "battle-skill",
     cost: def.cost,
     power,
-    stagger: def.effect ? 0 : TACTICAL_STAGGER,
-    name: upgraded && !def.effect ? `${def.name}+` : def.name,
+    stagger: def.effect ? 0 : upStag(TACTICAL_STAGGER, elite),
+    name: !def.effect ? `${def.name}${eliteSuffix(elite)}` : def.name,
+    eliteLevel: elite,
     icon: "",
     description: def.description,
     effectLine: def.effectLine,
@@ -152,11 +161,11 @@ const CLASS_UTIL: Record<OperatorClass, UtilDef> = {
   "스트라이커": { name: "예열", effect: "buff", cost: 1, target: "party", line: "이번 전투 카드 피해 +15%", power: 15 },
   "가드": { name: "처형격", cost: 1, target: "enemy", line: "강타 · 불균형 특효", power: 0 },
 };
-export function makeOperatorUtilCard(op: PartyMember, uid: string, upgraded = false): Card {
+export function makeOperatorUtilCard(op: PartyMember, uid: string, elite = 0): Card {
   const u = CLASS_UTIL[op.className];
   const base = op.className === "가드" ? op.attack * 2 : u.power; // 가드 처형격은 공격 비례 강타
-  const power = up(base, upgraded);
-  const stagger = u.effect && u.effect !== "setup" ? 0 : CARD_STAGGER["battle-skill"];
+  const power = upPow(base, elite);
+  const stagger = u.effect && u.effect !== "setup" ? 0 : upStag(CARD_STAGGER["battle-skill"], elite);
   return {
     uid,
     operatorId: op.id,
@@ -166,12 +175,13 @@ export function makeOperatorUtilCard(op: PartyMember, uid: string, upgraded = fa
     cost: u.cost,
     power,
     stagger,
-    name: upgraded ? `${u.name}+` : u.name,
+    name: `${u.name}${eliteSuffix(elite)}`,
     icon: "",
     description: "직군 유틸 카드",
     effectLine: u.line,
     target: u.target,
     effect: u.effect,
+    eliteLevel: elite,
   };
 }
 
@@ -193,13 +203,13 @@ export function deckCardFromToken(token: string, uid: string): DeckCard {
 
 // DeckCard → 실제 Card. battle=true면 전투 불능 오퍼의 스킬 카드는 제외.
 export function cardFromDeck(dc: DeckCard, party: PartyMember[], battle: boolean): Card | null {
-  if (dc.src === "basic") return makeBasicCard(dc.ref, dc.uid, dc.upgraded);
-  if (dc.src === "tactical") return TACTICAL_CARDS[dc.ref] ? makeTacticalCard(dc.ref, dc.uid, dc.upgraded) : null;
+  if (dc.src === "basic") return makeBasicCard(dc.ref, dc.uid, dc.eliteLevel);
+  if (dc.src === "tactical") return TACTICAL_CARDS[dc.ref] ? makeTacticalCard(dc.ref, dc.uid, dc.eliteLevel) : null;
   const op = party.find((m) => m.id === dc.ref);
   if (!op || !dc.kind) return null;
   if (battle && op.hp <= 0) return null;
-  if (dc.kind === "util") return makeOperatorUtilCard(op, dc.uid, dc.upgraded);
-  return makeCard(op, dc.kind, dc.uid, dc.upgraded);
+  if (dc.kind === "util") return makeOperatorUtilCard(op, dc.uid, dc.eliteLevel);
+  return makeCard(op, dc.kind, dc.uid, dc.eliteLevel);
 }
 
 export function buildDeck(party: PartyMember[], deck: DeckCard[], opts?: { battle?: boolean }): Card[] {
@@ -212,10 +222,14 @@ export function previewCardFromToken(token: string, party: PartyMember[]): Card 
   return cardFromDeck({ ...deckCardFromToken(token, `preview-${token}`) }, party, false);
 }
 
-// 시작 덱 생성. seqStart부터 uid 발급.
-export function startingDeck(seqStart: number): { deck: DeckCard[]; seq: number } {
-  const deck = STARTING_DECK_SPECS.map((spec, i) => deckCardFromToken(spec, `c${seqStart + i}`));
-  return { deck, seq: seqStart + STARTING_DECK_SPECS.length };
+// 시작 덱: 파티 각 오퍼의 기본 카드(오퍼 기본공격 1 + 방어 1). 4명 → 8장.
+// 덱이 파티 정체성을 가지며, 슬림해서 덱 순환·핵심 카드 빈도가 높다.
+export function startingDeck(seqStart: number, party: { id: string }[] = []): { deck: DeckCard[]; seq: number } {
+  const specs: string[] = party.length > 0
+    ? party.flatMap((op) => [`op:${op.id}:attack`, "basic:defend"])
+    : STARTING_DECK_SPECS;
+  const deck = specs.map((spec, i) => deckCardFromToken(spec, `c${seqStart + i}`));
+  return { deck, seq: seqStart + specs.length };
 }
 
 // 카드 등급: 오퍼 스킬은 종류 기반(기본=노멀, 배틀/연계=레어, 궁극=에픽), 전술은 정의값.
@@ -230,8 +244,16 @@ export function cardRarity(token: string): CardRarity {
 
 // 카제나식 세력 드래프트: 이번 런 세력 풀(파티 오퍼 스킬 + 중립·해당 세력 전술)에서
 // 등급 가중 추첨으로 서로 다른 3장 제시. 에픽일수록 드물게.
-export function cardRewardPool(party: PartyMember[], factionIndex: number, seed: number): string[] {
-  const kinds: SkillKind[] = ["attack", "battle-skill", "link-skill", "ultimate"];
+// 카제나식 카드 획득:
+//  · 흐릿한 기억(일반 전투, vivid=false): 등급 가중 랜덤 3장 드래프트.
+//  · 선명한 기억(정예/보스, vivid=true): 파티 오퍼의 모든 스킬(배틀/연계/궁극/유틸)을 펼쳐 확정 선택.
+export function cardRewardPool(party: PartyMember[], factionIndex: number, seed: number, vivid = false): string[] {
+  const kinds: SkillKind[] = ["battle-skill", "link-skill", "ultimate"];
+  if (vivid) {
+    // 선명한 기억: 파티 오퍼 고유 스킬 전체를 확정 선택지로 제시(랜덤 X).
+    return party.flatMap((op) => [...kinds.map((k) => `op:${op.id}:${k}`), `op:${op.id}:util`]);
+  }
+  // 오퍼 기본공격 카드는 제외(기본 스트라이크와 중복) → 덱이 임팩트 있는 스킬 위주로 슬림하게 유지.
   const tokens: string[] = [];
   party.forEach((op) => {
     kinds.forEach((k) => tokens.push(`op:${op.id}:${k}`));
