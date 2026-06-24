@@ -28,9 +28,11 @@ function newFaction(e) {
 
 // ===== 2) 티어 기준 스탯 + 세력 아키타입 =====
 const TIER = {
-  Common:   { hp: 38,  atk: 9,  def: 30, stag: 42 },
-  Normal:   { hp: 55,  atk: 12, def: 40, stag: 60 },
-  Enhanced: { hp: 85,  atk: 16, def: 52, stag: 95 },
+  // 초반(외곽 F1-7) 티어: 시작 덱(기본 위력 12)으로도 손맛 나도록 HP·DEF·ATK 완화
+  Common:   { hp: 30,  atk: 7,  def: 16, stag: 36 },
+  Normal:   { hp: 44,  atk: 10, def: 24, stag: 50 },
+  Enhanced: { hp: 74,  atk: 14, def: 40, stag: 86 },
+  // 중반(중심부) 이후는 기존 밸런스 유지
   Advanced: { hp: 120, atk: 20, def: 62, stag: 135 },
   Alpha:    { hp: 160, atk: 24, def: 72, stag: 175 },
   Elite:    { hp: 240, atk: 30, def: 80, stag: 270 },

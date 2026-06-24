@@ -5,13 +5,13 @@ export const enemies: Enemy[] = [
     "id": "acid-originium-slug-alpha",
     "name": "산성원석충 · α",
     "image": "/enemies/acid-originium-slug-alpha.webp",
-    "maxHp": 59,
-    "attack": 11,
-    "defense": 47,
+    "maxHp": 48,
+    "attack": 9,
+    "defense": 28,
     "speed": 92,
     "range": 6,
     "weight": 1,
-    "staggerHp": 65,
+    "staggerHp": 54,
     "intent": "야생의 감염된 생물, 일반적인 산성원석충보다 더 위협적입니다. 등에 짊어진 오리지늄 클러스터가 활성화될수록 공격성이 더 강해집니다.",
     "faction": "광석수",
     "tier": "Normal",
@@ -22,20 +22,21 @@ export const enemies: Enemy[] = [
       "acid",
       "armored",
       "ranged",
-      "charge"
+      "charge",
+      "enrage"
     ]
   },
   {
     "id": "acid-originium-slug",
     "name": "산성원석충",
     "image": "/enemies/acid-originium-slug.webp",
-    "maxHp": 58,
-    "attack": 12,
-    "defense": 47,
+    "maxHp": 47,
+    "attack": 10,
+    "defense": 28,
     "speed": 89,
     "range": 6,
     "weight": 1,
-    "staggerHp": 64,
+    "staggerHp": 53,
     "intent": "야생의 감염된 생물, 산성 물질을 분비할 수 있습니다. 위협받으면 몸을 격렬하게 흔들어, 등에 짊어지고 있던 오리지늄 클러스터를 날려 적을 위협합니다.",
     "faction": "광석수",
     "tier": "Normal",
@@ -47,20 +48,21 @@ export const enemies: Enemy[] = [
       "acid",
       "armored",
       "ranged",
-      "charge"
+      "charge",
+      "enrage"
     ]
   },
   {
     "id": "aethillu",
     "name": "잔영",
     "image": "/enemies/aethillu.webp",
-    "maxHp": 57,
-    "attack": 11,
-    "defense": 47,
+    "maxHp": 45,
+    "attack": 9,
+    "defense": 28,
     "speed": 89,
     "range": 7,
     "weight": 1,
-    "staggerHp": 62,
+    "staggerHp": 51,
     "intent": "아다시르가 소환한 환영, 한때 파멸의 상징이었으며 오래전에 퇴적된 잔재입니다.",
     "faction": "광석수",
     "tier": "Normal",
@@ -72,7 +74,8 @@ export const enemies: Enemy[] = [
       "revive",
       "self-destruct",
       "summoner",
-      "armored"
+      "armored",
+      "acid"
     ]
   },
   {
@@ -99,7 +102,9 @@ export const enemies: Enemy[] = [
       "charge",
       "ranged",
       "acid",
-      "enrage"
+      "enrage",
+      "rockfall",
+      "poison"
     ],
     "elite": true
   },
@@ -128,7 +133,8 @@ export const enemies: Enemy[] = [
       "enrage",
       "ranged",
       "acid",
-      "rockfall"
+      "rockfall",
+      "poison"
     ],
     "elite": true
   },
@@ -136,13 +142,13 @@ export const enemies: Enemy[] = [
     "id": "blazemist-originium-slug",
     "name": "용암원석충",
     "image": "/enemies/blazemist-originium-slug.webp",
-    "maxHp": 54,
-    "attack": 12,
-    "defense": 47,
+    "maxHp": 43,
+    "attack": 10,
+    "defense": 28,
     "speed": 92,
     "range": 6,
     "weight": 1,
-    "staggerHp": 59,
+    "staggerHp": 49,
     "intent": "야생의 감염된 생물, 체온이 매우 높고 갑각에 포함된 오리지늄 분진의 활성이 더욱 강합니다. 이 살아있는 용암 덩어리에는 절대 가까이 다가가지 않는 것을 강력히...",
     "faction": "광석수",
     "tier": "Normal",
@@ -153,20 +159,21 @@ export const enemies: Enemy[] = [
       "flame",
       "ranged",
       "self-destruct",
-      "armored"
+      "armored",
+      "acid"
     ]
   },
   {
     "id": "bonekrusher-ambusher",
     "name": "본 크러셔 저격수",
     "image": "/enemies/bonekrusher-ambusher.webp",
-    "maxHp": 49,
-    "attack": 15,
-    "defense": 34,
+    "maxHp": 39,
+    "attack": 12,
+    "defense": 20,
     "speed": 97,
     "range": 7,
     "weight": 1,
-    "staggerHp": 53,
+    "staggerHp": 44,
     "intent": "기초적인 원거리 무기를 장비한 무장 랜드브레이커, 기초적인 사격 훈련만 받았기 때문에 잘 명중시키질 못합니다. 하지만 그래도 여전히 많은 사람이 사수들의 화살에...",
     "faction": "본크러셔",
     "tier": "Normal",
@@ -176,20 +183,21 @@ export const enemies: Enemy[] = [
     "mechanics": [
       "armored",
       "ranged",
-      "flame"
+      "flame",
+      "charge"
     ]
   },
   {
     "id": "bonekrusher-arsonist",
     "name": "본 크러셔 집행자",
     "image": "/enemies/bonekrusher-arsonist.webp",
-    "maxHp": 84,
-    "attack": 20,
-    "defense": 44,
+    "maxHp": 73,
+    "attack": 17,
+    "defense": 34,
     "speed": 97,
     "range": 7,
     "weight": 1.5,
-    "staggerHp": 94,
+    "staggerHp": 85,
     "intent": "화염방사기를 장비한 무장 랜드브레이커, 조악하지만 정교하게 제작된 소각 장비를 사용하며 단단한 엄폐물과 완강한 저항 세력을 쓸어버립니다.",
     "faction": "본크러셔",
     "tier": "Enhanced",
@@ -202,7 +210,8 @@ export const enemies: Enemy[] = [
       "evasive",
       "flame",
       "ranged",
-      "charge"
+      "charge",
+      "enrage"
     ]
   },
   {
@@ -230,7 +239,9 @@ export const enemies: Enemy[] = [
       "self-destruct",
       "sniper",
       "flame",
-      "charge"
+      "charge",
+      "enrage",
+      "smoke"
     ],
     "elite": true
   },
@@ -257,7 +268,9 @@ export const enemies: Enemy[] = [
       "evasive",
       "grab",
       "flame",
-      "enrage"
+      "enrage",
+      "smoke",
+      "sniper"
     ],
     "elite": true
   },
@@ -265,13 +278,13 @@ export const enemies: Enemy[] = [
     "id": "bonekrusher-infiltrator",
     "name": "본 크러셔 침투자",
     "image": "/enemies/bonekrusher-infiltrator.webp",
-    "maxHp": 50,
-    "attack": 15,
-    "defense": 34,
+    "maxHp": 40,
+    "attack": 12,
+    "defense": 20,
     "speed": 97,
     "range": 2.3,
     "weight": 1,
-    "staggerHp": 55,
+    "staggerHp": 46,
     "intent": "쌍수 근거리 무기를 장비한 무장 랜드브레이커, 쌍수를 이용한 전투에 상당히 능숙합니다. 행동이 민첩한 건 물론, 근거리 전투가 특기이므로 신중하게 대응해야 합니다.",
     "faction": "본크러셔",
     "tier": "Normal",
@@ -282,20 +295,21 @@ export const enemies: Enemy[] = [
     "mechanics": [
       "armored",
       "evasive",
-      "flame"
+      "flame",
+      "charge"
     ]
   },
   {
     "id": "bonekrusher-pyromancer",
     "name": "본 크러셔 염술사",
     "image": "/enemies/bonekrusher-pyromancer.webp",
-    "maxHp": 85,
-    "attack": 19,
-    "defense": 44,
+    "maxHp": 74,
+    "attack": 17,
+    "defense": 34,
     "speed": 92,
     "range": 7,
     "weight": 1.5,
-    "staggerHp": 95,
+    "staggerHp": 86,
     "intent": "오리지늄 아츠를 다루는 무장 랜드브레이커, 에너지 전환계 오리지늄 아츠를 다룹니다. 전장에서 맹렬한 불길을 퍼뜨리는 존재로 상당히 위협적인 존재입니다.",
     "faction": "본크러셔",
     "tier": "Enhanced",
@@ -309,20 +323,21 @@ export const enemies: Enemy[] = [
       "evasive",
       "flame",
       "ranged",
-      "charge"
+      "charge",
+      "enrage"
     ]
   },
   {
     "id": "bonekrusher-raider",
     "name": "본 크러셔 약탈자",
     "image": "/enemies/bonekrusher-raider.webp",
-    "maxHp": 56,
-    "attack": 15,
-    "defense": 34,
+    "maxHp": 45,
+    "attack": 12,
+    "defense": 20,
     "speed": 97,
     "range": 2.3,
     "weight": 1,
-    "staggerHp": 61,
+    "staggerHp": 51,
     "intent": "기초적인 근거리 무기를 장비한 무장 랜드브레이커, 랜드브레이커 집단을 구성하는 대다수의 랜드브레이커입니다. 조악한 장비를 들고 있긴 하지만, 종종 떼를 지어 나...",
     "faction": "본크러셔",
     "tier": "Normal",
@@ -331,20 +346,21 @@ export const enemies: Enemy[] = [
     ],
     "mechanics": [
       "armored",
-      "flame"
+      "flame",
+      "charge"
     ]
   },
   {
     "id": "bonekrusher-ripptusk",
     "name": "본 크러셔 립터스크",
     "image": "/enemies/bonekrusher-ripptusk.webp",
-    "maxHp": 53,
-    "attack": 14,
-    "defense": 34,
+    "maxHp": 43,
+    "attack": 12,
+    "defense": 20,
     "speed": 91,
     "range": 2.1,
     "weight": 1,
-    "staggerHp": 58,
+    "staggerHp": 48,
     "intent": "무장 랜드브레이커가 조종하는 소형 워비스트, 야생의 터스크비스트보다 훨씬 더 사납고 포악합니다. 주인에게 절대적으로 충성하는 것이 특징입니다.",
     "faction": "본크러셔",
     "tier": "Normal",
@@ -354,7 +370,8 @@ export const enemies: Enemy[] = [
     "mechanics": [
       "armored",
       "evasive",
-      "flame"
+      "flame",
+      "charge"
     ]
   },
   {
@@ -381,7 +398,9 @@ export const enemies: Enemy[] = [
       "ranged",
       "self-destruct",
       "flame",
-      "charge"
+      "charge",
+      "enrage",
+      "smoke"
     ],
     "elite": true
   },
@@ -389,13 +408,13 @@ export const enemies: Enemy[] = [
     "id": "bonekrusher-vanguard",
     "name": "본 크러셔 돌격수",
     "image": "/enemies/bonekrusher-vanguard.webp",
-    "maxHp": 49,
-    "attack": 15,
-    "defense": 34,
+    "maxHp": 39,
+    "attack": 12,
+    "defense": 20,
     "speed": 91,
     "range": 6,
     "weight": 1,
-    "staggerHp": 54,
+    "staggerHp": 45,
     "intent": "창과 방패를 장착한 무장 랜드브레이커, 조잡하게 이어 붙인 장비 덕분에 본 크러셔 돌격수가 공격과 방어를 겸비한 전투 기술을 익히게 되었으니 주의해서 상대해야 ...",
     "faction": "본크러셔",
     "tier": "Normal",
@@ -408,7 +427,8 @@ export const enemies: Enemy[] = [
       "flame",
       "ranged",
       "shield",
-      "charge"
+      "charge",
+      "enrage"
     ]
   },
   {
@@ -433,7 +453,9 @@ export const enemies: Enemy[] = [
       "flame",
       "smoke",
       "evasive",
-      "charge"
+      "charge",
+      "grab",
+      "bind"
     ],
     "elite": true
   },
@@ -441,13 +463,13 @@ export const enemies: Enemy[] = [
     "id": "brutal-pincerbeast",
     "name": "브루탈 핀서비스트",
     "image": "/enemies/brutal-pincerbeast.webp",
-    "maxHp": 59,
-    "attack": 11,
-    "defense": 47,
+    "maxHp": 47,
+    "attack": 9,
+    "defense": 28,
     "speed": 88,
     "range": 6,
     "weight": 1,
-    "staggerHp": 64,
+    "staggerHp": 54,
     "intent": "야생의 감염된 생물, 등에 대량의 오리지늄 클러스터를 짊어지고 있으며 체구가 거대합니다. 갑각이 일반 개체보다 두껍고, 등에 짊어진 오리지늄 클러스터의 활성이 ...",
     "faction": "광석수",
     "tier": "Normal",
@@ -457,7 +479,8 @@ export const enemies: Enemy[] = [
     "mechanics": [
       "boss-shield",
       "ranged",
-      "armored"
+      "armored",
+      "acid"
     ]
   },
   {
@@ -486,7 +509,9 @@ export const enemies: Enemy[] = [
       "ranged",
       "sniper",
       "evasive",
-      "charge"
+      "charge",
+      "grab",
+      "bind"
     ],
     "elite": true
   },
@@ -494,13 +519,13 @@ export const enemies: Enemy[] = [
     "id": "cloud-stalker",
     "name": "겁운객",
     "image": "/enemies/cloud-stalker.webp",
-    "maxHp": 80,
-    "attack": 18,
-    "defense": 42,
+    "maxHp": 69,
+    "attack": 16,
+    "defense": 32,
     "speed": 97,
     "range": 2.3,
     "weight": 1,
-    "staggerHp": 89,
+    "staggerHp": 80,
     "intent": "기이한 무기를 장착한 불법 무장 세력. 겁운객의 무기는 등롱처럼 생겼지만, 겉보기와는 달리 열 발짝 떨어진 거리에서도 상대를 죽일 수 있으니 절대로 방심해서는 ...",
     "faction": "청파채",
     "tier": "Enhanced",
@@ -516,7 +541,8 @@ export const enemies: Enemy[] = [
       "flame",
       "healer",
       "smoke",
-      "charge"
+      "charge",
+      "grab"
     ]
   },
   {
@@ -544,7 +570,8 @@ export const enemies: Enemy[] = [
       "rockfall",
       "armored",
       "acid",
-      "charge"
+      "charge",
+      "poison"
     ],
     "elite": true,
     "boss": true
@@ -573,7 +600,8 @@ export const enemies: Enemy[] = [
       "ranged",
       "sniper",
       "armored",
-      "shield"
+      "shield",
+      "reflect"
     ],
     "elite": true
   },
@@ -581,13 +609,13 @@ export const enemies: Enemy[] = [
     "id": "elite-ambusher",
     "name": "저격수 · 정예",
     "image": "/enemies/elite-ambusher.webp",
-    "maxHp": 50,
-    "attack": 14,
-    "defense": 34,
+    "maxHp": 40,
+    "attack": 12,
+    "defense": 20,
     "speed": 94,
     "range": 7,
     "weight": 1,
-    "staggerHp": 54,
+    "staggerHp": 45,
     "intent": "안갯불의 강화를 받은, 원거리 무기를 장착한 정예 무장 랜드브레이커, 훈련이 잘되어 있고, 높은 명중률을 자랑하며, 사용하는 화살이 전반적으로 강화되었습니다.",
     "faction": "본크러셔",
     "tier": "Normal",
@@ -598,7 +626,8 @@ export const enemies: Enemy[] = [
       "armored",
       "flame",
       "ranged",
-      "charge"
+      "charge",
+      "enrage"
     ]
   },
   {
@@ -625,7 +654,9 @@ export const enemies: Enemy[] = [
       "flame",
       "grab",
       "enrage",
-      "smoke"
+      "smoke",
+      "sniper",
+      "self-destruct"
     ],
     "elite": true
   },
@@ -633,13 +664,13 @@ export const enemies: Enemy[] = [
     "id": "elite-raider",
     "name": "약탈자 · 정예",
     "image": "/enemies/elite-raider.webp",
-    "maxHp": 48,
-    "attack": 14,
-    "defense": 34,
+    "maxHp": 38,
+    "attack": 12,
+    "defense": 20,
     "speed": 94,
     "range": 2.3,
     "weight": 1,
-    "staggerHp": 52,
+    "staggerHp": 44,
     "intent": "안갯불의 강화를 받은, 근거리 무기를 장착한 정예 무장 랜드브레이커, 장비, 신체 능력, 그리고 근접 전투 기술이 전반적으로 강화되었습니다.",
     "faction": "본크러셔",
     "tier": "Normal",
@@ -649,20 +680,21 @@ export const enemies: Enemy[] = [
     "mechanics": [
       "armored",
       "flame",
-      "charge"
+      "charge",
+      "enrage"
     ]
   },
   {
     "id": "elite-ripptusk",
     "name": "립터스크 · 정예",
     "image": "/enemies/elite-ripptusk.webp",
-    "maxHp": 54,
-    "attack": 15,
-    "defense": 34,
+    "maxHp": 43,
+    "attack": 13,
+    "defense": 20,
     "speed": 95,
     "range": 2.1,
     "weight": 1,
-    "staggerHp": 59,
+    "staggerHp": 49,
     "intent": "안갯불의 강화를 받은, 무장 랜드브레이커가 조종하는 정예 워비스트, 일반적인 터스크비스트보다 더 잔인하고 교활하며, 행동이 기이하여 예측하기 어렵습니다.",
     "faction": "본크러셔",
     "tier": "Normal",
@@ -673,20 +705,21 @@ export const enemies: Enemy[] = [
       "armored",
       "evasive",
       "flame",
-      "charge"
+      "charge",
+      "enrage"
     ]
   },
   {
     "id": "falsewings-alpha",
     "name": "모방아겔로스 · α",
     "image": "/enemies/falsewings-alpha.webp",
-    "maxHp": 42,
-    "attack": 9,
-    "defense": 37,
+    "maxHp": 33,
+    "attack": 7,
+    "defense": 20,
     "speed": 83,
     "range": 6,
     "weight": 1,
-    "staggerHp": 46,
+    "staggerHp": 40,
     "intent": "'소스 탈론 · 아나본'(보관 번호: ARA07Cα), ARA07C의 활성 모델 생물류입니다. 일반적으로 원래 형성 모델과의 차이는 색상뿐이라고 여겨집니다.",
     "faction": "아겔로스",
     "tier": "Common",
@@ -696,20 +729,21 @@ export const enemies: Enemy[] = [
     "mechanics": [
       "ranged",
       "smoke",
-      "armored"
+      "armored",
+      "shield"
     ]
   },
   {
     "id": "falsewings",
     "name": "모방아겔로스",
     "image": "/enemies/falsewings.webp",
-    "maxHp": 41,
-    "attack": 9,
-    "defense": 37,
+    "maxHp": 32,
+    "attack": 7,
+    "defense": 20,
     "speed": 87,
     "range": 6,
     "weight": 1,
-    "staggerHp": 45,
+    "staggerHp": 39,
     "intent": "'소스 탈론'(보관 번호: ARA07C), 비행 능력은 외형과 무관합니다. 이러한 형성 모델은 처음에는 생물을 모방한 것으로 여겨졌으나, 현재는 테라인이 사용하...",
     "faction": "아겔로스",
     "tier": "Common",
@@ -719,20 +753,21 @@ export const enemies: Enemy[] = [
     "mechanics": [
       "ranged",
       "smoke",
-      "armored"
+      "armored",
+      "shield"
     ]
   },
   {
     "id": "firemist-originium-slug",
     "name": "화염원석충",
     "image": "/enemies/firemist-originium-slug.webp",
-    "maxHp": 62,
-    "attack": 11,
-    "defense": 47,
+    "maxHp": 50,
+    "attack": 9,
+    "defense": 28,
     "speed": 93,
     "range": 6,
     "weight": 1,
-    "staggerHp": 68,
+    "staggerHp": 57,
     "intent": "야생의 감염된 생물, 체온이 매우 높습니다. 빈사 상태가 되면 폭발하며, 끓어오르는 산성 체액과 활성 오리지늄 분진이 주변의 모든 것을 휩쓸어 버립니다.",
     "faction": "광석수",
     "tier": "Normal",
@@ -744,7 +779,8 @@ export const enemies: Enemy[] = [
       "flame",
       "ranged",
       "self-destruct",
-      "armored"
+      "armored",
+      "charge"
     ]
   },
   {
@@ -772,7 +808,9 @@ export const enemies: Enemy[] = [
       "flame",
       "ranged",
       "armored",
-      "acid"
+      "acid",
+      "rockfall",
+      "poison"
     ],
     "elite": true
   },
@@ -780,13 +818,13 @@ export const enemies: Enemy[] = [
     "id": "grove-archer",
     "name": "천림전",
     "image": "/enemies/grove-archer.webp",
-    "maxHp": 52,
-    "attack": 14,
-    "defense": 32,
+    "maxHp": 42,
+    "attack": 11,
+    "defense": 19,
     "speed": 99,
     "range": 7,
     "weight": 1,
-    "staggerHp": 57,
+    "staggerHp": 48,
     "intent": "기본 원거리 무기를 장착한 불법 무장 세력, 대나무 숲에서 단련한 활솜씨는 활을 쏘았을 때 숲을 관통하면서도 나뭇잎 하나 스치지 않을 정도입니다.",
     "faction": "청파채",
     "tier": "Normal",
@@ -797,7 +835,8 @@ export const enemies: Enemy[] = [
       "armored",
       "flame",
       "ranged",
-      "evasive"
+      "evasive",
+      "charge"
     ]
   },
   {
@@ -825,7 +864,9 @@ export const enemies: Enemy[] = [
       "flame",
       "ranged",
       "armored",
-      "acid"
+      "acid",
+      "rockfall",
+      "poison"
     ],
     "elite": true
   },
@@ -833,13 +874,13 @@ export const enemies: Enemy[] = [
     "id": "hazefyre-claw",
     "name": "안갯불에 물든 랜드브레이커",
     "image": "/enemies/hazefyre-claw.webp",
-    "maxHp": 50,
-    "attack": 15,
-    "defense": 34,
+    "maxHp": 40,
+    "attack": 13,
+    "defense": 20,
     "speed": 91,
     "range": 2.3,
     "weight": 1,
-    "staggerHp": 55,
+    "staggerHp": 46,
     "intent": "안갯불에 물든 무장 랜드브레이커, 안갯불을 흡수하는 게 반드시 행운인 것은 아닙니다. 이 랜드브레이커들은 심각한 왜곡을 겪었습니다.",
     "faction": "본크러셔",
     "tier": "Normal",
@@ -849,20 +890,21 @@ export const enemies: Enemy[] = [
     "mechanics": [
       "armored",
       "flame",
-      "charge"
+      "charge",
+      "enrage"
     ]
   },
   {
     "id": "hazefyre-tuskbeast",
     "name": "안갯불에 물든 터스크비스트",
     "image": "/enemies/hazefyre-tuskbeast.webp",
-    "maxHp": 54,
-    "attack": 12,
-    "defense": 47,
+    "maxHp": 43,
+    "attack": 10,
+    "defense": 28,
     "speed": 93,
     "range": 2.1,
     "weight": 1,
-    "staggerHp": 59,
+    "staggerHp": 49,
     "intent": "안갯불에 물든 터스크비스트, 이런 기괴하고 위험한 소형 생물이 무리를 지어 움직이면, 완전 무장한 특별 파견 팀에도 큰 위협이 될 수 있습니다.",
     "faction": "광석수",
     "tier": "Normal",
@@ -874,7 +916,8 @@ export const enemies: Enemy[] = [
       "armored",
       "charge",
       "flame",
-      "acid"
+      "acid",
+      "enrage"
     ]
   },
   {
@@ -893,7 +936,8 @@ export const enemies: Enemy[] = [
     "tier": "Advanced",
     "traits": [],
     "mechanics": [
-      "armored"
+      "armored",
+      "shield"
     ]
   },
   {
@@ -912,7 +956,8 @@ export const enemies: Enemy[] = [
     "tier": "Advanced",
     "traits": [],
     "mechanics": [
-      "armored"
+      "armored",
+      "shield"
     ]
   },
   {
@@ -938,7 +983,8 @@ export const enemies: Enemy[] = [
       "ranged",
       "rockfall",
       "summoner",
-      "shield"
+      "shield",
+      "reflect"
     ]
   },
   {
@@ -964,20 +1010,21 @@ export const enemies: Enemy[] = [
       "ranged",
       "rockfall",
       "summoner",
-      "shield"
+      "shield",
+      "reflect"
     ]
   },
   {
     "id": "hedron-delta",
     "name": "수정아겔로스 · δ",
     "image": "/enemies/hedron-delta.webp",
-    "maxHp": 43,
-    "attack": 9,
-    "defense": 29,
+    "maxHp": 34,
+    "attack": 7,
+    "defense": 15,
     "speed": 88,
     "range": 6,
     "weight": 1,
-    "staggerHp": 47,
+    "staggerHp": 40,
     "intent": "'다이파스타그란 · 다이네든'(보관 번호: ARM315δ), ARM315의 격류종, 햇빛 아래에서 눈부신 보랏빛 광채를 내뿜습니다. 탈로스의 반사광 아래에서는 ...",
     "faction": "침식체",
     "tier": "Common",
@@ -988,20 +1035,21 @@ export const enemies: Enemy[] = [
       "cold",
       "ranged",
       "reflect",
-      "poison"
+      "poison",
+      "healer"
     ]
   },
   {
     "id": "hedron",
     "name": "수정아겔로스",
     "image": "/enemies/hedron.webp",
-    "maxHp": 48,
-    "attack": 9,
-    "defense": 29,
+    "maxHp": 38,
+    "attack": 7,
+    "defense": 15,
     "speed": 88,
     "range": 2.1,
     "weight": 1,
-    "staggerHp": 53,
+    "staggerHp": 45,
     "intent": "'다이파스타그란'(보관 번호: ARM315), 에너지를 투척하는 액체 형성 모델, 복잡하고 대칭적인 기하학적 외형을 지녔으며, 공격하면 접촉한 면에서 열을 빼앗...",
     "faction": "침식체",
     "tier": "Common",
@@ -1011,20 +1059,21 @@ export const enemies: Enemy[] = [
     "mechanics": [
       "cold",
       "ranged",
-      "poison"
+      "poison",
+      "healer"
     ]
   },
   {
     "id": "highway-reaver",
     "name": "막석명",
     "image": "/enemies/highway-reaver.webp",
-    "maxHp": 53,
-    "attack": 13,
-    "defense": 32,
+    "maxHp": 42,
+    "attack": 11,
+    "defense": 19,
     "speed": 97,
     "range": 2.3,
     "weight": 1,
-    "staggerHp": 58,
+    "staggerHp": 48,
     "intent": "무릉 관할 지역에서 활동하는 불법 무장 세력. 불법 검문소를 설치하고 밀수품을 통해 이익을 취하며, 심지어 사람의 목숨을 위협할 때도 있습니다.",
     "faction": "청파채",
     "tier": "Normal",
@@ -1034,7 +1083,8 @@ export const enemies: Enemy[] = [
     "mechanics": [
       "armored",
       "flame",
-      "evasive"
+      "evasive",
+      "charge"
     ]
   },
   {
@@ -1063,7 +1113,9 @@ export const enemies: Enemy[] = [
       "ranged",
       "sniper",
       "evasive",
-      "charge"
+      "charge",
+      "grab",
+      "bind"
     ],
     "elite": true
   },
@@ -1071,13 +1123,13 @@ export const enemies: Enemy[] = [
     "id": "imbued-quillbeast",
     "name": "활성화된 프릭비스트",
     "image": "/enemies/imbued-quillbeast.webp",
-    "maxHp": 84,
-    "attack": 16,
-    "defense": 61,
+    "maxHp": 73,
+    "attack": 14,
+    "defense": 47,
     "speed": 90,
     "range": 6,
     "weight": 1,
-    "staggerHp": 94,
+    "staggerHp": 85,
     "intent": "활성 오리지늄 분진의 영향을 받은 프릭비스트, 온몸의 가시에 상당한 에너지를 저장하고 있으며 더 강한 파괴력을 지녔습니다.",
     "faction": "광석수",
     "tier": "Enhanced",
@@ -1090,20 +1142,21 @@ export const enemies: Enemy[] = [
       "enrage",
       "flame",
       "ranged",
-      "armored"
+      "armored",
+      "acid"
     ]
   },
   {
     "id": "indigenous-pincerbeast",
     "name": "원시 핀서비스트",
     "image": "/enemies/indigenous-pincerbeast.webp",
-    "maxHp": 60,
-    "attack": 11,
-    "defense": 47,
+    "maxHp": 48,
+    "attack": 10,
+    "defense": 28,
     "speed": 88,
     "range": 6,
     "weight": 1,
-    "staggerHp": 66,
+    "staggerHp": 55,
     "intent": "야생의 감염된 생물, 등에 대량의 오리지늄 클러스터를 짊어지고 있으며 체구가 거대합니다. 낫처럼 생긴 앞다리로 사냥감을 찢어발길 수 있습니다.",
     "faction": "광석수",
     "tier": "Normal",
@@ -1114,7 +1167,8 @@ export const enemies: Enemy[] = [
     "mechanics": [
       "boss-shield",
       "ranged",
-      "armored"
+      "armored",
+      "acid"
     ]
   },
   {
@@ -1212,13 +1266,13 @@ export const enemies: Enemy[] = [
     "id": "mudflow-delta",
     "name": "탁류아겔로스 · δ",
     "image": "/enemies/mudflow-delta.webp",
-    "maxHp": 46,
-    "attack": 9,
-    "defense": 29,
+    "maxHp": 36,
+    "attack": 7,
+    "defense": 15,
     "speed": 88,
     "range": 2.1,
     "weight": 1,
-    "staggerHp": 51,
+    "staggerHp": 43,
     "intent": "'토레이그란 · 다이네든'(보관 번호: ACM311δ), ACM311의 격류종, 에너지를 다루는 방식이 특이하여, 내부 온도가 구성 물질의 어는 점보다 낮습니다.",
     "faction": "침식체",
     "tier": "Common",
@@ -1229,20 +1283,21 @@ export const enemies: Enemy[] = [
       "cold",
       "evasive",
       "sniper",
-      "poison"
+      "poison",
+      "healer"
     ]
   },
   {
     "id": "mudflow",
     "name": "탁류아겔로스",
     "image": "/enemies/mudflow.webp",
-    "maxHp": 43,
-    "attack": 9,
-    "defense": 29,
+    "maxHp": 34,
+    "attack": 7,
+    "defense": 15,
     "speed": 88,
     "range": 2.1,
     "weight": 1,
-    "staggerHp": 48,
+    "staggerHp": 41,
     "intent": "'토레이그란'(보관 번호: ACM311), 인류가 처음 발견한 액체를 사용한 형성 모델, 헤일로의 외형이 불안정하며, 일반적으로 내부 온도가 구성 물질보다 낮습니다.",
     "faction": "침식체",
     "tier": "Common",
@@ -1255,7 +1310,8 @@ export const enemies: Enemy[] = [
       "flame",
       "self-destruct",
       "sniper",
-      "poison"
+      "poison",
+      "healer"
     ]
   },
   {
@@ -1288,7 +1344,8 @@ export const enemies: Enemy[] = [
       "summoner",
       "flame",
       "enrage",
-      "smoke"
+      "smoke",
+      "self-destruct"
     ],
     "elite": true,
     "boss": true
@@ -1334,13 +1391,13 @@ export const enemies: Enemy[] = [
     "id": "nimbus-razor",
     "name": "할운옹",
     "image": "/enemies/nimbus-razor.webp",
-    "maxHp": 83,
-    "attack": 18,
-    "defense": 42,
+    "maxHp": 72,
+    "attack": 16,
+    "defense": 32,
     "speed": 100,
     "range": 2.3,
     "weight": 1,
-    "staggerHp": 92,
+    "staggerHp": 84,
     "intent": "기이한 무기를 장착한 불법 무장 세력. 겁운객이 손에 든 기묘한 등롱으로 적을 상대하는 데 싫증이 나면, 단도를 꺼내 근접전으로 맞붙습니다.",
     "faction": "청파채",
     "tier": "Enhanced",
@@ -1351,20 +1408,21 @@ export const enemies: Enemy[] = [
     "mechanics": [
       "armored",
       "flame",
-      "evasive"
+      "evasive",
+      "charge"
     ]
   },
   {
     "id": "prism",
     "name": "굴절아겔로스",
     "image": "/enemies/prism.webp",
-    "maxHp": 48,
-    "attack": 9,
-    "defense": 29,
+    "maxHp": 38,
+    "attack": 7,
+    "defense": 15,
     "speed": 87,
     "range": 2.1,
     "weight": 1,
-    "staggerHp": 53,
+    "staggerHp": 45,
     "intent": "'프리마타그란'(보관 번호: ASM316), ARM315의 비모델 생물류입니다. 주변 아겔로스에게 보호를 제공하며, ARM315에 섞여 있을 때 조준하기 어렵습니다.",
     "faction": "침식체",
     "tier": "Common",
@@ -1373,20 +1431,21 @@ export const enemies: Enemy[] = [
     ],
     "mechanics": [
       "armored",
-      "poison"
+      "poison",
+      "cold"
     ]
   },
   {
     "id": "quillbeast",
     "name": "프릭비스트",
     "image": "/enemies/quillbeast.webp",
-    "maxHp": 88,
-    "attack": 16,
-    "defense": 61,
+    "maxHp": 77,
+    "attack": 14,
+    "defense": 47,
     "speed": 87,
     "range": 6,
     "weight": 1,
-    "staggerHp": 99,
+    "staggerHp": 89,
     "intent": "야생의 프릭비스트, 탈로스 II의 토착 동물입니다. 몸의 뾰족한 가시를 세우고 구르기 시작하면, 전기톱에 버금가는 파괴력을 지닙니다.",
     "faction": "광석수",
     "tier": "Enhanced",
@@ -1399,20 +1458,21 @@ export const enemies: Enemy[] = [
       "flame",
       "ranged",
       "shock",
-      "armored"
+      "armored",
+      "acid"
     ]
   },
   {
     "id": "ram-alpha",
     "name": "큰뿔아겔로스 · α",
     "image": "/enemies/ram-alpha.webp",
-    "maxHp": 46,
-    "attack": 9,
-    "defense": 37,
+    "maxHp": 36,
+    "attack": 7,
+    "defense": 20,
     "speed": 84,
     "range": 2.1,
     "weight": 1,
-    "staggerHp": 51,
+    "staggerHp": 44,
     "intent": "'크리오손 아나본'(보관 번호: ACL071α), ACL071의 활성 모델 생물류입니다. 넘치는 에너지로 인해 상징적인 밝은 빨간색 외관을 가지고 있으며, 모델...",
     "faction": "아겔로스",
     "tier": "Common",
@@ -1420,27 +1480,29 @@ export const enemies: Enemy[] = [
     "mechanics": [
       "armored",
       "evasive",
-      "shield"
+      "shield",
+      "ranged"
     ]
   },
   {
     "id": "ram",
     "name": "큰뿔아겔로스",
     "image": "/enemies/ram.webp",
-    "maxHp": 45,
-    "attack": 9,
-    "defense": 37,
+    "maxHp": 36,
+    "attack": 7,
+    "defense": 20,
     "speed": 88,
     "range": 2.1,
     "weight": 1,
-    "staggerHp": 50,
+    "staggerHp": 43,
     "intent": "'크리오손'(보관 번호: ACL071), 뿔로 적을 들이받습니다. 최초로 기록된 아겔로스의 형성 모델 중 하나로, 각 지역에서 비교적 흔하게 볼 수 있습니다.",
     "faction": "아겔로스",
     "tier": "Common",
     "traits": [],
     "mechanics": [
       "charge",
-      "armored"
+      "armored",
+      "shield"
     ]
   },
   {
@@ -1470,7 +1532,8 @@ export const enemies: Enemy[] = [
       "sniper",
       "charge",
       "enrage",
-      "smoke"
+      "smoke",
+      "self-destruct"
     ],
     "elite": true,
     "boss": true
@@ -1479,13 +1542,13 @@ export const enemies: Enemy[] = [
     "id": "road-plunderer",
     "name": "막류재",
     "image": "/enemies/road-plunderer.webp",
-    "maxHp": 53,
-    "attack": 13,
-    "defense": 32,
+    "maxHp": 43,
+    "attack": 11,
+    "defense": 19,
     "speed": 98,
     "range": 2.3,
     "weight": 1,
-    "staggerHp": 58,
+    "staggerHp": 49,
     "intent": "무릉 관할 지역에서 활동하는 불법 무장 세력, 사설 검문소를 운영하며 불법 물품을 밀수합니다. 홍산 치안 부대의 주요 단속 대상입니다.",
     "faction": "청파채",
     "tier": "Normal",
@@ -1495,20 +1558,21 @@ export const enemies: Enemy[] = [
     "mechanics": [
       "armored",
       "flame",
-      "evasive"
+      "evasive",
+      "charge"
     ]
   },
   {
     "id": "rockhowler",
     "name": "록하울러",
     "image": "/enemies/rockhowler.webp",
-    "maxHp": 53,
-    "attack": 12,
-    "defense": 47,
+    "maxHp": 43,
+    "attack": 10,
+    "defense": 28,
     "speed": 90,
     "range": 6,
     "weight": 1,
-    "staggerHp": 58,
+    "staggerHp": 48,
     "intent": "야생의 록하울러. 영리하면서도 장난기 많은 이 동물은 종종 사람을 골탕 먹이기 위해 함정을 파놓기도 합니다. 사람들이 잔뜩 약이 오른 모습을 보는 것을 좋아하므...",
     "faction": "광석수",
     "tier": "Normal",
@@ -1518,7 +1582,8 @@ export const enemies: Enemy[] = [
     "mechanics": [
       "armored",
       "ranged",
-      "acid"
+      "acid",
+      "charge"
     ]
   },
   {
@@ -1554,7 +1619,8 @@ export const enemies: Enemy[] = [
       "summoner",
       "evasive",
       "charge",
-      "grab"
+      "grab",
+      "bind"
     ],
     "elite": true,
     "boss": true
@@ -1580,7 +1646,8 @@ export const enemies: Enemy[] = [
       "ranged",
       "sniper",
       "armored",
-      "shield"
+      "shield",
+      "reflect"
     ],
     "elite": true
   },
@@ -1607,7 +1674,9 @@ export const enemies: Enemy[] = [
       "enrage",
       "ranged",
       "armored",
-      "acid"
+      "acid",
+      "rockfall",
+      "poison"
     ],
     "elite": true
   },
@@ -1636,7 +1705,9 @@ export const enemies: Enemy[] = [
       "flame",
       "ranged",
       "armored",
-      "acid"
+      "acid",
+      "rockfall",
+      "poison"
     ],
     "elite": true
   },
@@ -1644,53 +1715,55 @@ export const enemies: Enemy[] = [
     "id": "sting-alpha",
     "name": "일미아겔로스 · α",
     "image": "/enemies/sting-alpha.webp",
-    "maxHp": 42,
-    "attack": 9,
-    "defense": 37,
+    "maxHp": 33,
+    "attack": 7,
+    "defense": 20,
     "speed": 89,
     "range": 6,
     "weight": 1,
-    "staggerHp": 47,
+    "staggerHp": 40,
     "intent": "'켄트론 아나본'(보관 번호: ARL121α), ARL121의 활성 모델 생물류입니다. 단순히 더 높은 에너지 밀도로 화력을 높이지만, 에너지 이용 효율은 여전...",
     "faction": "아겔로스",
     "tier": "Common",
     "traits": [],
     "mechanics": [
       "ranged",
-      "armored"
+      "armored",
+      "shield"
     ]
   },
   {
     "id": "sting",
     "name": "일미아겔로스",
     "image": "/enemies/sting.webp",
-    "maxHp": 41,
-    "attack": 9,
-    "defense": 37,
+    "maxHp": 33,
+    "attack": 7,
+    "defense": 20,
     "speed": 86,
     "range": 6,
     "weight": 1,
-    "staggerHp": 46,
+    "staggerHp": 39,
     "intent": "'켄트론'(보관 번호: ARL121), 자신을 구성한 물질에 에너지를 부여하고 관성을 이용해 던집니다. 에너지의 활용 효율은 상당히 낮습니다.",
     "faction": "아겔로스",
     "tier": "Common",
     "traits": [],
     "mechanics": [
       "ranged",
-      "armored"
+      "armored",
+      "shield"
     ]
   },
   {
     "id": "sweeping-wind",
     "name": "과당풍",
     "image": "/enemies/sweeping-wind.webp",
-    "maxHp": 47,
-    "attack": 13,
-    "defense": 32,
+    "maxHp": 37,
+    "attack": 11,
+    "defense": 19,
     "speed": 97,
     "range": 7,
     "weight": 1,
-    "staggerHp": 51,
+    "staggerHp": 42,
     "intent": "기본 원거리 무기를 장착한 불법 무장 세력. 시력이 더 뛰어나고 손놀림도 더 능숙합니다. 화살 한 방이면 문을 부수고, 집 안을 휘젓고 다니며, 돈이 될 만한 ...",
     "faction": "청파채",
     "tier": "Normal",
@@ -1701,7 +1774,8 @@ export const enemies: Enemy[] = [
       "armored",
       "flame",
       "ranged",
-      "evasive"
+      "evasive",
+      "charge"
     ]
   },
   {
@@ -1730,7 +1804,9 @@ export const enemies: Enemy[] = [
       "poison",
       "cold",
       "healer",
-      "boss-shield"
+      "boss-shield",
+      "summoner",
+      "revive"
     ],
     "elite": true,
     "boss": true
@@ -1755,7 +1831,9 @@ export const enemies: Enemy[] = [
     "mechanics": [
       "cold",
       "poison",
-      "healer"
+      "healer",
+      "summoner",
+      "revive"
     ],
     "elite": true
   },
@@ -1780,7 +1858,9 @@ export const enemies: Enemy[] = [
       "cold",
       "flame",
       "poison",
-      "healer"
+      "healer",
+      "summoner",
+      "revive"
     ],
     "elite": true
   },
@@ -1823,13 +1903,13 @@ export const enemies: Enemy[] = [
     "id": "tunneling-nidwyrm",
     "name": "터널링 니드웜",
     "image": "/enemies/tunneling-needworm.webp",
-    "maxHp": 83,
-    "attack": 15,
-    "defense": 61,
+    "maxHp": 72,
+    "attack": 13,
+    "defense": 47,
     "speed": 91,
     "range": 12,
     "weight": 2,
-    "staggerHp": 93,
+    "staggerHp": 84,
     "intent": "강한 부식성 액체를 뿜어내는 야수, 대부분의 시간을 지하에 숨어 지냅니다. 산성 액체로 금속을 녹인 다음 삼켜버리는 게 습관입니다. 교전할 때는 무기가 상하지 ...",
     "faction": "광석수",
     "tier": "Enhanced",
@@ -1843,7 +1923,8 @@ export const enemies: Enemy[] = [
       "poison",
       "ranged",
       "sniper",
-      "charge"
+      "charge",
+      "enrage"
     ]
   },
   {
@@ -1881,13 +1962,13 @@ export const enemies: Enemy[] = [
     "id": "waterlamp",
     "name": "수등충",
     "image": "/enemies/waterlamp.webp",
-    "maxHp": 55,
-    "attack": 11,
-    "defense": 47,
+    "maxHp": 44,
+    "attack": 9,
+    "defense": 28,
     "speed": 87,
     "range": 6,
     "weight": 1,
-    "staggerHp": 60,
+    "staggerHp": 50,
     "intent": "야생의 수생 곤충, 은은한 빛을 발산합니다. 복강 내의 자극성 체액은 피부 알레르기와 화상을 유발할 수 있으니 주의해서 상대해야 합니다.",
     "faction": "광석수",
     "tier": "Normal",
@@ -1898,7 +1979,8 @@ export const enemies: Enemy[] = [
       "acid",
       "armored",
       "ranged",
-      "charge"
+      "charge",
+      "enrage"
     ]
   }
 ];
