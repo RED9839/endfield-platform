@@ -68,6 +68,7 @@ import { lonebarge } from "./weapons-source/lonebarge";
 import { flickersinthemist } from "./weapons-source/flickersinthemist";
 import { amaranthinetassel } from "./weapons-source/amaranthinetassel";
 import { beaconofduty } from "./weapons-source/beaconofduty";
+import { blessingoflustrouscarmine } from "./weapons-source/blessingoflustrouscarmine";
 import { phantompain } from "./weapons-source/phantompain";
 import { getWeaponLevelCosts } from "./weapon-level-costs";
 
@@ -417,6 +418,7 @@ function buildWeaponDetail(source: SourceWeaponDetail): WeaponDetail {
 
 const weaponSources: SourceWeaponDetail[] = [
   phantompain,
+  blessingoflustrouscarmine,
   beaconofduty,
   amaranthinetassel,
   grandvision,

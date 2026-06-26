@@ -12,6 +12,16 @@ export type OperatorSummary = {
 
 export const operatorSummaries: OperatorSummary[] = [
   {
+    "slug": "camu",
+    "name": "카뮤",
+    "enName": "Camille",
+    "rarity": 6,
+    "element": "heat",
+    "class": "vanguard",
+    "weapon": "polearm",
+    "avatar": "/operators/camu/avatar.webp"
+  },
+  {
     "slug": "rossi",
     "name": "로시",
     "enName": "Rossi",

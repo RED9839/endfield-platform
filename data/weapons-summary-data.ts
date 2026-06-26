@@ -10,6 +10,15 @@ export type WeaponSummary = {
 
 export const weaponSummaries: WeaponSummary[] = [
   {
+    "slug": "blessingoflustrouscarmine",
+    "name": "붉게 물든 가호",
+    "enName": "Blessing of Lustrous Carmine",
+    "rarity": 6,
+    "weaponType": "polearm",
+    "image": "/weapons/blessingoflustrouscarmine.webp",
+    "series": "흐름"
+  },
+  {
     "slug": "phantompain",
     "name": "환상통",
     "enName": "Phantom Pain",
