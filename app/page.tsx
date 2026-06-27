@@ -163,7 +163,7 @@ function DataCard({
 export default function HomePage() {
   const featured = defaultHomeFeaturedOperator;
   const featuredWeapon =
-    weaponSummaries.find((weapon) => weapon.name === "적영") ??
+    weaponSummaries.find((weapon) => weapon.name === "붉게 물든 가호") ??
     weaponSummaries[0];
   const featuredGear =
     gearSummaries.find((gear) => gear.setName === "고검의 잔향") ??
