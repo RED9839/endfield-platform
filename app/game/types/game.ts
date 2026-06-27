@@ -7,10 +7,12 @@ export type Screen =
   | "shop"
   | "event"
   | "camp"
+  | "challenge"
+  | "duplicate"
   | "summary";
 
 export type Element = "physical" | "heat" | "electric" | "cryo" | "nature";
-export type NodeType = "battle" | "elite" | "event" | "shop" | "camp" | "boss";
+export type NodeType = "battle" | "elite" | "event" | "shop" | "camp" | "boss" | "treasure" | "unknown";
 export type SkillKind = "attack" | "battle-skill" | "link-skill" | "ultimate";
 export type UnitSide = "party" | "enemy";
 export type LinkCondition =
@@ -221,12 +223,18 @@ export type GameEventChoice = {
   credits?: number;
   gearSlug?: string;
   gearReward?: boolean;
+  relicReward?: boolean; // 유물 획득
+  potionReward?: boolean; // 포션 획득
+  promote?: number; // 정예화 토큰 획득(카드 강화 기회)
+  duplicate?: boolean; // 복제: 습득 카드 3장 중 1장 복제(정예화 잠금)
 };
 
 export type GameEvent = {
   id: string;
   title: string;
   description: string;
+  faction?: number; // 해당 세력(필드)에서만 등장(미지정=중립, 모든 세력)
+  rare?: boolean; // 희귀 이벤트: 일반 로테이션 제외, 낮은 확률로만 등장
   choices: GameEventChoice[];
 };
 
@@ -252,6 +260,7 @@ export type DeckCard = {
   ref: string; // basic: 카드 키 / operator: operatorId / tactical: tacticalId
   kind?: SkillKind | "util"; // operator일 때 스킬 종류('util'=직군 유틸 카드)
   eliteLevel?: 0 | 1 | 2; // 정예화 단계(0=기본, 1차, 2차) — 위력·불균형치 강화
+  copyLocked?: boolean; // 복제본: 복제 시점 상태로 고정, 정예화 영구 불가
 };
 
 export type CardTarget = "enemy" | "all-enemies" | "party";
@@ -273,6 +282,7 @@ export type Card = {
   effect?: "shield" | "heal" | "energy" | "draw" | "setup" | "buff" | "delay";
   tactical?: boolean; // 전술 카드(오퍼 무관, 중립 효과)
   eliteLevel?: number; // 정예화 단계(0/1/2) — 표시·강화 판정용
+  copyLocked?: boolean; // 복제본(정예화 불가) — 표시용
 };
 
 export type BattleState = {
@@ -304,6 +314,7 @@ export type RunState = {
   pendingCardOffers: string[]; // 전투 보상 카드 습득 선택지(세력 드래프트 토큰)
   pendingRelic?: string; // 엘리트/보스 유물 드랍(표시용)
   pendingPromotes?: number; // 정예/보스 처치 보상: 카드 정예화 가능 횟수(하이리스크 하이리턴)
+  pendingDuplicate?: string[]; // 필드보스 보상: 복제 후보 3장(덱 카드 uid). 1장 골라 복제(정예화 잠금)
   repairUsed?: boolean; // 정비소(상점) 1회 무료 휴식/강화 사용 여부
   shopRelics: string[]; // 상점 유물 매물
   shopPotions: string[]; // 상점 포션 매물
@@ -320,6 +331,11 @@ export type RunState = {
   battle?: BattleState;
   eventId?: string;
   result?: "victory" | "defeat" | "abandoned";
+  // 보스 점수 도전 모드: 저장 덱으로 보스를 처치 턴수로 도전.
+  challengeBossId?: string; // 진행 중인 도전 보스(없으면 일반 런)
+  challengeTurns?: number; // 처치 턴수(결과)
+  challengeBest?: number; // 해당 보스 최고 기록
+  challengeNewRecord?: boolean; // 이번에 신기록 갱신
 };
 
 export type RunActions = {
@@ -340,8 +356,14 @@ export type RunActions = {
   upgradeCard: (uid: string) => void;
   promoteCard: (uid: string) => void;
   skipPromote: () => void;
+  duplicateCard: (uid: string) => void; // 후보 중 1장 복제
+  skipDuplicate: () => void;
   repairRest: () => void;
   repairUpgrade: (uid: string) => void;
+  saveDeck: () => boolean; // 현재 덱을 도전용으로 저장
+  openChallenge: () => void; // 보스 선택 화면
+  startChallenge: (bossId: string) => void; // 저장 덱으로 보스 도전 시작
+  exitChallenge: () => void; // 도전 화면 → 배치로
   skipReward: () => void;
   resolveEvent: (choiceId: string) => void;
   rest: (mode: "heal" | "train") => void;

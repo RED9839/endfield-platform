@@ -3,7 +3,8 @@
 import { useCallback, useState } from "react";
 
 import { buildDeck, cardRemovalCost, cardRewardPool, deckCardFromToken, MAX_ELITE, MIN_DECK_SIZE, startingDeck } from "../data/cards";
-import { getEnemies } from "../data/enemies";
+import { getEnemies, getEnemy } from "../data/enemies";
+import { loadBestScores, loadDeckSnapshot, recordScore, saveDeckSnapshot } from "../lib/challenge";
 import { computeBattleDrop, getEnemyWeakness, WEAKNESS_AMP } from "../data/enemy-traits";
 import { events } from "../data/events";
 import { getRelic, getRelicEffects, pickRelics } from "../data/relics";
@@ -522,6 +523,13 @@ function makeIntent(enemy: BattleEnemy, turn: number): BattleEnemy["telegraph"] 
   return { kind: "attack", damage: a.damage, label: `${a.damage}${suffix}` };
 }
 function finishBattle(current: RunState, battle: BattleState): RunState {
+  // 보스 도전 모드: 일반 보상 대신 처치 턴수 기록.
+  if (current.challengeBossId) {
+    const turns = battle.turn;
+    const newRecord = recordScore(current.challengeBossId, turns);
+    const best = loadBestScores()[current.challengeBossId];
+    return { ...current, battle, screen: "summary", result: "victory", challengeTurns: turns, challengeBest: best, challengeNewRecord: newRecord };
+  }
   const node = getMapNode(current.currentNodeId ?? "");
   const won = current.battlesWon + 1;
   const seed = won * 13 + current.visitedNodes.length + 1;
@@ -537,6 +545,9 @@ function finishBattle(current: RunState, battle: BattleState): RunState {
   // 유물 드랍: Elite/Boss 티어 적이 있으면.
   const grantedRelic = drop.wantRelic ? pickRelics(current.relics, 1, seed)[0] : undefined;
   const relics = grantedRelic ? [...current.relics, grantedRelic] : current.relics;
+  // 필드보스(정예) 복제 보상: 기본 카드(기본공격·방어, 오퍼 기본공격) 제외한 습득 카드 중 랜덤 3장 제시.
+  const dupPool = current.deck.filter((d) => !d.copyLocked && d.src !== "basic" && d.kind !== "attack").map((d) => d.uid);
+  const pendingDuplicate = node.type === "elite" && dupPool.length > 0 ? shuffle(dupPool, seed * 7 + 3).slice(0, 3) : undefined;
   return {
     ...current,
     battle,
@@ -546,6 +557,7 @@ function finishBattle(current: RunState, battle: BattleState): RunState {
     relics,
     pendingRelic: grantedRelic,
     pendingPromotes,
+    pendingDuplicate,
     screen: "reward",
     pendingGearSlugs: chooseGearRewards(won, drop.gearCount, drop.gearTier),
     pendingCardOffers: cardRewardPool(current.party, current.factionIndex, seed, node.type === "elite"),
@@ -910,6 +922,34 @@ function endTurnOnState(current: RunState): RunState {
 export function useRunState(): RunState & RunActions {
   const [state, setState] = useState<RunState>(initialState);
   const startRun = useCallback(() => setState(initialState()), []);
+  // ===== 보스 점수 도전 =====
+  const saveDeck = useCallback(() => {
+    setState((current) => {
+      saveDeckSnapshot({ party: current.party, deck: current.deck, relics: current.relics, sp: current.maxSp, maxSp: current.maxSp, savedAt: Date.now() });
+      return current;
+    });
+    return true;
+  }, []);
+  const openChallenge = useCallback(() => setState((current) => ({ ...current, screen: "challenge" })), []);
+  const exitChallenge = useCallback(() => setState((current) => ({ ...current, screen: "deployment" })), []);
+  const startChallenge = useCallback((bossId: string) => {
+    setState((current) => {
+      const snap = loadDeckSnapshot();
+      if (!snap) return current;
+      const bs = applyBattleStartSetEffects(snap.party.map((m) => ({ ...m, hp: m.maxHp, shield: 0, ultimateCharge: 0, actionGauge: 0, passiveStacks: 0 })), snap.maxSp, snap.maxSp);
+      const fx = getRelicEffects(snap.relics);
+      const boss = getEnemy(bossId);
+      const every = enemyActionEvery(boss);
+      const e: BattleEnemy = { ...boss, hp: boss.maxHp, statuses: [], actionGauge: 0, actionEvery: every, stagger: 0, physBreakStacks: 0 };
+      const enemy = { ...e, telegraph: makeIntent(e, 1) };
+      const party = fx.startShield > 0 ? bs.party.map((m) => ({ ...m, shield: m.shield + fx.startShield })) : bs.party;
+      const deck = buildDeck(party, snap.deck, { battle: true });
+      const maxEnergy = ENERGY_PER_TURN + fx.maxEnergyBonus;
+      const handSize = HAND_SIZE + fx.handBonus;
+      const drawn = drawHand(shuffle(deck, 17), [], [], handSize, 11);
+      return { ...current, party, relics: snap.relics, sp: bs.sp, maxSp: snap.maxSp, challengeBossId: bossId, challengeTurns: undefined, screen: "battle", battle: { enemies: [enemy], hand: drawn.hand, drawPile: drawn.drawPile, discardPile: [], energy: maxEnergy + fx.startEnergy + bs.startEnergy, maxEnergy, turn: 1, log: [`보스 도전 — ${boss.name}`] } };
+    });
+  }, []);
   const confirmDeployment = useCallback((operatorIds: string[]) => setState((current) => {
     const party = freshParty(operatorIds);
     const sd = startingDeck(0, party); // 시작 덱을 선택한 파티의 기본 카드(기본공격+방어)로 재구성
@@ -922,16 +962,35 @@ export function useRunState(): RunState & RunActions {
       if (!current.availableNodes.includes(nodeId)) return current;
       const node = getMapNode(nodeId);
       const base = { ...current, currentNodeId: nodeId, visitedNodes: [...current.visitedNodes, nodeId], availableNodes: [] };
-      if (node.type === "event") {
-        const event = events[current.visitedNodes.length % events.length];
+      // 미지(?) 해소: 입장 시 전투(55%)/이벤트(25%)/보물(20%) 중 결정.
+      let type = node.type;
+      if (type === "unknown") {
+        const roll = (current.visitedNodes.length * 17 + nodeId.length * 7 + current.battlesWon * 3) % 100;
+        type = roll < 55 ? "battle" : roll < 80 ? "event" : "treasure";
+      }
+      if (type === "event") {
+        // 희귀 이벤트(복제 등): 낮은 확률 + 복제 후보가 있을 때만. 아니면 현재 세력 + 중립 풀에서 선택.
+        const canDup = current.deck.some((d) => !d.copyLocked && d.src !== "basic" && d.kind !== "attack");
+        const rareRoll = (current.visitedNodes.length * 31 + current.battlesWon * 7 + 5) % 100;
+        const rareEvent = events.find((e) => e.rare && canDup);
+        const pool = events.filter((e) => !e.rare && (e.faction == null || e.faction === current.factionIndex));
+        const list = pool.length > 0 ? pool : events.filter((e) => !e.rare);
+        const event = rareEvent && rareRoll < 12 ? rareEvent : list[current.visitedNodes.length % list.length];
         return { ...base, screen: "event", eventId: event.id };
       }
-      if (node.type === "shop") {
+      if (type === "shop") {
         const seed = current.visitedNodes.length + current.battlesWon + 5;
         // 정비소: 상점 구매 + 1회 무료 휴식/강화(repairUsed 리셋)
         return { ...base, screen: "shop", repairUsed: false, pendingGearSlugs: chooseGearRewards(current.battlesWon + 1, 4, node.rewardTier ?? "mid"), shopRelics: pickRelics(current.relics, 2, seed), shopPotions: pickPotions(2, seed) };
       }
-      if (node.type === "camp") return { ...base, screen: "camp" };
+      if (type === "treasure") {
+        // 보물: 무전투 보상 — 장비 + 크레딧 + 낮은 확률 유물.
+        const seed = current.visitedNodes.length + current.battlesWon + 9;
+        const wantRelic = (current.visitedNodes.length + nodeId.length) % 3 === 0;
+        const grantedRelic = wantRelic ? pickRelics(current.relics, 1, seed)[0] : undefined;
+        return { ...base, screen: "reward", credits: current.credits + 50, relics: grantedRelic ? [...current.relics, grantedRelic] : current.relics, pendingRelic: grantedRelic, pendingGearSlugs: chooseGearRewards(current.battlesWon + 1, 3, node.rewardTier ?? "mid"), pendingCardOffers: [] };
+      }
+      if (type === "camp") return { ...base, screen: "camp" };
       const fx = getRelicEffects(current.relics);
       const battleStartRaw = applyBattleStartSetEffects(current.party, current.sp, current.maxSp);
       const battleParty = fx.startShield > 0 ? battleStartRaw.party.map((m) => (m.hp > 0 ? { ...m, shield: m.shield + fx.startShield } : m)) : battleStartRaw.party;
@@ -1019,7 +1078,7 @@ export function useRunState(): RunState & RunActions {
       if (current.screen !== "shop" || current.repairUsed) return current;
       const entry = current.deck.find((d) => d.uid === uid);
       const lv = entry?.eliteLevel ?? 0;
-      if (!entry || lv >= MAX_ELITE) return current;
+      if (!entry || entry.copyLocked || lv >= MAX_ELITE) return current; // 복제본은 강화 불가
       const next = (lv + 1) as 1 | 2;
       return { ...current, deck: current.deck.map((d) => (d.uid === uid ? { ...d, eliteLevel: next } : d)), repairUsed: true };
     });
@@ -1113,38 +1172,53 @@ export function useRunState(): RunState & RunActions {
     });
   }, []);
 
-  // 캠프 카드 정예화. 이미 2차면 불가.
+  // 캠프 카드 정예화. 이미 2차/복제본이면 불가.
   const upgradeCard = useCallback((uid: string) => {
     setState((current) => {
       if (current.screen !== "camp") return current;
       const entry = current.deck.find((d) => d.uid === uid);
       const lv = entry?.eliteLevel ?? 0;
-      if (!entry || lv >= MAX_ELITE) return current; // 이미 2차 정예화면 불가
+      if (!entry || entry.copyLocked || lv >= MAX_ELITE) return current; // 복제본·2차는 불가
       const next = (lv + 1) as 1 | 2;
       return { ...current, deck: current.deck.map((d) => (d.uid === uid ? { ...d, eliteLevel: next } : d)), screen: "map", availableNodes: getMapNode(current.currentNodeId ?? "").next };
     });
   }, []);
 
-  // 정예 보상 정예화: 보유 토큰(pendingPromotes)만큼 카드 정예화. 다 쓰면 맵으로.
+  // 정예 보상 정예화: 보유 토큰(pendingPromotes)만큼 카드 정예화. 다 쓰면 복제 단계 또는 맵으로.
   const promoteCard = useCallback((uid: string) => {
     setState((current) => {
       if (current.screen !== "promote") return current;
       const entry = current.deck.find((d) => d.uid === uid);
       const lv = entry?.eliteLevel ?? 0;
-      if (!entry || lv >= MAX_ELITE) return current;
+      if (!entry || entry.copyLocked || lv >= MAX_ELITE) return current; // 복제본은 강화 불가
       const next = (lv + 1) as 1 | 2;
       const left = (current.pendingPromotes ?? 1) - 1;
       const deck = current.deck.map((d) => (d.uid === uid ? { ...d, eliteLevel: next } : d));
       if (left > 0) return { ...current, deck, pendingPromotes: left };
-      return { ...current, deck, pendingPromotes: 0, screen: "map", availableNodes: current.currentNodeId ? getMapNode(current.currentNodeId).next : getFactionStart(current.factionIndex) };
+      const toDup = (current.pendingDuplicate?.length ?? 0) > 0;
+      return { ...current, deck, pendingPromotes: 0, screen: toDup ? "duplicate" : "map", availableNodes: current.currentNodeId ? getMapNode(current.currentNodeId).next : getFactionStart(current.factionIndex) };
     });
   }, []);
   const skipPromote = useCallback(() => {
-    setState((current) => ({ ...current, pendingPromotes: 0, screen: "map", availableNodes: current.currentNodeId ? getMapNode(current.currentNodeId).next : getFactionStart(current.factionIndex) }));
+    setState((current) => { const toDup = (current.pendingDuplicate?.length ?? 0) > 0; return { ...current, pendingPromotes: 0, screen: toDup ? "duplicate" : "map", availableNodes: current.currentNodeId ? getMapNode(current.currentNodeId).next : getFactionStart(current.factionIndex) }; });
+  }, []);
+
+  // 필드보스(정예) 복제: 후보 3장 중 1장 복제. 복제본은 그 시점 상태로 고정 + 정예화 영구 불가.
+  const duplicateCard = useCallback((uid: string) => {
+    setState((current) => {
+      if (current.screen !== "duplicate" || !current.pendingDuplicate?.includes(uid)) return current;
+      const orig = current.deck.find((d) => d.uid === uid);
+      if (!orig) return current;
+      const copy = { ...orig, uid: `c${current.deckSeq}`, copyLocked: true };
+      return { ...current, deck: [...current.deck, copy], deckSeq: current.deckSeq + 1, pendingDuplicate: undefined, screen: "map", availableNodes: current.currentNodeId ? getMapNode(current.currentNodeId).next : getFactionStart(current.factionIndex) };
+    });
+  }, []);
+  const skipDuplicate = useCallback(() => {
+    setState((current) => ({ ...current, pendingDuplicate: undefined, screen: "map", availableNodes: current.currentNodeId ? getMapNode(current.currentNodeId).next : getFactionStart(current.factionIndex) }));
   }, []);
 
   const skipReward = useCallback(() => {
-    setState((current) => ({ ...current, pendingGearSlugs: [], pendingCardOffers: [], pendingRelic: undefined, shopRelics: [], shopPotions: [], screen: (current.pendingPromotes ?? 0) > 0 ? "promote" : "map", availableNodes: current.currentNodeId ? getMapNode(current.currentNodeId).next : getFactionStart(current.factionIndex), battle: undefined, eventId: undefined, sp: current.maxSp }));
+    setState((current) => ({ ...current, pendingGearSlugs: [], pendingCardOffers: [], pendingRelic: undefined, shopRelics: [], shopPotions: [], screen: (current.pendingPromotes ?? 0) > 0 ? "promote" : (current.pendingDuplicate?.length ?? 0) > 0 ? "duplicate" : "map", availableNodes: current.currentNodeId ? getMapNode(current.currentNodeId).next : getFactionStart(current.factionIndex), battle: undefined, eventId: undefined, sp: current.maxSp }));
   }, []);
 
   const resolveEvent = useCallback((choiceId: string) => {
@@ -1152,12 +1226,23 @@ export function useRunState(): RunState & RunActions {
       const event = events.find((item) => item.id === current.eventId);
       const choice: GameEventChoice | undefined = event?.choices.find((item) => item.id === choiceId);
       if (!choice) return current;
+      const seed = current.visitedNodes.length + current.battlesWon + 7;
       let next = current;
       if (choice.hpCost) next = { ...next, party: damageParty(next.party, choice.hpCost) };
       if (choice.heal) next = { ...next, party: healParty(next.party, choice.heal) };
       if (choice.credits) next = { ...next, credits: next.credits + choice.credits };
-      if (choice.gearSlug || choice.gearReward) return { ...next, pendingGearSlugs: choice.gearSlug ? [choice.gearSlug] : chooseGearRewards(current.battlesWon + 1, 3, getMapNode(current.currentNodeId ?? "").rewardTier ?? "early"), screen: "reward" };
-      return { ...next, screen: "map", eventId: undefined, availableNodes: getMapNode(current.currentNodeId ?? "").next };
+      if (choice.relicReward) { const r = pickRelics(next.relics, 1, seed)[0]; if (r) next = { ...next, relics: [...next.relics, r] }; }
+      if (choice.potionReward && next.potions.length < MAX_POTIONS) next = { ...next, potions: [...next.potions, pickPotions(1, seed)[0]] };
+      if (choice.promote) next = { ...next, pendingPromotes: (next.pendingPromotes ?? 0) + choice.promote };
+      const nextNodes = getMapNode(current.currentNodeId ?? "").next;
+      if (choice.duplicate) {
+        // 복제 이벤트: 습득 카드(기본 제외) 중 랜덤 3장을 복제 후보로 → 복제 화면.
+        const dupPool = next.deck.filter((d) => !d.copyLocked && d.src !== "basic" && d.kind !== "attack").map((d) => d.uid);
+        if (dupPool.length > 0) return { ...next, eventId: undefined, pendingDuplicate: shuffle(dupPool, seed * 11 + 1).slice(0, 3), screen: "duplicate", availableNodes: nextNodes };
+      }
+      if (choice.gearSlug || choice.gearReward) return { ...next, eventId: undefined, pendingGearSlugs: choice.gearSlug ? [choice.gearSlug] : chooseGearRewards(current.battlesWon + 1, 3, getMapNode(current.currentNodeId ?? "").rewardTier ?? "early"), screen: "reward" };
+      if (choice.promote) return { ...next, eventId: undefined, screen: "promote", availableNodes: nextNodes }; // 정예화 화면으로 직행
+      return { ...next, screen: "map", eventId: undefined, availableNodes: nextNodes };
     });
   }, []);
 
@@ -1169,5 +1254,5 @@ export function useRunState(): RunState & RunActions {
     setState((current) => ({ ...current, screen: "map", availableNodes: current.currentNodeId ? getMapNode(current.currentNodeId).next : getFactionStart(current.factionIndex) }));
   }, []);
 
-  return { ...state, startRun, confirmDeployment, abandonRun, enterNode, playCard, endTurn, equipRewardGear, takeCardOffer, skipCardOffer, usePotion, buyGear, removeCard, buyRelic, buyPotion, upgradeCard, promoteCard, skipPromote, repairRest, repairUpgrade, skipReward, resolveEvent, rest, continueToMap };
+  return { ...state, startRun, confirmDeployment, abandonRun, enterNode, playCard, endTurn, equipRewardGear, takeCardOffer, skipCardOffer, usePotion, buyGear, removeCard, buyRelic, buyPotion, upgradeCard, promoteCard, skipPromote, duplicateCard, skipDuplicate, repairRest, repairUpgrade, saveDeck, openChallenge, startChallenge, exitChallenge, skipReward, resolveEvent, rest, continueToMap };
 }

@@ -5,7 +5,9 @@ import { ChevronLeft, Flag } from "lucide-react";
 
 import BattleScreen from "./components/BattleScreen";
 import CampScreen from "./components/CampScreen";
+import ChallengeScreen from "./components/ChallengeScreen";
 import DeploymentScreen from "./components/DeploymentScreen";
+import DuplicateScreen from "./components/DuplicateScreen";
 import EventScreen from "./components/EventScreen";
 import MapScreen from "./components/MapScreen";
 import RewardScreen from "./components/RewardScreen";
@@ -66,7 +68,11 @@ export default function GamePage() {
         <DeploymentScreen
           onConfirm={run.confirmDeployment}
           initialSelected={run.party.map((member) => member.id)}
+          onOpenChallenge={run.openChallenge}
         />
+      )}
+      {run.screen === "challenge" && (
+        <ChallengeScreen onStart={run.startChallenge} onBack={run.exitChallenge} />
       )}
       {run.screen === "map" && (
         <MapScreen
@@ -144,8 +150,17 @@ export default function GamePage() {
           onSkip={run.skipPromote}
         />
       )}
+      {run.screen === "duplicate" && (
+        <DuplicateScreen
+          party={run.party}
+          deck={run.deck}
+          candidates={run.pendingDuplicate ?? []}
+          onDuplicate={run.duplicateCard}
+          onSkip={run.skipDuplicate}
+        />
+      )}
       {run.screen === "summary" && (
-        <RunSummaryScreen state={run} onRestart={run.startRun} />
+        <RunSummaryScreen state={run} onRestart={run.startRun} onSaveDeck={run.saveDeck} onOpenChallenge={run.openChallenge} />
       )}
     </main>
   );

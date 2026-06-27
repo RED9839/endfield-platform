@@ -78,16 +78,17 @@ const wildFor = (layer) => WILD[layer];
 const layerOf = (floor) => (floor <= 7 ? "outer" : floor <= 14 ? "core" : "deep");
 const rewardTierOf = (floor, type) => (type === "boss" ? "boss" : type === "elite" ? (floor <= 7 ? "mid" : floor <= 14 ? "late" : "elite") : floor <= 7 ? "early" : floor <= 14 ? "mid" : "late");
 
-// 정비소(shop) = 상점 구매 + 1회 무료 휴식/강화. 캠프는 정비소로 통합.
+// 카제나식 다채로운 필드: 전투/정예/이벤트/정비소(shop) + 보물(treasure)·미지(unknown,?) 노드 + 다분기.
+//  treasure = 무전투 보상(장비·유물) · unknown = 입장 시 전투/이벤트/보물 중 랜덤 해소.
 const PLAN = [
-  ["battle", "battle"], ["battle", "event"], ["battle", "battle"], ["shop"],
-  ["battle", "elite"], ["battle", "event"], ["shop"], ["battle", "battle"],
-  ["elite", "event"], ["shop"], ["battle", "battle"], ["elite"],
-  ["battle", "event"], ["shop"], ["battle", "elite"], ["battle", "event"],
-  ["shop"], ["elite", "battle"], ["shop"], ["boss"],
+  ["battle", "battle"], ["battle", "unknown", "event"], ["battle", "treasure"], ["shop"],
+  ["battle", "elite", "unknown"], ["unknown", "event"], ["battle", "treasure", "battle"], ["shop"],
+  ["elite", "unknown", "event"], ["battle", "treasure"], ["shop"], ["battle", "elite"],
+  ["unknown", "event", "battle"], ["treasure", "shop"], ["battle", "elite"], ["unknown", "event"],
+  ["shop"], ["elite", "battle", "unknown"], ["shop"], ["boss"],
 ];
 const COLS = [0, 4, 2, 1, 3];
-const titleOf = (type, short) => type === "boss" ? `${short} 심층부 · 최종` : type === "elite" ? "정예 교전" : type === "event" ? "조우 신호" : type === "shop" ? "델랑 보급소" : type === "camp" ? "전선 캠프" : "교전";
+const titleOf = (type, short) => type === "boss" ? `${short} 심층부 · 최종` : type === "elite" ? "정예 교전" : type === "event" ? "조우 신호" : type === "shop" ? "델랑 보급소" : type === "camp" ? "전선 캠프" : type === "treasure" ? "보급 캐시" : type === "unknown" ? "미지 신호" : "교전";
 
 const nodes = [];
 const factionMeta = [];
@@ -106,8 +107,8 @@ for (let f = 0; f < FACTIONS.length; f++) {
         // 정예: 세력 정예 1 + (세력 1~4는 떠도는 야생 정예, 세력 0은 동일 계층 1)
         const second = f !== 0 ? wildFor(layer) : poolFor(f, LAYER_TIERS[layer]);
         enemyIds = [...pick(eliteFor(f), rng, 1), ...pick(second, rng, 1)];
-      } else if (type === "battle") {
-        // 교전: 세력 적 다수 + 떠도는 야생 1마리(세력 1~4)로 매 전투 구성 다양화
+      } else if (type === "battle" || type === "unknown") {
+        // 교전/미지: 세력 적 다수 + 떠도는 야생 1마리(세력 1~4)로 매 전투 구성 다양화. unknown은 입장 시 전투/이벤트/보물로 해소.
         const total = layer === "outer" ? 2 : 3;
         const facCount = f === 0 ? total : total - 1;
         enemyIds = pick(poolFor(f, LAYER_TIERS[layer]), rng, facCount);

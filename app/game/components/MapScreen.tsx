@@ -1,7 +1,9 @@
 import {
   Castle,
   Check,
+  CircleDashed,
   Flame,
+  Gift,
   HelpCircle,
   Lock,
   Map,
@@ -38,6 +40,8 @@ const nodeVisual: Record<
   event: { icon: HelpCircle, label: "EVENT", color: "#a78bfa" },
   shop: { icon: ShoppingBag, label: "SUPPLY", color: "#34d399" },
   camp: { icon: Flame, label: "CAMP", color: "#fb923c" },
+  treasure: { icon: Gift, label: "CACHE", color: "#fcd34d" },
+  unknown: { icon: CircleDashed, label: "UNKNOWN", color: "#94a3b8" },
   boss: { icon: Castle, label: "BOSS", color: "#ff5d5d" },
 };
 
@@ -54,6 +58,8 @@ function rewardChip(node: MapNode) {
   if (node.type === "shop") return { label: "상점", color: "#34d399" };
   if (node.type === "camp") return { label: "정비", color: "#fb923c" };
   if (node.type === "event") return { label: "조우", color: "#a78bfa" };
+  if (node.type === "treasure") return { label: "보물", color: "#fcd34d" };
+  if (node.type === "unknown") return { label: "미지", color: "#94a3b8" };
   return null;
 }
 

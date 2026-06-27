@@ -54,15 +54,16 @@ export default function CampScreen({
           {cards.map((card) => {
             const col = ELEMENT_COLOR[card.element];
             const lv = card.eliteLevel ?? 0;
-            const maxed = lv >= 2;
-            const eliteTag = lv >= 2 ? "정예 II" : lv === 1 ? "정예 I" : null;
+            const locked = Boolean(card.copyLocked);
+            const maxed = lv >= 2 || locked;
+            const eliteTag = locked ? "복제 🔒" : lv >= 2 ? "정예 II" : lv === 1 ? "정예 I" : null;
             return (
               <button
                 key={card.uid}
                 type="button"
                 disabled={maxed}
                 onClick={() => onUpgrade(card.uid)}
-                title={maxed ? "최대 정예화" : `정예화 ${lv}차 → ${lv + 1}차`}
+                title={locked ? "복제본 — 정예화 불가" : maxed ? "최대 정예화" : `정예화 ${lv}차 → ${lv + 1}차`}
                 className="flex flex-col border bg-ef-card2 p-3 text-left transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-40"
                 style={{ ...CUT_SM, borderColor: maxed ? `${ACCENT}aa` : `${col}66` }}
               >

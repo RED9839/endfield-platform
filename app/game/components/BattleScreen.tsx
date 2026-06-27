@@ -183,7 +183,7 @@ function PartyCard({ member }: { member: PartyMember }) {
   );
 }
 
-function HandCard({ card, playable, onPlay }: { card: Card; playable: boolean; onPlay: () => void }) {
+function HandCard({ card, playable, downed = false, onPlay }: { card: Card; playable: boolean; downed?: boolean; onPlay: () => void }) {
   const col = elementColor[card.element];
   return (
     <button
@@ -193,6 +193,9 @@ function HandCard({ card, playable, onPlay }: { card: Card; playable: boolean; o
       className={`relative flex h-[180px] w-[132px] shrink-0 flex-col border bg-gradient-to-b from-ef-card2 to-ef-bg p-2.5 text-left transition ${playable ? "hover:-translate-y-3" : "cursor-not-allowed opacity-40"}`}
       style={{ ...CUT_SM, borderColor: playable ? `${col}99` : "#202020" }}
     >
+      {downed && (
+        <span className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-black/70 font-mono text-[10px] font-black uppercase tracking-wider text-red-400" style={CUT_SM}>전투 불능</span>
+      )}
       <div className="flex items-start justify-between">
         <span className="flex h-7 w-7 items-center justify-center border font-mono text-sm font-black tabular-nums text-black" style={{ ...CUT_SM, background: ACCENT, borderColor: ACCENT }}>{card.cost}</span>
         <span className="border border-ef-line bg-black/50 px-1.5 py-0.5 font-mono text-[8px] font-black uppercase" style={{ ...CUT_SM, color: col }}>{kindLabel[card.kind]}</span>
@@ -236,8 +239,12 @@ export default function BattleScreen({
   const [selRaw, setSel] = useState<string | undefined>(living[0]?.id);
   const selectedId = living.some((e) => e.id === selRaw) ? selRaw : living[0]?.id;
 
+  // 시전 오퍼가 전투 불능이면 그 오퍼의 카드는 낼 수 없다(전술 카드는 오퍼 무관).
+  const downedOps = new Set(party.filter((m) => m.hp <= 0).map((m) => m.id));
+  const casterAlive = (card: Card) => card.tactical || !card.operatorId || !downedOps.has(card.operatorId);
+
   const play = (card: Card) => {
-    if (battle.energy < card.cost) return;
+    if (battle.energy < card.cost || !casterAlive(card)) return;
     onPlayCard(card.uid, selectedId);
   };
 
@@ -332,7 +339,7 @@ export default function BattleScreen({
             <div className="flex items-end justify-center">
               {battle.hand.map((card, i) => (
                 <div key={card.uid} className="transition-transform hover:z-30" style={{ marginLeft: i === 0 ? 0 : -28, zIndex: i }}>
-                  <HandCard card={card} playable={battle.energy >= card.cost} onPlay={() => play(card)} />
+                  <HandCard card={card} playable={battle.energy >= card.cost && casterAlive(card)} downed={!casterAlive(card)} onPlay={() => play(card)} />
                 </div>
               ))}
             </div>

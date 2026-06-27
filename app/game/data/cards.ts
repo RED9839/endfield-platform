@@ -203,13 +203,14 @@ export function deckCardFromToken(token: string, uid: string): DeckCard {
 
 // DeckCard → 실제 Card. battle=true면 전투 불능 오퍼의 스킬 카드는 제외.
 export function cardFromDeck(dc: DeckCard, party: PartyMember[], battle: boolean): Card | null {
-  if (dc.src === "basic") return makeBasicCard(dc.ref, dc.uid, dc.eliteLevel);
-  if (dc.src === "tactical") return TACTICAL_CARDS[dc.ref] ? makeTacticalCard(dc.ref, dc.uid, dc.eliteLevel) : null;
+  const lock = (c: Card | null): Card | null => (c && dc.copyLocked ? { ...c, copyLocked: true } : c);
+  if (dc.src === "basic") return lock(makeBasicCard(dc.ref, dc.uid, dc.eliteLevel));
+  if (dc.src === "tactical") return TACTICAL_CARDS[dc.ref] ? lock(makeTacticalCard(dc.ref, dc.uid, dc.eliteLevel)) : null;
   const op = party.find((m) => m.id === dc.ref);
   if (!op || !dc.kind) return null;
   if (battle && op.hp <= 0) return null;
-  if (dc.kind === "util") return makeOperatorUtilCard(op, dc.uid, dc.eliteLevel);
-  return makeCard(op, dc.kind, dc.uid, dc.eliteLevel);
+  if (dc.kind === "util") return lock(makeOperatorUtilCard(op, dc.uid, dc.eliteLevel));
+  return lock(makeCard(op, dc.kind, dc.uid, dc.eliteLevel));
 }
 
 export function buildDeck(party: PartyMember[], deck: DeckCard[], opts?: { battle?: boolean }): Card[] {

@@ -134,10 +134,13 @@ function RosterCard({
 export default function DeploymentScreen({
   onConfirm,
   initialSelected = [],
+  onOpenChallenge,
 }: {
   onConfirm: (ids: string[]) => void;
   initialSelected?: string[];
+  onOpenChallenge?: () => void;
 }) {
+  const hasSavedDeck = typeof window !== "undefined" && Boolean(localStorage.getItem("endfield-challenge-deck"));
   const [selected, setSelected] = useState<string[]>(() =>
     initialSelected.filter((id) => allOperators.some((operator) => operator.id === id)).slice(0, TEAM_SIZE),
   );
@@ -246,6 +249,16 @@ export default function DeploymentScreen({
               <RotateCcw className="h-4 w-4" />
               초기화
             </button>
+            {onOpenChallenge && hasSavedDeck && (
+              <button
+                type="button"
+                onClick={onOpenChallenge}
+                className="flex items-center gap-2 border px-5 py-3 text-sm font-black transition hover:brightness-110"
+                style={{ ...CUT_SM, borderColor: `${ACCENT}66`, color: ACCENT, background: `${ACCENT}0d` }}
+              >
+                보스 도전
+              </button>
+            )}
             <button
               type="button"
               onClick={() => ready && onConfirm(selected)}

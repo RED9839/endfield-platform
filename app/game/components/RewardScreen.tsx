@@ -227,15 +227,16 @@ export default function RewardScreen({
               {buildDeck(party, deck).map((card) => {
                 const col = ELEMENT_COLOR[card.element];
                 const lv = card.eliteLevel ?? 0;
-                const maxed = lv >= 2;
-                const tag = lv >= 2 ? "정예 II" : lv === 1 ? "정예 I" : null;
+                const locked = Boolean(card.copyLocked);
+                const maxed = lv >= 2 || locked;
+                const tag = locked ? "복제 🔒" : lv >= 2 ? "정예 II" : lv === 1 ? "정예 I" : null;
                 return (
                   <button
                     key={card.uid}
                     type="button"
                     disabled={maxed}
                     onClick={() => onRepairUpgrade(card.uid)}
-                    title={maxed ? "최대 정예화" : `정예화 ${lv}차 → ${lv + 1}차`}
+                    title={locked ? "복제본 — 정예화 불가" : maxed ? "최대 정예화" : `정예화 ${lv}차 → ${lv + 1}차`}
                     className="flex flex-col border bg-ef-card p-2.5 text-left transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-40"
                     style={{ ...CUT_SM, borderColor: maxed ? `${ACCENT}aa` : `${col}66` }}
                   >
