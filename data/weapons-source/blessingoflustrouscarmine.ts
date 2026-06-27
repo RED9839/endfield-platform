@@ -1,20 +1,18 @@
 import type { SourceWeaponDetail } from "../weapons-detail-data";
 
 const attackValues = [
-  49, 54, 59, 64, 69, 74, 78, 83, 88, 93, 98, 103, 108, 113, 118,
-  123, 127, 132, 137, 142, 147, 152, 157, 162, 167, 172, 176, 181, 186,
-  191, 196, 201, 206, 211, 216, 221, 225, 230, 235, 240, 245, 250, 255,
-  260, 265, 270, 274, 279, 284, 289, 294, 299, 304, 309, 314, 319, 323,
-  328, 333, 338, 343, 348, 353, 358, 363, 368, 372, 377, 382, 387, 392,
-  397, 402, 407, 412, 417, 421, 426, 431, 436, 441, 446, 451, 456, 461,
-  466, 470, 475, 480, 485,
+  51, 56, 61, 66, 71, 76, 81, 86, 91, 96, 101, 106, 111, 116, 121,
+  126, 131, 136, 141, 146, 152, 157, 162, 167, 172, 177, 182, 187, 192, 197,
+  202, 207, 212, 217, 222, 227, 232, 237, 242, 247, 253, 258, 263, 268, 273,
+  278, 283, 288, 293, 298, 303, 308, 313, 318, 323, 328, 333, 338, 343, 348,
+  354, 359, 364, 369, 374, 379, 384, 389, 394, 399, 404, 409, 414, 419, 424,
+  429, 434, 439, 444, 449, 455, 460, 465, 470, 475, 480, 485, 490, 495, 500,
 ];
 
 const agilityValues = [20, 36, 52, 68, 84, 100, 116, 132, 156];
-const ultimateEfficiencyValues = [6, 10.7, 15.5, 20.2, 25, 29.8, 34.5, 39.3, 46.4];
-const heatDamageValues = [7, 8.4, 9.8, 11.2, 12.6, 14, 15.4, 16.8, 19.6];
-const selfDamageValues = [8, 9.6, 11.2, 12.8, 14.4, 16, 17.6, 19.2, 22.4];
-const teamDamageValues = [4, 4.8, 5.6, 6.4, 7.2, 8, 8.8, 9.6, 11.2];
+const heatDamageValues = [5.6, 10.0, 14.4, 18.9, 23.3, 27.8, 32.2, 36.7, 43.3];
+const ultimateEfficiencyValues = [18.0, 21.6, 25.2, 28.8, 32.4, 36.0, 39.6, 43.2, 50.4];
+const teamBuffValues = [6.0, 7.2, 8.4, 9.6, 10.8, 12.0, 13.2, 14.4, 16.8];
 
 function percent(value: number) {
   return `+${value.toFixed(1)}%`;
@@ -33,7 +31,7 @@ export const blessingoflustrouscarmine = {
   summary:
     "엔드필드 오퍼레이터용 무기, 장착 시 오퍼레이터의 작전 능력이 크게 증가합니다.",
   description:
-    "노스마치 중공업 지원소의 구형 제품, 조작성은 떨어지지만 놀라운 위력을 자랑합니다. 지나친 무게 탓에 대중에게 환영받지는 못하지만, 과감한 전투 스타일을 선호하는 이들에게는 큰 인기를 끌고 있습니다.",
+    "주술 타임에서 발행한 장창 중 하나, 세쉬카 오픈 데이에 출시된 특별 기념 모델로, 창대에 특수 코팅 공법을 적용하여 실용성과 미학적 가치를 모두 갖추었습니다.",
 
   levelStats: attackValues.map((attack, index) => ({
     level: index + 1,
@@ -47,8 +45,8 @@ export const blessingoflustrouscarmine = {
       materials: [],
       bonuses: [
         "민첩 증가 · 대: 1/3",
-        "궁극기 충전 효율 증가 · 대: 1/3",
-        "효율 · 불빛 연소: 1/4",
+        "열기 피해 증가 · 대: 1/3",
+        "흐름 · 심판: 1/4",
       ],
     },
     {
@@ -61,8 +59,8 @@ export const blessingoflustrouscarmine = {
       ],
       bonuses: [
         "민첩 증가 · 대: 2/5",
-        "궁극기 충전 효율 증가 · 대: 1/4",
-        "효율 · 불빛 연소: 1/4",
+        "열기 피해 증가 · 대: 1/4",
+        "흐름 · 심판: 1/4",
       ],
     },
     {
@@ -75,8 +73,8 @@ export const blessingoflustrouscarmine = {
       ],
       bonuses: [
         "민첩 증가 · 대: 2/6",
-        "궁극기 충전 효율 증가 · 대: 2/6",
-        "효율 · 불빛 연소: 1/4",
+        "열기 피해 증가 · 대: 2/6",
+        "흐름 · 심판: 1/4",
       ],
     },
     {
@@ -89,8 +87,8 @@ export const blessingoflustrouscarmine = {
       ],
       bonuses: [
         "민첩 증가 · 대: 3/8",
-        "궁극기 충전 효율 증가 · 대: 2/7",
-        "효율 · 불빛 연소: 1/4",
+        "열기 피해 증가 · 대: 2/7",
+        "흐름 · 심판: 1/4",
       ],
     },
     {
@@ -99,13 +97,13 @@ export const blessingoflustrouscarmine = {
       materials: [
         { name: "탈로시안 화폐", count: 90000 },
         { name: "중형 모형 틀", count: 30 },
-        { name: "3상 나노 플레이크 칩", count: 16 },
-        { name: "화염석", count: 8 },
+        { name: "D96강 시제품 4번", count: 16 },
+        { name: "무릉석", count: 8 },
       ],
       bonuses: [
         "민첩 증가 · 대: 3/9",
-        "궁극기 충전 효율 증가 · 대: 3/9",
-        "효율 · 불빛 연소: 1/4",
+        "열기 피해 증가 · 대: 3/9",
+        "흐름 · 심판: 1/4",
       ],
     },
   ],
@@ -129,60 +127,59 @@ export const blessingoflustrouscarmine = {
       ],
     },
     {
-      key: "ultimate-efficiency-large",
-      name: "궁극기 충전 효율 증가 · 대",
+      key: "heat-damage-large",
+      name: "열기 피해 증가 · 대",
       typeLabel: "속성",
-      meta: [{ label: "속성", value: "궁극기 충전 효율" }],
-      levelValues: ultimateEfficiencyValues.map((value, index) => ({
+      meta: [{ label: "속성", value: "열기 피해" }],
+      levelValues: heatDamageValues.map((value, index) => ({
         rank: String(index + 1),
-        description: `궁극기 충전 효율 ${percent(value)}`,
-        stats: [{ label: "궁극기 충전 효율", value: percent(value) }],
+        description: `열기 피해 ${percent(value)}`,
+        stats: [{ label: "열기 피해", value: percent(value) }],
       })),
-      compareRows: [
-        {
-          label: "궁극기 충전 효율",
-          values: ultimateEfficiencyValues.map(percent),
-        },
-      ],
-    },
-    {
-      key: "efficiency-burning-light",
-      name: "효율 · 불빛 연소",
-      typeLabel: "시리즈 스킬",
-      meta: [
-        { label: "시리즈 스킬", value: "효율" },
-        { label: "속성", value: "열기 피해" },
-      ],
-      levelValues: heatDamageValues.map((heatDamage, index) => {
-        const selfDamage = selfDamageValues[index];
-        const teamDamage = teamDamageValues[index];
-
-        return {
-          rank: String(index + 1),
-          description:
-            `열기 피해 ${percent(heatDamage)}\n` +
-            `장착자가 자신의 스킬로 열기 부착을 부여할 때, 자신의 물리 및 열기 피해 ${percent(selfDamage)}, 20초 동안 지속. ` +
-            `장착자가 자신의 스킬로 열기 취약을 부여할 때, 팀 전체의 물리 및 열기 피해 ${percent(teamDamage)}, 30초 동안 지속.\n` +
-            "두 가지 효과는 독립적으로 적용되며 중첩되지 않습니다.",
-          stats: [
-            { label: "열기 피해", value: percent(heatDamage) },
-            { label: "자신의 물리 및 열기 피해", value: percent(selfDamage) },
-            { label: "팀 전체의 물리 및 열기 피해", value: percent(teamDamage) },
-          ],
-        };
-      }),
       compareRows: [
         {
           label: "열기 피해",
           values: heatDamageValues.map(percent),
         },
+      ],
+    },
+    {
+      key: "flow-judgment",
+      name: "흐름 · 심판",
+      typeLabel: "시리즈 스킬",
+      meta: [
+        { label: "시리즈 스킬", value: "흐름" },
+        { label: "속성", value: "궁극기 충전 효율" },
+      ],
+      levelValues: ultimateEfficiencyValues.map((efficiency, index) => {
+        const buff = teamBuffValues[index];
+
+        return {
+          rank: String(index + 1),
+          description:
+            `궁극기 충전 효율 ${percent(efficiency)}\n` +
+            `장착자가 자신의 스킬로 스킬 게이지를 회복한 후, 팀 전체의 공격력 ${percent(buff)}, 20초 동안 지속. ` +
+            `장착자가 자신의 스킬로 열기 부착을 부여할 때, 팀 전체가 주는 열기 피해 ${percent(buff)}, 20초 동안 지속.\n` +
+            "두 가지 효과는 독립적으로 적용되며 중첩되지 않습니다.",
+          stats: [
+            { label: "궁극기 충전 효율", value: percent(efficiency) },
+            { label: "팀 전체 공격력", value: percent(buff) },
+            { label: "팀 전체 열기 피해", value: percent(buff) },
+          ],
+        };
+      }),
+      compareRows: [
         {
-          label: "자신의 물리 및 열기 피해",
-          values: selfDamageValues.map(percent),
+          label: "궁극기 충전 효율",
+          values: ultimateEfficiencyValues.map(percent),
         },
         {
-          label: "팀 전체의 물리 및 열기 피해",
-          values: teamDamageValues.map(percent),
+          label: "팀 전체 공격력",
+          values: teamBuffValues.map(percent),
+        },
+        {
+          label: "팀 전체 열기 피해",
+          values: teamBuffValues.map(percent),
         },
       ],
     },
