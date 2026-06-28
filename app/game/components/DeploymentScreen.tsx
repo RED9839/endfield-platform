@@ -76,7 +76,7 @@ const CUT_SM = {
 const elementMeta: Record<Element, { label: string; color: string }> = {
   physical: { label: "물리", color: "#c7cdd6" },
   heat: { label: "열기", color: "#ff8a4c" },
-  electric: { label: "전기", color: "#a78bfa" },
+  electric: { label: "전기", color: "#FBCB38" },
   cryo: { label: "냉기", color: "#67e8f9" },
   nature: { label: "자연", color: "#86efac" },
 };

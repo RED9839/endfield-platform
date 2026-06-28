@@ -22,7 +22,7 @@ const CUT_SM = { clipPath: "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%
 const elementColor: Record<Element, string> = {
   physical: "#d4d4d8",
   heat: "#fb923c",
-  electric: "#a78bfa",
+  electric: "#FBCB38",
   cryo: "#67e8f9",
   nature: "#86efac",
 };
