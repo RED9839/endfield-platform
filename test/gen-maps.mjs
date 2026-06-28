@@ -58,12 +58,14 @@ const pools = FACTIONS.map((f) => {
 function mulberry(seed) { return () => { seed |= 0; seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 const pick = (arr, rng, n = 1) => { const a = arr.slice(); const out = []; for (let i = 0; i < n && a.length; i++) out.push(a.splice(Math.floor(rng() * a.length), 1)[0]); return out; };
 
-const LAYER_TIERS = { outer: ["Common", "Normal", "Enhanced"], core: ["Normal", "Enhanced", "Advanced", "Alpha"], deep: ["Advanced", "Alpha", "Elite"] };
+// 일반 전투 티어: 부드러운 램프. Elite는 제외(정예 노드 전용) — 후반 전투가 보스보다 어려운 절벽 방지.
+const LAYER_TIERS = { outer: ["Common", "Normal"], core: ["Normal", "Enhanced", "Advanced"], deep: ["Enhanced", "Advanced", "Alpha"] };
 function poolFor(f, tiers) {
   const out = [];
   for (const t of tiers) out.push(...pools[f][t]);
   if (out.length) return out;
-  for (const t of ["Normal", "Common", "Enhanced", "Advanced", "Alpha", "Elite"]) if (pools[f][t].length) return pools[f][t];
+  // 폴백도 Elite/Boss 제외(전투 노드가 정예급으로 튀지 않게)
+  for (const t of ["Advanced", "Enhanced", "Normal", "Alpha", "Common"]) if (pools[f][t].length) return pools[f][t];
   return [FACTIONS[f].ids[0]];
 }
 const eliteFor = (f) => (pools[f].Elite.length ? pools[f].Elite : poolFor(f, ["Enhanced", "Advanced", "Alpha"]));
@@ -75,6 +77,8 @@ const WILD = {
   deep: ["armored-manglerbeast", "glaring-rakerbeast", "axe-armorbeast", "hazefyre-axe-armorbeast", "skydrummer", "spotted-rakerbeast"],
 };
 const wildFor = (layer) => WILD[layer];
+// 전투 야생 슬롯: Elite/Boss 티어 제외(정예급 야생이 일반 전투에 섞이는 것 방지). 비면 원본 폴백.
+const wildBattle = (layer) => { const w = WILD[layer].filter((id) => !["Elite", "Boss"].includes(tierOf[id])); return w.length ? w : WILD[layer]; };
 const layerOf = (floor) => (floor <= 7 ? "outer" : floor <= 14 ? "core" : "deep");
 const rewardTierOf = (floor, type) => (type === "boss" ? "boss" : type === "elite" ? (floor <= 7 ? "mid" : floor <= 14 ? "late" : "elite") : floor <= 7 ? "early" : floor <= 14 ? "mid" : "late");
 
@@ -112,9 +116,10 @@ for (let f = 0; f < FACTIONS.length; f++) {
         const total = layer === "outer" ? 2 : 3;
         const facCount = f === 0 ? total : total - 1;
         enemyIds = pick(poolFor(f, LAYER_TIERS[layer]), rng, facCount);
-        if (f !== 0) enemyIds.push(...pick(wildFor(layer), rng, 1));
+        if (f !== 0) enemyIds.push(...pick(wildBattle(layer), rng, 1));
       } else if (type === "boss") {
-        enemyIds = [FACTIONS[f].boss, ...pick(f !== 0 ? wildFor("deep") : eliteFor(f), rng, 1)];
+        // 보스 동반 적: 세력 무관 Advanced/Alpha로 통일(Elite 동반 시 보스보다 어려워지는 편차 방지).
+        enemyIds = [FACTIONS[f].boss, ...pick(poolFor(f, ["Advanced", "Alpha"]), rng, 1)];
       }
       nodes.push({ id, chapter: f, floor: fl, column: col, type, title: titleOf(type, FACTIONS[f].short), subtitle: layer === "outer" ? "외곽" : layer === "core" ? "중심부" : "심층부", enemyIds, rewardTier: rewardTierOf(fl, type), next: [] });
       ids.push(id);

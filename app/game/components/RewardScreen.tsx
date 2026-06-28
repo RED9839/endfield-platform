@@ -256,7 +256,9 @@ export default function RewardScreen({
         {/* 유물 드랍 배너(엘리트) */}
         {!isShop && pendingRelic && getRelic(pendingRelic) && (
           <div className="mt-5 flex items-center gap-3 border bg-ef-card p-4" style={{ ...CUT, borderColor: `${ACCENT}55` }}>
-            <Gem className="h-6 w-6 shrink-0" style={{ color: ACCENT }} />
+            {getRelic(pendingRelic)!.image
+              ? <span className="relative h-10 w-10 shrink-0 overflow-hidden border" style={{ ...CUT_SM, borderColor: `${ACCENT}55` }}><Image src={getRelic(pendingRelic)!.image!} alt="" fill sizes="40px" className="object-cover" /></span>
+              : <Gem className="h-6 w-6 shrink-0" style={{ color: ACCENT }} />}
             <div>
               <p className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-ef-muted">유물 획득</p>
               <p className="text-base font-black" style={{ color: ACCENT }}>{getRelic(pendingRelic)!.name}</p>
@@ -325,7 +327,9 @@ export default function RewardScreen({
                     const afford = credits >= relic.price && !owned;
                     return (
                       <button key={id} type="button" disabled={!afford} onClick={() => onBuyRelic(id)} className="flex w-full items-center gap-3 border border-ef-line bg-ef-card2 p-3 text-left transition hover:border-ef-accent/40 disabled:cursor-not-allowed disabled:opacity-40" style={CUT_SM}>
-                        <Gem className="h-4 w-4 shrink-0" style={{ color: ACCENT }} />
+                        {relic.image
+                          ? <span className="relative h-8 w-8 shrink-0 overflow-hidden border" style={{ ...CUT_SM, borderColor: `${ACCENT}55` }}><Image src={relic.image} alt="" fill sizes="32px" className="object-cover" /></span>
+                          : <Gem className="h-4 w-4 shrink-0" style={{ color: ACCENT }} />}
                         <span className="min-w-0 flex-1">
                           <span className="block text-sm font-black text-white">{relic.name}</span>
                           <span className="block text-[10px] leading-4 text-ef-muted">{relic.description}</span>

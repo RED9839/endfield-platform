@@ -11,8 +11,8 @@ const allFactionNodes: MapNode[] = [
     "title": "교전",
     "subtitle": "외곽",
     "enemyIds": [
-      "imbued-quillbeast",
-      "quillbeast"
+      "brutal-pincerbeast",
+      "indigenous-pincerbeast"
     ],
     "rewardTier": "early",
     "next": [
@@ -29,8 +29,8 @@ const allFactionNodes: MapNode[] = [
     "title": "교전",
     "subtitle": "외곽",
     "enemyIds": [
-      "hazefyre-tuskbeast",
-      "quillbeast"
+      "indigenous-pincerbeast",
+      "hazefyre-tuskbeast"
     ],
     "rewardTier": "early",
     "next": [
@@ -48,7 +48,7 @@ const allFactionNodes: MapNode[] = [
     "subtitle": "외곽",
     "enemyIds": [
       "rockhowler",
-      "blazemist-originium-slug"
+      "firemist-originium-slug"
     ],
     "rewardTier": "early",
     "next": [
@@ -64,8 +64,8 @@ const allFactionNodes: MapNode[] = [
     "title": "미지 신호",
     "subtitle": "외곽",
     "enemyIds": [
-      "acid-originium-slug-alpha",
-      "waterlamp"
+      "acid-originium-slug",
+      "rockhowler"
     ],
     "rewardTier": "early",
     "next": [
@@ -95,8 +95,8 @@ const allFactionNodes: MapNode[] = [
     "title": "교전",
     "subtitle": "외곽",
     "enemyIds": [
-      "imbued-quillbeast",
-      "brutal-pincerbeast"
+      "indigenous-pincerbeast",
+      "blazemist-originium-slug"
     ],
     "rewardTier": "early",
     "next": [
@@ -140,8 +140,8 @@ const allFactionNodes: MapNode[] = [
     "title": "교전",
     "subtitle": "외곽",
     "enemyIds": [
-      "brutal-pincerbeast",
-      "acid-originium-slug"
+      "blazemist-originium-slug",
+      "waterlamp"
     ],
     "rewardTier": "early",
     "next": [
@@ -158,7 +158,7 @@ const allFactionNodes: MapNode[] = [
     "subtitle": "외곽",
     "enemyIds": [
       "hazefyre-axe-armorbeast",
-      "indigenous-pincerbeast"
+      "firemist-originium-slug"
     ],
     "rewardTier": "mid",
     "next": [
@@ -175,7 +175,7 @@ const allFactionNodes: MapNode[] = [
     "title": "미지 신호",
     "subtitle": "외곽",
     "enemyIds": [
-      "indigenous-pincerbeast",
+      "blazemist-originium-slug",
       "rockhowler"
     ],
     "rewardTier": "early",
@@ -194,7 +194,7 @@ const allFactionNodes: MapNode[] = [
     "subtitle": "외곽",
     "enemyIds": [
       "acid-originium-slug",
-      "firemist-originium-slug"
+      "acid-originium-slug-alpha"
     ],
     "rewardTier": "early",
     "next": [
@@ -224,8 +224,8 @@ const allFactionNodes: MapNode[] = [
     "title": "교전",
     "subtitle": "외곽",
     "enemyIds": [
-      "indigenous-pincerbeast",
-      "imbued-quillbeast"
+      "blazemist-originium-slug",
+      "brutal-pincerbeast"
     ],
     "rewardTier": "early",
     "next": [
@@ -254,8 +254,8 @@ const allFactionNodes: MapNode[] = [
     "title": "교전",
     "subtitle": "외곽",
     "enemyIds": [
-      "acid-originium-slug-alpha",
-      "firemist-originium-slug"
+      "acid-originium-slug",
+      "acid-originium-slug-alpha"
     ],
     "rewardTier": "early",
     "next": [
@@ -286,8 +286,8 @@ const allFactionNodes: MapNode[] = [
     "title": "정예 교전",
     "subtitle": "중심부",
     "enemyIds": [
-      "skydrummer",
-      "acid-originium-slug-alpha"
+      "hazefyre-axe-armorbeast",
+      "firemist-originium-slug"
     ],
     "rewardTier": "late",
     "next": [
@@ -305,7 +305,7 @@ const allFactionNodes: MapNode[] = [
     "enemyIds": [
       "acid-originium-slug",
       "waterlamp",
-      "acid-originium-slug-alpha"
+      "firemist-originium-slug"
     ],
     "rewardTier": "mid",
     "next": [
@@ -335,9 +335,9 @@ const allFactionNodes: MapNode[] = [
     "title": "교전",
     "subtitle": "중심부",
     "enemyIds": [
-      "imbued-quillbeast",
-      "quillbeast",
-      "brutal-pincerbeast"
+      "tunneling-nidwyrm",
+      "glaring-rakerbeast",
+      "hazefyre-tuskbeast"
     ],
     "rewardTier": "mid",
     "next": [
@@ -380,8 +380,8 @@ const allFactionNodes: MapNode[] = [
     "title": "교전",
     "subtitle": "중심부",
     "enemyIds": [
-      "blazemist-originium-slug",
-      "tunneling-nidwyrm",
+      "indigenous-pincerbeast",
+      "spotted-rakerbeast",
       "firemist-originium-slug"
     ],
     "rewardTier": "mid",
@@ -399,7 +399,7 @@ const allFactionNodes: MapNode[] = [
     "subtitle": "중심부",
     "enemyIds": [
       "hazefyre-axe-armorbeast",
-      "hazefyre-tuskbeast"
+      "quillbeast"
     ],
     "rewardTier": "late",
     "next": [
@@ -417,8 +417,8 @@ const allFactionNodes: MapNode[] = [
     "subtitle": "중심부",
     "enemyIds": [
       "waterlamp",
-      "firemist-originium-slug",
-      "brutal-pincerbeast"
+      "blazemist-originium-slug",
+      "hazefyre-tuskbeast"
     ],
     "rewardTier": "mid",
     "next": [
@@ -448,7 +448,7 @@ const allFactionNodes: MapNode[] = [
     "title": "교전",
     "subtitle": "중심부",
     "enemyIds": [
-      "firemist-originium-slug",
+      "blazemist-originium-slug",
       "acid-originium-slug",
       "rockhowler"
     ],
@@ -493,9 +493,9 @@ const allFactionNodes: MapNode[] = [
     "title": "교전",
     "subtitle": "심층부",
     "enemyIds": [
-      "armored-manglerbeast",
-      "skydrummer",
-      "spotted-rakerbeast"
+      "imbued-quillbeast",
+      "spotted-rakerbeast",
+      "glaring-rakerbeast"
     ],
     "rewardTier": "late",
     "next": [
@@ -512,8 +512,8 @@ const allFactionNodes: MapNode[] = [
     "title": "정예 교전",
     "subtitle": "심층부",
     "enemyIds": [
-      "skydrummer",
-      "skydrummer"
+      "hazefyre-axe-armorbeast",
+      "spotted-rakerbeast"
     ],
     "rewardTier": "elite",
     "next": [
@@ -530,9 +530,9 @@ const allFactionNodes: MapNode[] = [
     "title": "미지 신호",
     "subtitle": "심층부",
     "enemyIds": [
-      "armored-manglerbeast",
-      "hazefyre-axe-armorbeast",
-      "skydrummer"
+      "imbued-quillbeast",
+      "skydrummer",
+      "spotted-rakerbeast"
     ],
     "rewardTier": "late",
     "next": [
@@ -577,7 +577,7 @@ const allFactionNodes: MapNode[] = [
     "subtitle": "심층부",
     "enemyIds": [
       "armored-manglerbeast",
-      "armored-manglerbeast"
+      "imbued-quillbeast"
     ],
     "rewardTier": "elite",
     "next": [
@@ -593,9 +593,9 @@ const allFactionNodes: MapNode[] = [
     "title": "교전",
     "subtitle": "심층부",
     "enemyIds": [
-      "spotted-rakerbeast",
-      "hazefyre-axe-armorbeast",
-      "axe-armorbeast"
+      "glaring-rakerbeast",
+      "skydrummer",
+      "tunneling-nidwyrm"
     ],
     "rewardTier": "late",
     "next": [
@@ -611,9 +611,9 @@ const allFactionNodes: MapNode[] = [
     "title": "미지 신호",
     "subtitle": "심층부",
     "enemyIds": [
+      "quillbeast",
       "glaring-rakerbeast",
-      "spotted-rakerbeast",
-      "armored-manglerbeast"
+      "imbued-quillbeast"
     ],
     "rewardTier": "late",
     "next": [
@@ -933,7 +933,7 @@ const allFactionNodes: MapNode[] = [
     "title": "정예 교전",
     "subtitle": "중심부",
     "enemyIds": [
-      "effigy",
+      "sentinel",
       "quillbeast"
     ],
     "rewardTier": "late",
@@ -985,7 +985,7 @@ const allFactionNodes: MapNode[] = [
     "enemyIds": [
       "heavy-ram",
       "heavy-sting",
-      "hazefyre-tuskbeast"
+      "brutal-pincerbeast"
     ],
     "rewardTier": "mid",
     "next": [
@@ -1028,9 +1028,9 @@ const allFactionNodes: MapNode[] = [
     "title": "교전",
     "subtitle": "중심부",
     "enemyIds": [
-      "walking-chrysopolis",
+      "effigy",
       "heavy-ram",
-      "tunneling-nidwyrm"
+      "quillbeast"
     ],
     "rewardTier": "mid",
     "next": [
@@ -1047,7 +1047,7 @@ const allFactionNodes: MapNode[] = [
     "title": "정예 교전",
     "subtitle": "중심부",
     "enemyIds": [
-      "effigy",
+      "sentinel",
       "armored-manglerbeast"
     ],
     "rewardTier": "late",
@@ -1066,7 +1066,7 @@ const allFactionNodes: MapNode[] = [
     "enemyIds": [
       "heavy-sting-alpha",
       "heavy-ram-alpha",
-      "brutal-pincerbeast"
+      "tunneling-nidwyrm"
     ],
     "rewardTier": "mid",
     "next": [
@@ -1143,9 +1143,9 @@ const allFactionNodes: MapNode[] = [
     "title": "교전",
     "subtitle": "심층부",
     "enemyIds": [
-      "sentinel",
       "walking-chrysopolis",
-      "armored-manglerbeast"
+      "effigy",
+      "glaring-rakerbeast"
     ],
     "rewardTier": "late",
     "next": [
@@ -1180,8 +1180,8 @@ const allFactionNodes: MapNode[] = [
     "subtitle": "심층부",
     "enemyIds": [
       "heavy-sting-alpha",
-      "walking-chrysopolis",
-      "axe-armorbeast"
+      "effigy",
+      "skydrummer"
     ],
     "rewardTier": "late",
     "next": [
@@ -1225,7 +1225,7 @@ const allFactionNodes: MapNode[] = [
     "title": "정예 교전",
     "subtitle": "심층부",
     "enemyIds": [
-      "effigy",
+      "sentinel",
       "skydrummer"
     ],
     "rewardTier": "elite",
@@ -1244,7 +1244,7 @@ const allFactionNodes: MapNode[] = [
     "enemyIds": [
       "heavy-ram",
       "heavy-sting-alpha",
-      "armored-manglerbeast"
+      "glaring-rakerbeast"
     ],
     "rewardTier": "late",
     "next": [
@@ -1261,8 +1261,8 @@ const allFactionNodes: MapNode[] = [
     "subtitle": "심층부",
     "enemyIds": [
       "heavy-ram-alpha",
-      "heavy-sting-alpha",
-      "axe-armorbeast"
+      "heavy-sting",
+      "skydrummer"
     ],
     "rewardTier": "late",
     "next": [
@@ -1292,7 +1292,7 @@ const allFactionNodes: MapNode[] = [
     "subtitle": "심층부",
     "enemyIds": [
       "triaggelos",
-      "armored-manglerbeast"
+      "heavy-ram"
     ],
     "rewardTier": "boss",
     "next": []
@@ -1329,7 +1329,8 @@ const allFactionNodes: MapNode[] = [
     ],
     "rewardTier": "early",
     "next": [
-      "f2-2-1"
+      "f2-2-1",
+      "f2-2-2"
     ]
   },
   {
@@ -1346,7 +1347,8 @@ const allFactionNodes: MapNode[] = [
     ],
     "rewardTier": "early",
     "next": [
-      "f2-3-0"
+      "f2-3-0",
+      "f2-3-1"
     ]
   },
   {
@@ -1377,7 +1379,8 @@ const allFactionNodes: MapNode[] = [
     "subtitle": "외곽",
     "rewardTier": "early",
     "next": [
-      "f2-3-0"
+      "f2-3-0",
+      "f2-3-1"
     ]
   },
   {
@@ -1457,8 +1460,7 @@ const allFactionNodes: MapNode[] = [
     ],
     "rewardTier": "mid",
     "next": [
-      "f2-6-1",
-      "f2-6-0"
+      "f2-6-1"
     ]
   },
   {
@@ -1581,7 +1583,7 @@ const allFactionNodes: MapNode[] = [
     "title": "정예 교전",
     "subtitle": "중심부",
     "enemyIds": [
-      "tidewalker-delta",
+      "tidewalker",
       "glaring-rakerbeast"
     ],
     "rewardTier": "late",
@@ -1599,14 +1601,12 @@ const allFactionNodes: MapNode[] = [
     "title": "미지 신호",
     "subtitle": "중심부",
     "enemyIds": [
-      "hedron",
-      "mudflow-delta",
-      "hazefyre-tuskbeast"
+      "tidewalker-delta",
+      "brutal-pincerbeast"
     ],
     "rewardTier": "mid",
     "next": [
-      "f2-10-1",
-      "f2-10-0"
+      "f2-10-1"
     ]
   },
   {
@@ -1632,9 +1632,8 @@ const allFactionNodes: MapNode[] = [
     "title": "교전",
     "subtitle": "중심부",
     "enemyIds": [
-      "prism",
-      "hedron-delta",
-      "tunneling-nidwyrm"
+      "tidewalker-delta",
+      "spotted-rakerbeast"
     ],
     "rewardTier": "mid",
     "next": [
@@ -1677,13 +1676,13 @@ const allFactionNodes: MapNode[] = [
     "title": "교전",
     "subtitle": "중심부",
     "enemyIds": [
-      "hedron",
-      "prism",
-      "imbued-quillbeast"
+      "tidewalker-delta",
+      "tunneling-nidwyrm"
     ],
     "rewardTier": "mid",
     "next": [
-      "f2-13-0"
+      "f2-13-0",
+      "f2-13-2"
     ]
   },
   {
@@ -1695,8 +1694,8 @@ const allFactionNodes: MapNode[] = [
     "title": "정예 교전",
     "subtitle": "중심부",
     "enemyIds": [
-      "tidewalker-delta",
-      "quillbeast"
+      "tidewalker",
+      "glaring-rakerbeast"
     ],
     "rewardTier": "late",
     "next": [
@@ -1713,14 +1712,12 @@ const allFactionNodes: MapNode[] = [
     "title": "미지 신호",
     "subtitle": "중심부",
     "enemyIds": [
-      "prism",
-      "mudflow-delta",
-      "hazefyre-tuskbeast"
+      "tidewalker-delta",
+      "spotted-rakerbeast"
     ],
     "rewardTier": "mid",
     "next": [
-      "f2-14-0",
-      "f2-14-1"
+      "f2-14-0"
     ]
   },
   {
@@ -1733,8 +1730,7 @@ const allFactionNodes: MapNode[] = [
     "subtitle": "중심부",
     "rewardTier": "mid",
     "next": [
-      "f2-14-1",
-      "f2-14-0"
+      "f2-14-1"
     ]
   },
   {
@@ -1746,13 +1742,13 @@ const allFactionNodes: MapNode[] = [
     "title": "교전",
     "subtitle": "중심부",
     "enemyIds": [
-      "hedron",
-      "mudflow",
-      "imbued-quillbeast"
+      "tidewalker-delta",
+      "glaring-rakerbeast"
     ],
     "rewardTier": "mid",
     "next": [
-      "f2-14-0"
+      "f2-14-0",
+      "f2-14-1"
     ]
   },
   {
@@ -1765,7 +1761,8 @@ const allFactionNodes: MapNode[] = [
     "subtitle": "중심부",
     "rewardTier": "mid",
     "next": [
-      "f2-15-0"
+      "f2-15-0",
+      "f2-15-1"
     ]
   },
   {
@@ -1778,7 +1775,8 @@ const allFactionNodes: MapNode[] = [
     "subtitle": "중심부",
     "rewardTier": "mid",
     "next": [
-      "f2-15-1"
+      "f2-15-1",
+      "f2-15-0"
     ]
   },
   {
@@ -1791,8 +1789,7 @@ const allFactionNodes: MapNode[] = [
     "subtitle": "심층부",
     "enemyIds": [
       "tidewalker-delta",
-      "tidewalker",
-      "hazefyre-axe-armorbeast"
+      "skydrummer"
     ],
     "rewardTier": "late",
     "next": [
@@ -1810,12 +1807,11 @@ const allFactionNodes: MapNode[] = [
     "subtitle": "심층부",
     "enemyIds": [
       "tidewalker",
-      "spotted-rakerbeast"
+      "glaring-rakerbeast"
     ],
     "rewardTier": "elite",
     "next": [
-      "f2-16-1",
-      "f2-16-0"
+      "f2-16-1"
     ]
   },
   {
@@ -1827,7 +1823,6 @@ const allFactionNodes: MapNode[] = [
     "title": "미지 신호",
     "subtitle": "심층부",
     "enemyIds": [
-      "tidewalker",
       "tidewalker-delta",
       "spotted-rakerbeast"
     ],
@@ -1873,8 +1868,8 @@ const allFactionNodes: MapNode[] = [
     "title": "정예 교전",
     "subtitle": "심층부",
     "enemyIds": [
-      "tidewalker-delta",
-      "skydrummer"
+      "tidewalker",
+      "hazefyre-axe-armorbeast"
     ],
     "rewardTier": "elite",
     "next": [
@@ -1891,7 +1886,6 @@ const allFactionNodes: MapNode[] = [
     "subtitle": "심층부",
     "enemyIds": [
       "tidewalker-delta",
-      "tidewalker",
       "spotted-rakerbeast"
     ],
     "rewardTier": "late",
@@ -1909,8 +1903,7 @@ const allFactionNodes: MapNode[] = [
     "subtitle": "심층부",
     "enemyIds": [
       "tidewalker-delta",
-      "tidewalker",
-      "glaring-rakerbeast"
+      "spotted-rakerbeast"
     ],
     "rewardTier": "late",
     "next": [
@@ -1940,7 +1933,7 @@ const allFactionNodes: MapNode[] = [
     "subtitle": "심층부",
     "enemyIds": [
       "tidalklast",
-      "spotted-rakerbeast"
+      "tidewalker-delta"
     ],
     "rewardTier": "boss",
     "next": []
@@ -1972,7 +1965,7 @@ const allFactionNodes: MapNode[] = [
     "title": "교전",
     "subtitle": "외곽",
     "enemyIds": [
-      "bonekrusher-pyromancer",
+      "hazefyre-claw",
       "rockhowler"
     ],
     "rewardTier": "early",
@@ -2006,7 +1999,7 @@ const allFactionNodes: MapNode[] = [
     "title": "미지 신호",
     "subtitle": "외곽",
     "enemyIds": [
-      "hazefyre-claw",
+      "elite-ripptusk",
       "indigenous-pincerbeast"
     ],
     "rewardTier": "early",
@@ -2036,7 +2029,7 @@ const allFactionNodes: MapNode[] = [
     "title": "교전",
     "subtitle": "외곽",
     "enemyIds": [
-      "bonekrusher-arsonist",
+      "elite-ripptusk",
       "acid-originium-slug"
     ],
     "rewardTier": "early",
@@ -2081,7 +2074,7 @@ const allFactionNodes: MapNode[] = [
     "title": "교전",
     "subtitle": "외곽",
     "enemyIds": [
-      "elite-ripptusk",
+      "elite-raider",
       "aethillu"
     ],
     "rewardTier": "early",
@@ -2098,7 +2091,7 @@ const allFactionNodes: MapNode[] = [
     "title": "정예 교전",
     "subtitle": "외곽",
     "enemyIds": [
-      "bonekrusher-siegeknuckles",
+      "elite-executioner",
       "acid-originium-slug"
     ],
     "rewardTier": "mid",
@@ -2115,7 +2108,7 @@ const allFactionNodes: MapNode[] = [
     "title": "미지 신호",
     "subtitle": "외곽",
     "enemyIds": [
-      "bonekrusher-raider",
+      "bonekrusher-infiltrator",
       "rockhowler"
     ],
     "rewardTier": "early",
@@ -2133,7 +2126,7 @@ const allFactionNodes: MapNode[] = [
     "title": "미지 신호",
     "subtitle": "외곽",
     "enemyIds": [
-      "elite-ripptusk",
+      "elite-ambusher",
       "quillbeast"
     ],
     "rewardTier": "early",
@@ -2243,7 +2236,7 @@ const allFactionNodes: MapNode[] = [
     "title": "미지 신호",
     "subtitle": "중심부",
     "enemyIds": [
-      "bonekrusher-ripptusk",
+      "bonekrusher-vanguard",
       "elite-ripptusk",
       "quillbeast"
     ],
@@ -2275,9 +2268,9 @@ const allFactionNodes: MapNode[] = [
     "title": "교전",
     "subtitle": "중심부",
     "enemyIds": [
-      "elite-raider",
+      "elite-ripptusk",
       "bonekrusher-raider",
-      "armored-manglerbeast"
+      "glaring-rakerbeast"
     ],
     "rewardTier": "mid",
     "next": [
@@ -2321,8 +2314,8 @@ const allFactionNodes: MapNode[] = [
     "subtitle": "중심부",
     "enemyIds": [
       "elite-raider",
-      "bonekrusher-arsonist",
-      "brutal-pincerbeast"
+      "bonekrusher-pyromancer",
+      "tunneling-nidwyrm"
     ],
     "rewardTier": "mid",
     "next": [
@@ -2339,7 +2332,7 @@ const allFactionNodes: MapNode[] = [
     "title": "정예 교전",
     "subtitle": "중심부",
     "enemyIds": [
-      "bonekrusher-siegeknuckles",
+      "elite-executioner",
       "spotted-rakerbeast"
     ],
     "rewardTier": "late",
@@ -2356,7 +2349,7 @@ const allFactionNodes: MapNode[] = [
     "title": "미지 신호",
     "subtitle": "중심부",
     "enemyIds": [
-      "bonekrusher-arsonist",
+      "bonekrusher-pyromancer",
       "bonekrusher-raider",
       "spotted-rakerbeast"
     ],
@@ -2388,8 +2381,8 @@ const allFactionNodes: MapNode[] = [
     "title": "교전",
     "subtitle": "중심부",
     "enemyIds": [
-      "bonekrusher-vanguard",
       "elite-ambusher",
+      "elite-raider",
       "spotted-rakerbeast"
     ],
     "rewardTier": "mid",
@@ -2434,8 +2427,8 @@ const allFactionNodes: MapNode[] = [
     "title": "교전",
     "subtitle": "심층부",
     "enemyIds": [
-      "bonekrusher-ballista",
-      "bonekrusher-executioner",
+      "bonekrusher-arsonist",
+      "bonekrusher-pyromancer",
       "spotted-rakerbeast"
     ],
     "rewardTier": "late",
@@ -2453,7 +2446,7 @@ const allFactionNodes: MapNode[] = [
     "title": "정예 교전",
     "subtitle": "심층부",
     "enemyIds": [
-      "bonekrusher-siegeknuckles",
+      "elite-executioner",
       "skydrummer"
     ],
     "rewardTier": "elite",
@@ -2471,8 +2464,8 @@ const allFactionNodes: MapNode[] = [
     "title": "미지 신호",
     "subtitle": "심층부",
     "enemyIds": [
-      "elite-executioner",
-      "bonekrusher-ballista",
+      "bonekrusher-executioner",
+      "bonekrusher-arsonist",
       "glaring-rakerbeast"
     ],
     "rewardTier": "late",
@@ -2534,9 +2527,9 @@ const allFactionNodes: MapNode[] = [
     "title": "교전",
     "subtitle": "심층부",
     "enemyIds": [
-      "elite-executioner",
       "bonekrusher-executioner",
-      "axe-armorbeast"
+      "bonekrusher-pyromancer",
+      "skydrummer"
     ],
     "rewardTier": "late",
     "next": [
@@ -2552,9 +2545,9 @@ const allFactionNodes: MapNode[] = [
     "title": "미지 신호",
     "subtitle": "심층부",
     "enemyIds": [
-      "bonekrusher-ballista",
-      "bonekrusher-executioner",
-      "hazefyre-axe-armorbeast"
+      "bonekrusher-arsonist",
+      "bonekrusher-pyromancer",
+      "skydrummer"
     ],
     "rewardTier": "late",
     "next": [
@@ -2584,7 +2577,7 @@ const allFactionNodes: MapNode[] = [
     "subtitle": "심층부",
     "enemyIds": [
       "nefarith-conqueror",
-      "spotted-rakerbeast"
+      "bonekrusher-executioner"
     ],
     "rewardTier": "boss",
     "next": []
@@ -2598,7 +2591,7 @@ const allFactionNodes: MapNode[] = [
     "title": "교전",
     "subtitle": "외곽",
     "enemyIds": [
-      "highway-reaver",
+      "grove-archer",
       "waterlamp"
     ],
     "rewardTier": "early",
@@ -2616,7 +2609,7 @@ const allFactionNodes: MapNode[] = [
     "title": "교전",
     "subtitle": "외곽",
     "enemyIds": [
-      "road-plunderer",
+      "highway-reaver",
       "acid-originium-slug-alpha"
     ],
     "rewardTier": "early",
@@ -2651,7 +2644,7 @@ const allFactionNodes: MapNode[] = [
     "title": "미지 신호",
     "subtitle": "외곽",
     "enemyIds": [
-      "road-plunderer",
+      "highway-reaver",
       "waterlamp"
     ],
     "rewardTier": "early",
@@ -2683,7 +2676,7 @@ const allFactionNodes: MapNode[] = [
     "title": "교전",
     "subtitle": "외곽",
     "enemyIds": [
-      "cloud-stalker",
+      "sweeping-wind",
       "quillbeast"
     ],
     "rewardTier": "early",
@@ -2728,7 +2721,7 @@ const allFactionNodes: MapNode[] = [
     "title": "교전",
     "subtitle": "외곽",
     "enemyIds": [
-      "nimbus-razor",
+      "sweeping-wind",
       "acid-originium-slug"
     ],
     "rewardTier": "early",
@@ -2762,7 +2755,7 @@ const allFactionNodes: MapNode[] = [
     "title": "미지 신호",
     "subtitle": "외곽",
     "enemyIds": [
-      "nimbus-razor",
+      "sweeping-wind",
       "firemist-originium-slug"
     ],
     "rewardTier": "early",
@@ -2779,7 +2772,7 @@ const allFactionNodes: MapNode[] = [
     "title": "미지 신호",
     "subtitle": "외곽",
     "enemyIds": [
-      "sweeping-wind",
+      "road-plunderer",
       "imbued-quillbeast"
     ],
     "rewardTier": "early",
@@ -2811,7 +2804,7 @@ const allFactionNodes: MapNode[] = [
     "title": "교전",
     "subtitle": "외곽",
     "enemyIds": [
-      "nimbus-razor",
+      "sweeping-wind",
       "quillbeast"
     ],
     "rewardTier": "early",
@@ -2841,7 +2834,7 @@ const allFactionNodes: MapNode[] = [
     "title": "교전",
     "subtitle": "외곽",
     "enemyIds": [
-      "nimbus-razor",
+      "sweeping-wind",
       "hazefyre-tuskbeast"
     ],
     "rewardTier": "early",
@@ -2892,7 +2885,7 @@ const allFactionNodes: MapNode[] = [
     "enemyIds": [
       "cloud-stalker",
       "highway-reaver",
-      "hazefyre-tuskbeast"
+      "brutal-pincerbeast"
     ],
     "rewardTier": "mid",
     "next": [
@@ -2921,7 +2914,7 @@ const allFactionNodes: MapNode[] = [
     "title": "교전",
     "subtitle": "중심부",
     "enemyIds": [
-      "sweeping-wind",
+      "cloud-stalker",
       "grove-archer",
       "glaring-rakerbeast"
     ],
@@ -2966,9 +2959,9 @@ const allFactionNodes: MapNode[] = [
     "title": "교전",
     "subtitle": "중심부",
     "enemyIds": [
-      "cloud-stalker",
+      "nimbus-razor",
       "sweeping-wind",
-      "armored-manglerbeast"
+      "glaring-rakerbeast"
     ],
     "rewardTier": "mid",
     "next": [
@@ -2985,7 +2978,7 @@ const allFactionNodes: MapNode[] = [
     "title": "정예 교전",
     "subtitle": "중심부",
     "enemyIds": [
-      "cloud-obliterator",
+      "breaking-gust",
       "hazefyre-tuskbeast"
     ],
     "rewardTier": "late",
@@ -3002,8 +2995,8 @@ const allFactionNodes: MapNode[] = [
     "title": "미지 신호",
     "subtitle": "중심부",
     "enemyIds": [
-      "sweeping-wind",
-      "nimbus-razor",
+      "cloud-stalker",
+      "cloud-obliterator",
       "glaring-rakerbeast"
     ],
     "rewardTier": "mid",
@@ -3079,8 +3072,8 @@ const allFactionNodes: MapNode[] = [
     "subtitle": "심층부",
     "enemyIds": [
       "cloud-obliterator",
-      "hill-smasher",
-      "armored-manglerbeast"
+      "nimbus-razor",
+      "glaring-rakerbeast"
     ],
     "rewardTier": "late",
     "next": [
@@ -3097,7 +3090,7 @@ const allFactionNodes: MapNode[] = [
     "title": "정예 교전",
     "subtitle": "심층부",
     "enemyIds": [
-      "hill-smasher",
+      "breaking-gust",
       "glaring-rakerbeast"
     ],
     "rewardTier": "elite",
@@ -3114,7 +3107,7 @@ const allFactionNodes: MapNode[] = [
     "title": "미지 신호",
     "subtitle": "심층부",
     "enemyIds": [
-      "breaking-gust",
+      "cloud-stalker",
       "hill-smasher",
       "spotted-rakerbeast"
     ],
@@ -3179,7 +3172,7 @@ const allFactionNodes: MapNode[] = [
     "enemyIds": [
       "hill-smasher",
       "cloud-obliterator",
-      "hazefyre-axe-armorbeast"
+      "skydrummer"
     ],
     "rewardTier": "late",
     "next": [
@@ -3196,7 +3189,7 @@ const allFactionNodes: MapNode[] = [
     "subtitle": "심층부",
     "enemyIds": [
       "cloud-obliterator",
-      "hill-smasher",
+      "nimbus-razor",
       "spotted-rakerbeast"
     ],
     "rewardTier": "late",
@@ -3227,7 +3220,7 @@ const allFactionNodes: MapNode[] = [
     "subtitle": "심층부",
     "enemyIds": [
       "ruan-yi",
-      "glaring-rakerbeast"
+      "cloud-obliterator"
     ],
     "rewardTier": "boss",
     "next": []

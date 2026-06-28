@@ -23,7 +23,8 @@ export const enemies: Enemy[] = [
       "armored",
       "ranged",
       "charge",
-      "enrage"
+      "enrage",
+      "rockfall"
     ]
   },
   {
@@ -49,7 +50,8 @@ export const enemies: Enemy[] = [
       "armored",
       "ranged",
       "charge",
-      "enrage"
+      "enrage",
+      "rockfall"
     ]
   },
   {
@@ -75,7 +77,8 @@ export const enemies: Enemy[] = [
       "self-destruct",
       "summoner",
       "armored",
-      "acid"
+      "acid",
+      "charge"
     ]
   },
   {
@@ -160,7 +163,8 @@ export const enemies: Enemy[] = [
       "ranged",
       "self-destruct",
       "armored",
-      "acid"
+      "acid",
+      "charge"
     ]
   },
   {
@@ -184,7 +188,8 @@ export const enemies: Enemy[] = [
       "armored",
       "ranged",
       "flame",
-      "charge"
+      "charge",
+      "enrage"
     ]
   },
   {
@@ -211,23 +216,24 @@ export const enemies: Enemy[] = [
       "flame",
       "ranged",
       "charge",
-      "enrage"
+      "enrage",
+      "smoke"
     ]
   },
   {
     "id": "bonekrusher-ballista",
     "name": "본 크러셔 사수",
     "image": "/enemies/bonekrusher-ballista.webp",
-    "maxHp": 226,
-    "attack": 36,
-    "defense": 67,
+    "maxHp": 113,
+    "attack": 24,
+    "defense": 52,
     "speed": 93,
     "range": 12,
     "weight": 1.5,
-    "staggerHp": 254,
+    "staggerHp": 127,
     "intent": "중형 원거리 무기를 장비한 무장 랜드브레이커, 저격수 중에서도 실력이 좋은 정예입니다. 이 사수들이 사용하는 무거운 화살은 목표의 중장갑마저도 뚫습니다.",
     "faction": "본크러셔",
-    "tier": "Elite",
+    "tier": "Advanced",
     "traits": [
       "화살비를 발사하여 지속 피해를 주고, 몇 초 뒤 폭발을 일으킵니다.",
       "거대한 쇠뇌를 들고 있지만, 근거리 전투 능력도 무시할 수 없습니다."
@@ -249,16 +255,16 @@ export const enemies: Enemy[] = [
     "id": "bonekrusher-executioner",
     "name": "본 크러셔 처형자",
     "image": "/enemies/bonecrusher-executioner.webp",
-    "maxHp": 212,
-    "attack": 36,
-    "defense": 67,
+    "maxHp": 141,
+    "attack": 29,
+    "defense": 60,
     "speed": 94,
     "range": 2.8,
     "weight": 1.5,
-    "staggerHp": 239,
+    "staggerHp": 155,
     "intent": "중형 도끼를 장착한 랜드브레이커, 상당히 큰 덩치를 갖고 있습니다. 일반적인 랜드브레이커보다 좀 더 뛰어난 신체 능력을 갖고 있어 비교적 쉽게 전차를 뒤집거나 ...",
     "faction": "본크러셔",
-    "tier": "Elite",
+    "tier": "Alpha",
     "traits": [
       "잡기 공격에 당하면 대량의 피해를 받습니다. 오퍼레이터가 잡혔다면, 다른 오퍼레이터는 스킬을 사용하여 빠르게 적의 공격을 끊어 구출하세요.",
       "차지 2단 도끼 휘두르기를 사용하면 회피하기 어렵습니다. 빠르게 적의 공격을 끊으세요."
@@ -270,7 +276,8 @@ export const enemies: Enemy[] = [
       "flame",
       "enrage",
       "smoke",
-      "sniper"
+      "sniper",
+      "self-destruct"
     ],
     "elite": true
   },
@@ -296,7 +303,8 @@ export const enemies: Enemy[] = [
       "armored",
       "evasive",
       "flame",
-      "charge"
+      "charge",
+      "enrage"
     ]
   },
   {
@@ -324,7 +332,8 @@ export const enemies: Enemy[] = [
       "flame",
       "ranged",
       "charge",
-      "enrage"
+      "enrage",
+      "smoke"
     ]
   },
   {
@@ -347,7 +356,8 @@ export const enemies: Enemy[] = [
     "mechanics": [
       "armored",
       "flame",
-      "charge"
+      "charge",
+      "enrage"
     ]
   },
   {
@@ -371,7 +381,8 @@ export const enemies: Enemy[] = [
       "armored",
       "evasive",
       "flame",
-      "charge"
+      "charge",
+      "enrage"
     ]
   },
   {
@@ -400,7 +411,8 @@ export const enemies: Enemy[] = [
       "flame",
       "charge",
       "enrage",
-      "smoke"
+      "smoke",
+      "sniper"
     ],
     "elite": true
   },
@@ -428,7 +440,8 @@ export const enemies: Enemy[] = [
       "ranged",
       "shield",
       "charge",
-      "enrage"
+      "enrage",
+      "smoke"
     ]
   },
   {
@@ -455,7 +468,8 @@ export const enemies: Enemy[] = [
       "evasive",
       "charge",
       "grab",
-      "bind"
+      "bind",
+      "sniper"
     ],
     "elite": true
   },
@@ -480,23 +494,24 @@ export const enemies: Enemy[] = [
       "boss-shield",
       "ranged",
       "armored",
-      "acid"
+      "acid",
+      "charge"
     ]
   },
   {
     "id": "cloud-obliterator",
     "name": "개천장",
     "image": "/enemies/cloud-obliterator.webp",
-    "maxHp": 205,
-    "attack": 35,
-    "defense": 64,
+    "maxHp": 103,
+    "attack": 23,
+    "defense": 50,
     "speed": 96,
     "range": 2.8,
     "weight": 1.5,
-    "staggerHp": 231,
+    "staggerHp": 115,
     "intent": "중형 무기를 장착한 불법 무장 세력. 하늘을 여는 것은 아무나 쉽게 할 수 있는 일이 아닙니다. 사중 장착 발사기를 메고 있는 무장 인원 중에서 오직 충분히 강...",
     "faction": "청파채",
-    "tier": "Elite",
+    "tier": "Advanced",
     "traits": [
       "대포를 휘둘러 근거리 공격을 하거나, 불꽃을 발사하여 원거리 공격을 합니다.",
       "뿔에 받히면 거대한 불꽃을 볼 수 있을지도 모릅니다.",
@@ -542,7 +557,8 @@ export const enemies: Enemy[] = [
       "healer",
       "smoke",
       "charge",
-      "grab"
+      "grab",
+      "bind"
     ]
   },
   {
@@ -580,16 +596,16 @@ export const enemies: Enemy[] = [
     "id": "effigy",
     "name": "형상아겔로스",
     "image": "/enemies/effigy.webp",
-    "maxHp": 261,
-    "attack": 30,
-    "defense": 98,
+    "maxHp": 130,
+    "attack": 20,
+    "defense": 76,
     "speed": 87,
     "range": 12,
     "weight": 2,
-    "staggerHp": 293,
+    "staggerHp": 147,
     "intent": "'호모이오사론'(보관 번호: AGL371), 인간의 신체 또는 특정 부위를 모방하는 형성 모델을 지니고 있으며, 매우 희귀하고 위험합니다. 일부 개체는 초자연 ...",
     "faction": "아겔로스",
-    "tier": "Elite",
+    "tier": "Advanced",
     "traits": [
       "강력한 타격 수단을 다양하게 가지고 있지만, 공격할 때는 방향 전환 속도가 느리므로 후방에서 공격하는 것이 좋습니다.",
       "신체를 조합하여 다양한 형태로 변신하며 전장을 누빕니다.",
@@ -627,7 +643,8 @@ export const enemies: Enemy[] = [
       "flame",
       "ranged",
       "charge",
-      "enrage"
+      "enrage",
+      "smoke"
     ]
   },
   {
@@ -681,7 +698,8 @@ export const enemies: Enemy[] = [
       "armored",
       "flame",
       "charge",
-      "enrage"
+      "enrage",
+      "smoke"
     ]
   },
   {
@@ -706,7 +724,8 @@ export const enemies: Enemy[] = [
       "evasive",
       "flame",
       "charge",
-      "enrage"
+      "enrage",
+      "smoke"
     ]
   },
   {
@@ -730,7 +749,8 @@ export const enemies: Enemy[] = [
       "ranged",
       "smoke",
       "armored",
-      "shield"
+      "shield",
+      "reflect"
     ]
   },
   {
@@ -754,7 +774,8 @@ export const enemies: Enemy[] = [
       "ranged",
       "smoke",
       "armored",
-      "shield"
+      "shield",
+      "reflect"
     ]
   },
   {
@@ -780,23 +801,24 @@ export const enemies: Enemy[] = [
       "ranged",
       "self-destruct",
       "armored",
-      "charge"
+      "charge",
+      "enrage"
     ]
   },
   {
     "id": "glaring-rakerbeast",
     "name": "분노의 레이커비스트",
     "image": "/enemies/glaring-rakerbeast.webp",
-    "maxHp": 255,
-    "attack": 27,
-    "defense": 94,
+    "maxHp": 127,
+    "attack": 18,
+    "defense": 73,
     "speed": 91,
     "range": 7,
     "weight": 2,
-    "staggerHp": 286,
+    "staggerHp": 143,
     "intent": "레이커비스트의 특수 변이 색상형, 수명은 다소 짧아졌지만 더 강해졌습니다. 두 눈 속에는 마치 흐르는 불꽃이 깃든 듯합니다.",
     "faction": "광석수",
-    "tier": "Elite",
+    "tier": "Advanced",
     "traits": [
       "일반 레이커비스트와 달리, 생명력이 낮아지면 잠시 은신하며 차지합니다. 제때 차지를 끊으면 은신이 해제되며 대량의 불균형치를 쌓을 수 있습니다.",
       "분노 상태: 분노 상태에서 공격력이 증가하고, 차지 빈도가 더 높아집니다. 불균형 상태에 진입하면 분노 상태가 종료됩니다."
@@ -836,7 +858,8 @@ export const enemies: Enemy[] = [
       "flame",
       "ranged",
       "evasive",
-      "charge"
+      "charge",
+      "grab"
     ]
   },
   {
@@ -891,7 +914,8 @@ export const enemies: Enemy[] = [
       "armored",
       "flame",
       "charge",
-      "enrage"
+      "enrage",
+      "smoke"
     ]
   },
   {
@@ -917,7 +941,8 @@ export const enemies: Enemy[] = [
       "charge",
       "flame",
       "acid",
-      "enrage"
+      "enrage",
+      "rockfall"
     ]
   },
   {
@@ -937,7 +962,8 @@ export const enemies: Enemy[] = [
     "traits": [],
     "mechanics": [
       "armored",
-      "shield"
+      "shield",
+      "ranged"
     ]
   },
   {
@@ -957,7 +983,8 @@ export const enemies: Enemy[] = [
     "traits": [],
     "mechanics": [
       "armored",
-      "shield"
+      "shield",
+      "ranged"
     ]
   },
   {
@@ -1036,7 +1063,8 @@ export const enemies: Enemy[] = [
       "ranged",
       "reflect",
       "poison",
-      "healer"
+      "healer",
+      "summoner"
     ]
   },
   {
@@ -1060,7 +1088,8 @@ export const enemies: Enemy[] = [
       "cold",
       "ranged",
       "poison",
-      "healer"
+      "healer",
+      "summoner"
     ]
   },
   {
@@ -1084,23 +1113,24 @@ export const enemies: Enemy[] = [
       "armored",
       "flame",
       "evasive",
-      "charge"
+      "charge",
+      "grab"
     ]
   },
   {
     "id": "hill-smasher",
     "name": "최산장",
     "image": "/enemies/hill-smasher.webp",
-    "maxHp": 201,
-    "attack": 33,
-    "defense": 64,
+    "maxHp": 134,
+    "attack": 26,
+    "defense": 58,
     "speed": 96,
     "range": 2.8,
     "weight": 1.5,
-    "staggerHp": 226,
+    "staggerHp": 146,
     "intent": "중형 무기를 장착한 불법 무장 세력. 최산장의 4연장 발사기는 산을 뒤흔들 정도의 진정한 중화기이므로 절대로 방심해서는 안 됩니다.",
     "faction": "청파채",
-    "tier": "Elite",
+    "tier": "Alpha",
     "traits": [
       "대포를 휘둘러 근거리 공격을 하거나, 불꽃을 발사하여 원거리 공격을 합니다.",
       "뿔에 받히면 거대한 불꽃을 볼 수 있을지도 모릅니다.",
@@ -1143,7 +1173,8 @@ export const enemies: Enemy[] = [
       "flame",
       "ranged",
       "armored",
-      "acid"
+      "acid",
+      "rockfall"
     ]
   },
   {
@@ -1168,7 +1199,8 @@ export const enemies: Enemy[] = [
       "boss-shield",
       "ranged",
       "armored",
-      "acid"
+      "acid",
+      "charge"
     ]
   },
   {
@@ -1284,7 +1316,8 @@ export const enemies: Enemy[] = [
       "evasive",
       "sniper",
       "poison",
-      "healer"
+      "healer",
+      "summoner"
     ]
   },
   {
@@ -1311,7 +1344,8 @@ export const enemies: Enemy[] = [
       "self-destruct",
       "sniper",
       "poison",
-      "healer"
+      "healer",
+      "summoner"
     ]
   },
   {
@@ -1409,7 +1443,8 @@ export const enemies: Enemy[] = [
       "armored",
       "flame",
       "evasive",
-      "charge"
+      "charge",
+      "grab"
     ]
   },
   {
@@ -1432,7 +1467,8 @@ export const enemies: Enemy[] = [
     "mechanics": [
       "armored",
       "poison",
-      "cold"
+      "cold",
+      "healer"
     ]
   },
   {
@@ -1459,7 +1495,8 @@ export const enemies: Enemy[] = [
       "ranged",
       "shock",
       "armored",
-      "acid"
+      "acid",
+      "rockfall"
     ]
   },
   {
@@ -1481,7 +1518,8 @@ export const enemies: Enemy[] = [
       "armored",
       "evasive",
       "shield",
-      "ranged"
+      "ranged",
+      "reflect"
     ]
   },
   {
@@ -1502,7 +1540,8 @@ export const enemies: Enemy[] = [
     "mechanics": [
       "charge",
       "armored",
-      "shield"
+      "shield",
+      "ranged"
     ]
   },
   {
@@ -1559,7 +1598,8 @@ export const enemies: Enemy[] = [
       "armored",
       "flame",
       "evasive",
-      "charge"
+      "charge",
+      "grab"
     ]
   },
   {
@@ -1583,7 +1623,8 @@ export const enemies: Enemy[] = [
       "armored",
       "ranged",
       "acid",
-      "charge"
+      "charge",
+      "enrage"
     ]
   },
   {
@@ -1655,16 +1696,16 @@ export const enemies: Enemy[] = [
     "id": "skydrummer",
     "name": "천고",
     "image": "/enemies/skydrummer.webp",
-    "maxHp": 237,
-    "attack": 27,
-    "defense": 94,
+    "maxHp": 158,
+    "attack": 22,
+    "defense": 85,
     "speed": 88,
     "range": 7,
     "weight": 2,
-    "staggerHp": 266,
+    "staggerHp": 173,
     "intent": "야생의 하울러비스트, 탈로스 II의 토착 동물입니다. 머리와 목을 감싼 질긴 피부막이 산림을 뒤흔드는 거대한 포효를 내지르는 데 힘을 보탭니다.",
     "faction": "광석수",
-    "tier": "Elite",
+    "tier": "Alpha",
     "traits": [
       "생명력이 일정 이하로 떨어지면 자극을 받아 분노 상태에 진입합니다. 차지 공격 빈도가 더 높아지고, 더 큰 피해를 주며, 받는 피해가 감소합니다. 분노 상태를 끝내려면 제때에 끊어야 합니다."
     ],
@@ -1684,16 +1725,16 @@ export const enemies: Enemy[] = [
     "id": "spotted-rakerbeast",
     "name": "백안의 레이커비스트",
     "image": "/enemies/spotted-rakerbeast.webp",
-    "maxHp": 247,
-    "attack": 29,
-    "defense": 94,
+    "maxHp": 123,
+    "attack": 19,
+    "defense": 73,
     "speed": 87,
     "range": 7,
     "weight": 2,
-    "staggerHp": 278,
+    "staggerHp": 139,
     "intent": "자연 환경에 서식하는 레이커비스트, 탈로스 II의 토착 동물입니다. 뛰어난 점프력과 날카로운 발톱을 지닌, 산림 지대의 최상위 포식자입니다.",
     "faction": "광석수",
-    "tier": "Elite",
+    "tier": "Advanced",
     "traits": [
       "몸놀림이 민첩하며, 발톱과 꼬리로 공격합니다. 주의해서 피하세요.",
       "분노 상태에서는 공격력이 증가하고 차지 공격 빈도가 더 높아집니다. 불균형 상태에 진입하면 분노 상태가 종료됩니다."
@@ -1729,7 +1770,8 @@ export const enemies: Enemy[] = [
     "mechanics": [
       "ranged",
       "armored",
-      "shield"
+      "shield",
+      "reflect"
     ]
   },
   {
@@ -1750,7 +1792,8 @@ export const enemies: Enemy[] = [
     "mechanics": [
       "ranged",
       "armored",
-      "shield"
+      "shield",
+      "reflect"
     ]
   },
   {
@@ -1775,7 +1818,8 @@ export const enemies: Enemy[] = [
       "flame",
       "ranged",
       "evasive",
-      "charge"
+      "charge",
+      "grab"
     ]
   },
   {
@@ -1815,16 +1859,16 @@ export const enemies: Enemy[] = [
     "id": "tidewalker-delta",
     "name": "조류아겔로스 · δ",
     "image": "/enemies/tidewalker-delta.webp",
-    "maxHp": 278,
-    "attack": 31,
-    "defense": 76,
+    "maxHp": 139,
+    "attack": 20,
+    "defense": 59,
     "speed": 89,
     "range": 2.8,
     "weight": 1.2,
-    "staggerHp": 313,
+    "staggerHp": 156,
     "intent": "'제나크뤼단 · 다이네든'(보관 번호: AGM321δ), AGM321의 격류종, 내부 구성 물질의 흐름이 격렬하고 밤에 마주치면 그 모습이 평소보다 훨씬 더 무...",
     "faction": "침식체",
-    "tier": "Elite",
+    "tier": "Advanced",
     "traits": [
       "냉기 부착이 있는 능력으로 공격하며, 명중 시 오퍼레이터를 동결시킵니다."
     ],
@@ -1924,7 +1968,8 @@ export const enemies: Enemy[] = [
       "ranged",
       "sniper",
       "charge",
-      "enrage"
+      "enrage",
+      "rockfall"
     ]
   },
   {
@@ -1980,7 +2025,8 @@ export const enemies: Enemy[] = [
       "armored",
       "ranged",
       "charge",
-      "enrage"
+      "enrage",
+      "rockfall"
     ]
   }
 ];

@@ -149,9 +149,9 @@ export function getGearStatDeltas(gear: RunGear, element?: Element): GearStatDel
   const value = getGearValue(gear);
   const deltas: GearStatDeltas = {};
 
-  if (gear.category === "armor") addDelta(deltas, { defense: value }); // 방어구 = 전열
-  if (gear.category === "gloves") addDelta(deltas, { attack: value }); // 장갑 = 화력
-  if (gear.category === "kit") addDelta(deltas, { critRate: value * 0.01 }); // 키트 = 정밀 장치(치명)
+  if (gear.category === "armor") addDelta(deltas, { maxHp: value * 4 }); // 방어구 = 체력
+  if (gear.category === "gloves") addDelta(deltas, { attack: value }); // 장갑 = 공격력
+  if (gear.category === "kit") addDelta(deltas, { attack: Math.round(value * 0.5), maxHp: value * 2 }); // 부품 = 공격력+체력 소폭
 
   gear.attributeTypes.forEach((type) => {
     if (type === "attack") addDelta(deltas, { attack: value * 2, battleSkillPower: value, linkSkillPower: value, ultimatePower: value });
@@ -170,9 +170,10 @@ export function getGearStatDeltas(gear: RunGear, element?: Element): GearStatDel
     // 방어 불능(불균형) 특화: 연계 콤보(불균형 강타) 강화 + 치명 피해.
     if (type === "unbalancedTargetDamage") addDelta(deltas, { linkSkillPower: value, critDamage: value * 0.03 });
     if (type === "mainStat") {
-      if (gear.category === "armor") addDelta(deltas, { maxHp: value * 3, defense: value });
+      // 주 능력치 = 슬롯 기본스탯 증폭(방어구 체력 / 장갑 공격 / 부품 공격+체력).
+      if (gear.category === "armor") addDelta(deltas, { maxHp: value * 5 });
       if (gear.category === "gloves") addDelta(deltas, { attack: value * 2 });
-      if (gear.category === "kit") addDelta(deltas, { battleSkillPower: value, linkSkillPower: value, ultimatePower: value });
+      if (gear.category === "kit") addDelta(deltas, { attack: value, maxHp: value * 2 });
     }
     if (type === "damageReduction") addDelta(deltas, { defense: value * 2, evasion: 1 });
     if (type === "subStat") addDelta(deltas, { attack: value, maxHp: value * 2, critRate: value * 0.01 });
@@ -213,9 +214,9 @@ export function getGearPrimaryStatLine(gear: RunGear) {
   if (type === "allSkillDamage") return `스킬 피해 +${value}`;
   if (type === "heatNatureDamage") return `열기/자연 피해 +${value}`;
 
-  if (gear.category === "armor") return `방어력 +${value}`;
+  if (gear.category === "armor") return `생명력 +${value * 4}`;
   if (gear.category === "gloves") return `공격력 +${value}`;
-  return `치명타 확률 +${value}%`;
+  return `공격력 +${Math.round(value * 0.5)} · 생명력 +${value * 2}`;
 }
 
 function toCombatDescription(attributeLabel: string, level: RunGearLevel, quality: number, hasSetEffect: boolean) {

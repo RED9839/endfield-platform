@@ -46,6 +46,9 @@ export function computeBattleDrop(enemies: { tier?: string }[], floor: number) {
     if (GEAR_RANK[d.gearTier] > GEAR_RANK[gearTier]) gearTier = d.gearTier;
     if (d.relic) wantRelic = true;
   }
+  // 층 기반 기어티어 하한: 심층 전투를 Advanced/Alpha로 낮춰도 진행 보상은 유지(어려운 층 = 좋은 기어).
+  const floorFloorTier: RewardTier = floor >= 15 ? "late" : floor >= 8 ? "mid" : "early";
+  if (GEAR_RANK[floorFloorTier] > GEAR_RANK[gearTier]) gearTier = floorFloorTier;
   return {
     credits: Math.round(value * layerMult),
     value, // 계층 배수 전 원시 가치(포션 드랍 판정용)

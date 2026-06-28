@@ -7,7 +7,7 @@ import { getEnemies, getEnemy } from "../data/enemies";
 import { loadBestScores, loadDeckSnapshot, recordScore, saveDeckSnapshot } from "../lib/challenge";
 import { computeBattleDrop, getEnemyWeakness, WEAKNESS_AMP } from "../data/enemy-traits";
 import { events } from "../data/events";
-import { getRelic, getRelicEffects, pickRelics } from "../data/relics";
+import { getRelic, getRelicEffects, pickRelics, RELIC_IDS } from "../data/relics";
 import { getPotion, MAX_POTIONS, pickPotions, potionNeedsTarget } from "../data/potions";
 import {
   chooseGearRewards,
@@ -62,7 +62,7 @@ function getBaseOperator(operatorId: string): Operator {
   return operator;
 }
 
-function freshParty(operatorIds?: string[]): PartyMember[] {
+export function freshParty(operatorIds?: string[]): PartyMember[] {
   const roster =
     operatorIds && operatorIds.length > 0
       ? operatorIds
@@ -195,7 +195,7 @@ const BREAK_TURNS = 2; // 불균형 지속(적 행동 손실 횟수)
 const TACTICAL_STAGGER = 16; // 포션 등 카드 외 피해의 불균형 누적
 
 // 카드 템포: 적의 행동 주기(카드 N장당 1회). 빠른 적/보스일수록 자주 행동.
-function enemyActionEvery(e: Enemy): number {
+export function enemyActionEvery(e: Enemy): number {
   let every = e.speed >= 98 ? 2 : e.speed <= 88 ? 4 : 3;
   if (e.boss) every = 2;
   else if (e.elite && every > 3) every = 3;
@@ -393,7 +393,7 @@ function getPassiveDamageBonus(actor: PartyMember, target: BattleEnemy, kind: Sk
     if (mech === "crystal-burst" && vulnerable) bonus += 0.22 * scale * e; // 취약 적 특화
     if (mech === "blade-stacks" && kind !== "attack") bonus += stacks * 0.06 * scale * e; // 누적 강타
     if (mech === "essence-collapse") bonus += stacks * 0.06 * scale * e; // 본질 붕괴
-    if (mech === "flat-power") bonus += 0.08 * scale * e; // 상시 화력
+    if (mech === "flat-power") bonus += 0.13 * scale * e; // 상시 자기 화력(여풍 스탯 스케일·울프가드 +20% 열기 등 강한 자기버프 반영, 무조건 발동)
     if (mech === "team-amp") bonus += 0.05 * scale * elite; // 디버퍼/버퍼: 정예화 시 증폭 카드 강화
   }
   return bonus;
@@ -448,7 +448,7 @@ function applySkillMechanic(actor: PartyMember, target: BattleEnemy, baseDamage:
   return { damage, statuses, notes };
 }
 
-function applyGearStats(member: PartyMember): PartyMember {
+export function applyGearStats(member: PartyMember): PartyMember {
   const stats = getEquippedGears(member.gear).reduce(
     (total, gear) => {
       const delta = getGearStatDeltas(gear, member.element);
@@ -481,14 +481,14 @@ function applyGearStats(member: PartyMember): PartyMember {
   };
 }
 
-function equipGearToMember(member: PartyMember, gear: RunGear): PartyMember {
+export function equipGearToMember(member: PartyMember, gear: RunGear): PartyMember {
   const slot = getGearSlot(gear);
   const equipped = applyGearStats({ ...member, gear: { ...member.gear, [slot]: gear } });
   return { ...equipped, hp: Math.min(equipped.maxHp, member.hp + Math.max(0, equipped.maxHp - member.maxHp)) };
 }
 
 // ===== 카드 덱빌더 (makeCard/buildDeck/CARD_COST는 data/cards.ts로 분리) =====
-function shuffle<T>(arr: T[], seed: number): T[] {
+export function shuffle<T>(arr: T[], seed: number): T[] {
   const a = arr.slice();
   let s = (seed || 1) & 0x7fffffff;
   for (let i = a.length - 1; i > 0; i -= 1) {
@@ -498,7 +498,7 @@ function shuffle<T>(arr: T[], seed: number): T[] {
   }
   return a;
 }
-function drawHand(drawPile: Card[], discardPile: Card[], hand: Card[], n: number, seed: number) {
+export function drawHand(drawPile: Card[], discardPile: Card[], hand: Card[], n: number, seed: number) {
   let dp = drawPile.slice();
   let disc = discardPile.slice();
   const h = hand.slice();
@@ -509,7 +509,7 @@ function drawHand(drawPile: Card[], discardPile: Card[], hand: Card[], n: number
   }
   return { hand: h, drawPile: dp, discardPile: disc };
 }
-function makeIntent(enemy: BattleEnemy, turn: number): BattleEnemy["telegraph"] {
+export function makeIntent(enemy: BattleEnemy, turn: number): BattleEnemy["telegraph"] {
   if (enemy.statuses.includes("defense-break")) return { kind: "stunned", damage: 0, label: "불균형 · 행동 불가" };
   const a = buildEnemyAction(enemy, turn);
   const tags: string[] = [];
@@ -616,7 +616,7 @@ function playTacticalCard(current: RunState, card: Card, targetEnemyId?: string)
   return advanceTempo({ ...current, battle: nextBattle }, 1);
 }
 
-function playCardOnState(current: RunState, uid: string, targetEnemyId?: string): RunState {
+export function playCardOnState(current: RunState, uid: string, targetEnemyId?: string): RunState {
   const battle = current.battle;
   if (!battle || current.screen !== "battle") return current;
   const card = battle.hand.find((c) => c.uid === uid);
@@ -665,7 +665,7 @@ function playCardOnState(current: RunState, uid: string, targetEnemyId?: string)
   const setCrit = getSetCrit(actor);
   const setStagger = getSetStagger(actor);
   const isCrit = rollCrit(actor, `${battle.turn}:${card.uid}`, fx.critBonus + (battle.critBuff ?? 0) + critSurge + eliteCrit + setCrit.rate);
-  const dmgMult = 1 + fx.damageMult + (battle.dmgBuffPct ?? 0) + teamAmp;
+  const dmgMult = 1 + fx.damageMult + (battle.dmgBuffPct ?? 0) + teamAmp + (aoe ? fx.aoeDamage : 0);
   // 연타(連打): 보유 스택만큼 배틀 스킬 +30~75% / 궁극 +20~50% (소모형)
   const multiHitStacks = Math.min(4, battle.multiHit ?? 0);
   const multiHitBonus = multiHitStacks > 0
@@ -690,7 +690,7 @@ function playCardOnState(current: RunState, uid: string, targetEnemyId?: string)
     const linkCombo = kind === "link-skill" && enemy.statuses.includes("defense-break");
     const shatter = actor.element === "physical" && enemy.statuses.includes("freeze"); // 쇄빙(Shatter)
     const weak = getEnemyWeakness(enemy.faction) === actor.element; // 세력 원소 약점
-    mech.damage = Math.ceil(mech.damage * dmgMult * (1 + multiHitBonus) * defenseFactor(enemy.defense) * (enemy.statuses.includes("defense-break") ? IMBALANCE_DAMAGE_TAKEN : 1) * (linkCombo ? LINK_COMBO_AMP : 1) * (armorBroken ? ARMOR_BREAK_AMP : 1) * (shatter ? SHATTER_AMP : 1) * (weak ? WEAKNESS_AMP : 1) * (isCrit ? 1 + actor.critDamage + setCrit.dmg : 1));
+    mech.damage = Math.ceil(mech.damage * dmgMult * (1 + multiHitBonus) * defenseFactor(enemy.defense) * (enemy.statuses.includes("defense-break") ? IMBALANCE_DAMAGE_TAKEN * (1 + fx.vsBrokenDamage) : 1) * (linkCombo ? LINK_COMBO_AMP : 1) * (armorBroken ? ARMOR_BREAK_AMP : 1) * (shatter ? SHATTER_AMP : 1) * (weak ? WEAKNESS_AMP : 1) * (isCrit ? 1 + actor.critDamage + setCrit.dmg : 1));
     if (isCrit) noteSet.add("치명타");
     if (weak) noteSet.add("약점!");
     if (linkCombo) noteSet.add("연계 강타");
@@ -888,7 +888,7 @@ function advanceTempo(current: RunState, ticks: number): RunState {
 }
 
 // 턴 넘기기(정비): 적 템포 +1 → 에너지 재충전 + 새 손패 + 지속 회복.
-function endTurnOnState(current: RunState): RunState {
+export function endTurnOnState(current: RunState): RunState {
   const battle = current.battle;
   if (!battle || current.screen !== "battle") return current;
   const afterEnemies = advanceTempo(current, 1);
@@ -903,7 +903,12 @@ function endTurnOnState(current: RunState): RunState {
   const regenActive = regen && regen.turns > 0;
   if (regenActive) party = healParty(party, regen.amount);
   const nextRegen = regenActive ? (regen.turns - 1 > 0 ? { amount: regen.amount, turns: regen.turns - 1 } : undefined) : regen;
-  const regenLog = regenActive ? [`지속 회복 +${regen!.amount}`] : [];
+  // 유물 상시 회복(사리아·나이팅게일): 매 턴 파티 회복
+  if (relicFx.regenPerTurn > 0) party = healParty(party, relicFx.regenPerTurn);
+  const regenLog = [
+    ...(regenActive ? [`지속 회복 +${regen!.amount}`] : []),
+    ...(relicFx.regenPerTurn > 0 ? [`유물 회복 +${relicFx.regenPerTurn}`] : []),
+  ];
   // 아츠 DoT: 연소·부식 적은 매 턴 시작 시 지속 피해(부식은 강함).
   let dotTotal = 0;
   const enemies = b.enemies.map((e) => {
@@ -940,20 +945,22 @@ export function useRunState(): RunState & RunActions {
       const fx = getRelicEffects(snap.relics);
       const boss = getEnemy(bossId);
       const every = enemyActionEvery(boss);
-      const e: BattleEnemy = { ...boss, hp: boss.maxHp, statuses: [], actionGauge: 0, actionEvery: every, stagger: 0, physBreakStacks: 0 };
+      const e: BattleEnemy = { ...boss, hp: boss.maxHp, statuses: [], actionGauge: 0 - fx.enemyStartDelay, actionEvery: every, stagger: 0, physBreakStacks: 0 };
       const enemy = { ...e, telegraph: makeIntent(e, 1) };
       const party = fx.startShield > 0 ? bs.party.map((m) => ({ ...m, shield: m.shield + fx.startShield })) : bs.party;
       const deck = buildDeck(party, snap.deck, { battle: true });
       const maxEnergy = ENERGY_PER_TURN + fx.maxEnergyBonus;
       const handSize = HAND_SIZE + fx.handBonus;
       const drawn = drawHand(shuffle(deck, 17), [], [], handSize, 11);
-      return { ...current, party, relics: snap.relics, sp: bs.sp, maxSp: snap.maxSp, challengeBossId: bossId, challengeTurns: undefined, screen: "battle", battle: { enemies: [enemy], hand: drawn.hand, drawPile: drawn.drawPile, discardPile: [], energy: maxEnergy + fx.startEnergy + bs.startEnergy, maxEnergy, turn: 1, log: [`보스 도전 — ${boss.name}`] } };
+      return { ...current, party, relics: snap.relics, sp: bs.sp, maxSp: snap.maxSp, challengeBossId: bossId, challengeTurns: undefined, screen: "battle", battle: { enemies: [enemy], hand: drawn.hand, drawPile: drawn.drawPile, discardPile: [], energy: maxEnergy + fx.startEnergy + bs.startEnergy, maxEnergy, multiHit: fx.startMultiHit > 0 ? fx.startMultiHit : undefined, turn: 1, log: [`보스 도전 — ${boss.name}`] } };
     });
   }, []);
   const confirmDeployment = useCallback((operatorIds: string[]) => setState((current) => {
     const party = freshParty(operatorIds);
     const sd = startingDeck(0, party); // 시작 덱을 선택한 파티의 기본 카드(기본공격+방어)로 재구성
-    return { ...current, party, deck: sd.deck, deckSeq: sd.seq, screen: "map", availableNodes: current.availableNodes.length > 0 ? current.availableNodes : getFactionStart(current.factionIndex) };
+    // 테스트 훅: URL에 ?relics=all 이면 전 유물 시드(유물 동작 확인용)
+    const testRelics = typeof window !== "undefined" && /[?&]relics=all/.test(window.location.search) ? RELIC_IDS : [];
+    return { ...current, party, deck: sd.deck, deckSeq: sd.seq, relics: [...current.relics, ...testRelics], screen: "map", availableNodes: current.availableNodes.length > 0 ? current.availableNodes : getFactionStart(current.factionIndex) };
   }), []);
   const abandonRun = useCallback(() => setState((current) => ({ ...current, screen: "summary", result: "abandoned" })), []);
 
@@ -997,15 +1004,16 @@ export function useRunState(): RunState & RunActions {
       const startEnemies = getEnemies(node.enemyIds ?? []).map((enemy, i) => {
         const every = enemyActionEvery(enemy);
         // 초기 게이지를 적마다 살짝 어긋나게(동시 행동 방지). 첫 행동까지 최소 1장.
-        const e: BattleEnemy = { ...enemy, hp: enemy.maxHp, statuses: [], actionGauge: Math.min(i, every - 1), actionEvery: every, stagger: 0, physBreakStacks: 0 };
+        const e: BattleEnemy = { ...enemy, hp: enemy.maxHp, statuses: [], actionGauge: Math.min(i, every - 1) - fx.enemyStartDelay, actionEvery: every, stagger: 0, physBreakStacks: 0 };
         return { ...e, telegraph: makeIntent(e, 1) };
       });
       const deck = buildDeck(battleParty, current.deck, { battle: true });
       const maxEnergy = ENERGY_PER_TURN + fx.maxEnergyBonus;
       const handSize = HAND_SIZE + fx.handBonus;
       const drawn = drawHand(shuffle(deck, startEnemies.length * 7 + current.battlesWon + 3), [], [], handSize, 11);
-      const relicLog = fx.startShield > 0 || fx.startEnergy > 0 ? [`유물 발동 — ${[fx.startShield > 0 ? `보호막 +${fx.startShield}` : "", fx.startEnergy > 0 ? `에너지 +${fx.startEnergy}` : ""].filter(Boolean).join(" · ")}`] : [];
-      return { ...base, party: battleParty, sp: battleStartRaw.sp, screen: "battle", battle: { enemies: startEnemies, hand: drawn.hand, drawPile: drawn.drawPile, discardPile: [], energy: maxEnergy + fx.startEnergy + battleStartRaw.startEnergy, maxEnergy, turn: 1, log: [...relicLog, `${node.title}에서 적과 조우했습니다.`] } };
+      const relicBits = [fx.startShield > 0 ? `보호막 +${fx.startShield}` : "", fx.startEnergy > 0 ? `에너지 +${fx.startEnergy}` : "", fx.startMultiHit > 0 ? `연타 ${fx.startMultiHit}` : "", fx.enemyStartDelay > 0 ? `적 지연 ${fx.enemyStartDelay}` : ""].filter(Boolean);
+      const relicLog = relicBits.length ? [`유물 발동 — ${relicBits.join(" · ")}`] : [];
+      return { ...base, party: battleParty, sp: battleStartRaw.sp, screen: "battle", battle: { enemies: startEnemies, hand: drawn.hand, drawPile: drawn.drawPile, discardPile: [], energy: maxEnergy + fx.startEnergy + battleStartRaw.startEnergy, maxEnergy, multiHit: fx.startMultiHit > 0 ? fx.startMultiHit : undefined, turn: 1, log: [...relicLog, `${node.title}에서 적과 조우했습니다.`] } };
     });
   }, []);
 

@@ -76,7 +76,15 @@ function rebalance(e) {
 }
 
 // 티어 보정(위키 분포/등급 반영): 파조의 상 = 무릉 아겔로스 네임드 보스.
-const TIER_OVERRIDE = { tidalklast: "Boss" };
+const TIER_OVERRIDE = {
+  tidalklast: "Boss",
+  // 후반(F15+) 일반 전투 램프용 Advanced/Alpha 티어 확보. Elite 일부 강등(Elite는 정예 노드 전용으로 충분히 유지).
+  "glaring-rakerbeast": "Advanced", "spotted-rakerbeast": "Advanced", "skydrummer": "Alpha", // 광석수
+  "bonekrusher-ballista": "Advanced", "bonekrusher-executioner": "Alpha",                    // 본크러셔
+  "cloud-obliterator": "Advanced", "hill-smasher": "Alpha",                                  // 청파채
+  "effigy": "Advanced",                                                                       // 아겔로스
+  "tidewalker-delta": "Advanced",                                                             // 침식체
+};
 for (const e of data) if (TIER_OVERRIDE[e.id]) e.tier = TIER_OVERRIDE[e.id];
 
 for (const e of data) rebalance(e);

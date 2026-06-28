@@ -264,8 +264,8 @@ export default function BattleScreen({
                 if (!relic) return null;
                 const Icon = ICON_MAP[relic.icon] ?? Gem;
                 return (
-                  <span key={id} className="flex h-7 w-7 items-center justify-center border bg-ef-card" style={{ ...CUT_SM, borderColor: `${ACCENT}55`, color: ACCENT }} title={`${relic.name} — ${relic.description}`}>
-                    <Icon className="h-3.5 w-3.5" />
+                  <span key={id} className="relative flex h-7 w-7 items-center justify-center overflow-hidden border bg-ef-card" style={{ ...CUT_SM, borderColor: `${ACCENT}55`, color: ACCENT }} title={`${relic.name} — ${relic.description}`}>
+                    {relic.image ? <Image src={relic.image} alt={relic.name} fill sizes="28px" className="object-cover" /> : <Icon className="h-3.5 w-3.5" />}
                   </span>
                 );
               })}
