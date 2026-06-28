@@ -76,7 +76,7 @@ function EnemyCard({ enemy, selected, onSelect }: { enemy: BattleEnemy; selected
       type="button"
       onClick={onSelect}
       disabled={dead}
-      className={`group relative w-[200px] shrink-0 border bg-ef-card2 p-3 text-left transition ${dead ? "opacity-25 grayscale" : selected ? "-translate-y-1" : "hover:-translate-y-0.5"}`}
+      className={`group relative w-[272px] shrink-0 border bg-ef-card2 p-4 text-left transition ${dead ? "opacity-25 grayscale" : selected ? "-translate-y-1" : "hover:-translate-y-0.5"}`}
       style={{ ...CUT_SM, borderColor: selected && !dead ? ACCENT : "#202020" }}
     >
       {selected && !dead && (
@@ -104,10 +104,10 @@ function EnemyCard({ enemy, selected, onSelect }: { enemy: BattleEnemy; selected
           {tg.kind === "stunned" ? <Zap className="h-3 w-3" /> : <Swords className="h-3 w-3" />} {tg.label}
         </span>
       )}
-      <div className="relative mx-auto h-28 w-28">
-        {enemy.image ? <Image src={enemy.image} alt={enemy.name} fill sizes="112px" className="object-contain" /> : <Shield className="mx-auto mt-7 h-14 w-14 text-red-200/30" />}
+      <div className="relative mx-auto h-44 w-44">
+        {enemy.image ? <Image src={enemy.image} alt={enemy.name} fill sizes="176px" className="object-contain" /> : <Shield className="mx-auto mt-10 h-20 w-20 text-red-200/30" />}
       </div>
-      <p className="mt-1 truncate text-base font-black text-white">{enemy.name}</p>
+      <p className="mt-1.5 truncate text-xl font-black text-white">{enemy.name}</p>
       {!dead && (() => {
         const weak = getEnemyWeakness(enemy.faction);
         return weak ? (
@@ -129,10 +129,10 @@ function EnemyCard({ enemy, selected, onSelect }: { enemy: BattleEnemy; selected
           </div>
         ) : null;
       })()}
-      <div className="mt-1 flex items-center justify-between font-mono text-[10px] font-bold tabular-nums text-ef-muted">
+      <div className="mt-1.5 flex items-center justify-between font-mono text-xs font-bold tabular-nums text-ef-muted">
         <span>HP</span><span>{enemy.hp}/{enemy.maxHp}</span>
       </div>
-      <Bar value={enemy.hp} max={enemy.maxHp} color="#f43f5e" />
+      <Bar value={enemy.hp} max={enemy.maxHp} color="#f43f5e" height="h-2.5" />
       {enemy.staggerHp > 0 && (
         <div className="mt-1.5">
           <div className="mb-0.5 flex items-center justify-between font-mono text-[8px] font-bold uppercase tracking-wide">
@@ -162,22 +162,22 @@ function EnemyCard({ enemy, selected, onSelect }: { enemy: BattleEnemy; selected
 function PartyCard({ member }: { member: PartyMember }) {
   const dead = member.hp <= 0;
   return (
-    <div className={`w-[168px] shrink-0 border border-ef-line bg-ef-card p-2.5 ${dead ? "opacity-30 grayscale" : ""}`} style={CUT_SM}>
-      <div className="flex items-center gap-2">
-        <span className="relative h-12 w-12 shrink-0 overflow-hidden border border-ef-line bg-black" style={{ ...CUT_SM, borderColor: `${elementColor[member.element]}66` }}>
-          {member.image ? <Image src={member.image} alt={member.name} fill sizes="48px" className="object-cover object-top" /> : null}
+    <div className={`w-[228px] shrink-0 border border-ef-line bg-ef-card p-3.5 ${dead ? "opacity-30 grayscale" : ""}`} style={CUT_SM}>
+      <div className="flex items-center gap-3">
+        <span className="relative h-16 w-16 shrink-0 overflow-hidden border border-ef-line bg-black" style={{ ...CUT_SM, borderColor: `${elementColor[member.element]}66` }}>
+          {member.image ? <Image src={member.image} alt={member.name} fill sizes="64px" className="object-cover object-top" /> : null}
         </span>
         <div className="min-w-0">
-          <p className="truncate text-xs font-black text-white">{member.name}</p>
-          <p className="font-mono text-[9px] uppercase tracking-wide" style={{ color: elementColor[member.element] }}>{member.className}</p>
+          <p className="truncate text-base font-black text-white">{member.name}</p>
+          <p className="font-mono text-[11px] uppercase tracking-wide" style={{ color: elementColor[member.element] }}>{member.className}</p>
         </div>
       </div>
-      <div className="mt-1.5 flex items-center justify-between font-mono text-[10px] font-bold tabular-nums text-ef-muted">
+      <div className="mt-2.5 flex items-center justify-between font-mono text-xs font-bold tabular-nums text-ef-muted">
         <span>HP</span><span>{member.hp}/{member.maxHp}{member.shield > 0 ? ` (+${member.shield})` : ""}</span>
       </div>
-      <Bar value={member.hp} max={member.maxHp} color="#34d399" />
+      <Bar value={member.hp} max={member.maxHp} color="#34d399" height="h-2.5" />
       {member.shield > 0 && (
-        <div className="mt-1 flex items-center gap-1 font-mono text-[9px] font-bold text-cyan-300"><Shield className="h-3 w-3" /> 보호막 {member.shield}</div>
+        <div className="mt-1.5 flex items-center gap-1 font-mono text-[10px] font-bold text-cyan-300"><Shield className="h-3.5 w-3.5" /> 보호막 {member.shield}</div>
       )}
     </div>
   );
@@ -190,29 +190,29 @@ function HandCard({ card, playable, downed = false, onPlay }: { card: Card; play
       type="button"
       onClick={onPlay}
       disabled={!playable}
-      className={`relative flex h-[180px] w-[132px] shrink-0 flex-col border bg-gradient-to-b from-ef-card2 to-ef-bg p-2.5 text-left transition ${playable ? "hover:-translate-y-3" : "cursor-not-allowed opacity-40"}`}
+      className={`relative flex h-[232px] w-[168px] shrink-0 flex-col border bg-gradient-to-b from-ef-card2 to-ef-bg p-3 text-left transition ${playable ? "hover:-translate-y-3" : "cursor-not-allowed opacity-40"}`}
       style={{ ...CUT_SM, borderColor: playable ? `${col}99` : "#202020" }}
     >
       {downed && (
-        <span className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-black/70 font-mono text-[10px] font-black uppercase tracking-wider text-red-400" style={CUT_SM}>전투 불능</span>
+        <span className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center bg-black/70 font-mono text-xs font-black uppercase tracking-wider text-red-400" style={CUT_SM}>전투 불능</span>
       )}
       <div className="flex items-start justify-between">
-        <span className="flex h-7 w-7 items-center justify-center border font-mono text-sm font-black tabular-nums text-black" style={{ ...CUT_SM, background: ACCENT, borderColor: ACCENT }}>{card.cost}</span>
-        <span className="border border-ef-line bg-black/50 px-1.5 py-0.5 font-mono text-[8px] font-black uppercase" style={{ ...CUT_SM, color: col }}>{kindLabel[card.kind]}</span>
+        <span className="flex h-9 w-9 items-center justify-center border font-mono text-lg font-black tabular-nums text-black" style={{ ...CUT_SM, background: ACCENT, borderColor: ACCENT }}>{card.cost}</span>
+        <span className="border border-ef-line bg-black/50 px-2 py-0.5 font-mono text-[10px] font-black uppercase" style={{ ...CUT_SM, color: col }}>{kindLabel[card.kind]}</span>
       </div>
-      <div className="relative mx-auto mt-1 h-12 w-12">
-        {card.icon ? <Image src={card.icon} alt="" fill sizes="48px" className="object-contain" /> : null}
+      <div className="relative mx-auto mt-1.5 h-16 w-16">
+        {card.icon ? <Image src={card.icon} alt="" fill sizes="64px" className="object-contain" /> : null}
       </div>
-      <p className="mt-1 line-clamp-2 text-[11px] font-black leading-tight text-white">{card.name}</p>
-      <p className="font-mono text-[8px] uppercase tracking-wide text-ef-muted">{card.operatorName}</p>
-      <div className="mt-auto border-t border-ef-line pt-1">
+      <p className="mt-1.5 line-clamp-2 text-sm font-black leading-tight text-white">{card.name}</p>
+      <p className="font-mono text-[10px] uppercase tracking-wide text-ef-muted">{card.operatorName}</p>
+      <div className="mt-auto border-t border-ef-line pt-1.5">
         <div className="flex items-center justify-between">
-          <span className="font-mono text-[8px] uppercase text-ef-muted">{card.target === "all-enemies" ? "전체" : card.target === "party" ? "파티" : "단일"}</span>
+          <span className="font-mono text-[10px] uppercase text-ef-muted">{card.target === "all-enemies" ? "전체" : card.target === "party" ? "파티" : "단일"}</span>
           {card.stagger > 0 && (
-            <span className="font-mono text-[8px] font-black tabular-nums" style={{ color: PRIMARY }} title="불균형치">◇{card.stagger}</span>
+            <span className="font-mono text-[10px] font-black tabular-nums" style={{ color: PRIMARY }} title="불균형치">◇{card.stagger}</span>
           )}
         </div>
-        <p className="mt-0.5 line-clamp-2 font-mono text-[9px] font-bold leading-tight" style={{ color: card.effect ? "#7fd4a3" : ACCENT }}>{card.effectLine}</p>
+        <p className="mt-0.5 line-clamp-2 font-mono text-[11px] font-bold leading-tight" style={{ color: card.effect ? "#7fd4a3" : ACCENT }}>{card.effectLine}</p>
       </div>
     </button>
   );
@@ -338,9 +338,9 @@ export default function BattleScreen({
       <div className="relative z-20 flex items-end justify-between gap-3 border-t border-ef-line bg-black/55 px-5 pb-3 pt-4 backdrop-blur-sm">
         {/* 에너지 오브 */}
         <div className="flex shrink-0 flex-col items-center gap-1">
-          <span className="flex h-14 w-14 flex-col items-center justify-center rounded-full border-2" style={{ borderColor: ACCENT, background: `${ACCENT}1a` }} title="에너지(행동 포인트)">
-            <Zap className="h-3.5 w-3.5" style={{ color: ACCENT }} />
-            <span className="font-mono text-sm font-black leading-none tabular-nums" style={{ color: ACCENT }}>{battle.energy}<span className="text-[10px] text-ef-muted">/{battle.maxEnergy}</span></span>
+          <span className="flex h-[72px] w-[72px] flex-col items-center justify-center gap-0.5 rounded-full border-2" style={{ borderColor: ACCENT, background: `${ACCENT}1a` }} title="에너지(행동 포인트)">
+            <Zap className="h-4 w-4" style={{ color: ACCENT }} />
+            <span className="font-mono text-lg font-black leading-none tabular-nums" style={{ color: ACCENT }}>{battle.energy}<span className="text-xs text-ef-muted">/{battle.maxEnergy}</span></span>
           </span>
         </div>
 
@@ -352,7 +352,7 @@ export default function BattleScreen({
           ) : (
             <div className="flex items-end justify-center">
               {battle.hand.map((card, i) => (
-                <div key={card.uid} className="transition-transform hover:z-30" style={{ marginLeft: i === 0 ? 0 : -28, zIndex: i }}>
+                <div key={card.uid} className="transition-transform hover:z-30" style={{ marginLeft: i === 0 ? 0 : -34, zIndex: i }}>
                   <HandCard card={card} playable={battle.energy >= card.cost && casterAlive(card)} downed={!casterAlive(card)} onPlay={() => play(card)} />
                 </div>
               ))}
