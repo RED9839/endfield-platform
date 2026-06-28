@@ -350,9 +350,9 @@ export default function BattleScreen({
           {battle.hand.length === 0 ? (
             <p className="py-5 text-center text-sm text-ef-muted">손패가 없습니다. 턴을 종료하세요.</p>
           ) : (
-            <div className="flex items-end justify-center">
-              {battle.hand.map((card, i) => (
-                <div key={card.uid} className="transition-transform hover:z-30" style={{ marginLeft: i === 0 ? 0 : -34, zIndex: i }}>
+            <div className="flex flex-wrap items-end justify-center gap-2.5">
+              {battle.hand.map((card) => (
+                <div key={card.uid} className="transition-transform hover:z-30">
                   <HandCard card={card} playable={battle.energy >= card.cost && casterAlive(card)} downed={!casterAlive(card)} onPlay={() => play(card)} />
                 </div>
               ))}
