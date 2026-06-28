@@ -46,7 +46,7 @@ export default function CampScreen({
             <ArrowLeft className="h-4 w-4" />
           </button>
           <div>
-            <p className="font-mono text-[10px] font-bold uppercase tracking-[0.3em] text-ef-muted">{promoting ? "Elite Reward // 정예 보상" : "Forge // 카드 정예화"}</p>
+            <p className="font-mono text-[12px] font-bold uppercase tracking-[0.3em] text-ef-muted">{promoting ? "Elite Reward // 정예 보상" : "Forge // 카드 정예화"}</p>
             <h1 className="text-2xl font-black text-white">정예화할 카드 선택 {promoting ? <span className="text-sm font-bold" style={{ color: ACCENT }}>· 남은 {promotesLeft}회</span> : <span className="text-sm font-bold text-ef-muted">· 오퍼 컨셉 강화 (강타·빌더·아츠·치명…)</span>}</h1>
           </div>
         </div>
@@ -69,11 +69,11 @@ export default function CampScreen({
               >
                 <span className="flex items-center justify-between">
                   <span className="flex h-6 w-6 items-center justify-center border font-mono text-xs font-black text-black" style={{ ...CUT_SM, background: ACCENT, borderColor: ACCENT }}>{card.cost}</span>
-                  {eliteTag ? <span className="border px-1 py-px font-mono text-[8px] font-black uppercase" style={{ ...CUT_SM, color: ACCENT, borderColor: `${ACCENT}88` }}>{eliteTag}</span> : <span className="font-mono text-[8px] uppercase" style={{ color: col }}>{KIND_LABEL[card.kind]}</span>}
+                  {eliteTag ? <span className="border px-1 py-px font-mono text-[10px] font-black uppercase" style={{ ...CUT_SM, color: ACCENT, borderColor: `${ACCENT}88` }}>{eliteTag}</span> : <span className="font-mono text-[10px] uppercase" style={{ color: col }}>{KIND_LABEL[card.kind]}</span>}
                 </span>
                 <span className="mt-2 truncate text-sm font-black text-white">{card.name}</span>
-                <span className="truncate font-mono text-[9px] text-ef-muted">{card.operatorName}</span>
-                <span className="mt-1 font-mono text-[10px] font-bold" style={{ color: ACCENT }}>{maxed ? "최대 정예화 (II)" : `→ 정예화 ${lv + 1}차`}</span>
+                <span className="truncate font-mono text-[11px] text-ef-muted">{card.operatorName}</span>
+                <span className="mt-1 font-mono text-[12px] font-bold" style={{ color: ACCENT }}>{maxed ? "최대 정예화 (II)" : `→ 정예화 ${lv + 1}차`}</span>
               </button>
             );
           })}
@@ -86,7 +86,7 @@ export default function CampScreen({
     <section className="mx-auto flex min-h-[620px] w-full max-w-4xl flex-col justify-center px-4 py-10 sm:px-6">
       <div className="text-center">
         <Flame className="mx-auto h-11 w-11" style={{ color: PRIMARY }} />
-        <p className="mt-4 font-mono text-[10px] font-bold uppercase tracking-[0.34em] text-ef-muted">
+        <p className="mt-4 font-mono text-[12px] font-bold uppercase tracking-[0.34em] text-ef-muted">
           MOBILE CAMP
         </p>
         <h1 className="mt-2 text-3xl font-black text-white">짧은 정비</h1>

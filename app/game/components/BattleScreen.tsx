@@ -80,14 +80,14 @@ function EnemyCard({ enemy, selected, onSelect }: { enemy: BattleEnemy; selected
       style={{ ...CUT_SM, borderColor: selected && !dead ? ACCENT : "#202020" }}
     >
       {selected && !dead && (
-        <span className="absolute -top-2 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1 border px-2 py-0.5 font-mono text-[9px] font-black uppercase tracking-wide text-black" style={{ ...CUT_SM, background: ACCENT }}>
+        <span className="absolute -top-2 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1 border px-2 py-0.5 font-mono text-[11px] font-black uppercase tracking-wide text-black" style={{ ...CUT_SM, background: ACCENT }}>
           <Crosshair className="h-3 w-3" /> TARGET
         </span>
       )}
       {/* 카드 템포 카운트다운: 이 적이 행동하기까지 사용해야 할 카드 수 */}
       {!dead && (
         <span
-          className="absolute left-2 top-2 z-10 flex items-center gap-1 border bg-black/80 px-1.5 py-0.5 font-mono text-[9px] font-black tabular-nums"
+          className="absolute left-2 top-2 z-10 flex items-center gap-1 border bg-black/80 px-1.5 py-0.5 font-mono text-[11px] font-black tabular-nums"
           style={{ ...CUT_SM, borderColor: until <= 1 ? "#f8717188" : "#3a4250", color: until <= 1 ? "#fca5a5" : "#cbd5e1" }}
           title="이 적이 행동하기까지 사용해야 하는 카드 수"
         >
@@ -97,7 +97,7 @@ function EnemyCard({ enemy, selected, onSelect }: { enemy: BattleEnemy; selected
       {/* 텔레그래프(다음 행동 예고) */}
       {!dead && tg && (
         <span
-          className="absolute right-2 top-2 z-10 flex items-center gap-1 border bg-black/80 px-1.5 py-0.5 font-mono text-[10px] font-black tabular-nums"
+          className="absolute right-2 top-2 z-10 flex items-center gap-1 border bg-black/80 px-1.5 py-0.5 font-mono text-[12px] font-black tabular-nums"
           style={{ ...CUT_SM, borderColor: tg.kind === "stunned" ? "#fb923c" : "#f87171", color: tg.kind === "stunned" ? "#fb923c" : "#fca5a5" }}
           title="다음 적 행동"
         >
@@ -111,7 +111,7 @@ function EnemyCard({ enemy, selected, onSelect }: { enemy: BattleEnemy; selected
       {!dead && (() => {
         const weak = getEnemyWeakness(enemy.faction);
         return weak ? (
-          <p className="mt-0.5 font-mono text-[9px] font-bold" style={{ color: elementColor[weak] }}>
+          <p className="mt-0.5 font-mono text-[11px] font-bold" style={{ color: elementColor[weak] }}>
             약점 · {ELEMENT_NAME[weak]}
           </p>
         ) : null;
@@ -123,7 +123,7 @@ function EnemyCard({ enemy, selected, onSelect }: { enemy: BattleEnemy; selected
             {traits.map((m) => {
               const info = TRAIT_INFO[m]!;
               return (
-                <span key={m} className="border px-1 py-px font-mono text-[8px] font-black uppercase tracking-wide" style={{ ...CUT_SM, borderColor: `${TRAIT_TONE[info.tone]}55`, color: TRAIT_TONE[info.tone], background: `${TRAIT_TONE[info.tone]}12` }}>{info.label}</span>
+                <span key={m} className="border px-1 py-px font-mono text-[10px] font-black uppercase tracking-wide" style={{ ...CUT_SM, borderColor: `${TRAIT_TONE[info.tone]}55`, color: TRAIT_TONE[info.tone], background: `${TRAIT_TONE[info.tone]}12` }}>{info.label}</span>
               );
             })}
           </div>
@@ -135,7 +135,7 @@ function EnemyCard({ enemy, selected, onSelect }: { enemy: BattleEnemy; selected
       <Bar value={enemy.hp} max={enemy.maxHp} color="#f43f5e" height="h-2.5" />
       {enemy.staggerHp > 0 && (
         <div className="mt-1.5">
-          <div className="mb-0.5 flex items-center justify-between font-mono text-[8px] font-bold uppercase tracking-wide">
+          <div className="mb-0.5 flex items-center justify-between font-mono text-[10px] font-bold uppercase tracking-wide">
             <span className={broken ? "text-orange-300" : "text-ef-muted"}>{broken ? "● BREAK" : "STAGGER"}</span>
             <span className="tabular-nums text-ef-muted">{Math.round(enemy.stagger)}/{enemy.staggerHp}</span>
           </div>
@@ -144,14 +144,14 @@ function EnemyCard({ enemy, selected, onSelect }: { enemy: BattleEnemy; selected
       )}
       {enemy.physBreakStacks > 0 && (
         <div className="mt-1 flex items-center gap-1">
-          <span className="font-mono text-[8px] font-bold uppercase text-sky-300/80">취약</span>
-          <span className="flex gap-0.5">{Array.from({ length: 4 }, (_, k) => <span key={k} className="text-[9px] leading-none" style={{ color: k < enemy.physBreakStacks ? "#7dd3fc" : "#33415580" }}>◆</span>)}</span>
+          <span className="font-mono text-[10px] font-bold uppercase text-sky-300/80">취약</span>
+          <span className="flex gap-0.5">{Array.from({ length: 4 }, (_, k) => <span key={k} className="text-[11px] leading-none" style={{ color: k < enemy.physBreakStacks ? "#7dd3fc" : "#33415580" }}>◆</span>)}</span>
         </div>
       )}
       {enemy.statuses.length > 0 && (
         <div className="mt-1.5 flex flex-wrap gap-1">
           {enemy.statuses.map((s) => (
-            <span key={s} className="border border-ef-line bg-black/40 px-1.5 py-0.5 text-[8px] font-black text-ef-accent-soft" style={CUT_SM}>{statusLabel(s)}</span>
+            <span key={s} className="border border-ef-line bg-black/40 px-1.5 py-0.5 text-[10px] font-black text-ef-accent-soft" style={CUT_SM}>{statusLabel(s)}</span>
           ))}
         </div>
       )}
@@ -169,7 +169,7 @@ function PartyCard({ member }: { member: PartyMember }) {
         </span>
         <div className="min-w-0">
           <p className="truncate text-base font-black text-white">{member.name}</p>
-          <p className="font-mono text-[11px] uppercase tracking-wide" style={{ color: elementColor[member.element] }}>{member.className}</p>
+          <p className="font-mono text-[13px] uppercase tracking-wide" style={{ color: elementColor[member.element] }}>{member.className}</p>
         </div>
       </div>
       <div className="mt-2.5 flex items-center justify-between font-mono text-xs font-bold tabular-nums text-ef-muted">
@@ -177,7 +177,7 @@ function PartyCard({ member }: { member: PartyMember }) {
       </div>
       <Bar value={member.hp} max={member.maxHp} color="#34d399" height="h-2.5" />
       {member.shield > 0 && (
-        <div className="mt-1.5 flex items-center gap-1 font-mono text-[10px] font-bold text-cyan-300"><Shield className="h-3.5 w-3.5" /> 보호막 {member.shield}</div>
+        <div className="mt-1.5 flex items-center gap-1 font-mono text-[12px] font-bold text-cyan-300"><Shield className="h-3.5 w-3.5" /> 보호막 {member.shield}</div>
       )}
     </div>
   );
@@ -198,21 +198,21 @@ function HandCard({ card, playable, downed = false, onPlay }: { card: Card; play
       )}
       <div className="flex items-start justify-between">
         <span className="flex h-9 w-9 items-center justify-center border font-mono text-lg font-black tabular-nums text-black" style={{ ...CUT_SM, background: ACCENT, borderColor: ACCENT }}>{card.cost}</span>
-        <span className="border border-ef-line bg-black/50 px-2 py-0.5 font-mono text-[10px] font-black uppercase" style={{ ...CUT_SM, color: col }}>{kindLabel[card.kind]}</span>
+        <span className="border border-ef-line bg-black/50 px-2 py-0.5 font-mono text-[12px] font-black uppercase" style={{ ...CUT_SM, color: col }}>{kindLabel[card.kind]}</span>
       </div>
       <div className="relative mx-auto mt-1.5 h-16 w-16">
         {card.icon ? <Image src={card.icon} alt="" fill sizes="64px" className="object-contain" /> : null}
       </div>
       <p className="mt-1.5 line-clamp-2 text-sm font-black leading-tight text-white">{card.name}</p>
-      <p className="font-mono text-[10px] uppercase tracking-wide text-ef-muted">{card.operatorName}</p>
+      <p className="font-mono text-[12px] uppercase tracking-wide text-ef-muted">{card.operatorName}</p>
       <div className="mt-auto border-t border-ef-line pt-1.5">
         <div className="flex items-center justify-between">
-          <span className="font-mono text-[10px] uppercase text-ef-muted">{card.target === "all-enemies" ? "전체" : card.target === "party" ? "파티" : "단일"}</span>
+          <span className="font-mono text-[12px] uppercase text-ef-muted">{card.target === "all-enemies" ? "전체" : card.target === "party" ? "파티" : "단일"}</span>
           {card.stagger > 0 && (
-            <span className="font-mono text-[10px] font-black tabular-nums" style={{ color: PRIMARY }} title="불균형치">◇{card.stagger}</span>
+            <span className="font-mono text-[12px] font-black tabular-nums" style={{ color: PRIMARY }} title="불균형치">◇{card.stagger}</span>
           )}
         </div>
-        <p className="mt-0.5 line-clamp-2 font-mono text-[11px] font-bold leading-tight" style={{ color: card.effect ? "#7fd4a3" : ACCENT }}>{card.effectLine}</p>
+        <p className="mt-0.5 line-clamp-2 font-mono text-[13px] font-bold leading-tight" style={{ color: card.effect ? "#7fd4a3" : ACCENT }}>{card.effectLine}</p>
       </div>
     </button>
   );
@@ -256,7 +256,7 @@ export default function BattleScreen({
         <div className="flex flex-wrap items-center gap-2">
           <span className="h-4 w-1" style={{ background: PRIMARY }} />
           <span className="font-mono text-sm font-black uppercase tracking-[0.2em] text-white">교전</span>
-          <span className="font-mono text-[11px] tracking-[0.2em] text-ef-muted">// {battle.turn}턴</span>
+          <span className="font-mono text-[13px] tracking-[0.2em] text-ef-muted">// {battle.turn}턴</span>
           {relics.length > 0 && (
             <span className="ml-2 flex items-center gap-1">
               {relics.map((id) => {
@@ -273,14 +273,14 @@ export default function BattleScreen({
           )}
           {(battle.dmgBuffPct || battle.critBuff || battle.partyRegen) && (
             <span className="ml-1 flex items-center gap-1">
-              {battle.dmgBuffPct ? <span className="border px-1.5 py-0.5 font-mono text-[9px] font-black" style={{ ...CUT_SM, borderColor: "#fb923c66", color: "#fb923c" }}>피해 +{Math.round(battle.dmgBuffPct * 100)}%</span> : null}
-              {battle.critBuff ? <span className="border px-1.5 py-0.5 font-mono text-[9px] font-black" style={{ ...CUT_SM, borderColor: "#f8717166", color: "#fca5a5" }}>치명 +{Math.round(battle.critBuff * 100)}%</span> : null}
-              {battle.partyRegen ? <span className="border px-1.5 py-0.5 font-mono text-[9px] font-black" style={{ ...CUT_SM, borderColor: "#67e8f966", color: "#67e8f9" }}>재생 {battle.partyRegen.turns}T</span> : null}
+              {battle.dmgBuffPct ? <span className="border px-1.5 py-0.5 font-mono text-[11px] font-black" style={{ ...CUT_SM, borderColor: "#fb923c66", color: "#fb923c" }}>피해 +{Math.round(battle.dmgBuffPct * 100)}%</span> : null}
+              {battle.critBuff ? <span className="border px-1.5 py-0.5 font-mono text-[11px] font-black" style={{ ...CUT_SM, borderColor: "#f8717166", color: "#fca5a5" }}>치명 +{Math.round(battle.critBuff * 100)}%</span> : null}
+              {battle.partyRegen ? <span className="border px-1.5 py-0.5 font-mono text-[11px] font-black" style={{ ...CUT_SM, borderColor: "#67e8f966", color: "#67e8f9" }}>재생 {battle.partyRegen.turns}T</span> : null}
             </span>
           )}
         </div>
         {/* 전투 로그 한 줄 */}
-        <p className="min-w-0 max-w-[46%] flex-1 truncate text-right font-mono text-[11px] text-ef-muted">{battle.log[0] ?? "전투 시작."}</p>
+        <p className="min-w-0 max-w-[46%] flex-1 truncate text-right font-mono text-[13px] text-ef-muted">{battle.log[0] ?? "전투 시작."}</p>
       </div>
 
       {/* 전장: 적 ↔ 파티 대치 — 화면 중앙에 한 덩어리로 정렬(공백 제거) */}
@@ -296,7 +296,7 @@ export default function BattleScreen({
           {/* 대치 디바이더 */}
           <div className="flex w-full max-w-[760px] items-center justify-center gap-3">
             <span className="h-px flex-1 bg-gradient-to-r from-transparent via-ef-line/60 to-ef-line/70" />
-            <span className="flex items-center gap-1.5 font-mono text-[10px] font-black uppercase tracking-[0.35em] text-ef-muted/70">
+            <span className="flex items-center gap-1.5 font-mono text-[12px] font-black uppercase tracking-[0.35em] text-ef-muted/70">
               <Swords className="h-3 w-3" style={{ color: PRIMARY }} /> 교전 <Swords className="h-3 w-3" style={{ color: PRIMARY }} />
             </span>
             <span className="h-px flex-1 bg-gradient-to-l from-transparent via-ef-line/60 to-ef-line/70" />
@@ -307,7 +307,7 @@ export default function BattleScreen({
             {party.map((member) => <PartyCard key={member.id} member={member} />)}
             {onUsePotion && potions.length > 0 && (
               <div className="flex items-center gap-2 border border-ef-line bg-ef-card px-3" style={CUT_SM}>
-                <span className="font-mono text-[9px] font-bold uppercase tracking-wide text-ef-muted">포션</span>
+                <span className="font-mono text-[11px] font-bold uppercase tracking-wide text-ef-muted">포션</span>
                 {potions.map((id, i) => {
                   const potion = getPotion(id);
                   if (!potion) return null;
@@ -346,7 +346,7 @@ export default function BattleScreen({
 
         {/* 부채꼴 손패 */}
         <div className="flex min-w-0 flex-1 flex-col items-center">
-          <span className="mb-1 font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-ef-muted">손패 · 카드 사용 시 적이 빨리 행동 (◇=불균형치)</span>
+          <span className="mb-1 font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-ef-muted">손패 · 카드 사용 시 적이 빨리 행동 (◇=불균형치)</span>
           {battle.hand.length === 0 ? (
             <p className="py-5 text-center text-sm text-ef-muted">손패가 없습니다. 턴을 종료하세요.</p>
           ) : (
@@ -362,7 +362,7 @@ export default function BattleScreen({
 
         {/* 덱/버린덱 + 턴 종료 */}
         <div className="flex shrink-0 flex-col items-end gap-2">
-          <span className="flex items-center gap-1 border border-ef-line bg-ef-card px-2.5 py-1 font-mono text-[11px] font-bold tabular-nums text-ef-muted" style={CUT_SM} title="덱 / 버린 더미">
+          <span className="flex items-center gap-1 border border-ef-line bg-ef-card px-2.5 py-1 font-mono text-[13px] font-bold tabular-nums text-ef-muted" style={CUT_SM} title="덱 / 버린 더미">
             <Layers className="h-3.5 w-3.5" /> {battle.drawPile.length}
             <Trash2 className="ml-1.5 h-3.5 w-3.5" /> {battle.discardPile.length}
           </span>

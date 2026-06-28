@@ -39,7 +39,7 @@ export default function RunSummaryScreen({
           ) : (
             <Skull className="mx-auto h-12 w-12" style={{ color: resultColor }} />
           )}
-          <p className="mt-5 font-mono text-[10px] font-bold uppercase tracking-[0.35em] text-ef-muted">
+          <p className="mt-5 font-mono text-[12px] font-bold uppercase tracking-[0.35em] text-ef-muted">
             RUN COMPLETE
           </p>
           <h1 className="mt-2 text-4xl font-black" style={{ color: resultColor }}>
@@ -49,11 +49,11 @@ export default function RunSummaryScreen({
             <div className="mx-auto mt-8 grid max-w-md grid-cols-2 gap-3">
               <div className="border bg-ef-card p-4" style={{ ...CUT_SM, borderColor: "#ffd24a66" }}>
                 <p className="font-mono text-3xl font-black tabular-nums" style={{ color: "#ffd24a" }}>{state.challengeTurns}<span className="text-sm text-ef-muted">턴</span></p>
-                <p className="mt-1 font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-ef-muted">처치 턴수{state.challengeNewRecord ? " · 신기록!" : ""}</p>
+                <p className="mt-1 font-mono text-[12px] font-bold uppercase tracking-[0.16em] text-ef-muted">처치 턴수{state.challengeNewRecord ? " · 신기록!" : ""}</p>
               </div>
               <div className="border border-ef-line bg-ef-card p-4" style={CUT_SM}>
                 <p className="font-mono text-3xl font-black tabular-nums text-white">{state.challengeBest ?? state.challengeTurns}<span className="text-sm text-ef-muted">턴</span></p>
-                <p className="mt-1 font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-ef-muted">최고 기록</p>
+                <p className="mt-1 font-mono text-[12px] font-bold uppercase tracking-[0.16em] text-ef-muted">최고 기록</p>
               </div>
             </div>
           ) : (
@@ -65,7 +65,7 @@ export default function RunSummaryScreen({
               ] as const).map(([label, value]) => (
                 <div key={label} className="border border-ef-line bg-ef-card p-4" style={CUT_SM}>
                   <p className="font-mono text-2xl font-black tabular-nums text-white">{value}</p>
-                  <p className="mt-1 font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-ef-muted">{label}</p>
+                  <p className="mt-1 font-mono text-[12px] font-bold uppercase tracking-[0.16em] text-ef-muted">{label}</p>
                 </div>
               ))}
             </div>

@@ -96,7 +96,7 @@ const SORT_LABEL: Record<SortKey, string> = { default: "기본", atk: "공격", 
 function StatChip({ label, value }: { label: string; value: string | number }) {
   return (
     <span className="block border border-ef-line bg-ef-card px-2 py-1.5 text-center" style={CUT_SM}>
-      <span className="block font-mono text-[8px] font-bold uppercase tracking-[0.18em] text-ef-muted">{label}</span>
+      <span className="block font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-ef-muted">{label}</span>
       <span className="mt-0.5 block font-mono text-xs font-black tabular-nums text-ef-ink">{value}</span>
     </span>
   );
@@ -125,7 +125,7 @@ function FilterChip({
           ? { borderColor: `${color}99`, background: `${color}1f`, color }
           : {}),
       }}
-      className={`border px-3 py-1.5 font-mono text-[11px] font-black uppercase tracking-wide transition ${
+      className={`border px-3 py-1.5 font-mono text-[13px] font-black uppercase tracking-wide transition ${
         active
           ? color
             ? ""
@@ -188,7 +188,7 @@ function RosterCard({
         />
         {mechTag && (
           <span
-            className="absolute bottom-1.5 left-1.5 z-10 flex items-center gap-1 border border-ef-accent/40 bg-ef-bg/85 px-1.5 py-0.5 font-mono text-[9px] font-black tracking-wide text-ef-accent-soft backdrop-blur-sm"
+            className="absolute bottom-1.5 left-1.5 z-10 flex items-center gap-1 border border-ef-accent/40 bg-ef-bg/85 px-1.5 py-0.5 font-mono text-[11px] font-black tracking-wide text-ef-accent-soft backdrop-blur-sm"
             style={CUT_SM}
           >
             <Sparkles className="h-2.5 w-2.5" />
@@ -199,16 +199,16 @@ function RosterCard({
 
       <div className="relative z-10 mt-2">
         <div className="flex items-center justify-between gap-2">
-          <p className="font-mono text-[9px] font-bold uppercase tracking-[0.24em] text-ef-muted">OPERATOR</p>
+          <p className="font-mono text-[11px] font-bold uppercase tracking-[0.24em] text-ef-muted">OPERATOR</p>
           <span
-            className="border px-2 py-0.5 font-mono text-[9px] font-black uppercase tracking-wide"
+            className="border px-2 py-0.5 font-mono text-[11px] font-black uppercase tracking-wide"
             style={{ ...CUT_SM, borderColor: `${element.color}66`, background: `${element.color}1a`, color: element.color }}
           >
             {element.label}
           </span>
         </div>
         <h3 className="mt-1 truncate text-xl font-black text-white">{operator.name}</h3>
-        <p className="truncate text-[11px] font-bold text-ef-muted">
+        <p className="truncate text-[13px] font-bold text-ef-muted">
           {operator.className} · {operator.role}
         </p>
 
@@ -219,10 +219,10 @@ function RosterCard({
         </div>
 
         <div className="mt-2 space-y-0.5 border-t border-ef-line pt-2">
-          <p className="truncate font-mono text-[9px] text-ef-muted">
+          <p className="truncate font-mono text-[11px] text-ef-muted">
             <span className="font-bold text-ef-accent-soft">직군 패시브</span> · {CLASS_PASSIVE_LABEL[operator.className] ?? "-"}
           </p>
-          <p className="truncate font-mono text-[9px] text-ef-muted">
+          <p className="truncate font-mono text-[11px] text-ef-muted">
             <span className="font-bold text-ef-accent-soft">재능</span> · {operator.passiveName}
           </p>
         </div>
@@ -255,7 +255,7 @@ function SynergyChip({
       style={CUT_SM}
     >
       {icon}
-      <span className="font-mono text-[9px] font-bold uppercase tracking-[0.14em] opacity-70">{label}</span>
+      <span className="font-mono text-[11px] font-bold uppercase tracking-[0.14em] opacity-70">{label}</span>
       <span className="font-mono text-xs font-black tabular-nums">{value}</span>
     </span>
   );
@@ -329,7 +329,7 @@ export default function DeploymentScreen({
           <div>
             <div className="flex items-center gap-2">
               <span className="h-4 w-1" style={{ background: PRIMARY }} />
-              <p className="font-mono text-[10px] font-bold uppercase tracking-[0.42em] text-ef-muted">
+              <p className="font-mono text-[12px] font-bold uppercase tracking-[0.42em] text-ef-muted">
                 Field Operation
               </p>
             </div>
@@ -359,7 +359,7 @@ export default function DeploymentScreen({
             <div className="space-y-2.5">
               {/* 속성 */}
               <div className="flex flex-wrap items-center gap-1.5">
-                <span className="mr-1 w-8 font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-ef-muted">속성</span>
+                <span className="mr-1 w-8 font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-ef-muted">속성</span>
                 <FilterChip active={elementFilter === "all"} onClick={() => setElementFilter("all")}>
                   전체
                 </FilterChip>
@@ -376,7 +376,7 @@ export default function DeploymentScreen({
               </div>
               {/* 직군 */}
               <div className="flex flex-wrap items-center gap-1.5">
-                <span className="mr-1 w-8 font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-ef-muted">직군</span>
+                <span className="mr-1 w-8 font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-ef-muted">직군</span>
                 <FilterChip active={classFilter === "all"} onClick={() => setClassFilter("all")}>
                   전체
                 </FilterChip>
@@ -394,13 +394,13 @@ export default function DeploymentScreen({
 
             {/* 정렬 */}
             <div className="flex flex-wrap items-center gap-1.5">
-              <span className="mr-1 font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-ef-muted">정렬</span>
+              <span className="mr-1 font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-ef-muted">정렬</span>
               {(Object.keys(SORT_LABEL) as SortKey[]).map((key) => (
                 <FilterChip key={key} active={sort === key} onClick={() => setSort(key)}>
                   {SORT_LABEL[key]}
                 </FilterChip>
               ))}
-              <span className="ml-1 font-mono text-[10px] font-bold tabular-nums text-ef-muted">
+              <span className="ml-1 font-mono text-[12px] font-bold tabular-nums text-ef-muted">
                 {visible.length}명
               </span>
             </div>

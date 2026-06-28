@@ -173,7 +173,7 @@ export default function RewardScreen({
                 <PackageOpen className="h-5 w-5" />
               </span>
               <div>
-                <p className="font-mono text-[11px] font-bold uppercase tracking-[0.24em] text-ef-muted">
+                <p className="font-mono text-[13px] font-bold uppercase tracking-[0.24em] text-ef-muted">
                   {isShop ? "Supply Depot" : "Operation Complete"} <span className="text-ef-muted/60">// {isShop ? "델랑 보급소" : "작전 완료"}</span>
                 </p>
                 <h1 className="mt-1 text-3xl font-black text-white">{isShop ? "전술 보급" : "전술 장비 회수"}</h1>
@@ -196,7 +196,7 @@ export default function RewardScreen({
                 </span>
               ) : (
                 <span className="flex items-center gap-1.5">
-                  <span className="font-mono text-[9px] font-bold uppercase tracking-wide text-ef-muted">정비 1회</span>
+                  <span className="font-mono text-[11px] font-bold uppercase tracking-wide text-ef-muted">정비 1회</span>
                   <button type="button" onClick={onRepairRest} className="flex items-center gap-1.5 border px-3 py-3 text-sm font-bold transition hover:brightness-110" style={{ ...CUT_SM, borderColor: "#34d39955", color: "#7fd4a3", background: "#34d3990d" }} title="파티 전원 +28 회복">
                     <HeartPulse className="h-4 w-4" /> 휴식
                   </button>
@@ -211,7 +211,7 @@ export default function RewardScreen({
               <ArrowRight className="h-4 w-4" />
             </button>
             <div className="border border-ef-line bg-ef-card px-4 py-3 text-right" style={CUT_SM}>
-              <p className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-ef-muted">{isShop ? "CREDITS" : "RECOVERED"}</p>
+              <p className="font-mono text-[12px] font-bold uppercase tracking-[0.2em] text-ef-muted">{isShop ? "CREDITS" : "RECOVERED"}</p>
               <p className="mt-1 font-mono text-2xl font-black tabular-nums" style={{ color: ACCENT }}>{isShop ? credits : gearSlugs.length}</p>
             </div>
           </div>
@@ -220,7 +220,7 @@ export default function RewardScreen({
         {/* 정비소 강화: 정예화할 카드 선택(1회) */}
         {isShop && repairPicking && !repairUsed && onRepairUpgrade && (
           <div className="mt-5 border bg-ef-card2 p-4" style={{ ...CUT, borderColor: `${ACCENT}55` }}>
-            <p className="mb-3 flex items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: ACCENT }}>
+            <p className="mb-3 flex items-center gap-2 font-mono text-[12px] font-bold uppercase tracking-[0.2em]" style={{ color: ACCENT }}>
               <Sparkles className="h-3.5 w-3.5" /> 정예화할 카드 선택 · 1회 (오퍼 컨셉 강화)
             </p>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
@@ -241,11 +241,11 @@ export default function RewardScreen({
                     style={{ ...CUT_SM, borderColor: maxed ? `${ACCENT}aa` : `${col}66` }}
                   >
                     <span className="flex items-center justify-between">
-                      <span className="flex h-5 w-5 items-center justify-center border font-mono text-[10px] font-black text-black" style={{ ...CUT_SM, background: ACCENT, borderColor: ACCENT }}>{card.cost}</span>
-                      {tag ? <span className="font-mono text-[8px] font-black uppercase" style={{ color: ACCENT }}>{tag}</span> : <span className="font-mono text-[8px] uppercase" style={{ color: col }}>{KIND_LABEL[card.kind]}</span>}
+                      <span className="flex h-5 w-5 items-center justify-center border font-mono text-[12px] font-black text-black" style={{ ...CUT_SM, background: ACCENT, borderColor: ACCENT }}>{card.cost}</span>
+                      {tag ? <span className="font-mono text-[10px] font-black uppercase" style={{ color: ACCENT }}>{tag}</span> : <span className="font-mono text-[10px] uppercase" style={{ color: col }}>{KIND_LABEL[card.kind]}</span>}
                     </span>
                     <span className="mt-1.5 truncate text-xs font-black text-white">{card.name}</span>
-                    <span className="truncate font-mono text-[8px] text-ef-muted">{card.operatorName}</span>
+                    <span className="truncate font-mono text-[10px] text-ef-muted">{card.operatorName}</span>
                   </button>
                 );
               })}
@@ -260,7 +260,7 @@ export default function RewardScreen({
               ? <span className="relative h-10 w-10 shrink-0 overflow-hidden border" style={{ ...CUT_SM, borderColor: `${ACCENT}55` }}><Image src={getRelic(pendingRelic)!.image!} alt="" fill sizes="40px" className="object-cover" /></span>
               : <Gem className="h-6 w-6 shrink-0" style={{ color: ACCENT }} />}
             <div>
-              <p className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-ef-muted">유물 획득</p>
+              <p className="font-mono text-[12px] font-bold uppercase tracking-[0.2em] text-ef-muted">유물 획득</p>
               <p className="text-base font-black" style={{ color: ACCENT }}>{getRelic(pendingRelic)!.name}</p>
               <p className="text-xs text-ef-muted">{getRelic(pendingRelic)!.description}</p>
             </div>
@@ -273,15 +273,15 @@ export default function RewardScreen({
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-ef-line pb-3">
               <div className="flex items-center gap-2">
                 <span className="h-4 w-1" style={{ background: PRIMARY }} />
-                <p className="font-mono text-[11px] font-bold uppercase tracking-[0.2em]" style={{ color: vivid ? ACCENT : undefined }}>{vivid ? `선명한 기억 // 스킬 확정 선택${factionName ? ` · ${factionName}` : ""}` : `흐릿한 기억 // 카드 습득${factionName ? ` · ${factionName}` : ""}`}</p>
+                <p className="font-mono text-[13px] font-bold uppercase tracking-[0.2em]" style={{ color: vivid ? ACCENT : undefined }}>{vivid ? `선명한 기억 // 스킬 확정 선택${factionName ? ` · ${factionName}` : ""}` : `흐릿한 기억 // 카드 습득${factionName ? ` · ${factionName}` : ""}`}</p>
               </div>
               <div className="flex items-center gap-2">
-                <button type="button" onClick={onSkipCard} className="border border-ef-line bg-ef-card2 px-3 py-1.5 font-mono text-[11px] font-bold text-ef-muted transition hover:text-ef-accent-soft" style={CUT_SM}>
+                <button type="button" onClick={onSkipCard} className="border border-ef-line bg-ef-card2 px-3 py-1.5 font-mono text-[13px] font-bold text-ef-muted transition hover:text-ef-accent-soft" style={CUT_SM}>
                   받지 않기
                 </button>
               </div>
             </div>
-            <p className="mt-3 text-[11px] text-ef-muted">세력 풀에서 한 장을 골라 덱에 영구 추가합니다. 등급이 높을수록 강력하고 드뭅니다.</p>
+            <p className="mt-3 text-[13px] text-ef-muted">세력 풀에서 한 장을 골라 덱에 영구 추가합니다. 등급이 높을수록 강력하고 드뭅니다.</p>
             <div className="mt-3 grid gap-2 sm:grid-cols-3">
               {cardOffers.map((token) => {
                 const card = previewCardFromToken(token, party);
@@ -296,15 +296,15 @@ export default function RewardScreen({
                     className="relative flex flex-col border bg-ef-card2 p-3 pt-5 text-left transition hover:-translate-y-0.5"
                     style={{ ...CUT_SM, borderColor: `${rarity.color}88` }}
                   >
-                    <span className="absolute left-0 top-0 px-1.5 py-0.5 font-mono text-[8px] font-black uppercase tracking-wide text-black" style={{ background: rarity.color }}>{rarity.label}</span>
+                    <span className="absolute left-0 top-0 px-1.5 py-0.5 font-mono text-[10px] font-black uppercase tracking-wide text-black" style={{ background: rarity.color }}>{rarity.label}</span>
                     <span className="flex items-center justify-between">
                       <span className="flex h-6 w-6 items-center justify-center border font-mono text-xs font-black text-black" style={{ ...CUT_SM, background: ACCENT, borderColor: ACCENT }}>{card.cost}</span>
-                      <span className="font-mono text-[8px] uppercase" style={{ color: col }}>{card.target === "all-enemies" ? "전체" : card.target === "party" ? "파티" : "단일"}</span>
+                      <span className="font-mono text-[10px] uppercase" style={{ color: col }}>{card.target === "all-enemies" ? "전체" : card.target === "party" ? "파티" : "단일"}</span>
                     </span>
                     <span className="mt-2 truncate text-sm font-black text-white">{card.name}</span>
-                    <span className="truncate font-mono text-[9px] text-ef-muted">{card.operatorName}</span>
-                    <span className="mt-0.5 font-mono text-[10px] font-bold" style={{ color: ACCENT }}>{card.effectLine}</span>
-                    <span className="mt-1 font-mono text-[9px] font-black tabular-nums" style={{ color: PRIMARY }}>{card.stagger > 0 ? `◇${card.stagger}` : ""}</span>
+                    <span className="truncate font-mono text-[11px] text-ef-muted">{card.operatorName}</span>
+                    <span className="mt-0.5 font-mono text-[12px] font-bold" style={{ color: ACCENT }}>{card.effectLine}</span>
+                    <span className="mt-1 font-mono text-[11px] font-black tabular-nums" style={{ color: PRIMARY }}>{card.stagger > 0 ? `◇${card.stagger}` : ""}</span>
                   </button>
                 );
               })}
@@ -317,9 +317,9 @@ export default function RewardScreen({
           <div className="mt-5 grid gap-3 lg:grid-cols-2">
             {onBuyRelic && (
               <div className="border border-ef-line bg-ef-card p-4" style={CUT}>
-                <div className="mb-2 flex items-center gap-2"><Gem className="h-4 w-4" style={{ color: ACCENT }} /><p className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-ef-muted">유물</p></div>
+                <div className="mb-2 flex items-center gap-2"><Gem className="h-4 w-4" style={{ color: ACCENT }} /><p className="font-mono text-[13px] font-bold uppercase tracking-[0.2em] text-ef-muted">유물</p></div>
                 <div className="space-y-2">
-                  {shopRelics.length === 0 && <p className="text-[11px] text-ef-muted">매진</p>}
+                  {shopRelics.length === 0 && <p className="text-[13px] text-ef-muted">매진</p>}
                   {shopRelics.map((id) => {
                     const relic = getRelic(id);
                     if (!relic) return null;
@@ -332,7 +332,7 @@ export default function RewardScreen({
                           : <Gem className="h-4 w-4 shrink-0" style={{ color: ACCENT }} />}
                         <span className="min-w-0 flex-1">
                           <span className="block text-sm font-black text-white">{relic.name}</span>
-                          <span className="block text-[10px] leading-4 text-ef-muted">{relic.description}</span>
+                          <span className="block text-[12px] leading-4 text-ef-muted">{relic.description}</span>
                         </span>
                         <span className="inline-flex items-center gap-1 font-mono text-xs font-black tabular-nums" style={{ color: afford ? ACCENT : "#fca5a5" }}><Coins className="h-3 w-3" />{owned ? "보유" : relic.price}</span>
                       </button>
@@ -343,9 +343,9 @@ export default function RewardScreen({
             )}
             {onBuyPotion && (
               <div className="border border-ef-line bg-ef-card p-4" style={CUT}>
-                <div className="mb-2 flex items-center gap-2"><FlaskConical className="h-4 w-4" style={{ color: ACCENT }} /><p className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-ef-muted">포션 ({potionCount}/3)</p></div>
+                <div className="mb-2 flex items-center gap-2"><FlaskConical className="h-4 w-4" style={{ color: ACCENT }} /><p className="font-mono text-[13px] font-bold uppercase tracking-[0.2em] text-ef-muted">포션 ({potionCount}/3)</p></div>
                 <div className="space-y-2">
-                  {shopPotions.length === 0 && <p className="text-[11px] text-ef-muted">매진</p>}
+                  {shopPotions.length === 0 && <p className="text-[13px] text-ef-muted">매진</p>}
                   {shopPotions.map((id, i) => {
                     const potion = getPotion(id);
                     if (!potion) return null;
@@ -357,7 +357,7 @@ export default function RewardScreen({
                         </span>
                         <span className="min-w-0 flex-1">
                           <span className="block text-sm font-black text-white">{potion.name}</span>
-                          <span className="block text-[10px] leading-4 text-ef-muted">{potion.description}</span>
+                          <span className="block text-[12px] leading-4 text-ef-muted">{potion.description}</span>
                         </span>
                         <span className="inline-flex items-center gap-1 font-mono text-xs font-black tabular-nums" style={{ color: afford ? ACCENT : "#fca5a5" }}><Coins className="h-3 w-3" />{potionCount >= 3 ? "가득" : potion.price}</span>
                       </button>
@@ -410,24 +410,24 @@ export default function RewardScreen({
                   {/* 품질 코너 브래킷(레어도 색) */}
                   <span className="pointer-events-none absolute left-1.5 top-1.5 h-5 w-5 border-l-2 border-t-2" style={{ borderColor: rarity.color }} />
                   <span className="pointer-events-none absolute right-1.5 top-1.5 h-5 w-5 border-r-2 border-t-2" style={{ borderColor: rarity.color }} />
-                  <span className="absolute bottom-0 left-0 right-0 h-7 px-2 py-1 font-mono text-[10px] font-black uppercase tracking-[0.22em] text-black" style={{ background: `${rarity.color}d9` }}>
+                  <span className="absolute bottom-0 left-0 right-0 h-7 px-2 py-1 font-mono text-[12px] font-black uppercase tracking-[0.22em] text-black" style={{ background: `${rarity.color}d9` }}>
                     {rarity.label}
                   </span>
                 </span>
 
                 <span className="flex min-w-0 flex-1 flex-col justify-center px-4 py-4 sm:px-6">
                   <span className="flex flex-wrap items-center gap-2">
-                    <span className="inline-flex border px-2 py-1 font-mono text-[10px] font-black uppercase tracking-wide" style={{ ...CUT_SM, borderColor: `${rarity.color}66`, background: `${rarity.color}1a`, color: rarity.color }}>
+                    <span className="inline-flex border px-2 py-1 font-mono text-[12px] font-black uppercase tracking-wide" style={{ ...CUT_SM, borderColor: `${rarity.color}66`, background: `${rarity.color}1a`, color: rarity.color }}>
                       레어도 {gear.quality}
                     </span>
-                    <span className="inline-flex border border-ef-line bg-ef-card px-2 py-1 font-mono text-[10px] font-black text-ef-muted" style={CUT_SM}>
+                    <span className="inline-flex border border-ef-line bg-ef-card px-2 py-1 font-mono text-[12px] font-black text-ef-muted" style={CUT_SM}>
                       {categoryLabel(gear.category)}
                     </span>
-                    <span className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-ef-muted">
+                    <span className="font-mono text-[12px] font-bold uppercase tracking-[0.18em] text-ef-muted">
                       LV.{gear.level}
                     </span>
                     {isShop && (
-                      <span className="ml-auto inline-flex items-center gap-1 border px-2 py-1 font-mono text-[11px] font-black tabular-nums" style={{ ...CUT_SM, borderColor: affordable ? `${ACCENT}66` : "#f8717166", background: affordable ? `${ACCENT}14` : "#f871711a", color: affordable ? ACCENT : "#fca5a5" }}>
+                      <span className="ml-auto inline-flex items-center gap-1 border px-2 py-1 font-mono text-[13px] font-black tabular-nums" style={{ ...CUT_SM, borderColor: affordable ? `${ACCENT}66` : "#f8717166", background: affordable ? `${ACCENT}14` : "#f871711a", color: affordable ? ACCENT : "#fca5a5" }}>
                         <Coins className="h-3 w-3" />{price}
                       </span>
                     )}
@@ -462,7 +462,7 @@ export default function RewardScreen({
               <div className="flex flex-wrap items-center justify-between gap-3 border-b border-ef-line pb-3">
                 <div className="flex items-center gap-2">
                   <span className="h-4 w-1" style={{ background: PRIMARY }} />
-                  <p className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-ef-muted">Deck Refit // 카드 정리</p>
+                  <p className="font-mono text-[13px] font-bold uppercase tracking-[0.2em] text-ef-muted">Deck Refit // 카드 정리</p>
                 </div>
                 <div className="flex items-center gap-3 text-xs">
                   <span className="font-mono text-ef-muted">덱 {cards.length}장</span>
@@ -471,7 +471,7 @@ export default function RewardScreen({
                   </span>
                 </div>
               </div>
-              <p className="mt-3 text-[11px] text-ef-muted">
+              <p className="mt-3 text-[13px] text-ef-muted">
                 {deckAtMin ? "최소 덱 크기에 도달해 더 삭제할 수 없습니다." : "카드를 골라 영구 삭제하면 덱이 얇아져 핵심 카드를 더 자주 뽑습니다. 삭제할수록 비용이 비싸집니다."}
               </p>
               <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
@@ -493,9 +493,9 @@ export default function RewardScreen({
                       <span className="min-w-0 flex-1">
                         <span className="flex items-center gap-1">
                           <span className="truncate text-xs font-black text-white">{card.name}</span>
-                          <span className="ml-auto font-mono text-[8px] uppercase" style={{ color: col }}>{KIND_LABEL[card.kind]}</span>
+                          <span className="ml-auto font-mono text-[10px] uppercase" style={{ color: col }}>{KIND_LABEL[card.kind]}</span>
                         </span>
-                        <span className="truncate font-mono text-[9px] text-ef-muted">{card.operatorName}</span>
+                        <span className="truncate font-mono text-[11px] text-ef-muted">{card.operatorName}</span>
                       </span>
                       <Trash2 className="h-3.5 w-3.5 shrink-0 text-ef-muted transition group-hover:text-red-300" />
                     </button>
@@ -510,7 +510,7 @@ export default function RewardScreen({
           <div className="mt-6 border border-ef-line bg-ef-card p-5" style={CUT}>
             <div className="flex items-center gap-2">
               <span className="h-4 w-1" style={{ background: PRIMARY }} />
-              <p className="font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-ef-muted">
+              <p className="font-mono text-[13px] font-bold uppercase tracking-[0.2em] text-ef-muted">
                 Equip Target
               </p>
             </div>
@@ -541,10 +541,10 @@ export default function RewardScreen({
                       </span>
                       <div className="min-w-0">
                         <p className="truncate text-sm font-black text-white">{member.name}</p>
-                        <p className="text-[10px] font-bold text-ef-muted">{member.className} · {member.role}</p>
+                        <p className="text-[12px] font-bold text-ef-muted">{member.className} · {member.role}</p>
                       </div>
                     </div>
-                    <p className="mt-3 text-[10px] leading-4 text-ef-muted">
+                    <p className="mt-3 text-[12px] leading-4 text-ef-muted">
                       {unaffordable
                         ? "크레딧 부족"
                         : currentGear

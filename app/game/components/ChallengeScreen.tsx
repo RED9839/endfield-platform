@@ -21,7 +21,7 @@ export default function ChallengeScreen({
           <ArrowLeft className="h-4 w-4" />
         </button>
         <div>
-          <p className="font-mono text-[10px] font-bold uppercase tracking-[0.3em] text-ef-muted">Boss Challenge // 보스 도전</p>
+          <p className="font-mono text-[12px] font-bold uppercase tracking-[0.3em] text-ef-muted">Boss Challenge // 보스 도전</p>
           <h1 className="text-2xl font-black text-white">저장한 덱으로 보스 도전 <span className="text-sm font-bold text-ef-muted">· 처치 턴수 기록</span></h1>
         </div>
       </div>
@@ -39,9 +39,9 @@ export default function ChallengeScreen({
               style={CUT_SM}
             >
               <div className="min-w-0">
-                <p className="font-mono text-[9px] font-bold uppercase tracking-wide text-ef-muted">{b.faction}</p>
+                <p className="font-mono text-[11px] font-bold uppercase tracking-wide text-ef-muted">{b.faction}</p>
                 <p className="mt-0.5 truncate text-lg font-black text-white">{enemy?.name ?? b.id}</p>
-                <p className="mt-1 flex items-center gap-1 font-mono text-[11px] font-bold tabular-nums" style={{ color: record != null ? ACCENT : "#52525b" }}>
+                <p className="mt-1 flex items-center gap-1 font-mono text-[13px] font-bold tabular-nums" style={{ color: record != null ? ACCENT : "#52525b" }}>
                   <Trophy className="h-3.5 w-3.5" /> {record != null ? `최고 ${record}턴` : "기록 없음"}
                 </p>
               </div>

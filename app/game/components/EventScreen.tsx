@@ -25,7 +25,7 @@ export default function EventScreen({
         <span className="block h-0.5 w-full" style={{ background: `linear-gradient(90deg, ${PRIMARY}, transparent 55%)` }} />
         <div className="p-6 sm:p-10">
           <Radio className="h-9 w-9" style={{ color: PRIMARY }} />
-          <p className="mt-6 font-mono text-[10px] font-bold uppercase tracking-[0.32em] text-ef-muted">
+          <p className="mt-6 font-mono text-[12px] font-bold uppercase tracking-[0.32em] text-ef-muted">
             UNKNOWN SIGNAL
           </p>
           <h1 className="mt-2 text-3xl font-black text-white">{event.title}</h1>

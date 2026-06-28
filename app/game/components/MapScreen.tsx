@@ -196,7 +196,7 @@ function RouteNode({
         </span>
         <span className="flex flex-col items-end gap-1">
           <span
-            className="border border-ef-line bg-black/40 px-2 py-1 font-mono text-[10px] font-bold tabular-nums"
+            className="border border-ef-line bg-black/40 px-2 py-1 font-mono text-[12px] font-bold tabular-nums"
             style={CUT_SM}
           >
             F{node.floor}
@@ -205,7 +205,7 @@ function RouteNode({
             const reward = rewardChip(node);
             return reward ? (
               <span
-                className="border px-1.5 py-0.5 font-mono text-[9px] font-black tracking-wide"
+                className="border px-1.5 py-0.5 font-mono text-[11px] font-black tracking-wide"
                 style={{ ...CUT_SM, borderColor: available ? `${reward.color}66` : "#202020", color: available ? reward.color : undefined, background: available ? `${reward.color}1a` : "transparent" }}
               >
                 {reward.label}
@@ -215,7 +215,7 @@ function RouteNode({
         </span>
       </span>
       <span
-        className="mt-3 block font-mono text-[10px] font-bold uppercase tracking-[0.2em]"
+        className="mt-3 block font-mono text-[12px] font-bold uppercase tracking-[0.2em]"
         style={available ? { color: typeColor } : undefined}
       >
         {visual.label}
@@ -223,7 +223,7 @@ function RouteNode({
       <span className={`mt-1 block truncate text-base font-black ${available ? "text-white" : ""}`}>
         {nodeTitle(node)}
       </span>
-      <span className="mt-1 block truncate text-[10px] font-bold opacity-60">
+      <span className="mt-1 block truncate text-[12px] font-bold opacity-60">
         {nodeSubtitle(node)}
       </span>
       {available && (
@@ -272,8 +272,8 @@ export default function MapScreen({
           <div>
             <div className="flex items-center gap-2">
               <span className="h-3 w-3" style={{ background: PRIMARY }} />
-              <span className="font-mono text-[11px] font-bold uppercase tracking-[0.3em] text-ef-muted">Route Map</span>
-              <span className="font-mono text-[11px] tracking-[0.2em] text-ef-muted/60">// 카오스 출격 · {zone}</span>
+              <span className="font-mono text-[13px] font-bold uppercase tracking-[0.3em] text-ef-muted">Route Map</span>
+              <span className="font-mono text-[13px] tracking-[0.2em] text-ef-muted/60">// 카오스 출격 · {zone}</span>
             </div>
             <h1 className="mt-2 text-4xl font-black tracking-tight text-white sm:text-5xl">
               {chapterMeta?.name ?? "작전 경로 선택"} <span className="text-ef-accent">· {zone}</span>
@@ -299,7 +299,7 @@ export default function MapScreen({
               <div className="flex items-center gap-3">
                 <Route className="h-5 w-5" style={{ color: ACCENT }} />
                 <div>
-                  <p className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-ef-muted">CURRENT CHOICE</p>
+                  <p className="font-mono text-[12px] font-bold uppercase tracking-[0.2em] text-ef-muted">CURRENT CHOICE</p>
                   <p className="text-sm font-black text-ef-ink">{currentLabel}</p>
                 </div>
               </div>
@@ -318,7 +318,7 @@ export default function MapScreen({
           </div>
 
           <div className="relative overflow-x-auto border border-ef-line bg-ef-bg bg-[linear-gradient(rgba(255,255,255,0.022)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.022)_1px,transparent_1px)] bg-[size:64px_64px,64px_64px] p-4" style={CUT}>
-            <div className="sticky left-0 top-0 z-20 mb-3 flex w-fit items-center gap-2 border border-ef-line bg-black/70 px-3 py-2 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-ef-accent-soft backdrop-blur" style={CUT_SM}>
+            <div className="sticky left-0 top-0 z-20 mb-3 flex w-fit items-center gap-2 border border-ef-line bg-black/70 px-3 py-2 font-mono text-[12px] font-bold uppercase tracking-[0.2em] text-ef-accent-soft backdrop-blur" style={CUT_SM}>
               <Map className="h-4 w-4" /> ROUTE BOARD
             </div>
             <div className="relative" style={{ width: boardWidth, height: boardHeight }}>
@@ -326,7 +326,7 @@ export default function MapScreen({
               {laneLabels.map((label, index) => (
                 <div
                   key={label}
-                  className="absolute left-2 flex items-center gap-2 font-mono text-[9px] font-bold uppercase tracking-[0.22em] text-white/20"
+                  className="absolute left-2 flex items-center gap-2 font-mono text-[11px] font-bold uppercase tracking-[0.22em] text-white/20"
                   style={{ top: yStart + index * yGap + 43 }}
                 >
                   <span className="h-px w-8 bg-white/10" />
