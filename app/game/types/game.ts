@@ -203,6 +203,8 @@ export type BattleEnemy = Enemy & {
   // 방어불능 스택(물리 전용, 0~4): 물리 오퍼가 누적→소모하면 '갑옷 파괴'(armor-break) 부여.
   physBreakStacks: number;
   armorBreakTurns?: number;
+  // 표식 디버프(targetVuln): 이 적이 받는 모든 피해 +x (디버퍼 재능). 0~1.
+  vulnMark?: number;
   // 카드 전투: 다음 적 행동 예고(텔레그래프)
   telegraph?: { kind: "attack" | "attack-all" | "buff" | "stunned"; damage: number; label: string };
 };

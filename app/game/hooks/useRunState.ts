@@ -14,6 +14,7 @@ import {
   getActiveSets,
   getEquippedGears,
   getGameGear,
+  getGearTalentPower,
   getGearBuyValue,
   getGearSellValue,
   getGearStatDeltas,
@@ -22,6 +23,7 @@ import {
 } from "../data/game-gears";
 import { factions, getFactionStart, getMapNode } from "../data/maps";
 import { allOperators, startingParty } from "../data/operators";
+import { passiveSpec } from "../data/operator-passives";
 import type {
   BattleEnemy,
   BattleState,
@@ -31,9 +33,7 @@ import type {
   EnemyStatus,
   GameEventChoice,
   Operator,
-  OperatorClass,
   PartyMember,
-  PassiveMechanic,
   RunActions,
   RunGear,
   RunState,
@@ -133,8 +133,10 @@ function withoutStatus(statuses: EnemyStatus[], status: EnemyStatus) {
 }
 
 function absorbHit(member: PartyMember, amount: number) {
-  const blocked = Math.min(member.shield, amount);
-  return { ...member, shield: member.shield - blocked, hp: Math.max(0, member.hp - (amount - blocked)) };
+  const resist = passiveSpec(member.id).damageResist ?? 0; // 재능 피해 감소(부활의 불씨·무의식·하늘의 가호 등)
+  const amt = resist > 0 ? Math.ceil(amount * (1 - resist)) : amount;
+  const blocked = Math.min(member.shield, amt);
+  return { ...member, shield: member.shield - blocked, hp: Math.max(0, member.hp - (amt - blocked)) };
 }
 
 function activeSets(member: PartyMember) {
@@ -356,59 +358,40 @@ function hasBreakEnergySet(actor: PartyMember): boolean {
   return activeSets(actor).some((set) => getSetEffects(set).some((e) => e.type === "breakEnergy"));
 }
 
-// ===== 2층 패시브 =====
-// 모든 오퍼는 직군 패시브(공통 베이스라인) + 오퍼 패시브(개별 재능)를 둘 다 받는다.
+// ===== 오퍼별 고유 패시브 (재능 2종 합성 스펙) =====
+// 각 오퍼는 operator-passives.ts의 PassiveSpec(자기 두 재능 반영)으로 정의된다.
 const ARTS_STATUSES: EnemyStatus[] = ["combustion", "shock", "freeze", "corrosion", "armor-break"];
-// 직군 패시브: 직군 컨셉을 약한 베이스라인으로(오퍼 패시브 대비 60%).
-const CLASS_PASSIVE: Record<OperatorClass, PassiveMechanic> = {
-  "가드": "vs-broken",
-  "디펜더": "guardian-shield",
-  "캐스터": "vs-status",
-  "스트라이커": "crit-surge",
-  "서포터": "support-heal",
-  "뱅가드": "energy-surge",
-};
-const CLASS_SCALE = 0.6;
-// 오퍼가 받는 패시브 목록: [직군(60%), 개별(100%)]
-function passiveList(m: PartyMember): { mech: PassiveMechanic; scale: number }[] {
-  return [
-    { mech: CLASS_PASSIVE[m.className], scale: CLASS_SCALE },
-    { mech: m.passiveMechanic, scale: 1 },
-  ];
-}
-function hasPassive(m: PartyMember, mech: PassiveMechanic): boolean {
-  return CLASS_PASSIVE[m.className] === mech || m.passiveMechanic === mech;
-}
 
 function getPassiveDamageBonus(actor: PartyMember, target: BattleEnemy, kind: SkillKind, elite = 0) {
+  const s = passiveSpec(actor.id);
   let bonus = 1;
-  const e = 1 + 0.3 * elite; // 정예화: 오퍼 핵심 재능(패시브) 효과를 단계마다 +30% 강화
+  const e = 1 + 0.3 * elite; // 정예화: 재능 효과를 단계마다 +30% 강화
   const broken = target.statuses.includes("defense-break");
-  const afflicted = broken || target.statuses.some((s) => ARTS_STATUSES.includes(s));
+  const afflicted = broken || target.statuses.some((st) => ARTS_STATUSES.includes(st));
   const vulnerable = target.physBreakStacks > 0; // 취약(Vulnerable) 스택
   const stacks = Math.min(5, actor.passiveStacks);
-  for (const { mech, scale } of passiveList(actor)) {
-    if (mech === "vs-broken" && broken) bonus += 0.2 * scale * e; // 불균형 적 특화
-    if (mech === "vs-status" && afflicted) bonus += 0.15 * scale * e; // 아츠/이상 적 특화
-    if (mech === "crystal-burst" && vulnerable) bonus += 0.22 * scale * e; // 취약 적 특화
-    if (mech === "blade-stacks" && kind !== "attack") bonus += stacks * 0.06 * scale * e; // 누적 강타
-    if (mech === "essence-collapse") bonus += stacks * 0.06 * scale * e; // 본질 붕괴
-    if (mech === "flat-power") bonus += 0.13 * scale * e; // 상시 자기 화력(여풍 스탯 스케일·울프가드 +20% 열기 등 강한 자기버프 반영, 무조건 발동)
-    if (mech === "team-amp") bonus += 0.05 * scale * elite; // 디버퍼/버퍼: 정예화 시 증폭 카드 강화
-  }
-  return bonus;
+  if (s.vsBroken && broken) bonus += s.vsBroken * e;              // 불균형 적 특화
+  if (s.vsStatus && afflicted) bonus += s.vsStatus * e;          // 아츠/이상 적 특화
+  if (s.vsVulnerable && vulnerable) bonus += s.vsVulnerable * e; // 취약 적 특화
+  if (s.selfPower) bonus += s.selfPower * e;                     // 상시 자기 화력
+  if (s.stackPerHit && kind !== "attack") bonus += stacks * s.stackPerHit * e; // 누적 강타
+  if (s.essenceStack) bonus += stacks * s.essenceStack * e;      // 분쇄 누적
+  // 재능 데미지 효과도 장비 등급에 비례 성장(완만 — 기본 스탯은 이미 장비로 성장하므로 중복 완화)
+  return 1 + (bonus - 1) * (1 + getGearTalentPower(actor.gear) * TALENT_GEAR_DMG_SCALE);
 }
 
-// 비피해 시전 효과(비기본 스킬): 직군+오퍼 패시브 합산 회복/보호막.
+// 비피해 시전 효과(비기본 스킬): 재능 회복/보호막.
+// 재능 강도(장착 장비 등급 합산)에 비례 — 좋은 장비 = 강한 재능(원작 지능/의지 스케일 게임화).
+const TALENT_GEAR_SCALE = 0.06;     // 회복·보호막: 장비 등급 1당 +6%
+const TALENT_GEAR_DMG_SCALE = 0.03; // 딜 재능·팀증폭: 장비 등급 1당 +3%(중복 완화)
 function passivePlayEffect(actor: PartyMember, kind: SkillKind): { heal: number; shield: number } {
   if (kind === "attack") return { heal: 0, shield: 0 };
-  let heal = 0;
-  let shield = 0;
-  for (const { mech, scale } of passiveList(actor)) {
-    if (mech === "support-heal") heal += Math.ceil(6 * scale);
-    if (mech === "guardian-shield") shield += Math.ceil(8 * scale);
-  }
-  return { heal, shield };
+  const s = passiveSpec(actor.id);
+  const mult = 1 + getGearTalentPower(actor.gear) * TALENT_GEAR_SCALE; // 장비 0칸=1×, 풀장비 최대 ~1.9×
+  return {
+    heal: Math.round((s.healOnCast ?? 0) * mult),
+    shield: Math.round((s.shieldOnCast ?? 0) * mult),
+  };
 }
 
 function hasArtsAttachment(enemy: BattleEnemy) {
@@ -448,6 +431,16 @@ function applySkillMechanic(actor: PartyMember, target: BattleEnemy, baseDamage:
   return { damage, statuses, notes };
 }
 
+// 직군별 장비 성장 프로파일 — 같은 장비라도 직군에 따라 체력/공격 성장 배분이 다르다(배수 평균 ≈1.0, 총량 유지·배분만 변경).
+const CLASS_GROWTH: Record<string, { hp: number; dmg: number }> = {
+  "디펜더":     { hp: 1.30, dmg: 0.70 }, // 탱: 체력 위주
+  "서포터":     { hp: 1.15, dmg: 0.80 }, // 지원: 단단·저딜
+  "가드":       { hp: 1.05, dmg: 1.10 }, // 브루저: 균형 + 공격
+  "뱅가드":     { hp: 0.95, dmg: 1.05 },
+  "스트라이커": { hp: 0.85, dmg: 1.25 }, // 글래스캐논: 공격 위주
+  "캐스터":     { hp: 0.80, dmg: 1.20 }, // 물렁·고화력
+};
+
 export function applyGearStats(member: PartyMember): PartyMember {
   const stats = getEquippedGears(member.gear).reduce(
     (total, gear) => {
@@ -467,15 +460,16 @@ export function applyGearStats(member: PartyMember): PartyMember {
     { attack: 0, hp: 0, defense: 0, evasion: 0, battleSkillPower: 0, linkSkillPower: 0, ultimatePower: 0, critRate: 0, critDamage: 0 },
   );
   const base = getBaseOperator(member.id);
+  const g = CLASS_GROWTH[member.className] ?? { hp: 1, dmg: 1 }; // 직군별 체력/공격 성장 배분
   return {
     ...member,
-    maxHp: base.maxHp + stats.hp,
-    attack: base.attack + stats.attack,
-    defense: base.defense + stats.defense,
+    maxHp: base.maxHp + Math.round(stats.hp * g.hp),
+    attack: base.attack + Math.round(stats.attack * g.dmg),
+    defense: base.defense + Math.round(stats.defense * g.hp), // 방어도 탱 성향과 함께
     evasion: base.evasion + stats.evasion,
-    battleSkillPower: base.battleSkillPower + stats.battleSkillPower,
-    linkSkillPower: base.linkSkillPower + stats.linkSkillPower,
-    ultimatePower: base.ultimatePower + stats.ultimatePower,
+    battleSkillPower: base.battleSkillPower + Math.round(stats.battleSkillPower * g.dmg),
+    linkSkillPower: base.linkSkillPower + Math.round(stats.linkSkillPower * g.dmg),
+    ultimatePower: base.ultimatePower + Math.round(stats.ultimatePower * g.dmg),
     critRate: Math.min(1, base.critRate + stats.critRate),
     critDamage: base.critDamage + stats.critDamage,
   };
@@ -656,11 +650,11 @@ export function playCardOnState(current: RunState, uid: string, targetEnemyId?: 
   const kind = card.kind;
   // 정예화 단계(0/1/2): 단순 딜이 아니라 오퍼 컨셉 강화에 쓰인다(강타·빌더·갑옷파괴·치명·아츠).
   const elite = card.eliteLevel ?? 0;
-  // 재능 crit-surge(자신 치명 +12%) · team-amp(파티 오라, 생존 보유자당 +6% 카드 피해) — 2층 패시브 합산
-  const critSurge = passiveList(actor).reduce((s, p) => s + (p.mech === "crit-surge" ? 0.12 * p.scale : 0), 0);
-  // 정예화 컨셉: 치명형(crit-surge) 카드는 정예화마다 치명 확률 +6%
-  const eliteCrit = hasPassive(actor, "crit-surge") ? elite * 0.06 : 0;
-  const teamAmp = current.party.filter((m) => m.hp > 0 && hasPassive(m, "team-amp")).length * 0.06;
+  const aspec = passiveSpec(actor.id);
+  // 재능 crit(자기 치명) · team-amp(파티 오라, 생존 보유자 spec 합산) — 오퍼별 스펙
+  const critSurge = aspec.crit ?? 0;
+  const eliteCrit = (aspec.crit ?? 0) > 0 ? elite * 0.06 : 0; // 치명형은 정예화마다 +6%
+  const teamAmp = current.party.reduce((sum, m) => sum + (m.hp > 0 ? (passiveSpec(m.id).teamAmp ?? 0) * (1 + getGearTalentPower(m.gear) * TALENT_GEAR_DMG_SCALE) : 0), 0);
   // 유물 효과 + 소비 아이템 전투 버프 + 재능 + 장비 세트 합산
   const setCrit = getSetCrit(actor);
   const setStagger = getSetStagger(actor);
@@ -690,7 +684,10 @@ export function playCardOnState(current: RunState, uid: string, targetEnemyId?: 
     const linkCombo = kind === "link-skill" && enemy.statuses.includes("defense-break");
     const shatter = actor.element === "physical" && enemy.statuses.includes("freeze"); // 쇄빙(Shatter)
     const weak = getEnemyWeakness(enemy.faction) === actor.element; // 세력 원소 약점
-    mech.damage = Math.ceil(mech.damage * dmgMult * (1 + multiHitBonus) * defenseFactor(enemy.defense) * (enemy.statuses.includes("defense-break") ? IMBALANCE_DAMAGE_TAKEN * (1 + fx.vsBrokenDamage) : 1) * (linkCombo ? LINK_COMBO_AMP : 1) * (armorBroken ? ARMOR_BREAK_AMP : 1) * (shatter ? SHATTER_AMP : 1) * (weak ? WEAKNESS_AMP : 1) * (isCrit ? 1 + actor.critDamage + setCrit.dmg : 1));
+    const afflictedT = enemy.statuses.includes("defense-break") || enemy.statuses.some((st) => ARTS_STATUSES.includes(st));
+    const vulnMark = enemy.vulnMark ?? 0; // 표식 디버프(targetVuln): 이 적이 받는 모든 피해 +
+    const critDmg = isCrit ? 1 + actor.critDamage + setCrit.dmg + (afflictedT ? (aspec.critVsStatus ?? 0) : 0) : 1;
+    mech.damage = Math.ceil(mech.damage * dmgMult * (1 + multiHitBonus) * (1 + vulnMark) * defenseFactor(enemy.defense) * (enemy.statuses.includes("defense-break") ? IMBALANCE_DAMAGE_TAKEN * (1 + fx.vsBrokenDamage) : 1) * (linkCombo ? LINK_COMBO_AMP : 1) * (armorBroken ? ARMOR_BREAK_AMP : 1) * (shatter ? SHATTER_AMP : 1) * (weak ? WEAKNESS_AMP : 1) * critDmg);
     if (isCrit) noteSet.add("치명타");
     if (weak) noteSet.add("약점!");
     if (linkCombo) noteSet.add("연계 강타");
@@ -755,13 +752,16 @@ export function playCardOnState(current: RunState, uid: string, targetEnemyId?: 
         noteSet.add(`갑옷 파괴 ${ab} · 관통`);
       }
     }
-    return { ...enemy, hp, statuses, stagger: staggerFinal, breakTurns, physBreakStacks, armorBreakTurns, actionGauge: ccDelay ? Math.max(0, enemy.actionGauge - 2) : enemy.actionGauge };
+    // 표식 디버프(targetVuln): 이 오퍼가 때린 적이 받는 모든 피해 누적 부여(팀 전체 이득)
+    const nextVuln = aspec.targetVuln ? Math.max(enemy.vulnMark ?? 0, aspec.targetVuln) : enemy.vulnMark;
+    if (aspec.targetVuln && nextVuln !== (enemy.vulnMark ?? 0)) noteSet.add(`표식 +${Math.round(aspec.targetVuln * 100)}%`);
+    return { ...enemy, hp, statuses, stagger: staggerFinal, breakTurns, physBreakStacks, armorBreakTurns, vulnMark: nextVuln, actionGauge: ccDelay ? Math.max(0, enemy.actionGauge - 2) : enemy.actionGauge };
   });
   const revival = reviveEnemies(damaged);
   revival.notes.forEach((n) => noteSet.add(n));
   const after = revival.enemies;
-  // 처형: 불균형 돌파 시 에너지 회복. energy-surge 재능 +1(정예화 2차 시 +2), breakEnergy 세트 +1.
-  const surge = hasPassive(actor, "energy-surge");
+  // 처형: 불균형 돌파 시 에너지 회복. 재능 breakEnergy +1(정예화 2차 시 +2), breakEnergy 세트 +1.
+  const surge = (aspec.breakEnergy ?? 0) > 0;
   const gearSurge = hasBreakEnergySet(actor);
   const breakEnergy = brokeAny ? 1 + (surge ? 1 + (elite >= 2 ? 1 : 0) : 0) + (gearSurge ? 1 : 0) : 0;
   const energyBonus = breakEnergy;
@@ -773,7 +773,7 @@ export function playCardOnState(current: RunState, uid: string, targetEnemyId?: 
   if (pe.heal > 0) noteSet.add(`재능 회복 +${pe.heal}`);
   if (pe.shield > 0) noteSet.add(`재능 보호막 +${pe.shield}`);
   // 연타: 소모 시 0, 부여 오퍼(아케쿠리 등)가 스킬 사용 시 +1 (다음 배틀/궁극에 적용)
-  const grantMultiHit = actor.grantsMultiHit && kind !== "attack" ? 1 : 0;
+  const grantMultiHit = (actor.grantsMultiHit || aspec.grantMultiHit) && kind !== "attack" ? 1 : 0;
   const nextMultiHit = Math.min(4, (multiHitBonus > 0 ? 0 : multiHitStacks) + grantMultiHit);
   if (grantMultiHit > 0) noteSet.add(`연타 부여 → ${nextMultiHit}`);
   const note = noteSet.size ? ` (${[...noteSet].join(", ")})` : "";
@@ -785,8 +785,8 @@ export function playCardOnState(current: RunState, uid: string, targetEnemyId?: 
     let next = m;
     if (m.id === actor.id) {
       if (reflectDmg > 0) next = absorbHit(next, reflectDmg);
-      if (hasPassive(actor, "blade-stacks") && kind !== "attack") next = { ...next, passiveStacks: Math.min(5, next.passiveStacks + 1) };
-      if (actor.passiveMechanic === "essence-collapse" && crushedAny) next = { ...next, passiveStacks: Math.min(5, next.passiveStacks + 1) }; // 본질 붕괴: 분쇄 시 공격력 누적
+      if ((aspec.stackPerHit ?? 0) > 0 && kind !== "attack") next = { ...next, passiveStacks: Math.min(5, next.passiveStacks + 1) }; // 누적 강타: 스킬 명중마다
+      if ((aspec.essenceStack ?? 0) > 0 && crushedAny) next = { ...next, passiveStacks: Math.min(5, next.passiveStacks + 1) }; // 분쇄 누적: 강타/갑옷파괴 시
     }
     if (pe.heal > 0) next = { ...next, hp: Math.min(next.maxHp, next.hp + pe.heal) };
     if (pe.shield > 0) next = { ...next, shield: next.shield + pe.shield };

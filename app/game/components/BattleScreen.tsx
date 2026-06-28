@@ -169,7 +169,10 @@ function PartyCard({ member }: { member: PartyMember }) {
         </span>
         <div className="min-w-0">
           <p className="truncate text-base font-black text-white">{member.name}</p>
-          <p className="font-mono text-[13px] uppercase tracking-wide" style={{ color: elementColor[member.element] }}>{member.className}</p>
+          <p className="font-mono text-[13px] uppercase tracking-wide">
+            <span className="font-black" style={{ color: elementColor[member.element] }}>{ELEMENT_NAME[member.element]}</span>
+            <span className="text-ef-muted"> · {member.className}</span>
+          </p>
         </div>
       </div>
       <div className="mt-2.5 flex items-center justify-between font-mono text-xs font-bold tabular-nums text-ef-muted">

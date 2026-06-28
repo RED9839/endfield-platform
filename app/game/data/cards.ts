@@ -80,7 +80,11 @@ export function makeCard(op: PartyMember, kind: SkillKind, uid: string, elite = 
           : kind === "battle-skill"
             ? `${power} · 불균형 누적${op.physBreak === "build" ? " · 취약+" : op.physBreak === "consume" ? " · 분쇄" : ""}`
             : `${power} 피해`;
-  return { uid, operatorId: op.id, operatorName: op.name, element: op.element, kind, cost: CARD_COST[kind], power, stagger: effect ? 0 : upStag(CARD_STAGGER[kind], elite), name, icon, description, effectLine, target: aoe ? "all-enemies" : effect ? "party" : "enemy", effect, eliteLevel: elite };
+  // 불균형치 역할 차등(재분배 — 평균 유지): 물리 빌더 ×1.2, 소비형 ×1.0, 그 외(캐스터·서포터 등) ×0.85.
+  const staggerMod = op.physBreak === "build" ? 1.2 : op.physBreak === "consume" ? 1.0 : 0.85;
+  const stagger = effect ? 0 : Math.round(upStag(CARD_STAGGER[kind], elite) * staggerMod);
+  // 보호막/회복 effect는 파티 대상 — 광역 판정보다 우선(표시·타깃 일관성).
+  return { uid, operatorId: op.id, operatorName: op.name, element: op.element, kind, cost: CARD_COST[kind], power, stagger, name, icon, description, effectLine, target: effect ? "party" : aoe ? "all-enemies" : "enemy", effect, eliteLevel: elite };
 }
 
 // ===== 전술 카드(습득) =====

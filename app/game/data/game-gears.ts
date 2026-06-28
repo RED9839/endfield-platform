@@ -297,6 +297,12 @@ export function getEquippedGears(loadout: GearLoadout) {
   );
 }
 
+// 재능 강도(才能 强度): 장착 장비 등급(1~5) 합산(3슬롯 → 0~15).
+// 원작에서 재능이 장비·무기로 얻은 힘/지능/의지를 쓰던 것을 게임화 — 좋은 장비 = 강한 재능(회복·보호막).
+export function getGearTalentPower(loadout: GearLoadout): number {
+  return getEquippedGears(loadout).reduce((sum, gear) => sum + getGearValue(gear), 0);
+}
+
 // 세트 효과: 같은 세트 2부위 이상 장착 시 발동(3슬롯 = 방어구/장갑/부품1).
 export function getActiveSets(loadout: GearLoadout) {
   const counts = getEquippedGears(loadout).reduce<Record<string, number>>((acc, gear) => {
