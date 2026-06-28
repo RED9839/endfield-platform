@@ -76,7 +76,7 @@ function EnemyCard({ enemy, selected, onSelect }: { enemy: BattleEnemy; selected
       type="button"
       onClick={onSelect}
       disabled={dead}
-      className={`group relative w-[180px] shrink-0 border bg-ef-card2 p-3 text-left transition ${dead ? "opacity-25 grayscale" : selected ? "-translate-y-1" : "hover:-translate-y-0.5"}`}
+      className={`group relative w-[200px] shrink-0 border bg-ef-card2 p-3 text-left transition ${dead ? "opacity-25 grayscale" : selected ? "-translate-y-1" : "hover:-translate-y-0.5"}`}
       style={{ ...CUT_SM, borderColor: selected && !dead ? ACCENT : "#202020" }}
     >
       {selected && !dead && (
@@ -104,10 +104,10 @@ function EnemyCard({ enemy, selected, onSelect }: { enemy: BattleEnemy; selected
           {tg.kind === "stunned" ? <Zap className="h-3 w-3" /> : <Swords className="h-3 w-3" />} {tg.label}
         </span>
       )}
-      <div className="relative mx-auto h-24 w-24">
-        {enemy.image ? <Image src={enemy.image} alt={enemy.name} fill sizes="96px" className="object-contain" /> : <Shield className="mx-auto mt-6 h-12 w-12 text-red-200/30" />}
+      <div className="relative mx-auto h-28 w-28">
+        {enemy.image ? <Image src={enemy.image} alt={enemy.name} fill sizes="112px" className="object-contain" /> : <Shield className="mx-auto mt-7 h-14 w-14 text-red-200/30" />}
       </div>
-      <p className="mt-1 truncate text-sm font-black text-white">{enemy.name}</p>
+      <p className="mt-1 truncate text-base font-black text-white">{enemy.name}</p>
       {!dead && (() => {
         const weak = getEnemyWeakness(enemy.faction);
         return weak ? (
@@ -162,10 +162,10 @@ function EnemyCard({ enemy, selected, onSelect }: { enemy: BattleEnemy; selected
 function PartyCard({ member }: { member: PartyMember }) {
   const dead = member.hp <= 0;
   return (
-    <div className={`w-[150px] shrink-0 border border-ef-line bg-ef-card p-2.5 ${dead ? "opacity-30 grayscale" : ""}`} style={CUT_SM}>
+    <div className={`w-[168px] shrink-0 border border-ef-line bg-ef-card p-2.5 ${dead ? "opacity-30 grayscale" : ""}`} style={CUT_SM}>
       <div className="flex items-center gap-2">
-        <span className="relative h-10 w-10 shrink-0 overflow-hidden border border-ef-line bg-black" style={{ ...CUT_SM, borderColor: `${elementColor[member.element]}66` }}>
-          {member.image ? <Image src={member.image} alt={member.name} fill sizes="40px" className="object-cover object-top" /> : null}
+        <span className="relative h-12 w-12 shrink-0 overflow-hidden border border-ef-line bg-black" style={{ ...CUT_SM, borderColor: `${elementColor[member.element]}66` }}>
+          {member.image ? <Image src={member.image} alt={member.name} fill sizes="48px" className="object-cover object-top" /> : null}
         </span>
         <div className="min-w-0">
           <p className="truncate text-xs font-black text-white">{member.name}</p>
@@ -283,40 +283,54 @@ export default function BattleScreen({
         <p className="min-w-0 max-w-[46%] flex-1 truncate text-right font-mono text-[11px] text-ef-muted">{battle.log[0] ?? "전투 시작."}</p>
       </div>
 
-      {/* 전장: 적(상단) ↔ 파티(하단) 대치 */}
-      <div className="relative z-10 flex flex-1 flex-col justify-between gap-4 overflow-y-auto px-6 py-5">
-        <div className="flex flex-wrap items-start justify-center gap-3">
-          {battle.enemies.map((enemy) => (
-            <EnemyCard key={enemy.id} enemy={enemy} selected={enemy.id === selectedId} onSelect={() => setSel(enemy.id)} />
-          ))}
-        </div>
-        <div className="flex flex-wrap items-stretch justify-center gap-2">
-          {party.map((member) => <PartyCard key={member.id} member={member} />)}
-          {onUsePotion && potions.length > 0 && (
-            <div className="flex items-center gap-2 border border-ef-line bg-ef-card px-3" style={CUT_SM}>
-              <span className="font-mono text-[9px] font-bold uppercase tracking-wide text-ef-muted">포션</span>
-              {potions.map((id, i) => {
-                const potion = getPotion(id);
-                if (!potion) return null;
-                return (
-                  <button
-                    key={`${id}-${i}`}
-                    type="button"
-                    onClick={() => onUsePotion(id, potionNeedsTarget(id) ? selectedId : undefined)}
-                    className="relative h-10 w-10 overflow-hidden border bg-black/40 transition hover:-translate-y-0.5"
-                    style={{ ...CUT_SM, borderColor: `${potion.color}66` }}
-                    title={`${potion.name} — ${potion.description}${potionNeedsTarget(id) ? " (선택 적 대상)" : ""}`}
-                  >
-                    {potion.image ? (
-                      <Image src={potion.image} alt={potion.name} fill sizes="40px" className="object-contain p-0.5" />
-                    ) : (
-                      <FlaskConical className="m-auto h-4 w-4" style={{ color: potion.color }} />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          )}
+      {/* 전장: 적 ↔ 파티 대치 — 화면 중앙에 한 덩어리로 정렬(공백 제거) */}
+      <div className="relative z-10 flex flex-1 flex-col overflow-y-auto px-6 py-4">
+        <div className="m-auto flex w-full max-w-[1600px] flex-col items-center gap-5">
+          {/* 적 진영 */}
+          <div className="flex flex-wrap items-start justify-center gap-3">
+            {battle.enemies.map((enemy) => (
+              <EnemyCard key={enemy.id} enemy={enemy} selected={enemy.id === selectedId} onSelect={() => setSel(enemy.id)} />
+            ))}
+          </div>
+
+          {/* 대치 디바이더 */}
+          <div className="flex w-full max-w-[760px] items-center justify-center gap-3">
+            <span className="h-px flex-1 bg-gradient-to-r from-transparent via-ef-line/60 to-ef-line/70" />
+            <span className="flex items-center gap-1.5 font-mono text-[10px] font-black uppercase tracking-[0.35em] text-ef-muted/70">
+              <Swords className="h-3 w-3" style={{ color: PRIMARY }} /> 교전 <Swords className="h-3 w-3" style={{ color: PRIMARY }} />
+            </span>
+            <span className="h-px flex-1 bg-gradient-to-l from-transparent via-ef-line/60 to-ef-line/70" />
+          </div>
+
+          {/* 아군 진영 */}
+          <div className="flex flex-wrap items-stretch justify-center gap-2">
+            {party.map((member) => <PartyCard key={member.id} member={member} />)}
+            {onUsePotion && potions.length > 0 && (
+              <div className="flex items-center gap-2 border border-ef-line bg-ef-card px-3" style={CUT_SM}>
+                <span className="font-mono text-[9px] font-bold uppercase tracking-wide text-ef-muted">포션</span>
+                {potions.map((id, i) => {
+                  const potion = getPotion(id);
+                  if (!potion) return null;
+                  return (
+                    <button
+                      key={`${id}-${i}`}
+                      type="button"
+                      onClick={() => onUsePotion(id, potionNeedsTarget(id) ? selectedId : undefined)}
+                      className="relative h-10 w-10 overflow-hidden border bg-black/40 transition hover:-translate-y-0.5"
+                      style={{ ...CUT_SM, borderColor: `${potion.color}66` }}
+                      title={`${potion.name} — ${potion.description}${potionNeedsTarget(id) ? " (선택 적 대상)" : ""}`}
+                    >
+                      {potion.image ? (
+                        <Image src={potion.image} alt={potion.name} fill sizes="40px" className="object-contain p-0.5" />
+                      ) : (
+                        <FlaskConical className="m-auto h-4 w-4" style={{ color: potion.color }} />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
