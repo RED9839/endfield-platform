@@ -295,13 +295,13 @@ export function makeYvonneStanceCard(op: PartyMember, uid: string): Card {
   };
 }
 
-// 미브 「청파 삼형」: 배틀 스킬이 단운→추형→종식 3초식으로 이어진다. 사용 시 다음 초식 카드를 손패에 추가.
-// 1식 단운은 덱 배틀 스킬(순환), 2·3식은 추가되는 소멸 카드. 갈수록 위력↑·불균형↑(빌더 컨셉).
+// 미브 「청파 삼형」: 배틀 스킬이 단운→추형→개천 3초식으로 이어진다. 사용 시 다음 초식 카드를 손패에 추가.
+// 1식 단운은 덱 배틀 스킬(끌어오기·순환), 2·3식은 추가되는 소멸 카드. 추형·개천은 강타(방불 소모)형.
 export const MIFU_FORM_COUNT = 3;
 const MIFU_FORMS: Record<number, { name: string; mult: number; cost: number; staggerMult: number; note: string }> = {
   1: { name: "청파 삼형 · 단운", mult: 0.9, cost: 2, staggerMult: 1.0, note: "끌어오기 · 불균형" },
-  2: { name: "청파 삼형 · 추형", mult: 1.1, cost: 2, staggerMult: 1.15, note: "강화 연격" },
-  3: { name: "청파 삼형 · 종식", mult: 1.45, cost: 1, staggerMult: 1.4, note: "넘어뜨리기 마무리" },
+  2: { name: "청파 삼형 · 추형", mult: 1.1, cost: 2, staggerMult: 1.15, note: "강타 소모" },
+  3: { name: "청파 삼형 · 개천", mult: 1.45, cost: 1, staggerMult: 1.4, note: "강타 대량딜" },
 };
 export function makeMifuFormCard(op: PartyMember, form: number, uid: string): Card {
   const f = MIFU_FORMS[form] ?? MIFU_FORMS[1];

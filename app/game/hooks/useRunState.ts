@@ -341,7 +341,9 @@ function getStatusBonus(actor: PartyMember, target: BattleEnemy) {
   let bonus = 1;
   const arts = actor.element !== "physical";
   if (arts) bonus += target.artsVuln ?? 0;   // 감전 = 아츠 취약(아츠 전용, 레벨 비례)
+  if (!arts) bonus += target.physVuln ?? 0;  // 물리 취약(여풍 신체 정화 등, 물리 전용)
   bonus += target.corrodeVuln ?? 0;          // 부식 = 모든 속성 저항 감소(물리·아츠 공통, 레벨 비례)
+  if (!arts && target.statuses.includes("crystal")) bonus += 0.2; // 관리자 현실 정지: 오리지늄 결정 적이 받는 물리 피해 +20%
   return bonus;
 }
 
@@ -391,12 +393,13 @@ function getPassiveDamageBonus(actor: PartyMember, target: BattleEnemy, kind: Sk
   const e = 1 + 0.3 * elite; // 정예화: 재능 효과를 단계마다 +30% 강화
   const broken = target.statuses.includes("defense-break");
   const afflicted = broken || target.statuses.some((st) => ARTS_STATUSES.includes(st));
-  const vulnerable = target.physBreakStacks > 0; // 취약(Vulnerable) 스택
+  const vulnerable = (target.physVuln ?? 0) > 0; // 물리 취약 디버프(미브 냉정 등)
   const stacks = Math.min(5, actor.passiveStacks);
   if (s.vsBroken && broken) bonus += s.vsBroken * e;              // 불균형 적 특화
   if (s.vsStatus && afflicted) bonus += s.vsStatus * e;          // 아츠/이상 적 특화
-  if (s.vsVulnerable && vulnerable) bonus += s.vsVulnerable * e; // 취약 적 특화
-  if (s.selfPower) bonus += s.selfPower * e;                     // 상시 자기 화력
+  if (s.vsVulnerable && vulnerable) bonus += s.vsVulnerable * e; // 물리 취약 적 특화
+  if (s.selfPower) bonus += s.selfPower * e;                     // 상시 자기 화력(고정)
+  if (s.statPower) bonus += s.statPower * e * (1 + getGearTalentPower(actor.gear) * TALENT_GEAR_SCALE); // 스탯(지능·의지) 파생 — 장비 등급 비례
   if (s.stackPerHit && kind !== "attack") bonus += stacks * s.stackPerHit * e; // 누적 강타
   if (s.essenceStack) bonus += stacks * s.essenceStack * e;      // 분쇄 누적
   // 딜 재능은 고정 % — 데미지 성장은 기초 스탯(스킬위력×장비배율)이 담당(중복 방지).
@@ -671,6 +674,8 @@ export function playCardOnState(current: RunState, uid: string, targetEnemyId?: 
   let crushedAny = false;
   let physAnomalyFired = false; // 물리 이상(띄우기·넘어뜨리기·강타·갑옷 파괴) 효과가 실제 발동했는지 — 불균형과 무관
   let freezeApplied = false;    // 이 플레이로 동결(냉기 부착)을 새로 부여했는지 (알레쉬 궁극 충전용)
+  let crystalConsumed = false;  // 관리자 오리지늄 결정을 이 플레이로 파괴했는지 (본질 붕괴·길잡이 트리거)
+  let shatteredAny = false;     // 이 플레이로 쇄빙이 발동했는지 (에스텔라 공감 — 게이지 반환 트리거)
   const damaged = battle.enemies.map((enemy) => {
     if (!targetIds.has(enemy.id) || enemy.hp <= 0) return enemy;
     const mech = kind === "attack"
@@ -702,10 +707,11 @@ export function playCardOnState(current: RunState, uid: string, targetEnemyId?: 
     if (enemyHas(enemy, "reflect") && !enemy.statuses.includes("defense-break")) reflectDmg += Math.ceil(ed.damage * 0.2);
     let hp = Math.max(0, enemy.hp - ed.damage);
     const alreadyBroken = enemy.statuses.includes("defense-break");
-    const staggerAdd = alreadyBroken ? 0 : Math.round(card.stagger * setStagger) + (shouldInterruptEnemy(enemy, kind) ? STAGGER_INTERRUPT_BONUS : 0);
+    const interrupting = shouldInterruptEnemy(enemy, kind);
+    const staggerAdd = alreadyBroken ? 0 : Math.round(card.stagger * setStagger) + (interrupting ? STAGGER_INTERRUPT_BONUS + (enemyHas(enemy, "charge") ? (aspec.chargeBreakStagger ?? 0) : 0) : 0);
     const nextStagger = Math.min(enemy.staggerHp, enemy.stagger + staggerAdd);
     let statuses = mech.statuses;
-    if (shatter) statuses = withoutStatus(statuses, "freeze"); // 쇄빙: 동결 해제
+    if (shatter) { statuses = withoutStatus(statuses, "freeze"); shatteredAny = true; } // 쇄빙: 동결 해제 + 공감 트리거
     let breakTurns = enemy.breakTurns;
     let staggerFinal = nextStagger;
     const forcedBreak = statuses.includes("defense-break") && !alreadyBroken;
@@ -716,7 +722,14 @@ export function playCardOnState(current: RunState, uid: string, targetEnemyId?: 
     // 방어 불능 스택이 있어야 실제 효과가 발동(강타·갑옷 파괴는 전 스택 소모). physBreakStacks = 방어 불능 스택.
     let physBreakStacks = enemy.physBreakStacks;
     let armorBreakTurns = enemy.armorBreakTurns;
+    let physVuln = enemy.physVuln;
+    let bleed = enemy.bleed;
     let ccDelay = false;
+    // 로시 절흔: 배틀 스킬이 '이미 방어 불능' 적을 치면 울프팀의 진주 발동 → 출혈(매 턴 공격력 30%) 부여.
+    if (hp > 0 && (aspec.bleed ?? 0) > 0 && kind === "battle-skill" && enemy.physBreakStacks > 0) {
+      bleed = Math.max(bleed ?? 0, Math.round(actor.attack * aspec.bleed!));
+      noteSet.add(`출혈 ${bleed}/턴`);
+    }
     if (hp > 0 && actor.element === "physical" && kind !== "attack") {
       const anomaly = actor.physAnomaly ?? (actor.physBreak === "consume" ? "crush" : actor.physBreak === "build" ? "launch" : undefined);
       if (anomaly === "launch" || anomaly === "knockdown") {
@@ -724,10 +737,16 @@ export function playCardOnState(current: RunState, uid: string, targetEnemyId?: 
         const add = PHYS_BREAK_BUILD[kind] + (elite >= 2 ? 1 : 0);
         if (add > 0) {
           const wasVuln = physBreakStacks > 0;
+          // 여풍 신체 정화: 방어 불능이 없던 적에게만 물리 취약 부여(팀 전체 물리 딜↑).
+          if ((aspec.appliesPhysVuln ?? 0) > 0 && !wasVuln && kind === "battle-skill") {
+            physVuln = Math.max(physVuln ?? 0, aspec.appliesPhysVuln!);
+            noteSet.add(`물리 취약 +${Math.round(aspec.appliesPhysVuln! * 100)}%`);
+          }
           physBreakStacks = Math.min(MAX_PHYS_BREAK_STACKS, physBreakStacks + add);
           noteSet.add(`방어 불능 ${physBreakStacks}${elite >= 2 ? "↑" : ""}`);
           if (wasVuln) { // 방어 불능 적 → 물리 이상 발동
-            const bonus = Math.ceil(card.power * 0.2);
+            let bonus = Math.ceil(card.power * 0.2);
+            if ((aspec.knockdownBonus ?? 0) > 0 && anomaly === "knockdown") bonus += Math.ceil(actor.attack * aspec.knockdownBonus!); // 여풍 복마: 넘어뜨리기마다 공격력 비례 추가 물리
             hp = Math.max(0, hp - bonus);
             totalDamage += bonus;
             staggerFinal = Math.min(enemy.staggerHp, staggerFinal + 10);
@@ -758,6 +777,26 @@ export function playCardOnState(current: RunState, uid: string, targetEnemyId?: 
           physAnomalyFired = true;
           noteSet.add(`갑옷 파괴 ${ab} · 관통`);
         } else { physBreakStacks = 1; noteSet.add("방어 불능 1"); }
+      }
+    }
+    // 에스텔라 「디스토션」: 연계 스킬로 물리 취약 부여(원소 무관 — 냉기 하이브리드).
+    if (hp > 0 && kind === "link-skill" && (aspec.linkPhysVuln ?? 0) > 0) {
+      physVuln = Math.max(physVuln ?? 0, aspec.linkPhysVuln!);
+      noteSet.add(`물리 취약 +${Math.round(aspec.linkPhysVuln! * 100)}%`);
+    }
+    // ── 관리자 「오리지늄 결정」 ──
+    // 연계 스킬 = 결정 부착(현실 정지로 받는 물리↑). 배틀/궁극 = 결정 파괴 → 추가 물리 + 본질 붕괴(공격력 누적).
+    if (hp > 0 && actor.id === "endministrator") {
+      if (kind === "link-skill" && !statuses.includes("crystal")) {
+        statuses = addStatus(statuses, "crystal");
+        noteSet.add("오리지늄 결정 부착");
+      } else if ((kind === "battle-skill" || kind === "ultimate") && statuses.includes("crystal")) {
+        const crystalDmg = Math.ceil(card.power * (kind === "ultimate" ? 1.2 : 0.9)); // 결정 파괴 피해(위키 추가/결정파괴 배율 보정)
+        hp = Math.max(0, hp - crystalDmg);
+        totalDamage += crystalDmg;
+        statuses = withoutStatus(statuses, "crystal");
+        crystalConsumed = true;
+        noteSet.add(`결정 파괴 ${crystalDmg}`);
       }
     }
     // ── 아츠 부착 / 폭발 / 이상(위키 §3.2.1~3.2.3) ──
@@ -799,7 +838,7 @@ export function playCardOnState(current: RunState, uid: string, targetEnemyId?: 
     if (aspec.targetVuln && nextVuln !== (enemy.vulnMark ?? 0)) noteSet.add(`표식 +${Math.round(aspec.targetVuln * 100)}%`);
     if (statuses.includes("freeze") && !enemy.statuses.includes("freeze")) freezeApplied = true; // 동결 신규 부여
 
-    return { ...enemy, hp, statuses, stagger: staggerFinal, breakTurns, physBreakStacks, armorBreakTurns, vulnMark: nextVuln, attach, artsVuln, corrodeVuln, actionGauge: ccDelay ? Math.max(0, enemy.actionGauge - 2) : enemy.actionGauge };
+    return { ...enemy, hp, statuses, stagger: staggerFinal, breakTurns, physBreakStacks, armorBreakTurns, physVuln, bleed, vulnMark: nextVuln, attach, artsVuln, corrodeVuln, actionGauge: ccDelay ? Math.max(0, enemy.actionGauge - 2) : enemy.actionGauge };
   });
   const revival = reviveEnemies(damaged);
   revival.notes.forEach((n) => noteSet.add(n));
@@ -826,7 +865,9 @@ export function playCardOnState(current: RunState, uid: string, targetEnemyId?: 
   const surge = (aspec.breakEnergy ?? 0) > 0;
   const gearSurge = hasBreakEnergySet(actor);
   const breakEnergy = brokeAny ? 2 + (surge ? 1 + (elite >= 2 ? 1 : 0) : 0) + (gearSurge ? 1 : 0) : 0; // 불균형 돌파 = 주 에너지원(+2)
-  const energyBonus = breakEnergy;
+  // 에스텔라 공감: 쇄빙 발동 시 게이지(전투 에너지) 반환(생존 보유자 합산).
+  const shatterEnergy = shatteredAny ? current.party.reduce((s, m) => (m.hp > 0 ? s + (passiveSpec(m.id).shatterEnergy ?? 0) : s), 0) : 0;
+  const energyBonus = breakEnergy + shatterEnergy;
   if (reflectDmg > 0) noteSet.add(`반사 -${reflectDmg}`);
   if (brokeAny) noteSet.add(`처형 — 에너지 +${breakEnergy}`);
   const peRaw = passivePlayEffect(actor, kind); // 재능: support-heal / guardian-shield
@@ -863,7 +904,7 @@ export function playCardOnState(current: RunState, uid: string, targetEnemyId?: 
     if (m.id === actor.id) {
       if (reflectDmg > 0) next = absorbHit(next, reflectDmg);
       if ((aspec.stackPerHit ?? 0) > 0 && kind !== "attack") next = { ...next, passiveStacks: Math.min(5, next.passiveStacks + 1) }; // 누적 강타: 스킬 명중마다
-      if ((aspec.essenceStack ?? 0) > 0 && crushedAny) next = { ...next, passiveStacks: Math.min(5, next.passiveStacks + 1) }; // 분쇄 누적: 강타/갑옷파괴 시
+      if ((aspec.essenceStack ?? 0) > 0 && (crushedAny || crystalConsumed)) next = { ...next, passiveStacks: Math.min(5, next.passiveStacks + 1) }; // 본질 붕괴: 강타/갑옷파괴·오리지늄 결정 소모 시 공격력 누적
       if (selfUltGain > 0) next = { ...next, ultimateCharge: Math.min(ultEnergyReq(next.id), (next.ultimateCharge ?? 0) + selfUltGain) }; // 명중/동결 자기 충전(기본 공격 포함)
     }
     if (kind === "battle-skill") {
@@ -1099,6 +1140,7 @@ export function endTurnOnState(current: RunState): RunState {
     let dot = 0;
     if (e.statuses.includes("combustion")) dot += DOT_DAMAGE;
     if (e.statuses.includes("corrosion")) dot += DOT_DAMAGE + 2;
+    if ((e.bleed ?? 0) > 0) dot += e.bleed!; // 로시 절흔 출혈
     if (dot > 0) dotTotal += dot;
     const hp = Math.max(0, e.hp - dot);
     return { ...e, hp, telegraph: makeIntent({ ...e, hp }, turn) };

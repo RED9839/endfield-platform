@@ -55,7 +55,8 @@ export type EnemyStatus =
   | "freeze" // 동결(냉기): 행동 불가 + 물리로 치면 쇄빙(Shatter)
   | "corrosion" // 부식(자연): 저항 감소 — 받는 모든 피해 증가 + DoT
   | "defense-break" // 불균형(스태거): 행동 불가 + 받피증 ×1.3
-  | "armor-break"; // 관통(Breach): 취약 소모 결과 — 물리 피해 증폭
+  | "armor-break" // 관통(Breach): 취약 소모 결과 — 물리 피해 증폭
+  | "crystal"; // 오리지늄 결정(관리자): 연계로 부착 → 받는 물리 +20%(현실 정지), 배틀/궁극으로 파괴 시 추가 물리 + 본질 붕괴
 export type EnemyMechanic =
   | "none"
   | "armored"
@@ -211,6 +212,8 @@ export type BattleEnemy = Enemy & {
   // 아츠 이상 취약(이상 레벨 1~4 → 12~24%). 감전=받는 아츠 피해↑(아츠 전용), 부식=모든 속성 저항↓(물리·아츠 공통).
   artsVuln?: number;
   corrodeVuln?: number;
+  physVuln?: number; // 물리 취약(여풍 신체 정화 등): 받는 물리 피해 증가(물리 전용)
+  bleed?: number; // 출혈 DoT(로시 절흔 늑대의 발톱): 매 턴 시작 시 받는 고정 물리 피해
   // 표식 디버프(targetVuln): 이 적이 받는 모든 피해 +x (디버퍼 재능). 0~1.
   vulnMark?: number;
   // 카드 전투: 다음 적 행동 예고(텔레그래프)
