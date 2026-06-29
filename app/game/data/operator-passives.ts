@@ -9,7 +9,8 @@ export type PassiveSpec = {
   statPower?: number;      // 지능·의지 등 스탯 파생 자기 화력 +x — 장비 등급에 비례(여풍 돈오 등)
   stackPerHit?: number;    // 비기본 스킬 명중마다 자기 피해 누적 +x/스택(최대5)
   essenceStack?: number;   // 물리 분쇄(강타/갑옷파괴) 시 자기 피해 누적 +x/스택
-  teamAmp?: number;        // 파티 전체 카드 피해 오라 +x (생존 보유자 합산)
+  teamAmp?: number;        // 파티 전체 카드 피해 오라 +x (생존 보유자 합산, 고정)
+  teamStatAmp?: number;    // 지능 등 스탯 파생 파티 피해 오라 +x — 보유자 장비 등급에 비례(아크라이트 황무지의 방랑자)
   crit?: number;           // 자기 치명타 확률 +x
   critVsStatus?: number;   // 아츠/이상 적 대상 치명타 피해 +x
   targetVuln?: number;     // 이 오퍼가 때린 적이 받는 모든 피해 +x (표식 디버프, 팀 전체 이득)
@@ -23,6 +24,10 @@ export type PassiveSpec = {
   linkPhysVuln?: number; // 연계 스킬이 적에 물리 취약 x 부여(에스텔라 디스토션)
   bleed?: number; // 배틀 스킬이 방어 불능 적을 칠 때 출혈 부여(공격력 ×x /턴) — 로시 절흔(울프팀의 진주)
   shatterEnergy?: number; // 쇄빙 발동 시 전투 에너지(스킬 게이지) 반환 — 에스텔라 공감
+  gaugeOnArmorBreak?: number; // 갑옷 파괴로 방불 소모 시 스택당 게이지(에너지) 수급 — 포그라니치니크 전선 분쇄
+  forceFreezeOnCryo?: boolean; // 배틀 스킬이 냉기 부착 적을 강제 동결(2원소 없이도 동결) — 알레쉬 비정규 루어
+  linkStatDamage?: number; // 연계 스킬 피해 +x — 지능 파생(장비 등급 비례), 알레쉬 낚시의 달인(린수 강화 평균값)
+  linkStatGauge?: number; // 연계 스킬 추가 에너지 +x — 지능 파생(장비 등급 비례), 아케쿠리 승리의 함성
   chargeBreakStagger?: number; // 적 차지를 끊었을 때 추가 불균형치(진천우 흐름 끊기)
   teamUltPct?: number;     // 가드/캐스터/서포터 아군의 궁극 충전량 ×(1+x) — 충전 효율 % (질베르타)
   ultOnHit?: number;       // 피해를 준 카드마다 자기 궁극 에너지 +x (아비웬나 명중 충전)
@@ -39,8 +44,8 @@ export const OPERATOR_PASSIVES: Record<string, PassiveSpec> = {
   chenqianyu: { stackPerHit: 0.08, chargeBreakStagger: 10 },
   // 친구의 그림자(돌리 그림자 회복 — 스킬 시전 시 파티 회복) / 마운틴 서퍼(부식 적에 배틀 1회 더)
   ardelia: { healOnCast: 16 },
-  // 죄를 쫓는 자(연계 명중 시 생명력 회복 + 연타 획득) / 혈류 소생(회복 시 자기 열기↑·팀 25% 공유)
-  camu: { teamAmp: 0.10, grantMultiHit: true, healOnCast: 6 },
+  // 죄를 쫓는 자(연계 명중 시 회복[지능 비례=장비 등급 비례] + 연타) / 혈류 소생(회복 시 자기 열기↑·팀 25%=teamAmp) / 배틀 사르는 불꽃 열기 취약+허약=targetVuln
+  camu: { teamAmp: 0.10, grantMultiHit: true, healOnCast: 6, targetVuln: 0.08 },
   // 전진의 결의(50% 비호) / 강철에는 강철로(피격 후 공격↑)
   ember: { shieldOnCast: 14, selfPower: 0.06 },
   // 가동 프로세스(냉기/동결 적 받는 냉기+10%) / 프리징(궁 정화)
@@ -49,8 +54,8 @@ export const OPERATOR_PASSIVES: Record<string, PassiveSpec> = {
   snowshine: { healOnCast: 12, breakEnergy: 1 },
   // 고효율 배송(썬더랜스 명중마다 궁에너지+3) / 완곡한 수단(궁이 전기취약+10%)
   avywenna: { ultOnHit: 3, targetVuln: 0.10 },
-  // 황무지의 여행자(팀 전기 피해↑) / 만물의 지혜(아츠 50% 면역)
-  arclight: { teamAmp: 0.10, damageResist: 0.10 },
+  // 황무지의 방랑자(질풍 섬광 후 지능 비례 팀 전기 피해↑ → 장비 등급 비례) / 만물의 지혜(아츠 50% 면역)
+  arclight: { teamStatAmp: 0.07, damageResist: 0.10 },
   // 전분 풀기(방어 불능 1스택 소모 후 물리+4% 최대 4스택 → 강타 소모 트리거) / 간 맞추기(연계 쿨↓)
   dapan: { essenceStack: 0.07 },
   // 하이테크 버스트(동결 후 강타+50%) / 빙점(냉기 적 치명피해+20%, 동결 2배)
@@ -63,7 +68,8 @@ export const OPERATOR_PASSIVES: Record<string, PassiveSpec> = {
   lifeng: { statPower: 0.12, knockdownBonus: 0.6, appliesPhysVuln: 0.12, grantMultiHit: true },
   // 전달자의 노래(가드/캐스터/서포터 궁 충전 효율 +20%; 실제 +4%를 카드게임 게이지 경제에 맞춰 상향) / 뒤늦은 편지(2명 명중 시 회복)
   gilberta: { teamUltPct: 0.20, healOnCast: 10 },
-  // 생존의 깃발(게이지 회복 시 공격+8%) / 전술 지도(궁 후 사기격양)
+  // 생존의 깃발(게이지 회복 시 사기 격양 공격+8%) / 처형 게이지 수급
+  // ※ 위키의 '방불 소모 비례 게이지 수급'(gaugeOnArmorBreak)은 카드-템포 모델에서 에너지=템포라 역효과 → 미적용(인프라는 비활성으로 보존).
   pogranichnik: { breakEnergy: 1, selfPower: 0.08 },
   // 불꽃의 심장(녹아내린 불꽃 누적) / 부활의 불씨(저HP 90% 비호+회복)
   laevatain: { stackPerHit: 0.08, damageResist: 0.10 },
@@ -71,8 +77,8 @@ export const OPERATOR_PASSIVES: Record<string, PassiveSpec> = {
   lastrite: { vsStatus: 0.22, targetVuln: 0.10 },
   // 불타는 송곳니(연소 적 자기 열기+30%) / 절제(아츠이상 소모 시 게이지+10)
   wulfgard: { selfPower: 0.18, breakEnergy: 1 },
-  // 급속 냉동(동결/냉기 부착 시 궁에너지+, 자기 동결이면 추가) / 낚시의 달인(린수 확률)
-  alesh: { ultOnFreeze: 8 },
+  // 급속 냉동(동결/냉기 부착 시 궁에너지+, 자기 동결이면 추가) / 낚시의 달인(린수 확률) + 비정규 루어 강제 동결
+  alesh: { ultOnFreeze: 8, forceFreezeOnCryo: true, linkStatDamage: 0.12 },
   // 공감(쇄빙 시 게이지 반환 → shatterEnergy) / 이유 있는 게으름(냉기 면역, 냉기 -20%) / 생존이 승리다(동결 시 궁충) / 디스토션 물리 취약
   estella: { shatterEnergy: 1, damageResist: 0.10, ultOnFreeze: 5, linkPhysVuln: 0.12 },
   // 강인한 방어선(방어력↑) / 전장을 꿰뚫는 통찰(궁 충격파)
@@ -81,8 +87,8 @@ export const OPERATOR_PASSIVES: Record<string, PassiveSpec> = {
   antal: { healOnCast: 10, damageResist: 0.12 },
   // 몰락의 조력자(감속 적 +20%) / 종잡을 수 없는 자(20% 아츠면역+공격+20%)
   fluorite: { vsStatus: 0.22, damageResist: 0.08 },
-  // 승리의 함성(연계 게이지 회복) / 몰입의 시간(궁 중 연타)
-  akekuri: { breakEnergy: 1, grantMultiHit: true },
+  // 승리의 함성(연계 게이지 회복 지능 비례 → linkStatGauge) / 몰입의 시간(궁 중 연타)
+  akekuri: { breakEnergy: 1, grantMultiHit: true, linkStatGauge: 2 },
   // 천지의 조화(전기 증폭 누적) / 하늘의 가호(9% 면역+회복)
   zhuangfangyi: { stackPerHit: 0.08, damageResist: 0.08 },
   // 냉정(취약/불균형 적 1.2배) / 분노(연계 후 보호막 30%)

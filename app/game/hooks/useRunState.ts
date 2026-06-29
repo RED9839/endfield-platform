@@ -400,6 +400,7 @@ function getPassiveDamageBonus(actor: PartyMember, target: BattleEnemy, kind: Sk
   if (s.vsVulnerable && vulnerable) bonus += s.vsVulnerable * e; // 물리 취약 적 특화
   if (s.selfPower) bonus += s.selfPower * e;                     // 상시 자기 화력(고정)
   if (s.statPower) bonus += s.statPower * e * (1 + getGearTalentPower(actor.gear) * TALENT_GEAR_SCALE); // 스탯(지능·의지) 파생 — 장비 등급 비례
+  if (s.linkStatDamage && kind === "link-skill") bonus += s.linkStatDamage * e * (1 + getGearTalentPower(actor.gear) * TALENT_GEAR_SCALE); // 낚시의 달인: 연계 피해 +(지능=장비 등급 비례, 린수 강화 평균)
   if (s.stackPerHit && kind !== "attack") bonus += stacks * s.stackPerHit * e; // 누적 강타
   if (s.essenceStack) bonus += stacks * s.essenceStack * e;      // 분쇄 누적
   // 딜 재능은 고정 % — 데미지 성장은 기초 스탯(스킬위력×장비배율)이 담당(중복 방지).
@@ -655,7 +656,11 @@ export function playCardOnState(current: RunState, uid: string, targetEnemyId?: 
   // 재능 crit(자기 치명) · team-amp(파티 오라, 생존 보유자 spec 합산) — 오퍼별 스펙
   const critSurge = aspec.crit ?? 0;
   const eliteCrit = (aspec.crit ?? 0) > 0 ? elite * 0.06 : 0; // 치명형은 정예화마다 +6%
-  const teamAmp = current.party.reduce((sum, m) => sum + (m.hp > 0 ? (passiveSpec(m.id).teamAmp ?? 0) : 0), 0);
+  const teamAmp = current.party.reduce((sum, m) => {
+    if (m.hp <= 0) return sum;
+    const sp = passiveSpec(m.id);
+    return sum + (sp.teamAmp ?? 0) + (sp.teamStatAmp ?? 0) * (1 + getGearTalentPower(m.gear) * TALENT_GEAR_SCALE); // 스탯 파생 오라는 보유자 장비 등급 비례
+  }, 0);
   // 유물 효과 + 소비 아이템 전투 버프 + 재능 + 장비 세트 합산
   const setCrit = getSetCrit(actor);
   const setStagger = getSetStagger(actor);
@@ -676,6 +681,7 @@ export function playCardOnState(current: RunState, uid: string, targetEnemyId?: 
   let freezeApplied = false;    // 이 플레이로 동결(냉기 부착)을 새로 부여했는지 (알레쉬 궁극 충전용)
   let crystalConsumed = false;  // 관리자 오리지늄 결정을 이 플레이로 파괴했는지 (본질 붕괴·길잡이 트리거)
   let shatteredAny = false;     // 이 플레이로 쇄빙이 발동했는지 (에스텔라 공감 — 게이지 반환 트리거)
+  let gaugeRefund = 0;          // 갑옷 파괴로 방불 소모 시 게이지(에너지) 수급 (포그라니치니크 전선 분쇄)
   const damaged = battle.enemies.map((enemy) => {
     if (!targetIds.has(enemy.id) || enemy.hp <= 0) return enemy;
     const mech = kind === "attack"
@@ -772,6 +778,8 @@ export function playCardOnState(current: RunState, uid: string, targetEnemyId?: 
           totalDamage += ab;
           armorBreakTurns = 2 + physBreakStacks + elite; // 정예화: 관통 지속 +1턴/단계
           statuses = addStatus(statuses, "armor-break");
+          // 포그라니치니크 전선 분쇄: 소모한 방불 스택에 비례해 게이지 수급(뛰어난 배틀 스킬 게이지 수급).
+          if ((aspec.gaugeOnArmorBreak ?? 0) > 0) gaugeRefund = Math.max(gaugeRefund, Math.round(physBreakStacks * aspec.gaugeOnArmorBreak!));
           physBreakStacks = 0;
           crushedAny = true;
           physAnomalyFired = true;
@@ -808,7 +816,16 @@ export function playCardOnState(current: RunState, uid: string, targetEnemyId?: 
     if (hp > 0 && actor.element !== "physical" && kind !== "attack") {
       const el = actor.element;
       const others = (Object.keys(attach) as Element[]).filter((k) => k !== el && (attach[k] ?? 0) > 0);
-      if (others.length > 0) {
+      if (aspec.forceFreezeOnCryo && el === "cryo" && kind === "battle-skill" && (attach.cryo ?? 0) > 0) {
+        // 알레쉬 비정규 루어: 냉기 부착 적을 강제 동결(냉기 소모 → 동결 + 냉기 피해). 냉기 단일 조합으로도 동결 발동.
+        const level = Math.min(4, attach.cryo ?? 0);
+        const dmg = Math.ceil(card.power * (0.5 + 0.25 * level));
+        hp = Math.max(0, hp - dmg);
+        totalDamage += dmg;
+        statuses = addStatus(statuses, "freeze");
+        attach = {};
+        noteSet.add(`강제 동결 Lv${level} ${dmg}`);
+      } else if (others.length > 0) {
         // 아츠 이상 발동
         const level = Math.min(4, (Object.values(attach) as number[]).reduce((s, n) => s + (n ?? 0), 0));
         const anomaly = ELEMENT_INFLICTION[el];
@@ -867,7 +884,9 @@ export function playCardOnState(current: RunState, uid: string, targetEnemyId?: 
   const breakEnergy = brokeAny ? 2 + (surge ? 1 + (elite >= 2 ? 1 : 0) : 0) + (gearSurge ? 1 : 0) : 0; // 불균형 돌파 = 주 에너지원(+2)
   // 에스텔라 공감: 쇄빙 발동 시 게이지(전투 에너지) 반환(생존 보유자 합산).
   const shatterEnergy = shatteredAny ? current.party.reduce((s, m) => (m.hp > 0 ? s + (passiveSpec(m.id).shatterEnergy ?? 0) : s), 0) : 0;
-  const energyBonus = breakEnergy + shatterEnergy;
+  // 아케쿠리 승리의 함성: 연계 스킬 추가 에너지(지능=장비 등급 비례)
+  const linkGauge = (aspec.linkStatGauge ?? 0) > 0 && kind === "link-skill" ? Math.round(aspec.linkStatGauge! * (1 + getGearTalentPower(actor.gear) * TALENT_GEAR_SCALE)) : 0;
+  const energyBonus = breakEnergy + shatterEnergy + gaugeRefund + linkGauge;
   if (reflectDmg > 0) noteSet.add(`반사 -${reflectDmg}`);
   if (brokeAny) noteSet.add(`처형 — 에너지 +${breakEnergy}`);
   const peRaw = passivePlayEffect(actor, kind); // 재능: support-heal / guardian-shield
