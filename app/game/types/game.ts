@@ -163,6 +163,9 @@ export type PartyMember = Operator & {
   hp: number;
   shield: number;
   ultimateCharge: number;
+  transformed?: boolean; // 궁극 변신 상태(레바테인 황혼·장방이 천리의 경지) — 일반/배틀 카드 교체
+  transformTurns?: number; // 변신 잔여 턴(0 되면 원복)
+  ironOath?: number; // 포그라니치니크 「철의 서약」 포인트 — 적 물리 이상/연계 시 1 소모해 방패병 추가타+게이지 회복
   actionGauge: number;
   passiveStacks: number;
   gear: GearLoadout;
@@ -203,6 +206,11 @@ export type BattleEnemy = Enemy & {
   // 방어불능 스택(물리 전용, 0~4): 물리 오퍼가 누적→소모하면 '갑옷 파괴'(armor-break) 부여.
   physBreakStacks: number;
   armorBreakTurns?: number;
+  // 아츠 부착 스택(원소별, 0~4): 같은 원소 2스택=폭발, 다른 원소 부착+새 원소=아츠 이상(전부 소모). 위키 §3.2.
+  attach?: Partial<Record<Element, number>>;
+  // 아츠 이상 취약(이상 레벨 1~4 → 12~24%). 감전=받는 아츠 피해↑(아츠 전용), 부식=모든 속성 저항↓(물리·아츠 공통).
+  artsVuln?: number;
+  corrodeVuln?: number;
   // 표식 디버프(targetVuln): 이 적이 받는 모든 피해 +x (디버퍼 재능). 0~1.
   vulnMark?: number;
   // 카드 전투: 다음 적 행동 예고(텔레그래프)
@@ -260,7 +268,7 @@ export type DeckCard = {
   uid: string; // 영구 고유 id
   src: "basic" | "operator" | "tactical";
   ref: string; // basic: 카드 키 / operator: operatorId / tactical: tacticalId
-  kind?: SkillKind | "util"; // operator일 때 스킬 종류('util'=직군 유틸 카드)
+  kind?: SkillKind | "util" | "strong"; // operator일 때 스킬 종류('util'=직군 유틸, 'strong'=강력한 일격)
   eliteLevel?: 0 | 1 | 2; // 정예화 단계(0=기본, 1차, 2차) — 위력·불균형치 강화
   copyLocked?: boolean; // 복제본: 복제 시점 상태로 고정, 정예화 영구 불가
 };
@@ -283,6 +291,9 @@ export type Card = {
   // 비피해/특수 효과: 실드·회복·에너지·드로우 / 셋업(아츠 부착)·버프(피해 증가)·대응(적 행동 지연)
   effect?: "shield" | "heal" | "energy" | "draw" | "setup" | "buff" | "delay";
   tactical?: boolean; // 전술 카드(오퍼 무관, 중립 효과)
+  exhaust?: boolean; // 소멸 카드: 1회 사용 후 덱/버린덱에 안 돌아가고 제거(장방이 변신 추가 카드 등)
+  energyRefund?: number; // 사용 시 전투 에너지(스킬 게이지) 환급 — 카뮤 「추적」 등
+  comboForm?: number; // 미브 「청파 삼형」 초식 단계(1=단운/2=추형/3=종식) — 사용 시 다음 초식 손패 추가
   eliteLevel?: number; // 정예화 단계(0/1/2) — 표시·강화 판정용
   copyLocked?: boolean; // 복제본(정예화 불가) — 표시용
 };
@@ -346,6 +357,7 @@ export type RunActions = {
   abandonRun: () => void;
   enterNode: (nodeId: string) => void;
   playCard: (uid: string, targetEnemyId?: string) => void;
+  useUltimate: (operatorId: string, targetEnemyId?: string) => void;
   endTurn: () => void;
   equipRewardGear: (gearSlug: string, operatorId: string) => void;
   buyGear: (gearSlug: string, operatorId: string) => void;

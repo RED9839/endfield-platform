@@ -57,18 +57,25 @@ export function makeBasicCard(ref: string, uid: string, elite = 0): Card {
 }
 
 // ===== 오퍼레이터 스킬 카드(습득) =====
+// 연계 스킬로 '스킬 게이지를 회복'하는 오퍼(실제 설명) → 카드 사용 시 전투 에너지 환급.
+// 아크라이트 「천둥의 울림」, 카뮤 「영혼의 가시」, 알레쉬 「얼음낚시 기술」 등 게이지 수급형 연계.
+export const LINK_ENERGY_REFUND: Record<string, number> = { arclight: 1, camu: 1, alesh: 1 };
 export function makeCard(op: PartyMember, kind: SkillKind, uid: string, elite = 0): Card {
   const basePower = kind === "attack" ? op.attack : kind === "battle-skill" ? op.battleSkillPower : kind === "link-skill" ? op.linkSkillPower : op.ultimatePower;
-  const power = upPow(basePower, elite);
-  const rawName = kind === "attack" ? op.normalAttackName : kind === "battle-skill" ? op.battleSkillName : kind === "link-skill" ? op.linkSkillName : op.ultimateName;
-  const name = `${rawName}${eliteSuffix(elite)}`;
+  // 디펜더는 일반공격에 체력 계수 소폭 혼합(저공격 보완 — 단단할수록 평타가 강해짐).
+  const hpMix = kind === "attack" && op.className === "디펜더" ? Math.round(op.maxHp * DEFENDER_HP_COEF) : 0;
+  const power = upPow(basePower, elite) + hpMix;
+  // 일반공격 카드명은 "일반공격"으로 통일(스킬 카드는 실제 스킬명 유지).
+  const skillName = kind === "battle-skill" ? op.battleSkillName : kind === "link-skill" ? op.linkSkillName : op.ultimateName;
+  const name = kind === "attack" ? `일반공격${eliteSuffix(elite)}` : `${skillName}${eliteSuffix(elite)}`;
   const icon = kind === "attack" ? op.normalAttackIcon : kind === "battle-skill" ? op.battleSkillIcon : kind === "link-skill" ? op.linkSkillIcon : op.ultimateIcon;
   const description = kind === "attack" ? op.normalAttackDescription : kind === "battle-skill" ? op.battleSkillDescription : kind === "link-skill" ? op.linkSkillDescription : op.ultimateDescription;
   // 광역 판정(오퍼 컨셉): 궁극=기본 광역(ultSingle 예외) · 배틀/연계=플래그 또는 전기 연계
   const aoe = (kind === "ultimate" && !op.ultSingle)
     || (kind === "battle-skill" && !!op.battleAoe)
     || (kind === "link-skill" && (!!op.linkAoe || op.skillMechanic === "electric-attachment"));
-  const effect = op.skillMechanic === "protective-arts" && kind !== "attack" ? "shield" : op.skillMechanic === "corrosion-support" && kind !== "attack" ? "heal" : undefined;
+  // 아델리아(corrosion-support)는 스킬로 자연 피해를 줘 부식 부착을 거는 디버퍼다. 회복은 재능(healOnCast)으로 처리 → 스킬은 데미지 카드.
+  const effect = op.skillMechanic === "protective-arts" && kind !== "attack" ? "shield" : undefined;
   const effectLine = effect === "shield"
     ? "파티 보호막"
     : effect === "heal"
@@ -78,13 +85,14 @@ export function makeCard(op: PartyMember, kind: SkillKind, uid: string, elite = 
         : kind === "link-skill"
           ? `${power} · 불균형 시 강타(×1.5)`
           : kind === "battle-skill"
-            ? `${power} · 불균형 누적${op.physBreak === "build" ? " · 취약+" : op.physBreak === "consume" ? " · 분쇄" : ""}`
+            ? `${power} · 불균형 누적${op.physBreak === "build" ? " · 방어불능+" : op.physBreak === "consume" ? " · 강타 소모" : ""}`
             : `${power} 피해`;
   // 불균형치 역할 차등(재분배 — 평균 유지): 물리 빌더 ×1.2, 소비형 ×1.0, 그 외(캐스터·서포터 등) ×0.85.
   const staggerMod = op.physBreak === "build" ? 1.2 : op.physBreak === "consume" ? 1.0 : 0.85;
   const stagger = effect ? 0 : Math.round(upStag(CARD_STAGGER[kind], elite) * staggerMod);
   // 보호막/회복 effect는 파티 대상 — 광역 판정보다 우선(표시·타깃 일관성).
-  return { uid, operatorId: op.id, operatorName: op.name, element: op.element, kind, cost: CARD_COST[kind], power, stagger, name, icon, description, effectLine, target: effect ? "party" : aoe ? "all-enemies" : "enemy", effect, eliteLevel: elite };
+  const energyRefund = kind === "link-skill" ? LINK_ENERGY_REFUND[op.id] : undefined;
+  return { uid, operatorId: op.id, operatorName: op.name, element: op.element, kind, cost: CARD_COST[kind], power, stagger, name, icon, description, effectLine, target: effect ? "party" : aoe ? "all-enemies" : "enemy", effect, energyRefund, eliteLevel: elite };
 }
 
 // ===== 전술 카드(습득) =====
@@ -189,12 +197,131 @@ export function makeOperatorUtilCard(op: PartyMember, uid: string, elite = 0): C
   };
 }
 
+// ===== 강력한 일격(강공) — 오퍼 공격 변형: 코스트2·고불균형 빌더 =====
+// 엔드필드 '강력한 일격'(불균형 피해)을 카드화. 공격 계열(아츠/콤보 없음)이지만 불균형을 크게 쌓는다.
+export const STRONG_COST = 2;
+export const STRONG_STAGGER = 28; // 배틀(34) 미만 — 사다리: 일반 < 강공 < 배틀
+export const DEFENDER_HP_COEF = 0.07; // 디펜더 일반/강공 체력 계수(저공격 보완)
+export function makeStrongCard(op: PartyMember, uid: string, elite = 0): Card {
+  // 위력 사다리: 일반공격 2회(공격력×2) 살짝 위, 단 배틀스킬 미만으로 캡.
+  const target = Math.round(op.attack * 2.2);
+  const base = Math.max(op.attack * 2 + 1, Math.min(target, op.battleSkillPower - 1));
+  const hpMix = op.className === "디펜더" ? Math.round(op.maxHp * DEFENDER_HP_COEF) : 0; // 디펜더 체력 계수 혼합
+  const power = upPow(base, elite) + hpMix;
+  const staggerMod = op.physBreak === "build" ? 1.3 : op.physBreak === "consume" ? 1.1 : 0.9;
+  return {
+    uid,
+    operatorId: op.id,
+    operatorName: op.name,
+    element: op.element,
+    kind: "attack", // 공격 계열(콤보·아츠 없음) — 단순 강타, 일반과 배틀 사이
+    cost: STRONG_COST,
+    power,
+    stagger: Math.round(upStag(STRONG_STAGGER, elite) * staggerMod),
+    name: `강공격${eliteSuffix(elite)}`,
+    icon: op.normalAttackIcon ?? "",
+    description: "강공격 — 일반과 배틀 사이의 단타",
+    effectLine: `${power} · 불균형 누적`,
+    target: "enemy",
+    eliteLevel: elite,
+  };
+}
+
+// ===== 궁극 변신 카드(레바테인 황혼 · 장방이 천리의 경지) =====
+// 변신 시 일반공격·배틀스킬 카드가 강화 광역 버전으로 교체된다(카드 변경 방식).
+const TRANSFORM_FORM: Record<string, { atk: string; battle: string }> = {
+  laevatain: { atk: "황혼 · 작열참", battle: "황혼 · 천화" },
+  zhuangfangyi: { atk: "천뢰 · 섬격", battle: "천뢰 · 뇌옥" },
+};
+export function isTransformOperator(id: string): boolean {
+  return Boolean(TRANSFORM_FORM[id]);
+}
+export function makeTransformedCard(op: PartyMember, kind: "attack" | "battle-skill", uid: string, elite = 0): Card {
+  const form = TRANSFORM_FORM[op.id] ?? { atk: "강화 일격", battle: "강화 작렬" };
+  if (kind === "attack") {
+    const power = upPow(Math.round(op.attack * 2.5), elite); // 변신 일반 = 광역 강타
+    return {
+      uid, operatorId: op.id, operatorName: op.name, element: op.element, kind: "attack",
+      cost: 1, power, stagger: upStag(Math.round(STRONG_STAGGER * 0.8), elite),
+      name: `${form.atk}${eliteSuffix(elite)}`, icon: op.normalAttackIcon ?? "",
+      description: "변신 강화 일격(광역)", effectLine: `전체 · ${power} 피해`,
+      target: "all-enemies", eliteLevel: elite,
+    };
+  }
+  const power = upPow(Math.round(op.battleSkillPower * 1.5), elite); // 변신 배틀 = 강화 광역
+  return {
+    uid, operatorId: op.id, operatorName: op.name, element: op.element, kind: "battle-skill",
+    cost: 2, power, stagger: upStag(Math.round(CARD_STAGGER["battle-skill"] * 1.3), elite),
+    name: `${form.battle}${eliteSuffix(elite)}`, icon: op.battleSkillIcon ?? "",
+    description: "변신 강화 스킬(광역·고불균형)", effectLine: `전체 · ${power} 피해 · 고불균형`,
+    target: "all-enemies", eliteLevel: elite,
+  };
+}
+
+// 장방이 변신 추가: 0코스트 강화 배틀스킬(변신 동안 순환, 종료 시 제거).
+export function makeConsumableUltCard(op: PartyMember, uid: string): Card {
+  const power = upPow(Math.round(op.battleSkillPower * 2));
+  return {
+    uid, operatorId: op.id, operatorName: op.name, element: op.element, kind: "battle-skill",
+    cost: 0, power, stagger: CARD_STAGGER["battle-skill"],
+    name: "천리 · 일격필살", icon: op.battleSkillIcon ?? "",
+    description: "변신 강화 배틀(0코스트)", effectLine: `전체 · ${power} 피해`,
+    target: "all-enemies", eliteLevel: 0,
+  };
+}
+
+// 카뮤 궁극 「선혈의 비」 추적 상태: 배틀 스킬이 0코스트 연계 「추적」으로 교체(스킬 게이지 소모 X + 회복).
+// 연계 스킬로 간주되어 카뮤 재능(연계 회복·연타 부여)·궁극 충전이 함께 발동한다. 변신 동안 순환, 종료 시 제거.
+export function makeChaseCard(op: PartyMember, uid: string): Card {
+  const power = upPow(Math.round(op.linkSkillPower * 1.15));
+  return {
+    uid, operatorId: op.id, operatorName: op.name, element: op.element, kind: "link-skill",
+    cost: 0, power, stagger: CARD_STAGGER["link-skill"],
+    name: "추적", icon: op.linkSkillIcon ?? "",
+    description: "선혈의 비 추적 — 0코스트 연계, 스킬 게이지 회복", effectLine: `전체 · ${power} 피해 · 에너지+1`,
+    target: op.battleAoe ? "all-enemies" : "enemy", energyRefund: 1, eliteLevel: 0,
+  };
+}
+
+// 이본 궁극 「아이스 슈터」 강화 상태: 일반공격이 강화 사격으로 교체(광역 냉기·고위력). 변신 동안 순환, 종료 시 제거.
+export function makeYvonneStanceCard(op: PartyMember, uid: string): Card {
+  const power = upPow(Math.round(op.attack * 2.3));
+  return {
+    uid, operatorId: op.id, operatorName: op.name, element: op.element, kind: "attack",
+    cost: 1, power, stagger: upStag(Math.round(STRONG_STAGGER * 0.7)),
+    name: "아이스 슈터 · 강화 사격", icon: op.normalAttackIcon ?? "",
+    description: "아이스 슈터 강화 일반공격(광역·냉기)", effectLine: `전체 · ${power} 피해`,
+    target: "all-enemies", eliteLevel: 0,
+  };
+}
+
+// 미브 「청파 삼형」: 배틀 스킬이 단운→추형→종식 3초식으로 이어진다. 사용 시 다음 초식 카드를 손패에 추가.
+// 1식 단운은 덱 배틀 스킬(순환), 2·3식은 추가되는 소멸 카드. 갈수록 위력↑·불균형↑(빌더 컨셉).
+export const MIFU_FORM_COUNT = 3;
+const MIFU_FORMS: Record<number, { name: string; mult: number; cost: number; staggerMult: number; note: string }> = {
+  1: { name: "청파 삼형 · 단운", mult: 0.9, cost: 2, staggerMult: 1.0, note: "끌어오기 · 불균형" },
+  2: { name: "청파 삼형 · 추형", mult: 1.1, cost: 2, staggerMult: 1.15, note: "강화 연격" },
+  3: { name: "청파 삼형 · 종식", mult: 1.45, cost: 1, staggerMult: 1.4, note: "넘어뜨리기 마무리" },
+};
+export function makeMifuFormCard(op: PartyMember, form: number, uid: string): Card {
+  const f = MIFU_FORMS[form] ?? MIFU_FORMS[1];
+  const power = upPow(Math.round(op.battleSkillPower * f.mult));
+  return {
+    uid, operatorId: op.id, operatorName: op.name, element: op.element, kind: "battle-skill",
+    cost: f.cost, power, stagger: Math.round(CARD_STAGGER["battle-skill"] * f.staggerMult),
+    name: f.name, icon: op.battleSkillIcon ?? "",
+    description: `청파 삼형 ${form}식 — ${f.note}`, effectLine: `${op.battleAoe ? "전체 · " : ""}${power} 피해 · ${f.note}`,
+    target: op.battleAoe ? "all-enemies" : "enemy",
+    comboForm: form, exhaust: form > 1, eliteLevel: 0,
+  };
+}
+
 // ===== 토큰 ↔ DeckCard ↔ Card =====
-// 토큰: "basic:strike" | "op:<operatorId>:<kind|util>" | "tac:<tacticalId>"
-export function parseToken(token: string): { src: DeckCard["src"]; ref: string; kind?: SkillKind | "util" } {
+// 토큰: "basic:strike" | "op:<operatorId>:<kind|util|strong>" | "tac:<tacticalId>"
+export function parseToken(token: string): { src: DeckCard["src"]; ref: string; kind?: SkillKind | "util" | "strong" } {
   if (token.startsWith("op:")) {
     const parts = token.split(":");
-    return { src: "operator", ref: parts[1], kind: parts[2] as SkillKind | "util" };
+    return { src: "operator", ref: parts[1], kind: parts[2] as SkillKind | "util" | "strong" };
   }
   if (token.startsWith("tac:")) return { src: "tactical", ref: token.slice(4) };
   return { src: "basic", ref: token };
@@ -213,7 +340,24 @@ export function cardFromDeck(dc: DeckCard, party: PartyMember[], battle: boolean
   const op = party.find((m) => m.id === dc.ref);
   if (!op || !dc.kind) return null;
   if (battle && op.hp <= 0) return null;
+  // 변신 상태(레바테인·장방이): 일반공격·배틀스킬 카드를 강화 광역 버전으로 교체.
+  if (op.transformed && isTransformOperator(op.id) && (dc.kind === "attack" || dc.kind === "battle-skill")) {
+    return lock(makeTransformedCard(op, dc.kind, dc.uid, dc.eliteLevel));
+  }
+  // 카뮤 추적 상태: 배틀 스킬 → 0코스트 연계 「추적」으로 교체.
+  if (op.id === "camu" && op.transformed && dc.kind === "battle-skill") {
+    return lock(makeChaseCard(op, dc.uid));
+  }
+  // 이본 아이스 슈터 상태: 일반공격 → 강화 사격으로 교체.
+  if (op.id === "yvonne" && op.transformed && dc.kind === "attack") {
+    return lock(makeYvonneStanceCard(op, dc.uid));
+  }
+  // 미브 청파 삼형: 덱 배틀 스킬은 항상 1식 단운으로 시작(사용 시 다음 초식이 손패에 추가됨).
+  if (op.id === "mifu" && dc.kind === "battle-skill") {
+    return lock(makeMifuFormCard(op, 1, dc.uid));
+  }
   if (dc.kind === "util") return lock(makeOperatorUtilCard(op, dc.uid, dc.eliteLevel));
+  if (dc.kind === "strong") return lock(makeStrongCard(op, dc.uid, dc.eliteLevel));
   return lock(makeCard(op, dc.kind, dc.uid, dc.eliteLevel));
 }
 
@@ -227,11 +371,18 @@ export function previewCardFromToken(token: string, party: PartyMember[]): Card 
   return cardFromDeck({ ...deckCardFromToken(token, `preview-${token}`) }, party, false);
 }
 
-// 시작 덱: 파티 각 오퍼의 기본 카드(오퍼 기본공격 1 + 방어 1). 4명 → 8장.
-// 덱이 파티 정체성을 가지며, 슬림해서 덱 순환·핵심 카드 빈도가 높다.
+// 시작 덱: 파티 각 오퍼의 카드 키트 6장 — 일반공격×2 · 강공 · 쉴드(방어) · 배틀 · 연계.
+// 궁극기는 덱에 없음(별도 액티브 게이지). 카드 종류가 풍부해 카제나식 손맛.
 export function startingDeck(seqStart: number, party: { id: string }[] = []): { deck: DeckCard[]; seq: number } {
   const specs: string[] = party.length > 0
-    ? party.flatMap((op) => [`op:${op.id}:attack`, "basic:defend"])
+    ? party.flatMap((op) => [
+        `op:${op.id}:attack`,
+        `op:${op.id}:attack`,
+        `op:${op.id}:strong`,
+        "basic:defend",
+        `op:${op.id}:battle-skill`,
+        `op:${op.id}:link-skill`,
+      ])
     : STARTING_DECK_SPECS;
   const deck = specs.map((spec, i) => deckCardFromToken(spec, `c${seqStart + i}`));
   return { deck, seq: seqStart + specs.length };
@@ -256,12 +407,13 @@ export function cardRewardPool(party: PartyMember[], factionIndex: number, seed:
   const kinds: SkillKind[] = ["battle-skill", "link-skill", "ultimate"];
   if (vivid) {
     // 선명한 기억: 파티 오퍼 고유 스킬 전체를 확정 선택지로 제시(랜덤 X).
-    return party.flatMap((op) => [...kinds.map((k) => `op:${op.id}:${k}`), `op:${op.id}:util`]);
+    return party.flatMap((op) => [...kinds.map((k) => `op:${op.id}:${k}`), `op:${op.id}:strong`, `op:${op.id}:util`]);
   }
-  // 오퍼 기본공격 카드는 제외(기본 스트라이크와 중복) → 덱이 임팩트 있는 스킬 위주로 슬림하게 유지.
+  // 덱 강화: 강공(불균형 빌더)·배틀·연계·궁극·직군 유틸.
   const tokens: string[] = [];
   party.forEach((op) => {
     kinds.forEach((k) => tokens.push(`op:${op.id}:${k}`));
+    tokens.push(`op:${op.id}:strong`); // 강공(강력한 일격)
     tokens.push(`op:${op.id}:util`); // 직군 유틸 카드
   });
   Object.values(TACTICAL_CARDS).forEach((t) => {

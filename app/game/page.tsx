@@ -88,6 +88,7 @@ export default function GamePage() {
           relics={run.relics}
           potions={run.potions}
           onPlayCard={run.playCard}
+          onUseUltimate={run.useUltimate}
           onEndTurn={run.endTurn}
           onUsePotion={run.usePotion}
         />

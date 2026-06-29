@@ -7,6 +7,7 @@ import { Battery, Crosshair, FlaskConical, Flame, Gem, HeartPulse, Layers, Shiel
 import { getRelic } from "../data/relics";
 import { getPotion, potionNeedsTarget } from "../data/potions";
 import { getEnemyWeakness } from "../data/enemy-traits";
+import { ultEnergyReq } from "../data/operator-ult-energy";
 
 const ELEMENT_NAME: Record<Element, string> = { physical: "물리", heat: "열기", electric: "전기", cryo: "냉기", nature: "자연" };
 import type { BattleEnemy, BattleState, Card, Element, EnemyMechanic, PartyMember, SkillKind } from "../types/game";
@@ -144,7 +145,7 @@ function EnemyCard({ enemy, selected, onSelect }: { enemy: BattleEnemy; selected
       )}
       {enemy.physBreakStacks > 0 && (
         <div className="mt-1 flex items-center gap-1">
-          <span className="font-mono text-[10px] font-bold uppercase text-sky-300/80">취약</span>
+          <span className="font-mono text-[10px] font-bold uppercase text-sky-300/80">방어 불능</span>
           <span className="flex gap-0.5">{Array.from({ length: 4 }, (_, k) => <span key={k} className="text-[11px] leading-none" style={{ color: k < enemy.physBreakStacks ? "#7dd3fc" : "#33415580" }}>◆</span>)}</span>
         </div>
       )}
@@ -159,16 +160,22 @@ function EnemyCard({ enemy, selected, onSelect }: { enemy: BattleEnemy; selected
   );
 }
 
-function PartyCard({ member }: { member: PartyMember }) {
+function PartyCard({ member, onUlt }: { member: PartyMember; onUlt?: () => void }) {
   const dead = member.hp <= 0;
+  const ultMax = ultEnergyReq(member.id);
+  const charge = member.ultimateCharge ?? 0;
+  const ultReady = !dead && charge >= ultMax;
   return (
-    <div className={`w-[228px] shrink-0 border border-ef-line bg-ef-card p-3.5 ${dead ? "opacity-30 grayscale" : ""}`} style={CUT_SM}>
+    <div className={`w-[228px] shrink-0 border bg-ef-card p-3.5 ${dead ? "border-ef-line opacity-30 grayscale" : member.transformed ? "border-ef-accent" : "border-ef-line"}`} style={CUT_SM}>
       <div className="flex items-center gap-3">
         <span className="relative h-16 w-16 shrink-0 overflow-hidden border border-ef-line bg-black" style={{ ...CUT_SM, borderColor: `${elementColor[member.element]}66` }}>
           {member.image ? <Image src={member.image} alt={member.name} fill sizes="64px" className="object-cover object-top" /> : null}
         </span>
         <div className="min-w-0">
-          <p className="truncate text-base font-black text-white">{member.name}</p>
+          <p className="flex items-center gap-1 truncate text-base font-black text-white">
+            {member.name}
+            {member.transformed && <span className="border border-ef-accent/60 bg-ef-accent/15 px-1 py-px font-mono text-[9px] font-black text-ef-accent" style={CUT_SM}>변신 {member.transformTurns}T</span>}
+          </p>
           <p className="font-mono text-[13px] uppercase tracking-wide">
             <span className="font-black" style={{ color: elementColor[member.element] }}>{ELEMENT_NAME[member.element]}</span>
             <span className="text-ef-muted"> · {member.className}</span>
@@ -180,7 +187,23 @@ function PartyCard({ member }: { member: PartyMember }) {
       </div>
       <Bar value={member.hp} max={member.maxHp} color="#34d399" height="h-2.5" />
       {member.shield > 0 && (
-        <div className="mt-1.5 flex items-center gap-1 font-mono text-[12px] font-bold text-cyan-300"><Shield className="h-3.5 w-3.5" /> 보호막 {member.shield}</div>
+        <div className="mt-1 flex items-center gap-1 font-mono text-[12px] font-bold text-cyan-300"><Shield className="h-3.5 w-3.5" /> 보호막 {member.shield}</div>
+      )}
+      {/* 궁극기 게이지 */}
+      {!dead && (
+        <div className="mt-1.5">
+          <div className="mb-0.5 flex items-center justify-between font-mono text-[10px] font-bold uppercase tracking-wide">
+            <span className={ultReady ? "text-ef-accent" : "text-ef-muted"}>궁극</span>
+            <span className="tabular-nums text-ef-muted">{Math.round(charge)}/{ultMax}</span>
+          </div>
+          {ultReady && onUlt ? (
+            <button type="button" onClick={onUlt} className="flex w-full items-center justify-center gap-1 border py-1 font-mono text-[11px] font-black uppercase tracking-wide text-black transition hover:brightness-110" style={{ ...CUT_SM, background: ACCENT, borderColor: ACCENT }}>
+              <Zap className="h-3 w-3" /> 궁극 발동
+            </button>
+          ) : (
+            <Bar value={charge} max={ultMax} color="#a78bfa" height="h-1.5" />
+          )}
+        </div>
       )}
     </div>
   );
@@ -227,6 +250,7 @@ export default function BattleScreen({
   relics = [],
   potions = [],
   onPlayCard,
+  onUseUltimate,
   onEndTurn,
   onUsePotion,
 }: {
@@ -235,6 +259,7 @@ export default function BattleScreen({
   relics?: string[];
   potions?: string[];
   onPlayCard: (uid: string, targetEnemyId?: string) => void;
+  onUseUltimate?: (operatorId: string, targetEnemyId?: string) => void;
   onEndTurn: () => void;
   onUsePotion?: (potionId: string, targetEnemyId?: string) => void;
 }) {
@@ -307,7 +332,7 @@ export default function BattleScreen({
 
           {/* 아군 진영 */}
           <div className="flex flex-wrap items-stretch justify-center gap-2">
-            {party.map((member) => <PartyCard key={member.id} member={member} />)}
+            {party.map((member) => <PartyCard key={member.id} member={member} onUlt={onUseUltimate ? () => onUseUltimate(member.id, selectedId) : undefined} />)}
             {onUsePotion && potions.length > 0 && (
               <div className="flex items-center gap-2 border border-ef-line bg-ef-card px-3" style={CUT_SM}>
                 <span className="font-mono text-[11px] font-bold uppercase tracking-wide text-ef-muted">포션</span>

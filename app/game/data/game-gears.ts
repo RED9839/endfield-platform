@@ -191,32 +191,119 @@ export function getGearStatDeltas(gear: RunGear, element?: Element): GearStatDel
   return deltas;
 }
 
+// ===== 새 장비 옵션 모델 =====
+// 등급(level+quality)=기본 스탯 배율(getGearTalentPower) / 속성(attributeTypes)=특화 % 보너스.
+// 플랫 스탯 부여를 폐지하고, 속성은 배율 가산·종류별 피해%·원소%·치명 등으로 재해석.
+export type GearAttrBonus = {
+  atkMult: number;   // 공격·스킬위력 추가 배율(등급 배율에 가산)
+  hpMult: number;    // 체력 추가 배율
+  critRate: number;
+  critDamage: number;
+  defense: number;
+  evasion: number;
+  kindDmg: Partial<Record<SkillKind | "all", number>>; // 카드 종류별 피해 %
+  elementDmg: number; // 원소 일치 피해 %
+  vsBroken: number;   // 불균형 적 피해 %
+};
+const STAT_UNIT = 0.012; // 스탯 배율 단위(특화는 등급 배율 위 소폭만)
+const DMG_UNIT = 0.016;  // 피해 % 단위
+const CRIT_UNIT = 0.015; // 치명 단위
+function emptyAttrBonus(): GearAttrBonus {
+  return { atkMult: 0, hpMult: 0, critRate: 0, critDamage: 0, defense: 0, evasion: 0, kindDmg: {}, elementDmg: 0, vsBroken: 0 };
+}
+function addKind(b: GearAttrBonus, k: SkillKind | "all", v: number) { b.kindDmg[k] = (b.kindDmg[k] ?? 0) + v; }
+
+export function getGearAttrBonus(gear: RunGear, element?: Element): GearAttrBonus {
+  const v = getGearValue(gear);
+  const b = emptyAttrBonus();
+  // 슬롯 성향(소폭): 방어구=체력 / 장갑=공격 / 부품=둘 다 — 역할 대부분은 기초 스탯+등급 배율이 담당.
+  if (gear.category === "armor") b.hpMult += v * STAT_UNIT * 0.5;
+  else if (gear.category === "gloves") b.atkMult += v * STAT_UNIT * 0.5;
+  else { b.atkMult += v * STAT_UNIT * 0.25; b.hpMult += v * STAT_UNIT * 0.25; }
+  for (const t of gear.attributeTypes) {
+    switch (t) {
+      case "attack": b.atkMult += v * STAT_UNIT; break;
+      case "hp": b.hpMult += v * STAT_UNIT * 2; break;
+      case "mainStat":
+        if (gear.category === "armor") b.hpMult += v * STAT_UNIT * 1.5;
+        else if (gear.category === "gloves") b.atkMult += v * STAT_UNIT * 1.5;
+        else { b.atkMult += v * STAT_UNIT; b.hpMult += v * STAT_UNIT; }
+        break;
+      case "subStat": b.atkMult += v * STAT_UNIT * 0.5; b.hpMult += v * STAT_UNIT * 0.5; b.critRate += v * CRIT_UNIT * 0.5; break;
+      case "critRate": b.critRate += v * CRIT_UNIT; b.critDamage += v * CRIT_UNIT; break;
+      case "ultimateEfficiency": addKind(b, "ultimate", v * DMG_UNIT); b.critDamage += v * CRIT_UNIT; break;
+      case "skillDamage": addKind(b, "battle-skill", v * DMG_UNIT); break;
+      case "comboSkillDamage": addKind(b, "link-skill", v * DMG_UNIT); break;
+      case "ultimateDamage": addKind(b, "ultimate", v * DMG_UNIT); break;
+      case "normalAttack": addKind(b, "attack", v * DMG_UNIT); break;
+      case "allSkillDamage": addKind(b, "all", v * DMG_UNIT * 0.8); break;
+      // 아츠(오리지늄 아츠) = 속성 피해(비물리). 비물리 오퍼에게만 원소 피해 +%.
+      case "artsDamage": case "originiumArts": if (element && element !== "physical") b.elementDmg += v * DMG_UNIT; break;
+      case "unbalancedTargetDamage": b.vsBroken += v * DMG_UNIT; b.critDamage += v * CRIT_UNIT; break;
+      case "damageReduction": b.defense += v * 2; b.evasion += 1; break;
+      case "healEfficiency": b.hpMult += v * STAT_UNIT; b.defense += v; break;
+      case "physicalDamage": case "cryoElectricDamage": case "heatNatureDamage":
+        if (matchesElementalAttribute([t], element)) b.elementDmg += v * DMG_UNIT; break;
+    }
+  }
+  return b;
+}
+
+// 스탯 관련 합산(applyGearStats용): 배율 가산·치명·방어.
+export function getGearStatTotals(loadout: GearLoadout, element?: Element) {
+  return getEquippedGears(loadout).reduce(
+    (tot, g) => {
+      const b = getGearAttrBonus(g, element);
+      tot.atkMult += b.atkMult; tot.hpMult += b.hpMult;
+      tot.critRate += b.critRate; tot.critDamage += b.critDamage;
+      tot.defense += b.defense; tot.evasion += b.evasion;
+      return tot;
+    },
+    { atkMult: 0, hpMult: 0, critRate: 0, critDamage: 0, defense: 0, evasion: 0 },
+  );
+}
+
+// 전투용: 장비 속성에 의한 카드 피해 배수(종류별 + 원소 일치 + 불균형 적).
+export function getGearDamageMult(loadout: GearLoadout, element: Element, kind: SkillKind, broken: boolean): number {
+  let pct = 0;
+  for (const g of getEquippedGears(loadout)) {
+    const b = getGearAttrBonus(g, element);
+    pct += b.kindDmg[kind] ?? 0;
+    pct += b.kindDmg.all ?? 0;
+    pct += b.elementDmg;
+    if (broken) pct += b.vsBroken;
+  }
+  return 1 + pct;
+}
+
 export function getGearPrimaryStatLine(gear: RunGear) {
   const value = getGearValue(gear);
   const type = gear.attributeTypes[0];
+  const pStat = value * 2;   // 스탯 배율 %
+  const pDmg = Math.round(value * 2.5); // 피해 %
 
-  if (type === "attack") return `공격력 +${value * 2}`;
-  if (type === "hp") return `생명력 +${value * 4}`;
+  if (type === "attack") return `공격력 +${pStat}%`;
+  if (type === "hp") return `생명력 +${value * 4}%`;
   if (type === "critRate") return `치명타 확률 +${value * 2}%`;
-  if (type === "originiumArts" || type === "artsDamage") return `아츠 출력 +${value}`;
-  if (type === "healEfficiency") return `회복/체력 +${value * 3}`;
-  if (type === "physicalDamage") return `물리 피해 +${value}`;
-  if (type === "ultimateEfficiency") return `궁극기 출력 +${value * 2}`;
-  if (type === "normalAttack") return `기본공격 피해 +${value * 2}`;
-  if (type === "skillDamage") return `배틀스킬 피해 +${value * 2}`;
-  if (type === "comboSkillDamage") return `연계스킬 피해 +${value * 2}`;
-  if (type === "ultimateDamage") return `궁극기 피해 +${value * 2}`;
-  if (type === "unbalancedTargetDamage") return `연계 콤보·치명 피해 +${value}`;
-  if (type === "mainStat") return `주 능력치 +${value * 2}`;
-  if (type === "cryoElectricDamage") return `냉기/전기 피해 +${value}`;
-  if (type === "damageReduction") return `피해 감소 +${value * 2}`;
-  if (type === "subStat") return `보조 능력치 +${value * 2}`;
-  if (type === "allSkillDamage") return `스킬 피해 +${value}`;
-  if (type === "heatNatureDamage") return `열기/자연 피해 +${value}`;
+  if (type === "originiumArts" || type === "artsDamage") return `아츠(속성) 피해 +${pDmg}%`;
+  if (type === "healEfficiency") return `생명력 +${pStat}% · 방어`;
+  if (type === "physicalDamage") return `물리 피해 +${pDmg}%`;
+  if (type === "ultimateEfficiency") return `궁극기 피해 +${pDmg}% · 치명`;
+  if (type === "normalAttack") return `기본공격 피해 +${pDmg}%`;
+  if (type === "skillDamage") return `배틀스킬 피해 +${pDmg}%`;
+  if (type === "comboSkillDamage") return `연계스킬 피해 +${pDmg}%`;
+  if (type === "ultimateDamage") return `궁극기 피해 +${pDmg}%`;
+  if (type === "unbalancedTargetDamage") return `불균형 적 피해 +${pDmg}% · 치명`;
+  if (type === "mainStat") return `주 능력치 +${Math.round(value * 3)}%`;
+  if (type === "cryoElectricDamage") return `냉기/전기 피해 +${pDmg}%`;
+  if (type === "damageReduction") return `피해 감소 (방어 +${value * 2})`;
+  if (type === "subStat") return `보조 능력치 +${pStat}%`;
+  if (type === "allSkillDamage") return `전 스킬 피해 +${value * 2}%`;
+  if (type === "heatNatureDamage") return `열기/자연 피해 +${pDmg}%`;
 
-  if (gear.category === "armor") return `생명력 +${value * 4}`;
-  if (gear.category === "gloves") return `공격력 +${value}`;
-  return `공격력 +${Math.round(value * 0.5)} · 생명력 +${value * 2}`;
+  if (gear.category === "armor") return `생명력 +${value * 2}%`;
+  if (gear.category === "gloves") return `공격력 +${pStat}%`;
+  return `공격력 +${value}% · 생명력 +${value}%`;
 }
 
 function toCombatDescription(attributeLabel: string, level: RunGearLevel, quality: number, hasSetEffect: boolean) {

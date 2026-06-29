@@ -17,32 +17,35 @@ export type PassiveSpec = {
   breakEnergy?: number;    // 불균형 돌파 시 추가 에너지
   damageResist?: number;   // 받는 피해 감소 x (생존 재능)
   grantMultiHit?: boolean; // 스킬 시 연타 부여
+  teamUltPct?: number;     // 가드/캐스터/서포터 아군의 궁극 충전량 ×(1+x) — 충전 효율 % (질베르타)
+  ultOnHit?: number;       // 피해를 준 카드마다 자기 궁극 에너지 +x (아비웬나 명중 충전)
+  ultOnFreeze?: number;    // 이 플레이로 동결(냉기 부착)을 부여하면 자기 궁극 에너지 +x (알레쉬)
 };
 
 // 각 오퍼의 두 재능 → 레버 매핑(주석 = 재능1 / 재능2)
 export const OPERATOR_PASSIVES: Record<string, PassiveSpec> = {
   // 본질 붕괴(분쇄 시 공격력↑) / 현실 정지(결정 부착 적 받는 물리↑)
   endministrator: { essenceStack: 0.08, vsStatus: 0.20 },
-  // 오블리터레이션(불균형 적 +30%) / 순환(연계가 방불 적에 1회 더)
-  perlica: { vsBroken: 0.30 },
+  // 오블리터레이션(불균형 적 +20%) / 순환(연계가 방불 적에 1회 더)
+  perlica: { vsBroken: 0.20 },
   // 칼날 베기(명중마다 공격+8% 5스택) / 흐름 끊기(차지 끊으면 불균형+)
   chenqianyu: { stackPerHit: 0.08 },
-  // 친구의 그림자(회복) / 마운틴 서퍼(부식 적에 배틀 1회 더)
-  ardelia: { healOnCast: 12 },
-  // 죄를 쫓는 자(연계 회복+연타) / 혈류 소생(열기 피해 팀 공유)
-  camu: { teamAmp: 0.10, grantMultiHit: true },
+  // 친구의 그림자(돌리 그림자 회복 — 스킬 시전 시 파티 회복) / 마운틴 서퍼(부식 적에 배틀 1회 더)
+  ardelia: { healOnCast: 16 },
+  // 죄를 쫓는 자(연계 명중 시 생명력 회복 + 연타 획득) / 혈류 소생(회복 시 자기 열기↑·팀 25% 공유)
+  camu: { teamAmp: 0.10, grantMultiHit: true, healOnCast: 6 },
   // 전진의 결의(50% 비호) / 강철에는 강철로(피격 후 공격↑)
   ember: { shieldOnCast: 14, selfPower: 0.06 },
   // 가동 프로세스(냉기/동결 적 받는 냉기+10%) / 프리징(궁 정화)
   xaihi: { targetVuln: 0.12 },
   // 극지 생존(저HP 치유+25%) / 구조 전문가(방어 성공 시 에너지+10)
   snowshine: { healOnCast: 12, breakEnergy: 1 },
-  // 고효율 배송(명중 시 궁에너지+4) / 완곡한 수단(궁이 전기취약+10%)
-  avywenna: { breakEnergy: 1, targetVuln: 0.10 },
+  // 고효율 배송(썬더랜스 명중마다 궁에너지+3) / 완곡한 수단(궁이 전기취약+10%)
+  avywenna: { ultOnHit: 3, targetVuln: 0.10 },
   // 황무지의 여행자(팀 전기 피해↑) / 만물의 지혜(아츠 50% 면역)
   arclight: { teamAmp: 0.10, damageResist: 0.10 },
-  // 전분 풀기(방불 소모 후 물리+6% 4스택) / 간 맞추기(연계 쿨↓)
-  dapan: { stackPerHit: 0.07 },
+  // 전분 풀기(방어 불능 1스택 소모 후 물리+4% 최대 4스택 → 강타 소모 트리거) / 간 맞추기(연계 쿨↓)
+  dapan: { essenceStack: 0.07 },
   // 하이테크 버스트(동결 후 강타+50%) / 빙점(냉기 적 치명피해+20%, 동결 2배)
   yvonne: { crit: 0.12, critVsStatus: 0.16, vsStatus: 0.12 },
   // 절흔(늑대발톱: 받는 물리/열기+12% DoT) / 끓어오르는 피(치명 시 추가 열기딜+회복)
@@ -51,8 +54,8 @@ export const OPERATOR_PASSIVES: Record<string, PassiveSpec> = {
   tangtang: { teamAmp: 0.08 },
   // 돈오(스탯당 공격+0.15%) / 복마(넘어뜨리기 시 공격력 100% 추가)
   lifeng: { selfPower: 0.18, vsVulnerable: 0.15 },
-  // 전달자의 노래(팀 궁충전+7%) / 뒤늦은 편지(2명 명중 시 회복)
-  gilberta: { teamAmp: 0.06, healOnCast: 10 },
+  // 전달자의 노래(가드/캐스터/서포터 궁 충전 효율 +20%; 실제 +4%를 카드게임 게이지 경제에 맞춰 상향) / 뒤늦은 편지(2명 명중 시 회복)
+  gilberta: { teamUltPct: 0.20, healOnCast: 10 },
   // 생존의 깃발(게이지 회복 시 공격+8%) / 전술 지도(궁 후 사기격양)
   pogranichnik: { breakEnergy: 1, selfPower: 0.08 },
   // 불꽃의 심장(녹아내린 불꽃 누적) / 부활의 불씨(저HP 90% 비호+회복)
@@ -61,8 +64,8 @@ export const OPERATOR_PASSIVES: Record<string, PassiveSpec> = {
   lastrite: { vsStatus: 0.22, targetVuln: 0.10 },
   // 불타는 송곳니(연소 적 자기 열기+30%) / 절제(아츠이상 소모 시 게이지+10)
   wulfgard: { selfPower: 0.18, breakEnergy: 1 },
-  // 급속 냉동(동결/결정 시 에너지+) / 낚시의 달인(린수 확률)
-  alesh: { breakEnergy: 1 },
+  // 급속 냉동(동결/냉기 부착 시 궁에너지+, 자기 동결이면 추가) / 낚시의 달인(린수 확률)
+  alesh: { ultOnFreeze: 8 },
   // 공감(쇄빙 후 게이지 반환) / 이유 있는 게으름(냉기 면역, 냉기 -20%)
   estella: { breakEnergy: 1, damageResist: 0.10 },
   // 강인한 방어선(방어력↑) / 전장을 꿰뚫는 통찰(궁 충격파)

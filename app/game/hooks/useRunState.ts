@@ -2,7 +2,7 @@
 
 import { useCallback, useState } from "react";
 
-import { buildDeck, cardRemovalCost, cardRewardPool, deckCardFromToken, MAX_ELITE, MIN_DECK_SIZE, startingDeck } from "../data/cards";
+import { buildDeck, cardRemovalCost, cardRewardPool, deckCardFromToken, isTransformOperator, makeCard, makeChaseCard, makeConsumableUltCard, makeMifuFormCard, makeTransformedCard, makeYvonneStanceCard, MAX_ELITE, MIN_DECK_SIZE, MIFU_FORM_COUNT, startingDeck } from "../data/cards";
 import { getEnemies, getEnemy } from "../data/enemies";
 import { loadBestScores, loadDeckSnapshot, recordScore, saveDeckSnapshot } from "../lib/challenge";
 import { computeBattleDrop, getEnemyWeakness, WEAKNESS_AMP } from "../data/enemy-traits";
@@ -15,15 +15,17 @@ import {
   getEquippedGears,
   getGameGear,
   getGearTalentPower,
+  getGearStatTotals,
+  getGearDamageMult,
   getGearBuyValue,
   getGearSellValue,
-  getGearStatDeltas,
   getGearSlot,
   getSetEffects,
 } from "../data/game-gears";
 import { factions, getFactionStart, getMapNode } from "../data/maps";
 import { allOperators, startingParty } from "../data/operators";
 import { passiveSpec } from "../data/operator-passives";
+import { ultEnergyReq, ultGainConditional, ultArtsConsumeBonus, ultKind } from "../data/operator-ult-energy";
 import type {
   BattleEnemy,
   BattleState,
@@ -43,10 +45,16 @@ import type {
 // 카드 전투 자원
 const ENERGY_PER_TURN = 3;
 const HAND_SIZE = 5;
+// 포그라니치니크 「철의 서약」: 궁극 시 5포인트 생성, 물리 이상/연계 트리거마다 1 소모(방패병 추가타+게이지 회복), 마지막 1포인트=최후의 승부.
+const IRON_OATH_POINTS = 5;
+const IRON_OATH_GAUGE = 14; // 방패병 교란 시 포그 스킬 게이지 회복
+const IRON_OATH_FINAL_GAUGE = 60; // 최후의 승부 대량 게이지 회복
+// 질베르타 「전달자의 노래」 궁극 충전 효율 % 대상 직군(가드·캐스터·서포터).
+const ULT_BATTERY_CLASSES = ["가드", "캐스터", "서포터"];
 const EVASION_CAP = 25;
-// 아츠 부착 4종(원소 이상). 같은 원소 재부착=버스트, 다른 원소=반응.
+// 아츠 이상 4종(위키 §3.2.3). 적 statuses에는 '이상'이 발동했을 때만 부여된다(부착 자체는 enemy.attach로 별도 추적).
 const ARTS_INFLICTIONS: EnemyStatus[] = ["combustion", "shock", "freeze", "corrosion"];
-// 원소 → 아츠 부착(물리는 취약 스택으로 별도 처리)
+// 원소 → 발동되는 아츠 이상(마지막 부착 원소가 이상 타입을 결정)
 const ELEMENT_INFLICTION: Partial<Record<Element, EnemyStatus>> = {
   heat: "combustion",
   electric: "shock",
@@ -54,6 +62,8 @@ const ELEMENT_INFLICTION: Partial<Record<Element, EnemyStatus>> = {
   nature: "corrosion",
 };
 const INFLICTION_LABEL: Record<string, string> = { combustion: "연소", shock: "감전", freeze: "동결", corrosion: "부식" };
+// 원소 부착 표시 라벨(부착·폭발 단계)
+const ELEM_LABEL: Partial<Record<Element, string>> = { heat: "열기", electric: "전기", cryo: "냉기", nature: "자연" };
 const ARTS_ATTACHMENT_STATUSES = ARTS_INFLICTIONS;
 
 function getBaseOperator(operatorId: string): Operator {
@@ -181,6 +191,13 @@ function didEvade(member: PartyMember, battleTurn: number, enemyId: string) {
 function defenseFactor(defense: number) {
   return 1 / (0.01 * Math.max(0, defense) + 1);
 }
+
+// 궁극기 게이지: 배틀/연계 스킬 사용 시 시전 오퍼는 실제 획득량(ultGainSelf, 레바테인 100 등), 그 외 파티는 소량 트리클.
+// 만충치는 오퍼별 실제 "필요한 궁극기 에너지". 게이지는 전투 간 유지(런 내내 누적).
+// 위키 §2.1.4 궁극 게이지 충전: 배틀스킬=아군 전체 +6.5 / 연계스킬=시전자만 +10(아크라이트 예외 5).
+const ULT_CHARGE_BATTLE_TEAM = 6; // 배틀스킬 사용 시 아군 전체 충전(≈6.5)
+const LINK_ULT_GAIN = 10;          // 연계스킬 사용 시 시전자만 충전
+const LINK_ULT_GAIN_ARCLIGHT = 5;  // 아크라이트 예외(각주[5])
 
 // 엔드필드 불균형(스태거) 받피증: 방어 붕괴 상태의 적은 받는 피해 +30% (×1.3)
 const IMBALANCE_DAMAGE_TAKEN = 1.3;
@@ -314,11 +331,17 @@ function buildEnemyAction(actor: BattleEnemy, battleTurn: number) {
 }
 
 // 아츠 부착 상태별 받피증(엔드필드 내재 효과). 장비 세트는 getSetDamageBonus에서 별도 처리.
+// 아츠 이상 취약 — 이상 레벨(소모 스택 1~4)별 수치(위키 12/16/20/24%를 카드게임 밸런스로 보정해 상향).
+const ANOMALY_VULN = [0, 0.2, 0.28, 0.36, 0.44];
+// 위키 §3.2.3 기준 물리/아츠 분리:
+//  · 감전 = 아츠 취약(받는 아츠 피해↑, 이상 레벨 비례) → 아츠 공격에만 적용
+//  · 부식 = 모든 속성 저항 감소(이상 레벨 비례) → 물리·아츠 둘 다 적용(아츠 이상이지만 명시적 예외)
+//  · 물리 증폭은 별도 계통(불균형 받피증·관통·쇄빙)에서 처리
 function getStatusBonus(actor: PartyMember, target: BattleEnemy) {
   let bonus = 1;
   const arts = actor.element !== "physical";
-  if (target.statuses.includes("shock") && arts) bonus += 0.2; // 감전: 아츠 피해 증폭
-  if (target.statuses.includes("corrosion")) bonus += 0.15; // 부식: 저항 감소
+  if (arts) bonus += target.artsVuln ?? 0;   // 감전 = 아츠 취약(아츠 전용, 레벨 비례)
+  bonus += target.corrodeVuln ?? 0;          // 부식 = 모든 속성 저항 감소(물리·아츠 공통, 레벨 비례)
   return bonus;
 }
 
@@ -376,14 +399,13 @@ function getPassiveDamageBonus(actor: PartyMember, target: BattleEnemy, kind: Sk
   if (s.selfPower) bonus += s.selfPower * e;                     // 상시 자기 화력
   if (s.stackPerHit && kind !== "attack") bonus += stacks * s.stackPerHit * e; // 누적 강타
   if (s.essenceStack) bonus += stacks * s.essenceStack * e;      // 분쇄 누적
-  // 재능 데미지 효과도 장비 등급에 비례 성장(완만 — 기본 스탯은 이미 장비로 성장하므로 중복 완화)
-  return 1 + (bonus - 1) * (1 + getGearTalentPower(actor.gear) * TALENT_GEAR_DMG_SCALE);
+  // 딜 재능은 고정 % — 데미지 성장은 기초 스탯(스킬위력×장비배율)이 담당(중복 방지).
+  return bonus;
 }
 
 // 비피해 시전 효과(비기본 스킬): 재능 회복/보호막.
-// 재능 강도(장착 장비 등급 합산)에 비례 — 좋은 장비 = 강한 재능(원작 지능/의지 스케일 게임화).
-const TALENT_GEAR_SCALE = 0.06;     // 회복·보호막: 장비 등급 1당 +6%
-const TALENT_GEAR_DMG_SCALE = 0.03; // 딜 재능·팀증폭: 장비 등급 1당 +3%(중복 완화)
+// 회복·보호막은 공격력과 무관한 고정값이라 장비 등급에 직접 비례시킨다(원작 지능/의지 스케일 게임화).
+const TALENT_GEAR_SCALE = 0.06; // 회복·보호막: 장비 등급 1당 +6%
 function passivePlayEffect(actor: PartyMember, kind: SkillKind): { heal: number; shield: number } {
   if (kind === "attack") return { heal: 0, shield: 0 };
   const s = passiveSpec(actor.id);
@@ -409,69 +431,33 @@ function applySkillMechanic(actor: PartyMember, target: BattleEnemy, baseDamage:
     notes.push("연계 강타");
   }
 
-  // ===== 엔드필드 아츠 부착 / 반응 (배틀·연계·궁극 스킬) =====
-  // 아츠 오퍼: 자기 원소 부착. 정예화 컨셉 = 아츠 반응/버스트 피해 강화.
-  const infl = ELEMENT_INFLICTION[actor.element];
-  if (infl && kind !== "attack") {
-    const other = statuses.find((s) => ARTS_INFLICTIONS.includes(s) && s !== infl);
-    if (other) {
-      // 아츠 반응: 두 부착을 소모하고 반응 피해 + 새 원소(반응 효과) 적용. 정예화 +10%/단계.
-      statuses = addStatus(withoutStatus(statuses, other), infl);
-      damage += Math.ceil(baseDamage * (0.4 + 0.1 * elite));
-      notes.push(`아츠 반응 ${INFLICTION_LABEL[other]}→${INFLICTION_LABEL[infl]}${elite ? "↑" : ""}`);
-    } else if (statuses.includes(infl)) {
-      // 같은 원소 재부착 → 아츠 버스트. 정예화 +8%/단계.
-      damage += Math.ceil(baseDamage * (0.25 + 0.08 * elite));
-      notes.push(`${INFLICTION_LABEL[infl]} 버스트${elite ? "↑" : ""}`);
-    } else {
-      statuses = addStatus(statuses, infl);
-      notes.push(`${INFLICTION_LABEL[infl]} 부착`);
-    }
-  }
+  // 아츠 부착/폭발/이상(위키 §3.2)은 적별 부착 스택(enemy.attach) 추적이 필요해 메인 피해 루프에서 처리한다.
   return { damage, statuses, notes };
 }
 
-// 직군별 장비 성장 프로파일 — 같은 장비라도 직군에 따라 체력/공격 성장 배분이 다르다(배수 평균 ≈1.0, 총량 유지·배분만 변경).
-const CLASS_GROWTH: Record<string, { hp: number; dmg: number }> = {
-  "디펜더":     { hp: 1.30, dmg: 0.70 }, // 탱: 체력 위주
-  "서포터":     { hp: 1.15, dmg: 0.80 }, // 지원: 단단·저딜
-  "가드":       { hp: 1.05, dmg: 1.10 }, // 브루저: 균형 + 공격
-  "뱅가드":     { hp: 0.95, dmg: 1.05 },
-  "스트라이커": { hp: 0.85, dmg: 1.25 }, // 글래스캐논: 공격 위주
-  "캐스터":     { hp: 0.80, dmg: 1.20 }, // 물렁·고화력
-};
+// 장비 등급 = 오퍼 성장. 장착 장비 등급합(0~15)이 기초 체력·공격력·스킬위력을 균일 배율한다.
+// 직군 계수 없음 — 차등은 오퍼마다 다른 '기초 스탯'에서 나온다(디펜더 기초 HP↑, 스트라이커 기초 공격↑).
+// 공격력·스킬위력은 같은 배율 → 배틀/연계/궁극 데미지가 공격력에 비례.
+const GEAR_STAT_K = 0.05; // 등급 1당 +5% (풀장비 등급합 15 → 1.75×)
 
 export function applyGearStats(member: PartyMember): PartyMember {
-  const stats = getEquippedGears(member.gear).reduce(
-    (total, gear) => {
-      const delta = getGearStatDeltas(gear, member.element);
-      return {
-        attack: total.attack + (delta.attack ?? 0),
-        hp: total.hp + (delta.maxHp ?? 0),
-        defense: total.defense + (delta.defense ?? 0),
-        evasion: total.evasion + (delta.evasion ?? 0),
-        battleSkillPower: total.battleSkillPower + (delta.battleSkillPower ?? 0),
-        linkSkillPower: total.linkSkillPower + (delta.linkSkillPower ?? 0),
-        ultimatePower: total.ultimatePower + (delta.ultimatePower ?? 0),
-        critRate: total.critRate + (delta.critRate ?? 0),
-        critDamage: total.critDamage + (delta.critDamage ?? 0),
-      };
-    },
-    { attack: 0, hp: 0, defense: 0, evasion: 0, battleSkillPower: 0, linkSkillPower: 0, ultimatePower: 0, critRate: 0, critDamage: 0 },
-  );
   const base = getBaseOperator(member.id);
-  const g = CLASS_GROWTH[member.className] ?? { hp: 1, dmg: 1 }; // 직군별 체력/공격 성장 배분
+  // 등급 합산 → 기본 배율. 속성 % 보너스(특화)는 배율에 가산. 부가(치명·방어)는 가산.
+  const gradeMult = 1 + getGearTalentPower(member.gear) * GEAR_STAT_K;
+  const t = getGearStatTotals(member.gear, member.element);
+  const atkMult = gradeMult + t.atkMult; // 등급 + 공격 특화 속성
+  const hpMult = gradeMult + t.hpMult;   // 등급 + 체력 특화 속성
   return {
     ...member,
-    maxHp: base.maxHp + Math.round(stats.hp * g.hp),
-    attack: base.attack + Math.round(stats.attack * g.dmg),
-    defense: base.defense + Math.round(stats.defense * g.hp), // 방어도 탱 성향과 함께
-    evasion: base.evasion + stats.evasion,
-    battleSkillPower: base.battleSkillPower + Math.round(stats.battleSkillPower * g.dmg),
-    linkSkillPower: base.linkSkillPower + Math.round(stats.linkSkillPower * g.dmg),
-    ultimatePower: base.ultimatePower + Math.round(stats.ultimatePower * g.dmg),
-    critRate: Math.min(1, base.critRate + stats.critRate),
-    critDamage: base.critDamage + stats.critDamage,
+    maxHp: Math.round(base.maxHp * hpMult),
+    attack: Math.round(base.attack * atkMult),
+    battleSkillPower: Math.round(base.battleSkillPower * atkMult), // 스킬 데미지 = 공격력에 비례
+    linkSkillPower: Math.round(base.linkSkillPower * atkMult),
+    ultimatePower: Math.round(base.ultimatePower * atkMult),
+    defense: Math.round(base.defense * hpMult) + t.defense,
+    evasion: base.evasion + t.evasion,
+    critRate: Math.min(1, base.critRate + t.critRate),
+    critDamage: base.critDamage + t.critDamage,
   };
 }
 
@@ -610,16 +596,26 @@ function playTacticalCard(current: RunState, card: Card, targetEnemyId?: string)
   return advanceTempo({ ...current, battle: nextBattle }, 1);
 }
 
-export function playCardOnState(current: RunState, uid: string, targetEnemyId?: string): RunState {
+export function playCardOnState(current: RunState, uid: string, targetEnemyId?: string, injected?: Card): RunState {
   const battle = current.battle;
   if (!battle || current.screen !== "battle") return current;
-  const card = battle.hand.find((c) => c.uid === uid);
-  if (!card || battle.energy < card.cost) return current;
-  if (card.tactical) return playTacticalCard(current, card, targetEnemyId);
+  const origCard = injected ?? battle.hand.find((c) => c.uid === uid);
+  if (!origCard) return current;
+  if (!injected && battle.energy < origCard.cost) return current; // 주입 궁극은 에너지 무관(게이지로 발동)
+  if (origCard.tactical) return playTacticalCard(current, origCard, targetEnemyId);
   const fx = getRelicEffects(current.relics);
-  const actor = current.party.find((m) => m.id === card.operatorId && m.hp > 0);
+  const actor = current.party.find((m) => m.id === origCard.operatorId && m.hp > 0);
   if (!actor) return current;
-  const baseBattle: BattleState = { ...battle, hand: battle.hand.filter((c) => c.uid !== uid), discardPile: [...battle.discardPile, card], energy: battle.energy - card.cost };
+  // 변신(레바테인·장방이): 변신 중에는 평소 일반공격·배틀스킬도 강화 광역(범위 피해)으로 변환.
+  // 코스트·소멸은 원본 유지, 버린덱엔 원본이 돌아가 변신 종료 후 단일 타겟으로 정상 복귀.
+  const card: Card = (!injected && actor.transformed && isTransformOperator(actor.id)
+    && (origCard.kind === "attack" || origCard.kind === "battle-skill") && !origCard.effect && origCard.target !== "all-enemies")
+    ? { ...makeTransformedCard(actor, origCard.kind, origCard.uid, origCard.eliteLevel ?? 0), cost: origCard.cost, exhaust: origCard.exhaust, energyRefund: origCard.energyRefund }
+    : origCard;
+  // 주입 궁극: 손패/에너지/버린덱 변화 없음. 일반 카드: 손패 제거·에너지 차감·버린덱(소멸 카드는 제외=제거, 변신 변환 시 원본 복귀).
+  const baseBattle: BattleState = injected
+    ? battle
+    : { ...battle, hand: battle.hand.filter((c) => c.uid !== uid), discardPile: origCard.exhaust ? battle.discardPile : [...battle.discardPile, origCard], energy: battle.energy - origCard.cost + (origCard.energyRefund ?? 0) };
 
   if (card.effect === "shield") {
     const amt = card.power || (card.kind === "ultimate" ? 18 : 12);
@@ -648,13 +644,15 @@ export function playCardOnState(current: RunState, uid: string, targetEnemyId?: 
   const aoe = card.target === "all-enemies";
   const targetIds = new Set(aoe ? battle.enemies.filter((e) => e.hp > 0).map((e) => e.id) : [target.id]);
   const kind = card.kind;
+  // 아츠 소모 보너스(배틀스킬 한정): 타깃이 아츠 부착/이상 상태일 때, 그 상태를 소모하며 추가 궁극 충전.
+  const targetHadArts = kind === "battle-skill" && battle.enemies.some((e) => targetIds.has(e.id) && e.statuses.some((s) => ARTS_INFLICTIONS.includes(s)));
   // 정예화 단계(0/1/2): 단순 딜이 아니라 오퍼 컨셉 강화에 쓰인다(강타·빌더·갑옷파괴·치명·아츠).
   const elite = card.eliteLevel ?? 0;
   const aspec = passiveSpec(actor.id);
   // 재능 crit(자기 치명) · team-amp(파티 오라, 생존 보유자 spec 합산) — 오퍼별 스펙
   const critSurge = aspec.crit ?? 0;
   const eliteCrit = (aspec.crit ?? 0) > 0 ? elite * 0.06 : 0; // 치명형은 정예화마다 +6%
-  const teamAmp = current.party.reduce((sum, m) => sum + (m.hp > 0 ? (passiveSpec(m.id).teamAmp ?? 0) * (1 + getGearTalentPower(m.gear) * TALENT_GEAR_DMG_SCALE) : 0), 0);
+  const teamAmp = current.party.reduce((sum, m) => sum + (m.hp > 0 ? (passiveSpec(m.id).teamAmp ?? 0) : 0), 0);
   // 유물 효과 + 소비 아이템 전투 버프 + 재능 + 장비 세트 합산
   const setCrit = getSetCrit(actor);
   const setStagger = getSetStagger(actor);
@@ -669,16 +667,19 @@ export function playCardOnState(current: RunState, uid: string, targetEnemyId?: 
   if (multiHitBonus > 0) noteSet.add(`연타 +${Math.round(multiHitBonus * 100)}%`);
   let totalDamage = 0;
   let reflectDmg = 0;
-  let brokeAny = false;
+  let brokeAny = false;      // 불균형 돌파(스태거 게이지 만충 → 행동불가·받피증 30%·처형) — 별개 시스템
   let crushedAny = false;
+  let physAnomalyFired = false; // 물리 이상(띄우기·넘어뜨리기·강타·갑옷 파괴) 효과가 실제 발동했는지 — 불균형과 무관
+  let freezeApplied = false;    // 이 플레이로 동결(냉기 부착)을 새로 부여했는지 (알레쉬 궁극 충전용)
   const damaged = battle.enemies.map((enemy) => {
     if (!targetIds.has(enemy.id) || enemy.hp <= 0) return enemy;
     const mech = kind === "attack"
       ? { damage: card.power, statuses: enemy.statuses, notes: [] as string[] }
       : applySkillMechanic(actor, enemy, card.power, kind, elite);
-    // 상태이상 받피증 + 장비 세트 보정(모든 카드) → 재능 보정
+    // 상태이상 받피증 + 장비 세트·속성 보정(모든 카드) → 재능 보정
     mech.damage = Math.ceil(mech.damage * getStatusBonus(actor, enemy));
     mech.damage = Math.ceil(mech.damage * getSetDamageBonus(actor, enemy, kind));
+    mech.damage = Math.ceil(mech.damage * getGearDamageMult(actor.gear, actor.element, kind, enemy.statuses.includes("defense-break")));
     mech.damage = Math.ceil(mech.damage * getPassiveDamageBonus(actor, enemy, kind, elite));
     const armorBroken = enemy.statuses.includes("armor-break") && actor.element === "physical"; // 관통(Breach) 받피증
     const linkCombo = kind === "link-skill" && enemy.statuses.includes("defense-break");
@@ -710,60 +711,121 @@ export function playCardOnState(current: RunState, uid: string, targetEnemyId?: 
     const forcedBreak = statuses.includes("defense-break") && !alreadyBroken;
     const gaugeBreak = !alreadyBroken && enemy.staggerHp > 0 && nextStagger >= enemy.staggerHp;
     if ((gaugeBreak || forcedBreak) && hp > 0) { statuses = addStatus(statuses, "defense-break"); breakTurns = BREAK_TURNS; staggerFinal = enemy.staggerHp; brokeAny = true; noteSet.add("불균형!"); }
-    // 물리 이상 세분화(엔드필드): 띄우기/넘어뜨리기=스택 적립(+방불 적에 120%·CC), 강타=전소모 대량딜, 갑옷파괴=전소모+관통.
+    // ── 물리 이상(엔드필드 정의: 띄우기·넘어뜨리기·강타·갑옷 파괴) ──
+    // 모두 '방어 불능' 스택(최대 4) 기반이며 불균형(스태거)과 별개. 방어 불능이 없는 적엔 효과가 발동되지 않고 1스택만 부여,
+    // 방어 불능 스택이 있어야 실제 효과가 발동(강타·갑옷 파괴는 전 스택 소모). physBreakStacks = 방어 불능 스택.
     let physBreakStacks = enemy.physBreakStacks;
     let armorBreakTurns = enemy.armorBreakTurns;
     let ccDelay = false;
     if (hp > 0 && actor.element === "physical" && kind !== "attack") {
       const anomaly = actor.physAnomaly ?? (actor.physBreak === "consume" ? "crush" : actor.physBreak === "build" ? "launch" : undefined);
       if (anomaly === "launch" || anomaly === "knockdown") {
-        // 정예화 컨셉(빌더): 2차 시 방어 불능 +1 추가 적립
+        // 띄우기/넘어뜨리기: 방어 불능 1스택 부여(빌더 정예화 2차 +1). 이미 방어 불능이면 추가 물리 + 불균형 10 + CC.
         const add = PHYS_BREAK_BUILD[kind] + (elite >= 2 ? 1 : 0);
         if (add > 0) {
           const wasVuln = physBreakStacks > 0;
           physBreakStacks = Math.min(MAX_PHYS_BREAK_STACKS, physBreakStacks + add);
-          noteSet.add(`취약 ${physBreakStacks}${elite >= 2 ? "↑" : ""}`);
-          if (wasVuln) { // 방어 불능 적에게 띄우기/넘어뜨리기 발동 → 추가 물리 + 불균형 10 + 행동 지연
+          noteSet.add(`방어 불능 ${physBreakStacks}${elite >= 2 ? "↑" : ""}`);
+          if (wasVuln) { // 방어 불능 적 → 물리 이상 발동
             const bonus = Math.ceil(card.power * 0.2);
             hp = Math.max(0, hp - bonus);
             totalDamage += bonus;
             staggerFinal = Math.min(enemy.staggerHp, staggerFinal + 10);
             ccDelay = true;
+            physAnomalyFired = true;
             noteSet.add(`${anomaly === "launch" ? "띄우기" : "넘어뜨리기"} ${bonus}`);
           }
         }
-      } else if (anomaly === "crush" && physBreakStacks > 0) {
-        // 정예화 컨셉(강타): 스택당 계수 0.5 → 0.6 → 0.7
-        const crush = Math.ceil(card.power * (0.5 + 0.1 * elite) * physBreakStacks);
-        hp = Math.max(0, hp - crush);
-        totalDamage += crush;
-        physBreakStacks = 0;
-        crushedAny = true; // 본질 붕괴 트리거
-        noteSet.add(`강타 ${crush}${elite ? "↑" : ""}`);
-      } else if (anomaly === "armor-break" && physBreakStacks > 0) {
-        // 정예화 컨셉(갑옷 파괴): 계수·관통 지속 강화
-        const ab = Math.ceil(card.power * (0.25 + 0.05 * elite) * physBreakStacks);
-        hp = Math.max(0, hp - ab);
-        totalDamage += ab;
-        armorBreakTurns = 2 + physBreakStacks + elite; // 정예화: 관통 지속 +1턴/단계
-        statuses = addStatus(statuses, "armor-break");
-        physBreakStacks = 0;
-        crushedAny = true;
-        noteSet.add(`갑옷 파괴 ${ab} · 관통`);
+      } else if (anomaly === "crush") {
+        if (physBreakStacks > 0) { // 강타: 방어 불능 전 스택 소모 → 스택수 비례 대량 물리(정예화 계수↑)
+          const crush = Math.ceil(card.power * (0.5 + 0.1 * elite) * physBreakStacks);
+          hp = Math.max(0, hp - crush);
+          totalDamage += crush;
+          physBreakStacks = 0;
+          crushedAny = true; // 본질 붕괴 트리거
+          physAnomalyFired = true;
+          noteSet.add(`강타 ${crush}${elite ? "↑" : ""}`);
+        } else { physBreakStacks = 1; noteSet.add("방어 불능 1"); } // 방어 불능 없으면 미발동·1스택만
+      } else if (anomaly === "armor-break") {
+        if (physBreakStacks > 0) { // 갑옷 파괴: 방어 불능 전 스택 소모 → 물리 + 관통(받는 물리 피해 증가)
+          const ab = Math.ceil(card.power * (0.25 + 0.05 * elite) * physBreakStacks);
+          hp = Math.max(0, hp - ab);
+          totalDamage += ab;
+          armorBreakTurns = 2 + physBreakStacks + elite; // 정예화: 관통 지속 +1턴/단계
+          statuses = addStatus(statuses, "armor-break");
+          physBreakStacks = 0;
+          crushedAny = true;
+          physAnomalyFired = true;
+          noteSet.add(`갑옷 파괴 ${ab} · 관통`);
+        } else { physBreakStacks = 1; noteSet.add("방어 불능 1"); }
+      }
+    }
+    // ── 아츠 부착 / 폭발 / 이상(위키 §3.2.1~3.2.3) ──
+    // 부착 자체는 무효과. 같은 원소 2스택=아츠 폭발(미소모). 다른 원소 부착 존재 + 새 원소 = 아츠 이상
+    // (전부 소모, 타입=새 원소, 이상 레벨=소모한 총 스택 1~4 → 피해·효과 스케일). 이상 상태는 그때만 statuses에 부여.
+    let attach: Partial<Record<Element, number>> = { ...(enemy.attach ?? {}) };
+    let artsVuln = enemy.artsVuln;
+    let corrodeVuln = enemy.corrodeVuln;
+    if (hp > 0 && actor.element !== "physical" && kind !== "attack") {
+      const el = actor.element;
+      const others = (Object.keys(attach) as Element[]).filter((k) => k !== el && (attach[k] ?? 0) > 0);
+      if (others.length > 0) {
+        // 아츠 이상 발동
+        const level = Math.min(4, (Object.values(attach) as number[]).reduce((s, n) => s + (n ?? 0), 0));
+        const anomaly = ELEMENT_INFLICTION[el];
+        const dmg = Math.ceil(card.power * (0.55 + 0.3 * level)); // 이상 레벨 1~4 → 0.85~1.75배(셋업 보상, 위키 160~400% 보정)
+        hp = Math.max(0, hp - dmg);
+        totalDamage += dmg;
+        if (anomaly) statuses = addStatus(statuses, anomaly);
+        // 이상 레벨 비례 취약(감전=아츠 취약, 부식=모든 저항 감소) — 갱신 시 더 높은 값 유지
+        if (anomaly === "shock") artsVuln = Math.max(artsVuln ?? 0, ANOMALY_VULN[level]);
+        if (anomaly === "corrosion") corrodeVuln = Math.max(corrodeVuln ?? 0, ANOMALY_VULN[level]);
+        attach = {};
+        noteSet.add(`${anomaly ? INFLICTION_LABEL[anomaly] : "아츠 이상"} Lv${level} ${dmg}`);
+      } else if ((attach[el] ?? 0) > 0) {
+        // 아츠 폭발: 같은 원소 2스택 이상(부착 미소모, 1스택 추가) — 모노 원소 파티의 주 보상
+        const burst = Math.ceil(card.power * 0.65);
+        hp = Math.max(0, hp - burst);
+        totalDamage += burst;
+        attach[el] = Math.min(4, (attach[el] ?? 0) + 1);
+        noteSet.add(`${ELEM_LABEL[el]} 폭발 ${burst}`);
+      } else {
+        attach[el] = 1; // 첫 부착(효과 없음)
+        noteSet.add(`${ELEM_LABEL[el]} 부착`);
       }
     }
     // 표식 디버프(targetVuln): 이 오퍼가 때린 적이 받는 모든 피해 누적 부여(팀 전체 이득)
     const nextVuln = aspec.targetVuln ? Math.max(enemy.vulnMark ?? 0, aspec.targetVuln) : enemy.vulnMark;
     if (aspec.targetVuln && nextVuln !== (enemy.vulnMark ?? 0)) noteSet.add(`표식 +${Math.round(aspec.targetVuln * 100)}%`);
-    return { ...enemy, hp, statuses, stagger: staggerFinal, breakTurns, physBreakStacks, armorBreakTurns, vulnMark: nextVuln, actionGauge: ccDelay ? Math.max(0, enemy.actionGauge - 2) : enemy.actionGauge };
+    if (statuses.includes("freeze") && !enemy.statuses.includes("freeze")) freezeApplied = true; // 동결 신규 부여
+
+    return { ...enemy, hp, statuses, stagger: staggerFinal, breakTurns, physBreakStacks, armorBreakTurns, vulnMark: nextVuln, attach, artsVuln, corrodeVuln, actionGauge: ccDelay ? Math.max(0, enemy.actionGauge - 2) : enemy.actionGauge };
   });
   const revival = reviveEnemies(damaged);
   revival.notes.forEach((n) => noteSet.add(n));
-  const after = revival.enemies;
+  let after = revival.enemies;
+  // 포그라니치니크 「철의 서약」 소모: 적이 물리 이상(띄우기·넘어뜨리기·강타·갑옷 파괴) 효과를 받거나 포그 연계 스킬이 명중하면
+  // 서약 1포인트를 소모해 방패병 추가 소환 — 대상에 물리 추가타 + 포그 스킬 게이지 회복. 마지막 1포인트면 최후의 승부(대량딜+대량게이지).
+  // ※ 불균형(스태거)은 물리 이상이 아니므로 트리거에서 제외 — 실제 인게임 정의를 따른다.
+  let oathPog: PartyMember | null = null;
+  const pog = current.party.find((m) => m.id === "pogranichnik" && m.hp > 0);
+  if (pog && (pog.ironOath ?? 0) > 0) {
+    const oathTrigger = physAnomalyFired || (actor.id === "pogranichnik" && kind === "link-skill");
+    const tgt = after.find((e) => e.id === target.id && e.hp > 0) ?? after.find((e) => e.hp > 0);
+    if (oathTrigger && tgt) {
+      const stacks = pog.ironOath ?? 0;
+      const last = stacks <= 1;
+      const dmg = Math.max(1, Math.round(pog.attack * (last ? 3.6 : 0.85) * defenseFactor(tgt.defense) * (1 + (tgt.vulnMark ?? 0))));
+      const gauge = last ? IRON_OATH_FINAL_GAUGE : IRON_OATH_GAUGE;
+      after = after.map((e) => (e.id === tgt.id ? { ...e, hp: Math.max(0, e.hp - dmg) } : e));
+      oathPog = { ...pog, ironOath: stacks - 1, ultimateCharge: Math.min(ultEnergyReq(pog.id), (pog.ultimateCharge ?? 0) + gauge) };
+      noteSet.add(last ? `방패병 최후의 승부 ${dmg}!` : `방패병 돌격 ${dmg}`);
+    }
+  }
   // 처형: 불균형 돌파 시 에너지 회복. 재능 breakEnergy +1(정예화 2차 시 +2), breakEnergy 세트 +1.
   const surge = (aspec.breakEnergy ?? 0) > 0;
   const gearSurge = hasBreakEnergySet(actor);
-  const breakEnergy = brokeAny ? 1 + (surge ? 1 + (elite >= 2 ? 1 : 0) : 0) + (gearSurge ? 1 : 0) : 0;
+  const breakEnergy = brokeAny ? 2 + (surge ? 1 + (elite >= 2 ? 1 : 0) : 0) + (gearSurge ? 1 : 0) : 0; // 불균형 돌파 = 주 에너지원(+2)
   const energyBonus = breakEnergy;
   if (reflectDmg > 0) noteSet.add(`반사 -${reflectDmg}`);
   if (brokeAny) noteSet.add(`처형 — 에너지 +${breakEnergy}`);
@@ -776,17 +838,47 @@ export function playCardOnState(current: RunState, uid: string, targetEnemyId?: 
   const grantMultiHit = (actor.grantsMultiHit || aspec.grantMultiHit) && kind !== "attack" ? 1 : 0;
   const nextMultiHit = Math.min(4, (multiHitBonus > 0 ? 0 : multiHitStacks) + grantMultiHit);
   if (grantMultiHit > 0) noteSet.add(`연타 부여 → ${nextMultiHit}`);
+  // 미브 청파 삼형: 초식 카드를 쓰면 다음 초식(2식 추형 → 3식 종식)을 손패에 추가(중복 방지). 3식이면 체인 종료.
+  const comboForm = card.comboForm ?? 0;
+  const mifuNext = actor.id === "mifu" && comboForm >= 1 && comboForm < MIFU_FORM_COUNT
+    && !baseBattle.hand.some((c) => c.operatorId === "mifu" && c.comboForm === comboForm + 1)
+    ? makeMifuFormCard(actor, comboForm + 1, `mf${comboForm + 1}-${battle.turn}-${baseBattle.discardPile.length}`)
+    : null;
+  if (mifuNext) noteSet.add(`다음 초식 [${mifuNext.name.split("· ")[1] ?? mifuNext.name}]`);
   const note = noteSet.size ? ` (${[...noteSet].join(", ")})` : "";
   const logLine = `${actor.name}: ${card.name} → ${aoe ? "모든 적" : target.name} ${totalDamage} 피해${note}`;
-  const nextBattle: BattleState = { ...baseBattle, enemies: after, energy: baseBattle.energy + energyBonus, multiHit: nextMultiHit, log: [logLine, ...battle.log].slice(0, 8) };
+  const nextHand = mifuNext ? [...baseBattle.hand, mifuNext] : baseBattle.hand;
+  const nextBattle: BattleState = { ...baseBattle, enemies: after, hand: nextHand, energy: baseBattle.energy + energyBonus, multiHit: nextMultiHit, log: [logLine, ...battle.log].slice(0, 8) };
   // 시전 오퍼: 반사 피해 + blade-stacks 적립 / 재능 회복·보호막은 파티 전체에 적용.
-  const party = current.party.map((m) => {
+  // 궁극기 게이지(위키 §2.1.4): 배틀스킬=아군 전체 / 연계스킬=시전자만.
+  // 질베르타 「전달자의 노래」: 생존한 보유자가 있으면 가드/캐스터/서포터 아군의 궁극 충전량 ×(1+효율%).
+  const ultEffPct = current.party.reduce((s, m) => (m.hp > 0 ? s + (passiveSpec(m.id).teamUltPct ?? 0) : s), 0);
+  // 아비웬나 「고효율 배송」(명중 시 +x) / 알레쉬 「급속 냉동」(동결 부여 시 +x) — 시전 오퍼 자기 궁극 충전.
+  const selfUltGain = (aspec.ultOnHit && totalDamage > 0 ? aspec.ultOnHit : 0) + (aspec.ultOnFreeze && freezeApplied ? aspec.ultOnFreeze : 0);
+  // 철의 서약 소모분(포그 ironOath/게이지)을 파티 기준값에 먼저 반영.
+  const oathBaseParty = oathPog ? current.party.map((m) => (m.id === oathPog!.id ? oathPog! : m)) : current.party;
+  const party = oathBaseParty.map((m) => {
     if (m.hp <= 0) return m;
     let next = m;
     if (m.id === actor.id) {
       if (reflectDmg > 0) next = absorbHit(next, reflectDmg);
       if ((aspec.stackPerHit ?? 0) > 0 && kind !== "attack") next = { ...next, passiveStacks: Math.min(5, next.passiveStacks + 1) }; // 누적 강타: 스킬 명중마다
       if ((aspec.essenceStack ?? 0) > 0 && crushedAny) next = { ...next, passiveStacks: Math.min(5, next.passiveStacks + 1) }; // 분쇄 누적: 강타/갑옷파괴 시
+      if (selfUltGain > 0) next = { ...next, ultimateCharge: Math.min(ultEnergyReq(next.id), (next.ultimateCharge ?? 0) + selfUltGain) }; // 명중/동결 자기 충전(기본 공격 포함)
+    }
+    if (kind === "battle-skill") {
+      // 배틀스킬 = 아군 전체 충전. 시전자는 오퍼별 실제 획득량(레바테인 조건부 대량 등), 그 외 아군은 팀 충전(+6.5).
+      let gain = next.id === actor.id ? ultGainConditional(actor.id, kind, actor.passiveStacks) : ULT_CHARGE_BATTLE_TEAM;
+      // 아츠 소모 보너스(시전 오퍼): 아츠 적 타격 시 추가 충전 — 대궁(라스트라이트·이본·장방이)의 핵심
+      if (next.id === actor.id && targetHadArts) gain += ultArtsConsumeBonus(actor.id);
+      // 질베르타 충전 효율: 직군(가드·캐스터·서포터)이면 획득량 ×(1+효율%)
+      if (ultEffPct > 0 && ULT_BATTERY_CLASSES.includes(next.className)) gain = Math.round(gain * (1 + ultEffPct));
+      next = { ...next, ultimateCharge: Math.min(ultEnergyReq(next.id), (next.ultimateCharge ?? 0) + gain) };
+    } else if (kind === "link-skill" && next.id === actor.id) {
+      // 연계스킬 = 시전자만 충전(+10, 아크라이트 예외 5). 팀에는 충전 없음.
+      let gain = actor.id === "arclight" ? LINK_ULT_GAIN_ARCLIGHT : LINK_ULT_GAIN;
+      if (ultEffPct > 0 && ULT_BATTERY_CLASSES.includes(next.className)) gain = Math.round(gain * (1 + ultEffPct));
+      next = { ...next, ultimateCharge: Math.min(ultEnergyReq(next.id), (next.ultimateCharge ?? 0) + gain) };
     }
     if (pe.heal > 0) next = { ...next, hp: Math.min(next.maxHp, next.hp + pe.heal) };
     if (pe.shield > 0) next = { ...next, shield: next.shield + pe.shield };
@@ -796,6 +888,88 @@ export function playCardOnState(current: RunState, uid: string, targetEnemyId?: 
   if (after.every((e) => e.hp <= 0)) return finishBattle({ ...current, party }, nextBattle);
   return advanceTempo({ ...current, party, battle: nextBattle }, 1);
 }
+
+// ===== 궁극기 액티브 발동(게이지 만충 시) =====
+// 레바테인·장방이: 변신(강화 카드 패 추가 + 변신 상태 3턴). 그 외: 광역 궁극 피해.
+export function useUltimateOnState(current: RunState, operatorId: string, targetEnemyId?: string): RunState {
+  const battle = current.battle;
+  if (!battle || current.screen !== "battle") return current;
+  const actor = current.party.find((m) => m.id === operatorId && m.hp > 0);
+  if (!actor || (actor.ultimateCharge ?? 0) < ultEnergyReq(operatorId)) return current; // 만충 아니면 무시
+  const charged = current.party.map((m) => (m.id === operatorId ? { ...m, ultimateCharge: 0 } : m)); // 게이지 소모
+
+  if (isTransformOperator(operatorId)) {
+    const tParty = charged.map((m) => (m.id === operatorId ? { ...m, transformed: true, transformTurns: 3 } : m));
+    const tOp = tParty.find((m) => m.id === operatorId) as PartyMember;
+    const seed = battle.turn;
+    // 패 추가: 강화 일반공격 + 강화 배틀스킬. 변신 동안 일반 카드처럼 순환, 변신 종료 시 제거(uid 'tf-' 식별).
+    // 장방이: 강화 배틀은 0코스트(인게임 변신 배틀 무코스트). 덱의 기존 일반/배틀도 변신 3턴 동안 강화 드로우.
+    const added: Card[] = [makeTransformedCard(tOp, "attack", `tf-a-${operatorId}-${seed}`)];
+    added.push(operatorId === "zhuangfangyi"
+      ? makeConsumableUltCard(tOp, `tf-x-${seed}`) // 장방이 변신 배틀 = 0코스트
+      : makeTransformedCard(tOp, "battle-skill", `tf-b-${operatorId}-${seed}`));
+    const formName = operatorId === "laevatain" ? "황혼" : "천리의 경지";
+    return advanceTempo({ ...current, party: tParty, battle: { ...battle, hand: [...battle.hand, ...added], log: [`${actor.name} 궁극 — 변신! [${formName}] 강화 카드 +${added.length}`, ...battle.log].slice(0, 8) } }, 1);
+  }
+
+  const kind = ultKind(operatorId);
+  if (kind === "buff") {
+    // 팀 증폭 궁극(샤이히 「스택 오버플로」·안탈 「오버클록 타임」): 파티 카드 피해 버프(전투 지속).
+    const pct = 0.25;
+    return advanceTempo({ ...current, party: charged, battle: { ...battle, dmgBuffPct: (battle.dmgBuffPct ?? 0) + pct, log: [`${actor.name} 궁극 — 증폭! 파티 피해 +${Math.round(pct * 100)}%`, ...battle.log].slice(0, 8) } }, 1);
+  }
+  if (kind === "zone") {
+    // 질베르타 중력 혼란 구역: 모든 적에 범위 취약(받는 피해 +).
+    const vuln = 0.25;
+    const enemies = battle.enemies.map((e) => (e.hp > 0 ? { ...e, vulnMark: Math.max(e.vulnMark ?? 0, vuln) } : e));
+    return advanceTempo({ ...current, party: charged, battle: { ...battle, enemies, log: [`${actor.name} 궁극 — 중력 구역! 전체 취약 +${Math.round(vuln * 100)}%`, ...battle.log].slice(0, 8) } }, 1);
+  }
+  if (kind === "energy") {
+    // 아케쿠리 「소대, 집합!」: 집결 신호탄으로 스킬 게이지(=전투 에너지) 대량 회복 + 연타 부여(피해는 미미).
+    const refund = 4;
+    return advanceTempo({ ...current, party: charged, battle: { ...battle, energy: battle.energy + refund, multiHit: Math.min(4, (battle.multiHit ?? 0) + 1), log: [`${actor.name} 궁극 — 집결! 에너지 +${refund} · 연타 부여`, ...battle.log].slice(0, 8) } }, 1);
+  }
+
+  // 일반 오퍼: 궁극 = 광역 피해(궁극 카드 주입 → 기존 피해 파이프라인 재사용)
+  const ultCard = makeCard(actor, "ultimate", `ult-${operatorId}-${battle.turn}`);
+  // 엠버 「다시 불타오르는 맹세」: 광역 열기 피해와 동시에 팀 전체 보호막(엠버 최대 체력 기반) — 피격 전 부여되도록 시전 파티에 선반영.
+  const emberShield = operatorId === "ember" ? Math.round(actor.maxHp * 0.25) : 0;
+  const partyForUlt = emberShield > 0 ? charged.map((m) => (m.hp > 0 ? { ...m, shield: m.shield + emberShield } : m)) : charged;
+  const struck = playCardOnState({ ...current, party: partyForUlt }, ultCard.uid, targetEnemyId, ultCard);
+  if (emberShield > 0 && struck.battle) {
+    return { ...struck, battle: { ...struck.battle, log: [`${actor.name} — 맹세의 보호막! 팀 전체 +${emberShield}`, ...struck.battle.log].slice(0, 8) } };
+  }
+  // 포그라니치니크 「방패병 부대, 전진」: 진군 광역타 후 철의 서약 5포인트 부여(이후 적 물리 이상·포그 연계 시 1 소모 → 방패병 추가타+게이지).
+  if (operatorId === "pogranichnik" && struck.battle) {
+    return {
+      ...struck,
+      party: struck.party.map((m) => (m.id === operatorId ? { ...m, ironOath: IRON_OATH_POINTS } : m)),
+      battle: { ...struck.battle, log: [`${actor.name} — 철의 서약 ${IRON_OATH_POINTS}포인트 생성! 방패병 진군 개시`, ...struck.battle.log].slice(0, 8) },
+    };
+  }
+  // 카뮤 「선혈의 비」: 광역 열기 후 추적 상태(3턴) — 배틀 스킬이 0코스트 연계 「추적」으로 교체(손패에 즉시 1장 추가).
+  if (operatorId === "camu" && struck.battle) {
+    const cOp = struck.party.find((m) => m.id === "camu") ?? actor;
+    const chase = makeChaseCard(cOp, `tf-chase-camu-${battle.turn}`);
+    return {
+      ...struck,
+      party: struck.party.map((m) => (m.id === "camu" && m.hp > 0 ? { ...m, transformed: true, transformTurns: 3 } : m)),
+      battle: { ...struck.battle, hand: [...struck.battle.hand, chase], log: [`${actor.name} — 추적 상태! 배틀 스킬이 [추적]으로 교체 (3턴)`, ...struck.battle.log].slice(0, 8) },
+    };
+  }
+  // 이본 「아이스 슈터」: 광역 냉기 후 강화 상태(3턴) — 일반 공격이 강화 사격으로 교체(손패에 즉시 1장 추가).
+  if (operatorId === "yvonne" && struck.battle) {
+    const yOp = struck.party.find((m) => m.id === "yvonne") ?? actor;
+    const stance = makeYvonneStanceCard(yOp, `tf-ice-yvonne-${battle.turn}`);
+    return {
+      ...struck,
+      party: struck.party.map((m) => (m.id === "yvonne" && m.hp > 0 ? { ...m, transformed: true, transformTurns: 3 } : m)),
+      battle: { ...struck.battle, hand: [...struck.battle.hand, stance], log: [`${actor.name} — 아이스 슈터! 일반 공격 강화 (3턴)`, ...struck.battle.log].slice(0, 8) },
+    };
+  }
+  return struck;
+}
+
 // 지정된 적들의 행동을 해소(불균형이면 행동 불가 + 회복 카운트). 행동한 적은 게이지 0으로 리셋.
 function resolveEnemyActions(party: PartyMember[], enemies: BattleEnemy[], turn: number, actingIds: string[]) {
   const logs: string[] = [];
@@ -895,10 +1069,19 @@ export function endTurnOnState(current: RunState): RunState {
   if (afterEnemies.screen !== "battle" || !afterEnemies.battle) return afterEnemies;
   const b = afterEnemies.battle;
   let party = afterEnemies.party;
+  // 변신 만료: 새 턴마다 잔여 턴 감소, 0이면 원복(덱 일반/배틀이 평상시 카드로 복귀).
+  const prevTransformed = new Set(party.filter((m) => m.transformed).map((m) => m.id));
+  party = party.map((m) => {
+    if (!m.transformed) return m;
+    const t = (m.transformTurns ?? 1) - 1;
+    return t > 0 ? { ...m, transformTurns: t } : { ...m, transformed: false, transformTurns: 0 };
+  });
+  const expiredOps = [...prevTransformed].filter((id) => !party.find((m) => m.id === id)?.transformed);
+  const dropTf = (c: Card) => c.uid.startsWith("tf-") && expiredOps.includes(c.operatorId); // 변신 종료 오퍼의 추가 카드 제거
   const turn = b.turn + 1;
   const relicFx = getRelicEffects(afterEnemies.relics);
   const handSize = Math.max(2, HAND_SIZE + relicFx.handBonus);
-  const drawn = drawHand(b.drawPile, [...b.discardPile, ...b.hand], [], handSize, turn * 31 + b.enemies.length);
+  const drawn = drawHand(b.drawPile.filter((c) => !dropTf(c)), [...b.discardPile, ...b.hand].filter((c) => !dropTf(c)), [], handSize, turn * 31 + b.enemies.length);
   const regen = b.partyRegen;
   const regenActive = regen && regen.turns > 0;
   if (regenActive) party = healParty(party, regen.amount);
@@ -1000,7 +1183,7 @@ export function useRunState(): RunState & RunActions {
       if (type === "camp") return { ...base, screen: "camp" };
       const fx = getRelicEffects(current.relics);
       const battleStartRaw = applyBattleStartSetEffects(current.party, current.sp, current.maxSp);
-      const battleParty = fx.startShield > 0 ? battleStartRaw.party.map((m) => (m.hp > 0 ? { ...m, shield: m.shield + fx.startShield } : m)) : battleStartRaw.party;
+      const battleParty = battleStartRaw.party.map((m) => (m.hp > 0 ? { ...m, transformed: false, transformTurns: 0, ironOath: 0, shield: m.shield + (fx.startShield > 0 ? fx.startShield : 0) } : m)); // 변신·철의 서약은 전투마다 초기화
       const startEnemies = getEnemies(node.enemyIds ?? []).map((enemy, i) => {
         const every = enemyActionEvery(enemy);
         // 초기 게이지를 적마다 살짝 어긋나게(동시 행동 방지). 첫 행동까지 최소 1장.
@@ -1019,6 +1202,10 @@ export function useRunState(): RunState & RunActions {
 
   const playCard = useCallback((uid: string, targetEnemyId?: string) => {
     setState((current) => playCardOnState(current, uid, targetEnemyId));
+  }, []);
+
+  const useUltimate = useCallback((operatorId: string, targetEnemyId?: string) => {
+    setState((current) => useUltimateOnState(current, operatorId, targetEnemyId));
   }, []);
 
   const endTurn = useCallback(() => {
@@ -1262,5 +1449,5 @@ export function useRunState(): RunState & RunActions {
     setState((current) => ({ ...current, screen: "map", availableNodes: current.currentNodeId ? getMapNode(current.currentNodeId).next : getFactionStart(current.factionIndex) }));
   }, []);
 
-  return { ...state, startRun, confirmDeployment, abandonRun, enterNode, playCard, endTurn, equipRewardGear, takeCardOffer, skipCardOffer, usePotion, buyGear, removeCard, buyRelic, buyPotion, upgradeCard, promoteCard, skipPromote, duplicateCard, skipDuplicate, repairRest, repairUpgrade, saveDeck, openChallenge, startChallenge, exitChallenge, skipReward, resolveEvent, rest, continueToMap };
+  return { ...state, startRun, confirmDeployment, abandonRun, enterNode, playCard, useUltimate, endTurn, equipRewardGear, takeCardOffer, skipCardOffer, usePotion, buyGear, removeCard, buyRelic, buyPotion, upgradeCard, promoteCard, skipPromote, duplicateCard, skipDuplicate, repairRest, repairUpgrade, saveDeck, openChallenge, startChallenge, exitChallenge, skipReward, resolveEvent, rest, continueToMap };
 }
