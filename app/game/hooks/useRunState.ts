@@ -731,7 +731,7 @@ export function playCardOnState(current: RunState, uid: string, targetEnemyId?: 
       noteSet.add(`출혈 ${bleed}/턴`);
     }
     if (hp > 0 && actor.element === "physical" && kind !== "attack") {
-      const anomaly = actor.physAnomaly ?? (actor.physBreak === "consume" ? "crush" : actor.physBreak === "build" ? "launch" : undefined);
+      const anomaly = card.anomalyOverride ?? actor.physAnomaly ?? (actor.physBreak === "consume" ? "crush" : actor.physBreak === "build" ? "launch" : undefined);
       if (anomaly === "launch" || anomaly === "knockdown") {
         // 띄우기/넘어뜨리기: 방어 불능 1스택 부여(빌더 정예화 2차 +1). 이미 방어 불능이면 추가 물리 + 불균형 10 + CC.
         const add = PHYS_BREAK_BUILD[kind] + (elite >= 2 ? 1 : 0);
@@ -879,11 +879,15 @@ export function playCardOnState(current: RunState, uid: string, targetEnemyId?: 
   const grantMultiHit = (actor.grantsMultiHit || aspec.grantMultiHit) && kind !== "attack" ? 1 : 0;
   const nextMultiHit = Math.min(4, (multiHitBonus > 0 ? 0 : multiHitStacks) + grantMultiHit);
   if (grantMultiHit > 0) noteSet.add(`연타 부여 → ${nextMultiHit}`);
-  // 미브 청파 삼형: 초식 카드를 쓰면 다음 초식(2식 추형 → 3식 종식)을 손패에 추가(중복 방지). 3식이면 체인 종료.
+  // 미브 청파 삼형: 초식 카드(단운1→추형2→개천3) 사용 시 다음 초식을 손패에 추가. 또한 연계(후회없는 주먹)·궁극(절심) 사용 후엔 추형(2식)으로 교체(단운 건너뜀). 중복 방지.
   const comboForm = card.comboForm ?? 0;
-  const mifuNext = actor.id === "mifu" && comboForm >= 1 && comboForm < MIFU_FORM_COUNT
-    && !baseBattle.hand.some((c) => c.operatorId === "mifu" && c.comboForm === comboForm + 1)
-    ? makeMifuFormCard(actor, comboForm + 1, `mf${comboForm + 1}-${battle.turn}-${baseBattle.discardPile.length}`)
+  let mifuNextForm = 0;
+  if (actor.id === "mifu") {
+    if (comboForm >= 1 && comboForm < MIFU_FORM_COUNT) mifuNextForm = comboForm + 1;       // 단운→추형, 추형→개천
+    else if (kind === "link-skill" || kind === "ultimate") mifuNextForm = 2;               // 연계·궁극 → 추형
+  }
+  const mifuNext = mifuNextForm > 0 && !baseBattle.hand.some((c) => c.operatorId === "mifu" && c.comboForm === mifuNextForm)
+    ? makeMifuFormCard(actor, mifuNextForm, `mf${mifuNextForm}-${battle.turn}-${baseBattle.discardPile.length}`)
     : null;
   if (mifuNext) noteSet.add(`다음 초식 [${mifuNext.name.split("· ")[1] ?? mifuNext.name}]`);
   const note = noteSet.size ? ` (${[...noteSet].join(", ")})` : "";

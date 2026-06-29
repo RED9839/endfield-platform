@@ -313,6 +313,8 @@ export function makeMifuFormCard(op: PartyMember, form: number, uid: string): Ca
     description: `청파 삼형 ${form}식 — ${f.note}`, effectLine: `${op.battleAoe ? "전체 · " : ""}${power} 피해 · ${f.note}`,
     target: op.battleAoe ? "all-enemies" : "enemy",
     comboForm: form, exhaust: form > 1, eliteLevel: 0,
+    // 추형·개천은 강타(방불 소모)형 — 미브 본체는 build지만 이 카드만 강타로 오버라이드(단운·연계·궁극은 영향 없음).
+    anomalyOverride: form >= 2 ? "crush" : undefined,
   };
 }
 

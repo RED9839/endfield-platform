@@ -296,7 +296,8 @@ export type Card = {
   tactical?: boolean; // 전술 카드(오퍼 무관, 중립 효과)
   exhaust?: boolean; // 소멸 카드: 1회 사용 후 덱/버린덱에 안 돌아가고 제거(장방이 변신 추가 카드 등)
   energyRefund?: number; // 사용 시 전투 에너지(스킬 게이지) 환급 — 카뮤 「추적」 등
-  comboForm?: number; // 미브 「청파 삼형」 초식 단계(1=단운/2=추형/3=종식) — 사용 시 다음 초식 손패 추가
+  comboForm?: number; // 미브 「청파 삼형」 초식 단계(1=단운/2=추형/3=개천) — 사용 시 다음 초식 손패 추가
+  anomalyOverride?: "launch" | "knockdown" | "crush" | "armor-break"; // 카드 단위 물리 이상 지정(오퍼 physBreak 무시) — 미브 추형·개천 강타 등
   eliteLevel?: number; // 정예화 단계(0/1/2) — 표시·강화 판정용
   copyLocked?: boolean; // 복제본(정예화 불가) — 표시용
 };
