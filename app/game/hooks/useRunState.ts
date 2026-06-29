@@ -624,7 +624,23 @@ export function playCardOnState(current: RunState, uid: string, targetEnemyId?: 
   if (card.effect === "shield") {
     const amt = card.power || (card.kind === "ultimate" ? 18 : 12);
     const party = current.party.map((m) => (m.hp > 0 ? { ...m, shield: m.shield + amt } : m));
-    return advanceTempo({ ...current, party, battle: { ...baseBattle, log: [`${actor.name}: ${card.name} — 보호막 +${amt}`, ...battle.log].slice(0, 8) } }, 1);
+    // 방패 디펜더 반격: 막기(보호막=비호) + 반격 효과 + 게이지 반환. 냉기 오퍼(스노우샤인)=냉기 부착 / 물리 오퍼(카치르)=방어 불능 1스택.
+    const sp = passiveSpec(actor.id);
+    let enemies = baseBattle.enemies;
+    let energyGain = 0;
+    let extra = "";
+    if (sp.reflectAttach && card.kind === "battle-skill") {
+      if (actor.element !== "physical") {
+        enemies = enemies.map((e) => (e.hp > 0 ? { ...e, attach: { ...(e.attach ?? {}), [actor.element]: Math.min(4, (e.attach?.[actor.element] ?? 0) + 1) } } : e));
+        extra = `, ${ELEM_LABEL[actor.element]} 부착`;
+      } else {
+        enemies = enemies.map((e) => (e.hp > 0 ? { ...e, physBreakStacks: Math.min(MAX_PHYS_BREAK_STACKS, e.physBreakStacks + 1) } : e));
+        extra = `, 방어 불능 +1`;
+      }
+      energyGain = 1 + (sp.breakEnergy ?? 0); // 저비용 부착/방불(게이지 반환)
+      extra += ` · 에너지 +${energyGain}`;
+    }
+    return advanceTempo({ ...current, party, battle: { ...baseBattle, enemies, energy: baseBattle.energy + energyGain, log: [`${actor.name}: ${card.name} — 보호막 +${amt}${extra}`, ...battle.log].slice(0, 8) } }, 1);
   }
   if (card.effect === "heal") {
     const amt = card.power || (card.kind === "ultimate" ? 26 : 14);
@@ -736,7 +752,8 @@ export function playCardOnState(current: RunState, uid: string, targetEnemyId?: 
       bleed = Math.max(bleed ?? 0, Math.round(actor.attack * aspec.bleed!));
       noteSet.add(`출혈 ${bleed}/턴`);
     }
-    if (hp > 0 && actor.element === "physical" && kind !== "attack") {
+    if (hp > 0 && (actor.element === "physical" || !!actor.physAnomaly) && kind !== "attack") {
+      // 물리 단일 오퍼 + 물리 이상을 가진 하이브리드(엠버 heat 넘어뜨리기·에스텔라 cryo 띄우기 등)도 방어 불능 적용
       const anomaly = card.anomalyOverride ?? actor.physAnomaly ?? (actor.physBreak === "consume" ? "crush" : actor.physBreak === "build" ? "launch" : undefined);
       if (anomaly === "launch" || anomaly === "knockdown") {
         // 띄우기/넘어뜨리기: 방어 불능 1스택 부여(빌더 정예화 2차 +1). 이미 방어 불능이면 추가 물리 + 불균형 10 + CC.
@@ -813,7 +830,7 @@ export function playCardOnState(current: RunState, uid: string, targetEnemyId?: 
     let attach: Partial<Record<Element, number>> = { ...(enemy.attach ?? {}) };
     let artsVuln = enemy.artsVuln;
     let corrodeVuln = enemy.corrodeVuln;
-    if (hp > 0 && actor.element !== "physical" && kind !== "attack") {
+    if (hp > 0 && actor.element !== "physical" && kind !== "attack" && !aspec.noArtsAttach) {
       const el = actor.element;
       const others = (Object.keys(attach) as Element[]).filter((k) => k !== el && (attach[k] ?? 0) > 0);
       if (aspec.forceFreezeOnCryo && el === "cryo" && kind === "battle-skill" && (attach.cryo ?? 0) > 0) {
@@ -1002,6 +1019,11 @@ export function useUltimateOnState(current: RunState, operatorId: string, target
   const struck = playCardOnState({ ...current, party: partyForUlt }, ultCard.uid, targetEnemyId, ultCard);
   if (emberShield > 0 && struck.battle) {
     return { ...struck, battle: { ...struck.battle, log: [`${actor.name} — 맹세의 보호막! 팀 전체 +${emberShield}`, ...struck.battle.log].slice(0, 8) } };
+  }
+  // 스노우샤인 「살얼음 추위」: 광역 냉기 피해 후 빙설 지대로 적중 적을 강제 동결(냉기 부착 미소모) — 쇄빙 조합 지원.
+  if (passiveSpec(operatorId).ultForceFreeze && struck.battle) {
+    const enemies = struck.battle.enemies.map((e) => (e.hp > 0 ? { ...e, statuses: addStatus(e.statuses, "freeze") } : e));
+    return { ...struck, battle: { ...struck.battle, enemies, log: [`${actor.name} — 빙설 지대! 강제 동결`, ...struck.battle.log].slice(0, 8) } };
   }
   // 포그라니치니크 「방패병 부대, 전진」: 진군 광역타 후 철의 서약 5포인트 부여(이후 적 물리 이상·포그 연계 시 1 소모 → 방패병 추가타+게이지).
   if (operatorId === "pogranichnik" && struck.battle) {

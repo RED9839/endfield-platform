@@ -26,6 +26,9 @@ export type PassiveSpec = {
   shatterEnergy?: number; // 쇄빙 발동 시 전투 에너지(스킬 게이지) 반환 — 에스텔라 공감
   gaugeOnArmorBreak?: number; // 갑옷 파괴로 방불 소모 시 스택당 게이지(에너지) 수급 — 포그라니치니크 전선 분쇄
   forceFreezeOnCryo?: boolean; // 배틀 스킬이 냉기 부착 적을 강제 동결(2원소 없이도 동결) — 알레쉬 비정규 루어
+  noArtsAttach?: boolean; // 원소 피해를 주되 아츠 부착/폭발/이상을 만들지 않음 — 엠버(열기 탈을 쓴 물리 디펜더, 위키 각주 5)
+  reflectAttach?: boolean; // 방패(보호막) 배틀 스킬이 반격으로 자기 원소를 적에 부착 + 게이지 반환 — 스노우샤인 포화성 방어
+  ultForceFreeze?: boolean; // 궁극이 적중 적을 강제 동결(냉기 부착 미소모) — 스노우샤인 살얼음 추위 빙설 지대
   linkStatDamage?: number; // 연계 스킬 피해 +x — 지능 파생(장비 등급 비례), 알레쉬 낚시의 달인(린수 강화 평균값)
   linkStatGauge?: number; // 연계 스킬 추가 에너지 +x — 지능 파생(장비 등급 비례), 아케쿠리 승리의 함성
   chargeBreakStagger?: number; // 적 차지를 끊었을 때 추가 불균형치(진천우 흐름 끊기)
@@ -46,12 +49,12 @@ export const OPERATOR_PASSIVES: Record<string, PassiveSpec> = {
   ardelia: { healOnCast: 16 },
   // 죄를 쫓는 자(연계 명중 시 회복[지능 비례=장비 등급 비례] + 연타) / 혈류 소생(회복 시 자기 열기↑·팀 25%=teamAmp) / 배틀 사르는 불꽃 열기 취약+허약=targetVuln
   camu: { teamAmp: 0.10, grantMultiHit: true, healOnCast: 6, targetVuln: 0.08 },
-  // 전진의 결의(50% 비호) / 강철에는 강철로(피격 후 공격↑)
-  ember: { shieldOnCast: 14, selfPower: 0.06 },
+  // 전진의 결의(배틀/연계 중 50% 비호=damageResist) / 강철에는 강철로(피격 후 공격↑=selfPower) / 연계 전선 지원 치유(의지 비례=장비 등급 비례 healOnCast) — 궁극 보호막은 useUltimateOnState 커스텀(maxHp×25%)
+  ember: { healOnCast: 12, damageResist: 0.12, selfPower: 0.06, noArtsAttach: true },
   // 가동 프로세스(냉기/동결 적 받는 냉기+10%) / 프리징(궁 정화)
   xaihi: { targetVuln: 0.12 },
-  // 극지 생존(저HP 치유+25%) / 구조 전문가(방어 성공 시 에너지+10)
-  snowshine: { healOnCast: 12, breakEnergy: 1 },
+  // 극지 생존(저HP 치유+25%=healOnCast) / 구조 전문가(반격 시 궁충=breakEnergy) / 포화성 방어 비호(damageResist)+반격 냉기 부착(reflectAttach) / 살얼음 추위 강제 동결(ultForceFreeze)
+  snowshine: { healOnCast: 12, breakEnergy: 1, damageResist: 0.12, reflectAttach: true, ultForceFreeze: true },
   // 고효율 배송(썬더랜스 명중마다 궁에너지+3) / 완곡한 수단(궁이 전기취약+10%)
   avywenna: { ultOnHit: 3, targetVuln: 0.10 },
   // 황무지의 방랑자(질풍 섬광 후 지능 비례 팀 전기 피해↑ → 장비 등급 비례) / 만물의 지혜(아츠 50% 면역)
@@ -81,8 +84,8 @@ export const OPERATOR_PASSIVES: Record<string, PassiveSpec> = {
   alesh: { ultOnFreeze: 8, forceFreezeOnCryo: true, linkStatDamage: 0.12 },
   // 공감(쇄빙 시 게이지 반환 → shatterEnergy) / 이유 있는 게으름(냉기 면역, 냉기 -20%) / 생존이 승리다(동결 시 궁충) / 디스토션 물리 취약
   estella: { shatterEnergy: 1, damageResist: 0.10, ultOnFreeze: 5, linkPhysVuln: 0.12 },
-  // 강인한 방어선(방어력↑) / 전장을 꿰뚫는 통찰(궁 충격파)
-  catcher: { shieldOnCast: 14 },
+  // 강인한 방어선(방어력↑=비호 damageResist) / 전장을 꿰뚫는 통찰(궁 충격파=궁 위력) / 강력한 저지: 비호 + 반격 방어 불능(reflectAttach) + 게이지 / 실시간 억제 보호(shieldOnCast)
+  catcher: { shieldOnCast: 14, reflectAttach: true, damageResist: 0.12, breakEnergy: 1 },
   // 즉흥적인 천재성(증폭 팀원 딜 시 회복) / 무의식(30% 물리면역+회복)
   antal: { healOnCast: 10, damageResist: 0.12 },
   // 몰락의 조력자(감속 적 +20%) / 종잡을 수 없는 자(20% 아츠면역+공격+20%)

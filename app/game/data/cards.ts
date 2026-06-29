@@ -75,7 +75,8 @@ export function makeCard(op: PartyMember, kind: SkillKind, uid: string, elite = 
     || (kind === "battle-skill" && !!op.battleAoe)
     || (kind === "link-skill" && (!!op.linkAoe || op.skillMechanic === "electric-attachment"));
   // 아델리아(corrosion-support)는 스킬로 자연 피해를 줘 부식 부착을 거는 디버퍼다. 회복은 재능(healOnCast)으로 처리 → 스킬은 데미지 카드.
-  const effect = op.skillMechanic === "protective-arts" && kind !== "attack" ? "shield" : undefined;
+  // 방패 디펜더(스노우샤인·카치르): 배틀 스킬만 방패 막기(보호막=비호). 연계(치유/물리딜)·궁극(광역 딜)은 정상 피해 카드.
+  const effect = op.skillMechanic === "protective-arts" && kind === "battle-skill" ? "shield" : undefined;
   const effectLine = effect === "shield"
     ? "파티 보호막"
     : effect === "heal"

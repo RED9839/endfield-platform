@@ -245,7 +245,7 @@ export const benchOperators: Operator[] = [
     ultimateName: "다시 불타오르는 맹세",
     ultimateIcon: "/operators/ember/skills/ultimate.webp",
     ultimateDescription: "지면을 강타하여 주변의 적에게 열기 피해를 주고, 동시에 팀 전체에게 엠버의 최대 생명력에 따른 보호를 부여합니다.",
-    skillMechanic: "protective-arts",
+    skillMechanic: "combo-strike", // 딜탱형: 배틀/연계가 데미지+넘어뜨리기(방어 불능). 보호막은 궁극 전용(useUltimateOnState), 치유=healOnCast, 비호=damageResist
     passiveName: "전진의 결의",
     passiveIcon: "/operators/ember/talents/talent1.webp",
     passiveDescription: "배틀 스킬 진군과 연계 스킬 전선에서의 지원을 발동하는 과정에서 30%비호를 획득하고 스킬이 쉽게 끊기지 않습니다.",
@@ -258,6 +258,8 @@ export const benchOperators: Operator[] = [
     critRate: 0.05,
     critDamage: 0.5,
     battleAoe: true,
+    physBreak: "build", // 배틀 진군·연계 전선 지원 모두 넘어뜨리기 → 방어 불능 스택 누적(엠버 시그니처)
+    physAnomaly: "knockdown",
   },
   // ── 신규 추가 오퍼레이터 (임시 스탯/아트) ──────────────────────────
   {
@@ -911,7 +913,8 @@ export const extraOperators: Operator[] = [
     critDamage: 0.5,
     battleAoe: true,
     linkAoe: true,
-    physBreak: "build",
+    physBreak: "build", // 궁극 교과서적인 맹공 = 넘어뜨리기, 배틀 반격 = 방어 불능 1스택(reflectAttach)
+    physAnomaly: "knockdown",
   },
   {
     id: "antal",
