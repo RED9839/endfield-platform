@@ -809,6 +809,11 @@ export function playCardOnState(current: RunState, uid: string, targetEnemyId?: 
       physVuln = Math.max(physVuln ?? 0, aspec.linkPhysVuln!);
       noteSet.add(`물리 취약 +${Math.round(aspec.linkPhysVuln! * 100)}%`);
     }
+    // 질베르타 「매트릭스 이동」: 연계로 강제 띄우기 → 방어 불능 1스택(단발 CC). 본인은 띄우기 페이오프 딜러가 아니라 스택을 깔아 아군 강타/쇄빙을 보조.
+    if (hp > 0 && kind === "link-skill" && aspec.linkLaunch && physBreakStacks < 1) {
+      physBreakStacks = 1;
+      noteSet.add("강제 띄우기 (방어 불능 1)");
+    }
     // ── 관리자 「오리지늄 결정」 ──
     // 연계 스킬 = 결정 부착(현실 정지로 받는 물리↑). 배틀/궁극 = 결정 파괴 → 추가 물리 + 본질 붕괴(공격력 누적).
     if (hp > 0 && actor.id === "endministrator") {
@@ -830,6 +835,23 @@ export function playCardOnState(current: RunState, uid: string, targetEnemyId?: 
     let attach: Partial<Record<Element, number>> = { ...(enemy.attach ?? {}) };
     let artsVuln = enemy.artsVuln;
     let corrodeVuln = enemy.corrodeVuln;
+    // ── 아델리아 「부식」 사이클 ──
+    // 연계 화산 분화 = 부식 강제 부여(자연 단일이라 2단계 아츠로 못 만듦). 배틀 질주하는 돌리 = 부식 소모 → 물리·아츠 취약(긴 지속 디버프).
+    if (hp > 0 && actor.id === "ardelia") {
+      const corroded = statuses.includes("corrosion") || (corrodeVuln ?? 0) > 0;
+      if (kind === "link-skill" && !statuses.includes("corrosion")) {
+        statuses = addStatus(statuses, "corrosion");
+        corrodeVuln = Math.max(corrodeVuln ?? 0, 0.12); // 부식 = DoT + 모든 저항 감소
+        noteSet.add("부식 부여");
+      } else if (kind === "battle-skill" && corroded) {
+        statuses = withoutStatus(statuses, "corrosion");
+        const vuln = aspec.corrodeConsumeVuln ?? 0.18;
+        physVuln = Math.max(physVuln ?? 0, vuln);
+        artsVuln = Math.max(artsVuln ?? 0, vuln);
+        corrodeVuln = 0; // 부식 소모(취약으로 전환)
+        noteSet.add(`부식 소모 → 물리·아츠 취약 +${Math.round(vuln * 100)}%`);
+      }
+    }
     if (hp > 0 && actor.element !== "physical" && kind !== "attack" && !aspec.noArtsAttach) {
       const el = actor.element;
       const others = (Object.keys(attach) as Element[]).filter((k) => k !== el && (attach[k] ?? 0) > 0);

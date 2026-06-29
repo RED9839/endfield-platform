@@ -29,6 +29,8 @@ export type PassiveSpec = {
   noArtsAttach?: boolean; // 원소 피해를 주되 아츠 부착/폭발/이상을 만들지 않음 — 엠버(열기 탈을 쓴 물리 디펜더, 위키 각주 5)
   reflectAttach?: boolean; // 방패(보호막) 배틀 스킬이 반격으로 자기 원소를 적에 부착 + 게이지 반환 — 스노우샤인 포화성 방어
   ultForceFreeze?: boolean; // 궁극이 적중 적을 강제 동결(냉기 부착 미소모) — 스노우샤인 살얼음 추위 빙설 지대
+  corrodeConsumeVuln?: number; // 배틀 스킬이 부식 소모 시 물리 취약 + 아츠 취약 x 부여(긴 지속) — 아델리아 질주하는 돌리
+  linkLaunch?: boolean; // 연계 스킬이 강제 띄우기 → 방어 불능 1스택(이미 방불이면 띄우기 발동) — 질베르타 매트릭스 이동
   linkStatDamage?: number; // 연계 스킬 피해 +x — 지능 파생(장비 등급 비례), 알레쉬 낚시의 달인(린수 강화 평균값)
   linkStatGauge?: number; // 연계 스킬 추가 에너지 +x — 지능 파생(장비 등급 비례), 아케쿠리 승리의 함성
   chargeBreakStagger?: number; // 적 차지를 끊었을 때 추가 불균형치(진천우 흐름 끊기)
@@ -45,14 +47,15 @@ export const OPERATOR_PASSIVES: Record<string, PassiveSpec> = {
   perlica: { vsBroken: 0.20 },
   // 칼날 베기(명중마다 공격+8% 5스택) / 흐름 끊기(차지 끊으면 추가 불균형 10)
   chenqianyu: { stackPerHit: 0.08, chargeBreakStagger: 10 },
-  // 친구의 그림자(돌리 그림자 회복 — 스킬 시전 시 파티 회복) / 마운틴 서퍼(부식 적에 배틀 1회 더)
-  ardelia: { healOnCast: 16 },
+  // 친구의 그림자(돌리 그림자 회복[의지 비례=장비 등급 비례 healOnCast]) / 마운틴 서퍼(부식 적에 배틀 1회 더)
+  // + 연계 화산 분화=부식 부여 / 배틀 질주하는 돌리=부식 소모 → 물리·아츠 취약(corrodeConsumeVuln). 자연 단일이라 일반 아츠 부착은 안 함(noArtsAttach).
+  ardelia: { healOnCast: 16, corrodeConsumeVuln: 0.18, noArtsAttach: true },
   // 죄를 쫓는 자(연계 명중 시 회복[지능 비례=장비 등급 비례] + 연타) / 혈류 소생(회복 시 자기 열기↑·팀 25%=teamAmp) / 배틀 사르는 불꽃 열기 취약+허약=targetVuln
   camu: { teamAmp: 0.10, grantMultiHit: true, healOnCast: 6, targetVuln: 0.08 },
   // 전진의 결의(배틀/연계 중 50% 비호=damageResist) / 강철에는 강철로(피격 후 공격↑=selfPower) / 연계 전선 지원 치유(의지 비례=장비 등급 비례 healOnCast) — 궁극 보호막은 useUltimateOnState 커스텀(maxHp×25%)
   ember: { healOnCast: 12, damageResist: 0.12, selfPower: 0.06, noArtsAttach: true },
-  // 가동 프로세스(냉기/동결 적 받는 냉기+10%) / 프리징(궁 정화)
-  xaihi: { targetVuln: 0.12 },
+  // 가동 프로세스(냉기/동결 적 받는 냉기+10%=targetVuln) / 프리징(궁 정화) / 디도스 치유(의지 비례=장비 등급 healOnCast) + 오버힐 시 아츠 증폭(teamAmp)
+  xaihi: { targetVuln: 0.12, healOnCast: 14, teamAmp: 0.05 },
   // 극지 생존(저HP 치유+25%=healOnCast) / 구조 전문가(반격 시 궁충=breakEnergy) / 포화성 방어 비호(damageResist)+반격 냉기 부착(reflectAttach) / 살얼음 추위 강제 동결(ultForceFreeze)
   snowshine: { healOnCast: 12, breakEnergy: 1, damageResist: 0.12, reflectAttach: true, ultForceFreeze: true },
   // 고효율 배송(썬더랜스 명중마다 궁에너지+3) / 완곡한 수단(궁이 전기취약+10%)
@@ -70,7 +73,7 @@ export const OPERATOR_PASSIVES: Record<string, PassiveSpec> = {
   // 돈오(지능·의지→공격력 변환 = 장비 등급 비례 화력) / 복마(넘어뜨리기 시 공격력 100% 추가) / 신체 정화 물리 취약 + 분노의 형상 연타
   lifeng: { statPower: 0.12, knockdownBonus: 0.6, appliesPhysVuln: 0.12, grantMultiHit: true },
   // 전달자의 노래(가드/캐스터/서포터 궁 충전 효율 +20%; 실제 +4%를 카드게임 게이지 경제에 맞춰 상향) / 뒤늦은 편지(2명 명중 시 회복)
-  gilberta: { teamUltPct: 0.20, healOnCast: 10 },
+  gilberta: { teamUltPct: 0.20, healOnCast: 10, linkLaunch: true },
   // 생존의 깃발(게이지 회복 시 사기 격양 공격+8%) / 처형 게이지 수급
   // ※ 위키의 '방불 소모 비례 게이지 수급'(gaugeOnArmorBreak)은 카드-템포 모델에서 에너지=템포라 역효과 → 미적용(인프라는 비활성으로 보존).
   pogranichnik: { breakEnergy: 1, selfPower: 0.08 },
@@ -86,8 +89,8 @@ export const OPERATOR_PASSIVES: Record<string, PassiveSpec> = {
   estella: { shatterEnergy: 1, damageResist: 0.10, ultOnFreeze: 5, linkPhysVuln: 0.12 },
   // 강인한 방어선(방어력↑=비호 damageResist) / 전장을 꿰뚫는 통찰(궁 충격파=궁 위력) / 강력한 저지: 비호 + 반격 방어 불능(reflectAttach) + 게이지 / 실시간 억제 보호(shieldOnCast)
   catcher: { shieldOnCast: 14, reflectAttach: true, damageResist: 0.12, breakEnergy: 1 },
-  // 즉흥적인 천재성(증폭 팀원 딜 시 회복) / 무의식(30% 물리면역+회복)
-  antal: { healOnCast: 10, damageResist: 0.12 },
+  // 즉흥적인 천재성(증폭 팀원 딜 시 회복=healOnCast) / 무의식(30% 물리면역+회복=damageResist) / 지정 연구 대상 전기·열기 취약(targetVuln, 60초 장기 디버프)
+  antal: { healOnCast: 10, damageResist: 0.12, targetVuln: 0.10 },
   // 몰락의 조력자(감속 적 +20%) / 종잡을 수 없는 자(20% 아츠면역+공격+20%)
   fluorite: { vsStatus: 0.22, damageResist: 0.08 },
   // 승리의 함성(연계 게이지 회복 지능 비례 → linkStatGauge) / 몰입의 시간(궁 중 연타)
