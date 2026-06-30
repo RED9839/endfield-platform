@@ -222,6 +222,50 @@ export const SKILLS: Record<string, DDSkill[]> = {
     { id: "gil-u", name: "비전 지팡이 · 중력장", kind: "ult", fromPos: [1, 2, 3], target: "all", power: 3.33, element: "nature", attach: "nature", staggerVal: 20, selfUlt: true,
       apply: (t) => { bumpVuln(t, "arts", 0.18 + Math.min(4, t.physBreak) * 0.0175, 1); t.speedMod = (t.speedMod || 0) - 30; setTimer(t, "speedMod", 1); }, note: "광역 자연 부착 + 최고 아츠 취약(방불 비례) + 감속" },
   ],
+  // 펠리카: 전기/아츠 유닛 캐스터(★5, 첫 캐스터·타이틀 히로인). 즉발 전기 부착 + 강제 감전 연계(아츠 취약) + 깡딜 궁 + 불균형 추가딜. 범용 아츠 서포터/서브딜.
+  // 재능: 오블리터레이션 프로토콜(불균형 적 +30%, 엔진) · 순환 프로토콜(연계가 방불 적 추가 튕김 — 근사). 주스탯 지능·보조 의지.
+  perlica: [
+    // 프로토콜ω·뇌격(배틀 178%): 즉발 전기 + 전기 부착(좁은 범위, 빠른 발동).
+    { id: "prl-b", name: "프로토콜ω · 뇌격", kind: "battle", fromPos: [1, 2, 3], target: "single-front", power: 1.78, element: "electric", attach: "electric", staggerVal: 10, note: "즉발 전기 부착" },
+    // 실시간 프로토콜·연쇄 섬광(연계 80%, 쿨 20초≈4턴): 메인 강일 후(상시). 전기 + 강제 감전(부착 무관 아츠 취약 12%).
+    { id: "prl-l", name: "실시간 프로토콜 · 연쇄 섬광", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 0.8, element: "electric", staggerVal: 10, cooldown: 4, forceShock: true, note: "강제 감전(아츠 취약, 부착 무관)" },
+    // 프로토콜ε·70.41κ(궁 445%, 게이지 80): 광역 깡딜 전기. 불균형 적엔 오블리터레이션 +30%.
+    { id: "prl-u", name: "프로토콜ε · 70.41κ", kind: "ult", fromPos: [1, 2, 3], target: "all", power: 4.45, element: "electric", staggerVal: 20, selfUlt: true, note: "광역 깡딜 전기(불균형 적 +30%)" },
+  ],
+  // 울프가드: 열기/권총 캐스터(★5, 로시의 오빠). 열기 부착 + 연소/감전 소모 추가타(고배율) + 강제 연소 궁 + 불타는 송곳니(연소 부여 시 열기 증폭). 레바테인/로시 열기팟 핵심.
+  // 재능: 불타는 송곳니(연소 부여마다 자기 열기 +30%, 엔진) · 절제의 원칙(연소/감전 소모 시 게이지 +10, 엔진). 주스탯 힘·보조 민첩.
+  wulfgard: [
+    // 탄흔의 열기(배틀 102% + 추가 378%): 열기 + 마지막 열기 부착. 연소/감전 적이면 부착 대신 소모 → 대량 추가타 + 게이지.
+    { id: "wlf-b", name: "탄흔의 열기", kind: "battle", fromPos: [1, 2, 3], target: "single-front", power: 1.02, element: "heat", attach: "heat", staggerVal: 5, burnShockConsume: 3.78, note: "열기 부착 / 연소·감전 소모 대량 추가타" },
+    // 폭렬 수류탄·β형(연계 60%, 쿨 20초≈4턴): 아츠 부착 적 있을 때. 범위 열기 + 열기 부착.
+    { id: "wlf-l", name: "폭렬 수류탄 · β형", kind: "link", fromPos: [1, 2, 3], target: "row", power: 0.6, element: "heat", attach: "heat", staggerVal: 10, cooldown: 4,
+      requires: (t) => !!t && ELEMENTS.some((e) => t.arts[e] > 0), requiresText: "아츠 부착 적", note: "범위 열기 부착(부착 셋업)" },
+    // 늑대의 분노(궁 32%×5=160%, 게이지 90): 광역 다단 열기 + 강제 연소 + 불타는 송곳니.
+    { id: "wlf-u", name: "늑대의 분노", kind: "ult", fromPos: [1, 2, 3], target: "all", power: 1.6, element: "heat", staggerVal: 15, selfUlt: true, forceBurn: true, note: "광역 열기 + 강제 연소" },
+  ],
+  // 플루라이트: 자연/권총 캐스터(★4, Z7). 무료 다중 아츠 부착(연계/궁 게이지 무소모) + 감속 + 자연 부착. 다중 부착형 스트라이커(라스트 라이트) 보조. 긴 연계 쿨이 약점.
+  // 재능: 몰락의 조력자(감속 적 +20%, 엔진) · 종잡을 수 없는 자(20% 아츠 면역+공격력 — 휴면). 주스탯 민첩·보조 지능.
+  fluorite: [
+    // 서프라이즈?(배틀 187%): 수제 폭탄 → 범위 자연 + 자연 부착 + 30% 감속.
+    { id: "flr-b", name: "서프라이즈?", kind: "battle", fromPos: [1, 2, 3], target: "single-front", power: 1.87, element: "nature", attach: "nature", staggerVal: 10,
+      apply: (t) => { t.speedMod = (t.speedMod || 0) - 30; setTimer(t, "speedMod", 2); }, note: "자연 부착 + 감속" },
+    // 특별 보너스(연계 169%, 쿨 40초≈8턴 최장): 냉기/자연 2부착+ 적. 자연 + 같은 부착 1스택 추가(무료 부착 지원).
+    { id: "flr-l", name: "특별 보너스", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 1.69, element: "nature", staggerVal: 10, cooldown: 8,
+      requires: (t) => !!t && (t.arts.cryo >= 2 || t.arts.nature >= 2), requiresText: "냉기/자연 2부착+ 적", note: "자연 + 무료 아츠 부착(스택 추가)" },
+    // 난장판으로 만들어주지(궁 111%×4=444%, 게이지 100): 광역 다단 자연. 2부착+ 적이면 같은 부착 추가.
+    { id: "flr-u", name: "난장판으로 만들어주지", kind: "ult", fromPos: [1, 2, 3], target: "all", power: 4.44, element: "nature", staggerVal: 20, selfUlt: true, note: "광역 다단 자연 + 무료 아츠 부착" },
+  ],
+  // 탕탕: 냉기/권총 캐스터(★6 한정). 즉발 냉기 부착(용오름) + 용오름 개수 비례 아츠 취약 + 와류(가속/감속) + 시간 정지 궁 + 준수한 서브딜. 냉기팟 핵심(라스트 라이트/이본 부착 보조).
+  // 재능: 의기투합(와류 주변 아군 가속/적 감속, 엔진) · 풍랑의 주재자(낙하 공격 용오름 — 미모델). 주스탯 민첩·보조 힘.
+  tangtang: [
+    // 우당탕탕 파도!(배틀 사격 80% + 용오름 133% = 213%): 즉발 냉기 부착 + 용오름(와류 소모로 개수↑ → 아츠 취약·지속 냉기·게이지). 엔진 id훅.
+    { id: "tt-b", name: "우당탕탕 파도!", kind: "battle", fromPos: [1, 2, 3], target: "row", power: 2.13, element: "cryo", attach: "cryo", staggerVal: 10, note: "즉발 냉기 부착 + 용오름(아츠 취약·지속 냉기·게이지)" },
+    // 야, 강물! 도와줘!(연계 107%, 쿨 14초≈3턴): 냉기 부착/아츠 폭발 적. 냉기 관통 + 와류 생성 + 의기투합(가속/감속).
+    { id: "tt-l", name: "야, 강물! 도와줘!", kind: "link", fromPos: [1, 2, 3], target: "row", power: 1.07, element: "cryo", staggerVal: 10, cooldown: 3,
+      requires: (t, _s, st) => !!t && (t.arts.cryo > 0 || !!st.anomalyConsumed), requiresText: "냉기 부착/아츠 폭발 적", note: "냉기 관통 + 와류 생성 + 의기투합" },
+    // 대당가께서 지켜보고 계신다!(궁 거대 파도 311%, 게이지 90): 시간 정지(행동 불가) + 거대 파도 + 지속 냉기.
+    { id: "tt-u", name: "대당가께서 지켜보고 계신다!", kind: "ult", fromPos: [1, 2, 3], target: "all", power: 3.11, element: "cryo", staggerVal: 20, selfUlt: true, note: "시간 정지(행동 불가) + 거대 파도 + 지속 냉기" },
+  ],
 };
 
 type Base = { id: string; name: string; cls: DDClass; hp: number; attack: number; speed: number; ultCost: number; rampAtk?: number; artsImmune?: number };
@@ -244,6 +288,10 @@ const OP_BASE: Record<string, Base> = {
   xaihi: { id: "xaihi", name: "자이히", cls: "supporter", hp: 2689, attack: 110, speed: 64, ultCost: 80 }, // 냉기 서포터★5("냉기 파티의 꽃"). 퓨어 힐+아츠 증폭+냉기/자연 증폭궁+냉기 부착. 주스탯 의지·보조 지능
   antal: { id: "antal", name: "안탈", cls: "supporter", hp: 2689, attack: 110, speed: 63, ultCost: 100 }, // 전기 서포터★4 범용. 전기/열기 취약(60초 단일)+전기/열기 증폭궁+증폭 팀원 회복. 주스탯 지능·보조 힘
   gilberta: { id: "gilberta", name: "질베르타", cls: "supporter", hp: 2689, attack: 110, speed: 62, ultCost: 90 }, // 자연 서포터★6 한정(1황). 최고 아츠 취약궁+몹몰이+강제 띄우기+궁충 효율. 주스탯 의지·보조 지능
+  perlica: { id: "perlica", name: "펠리카", cls: "caster", hp: 2689, attack: 110, speed: 66, ultCost: 80 }, // 전기 캐스터★5(첫 캐스터). 전기 부착+강제 감전(아츠 취약)+깡딜 궁+불균형 추가딜. 주스탯 지능·보조 의지
+  wulfgard: { id: "wulfgard", name: "울프가드", cls: "caster", hp: 2689, attack: 110, speed: 70, ultCost: 90 }, // 열기 캐스터★5. 열기 부착+연소/감전 소모 추가타+강제 연소 궁+불타는 송곳니. 주스탯 힘·보조 민첩
+  fluorite: { id: "fluorite", name: "플루라이트", cls: "caster", hp: 2689, attack: 110, speed: 72, ultCost: 100 }, // 자연 캐스터★4. 무료 다중 아츠 부착(연계/궁)+감속+자연 부착. 주스탯 민첩·보조 지능
+  tangtang: { id: "tangtang", name: "탕탕", cls: "caster", hp: 2689, attack: 110, speed: 74, ultCost: 90 }, // 냉기 캐스터★6 한정. 즉발 냉기 부착(용오름)+아츠 취약+와류 가속/감속+시간정지 궁+서브딜. 주스탯 민첩·보조 힘
 };
 
 // 매 유닛 신선한 상태 객체(중첩 객체 공유 참조 방지). defense/resist 기본 0 → 밸런스 무변.

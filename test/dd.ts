@@ -58,7 +58,7 @@ function runBattle(allies: DDUnit[], enemies: DDUnit[], label: string): "ally" |
     for (const u of turnOrder(s)) {
       if (u.hp <= 0) continue;
       if (isOver(s)) break;
-      if (!canAct(u)) { if (u.staggered) s.log.push(`${u.name} 불균형 — 행동 불가`); continue; }
+      if (!canAct(u)) { if (u.staggered) s.log.push(`${u.name} 불균형 — 행동 불가`); else if ((u.timers.stun || 0) > 0) s.log.push(`${u.name} 시간 정지 — 행동 불가`); continue; }
       if (u.side === "ally") {
         const sk = allyChoose(s, u);
         if (sk) act(s, u, sk); else s.log.push(`${u.name} 행동 불가(사용 가능 스킬 없음)`);

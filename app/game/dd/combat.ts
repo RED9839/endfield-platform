@@ -85,6 +85,8 @@ export type DDSkill = {
   forceShock?: boolean; // 강제 감전 부여(아크라이트 궁: 전기 부착 소모→감전)
   forceFreeze?: boolean; // 냉기 부착 적 → 냉기 소모 + 강제 동결 + 게이지(알레쉬 비정규 루어)
   freezeZone?: number; // 빙설 지대: 부착 무관 직접 동결 N스택 + 지속 냉기(스노우샤인 살얼음 추위)
+  burnShockConsume?: number; // 연소/감전 상태 소모 → 추가 열기타 + 게이지(울프가드 탄흔의 열기). 소모 시 부착 생략
+  forceBurn?: boolean; // 강제 연소 부여(울프가드 늑대의 분노) + 불타는 송곳니
   lure?: { power: number; gauge: number }; // 진귀한 린수(알레쉬 연계): 확률로 강화 피해 + 게이지
   grantsMultiHit?: number; // 사용 후 자신에게 연타 부여(아케쿠리 궁 몰입의 시간 — 연타 소모 후 부여)
   requiresStance?: number; // 미브 스탠스 요구(추형≥1, 개천≥2)
@@ -140,6 +142,7 @@ function expire(u: DDUnit, key: string): void {
   else if (key === "ironOath") u.ironOath = 0;
   else if (key === "dot") { u.dot = 0; rm(u, "combustion"); }
   else if (key === "frozen") { u.frozen = 0; rm(u, "stun"); }
+  else if (key === "stun") rm(u, "stun"); // 시간 정지(탕탕 궁) 만료
   else if (key === "weaken") u.weakenMul = 1;
   else if (key === "protection") u.protection = 0;
   else if (key === "shield") u.shield = 0;
@@ -362,7 +365,7 @@ export function usable(s: DDState, self: DDUnit, skill: DDSkill): boolean {
   return true;
 }
 
-export const canAct = (u: DDUnit) => u.hp > 0 && !(u.side === "enemy" && u.staggered); // 불균형 적은 행동 불가
+export const canAct = (u: DDUnit) => u.hp > 0 && !(u.side === "enemy" && (u.staggered || (u.timers.stun || 0) > 0)); // 불균형/시간 정지 적은 행동 불가
 
 // 한 유닛의 행동 실행
 export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
@@ -398,7 +401,23 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
     let raw = baseDamage(skill, self); // 시전자 측 원 피해(공격력×증가×허약×배율)
     if (skill.kind === "attack" && t.staggered) { raw *= EXECUTE_MULT; executed = true; log.push(`  → 처형! 불균형 적 대량 물리`); }
     raw += applyAnomaly(skill, t, self, log); // 물리 이상 payoff(+쇄빙, 연타 미적용)
-    if (skill.attach) raw += applyAttach(t, skill.attach, self, log); // 아츠 부착→폭발/이상
+    let burnConsumed = false;
+    if (skill.burnShockConsume && (has(t, "combustion") || has(t, "shock"))) { // 울프가드: 연소/감전 소모 → 추가타(부착 생략)
+      rm(t, "combustion"); rm(t, "shock"); t.dot = 0;
+      raw += self.attack * eb(self) * skill.burnShockConsume;
+      s.anomalyConsumed = true; burnConsumed = true;
+      s.skillGauge = Math.min(s.maxGauge, s.skillGauge + 10); // 절제의 원칙(게이지 반환)
+      log.push(`  → 연소/감전 소모! 추가 ${skill.burnShockConsume * 100}% 열기 + 게이지`);
+    }
+    if (skill.attach && !burnConsumed) { // 아츠 부착→폭발/이상
+      raw += applyAttach(t, skill.attach, self, log);
+      if (self.id === "wulfgard" && has(t, "combustion")) { self.amp.heat = Math.max(self.amp.heat || 0, 0.3); setTimer(self, "amp:heat", 2); log.push(`  → 불타는 송곳니! 열기 피해 +30%`); }
+    }
+    if (skill.forceBurn && t.hp > 0) { // 울프가드 늑대의 분노: 강제 연소 + 불타는 송곳니
+      t.dot = Math.round(self.attack * eb(self) * 0.36); setTimer(t, "dot", DUR_DOT); add(t, "combustion");
+      self.amp.heat = Math.max(self.amp.heat || 0, 0.3); setTimer(self, "amp:heat", 2);
+      log.push(`  → 강제 연소 + 불타는 송곳니(+30%)`);
+    }
     if (skill.crystal && t.hp > 0) { add(t, "crystal"); log.push(`  → 오리지늄 결정 부착`); }
     if (skill.apply) skill.apply(t, self);
     const hadCrystal = has(t, "crystal"); // 현실 정지 판정(소모 전 기준)
@@ -462,6 +481,8 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
     let dmg = raw * (1 + self.critRate * self.critDmg); // 치명타 기댓값(RNG 대신)
     dmg *= 1 + ampFor(self, elem) + vulnFor(t, elem);
     if (t.staggered) dmg *= 1.3;
+    if (self.id === "perlica" && t.staggered) dmg *= 1.3; // 펠리카 오블리터레이션 프로토콜(불균형 적 추가 +30%)
+    if (self.id === "fluorite" && (t.speedMod || 0) < 0) dmg *= 1.2; // 플루라이트 몰락의 조력자(감속 적 +20%)
     if (hadCrystal && elem === "physical") dmg *= 1.2; // 관리자 현실 정지(물리 한정)
     if (skill.vsWeak && (vulnFor(t, "physical") > 0 || t.staggered)) dmg *= 1 + skill.vsWeak; // 미브 냉정(물취/불균형 적)
     dmg *= 1 - (t.protection || 0); // 비호
@@ -589,6 +610,37 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
     const hurt = living(s, "ally").filter((a) => a.hp < a.maxHp);
     const tgt = hurt.length ? hurt.reduce((lo, a) => (a.hp / a.maxHp < lo.hp / lo.maxHp ? a : lo), hurt[0]) : self;
     healUnit(tgt, 108 + self.gearGrade * 0.9, s, log);
+  }
+  // 플루라이트(캐스터): 무료 아츠 부착 지원 — 연계/궁이 냉기/자연 2부착+ 적에 같은 부착 1스택 추가(게이지 무소모)
+  if (self.id === "fluorite" && (skill.kind === "link" || skill.kind === "ult")) {
+    const t = pickTargets(s, self, skill)[0];
+    const el: Element | null = t ? (t.arts.cryo >= 2 ? "cryo" : t.arts.nature >= 2 ? "nature" : null) : null;
+    if (t && el) { applyAttach(t, el, self, log); log.push(`  → 무료 아츠 부착(${EL_NAME[el]} 1스택 추가)`); }
+  }
+  // 탕탕(캐스터): 용오름/와류 — 배틀(냉기 부착+용오름 개수 아츠 취약+게이지) · 연계(와류+의기투합) · 궁(시간 정지)
+  if (self.id === "tangtang") {
+    if (skill.kind === "battle") { // 우당탕탕 파도: 와류 소모 → 용오름 개수↑(1~3), 개수 비례 아츠 취약 + 지속 냉기 + 게이지 반환
+      const vortex = Math.min(2, self.procCount || 0); const spouts = 1 + vortex; self.procCount = 0;
+      for (const t of pickTargets(s, self, skill)) {
+        t.dot = Math.round(self.attack * eb(self) * 1.33); setTimer(t, "dot", DUR_DOT); // 용오름 지속 냉기
+        if (spouts >= 2) bumpVuln(t, "arts", spouts >= 3 ? 0.08 : 0.06, 3); // 용오름 2/3개 아츠 취약
+      }
+      if (vortex > 0) s.skillGauge = Math.min(s.maxGauge, s.skillGauge + vortex * 20); // 와류마다 게이지 20 반환
+      log.push(`  → 용오름 ${spouts}개${spouts >= 2 ? ` · 아츠 취약 ${spouts >= 3 ? 8 : 6}%` : ""}${vortex ? ` · 와류 ${vortex} 소모(게이지 +${vortex * 20})` : ""}`);
+    }
+    if (skill.kind === "link") { // 야, 강물!: 와류 생성(최대 2) + 의기투합(아군 가속 / 적 감속)
+      self.procCount = Math.min(2, (self.procCount || 0) + 1);
+      for (const a of living(s, "ally")) applyBuff(a, "speedMod", 10);
+      for (const e of living(s, "enemy")) { e.speedMod = (e.speedMod || 0) - 20; setTimer(e, "speedMod", 2); }
+      log.push(`  → 와류 생성(${self.procCount}/2) · 의기투합(아군 가속 / 적 감속)`);
+    }
+    if (skill.kind === "ult") { // 대당가: 고대의 진 시간 정지(다음 1턴 행동 불가 — 불균형 아님, 받는 피해 보너스 없음) + 지속 냉기
+      for (const t of pickTargets(s, self, skill)) {
+        if (t.staggerMax > 0 && !t.staggered) { add(t, "stun"); setTimer(t, "stun", 1); } // 상대 턴 1턴 뒤로
+        t.dot = Math.round(self.attack * eb(self) * 1.42); setTimer(t, "dot", DUR_DOT);
+      }
+      log.push(`  → 고대의 진! 시간 정지(다음 1턴 행동 불가) + 지속 냉기`);
+    }
   }
   if (skill.kind === "attack" && self.side === "ally") { // 강력한 일격/처형 → 스킬 게이지 회복
     s.skillGauge = Math.min(s.maxGauge, s.skillGauge + (executed ? EXEC_RECOVER : BASIC_RECOVER));

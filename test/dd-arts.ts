@@ -1,5 +1,5 @@
 // 아츠 시스템 검증 — 부착/폭발/이상(연소·감전·동결·쇄빙·부식)을 시나리오로 확인.
-import { DDState, DDUnit, DDSkill, act, applyAttach, usable } from "../app/game/dd/combat";
+import { DDState, DDUnit, DDSkill, act, applyAttach, usable, canAct as canActImport } from "../app/game/dd/combat";
 import { SKILLS, makeAlly } from "../app/game/dd/roster";
 
 function unit(over: Partial<DDUnit>): DDUnit {
@@ -339,4 +339,83 @@ console.log("\n══ 질베르타: 최고 아츠 취약궁(방불 비례) + 강
   console.log(`  연계 사용가능(연소 후): ${usable(s, gil, link)} (기대 true)`);
   e1.physBreak = 2; act(s, gil, ult); // 중력장: 방불 2 → 아츠 취약 0.18+2×0.0175=0.215
   console.log(`  중력장: 적A 아츠취약 ${(e1.vuln.arts ?? 0).toFixed(3)} (기대 0.215 = 0.18+방불2×0.0175) · 감속 ${e1.speedMod} · 자연부착 ${e1.arts.nature}`);
+}
+
+console.log("\n══ 펠리카: 전기 부착 + 강제 감전 연계(아츠 취약) + 깡딜 궁 + 불균형 추가딜(첫 캐스터) ══");
+{
+  const prl = makeAlly("perlica", 1); prl.critRate = 0; // 깡딜 측정용
+  prl.ultCharge = prl.ultCost;
+  const enemy = unit({ id: "e", name: "적", side: "enemy", maxHp: 1e7, hp: 1e7, staggerMax: 1e9, defense: 0 });
+  const s: DDState = { units: [prl, enemy], round: 1, log: [], skillGauge: 9999, maxGauge: 99999 };
+  const battle = SKILLS.perlica.find((k) => k.id === "prl-b")!;
+  const link = SKILLS.perlica.find((k) => k.id === "prl-l")!;
+  const ult = SKILLS.perlica.find((k) => k.id === "prl-u")!;
+  act(s, prl, battle); // 뇌격: 전기 부착
+  console.log(`  뇌격: 적 전기부착 ${enemy.arts.electric} (기대 1)`);
+  act(s, prl, link); // 연쇄 섬광: 강제 감전 + 아츠 취약
+  console.log(`  연쇄 섬광: 적 감전 ${enemy.statuses.includes("shock")} · 아츠취약 ${enemy.vuln.arts ?? 0} (기대 0.12 강제 감전)`);
+  const hp1 = enemy.hp; act(s, prl, ult); // 궁: 깡딜 445%(불균형 X)
+  const dmgNormal = hp1 - enemy.hp;
+  enemy.hp = 1e7; enemy.staggered = true; prl.ultCharge = prl.ultCost; const hp2 = enemy.hp; act(s, prl, ult); // 불균형 적: ×1.3(전역) ×1.3(오블리터레이션)
+  const dmgStagger = hp2 - enemy.hp;
+  console.log(`  깡딜 궁: 일반 ${dmgNormal} · 불균형 ${dmgStagger} (배율 ${(dmgStagger / dmgNormal).toFixed(2)} 기대 1.69 = 1.3×1.3 오블리터레이션)`);
+}
+
+console.log("\n══ 울프가드: 연소/감전 소모 추가타 + 강제 연소 궁 + 불타는 송곳니(캐스터) ══");
+{
+  const wlf = makeAlly("wulfgard", 1);
+  wlf.ultCharge = wlf.ultCost;
+  const enemy = unit({ id: "e", name: "적", side: "enemy", maxHp: 1e7, hp: 1e7, staggerMax: 1e9 });
+  const s: DDState = { units: [wlf, enemy], round: 1, log: [], skillGauge: 9999, maxGauge: 99999 };
+  const battle = SKILLS.wulfgard.find((k) => k.id === "wlf-b")!;
+  const link = SKILLS.wulfgard.find((k) => k.id === "wlf-l")!;
+  const ult = SKILLS.wulfgard.find((k) => k.id === "wlf-u")!;
+  act(s, wlf, battle); // 탄흔의 열기: 연소/감전 없음 → 열기 부착
+  console.log(`  탄흔(부착): 적 열기부착 ${enemy.arts.heat} (기대 1) · 연계가능 ${usable(s, wlf, link)} (기대 true 부착)`);
+  enemy.arts.heat = 0; applyAttach(enemy, "electric", wlf, s.log); applyAttach(enemy, "heat", wlf, s.log); // 전기→열기 = 연소(아츠 이상)
+  console.log(`  연소 상태: combustion ${enemy.statuses.includes("combustion")} · DoT ${enemy.dot} (기대 연소)`);
+  const g0 = s.skillGauge; act(s, wlf, battle); // 탄흔의 열기: 연소 소모 → 대량 추가타 + 게이지(절제의 원칙)
+  console.log(`  탄흔(연소 소모): combustion ${enemy.statuses.includes("combustion")}(기대 false 소모) · 게이지 순변동 ${(s.skillGauge - g0).toFixed(0)}(기대 -90 = -100배틀+10절제)`);
+  act(s, wlf, ult); // 늑대의 분노: 강제 연소 + 불타는 송곳니
+  console.log(`  늑대의 분노: 적 강제연소 ${enemy.statuses.includes("combustion")} · 울프가드 불타는 송곳니(열기증폭) ${(wlf.amp.heat ?? 0)} (기대 0.30)`);
+}
+
+console.log("\n══ 플루라이트: 자연 부착+감속 + 무료 다중 아츠 부착 연계/궁(마지막 캐스터) ══");
+{
+  const flr = makeAlly("fluorite", 1);
+  flr.ultCharge = flr.ultCost;
+  const enemy = unit({ id: "e", name: "적", side: "enemy", maxHp: 1e7, hp: 1e7, staggerMax: 1e9, speed: 50 });
+  const s: DDState = { units: [flr, enemy], round: 1, log: [], skillGauge: 9999, maxGauge: 99999 };
+  const battle = SKILLS.fluorite.find((k) => k.id === "flr-b")!;
+  const link = SKILLS.fluorite.find((k) => k.id === "flr-l")!;
+  console.log(`  연계 사용가능(2부착 전): ${usable(s, flr, link)} (기대 false)`);
+  act(s, flr, battle); // 서프라이즈?: 자연 부착 + 감속
+  console.log(`  서프라이즈?: 적 자연부착 ${enemy.arts.nature} · 감속 speedMod ${enemy.speedMod} (기대 -30)`);
+  enemy.arts.nature = 0; applyAttach(enemy, "cryo", flr, s.log); applyAttach(enemy, "cryo", flr, s.log); // 냉기 2부착(외부 냉기 딜러 가정)
+  console.log(`  냉기 2부착 후 연계가능: ${usable(s, flr, link)} (기대 true) · 냉기 ${enemy.arts.cryo}`);
+  const c0 = enemy.arts.cryo; act(s, flr, link); // 특별 보너스: 무료 냉기 1스택 추가
+  console.log(`  특별 보너스: 냉기부착 ${c0}→${enemy.arts.cryo} (기대 +1 무료 부착 지원)`);
+}
+
+console.log("\n══ 탕탕: 즉발 냉기 부착 + 용오름(아츠 취약) + 와류 + 시간정지 궁(냉기 캐스터) ══");
+{
+  const tt = makeAlly("tangtang", 1);
+  const ally = makeAlly("estella", 2);
+  tt.ultCharge = tt.ultCost;
+  const enemy = unit({ id: "e", name: "적", side: "enemy", maxHp: 1e7, hp: 1e7, staggerMax: 1e9, speed: 50 }); // 불균형 안 차게(시간정지 격리)
+  const s: DDState = { units: [tt, ally, enemy], round: 1, log: [], skillGauge: 9999, maxGauge: 99999 };
+  const battle = SKILLS.tangtang.find((k) => k.id === "tt-b")!;
+  const link = SKILLS.tangtang.find((k) => k.id === "tt-l")!;
+  const ult = SKILLS.tangtang.find((k) => k.id === "tt-u")!;
+  console.log(`  연계 사용가능(냉기 부착 전): ${usable(s, tt, link)} (기대 false)`);
+  act(s, tt, battle); // 우당탕탕: 즉발 냉기 부착 + 용오름 1개(와류 0 → 아츠취약 X)
+  console.log(`  우당탕탕(와류0): 냉기부착 ${enemy.arts.cryo} · 아츠취약 ${enemy.vuln.arts ?? 0}(기대 0, 용오름 1개) · 지속냉기 ${enemy.dot > 0}`);
+  console.log(`  연계 사용가능(냉기 부착 후): ${usable(s, tt, link)} (기대 true)`);
+  const spd0 = ally.speedMod; act(s, tt, link); // 야 강물: 와류 1 생성 + 의기투합
+  console.log(`  야 강물!: 와류 ${tt.procCount}(기대 1) · 에스텔라 가속 ${spd0}→${ally.speedMod} · 적 감속 ${enemy.speedMod}`);
+  act(s, tt, link); s.skillGauge = 9999; // 와류 2개 누적(쿨 무시 위해 직접 호출)
+  const g0 = s.skillGauge; act(s, tt, battle); // 와류 2 소모 → 용오름 3개 → 아츠취약 8% + 게이지 40
+  console.log(`  우당탕탕(와류2): 용오름 3개 → 아츠취약 ${enemy.vuln.arts ?? 0}(기대 0.08) · 게이지 +${(s.skillGauge - g0).toFixed(0)}(기대 40-100배틀=-60)`);
+  act(s, tt, ult); // 대당가: 시간 정지(불균형 아님 — stun 타이머로 다음 1턴 행동 불가)
+  console.log(`  대당가(궁): 적 시간정지 stun ${(enemy.timers.stun || 0) > 0}(기대 true) · 행동가능 ${canActImport(enemy)}(기대 false) · 불균형 ${enemy.staggered}(기대 false — 받는피해 보너스 없음) · 지속냉기 ${enemy.dot > 0}`);
 }
