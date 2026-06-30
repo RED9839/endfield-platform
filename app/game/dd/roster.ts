@@ -1,0 +1,127 @@
+// ===== DD류 물리 4인 + 적 정의 (프로토타입) =====
+// 스킬은 위키 매핑. 사용 요구(requires)가 카드 모델에서 깨지던 "연계 조건"을 DD류에선 자연 흡수.
+import { bumpVuln, vulnFor, setTimer, ELEMENTS, type DDClass, type DDSkill, type DDUnit } from "./combat";
+
+export const SKILLS: Record<string, DDSkill[]> = {
+  // 진천우: 최고 방불 누적 + 고계수 단일 누커(보스 삭제기). 빠른 선딜(차지 캔슬)·평타 속도.
+  // 재능: 칼날 베기(스킬마다 공격력 +8%, 최대 5스택=+40%, rampAtk) · 흐름 끊기(차지 끊기 추가 불균형, 차지 미모델).
+  chenqianyu: [
+    // 귀궁우(배틀 169%, 불균형 10): 올려치기 띄우기. 자체 방불 빌드.
+    { id: "cqy-b", name: "귀궁우", kind: "battle", fromPos: [1, 2, 3, 4], target: "single-front", power: 1.69, element: "physical", staggerVal: 10, anomaly: "launch", note: "올려치기·띄우기(자체 빌드)" },
+    // 견천하(연계 120%, 쿨 16초): 방어 불능 적일 때. 관통 돌진(경로 모든 적) 띄우기. 게이지 무소모.
+    { id: "cqy-l", name: "견천하", kind: "link", fromPos: [1, 2, 3, 4], target: "row", power: 1.2, element: "physical", staggerVal: 10, cooldown: 3, anomaly: "launch", requires: (t) => !!t && t.physBreak > 0, requiresText: "방어 불능 적", note: "관통 돌진·띄우기" },
+    // 예풍상(궁 671%=36×6+455, 불균형 35, 게이지 70): 7단 단일 누킹. 보스 삭제기(현 최고 단일 계수).
+    { id: "cqy-u", name: "예풍상", kind: "ult", fromPos: [1, 2], target: "single-lowhp", power: 6.71, element: "physical", staggerVal: 35, selfUlt: true, note: "7단 단일 누킹(보스 삭제기)" },
+  ],
+  // 여풍: 물리 파티 올라운더(가드). 넘어뜨리기로 방불 빌드 + 물리취약(딜버프) + 복마 추가타 + 연타 궁 폭딜.
+  // 재능: 돈오(지능+의지→공격력, attack에 baked) · 복마(넘어뜨리기마다 +공격력 100% 물리, selfPhysBonus).
+  lifeng: [
+    // 신체 정화(배틀 38+38+119%=1.95, 불균형 10): 전방 AoE + 넘어뜨리기. 방불 없는 적에게만 물리취약 5%(위키 조건).
+    { id: "lf-b", name: "신체 정화", kind: "battle", fromPos: [1, 2, 3], target: "row", power: 1.95, element: "physical", staggerVal: 10, anomaly: "knockdown", selfPhysBonus: 1.0,
+      apply: (t) => { if (t.physBreak === 0) bumpVuln(t, "physical", 0.05); }, note: "AoE 넘어뜨리기+물리취약(방불 0일 때)+복마" },
+    // 분노의 형상(연계 47+167%=2.14, 불균형 10, 쿨 16초): 물리취약/갑옷파괴 적 강일 시. 20초 연타 획득.
+    { id: "lf-l", name: "분노의 형상", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 2.14, element: "physical", staggerVal: 10, cooldown: 3,
+      requires: (t) => !!t && (vulnFor(t, "physical") > 0 || t.statuses.includes("armor-break")), requiresText: "물리취약/갑옷파괴 적",
+      apply: (_t, self) => { self.multiHit = Math.min(4, self.multiHit + 1); }, note: "연타 획득" },
+    // 움직이지 않는 마음(궁 178+178%=3.56, 불균형 15): 광역 넘어뜨리기 몹몰이. 연타 소모 추가 267%(엔진 MH_ULT). 복마.
+    { id: "lf-u", name: "움직이지 않는 마음", kind: "ult", fromPos: [1, 2, 3], target: "all", power: 3.56, element: "physical", staggerVal: 15, anomaly: "knockdown", selfPhysBonus: 1.0, selfUlt: true, note: "광역 넘어뜨리기 몹몰이 + 연타 소모 폭딜 + 복마" },
+  ],
+  // 관리자: 페이오프(가드의 탈을 쓴 물리 스트라이커). 자체 방불 부여 전무 → 팀이 쌓은 방불을 강타로 터트림.
+  // 봉인(연계, 아군 연계 후 사용)으로 오리지늄 결정 부착 → 강타/궁극/물리이상으로 결정 파괴(추가 물리) + 본질 붕괴(+30%).
+  // 재능: 본질 붕괴(결정 소모 시 공격력 +30%, 엔진) · 현실 정지(결정 부착 적 물리 +20%, 엔진).
+  endministrator: [
+    // 구성 시퀀스(배틀 156%, 불균형 10): 강타. 방불 스택 소모 대량 물리(아츠 강도=공격력 비례, 연타 미적용).
+    { id: "adm-b", name: "구성 시퀀스", kind: "battle", fromPos: [1, 2, 3, 4], target: "row", power: 1.56, element: "physical", staggerVal: 10, anomaly: "crush", note: "강타: 방불 소모 대량 물리(주력기)" },
+    // 봉인 시퀀스(연계 45%, 불균형 10, 결정 파괴 178%): 아군 연계가 피해를 줄 때만 사용. 결정 부착·봉인. 자체 방불 부여 없음.
+    { id: "adm-l", name: "봉인 시퀀스", kind: "link", fromPos: [1, 2, 3, 4], target: "single-front", power: 0.45, element: "physical", staggerVal: 10, crystal: true,
+      requires: (_t, self, s) => !!s.lastLinkAlly && s.lastLinkAlly !== self.id, requiresText: "아군 연계 후",
+      note: "오리지늄 결정 부착·봉인" },
+    // 폭격 시퀀스(궁 356% + 결정 파괴 267%, 불균형 25): 광역 대량 물리 + 결정 파괴 추가 물리(엔진).
+    { id: "adm-u", name: "폭격 시퀀스", kind: "ult", fromPos: [1, 2, 3, 4], target: "all", power: 3.56, element: "physical", staggerVal: 25, selfUlt: true, note: "광역 대량 물리 + 결정 파괴" },
+  ],
+  // 에스텔라: 냉기/가드. 냉기 부착 + 동결→쇄빙(강제 띄우기) + 물리취약 + 방불. 동결 파트너 의존(자체 동결 불가).
+  // 재능: 공감(쇄빙 시 게이지 반환 — 미구현) · 이유 있는 게으름(냉기 면역 — 미구현). 주스탯 의지.
+  estella: [
+    // 서스테인(배틀 150%, 불균형 10): 일직선 냉기 + 냉기 부착.
+    { id: "est-b", name: "서스테인", kind: "battle", fromPos: [1, 2, 3], target: "row", power: 1.5, element: "cryo", attach: "cryo", staggerVal: 10, note: "일직선 냉기 + 냉기 부착" },
+    // 디스토션(연계 동결적 280%, 물취 10%, 쿨 18초): 동결 적일 때. 강제 띄우기(물리) → 동결 적이면 쇄빙(엔진) + 물리취약.
+    { id: "est-l", name: "디스토션", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 2.8, element: "physical", staggerVal: 10, cooldown: 4, anomaly: "launch",
+      requires: (t) => !!t && t.frozen > 0, requiresText: "동결 적",
+      apply: (t) => bumpVuln(t, "physical", 0.1), note: "강제 띄우기 → 쇄빙 + 물리취약" },
+    // 트레몰로(궁 489%, 불균형 15, 게이지 70): 원형 AoE 물리 + (물리취약 적)강제 띄우기.
+    { id: "est-u", name: "트레몰로", kind: "ult", fromPos: [1, 2, 3], target: "all", power: 4.89, element: "physical", staggerVal: 15, anomaly: "launch", selfUlt: true, note: "원형 AoE + 강제 띄우기" },
+  ],
+  // 로시: 물리/열기 하이브리드 가드(★6). 띄우기 방불 + 열기 부착 + 늑대의 발톱(DoT·취약) + 치명타 빌드.
+  // ⚠ 치명타·회복(끓어오르는 피) 미모델 → 치명 버프는 atkBuff 근사. 방불+아츠부착 이중 조건이라 하이브리드 파티 필요.
+  rossi: [
+    // 붉은색의 그림자(배틀 85%, 불균형 5): 돌진 띄우기. 방불 적이면 진주(열기) + 절흔(늑대의 발톱: DoT+물리/열기 취약).
+    { id: "ros-b", name: "붉은색의 그림자", kind: "battle", fromPos: [1, 2, 3], target: "single-front", power: 0.85, element: "physical", staggerVal: 5, anomaly: "launch",
+      // 진주 조건 = "이미 방불 보유"(띄우기 전). 띄우기가 항상 +1이므로 post>1 ⟺ pre≥1.
+      apply: (t, self) => { if (t.physBreak > 1) { t.dot = Math.round(self.attack * (1 + (self.atkBuff || 0)) * 0.3); setTimer(t, "dot", 5); bumpVuln(t, "physical", 0.12); bumpVuln(t, "heat", 0.12); } },
+      note: "돌진 띄우기 + (이미 방불 적)진주·늑대의 발톱(DoT 30%/턴 + 물리/열기 취약 12%)" },
+    // 그림자가 타오르는 순간(연계 67+133%+소모비례 80%/스택, 쿨 15초): 방불+아츠부착 적. 아츠 소모 물리·띄우기 + 치명 버프.
+    { id: "ros-l", name: "그림자가 타오르는 순간", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 2.5, element: "physical", staggerVal: 5, cooldown: 3, anomaly: "launch",
+      requires: (t) => !!t && t.physBreak > 0 && ELEMENTS.some((e) => t.arts[e] > 0), requiresText: "방불+아츠부착 적",
+      apply: (t, self) => { ELEMENTS.forEach((e) => (t.arts[e] = 0)); self.critRate = 0.3; self.critDmg = 1.0; setTimer(self, "critRate", 3); setTimer(self, "critDmg", 3); }, // 아츠 소모 + 치확+25%/치피+50%(15초)
+      note: "아츠 소모 물리·띄우기 + 치명 버프(치확 30%/치피 100%)" },
+    // 기습 '날카로운 발톱'(궁 275+111+333=719%, 불균형 25, 게이지 110): 다단 열기 누킹 + 열기 부착.
+    { id: "ros-u", name: "기습 '날카로운 발톱'", kind: "ult", fromPos: [1, 2], target: "single-front", power: 7.19, element: "heat", attach: "heat", staggerVal: 25, selfUlt: true, note: "다단 열기 단일 누킹 + 열기 부착" },
+  ],
+  // 미브: 물리/양손검 가드. 청파 삼형(단운→추형→개천 3스탠스) + 물리취약 연계 + 방불 부여 궁.
+  // 재능: 냉정(개천이 물취/불균형 적에 ×1.2) · 분노(연계 후 보호막 — 보호막 근사). 자체 방불 부여는 궁뿐 → 팀 방불 보조 필요.
+  mifu: [
+    // 단운(배틀, 게이지 100·환불 50): 포승줄 몹몰이. → 추형(스탠스 1) 전환.
+    { id: "mf-b1", name: "청파 삼형·단운", kind: "battle", fromPos: [1, 2, 3], target: "row", power: 0.67, element: "physical", staggerVal: 5, gaugeRefund: 50, setStanceTo: 1, note: "몹몰이 + 추형 전환(게이지 50 반환)" },
+    // 추형(배틀, 게이지 50, 스탠스 1 요구): 강타. 방불 3+ 소모 시 → 개천(스탠스 2).
+    { id: "mf-b2", name: "청파 삼형·추형", kind: "battle", fromPos: [1, 2, 3], target: "single-front", power: 0.89, element: "physical", staggerVal: 5, gaugeCost: 50, requiresStance: 1, anomaly: "crush", stanceFromCrush: true, note: "강타 + (방불 3+ 소모)개천 전환" },
+    // 개천(배틀, 게이지 50, 스탠스 2 요구): 주력 딜(강타 간주). 냉정: 물취/불균형 적 ×1.2.
+    { id: "mf-b3", name: "청파 삼형·개천", kind: "battle", fromPos: [1, 2, 3], target: "row", power: 4.0, element: "physical", staggerVal: 10, gaugeCost: 50, requiresStance: 2, vsWeak: 0.2, note: "주력 딜(강타 간주) · 냉정 ×1.2" },
+    // 후회 없는 주먹(연계 111%, 쿨 20초): 방불 3+ 적. 물리취약 + 추형 전환.
+    { id: "mf-l", name: "후회 없는 주먹", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 1.11, element: "physical", staggerVal: 10, cooldown: 4, setStanceTo: 1,
+      requires: (t) => !!t && t.physBreak >= 3, requiresText: "방불 3+ 적", apply: (t) => bumpVuln(t, "physical", 0.05), note: "물리취약 + 추형 전환" },
+    // 절심(궁 311%, 게이지 80): 강제 띄우기+넘어뜨리기(방불 부여) + 추형 전환.
+    { id: "mf-u", name: "절심", kind: "ult", fromPos: [1, 2, 3], target: "single-front", power: 3.11, element: "physical", staggerVal: 20, selfUlt: true, anomaly: "knockdown", setStanceTo: 1, note: "방불 부여(넘어뜨리기) + 추형 전환" },
+  ],
+  // 포그라니치니크: 갑옷 파괴(관통). 전선 분쇄로 방불 소모→물리취약.
+  pogranichnik: [
+    { id: "pg-b", name: "전선 분쇄", kind: "battle", fromPos: [1, 2, 3], target: "row", power: 1.5, anomaly: "armor-break", note: "갑옷 파괴(방불 소모→관통)" },
+    { id: "pg-l", name: "보름달 참격", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 2.0,
+      requires: (t) => !!t && (t.physBreak > 0 || t.statuses.includes("armor-break")), requiresText: "방불/갑옷파괴 적", note: "단계별 베기" },
+    { id: "pg-u", name: "방패병 부대, 전진", kind: "ult", fromPos: [1, 2, 3, 4], target: "all", power: 2.0, selfUlt: true, note: "진군 광역타" },
+  ],
+};
+
+type Base = { id: string; name: string; cls: DDClass; hp: number; attack: number; speed: number; ultCost: number; rampAtk?: number };
+const OP_BASE: Record<string, Base> = {
+  chenqianyu: { id: "chenqianyu", name: "진천우", cls: "guard", hp: 2689, attack: 95, speed: 86, ultCost: 70, rampAtk: 0.08 }, // 칼날 베기
+  lifeng: { id: "lifeng", name: "여풍", cls: "guard", hp: 2689, attack: 110, speed: 69, ultCost: 90 },
+  endministrator: { id: "endministrator", name: "관리자", cls: "guard", hp: 2689, attack: 110, speed: 69, ultCost: 80 }, // 위키: 가드(가드의 탈을 쓴 물리 스트라이커)
+  estella: { id: "estella", name: "에스텔라", cls: "guard", hp: 2689, attack: 110, speed: 47, ultCost: 70 }, // 냉기/가드, 주스탯 의지·민첩 낮음
+  rossi: { id: "rossi", name: "로시", cls: "guard", hp: 2689, attack: 110, speed: 90, ultCost: 110 }, // 물리/열기 하이브리드, 민첩 90(최상위), 궁 게이지 110
+  mifu: { id: "mifu", name: "미브", cls: "guard", hp: 2689, attack: 110, speed: 46, ultCost: 80 }, // 물리/양손검 가드(공식). 주스탯 힘·민첩 낮음
+  pogranichnik: { id: "pogranichnik", name: "포그라니치니크", cls: "vanguard", hp: 2700, attack: 130, speed: 47, ultCost: 90 }, // 뱅가드(갑옷 파괴·게이지 회복)
+};
+
+// 매 유닛 신선한 상태 객체(중첩 객체 공유 참조 방지). defense/resist 기본 0 → 밸런스 무변.
+const zero = () => ({ physBreak: 0, stagger: 0, staggered: false, staggerTimer: 0, statuses: [] as DDUnit["statuses"], dot: 0, multiHit: 0, ultCharge: 0, atkBuff: 0, critRate: 0.05, critDmg: 0.5, arts: { heat: 0, electric: 0, cryo: 0, nature: 0 }, frozen: 0, amp: {}, vuln: {}, weakenMul: 1, protection: 0, shield: 0, speedMod: 0, timers: {}, linkCd: 0, defense: 0, resist: { physical: 0, arts: 0 }, stance: 0 });
+
+export function makeAlly(id: string, pos: number): DDUnit {
+  const b = OP_BASE[id];
+  return { ...b, side: "ally", pos, maxHp: b.hp, staggerMax: 0, ...zero() }; // 아군은 불균형 없음
+}
+
+export function alliesPhysical(): DDUnit[] {
+  // 포지션 퍼즐: 포그·여풍은 전열/중열(pos1~3)에서만, 관리자는 후열(pos4) 가능. 진천우는 어디서나(궁극만 pos1~2).
+  return [makeAlly("chenqianyu", 1), makeAlly("lifeng", 2), makeAlly("pogranichnik", 3), makeAlly("endministrator", 4)];
+}
+
+// 적: 간단한 단일 공격 AI(전열 아군 타격). staggerMax = 불균형 게이지 용량.
+export type EnemyDef = { id: string; name: string; hp: number; attack: number; speed: number; staggerMax: number };
+export function makeEnemy(def: EnemyDef, pos: number): DDUnit {
+  return { ...def, side: "enemy", pos, maxHp: def.hp, ultCost: 999, ...zero() };
+}
+export const ENEMY_DEFS: Record<string, EnemyDef> = {
+  mob: { id: "mob", name: "아겔로스 잡병", hp: 1200, attack: 130, speed: 40, staggerMax: 50 },
+  brute: { id: "brute", name: "중장 아겔로스", hp: 2600, attack: 220, speed: 55, staggerMax: 110 },
+  boss: { id: "boss", name: "보스: 티시로슨", hp: 9000, attack: 320, speed: 60, staggerMax: 260 },
+};
