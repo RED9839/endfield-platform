@@ -138,6 +138,40 @@ export const SKILLS: Record<string, DDSkill[]> = {
     // 방패병 부대, 전진(궁 133%, 게이지 90): 몹몰이 진군 + 넘어뜨리기(방불) + 철의 서약 5포인트 부여(물리이상마다 교란/최후의 승부).
     { id: "pg-u", name: "방패병 부대, 전진", kind: "ult", fromPos: [1, 2, 3], target: "all", power: 1.33, element: "physical", staggerVal: 10, anomaly: "knockdown", selfUlt: true, grantsIronOath: 5, note: "진군 몹몰이 + 방불 + 철의 서약 5(추가타 체인)" },
   ],
+  // 엠버: 열기/양손검 디펜더(첫 6성 디펜더, "열기 탈을 쓴 물리 디펜더"). 넘어뜨리기 방불 + 치유·비호·팀 보호막. 느린 공속·수동적 피격 운용.
+  // 재능: 전진의 결의(배틀/연계 시 50% 비호) · 강철에는 강철로(피격 시 공격력 +9%, 최대 3스택). 주스탯 힘·보조 의지(→장비등급, 치유 스케일).
+  ember: [
+    // 진군(배틀 173%, 불균형 10): 전방 부채꼴 열기 + 넘어뜨리기. 전진의 결의(비호). ⚠ 시전 중 피격 추가 불균형 미모델.
+    { id: "emb-b", name: "진군", kind: "battle", fromPos: [1, 2, 3], target: "row", power: 1.73, element: "heat", staggerVal: 10, anomaly: "knockdown", note: "부채꼴 열기 + 넘어뜨리기 + 비호" },
+    // 전선에서의 지원(연계 102%, 쿨 19초≈4턴): 아군 피격 시. 넘어뜨리기 + 최저 체력 아군 치유(300+장비등급×0.7) + 비호.
+    { id: "emb-l", name: "전선에서의 지원", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 1.02, element: "physical", staggerVal: 10, cooldown: 4, anomaly: "knockdown",
+      requires: (_t, _s, st) => !!st.allyHit, requiresText: "아군 피격 후", note: "넘어뜨리기 + 아군 치유 + 비호" },
+    // 다시 불타오르는 맹세(궁 289%, 불균형 25, 게이지 100): 광역 열기 + 팀 전체 보호막(엠버 최대 생명력 18%, 10초).
+    { id: "emb-u", name: "다시 불타오르는 맹세", kind: "ult", fromPos: [1, 2, 3], target: "row", power: 2.89, element: "heat", staggerVal: 25, selfUlt: true, note: "광역 열기 + 팀 보호막(최대 생명력 18%)" },
+  ],
+  // 스노우샤인: 냉기/양손검 디펜더(★5 배포). 저비용 냉기 부착(반격) + 비호 + 치유 + 궁 강제 동결(부착 무관). 쇄빙 보조.
+  // 재능: 극지 생존(저체력 치유 +25%) · 구조 전문가(반격 시 궁 +10). 주스탯 힘·보조 의지(→장비등급, 치유 스케일).
+  snowshine: [
+    // 포화성 방어(배틀 200%, 게이지 100·반환 30): 자신+주변 90% 비호 + 반격 태세. 피격 시 반격 → 냉기 부착(엔진).
+    { id: "snow-b", name: "포화성 방어", kind: "battle", fromPos: [1, 2, 3], target: "self", power: 0, staggerVal: 0, gaugeRefund: 30, note: "90% 비호 + 게이지 반환 + 반격 태세(피격 시 냉기 부착)" },
+    // 극지 구조(연계, 쿨 25초≈5턴): 아군 HP 60% 이하일 때. 대량 치유(96+장비등급×0.22) + 지속 치유(근사). 무피해.
+    { id: "snow-l", name: "극지 구조", kind: "link", fromPos: [1, 2, 3], target: "self", power: 0, staggerVal: 0, cooldown: 5,
+      requires: (_t, _self, st) => st.units.some((u) => u.side === "ally" && u.hp > 0 && u.hp / u.maxHp <= 0.6), requiresText: "아군 HP 60% 이하", note: "아군 대량 치유(저체력 +25%)" },
+    // 살얼음 추위(궁 200%, 불균형 15, 게이지 80): 광역 냉기 + 빙설 지대 강제 동결(냉기 부착 미소모) + 지속 냉기.
+    { id: "snow-u", name: "살얼음 추위", kind: "ult", fromPos: [1, 2, 3], target: "row", power: 2.0, element: "cryo", staggerVal: 15, selfUlt: true, freezeZone: 1, note: "광역 냉기 + 강제 동결(부착 무관, 쇄빙 보조)" },
+  ],
+  // 카치르: 물리/양손검 디펜더(★4 배포). 정석 패링 탱커 — 반격 방어 불능 부여 + 보호막 + 허약/넘어뜨리기 궁. 엠버 하위 호환이나 2디펜더 안정성.
+  // 재능: 강인한 방어선(의지→방어력, 보호막 스케일) · 전장을 꿰뚫는 통찰(궁 마지막 3회 충격파 ×45%). 주스탯 힘·보조 의지.
+  catcher: [
+    // 강력한 저지(배틀 178%, 게이지 100·반환 30): 자신+주변 90% 비호 + 반격 태세. 피격 시 반격 → 방어 불능 1스택(엔진).
+    { id: "cat-b", name: "강력한 저지", kind: "battle", fromPos: [1, 2, 3], target: "self", power: 0, staggerVal: 0, gaugeRefund: 30, note: "90% 비호 + 게이지 반환 + 반격 태세(피격 시 방어 불능)" },
+    // 실시간 억제(연계 25+100%=125%, 쿨 35초≈7턴): 아군 HP 40% 이하/적 차지 시. 물리 + 자신+아군 보호막(360+방어력×2.25).
+    { id: "cat-l", name: "실시간 억제", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 1.25, element: "physical", staggerVal: 10, cooldown: 7,
+      requires: (_t, _self, st) => st.units.some((u) => u.side === "ally" && u.hp > 0 && u.hp / u.maxHp <= 0.4), requiresText: "아군 HP 40% 이하", note: "물리 + 자신+아군 보호막(방어력 비례)" },
+    // 교과서적인 맹공(궁 89+120+178=387% + 충격파 3×45%=135% → 522%, 게이지 80): 다단 물리 + 허약 20% + 광역 넘어뜨리기.
+    { id: "cat-u", name: "교과서적인 맹공", kind: "ult", fromPos: [1, 2, 3], target: "all", power: 5.22, element: "physical", staggerVal: 20, selfUlt: true, anomaly: "knockdown",
+      apply: (t) => applyBuff(t, "weaken", 0.2), note: "다단 물리 + 허약 + 광역 넘어뜨리기(전장을 꿰뚫는 통찰 충격파 포함)" },
+  ],
 };
 
 type Base = { id: string; name: string; cls: DDClass; hp: number; attack: number; speed: number; ultCost: number; rampAtk?: number; artsImmune?: number };
@@ -153,6 +187,9 @@ const OP_BASE: Record<string, Base> = {
   akekuri: { id: "akekuri", name: "아케쿠리", cls: "vanguard", hp: 2689, attack: 110, speed: 70, ultCost: 120 }, // 열기 뱅가드★4 범용. 무딜 궁(게이지 120), 주스탯 민첩·보조 지능
   camu: { id: "camu", name: "카뮤", cls: "vanguard", hp: 2689, attack: 110, speed: 80, ultCost: 130 }, // 열기 뱅가드★6 한정. 만능 유틸+회복, 민첩 80·궁 130
   pogranichnik: { id: "pogranichnik", name: "포그라니치니크", cls: "vanguard", hp: 2689, attack: 130, speed: 55, ultCost: 90 }, // 뱅가드(갑옷 파괴·게이지 회복). 주스탯 의지·민첩 55
+  ember: { id: "ember", name: "엠버", cls: "defender", hp: 2689, attack: 110, speed: 40, ultCost: 100 }, // 열기 디펜더★6(첫 6성). 느린 공속(speed 40 최하위), 주스탯 힘·보조 의지
+  snowshine: { id: "snowshine", name: "스노우샤인", cls: "defender", hp: 2689, attack: 110, speed: 44, ultCost: 80 }, // 냉기 디펜더★5 배포. 반격 냉기 부착·궁 강제 동결. 저비용·궁 80, 주스탯 힘·보조 의지
+  catcher: { id: "catcher", name: "카치르", cls: "defender", hp: 2689, attack: 110, speed: 42, ultCost: 80 }, // 물리 디펜더★4 배포. 반격 방어 불능·보호막·허약/넘어뜨리기 궁. 주스탯 힘·보조 의지
 };
 
 // 매 유닛 신선한 상태 객체(중첩 객체 공유 참조 방지). defense/resist 기본 0 → 밸런스 무변.

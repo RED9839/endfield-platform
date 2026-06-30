@@ -84,6 +84,7 @@ export type DDSkill = {
   shockBonus?: { power: number; gauge: number }; // 감전 적에 추가 전기타 + 게이지(아크라이트 질풍 섬광)
   forceShock?: boolean; // 강제 감전 부여(아크라이트 궁: 전기 부착 소모→감전)
   forceFreeze?: boolean; // 냉기 부착 적 → 냉기 소모 + 강제 동결 + 게이지(알레쉬 비정규 루어)
+  freezeZone?: number; // 빙설 지대: 부착 무관 직접 동결 N스택 + 지속 냉기(스노우샤인 살얼음 추위)
   lure?: { power: number; gauge: number }; // 진귀한 린수(알레쉬 연계): 확률로 강화 피해 + 게이지
   grantsMultiHit?: number; // 사용 후 자신에게 연타 부여(아케쿠리 궁 몰입의 시간 — 연타 소모 후 부여)
   requiresStance?: number; // 미브 스탠스 요구(추형≥1, 개천≥2)
@@ -333,7 +334,7 @@ export function baseDamage(skill: DDSkill, self: DDUnit): number {
   return dmg;
 }
 
-export type DDState = { units: DDUnit[]; round: number; log: string[]; lastLinkAlly?: string; skillGauge: number; maxGauge: number; anomalyConsumed?: boolean };
+export type DDState = { units: DDUnit[]; round: number; log: string[]; lastLinkAlly?: string; skillGauge: number; maxGauge: number; anomalyConsumed?: boolean; allyHit?: boolean };
 
 export const living = (s: DDState, side?: "ally" | "enemy") =>
   s.units.filter((u) => u.hp > 0 && (!side || u.side === side));
@@ -435,6 +436,11 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
       self.ultCharge = Math.min(self.ultCost, self.ultCharge + 8); // 급속 냉동 보존 기술(자기 동결)
       log.push(`  → 강제 동결! 냉기 ${n}스택 소모 + 게이지 + 궁 에너지`);
     }
+    if (skill.freezeZone && t.hp > 0) { // 살얼음 추위(스노우샤인): 부착 무관 직접 동결 + 빙설 지대 지속 냉기
+      t.frozen = Math.max(t.frozen, skill.freezeZone); add(t, "stun"); setTimer(t, "frozen", DUR_FROZEN);
+      t.dot = Math.round(self.attack * eb(self) * 0.29); setTimer(t, "dot", DUR_DOT);
+      log.push(`  → 빙설 지대! 강제 동결(${skill.freezeZone}) + 지속 냉기 ${t.dot}/라운드`);
+    }
     if (skill.lure) {
       const chance = 0.1 + Math.min(0.3, (self.gearGrade / 10) * 0.005); // 낚시의 달인(지능→장비등급 치환)
       if (Math.random() < chance) { raw += self.attack * eb(self) * (skill.lure.power - skill.power); s.skillGauge = Math.min(s.maxGauge, s.skillGauge + skill.lure.gauge); log.push(`  → 진귀한 린수! 강화 피해 + 게이지`); }
@@ -463,6 +469,64 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
     const final = applyDamage(t, dmg); // 보호막(보호) 흡수 → 체력
     log.push(`  ${t.name} -${final} (HP ${t.hp}/${t.maxHp})`);
     if (t.hp === 0) log.push(`  ✗ ${t.name} 격파!`);
+    if (t.side === "ally" && final > 0) { // 엠버 연계(전선에서의 지원) 피격 트리거 윈도우
+      s.allyHit = true;
+      // 강철에는 강철로(엠버): 피해받을 때 공격력 +9%, 최대 3스택(=+27%), 7초≈2턴
+      if (t.id === "ember") { t.atkBuff = Math.min(0.27, (t.atkBuff || 0) + 0.09); setTimer(t, "atkBuff", 2); }
+      // 패링(스노우샤인·카치르): 방패 든 동안 피격 시 반격(공격자=self). 디펜더별 반격 효과 상이.
+      if (self.side === "enemy") {
+        const snow = s.units.find((u) => u.id === "snowshine" && u.hp > 0 && (u.timers.guard || 0) > 0);
+        if (snow) { // 포화성 방어: 냉기 부착 + 궁 에너지(구조 전문가)
+          log.push(`  → 스노우샤인 반격(패링)!`);
+          applyAttach(self, "cryo", snow, log);
+          snow.ultCharge = Math.min(snow.ultCost, snow.ultCharge + 10);
+        }
+        const cat = s.units.find((u) => u.id === "catcher" && u.hp > 0 && (u.timers.guard || 0) > 0);
+        if (cat) { // 강력한 저지: 방어 불능 1스택 부여
+          self.physBreak = Math.min(MAX_BREAK, self.physBreak + 1); setTimer(self, "physBreak", DUR_BREAK);
+          log.push(`  → 카치르 반격(패링)! 방어 불능 1스택 (방불 ${self.physBreak})`);
+        }
+      }
+    }
+  }
+  // 엠버(디펜더): 전진의 결의(배틀·연계 시 50% 비호) · 전선에서의 지원 치유 · 다시 불타오르는 맹세 팀 보호막
+  if (self.id === "ember") {
+    if (skill.kind === "battle" || skill.kind === "link") applyBuff(self, "protection", 0.5, undefined, 1); // 전진의 결의(시전 중 비호)
+    if (skill.kind === "link") { // 전선에서의 지원: 최저 체력% 아군 치유(기초 300 + 의지→장비등급 ×0.7)
+      const hurt = living(s, "ally").filter((a) => a.hp < a.maxHp);
+      const tgt = hurt.length ? hurt.reduce((lo, a) => (a.hp / a.maxHp < lo.hp / lo.maxHp ? a : lo), hurt[0]) : self;
+      healUnit(tgt, 300 + self.gearGrade * 0.7, s, log);
+    }
+    if (skill.kind === "ult") { // 다시 불타오르는 맹세: 팀 전체 보호막(엠버 최대 생명력 18%, 10초≈2턴)
+      const sh = Math.round(self.maxHp * 0.18);
+      for (const a of living(s, "ally")) applyBuff(a, "shield", sh, undefined, 2);
+      log.push(`  → 팀 보호막 +${sh} (최대 생명력 18%)`);
+    }
+  }
+  // 스노우샤인(디펜더): 포화성 방어(비호+반격 태세) · 극지 구조(저체력 치유, 의지→장비등급)
+  if (self.id === "snowshine") {
+    if (skill.kind === "battle") { // 포화성 방어: 자신+주변 90% 비호 + 반격 태세(이번 라운드 피격 시 냉기 부착)
+      for (const a of living(s, "ally")) applyBuff(a, "protection", 0.9, undefined, 1);
+      setTimer(self, "guard", 1);
+      log.push(`  → 포화성 방어! 90% 비호 + 반격 태세`);
+    }
+    if (skill.kind === "link") { // 극지 구조: 아군 대량 치유(96+장비등급×0.22), 극지 생존(55% 이하 +25%)
+      const base = 96 + self.gearGrade * 0.22;
+      for (const a of living(s, "ally")) healUnit(a, base * (a.hp / a.maxHp <= 0.55 ? 1.25 : 1), s, log);
+    }
+  }
+  // 카치르(디펜더): 강력한 저지(비호+반격 방불 태세) · 실시간 억제(보호막, 방어력→장비등급)
+  if (self.id === "catcher") {
+    if (skill.kind === "battle") { // 강력한 저지: 자신+주변 90% 비호 + 반격 태세(피격 시 방어 불능)
+      for (const a of living(s, "ally")) applyBuff(a, "protection", 0.9, undefined, 1);
+      setTimer(self, "guard", 1);
+      log.push(`  → 강력한 저지! 90% 비호 + 반격 태세`);
+    }
+    if (skill.kind === "link") { // 실시간 억제: 자신+아군 보호막(360 + 강인한 방어선 방어력→장비등급 ×2.25)
+      const sh = Math.round(360 + self.gearGrade * 2.25);
+      for (const a of living(s, "ally")) applyBuff(a, "shield", sh, undefined, 2);
+      log.push(`  → 실시간 억제 보호막 +${sh} (방어력 비례)`);
+    }
   }
   if (skill.kind === "attack" && self.side === "ally") { // 강력한 일격/처형 → 스킬 게이지 회복
     s.skillGauge = Math.min(s.maxGauge, s.skillGauge + (executed ? EXEC_RECOVER : BASIC_RECOVER));
@@ -500,6 +564,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
 export function startRound(s: DDState): void {
   s.round++;
   s.anomalyConsumed = false; // 아츠 이상/결정 소모 윈도우 리셋(알레쉬 연계)
+  s.allyHit = false; // 피격 트리거 윈도우 리셋(엠버 전선에서의 지원)
   s.skillGauge = Math.min(s.maxGauge, s.skillGauge + GAUGE_REGEN); // 스킬 게이지 자연 회복(파티 공유)
   for (const u of living(s)) {
     if (u.dot > 0) { u.hp = Math.max(0, u.hp - u.dot); s.log.push(`${u.name} 지속 피해 -${u.dot}`); }

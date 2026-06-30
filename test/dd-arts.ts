@@ -193,3 +193,68 @@ console.log("\n══ 카뮤: 핏빛 날개 + 죄를 쫓는 자(회복+연타) +
   act(s, cam, link); // 죄를 쫓는 자: 날개 적 → 회복 + 연타 + 혈류 소생
   console.log(`  영혼의 가시(날개 적): 회복 ${hp0}→${cam.hp}(+78) · 연타 ${mh0}→${cam.multiHit} · 혈류소생 열기증폭 ${(cam.amp.heat ?? 0) * 100}%`);
 }
+
+console.log("\n══ 엠버: 피격 트리거 연계 + 치유/비호 + 팀 보호막(디펜더) ══");
+{
+  const emb = makeAlly("ember", 1); emb.hp = 1500; // 부상 상태(maxHp 2689)
+  const ally = makeAlly("chenqianyu", 2); ally.hp = 1000; // 최저 체력% 아군(치유 대상)
+  emb.ultCharge = emb.ultCost;
+  const enemy = unit({ id: "e", name: "적", side: "enemy", maxHp: 1e7, hp: 1e7, staggerMax: 999, attack: 400 });
+  const s: DDState = { units: [emb, ally, enemy], round: 1, log: [], skillGauge: 9999, maxGauge: 99999 };
+  const battle = SKILLS.ember.find((k) => k.id === "emb-b")!;
+  const link = SKILLS.ember.find((k) => k.id === "emb-l")!;
+  const ult = SKILLS.ember.find((k) => k.id === "emb-u")!;
+  act(s, emb, battle); // 진군: 넘어뜨리기 + 전진의 결의(비호 50%)
+  console.log(`  진군: 방불 ${enemy.physBreak} · 엠버 비호 ${emb.protection} (기대 0.5 전진의 결의)`);
+  console.log(`  연계 사용가능(피격 전): ${usable(s, emb, link)} (기대 false)`);
+  act(s, enemy, atk("적 공격", "physical", undefined)); // 엠버 피격 → allyHit + 강철에는 강철로
+  console.log(`  피격 후: allyHit ${s.allyHit} · 강철에는 강철로 공격력버프 ${emb.atkBuff} (기대 0.09)`);
+  console.log(`  연계 사용가능(피격 후): ${usable(s, emb, link)} (기대 true)`);
+  const a0 = ally.hp; act(s, emb, link); // 전선에서의 지원: 최저 체력% 아군 치유(300+60×0.7=342)
+  console.log(`  전선에서의 지원: 진천우 회복 ${a0}→${ally.hp}(+342 기대) · 넘어뜨리기 방불 ${enemy.physBreak}`);
+  act(s, emb, ult); // 다시 불타오르는 맹세: 팀 보호막(2689×0.18=484)
+  console.log(`  궁 팀 보호막: 엠버 ${emb.shield} · 진천우 ${ally.shield} (기대 484 = 최대 생명력 18%)`);
+}
+
+console.log("\n══ 스노우샤인: 반격 냉기 부착 + 저체력 치유 + 궁 강제 동결(쇄빙 보조) ══");
+{
+  const snow = makeAlly("snowshine", 1); snow.hp = 2689;
+  const ally = makeAlly("estella", 2); ally.hp = 1300; // HP 48%(치유 대상)
+  snow.ultCharge = snow.ultCost;
+  const enemy = unit({ id: "e", name: "적", side: "enemy", maxHp: 1e7, hp: 1e7, staggerMax: 999, attack: 300 });
+  const s: DDState = { units: [snow, ally, enemy], round: 1, log: [], skillGauge: 100, maxGauge: 99999 };
+  const battle = SKILLS.snowshine.find((k) => k.id === "snow-b")!;
+  const link = SKILLS.snowshine.find((k) => k.id === "snow-l")!;
+  const ult = SKILLS.snowshine.find((k) => k.id === "snow-u")!;
+  const g0 = s.skillGauge; act(s, snow, battle); // 포화성 방어: 비호 0.9 + 게이지 반환 + 반격 태세
+  console.log(`  포화성 방어: 비호 ${snow.protection} · 게이지 ${g0}→${s.skillGauge} (-100+30) · 반격태세 ${(snow.timers.guard || 0) > 0}`);
+  const uc0 = snow.ultCharge = 0; act(s, enemy, atk("적 공격", "physical", undefined)); // 스노우샤인 피격 → 반격
+  console.log(`  반격(피격): 적 냉기 부착 ${enemy.arts.cryo} (기대 1) · 궁 ${uc0}→${snow.ultCharge} (구조 전문가 +10)`);
+  console.log(`  연계 사용가능(저체력 아군 존재): ${usable(s, snow, link)} (기대 true, 에스텔라 48%)`);
+  const a0 = ally.hp; act(s, snow, link); // 극지 구조: 96+60×0.22=109, 55% 이하 ×1.25=136
+  console.log(`  극지 구조: 에스텔라 회복 ${a0}→${ally.hp} (기대 +136 = 109×1.25 극지 생존)`);
+  snow.ultCharge = snow.ultCost; act(s, snow, ult); // 살얼음 추위: 강제 동결(부착 무관)
+  console.log(`  살얼음 추위: 적 동결 ${enemy.frozen} (기대 1, 냉기 부착 미소모) · 잔여 냉기부착 ${enemy.arts.cryo}`);
+  act(s, snow, LAUNCH); // 동결 적 띄우기(물리 이상) → 쇄빙
+  console.log(`  쇄빙 확인: 동결 ${enemy.frozen} (기대 0, 쇄빙 소모)`);
+}
+
+console.log("\n══ 카치르: 반격 방어 불능 + 보호막 + 허약/넘어뜨리기 궁(디펜더) ══");
+{
+  const cat = makeAlly("catcher", 1); cat.hp = 1000; // HP 37%(연계 게이트)
+  cat.ultCharge = cat.ultCost;
+  const enemy = unit({ id: "e", name: "적", side: "enemy", maxHp: 1e7, hp: 1e7, staggerMax: 999, attack: 300 });
+  const s: DDState = { units: [cat, enemy], round: 1, log: [], skillGauge: 100, maxGauge: 99999 };
+  const battle = SKILLS.catcher.find((k) => k.id === "cat-b")!;
+  const link = SKILLS.catcher.find((k) => k.id === "cat-l")!;
+  const ult = SKILLS.catcher.find((k) => k.id === "cat-u")!;
+  const g0 = s.skillGauge; act(s, cat, battle); // 강력한 저지: 비호 0.9 + 반환 + 반격 태세
+  console.log(`  강력한 저지: 비호 ${cat.protection} · 게이지 ${g0}→${s.skillGauge} (-100+30) · 반격태세 ${(cat.timers.guard || 0) > 0}`);
+  act(s, enemy, atk("적 공격", "physical", undefined)); // 카치르 피격 → 반격 방불
+  console.log(`  반격(피격): 적 방어 불능 ${enemy.physBreak} (기대 1)`);
+  console.log(`  연계 사용가능(아군 HP 40% 이하): ${usable(s, cat, link)} (기대 true, 카치르 37%)`);
+  act(s, cat, link); // 실시간 억제: 보호막 360+60×2.25=495
+  console.log(`  실시간 억제: 카치르 보호막 ${cat.shield} (기대 495 = 360+장비등급×2.25)`);
+  act(s, cat, ult); // 교과서적인 맹공: 허약 20% + 넘어뜨리기
+  console.log(`  교과서적인 맹공: 적 허약 ${enemy.weakenMul.toFixed(2)} (기대 0.80) · 방불 ${enemy.physBreak} (기대 2, 넘어뜨리기)`);
+}
