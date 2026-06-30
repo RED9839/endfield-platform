@@ -138,14 +138,14 @@ function expire(u: DDUnit, key: string): void {
   else if (key === "critDmg") u.critDmg = BASE_CRIT_DMG;
   else if (key === "stance") u.stance = 0;
   else if (key === "ironOath") u.ironOath = 0;
-  else if (key === "dot") u.dot = 0;
+  else if (key === "dot") { u.dot = 0; rm(u, "combustion"); }
   else if (key === "frozen") { u.frozen = 0; rm(u, "stun"); }
   else if (key === "weaken") u.weakenMul = 1;
   else if (key === "protection") u.protection = 0;
   else if (key === "shield") u.shield = 0;
   else if (key === "speedMod") u.speedMod = 0;
   else if (key.startsWith("arts:")) u.arts[key.slice(5) as Element] = 0;
-  else if (key.startsWith("vuln:")) delete u.vuln[key.slice(5) as DmgKey];
+  else if (key.startsWith("vuln:")) { delete u.vuln[key.slice(5) as DmgKey]; if (key === "vuln:all") rm(u, "corrosion"); }
   else if (key.startsWith("amp:")) delete u.amp[key.slice(4) as DmgKey];
 }
 
@@ -242,6 +242,7 @@ export function applyAttach(target: DDUnit, el: Element, self: DDUnit, log: stri
     if (el === "heat") { // 연소
       target.dot = Math.round(self.attack * buff * BURN_DOT[level - 1]);
       setTimer(target, "dot", DUR_DOT);
+      add(target, "combustion"); // 아츠 이상 마커(질베르타 연계 게이트)
       log.push(`  → 연소! ${ANOM[level - 1] * 100}% 열기 + 지속피해 ${target.dot}/라운드`);
       return self.attack * buff * ANOM[level - 1];
     }
@@ -256,9 +257,10 @@ export function applyAttach(target: DDUnit, el: Element, self: DDUnit, log: stri
       log.push(`  → 동결! 130% 냉기 + 빙결(쇄빙 대기, ${level}스택)`);
       return self.attack * buff * 1.3;
     }
-    // nature: 부식 — 모든 속성 저항 감소(물리 포함) = vuln.all 누적(상한 0.24)
+    // nature: 부식 — 모든 속성 저항 감소(물리 포함) = vuln.all 누적(상한 0.24) + 부식 상태(아델리아 소모 마커)
     target.vuln.all = Math.min(0.24, (target.vuln.all || 0) + CORR_SHRED[level - 1]);
     setTimer(target, "vuln:all", DUR_VULN);
+    add(target, "corrosion");
     log.push(`  → 부식! ${ANOM[level - 1] * 100}% 자연 + 전 속성 저항 감소`);
     return self.attack * buff * ANOM[level - 1];
   }
@@ -371,7 +373,13 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
     if (skill.kind === "battle") {
       s.skillGauge = Math.max(0, s.skillGauge - (skill.gaugeCost ?? GAUGE_COST)); // 배틀 소모(미브 추형/개천 50)
       if (skill.gaugeRefund) s.skillGauge = Math.min(s.maxGauge, s.skillGauge + skill.gaugeRefund); // 미브 단운 50 반환
-      for (const u of living(s, "ally")) u.ultCharge = Math.min(u.ultCost, u.ultCharge + ULT_BATTLE); // 배틀 → 아군 전체 +6.5
+      // 배틀 → 아군 전체 궁 충전(+6.5). 질베르타 전달자의 노래: 가드/캐스터/서포터 궁충 ×1.07
+      const gil = s.units.some((u) => u.id === "gilberta" && u.hp > 0);
+      for (const u of living(s, "ally")) {
+        let g = ULT_BATTLE;
+        if (gil && (u.cls === "guard" || u.cls === "caster" || u.cls === "supporter")) g *= 1.07;
+        u.ultCharge = Math.min(u.ultCost, u.ultCharge + g);
+      }
     } else if (skill.kind === "link") {
       self.ultCharge = Math.min(self.ultCost, self.ultCharge + ULT_LINK); // 연계 → 시전자 +10
       s.lastLinkAlly = self.id; // 팀 연계 윈도우(관리자 봉인 게이트)
@@ -528,6 +536,60 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
       log.push(`  → 실시간 억제 보호막 +${sh} (방어력 비례)`);
     }
   }
+  // 아델리아(서포터): 친구의 그림자 — 배틀/궁 명중 시 돌리 그림자 → 최저 체력% 아군 치유(의지→장비등급)
+  if (self.id === "ardelia" && (skill.kind === "battle" || skill.kind === "ult")) {
+    const heal = (90 + self.gearGrade * 0.75) * (skill.kind === "ult" ? 0.5 : 1); // 궁은 확률 생성 근사(절반)
+    const hurt = living(s, "ally").filter((a) => a.hp < a.maxHp);
+    const tgt = hurt.length ? hurt.reduce((lo, a) => (a.hp / a.maxHp < lo.hp / lo.maxHp ? a : lo), hurt[0]) : self;
+    healUnit(tgt, heal, s, log);
+  }
+  // 자이히(서포터): 디도스(치유 / 오버힐 시 아츠 증폭) · 스택 오버플로(팀 냉기/자연 증폭, 지능→장비등급)
+  if (self.id === "xaihi") {
+    if (skill.kind === "battle") { // 디도스: 지원 결정체 → 메인 치유, 오버힐이면 아츠 증폭. 연계 활성 윈도우.
+      setTimer(self, "didos", 3);
+      const hurt = living(s, "ally").filter((a) => a.hp < a.maxHp);
+      if (hurt.length) {
+        const tgt = hurt.reduce((lo, a) => (a.hp / a.maxHp < lo.hp / lo.maxHp ? a : lo), hurt[0]);
+        healUnit(tgt, 144 + self.gearGrade * 0.34, s, log); // 기초 144 + 의지→장비등급
+      } else { // 오버힐 → 최전열 아군(메인)에 아츠 증폭 9%(25초≈5턴)
+        const main = living(s, "ally").filter((a) => a.id !== self.id).sort((a, b) => a.pos - b.pos)[0] || self;
+        main.amp.arts = (main.amp.arts || 0) + 0.09; setTimer(main, "amp:arts", 5);
+        log.push(`  → 디도스 오버힐 → ${main.name} 아츠 증폭 +9%`);
+      }
+    }
+    if (skill.kind === "ult") { // 스택 오버플로: 팀 냉기/자연 증폭(12초≈3턴, 지능→장비등급 비례, 상한 30%)
+      const amp = 0.11 + Math.min(0.3, self.gearGrade * 0.003);
+      for (const a of living(s, "ally")) {
+        a.amp.cryo = (a.amp.cryo || 0) + amp; setTimer(a, "amp:cryo", 3);
+        a.amp.nature = (a.amp.nature || 0) + amp; setTimer(a, "amp:nature", 3);
+      }
+      log.push(`  → 스택 오버플로! 팀 냉기/자연 증폭 +${(amp * 100).toFixed(0)}%`);
+    }
+  }
+  // 안탈(서포터): 오버클럭 타임(팀 전기/열기 증폭) · 자기 폭풍 실험장(포커싱 적 부착/물리 이상 갱신)
+  if (self.id === "antal") {
+    if (skill.kind === "ult") { // 오버클럭 타임: 팀 전기/열기 증폭(12초≈3턴)
+      for (const a of living(s, "ally")) {
+        a.amp.electric = (a.amp.electric || 0) + 0.08; setTimer(a, "amp:electric", 3);
+        a.amp.heat = (a.amp.heat || 0) + 0.08; setTimer(a, "amp:heat", 3);
+      }
+      log.push(`  → 오버클럭 타임! 팀 전기/열기 증폭 +8%`);
+    }
+    if (skill.kind === "link") { // 자기 폭풍 실험장: 포커싱 적 아츠 부착/물리 이상 재부여(지속 갱신)
+      const t = pickTargets(s, self, skill)[0];
+      if (t) {
+        ELEMENTS.forEach((e) => { if (t.arts[e] > 0) setTimer(t, "arts:" + e, DUR_ATTACH); });
+        if (t.physBreak > 0) setTimer(t, "physBreak", DUR_BREAK);
+        log.push(`  → 안탈: 아츠 부착/물리 이상 갱신(재부여)`);
+      }
+    }
+  }
+  // 질베르타(서포터): 뒤늦은 편지 — 배틀 마지막/연계가 2명 이상 명중 시 최저 체력% 아군 치유(지능→장비등급)
+  if (self.id === "gilberta" && (skill.kind === "battle" || skill.kind === "link") && pickTargets(s, self, skill).length >= 2) {
+    const hurt = living(s, "ally").filter((a) => a.hp < a.maxHp);
+    const tgt = hurt.length ? hurt.reduce((lo, a) => (a.hp / a.maxHp < lo.hp / lo.maxHp ? a : lo), hurt[0]) : self;
+    healUnit(tgt, 108 + self.gearGrade * 0.9, s, log);
+  }
   if (skill.kind === "attack" && self.side === "ally") { // 강력한 일격/처형 → 스킬 게이지 회복
     s.skillGauge = Math.min(s.maxGauge, s.skillGauge + (executed ? EXEC_RECOVER : BASIC_RECOVER));
   }
@@ -555,6 +617,12 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
         while (self.gaugeRecovered >= 80) { self.gaugeRecovered -= 80; self.atkBuff = Math.min(0.24, (self.atkBuff || 0) + 0.08); setTimer(self, "atkBuff", 4); }
       }
     }
+  }
+  // 안탈 즉흥적인 천재성: 증폭 상태 아군이 스킬 피해를 줄 때 회복(30초≈6턴 1회 제한). 힘→장비등급.
+  if (self.side === "ally" && (skill.kind === "battle" || skill.kind === "link" || skill.kind === "ult")) {
+    const antal = s.units.find((u) => u.id === "antal" && u.hp > 0);
+    const amped = ampFor(self, "physical") > 0 || ELEMENTS.some((e) => ampFor(self, e) > 0);
+    if (antal && amped && (self.timers.antalHeal || 0) <= 0) { healUnit(self, 108 + antal.gearGrade * 0.9, s, log); setTimer(self, "antalHeal", 6); }
   }
   if (self.multiHit > 0 && (skill.kind === "battle" || skill.kind === "ult")) self.multiHit = 0; // 연타 소모
   if (skill.grantsMultiHit) self.multiHit = Math.min(4, self.multiHit + skill.grantsMultiHit); // 몰입의 시간(소모 후 부여)

@@ -172,6 +172,56 @@ export const SKILLS: Record<string, DDSkill[]> = {
     { id: "cat-u", name: "교과서적인 맹공", kind: "ult", fromPos: [1, 2, 3], target: "all", power: 5.22, element: "physical", staggerVal: 20, selfUlt: true, anomaly: "knockdown",
       apply: (t) => applyBuff(t, "weaken", 0.2), note: "다단 물리 + 허약 + 광역 넘어뜨리기(전장을 꿰뚫는 통찰 충격파 포함)" },
   ],
+  // 아델리아: 자연/아츠 유닛 서포터(★6 배포, 만능). 부식 셋업→소모로 물리+아츠 취약(30초) + 돌리 그림자 회복. 아츠 부착 없어 부착 파티와 무충돌.
+  // 재능: 친구의 그림자(배틀/궁 명중 시 최저 체력 아군 회복) · 마운틴 서퍼(부식 소모 시 추가 배틀 1회, 근사). 주스탯 지능·보조 의지.
+  ardelia: [
+    // 질주하는 돌리(배틀 142%): 자연 돌진. 부식 적이면 소모 → 물리+아츠 취약 12%(30초≈6턴). 친구의 그림자(명중 시 회복).
+    { id: "ard-b", name: "질주하는 돌리", kind: "battle", fromPos: [1, 2, 3], target: "single-front", power: 1.42, element: "nature", staggerVal: 10,
+      apply: (t) => { if (t.statuses.includes("corrosion")) { t.statuses = t.statuses.filter((x) => x !== "corrosion"); delete t.vuln.all; bumpVuln(t, "physical", 0.12, 6); bumpVuln(t, "arts", 0.12, 6); } }, note: "자연 + 부식 소모 → 물리/아츠 취약 + 회복(친구의 그림자)" },
+    // 화산 분화(연계 45+111%=156%, 쿨 18초≈4턴): 방불·아츠부착 없는 적에 강일 후. 자연 + 주변 강제 부식 7초(취약 셋업).
+    { id: "ard-l", name: "화산 분화", kind: "link", fromPos: [1, 2, 3], target: "all", power: 1.56, element: "nature", staggerVal: 10, cooldown: 4,
+      requires: (t) => !!t && t.physBreak === 0 && ELEMENTS.every((e) => t.arts[e] === 0), requiresText: "방불·아츠부착 없는 적",
+      apply: (t) => { bumpVuln(t, "all", 0.12, 3); if (!t.statuses.includes("corrosion")) t.statuses.push("corrosion"); }, note: "자연 + 강제 부식(취약 셋업)" },
+    // 복슬복슬 파티(궁 73%×3≈219%, 게이지 90): 광역 다단 자연 + 확률 회복(친구의 그림자).
+    { id: "ard-u", name: "복슬복슬 파티", kind: "ult", fromPos: [1, 2, 3], target: "all", power: 2.19, element: "nature", staggerVal: 2, selfUlt: true, note: "광역 다단 자연 + 회복" },
+  ],
+  // 자이히: 냉기/아츠 유닛 서포터(★5, "냉기 파티의 꽃·7성"). 퓨어 힐 + 오버힐 아츠 증폭 + 냉기/자연 증폭궁 + 냉기 부착 연계. 강일 트리거(메인 의존).
+  // 재능: 가동 프로세스(연계가 냉기/동결 적 명중 시 냉기 취약) · 프리징 프로토콜(궁이 팀 냉기부착/동결 정화 — 휴면). 주스탯 의지·보조 지능.
+  xaihi: [
+    // 디도스(배틀, 게이지 100): 지원 결정체 — 메인 치유(144+의지×0.34). 오버힐 시 아츠 증폭 9%(25초). 연계 활성(엔진 id훅).
+    { id: "xai-b", name: "디도스", kind: "battle", fromPos: [1, 2, 3], target: "self", power: 0, staggerVal: 0, note: "치유 + 오버힐 시 아츠 증폭 + 연계 활성" },
+    // 스트레스 테스트(연계 200%, 쿨 8초≈2턴): 디도스 활성 시. 냉기 + 냉기 부착 + 가동 프로세스(냉기/동결 적 → 냉기 취약 10%).
+    { id: "xai-l", name: "스트레스 테스트", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 2.0, element: "cryo", attach: "cryo", staggerVal: 10, cooldown: 2,
+      requires: (_t, self) => (self.timers.didos || 0) > 0, requiresText: "디도스 활성",
+      apply: (t) => { if (t.arts.cryo > 0 || t.frozen > 0) bumpVuln(t, "cryo", 0.1, 1); }, note: "냉기 부착 + 가동 프로세스(냉기 취약)" },
+    // 스택 오버플로(궁, 게이지 80): 팀 전체 냉기 증폭 + 자연 증폭(12초, 지능→장비등급 비례, 상한 30%).
+    { id: "xai-u", name: "스택 오버플로", kind: "ult", fromPos: [1, 2, 3], target: "self", power: 0, staggerVal: 0, selfUlt: true, note: "팀 냉기/자연 증폭" },
+  ],
+  // 안탈: 전기/아츠 유닛 서포터(★4 범용, 초고성능). 전기+열기 취약(60초 단일 장지속) + 전기/열기 증폭궁 + 증폭 팀원 회복. 열기/전기팟 필수.
+  // 재능: 즉흥적인 천재성(증폭 아군 스킬 피해 시 회복) · 무의식(30% 물리 면역 — 휴면). 주스탯 지능·보조 힘.
+  antal: [
+    // 지정 연구 대상(배틀 89%): 전기 단일 포커싱 + 전기 취약 + 열기 취약(60초≈12턴 장지속). 단일 1명 한정.
+    { id: "ant-b", name: "지정 연구 대상", kind: "battle", fromPos: [1, 2, 3], target: "single-front", power: 0.89, element: "electric", staggerVal: 10,
+      apply: (t) => { bumpVuln(t, "electric", 0.05, 12); bumpVuln(t, "heat", 0.05, 12); }, note: "전기/열기 취약(60초 장지속)" },
+    // 자기 폭풍 실험장(연계 151%, 쿨 25초≈5턴): 포커싱 적 물리이상/아츠부착 시. 전기 + 이상/부착 재부여(지속 갱신, 엔진 id훅).
+    { id: "ant-l", name: "자기 폭풍 실험장", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 1.51, element: "electric", staggerVal: 10, cooldown: 5,
+      requires: (t) => !!t && (t.physBreak > 0 || ELEMENTS.some((e) => t.arts[e] > 0)), requiresText: "물리이상/아츠부착 적", note: "전기 + 아츠부착/물리이상 갱신(폭발 유닛 시너지)" },
+    // 오버클럭 타임(궁, 게이지 100): 팀 전체 전기 증폭 + 열기 증폭(12초). 즉발·저비용.
+    { id: "ant-u", name: "오버클럭 타임", kind: "ult", fromPos: [1, 2, 3], target: "self", power: 0, staggerVal: 0, selfUlt: true, note: "팀 전기/열기 증폭" },
+  ],
+  // 질베르타: 자연/아츠 유닛 서포터(★6 한정, "서포터 1황"). 최고 아츠 취약궁(방불 비례) + 유일 배틀 몹몰이 + 강제 띄우기 연계 + 궁충 효율 재능. 누킹 딜러 시너지.
+  // 재능: 전달자의 노래(필드 시 가드/캐스터/서포터 궁충 +7%, 엔진) · 뒤늦은 편지(배틀/연계 2+ 명중 시 회복). 주스탯 의지·보조 지능.
+  gilberta: [
+    // 중력 모드(배틀 인력97+폭발58=155%): 몹몰이 광역 자연 + 자연 부착. 뒤늦은 편지(2+ 명중 회복).
+    { id: "gil-b", name: "비전 지팡이 · 중력 모드", kind: "battle", fromPos: [1, 2, 3], target: "all", power: 1.55, element: "nature", attach: "nature", staggerVal: 10, note: "몹몰이 광역 자연 + 자연 부착 + 회복(2+ 명중)" },
+    // 매트릭스 이동(연계 140%, 쿨 20초≈4턴): 아츠 이상 적 있을 때. 광역 끌어당김 + 강제 띄우기(방불). 뒤늦은 편지.
+    { id: "gil-l", name: "비전 지팡이 · 매트릭스 이동", kind: "link", fromPos: [1, 2, 3], target: "all", power: 1.4, element: "nature", staggerVal: 5, cooldown: 4, anomaly: "launch",
+      requires: (t) => !!t && (t.frozen > 0 || t.dot > 0 || t.statuses.includes("shock") || t.statuses.includes("corrosion") || t.statuses.includes("combustion")), requiresText: "아츠 이상 적",
+      note: "광역 강제 띄우기(방불) + 회복(2+ 명중)" },
+    // 중력장(궁 333%, 게이지 90): 광역 자연 + 자연 부착 + 최고 아츠 취약(기초 18% + 방불 1스택당 1.75%) + 감속.
+    { id: "gil-u", name: "비전 지팡이 · 중력장", kind: "ult", fromPos: [1, 2, 3], target: "all", power: 3.33, element: "nature", attach: "nature", staggerVal: 20, selfUlt: true,
+      apply: (t) => { bumpVuln(t, "arts", 0.18 + Math.min(4, t.physBreak) * 0.0175, 1); t.speedMod = (t.speedMod || 0) - 30; setTimer(t, "speedMod", 1); }, note: "광역 자연 부착 + 최고 아츠 취약(방불 비례) + 감속" },
+  ],
 };
 
 type Base = { id: string; name: string; cls: DDClass; hp: number; attack: number; speed: number; ultCost: number; rampAtk?: number; artsImmune?: number };
@@ -190,6 +240,10 @@ const OP_BASE: Record<string, Base> = {
   ember: { id: "ember", name: "엠버", cls: "defender", hp: 2689, attack: 110, speed: 40, ultCost: 100 }, // 열기 디펜더★6(첫 6성). 느린 공속(speed 40 최하위), 주스탯 힘·보조 의지
   snowshine: { id: "snowshine", name: "스노우샤인", cls: "defender", hp: 2689, attack: 110, speed: 44, ultCost: 80 }, // 냉기 디펜더★5 배포. 반격 냉기 부착·궁 강제 동결. 저비용·궁 80, 주스탯 힘·보조 의지
   catcher: { id: "catcher", name: "카치르", cls: "defender", hp: 2689, attack: 110, speed: 42, ultCost: 80 }, // 물리 디펜더★4 배포. 반격 방어 불능·보호막·허약/넘어뜨리기 궁. 주스탯 힘·보조 의지
+  ardelia: { id: "ardelia", name: "아델리아", cls: "supporter", hp: 2689, attack: 110, speed: 62, ultCost: 90 }, // 자연 서포터★6 배포(첫 서포터). 부식→물리/아츠 취약 + 회복. 주스탯 지능·보조 의지
+  xaihi: { id: "xaihi", name: "자이히", cls: "supporter", hp: 2689, attack: 110, speed: 64, ultCost: 80 }, // 냉기 서포터★5("냉기 파티의 꽃"). 퓨어 힐+아츠 증폭+냉기/자연 증폭궁+냉기 부착. 주스탯 의지·보조 지능
+  antal: { id: "antal", name: "안탈", cls: "supporter", hp: 2689, attack: 110, speed: 63, ultCost: 100 }, // 전기 서포터★4 범용. 전기/열기 취약(60초 단일)+전기/열기 증폭궁+증폭 팀원 회복. 주스탯 지능·보조 힘
+  gilberta: { id: "gilberta", name: "질베르타", cls: "supporter", hp: 2689, attack: 110, speed: 62, ultCost: 90 }, // 자연 서포터★6 한정(1황). 최고 아츠 취약궁+몹몰이+강제 띄우기+궁충 효율. 주스탯 의지·보조 지능
 };
 
 // 매 유닛 신선한 상태 객체(중첩 객체 공유 참조 방지). defense/resist 기본 0 → 밸런스 무변.
