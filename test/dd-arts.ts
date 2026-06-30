@@ -1,5 +1,5 @@
 // 아츠 시스템 검증 — 부착/폭발/이상(연소·감전·동결·쇄빙·부식)을 시나리오로 확인.
-import { DDState, DDUnit, DDSkill, act, applyAttach, usable, canAct as canActImport } from "../app/game/dd/combat";
+import { DDState, DDUnit, DDSkill, act, applyAttach, usable, canAct as canActImport, setTimer as setTimerImport, BASIC } from "../app/game/dd/combat";
 import { SKILLS, makeAlly } from "../app/game/dd/roster";
 
 function unit(over: Partial<DDUnit>): DDUnit {
@@ -418,4 +418,145 @@ console.log("\n══ 탕탕: 즉발 냉기 부착 + 용오름(아츠 취약) + 
   console.log(`  우당탕탕(와류2): 용오름 3개 → 아츠취약 ${enemy.vuln.arts ?? 0}(기대 0.08) · 게이지 +${(s.skillGauge - g0).toFixed(0)}(기대 40-100배틀=-60)`);
   act(s, tt, ult); // 대당가: 시간 정지(불균형 아님 — stun 타이머로 다음 1턴 행동 불가)
   console.log(`  대당가(궁): 적 시간정지 stun ${(enemy.timers.stun || 0) > 0}(기대 true) · 행동가능 ${canActImport(enemy)}(기대 false) · 불균형 ${enemy.staggered}(기대 false — 받는피해 보너스 없음) · 지속냉기 ${enemy.dot > 0}`);
+}
+
+console.log("\n══ 라스트 라이트: 냉기 부착 소모 단일 누킹 + 저체온증/저온 취성 + 자기 충전 궁(첫 스트라이커) ══");
+{
+  const lr = makeAlly("lastrite", 1); lr.critRate = 0;
+  const dps = makeAlly("chenqianyu", 2); // 다른 아군(궁충 락 확인용)
+  const enemy = unit({ id: "e", name: "적", side: "enemy", maxHp: 1e8, hp: 1e8, staggerMax: 1e9, defense: 0 });
+  const s: DDState = { units: [lr, dps, enemy], round: 1, log: [], skillGauge: 9999, maxGauge: 99999 };
+  const battle = SKILLS.lastrite.find((k) => k.id === "lr-b")!;
+  const link = SKILLS.lastrite.find((k) => k.id === "lr-l")!;
+  const ult = SKILLS.lastrite.find((k) => k.id === "lr-u")!;
+  // 궁충 락: 다른 아군(진천우) 배틀 → 라라 궁 충전 안 됨
+  const uc0 = lr.ultCharge; act(s, dps, { id: "x", name: "진천우배틀", kind: "battle", fromPos: [1, 2, 3], target: "single-front", power: 1, element: "physical" });
+  console.log(`  궁충 락: 타 아군 배틀 후 라라 궁 ${uc0}→${lr.ultCharge} (기대 0 — 자기 충전만)`);
+  act(s, lr, battle); // 세쉬카의 비전: 냉기 부착 + 자기 궁충(+16+6.5)
+  console.log(`  세쉬카의 비전: 적 냉기부착 ${enemy.arts.cryo} · 라라 궁 ${lr.ultCharge.toFixed(1)} (기대 ~22.5 자기 충전)`);
+  console.log(`  연계 사용가능(냉기 1스택): ${usable(s, lr, link)} (기대 false, 3스택 필요)`);
+  enemy.arts.cryo = 4; setTimerImport(enemy, "arts:cryo", 4); // 파트너가 냉기 4스택까지 보조
+  console.log(`  연계 사용가능(냉기 4스택): ${usable(s, lr, link)} (기대 true)`);
+  act(s, lr, link); // 겨울 포식자: 냉기 4스택 소모 → 누킹 + 냉기 취약 16% + 강제 정지
+  console.log(`  겨울 포식자: 냉기 ${enemy.arts.cryo}(기대 0 소모) · 냉기취약 ${enemy.vuln.cryo ?? 0}(기대 0.16=4×4%) · 강제정지 ${(enemy.timers.stun || 0) > 0} · 라라 궁 ${lr.ultCharge.toFixed(0)}`);
+  // 저온 취성: 궁이 냉기 취약을 1.5배로 간주 → 0.16 → 0.24 적용
+  lr.ultCharge = lr.ultCost; enemy.hp = 1e8; const hpB = enemy.hp; act(s, lr, ult);
+  const dmgUlt = hpB - enemy.hp;
+  console.log(`  마지막 인사(궁): 피해 ${dmgUlt} (저온 취성 — 냉기취약 0.16을 ×1.5=0.24로 간주)`);
+}
+
+console.log("\n══ 아비웨나: 썬더랜스 설치(연계/궁) → 회수 중복 폭딜(배틀) + 부착 미소모(스트라이커) ══");
+{
+  const avy = makeAlly("avywenna", 1); avy.critRate = 0; avy.ultCharge = avy.ultCost;
+  const enemy = unit({ id: "e", name: "적", side: "enemy", maxHp: 1e8, hp: 1e8, staggerMax: 1e9, defense: 0 });
+  const s: DDState = { units: [avy, enemy], round: 1, log: [], skillGauge: 9999, maxGauge: 99999 };
+  const battle = SKILLS.avywenna.find((k) => k.id === "avy-b")!;
+  const link = SKILLS.avywenna.find((k) => k.id === "avy-l")!;
+  const ult = SKILLS.avywenna.find((k) => k.id === "avy-u")!;
+  console.log(`  연계 사용가능(전기 부착 전): ${usable(s, avy, link)} (기대 false)`);
+  applyAttach(enemy, "electric", avy, s.log); // 전기 부착(펠리카 등 가정)
+  console.log(`  연계 사용가능(전기 부착 후): ${usable(s, avy, link)} (기대 true)`);
+  const e0 = enemy.arts.electric; act(s, avy, link); act(s, avy, link); // 연계 2회 → 일반 투창 6개. 부착 미소모 확인
+  console.log(`  번개 타격 ×2: 일반 투창 ${avy.procCount}(기대 6) · 전기 부착 ${e0}→${enemy.arts.electric}(미소모 유지) · 궁충 누적`);
+  act(s, avy, ult); // 궁: 강력 투창 1개 + 전기 취약
+  console.log(`  결전의 떨림(궁): 강력 투창 ${avy.gaugeRecovered}(기대 1) · 전기취약 ${enemy.vuln.electric ?? 0}(기대 0.10 완곡한 수단)`);
+  const hpB = enemy.hp; act(s, avy, battle); // 가로채기: 6일반+1강력 회수 → 본체 67% + 6×75% + 1×192% = 709% + 전기 부착
+  const dmg = hpB - enemy.hp;
+  console.log(`  가로채기(회수): 투창 회수 → 피해 ${dmg} · 회수 후 보유 일반 ${avy.procCount}/강력 ${avy.gaugeRecovered}(기대 0/0) · 전기부착 ${enemy.arts.electric}(강력 투창 재부착)`);
+}
+
+console.log("\n══ 판: 방불 4스택 강타 단발 누커 + 띄우기/넘어뜨리기 빌더 + 전분 풀기(스트라이커) ══");
+{
+  const pan = makeAlly("dapan", 1); pan.critRate = 0; pan.ultCharge = pan.ultCost;
+  const enemy = unit({ id: "e", name: "적", side: "enemy", maxHp: 1e8, hp: 1e8, staggerMax: 1e9, defense: 0 });
+  const s: DDState = { units: [pan, enemy], round: 1, log: [], skillGauge: 9999, maxGauge: 99999 };
+  const battle = SKILLS.dapan.find((k) => k.id === "dp-b")!;
+  const link = SKILLS.dapan.find((k) => k.id === "dp-l")!;
+  const ult = SKILLS.dapan.find((k) => k.id === "dp-u")!;
+  console.log(`  연계 사용가능(방불 0): ${usable(s, pan, link)} (기대 false, 4스택 필요)`);
+  act(s, pan, ult); // 궁: 강제 띄우기+넘어뜨리기 → 방불 2스택
+  console.log(`  채 썰어 웍에(궁): 적 방불 ${enemy.physBreak} (기대 2 = 띄우기+넘어뜨리기)`);
+  enemy.physBreak = 4; setTimerImport(enemy, "physBreak", 4); // 팀이 방불 4스택까지 적립 가정
+  console.log(`  연계 사용가능(방불 4): ${usable(s, pan, link)} (기대 true)`);
+  const hpB = enemy.hp; act(s, pan, link); // 조미료 뿌리기: 4스택 강타(×1.1) + 전분 풀기
+  console.log(`  조미료 뿌리기: 방불 ${enemy.physBreak}(기대 0 소모) · 판 물리증폭 ${(pan.amp.physical ?? 0).toFixed(2)}(기대 0.24=4스택 전분 풀기) · 피해 ${hpB - enemy.hp}`);
+}
+
+console.log("\n══ 레바테인: 열기 부착 흡수→녹아내린 불꽃 4스택→강화 폭발+궁100 + 부활의 불씨(스트라이커) ══");
+{
+  const lae = makeAlly("laevatain", 1); lae.critRate = 0;
+  const enemy = unit({ id: "e", name: "적", side: "enemy", maxHp: 1e8, hp: 1e8, staggerMax: 1e9, defense: 0 });
+  const s: DDState = { units: [lae, enemy], round: 1, log: [], skillGauge: 9999, maxGauge: 99999 };
+  const battle = SKILLS.laevatain.find((k) => k.id === "lae-b")!;
+  const link = SKILLS.laevatain.find((k) => k.id === "lae-l")!;
+  const ult = SKILLS.laevatain.find((k) => k.id === "lae-u")!;
+  // ① 일반공격으로 흡수
+  enemy.arts.heat = 2; setTimerImport(enemy, "arts:heat", 4); // 파트너가 열기 2부착
+  act(s, lae, BASIC); // 일반공격(강일)으로 열기 2 흡수 → 녹아내린 불꽃 2
+  console.log(`  ① 일반공격 흡수: 녹아내린 불꽃 ${lae.procCount}(기대 2, 열기 2 흡수) · 적 열기부착 ${enemy.arts.heat}(기대 0)`);
+  // ② 배틀로 추가 흡수 → 4스택 강화
+  enemy.arts.heat = 1; setTimerImport(enemy, "arts:heat", 4);
+  const uc0 = lae.ultCharge; act(s, lae, battle); // 흡수1 + 배틀 명중1 = +2 → 4스택 강화 폭발 + 궁 +100
+  console.log(`  ② 배틀 흡수→강화: 녹아내린 불꽃 ${lae.procCount}(기대 0 소모) · 강제 연소 ${enemy.statuses.includes("combustion")} · 궁 ${uc0.toFixed(0)}→${lae.ultCharge.toFixed(0)}(기대 +100강화+6.5)`);
+  console.log(`  연계 사용가능(연소 적): ${usable(s, lae, link)} (기대 true, 강제 연소)`);
+  // ③ 연계로 흡수/빌드 (열기 없으면 명중 +1)
+  const p0 = lae.procCount; act(s, lae, link); // 열화: 흡수 + 연계 명중 1
+  console.log(`  ③ 연계 흡수/빌드: 녹아내린 불꽃 ${p0}→${lae.procCount}(기대 +1 연계 명중) · 궁 ${lae.ultCharge.toFixed(0)}`);
+  // ④ 황혼 변신: 평타 ×3 + 광역화, 배틀 궁중 강화
+  lae.amp = {}; for (const k of Object.keys(lae.timers)) delete lae.timers[k]; lae.procCount = 0; // 버프 초기화
+  const e2 = unit({ id: "e2", name: "적B", side: "enemy", pos: 2, maxHp: 1e8, hp: 1e8, staggerMax: 1e9, defense: 0 }); s.units.push(e2);
+  const hbN = enemy.hp; act(s, lae, BASIC); const dN = hbN - enemy.hp; // 변신 전 평타(단일)
+  console.log(`  ④ 변신 전 평타: 적A -${dN} · 적B 무피해 ${e2.hp === 1e8}(단일)`);
+  lae.ultCharge = lae.ultCost; act(s, lae, ult); // 황혼 변신
+  console.log(`     황혼 변신: twilight ${(lae.timers.twilight || 0)}턴(기대 3)`);
+  const hA = enemy.hp, hB = e2.hp; act(s, lae, BASIC); const dA = hA - enemy.hp, dB = hB - e2.hp; // 변신 중 강화 평타(광역)
+  console.log(`     강화 평타: 적A -${dA}(변신 전 ${dN} 대비 ×${(dA / dN).toFixed(1)}) · 적B -${dB}(광역화! 기대 >0)`);
+  // 부활의 불씨: HP 40% 이하 피격 → 90% 비호 + 회복
+  lae.hp = Math.round(lae.maxHp * 0.35);
+  act(s, enemy, atk("적 강타", "physical", undefined)); // 적이 레바테인 공격
+  console.log(`  부활의 불씨(HP 35%): 비호 ${lae.protection}(기대 0.9) · embersCd ${(lae.timers.embersCd || 0) > 0}`);
+}
+
+console.log("\n══ 이본: 냉기/자연 소모 강제 동결 + 빙점(동결 치피) + 치명타 변신 말뚝딜 궁(스트라이커) ══");
+{
+  const yv = makeAlly("yvonne", 1); yv.critRate = 0.05;
+  const enemy = unit({ id: "e", name: "적", side: "enemy", maxHp: 1e8, hp: 1e8, staggerMax: 1e9, defense: 0 });
+  const s: DDState = { units: [yv, enemy], round: 1, log: [], skillGauge: 9999, maxGauge: 99999 };
+  const battle = SKILLS.yvonne.find((k) => k.id === "yv-b")!;
+  const link = SKILLS.yvonne.find((k) => k.id === "yv-l")!;
+  const ult = SKILLS.yvonne.find((k) => k.id === "yv-u")!;
+  enemy.arts.cryo = 2; setTimerImport(enemy, "arts:cryo", 4); enemy.arts.nature = 1; setTimerImport(enemy, "arts:nature", 4); // 파트너 냉기2+자연1 부착
+  const uc0 = yv.ultCharge; act(s, yv, battle); // 얼음 폭탄: 냉기2+자연1=3스택 소모 → 강제 동결 + 궁 +100
+  console.log(`  얼음 폭탄: 적 동결 ${enemy.frozen}(기대 3) · 냉기/자연 부착 ${enemy.arts.cryo}/${enemy.arts.nature}(기대 0/0 소모) · 궁 ${uc0}→${yv.ultCharge}(기대 +100=10+30×3)`);
+  console.log(`  연계 사용가능(동결 적): ${usable(s, yv, link)} (기대 true)`);
+  act(s, yv, link); // 꽁꽁이: 광역 냉기 + 자폭 강제 동결 + 궁 +10
+  console.log(`  꽁꽁이(연계): 적 동결 ${enemy.frozen}(자폭 유지) · 궁 ${yv.ultCharge}`);
+  // 빙점+변신: 동결 적 궁 → 치명타 대폭 증가 + 동결 소모 추가타
+  yv.ultCharge = yv.ultCost; const hb = enemy.hp; act(s, yv, ult);
+  console.log(`  아이스 슈터(궁, 동결 적): 동결 ${enemy.frozen}(기대 0 소모) · 피해 ${hb - enemy.hp} (변신 치확+30/치피+60 + 빙점 동결 치피+40 + 동결 소모 267%)`);
+}
+
+console.log("\n══ 장방이: 청뢰검(감전 소모→검 생성, 최대9) + 변신 궁(천리의 경지) 지속딜(스트라이커) ══");
+{
+  const zfy = makeAlly("zhuangfangyi", 1); zfy.critRate = 0;
+  const enemy = unit({ id: "e", name: "적", side: "enemy", maxHp: 1e8, hp: 1e8, staggerMax: 1e9, defense: 0 });
+  const s: DDState = { units: [zfy, enemy], round: 1, log: [], skillGauge: 9999, maxGauge: 99999 };
+  const battle = SKILLS.zhuangfangyi.find((k) => k.id === "zfy-b")!;
+  const link = SKILLS.zhuangfangyi.find((k) => k.id === "zfy-l")!;
+  const ult = SKILLS.zhuangfangyi.find((k) => k.id === "zfy-u")!;
+  enemy.arts.electric = 2; setTimerImport(enemy, "arts:electric", 4); // 펠리카가 전기 2부착 가정
+  console.log(`  연계 사용가능(전기 부착 적): ${usable(s, zfy, link)} (기대 true)`);
+  const uc0 = zfy.ultCharge; act(s, zfy, link); // 변화의 숨결: 전기 2소모 → 강제 감전 + 궁충
+  console.log(`  변화의 숨결: 적 감전 ${enemy.statuses.includes("shock")} · 전기부착 ${enemy.arts.electric}(소모) · 궁 ${uc0}→${zfy.ultCharge}(기대 +40 = 연계 10 + 소모 30)`);
+  act(s, zfy, battle); // 뇌정의 부름: 감전 소모 → 청뢰검 +2
+  console.log(`  뇌정의 부름①: 청뢰검 ${zfy.procCount}/9(기대 2, 감전 소모) · 감전 ${enemy.statuses.includes("shock")}(기대 false 소모)`);
+  act(s, zfy, battle); // 감전 없음 + 청뢰검<3 → +1
+  console.log(`  뇌정의 부름②(감전X): 청뢰검 ${zfy.procCount}/9(기대 3)`);
+  const e2 = unit({ id: "e2", name: "적B", side: "enemy", pos: 2, maxHp: 1e8, hp: 1e8, staggerMax: 1e9, defense: 0 }); s.units.push(e2);
+  zfy.ultCharge = zfy.ultCost; act(s, zfy, ult); // 심판의 폭풍: 변신 + 첫 배틀 3검 보장
+  console.log(`  심판의 폭풍(궁): heavenly ${(zfy.timers.heavenly || 0)}턴(기대 4) · 청뢰검 ${zfy.procCount}(기대 ≥3)`);
+  const hA = enemy.hp, hB = e2.hp; act(s, zfy, battle); // 변신 중 배틀: 광역 + 강화 뇌격
+  console.log(`  변신 중 뇌정의 부름: 청뢰검 ${zfy.procCount}/9 · 적A -${hA - enemy.hp} · 적B -${hB - e2.hp}(광역화! 기대 >0)`);
+  const bA = enemy.hp, bB = e2.hp; act(s, zfy, BASIC); // 변신 중 평타: 광역
+  console.log(`  변신 중 평타: 적A -${bA - enemy.hp} · 적B -${bB - e2.hp}(광역화! 기대 >0)`);
 }

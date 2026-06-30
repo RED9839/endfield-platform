@@ -266,6 +266,75 @@ export const SKILLS: Record<string, DDSkill[]> = {
     // 대당가께서 지켜보고 계신다!(궁 거대 파도 311%, 게이지 90): 시간 정지(행동 불가) + 거대 파도 + 지속 냉기.
     { id: "tt-u", name: "대당가께서 지켜보고 계신다!", kind: "ult", fromPos: [1, 2, 3], target: "all", power: 3.11, element: "cryo", staggerVal: 20, selfUlt: true, note: "시간 정지(행동 불가) + 거대 파도 + 지속 냉기" },
   ],
+  // 라스트 라이트(라라): 냉기/양손검 스트라이커(★6 한정, 첫 스트라이커). 냉기 부착 3+ 소모 단일 누킹 + 저체온증 냉기 취약 + 저온 취성(궁 취약 1.5배) + 자기 충전 궁(240). 대보스 특화·다수전 약점.
+  // 재능: 저체온증(아츠 부착 소모 시 냉기 취약 ×4%, 엔진) · 저온 취성(궁 냉기/아츠 취약 1.5배, 엔진). 궁은 배틀/연계로만 충전. 주스탯 힘·보조 의지.
+  lastrite: [
+    // 세쉬카의 비전(배틀 환영 추격 142%, 게이지 100·반환 30): 냉기 + 냉기 부착(환영) + 궁 에너지 16(자기 충전).
+    { id: "lr-b", name: "세쉬카의 비전", kind: "battle", fromPos: [1, 2, 3], target: "single-front", power: 1.42, element: "cryo", attach: "cryo", staggerVal: 10, gaugeRefund: 30, note: "냉기 부착(환영 추격) + 궁 에너지 자기 충전" },
+    // 겨울 포식자(연계 얼음송곳71+베기71=142% + 스택당 107%, 쿨 9초≈2턴): 냉기 부착 3스택+ 적. 전부 소모 → 스택 누킹 + 냉기 취약 + 강제 정지.
+    { id: "lr-l", name: "겨울 포식자", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 1.42, element: "cryo", staggerVal: 15, cooldown: 2, cryoNuke: 1.07,
+      requires: (t) => !!t && t.arts.cryo >= 3, requiresText: "냉기 부착 3스택+", note: "냉기 소모 누킹 + 저체온증 냉기 취약 + 강제 정지" },
+    // 마지막 인사(궁 178+178+356=712%, 게이지 240): 단일 3연 베기 누킹(시전 중 피해 면역) + 저온 취성(냉기/아츠 취약 1.5배).
+    { id: "lr-u", name: "마지막 인사", kind: "ult", fromPos: [1, 2], target: "single-front", power: 7.12, element: "cryo", staggerVal: 20, selfUlt: true, note: "단일 누킹 + 저온 취성(취약 1.5배)" },
+  ],
+  // 아비웨나: 전기/장병기 스트라이커(★5). 썬더랜스(투창)를 연계/궁으로 필드에 설치(30초) → 배틀로 전부 회수하며 수 비례 중복 폭딜. 전기 부착/감전 미소모(연계 조건일 뿐). 전기팟 핵심.
+  // 재능: 고효율 배송(투창 설치/회수 명중 시 궁 +4, 엔진) · 완곡한 수단(궁 명중 시 전기 취약, 엔진). 평타는 물리. 주스탯 의지·보조 민첩.
+  avywenna: [
+    // 썬더랜스·가로채기(배틀 본체 67%, 게이지 100): 모든 썬더랜스 회수 → 투창 수 비례 중복 전기타(일반 75%/강력 192%·전기 부착). 회수 = 배틀 피해.
+    { id: "avy-b", name: "썬더랜스 · 가로채기", kind: "battle", fromPos: [1, 2, 3], target: "single-front", power: 0.67, element: "electric", staggerVal: 5, lanceRecover: true, note: "투창 전부 회수 → 수 비례 중복 폭딜 + 강력 투창 전기 부착" },
+    // 썬더랜스·번개 타격(연계 169%, 쿨 13초≈3턴): 전기 부착/감전 적에 강일 후(미소모). 전기 + 일반 썬더랜스 3개 설치(30초).
+    { id: "avy-l", name: "썬더랜스 · 번개 타격", kind: "link", fromPos: [1, 2, 3], target: "row", power: 1.69, element: "electric", staggerVal: 10, cooldown: 3,
+      requires: (t) => !!t && (t.arts.electric > 0 || t.statuses.includes("shock")), requiresText: "전기 부착/감전 적", note: "전기 + 썬더랜스 3개 설치(부착 미소모)" },
+    // 썬더랜스·결전의 떨림(궁 422%, 게이지 100): 강력 썬더랜스 1개 설치 + 광역 전기 + 완곡한 수단(전기 취약 10%).
+    { id: "avy-u", name: "썬더랜스 · 결전의 떨림", kind: "ult", fromPos: [1, 2, 3], target: "all", power: 4.22, element: "electric", staggerVal: 15, selfUlt: true,
+      apply: (t) => bumpVuln(t, "electric", 0.1, 2), note: "광역 전기 + 강력 썬더랜스 설치 + 전기 취약" },
+  ],
+  // 판: 물리/양손검 스트라이커(★5, 유일 비6성 물리 스트라이커). 방어 불능 4스택 강타 단발 누커(관리자 유사). 띄우기/넘어뜨리기 방불 빌더 + 강타 화력 몰빵.
+  // 재능: 전분 풀기(방불 소모 시 물리 +6%/스택, 엔진) · 간 맞추기(궁→연계 쿨 회복 — 미모델). 주스탯 힘·보조 의지.
+  dapan: [
+    // 뒤집어 주지!(배틀 133%): 웍 던져 물리 + 띄우기(방불 빌더).
+    { id: "dp-b", name: "뒤집어 주지!", kind: "battle", fromPos: [1, 2, 3], target: "single-front", power: 1.33, element: "physical", staggerVal: 10, anomaly: "launch", note: "물리 + 띄우기(방불 빌더)" },
+    // 조미료 뿌리기!(연계 289% + 강타, 쿨 20초≈4턴): 방불 4스택 적. 대량 물리 + 강타(추가 강타 +10%) + 전분 풀기. SP 무소모.
+    { id: "dp-l", name: "조미료 뿌리기!", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 2.89, element: "physical", staggerVal: 15, cooldown: 4, anomaly: "crush", crushAmp: 1.1,
+      requires: (t) => !!t && t.physBreak >= 4, requiresText: "방어 불능 4스택", note: "대량 물리 + 강타(추가 +10%) + 전분 풀기" },
+    // 채 썰어 웍에 넣기!(궁 6단22%+178%=310%, 게이지 90): 강제 띄우기+넘어뜨리기(방불 2스택) + 광역 물리.
+    { id: "dp-u", name: "채 썰어 웍에 넣기!", kind: "ult", fromPos: [1, 2, 3], target: "all", power: 3.1, element: "physical", staggerVal: 20, selfUlt: true, anomaly: "launch",
+      apply: (t) => { if (t.hp > 0) { t.physBreak = Math.min(4, t.physBreak + 1); setTimer(t, "physBreak", 4); } }, note: "강제 띄우기+넘어뜨리기(방불 2스택) + 광역 물리" },
+  ],
+  // 레바테인: 열기/한손검 스트라이커(★6 한정, 수르트 리컨비너). 열기 부착 흡수 → 녹아내린 불꽃 4스택 → 강화 배틀 폭발 + 궁 +100 → 버프형 궁(300 최고). 부활의 불씨로 최고 안정성·광역 특화.
+  // 재능: 불꽃의 심장(열기 부착 흡수→녹아내린 불꽃, 4스택 열기 저항 무시) · 부활의 불씨(HP 40%↓ 90% 비호+회복). 주스탯 지능·보조 힘.
+  laevatain: [
+    // 불타오르는 화염(배틀 초기 62%): 열기 + (불꽃의 심장)열기 부착 흡수 → 녹아내린 불꽃. 4스택 시 강화 폭발(추가 342% + 강제 연소 + 궁 +100). 흡수는 일반공격/배틀/연계 공통(엔진 id훅).
+    { id: "lae-b", name: "불타오르는 화염", kind: "battle", fromPos: [1, 2, 3], target: "single-front", power: 0.62, element: "heat", staggerVal: 10, note: "열기 + 녹아내린 불꽃(흡수) · 4스택 강화 폭발+강제 연소+궁100" },
+    // 열화(연계 240%, 쿨 10초≈2턴): 연소/부식 적. 광역 열기 + 녹아내린 불꽃(명중당) + 궁충(명중 수 비례).
+    { id: "lae-l", name: "열화", kind: "link", fromPos: [1, 2, 3], target: "row", power: 2.4, element: "heat", staggerVal: 10, cooldown: 2,
+      requires: (t) => !!t && (t.statuses.includes("combustion") || t.statuses.includes("corrosion")), requiresText: "연소/부식 적", note: "광역 열기 + 녹아내린 불꽃 + 궁충" },
+    // 황혼(궁, 게이지 300 최고): 변신 — 즉발 도마 내리찍기(열기 부착) + 15초간 일반공격 ×3·배틀 ×2.5 강화(엔진 twilight). 딜 지분은 변신 중 강화 평타.
+    { id: "lae-u", name: "황혼", kind: "ult", fromPos: [1, 2, 3], target: "all", power: 3.0, element: "heat", attach: "heat", staggerVal: 20, selfUlt: true, note: "변신(15초): 일반공격/배틀 강화 + 즉발 열기 부착" },
+  ],
+  // 이본: 냉기/권총 스트라이커(★6 한정). 냉기/자연 부착 소모 강제 동결(배틀) + 치명타 변신 말뚝딜 궁(아이스 슈터) + 빙점(냉기/동결 적 치피). 간결한 부착-배틀-동결-궁 구조. 쇄빙 파티 동결 공급.
+  // 재능: 빙점(냉기 적 치피 +20%, 동결 ×2=+40%, 엔진) · 하이테크 버스트(동결 후 즉발 강일 — 근사). 주스탯 지능·보조 민첩.
+  yvonne: [
+    // 얼음 폭탄·β형(배틀 111%): 냉기. 냉기/자연 부착 적이면 전부 소모 → 강제 동결 + 스택 비례 냉기 + 궁충(엔진 iceBomb).
+    { id: "yv-b", name: "얼음 폭탄 · β형", kind: "battle", fromPos: [1, 2, 3], target: "single-front", power: 1.11, element: "cryo", staggerVal: 10, iceBomb: true, note: "냉기/자연 소모 → 강제 동결 + 궁충" },
+    // 꽁꽁이·υ37(연계 충격파45+폭발89=134%, 쿨 20초≈4턴): 동결 적 강일 후. 광역 냉기 + 몹몰이 + 자폭 강제 동결 + 궁충.
+    { id: "yv-l", name: "꽁꽁이 · υ37", kind: "link", fromPos: [1, 2, 3], target: "row", power: 1.34, element: "cryo", staggerVal: 10, cooldown: 4,
+      requires: (t) => !!t && t.frozen > 0, requiresText: "동결 적",
+      apply: (t) => { if (t.hp > 0) { t.frozen = Math.max(t.frozen, 1); if (!t.statuses.includes("stun")) t.statuses.push("stun"); setTimer(t, "frozen", 2); } }, note: "광역 냉기 + 몹몰이 + 자폭 강제 동결" },
+    // 아이스 슈터(궁 변신 말뚝딜, 게이지 220): 치명타 변신(치확 +30%·치피 +60%) + 동결 소모 추가 267%. 단일 누킹.
+    { id: "yv-u", name: "아이스 슈터", kind: "ult", fromPos: [1, 2], target: "single-front", power: 6.0, element: "cryo", staggerVal: 20, selfUlt: true, note: "치명타 변신 말뚝딜 + 동결 소모 추가타" },
+  ],
+  // 장방이: 전기/아츠 유닛 스트라이커(★6 한정, 무릉 책임자). 청뢰검(감전 소모→검 생성, 최대 9, 수 비례 뇌격·궁충) + 변신 궁(천리의 경지: 평타/배틀 강화·방해 면역·연계 쿨 4배). 6성 최고 다수전·지속딜. 레바테인 상위.
+  // 재능: 천지의 조화(배틀 시 전기 증폭, 엔진) · 하늘의 가호(청뢰검 비례 피해 면역 — 근사). 주스탯 의지·보조 지능.
+  zhuangfangyi: [
+    // 뇌정의 부름(배틀): 감전 소모 → 청뢰검 생성(최대 9) + 청뢰검 수 비례 뇌격(마지막 ×6) + 궁충. 변신 중 강화. 엔진 id훅.
+    { id: "zfy-b", name: "뇌정의 부름", kind: "battle", fromPos: [1, 2, 3], target: "single-front", power: 0, element: "electric", staggerVal: 15, note: "감전 소모 → 청뢰검 생성 + 뇌격(청뢰검 비례) + 궁충" },
+    // 변화의 숨결(연계 160%, 쿨 18초≈4턴): 전기 부착 적 강일 후. 전기 + 전기 부착 소모 → 강제 감전(레벨↑) + 궁충.
+    { id: "zfy-l", name: "변화의 숨결", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 1.6, element: "electric", staggerVal: 10, cooldown: 4,
+      requires: (t) => !!t && t.arts.electric > 0, requiresText: "전기 부착 적", note: "전기 + 전기 부착 소모 강제 감전 + 궁충" },
+    // 심판의 폭풍(궁 변신, 게이지 240): 천리의 경지 — 평타/배틀 강화 + 방해 면역 + 첫 배틀 3검. 25초 지속딜.
+    { id: "zfy-u", name: "심판의 폭풍", kind: "ult", fromPos: [1, 2, 3], target: "all", power: 2.0, element: "electric", staggerVal: 20, selfUlt: true, note: "천리의 경지 변신: 평타/배틀 강화 + 첫 배틀 3검" },
+  ],
 };
 
 type Base = { id: string; name: string; cls: DDClass; hp: number; attack: number; speed: number; ultCost: number; rampAtk?: number; artsImmune?: number };
@@ -292,6 +361,12 @@ const OP_BASE: Record<string, Base> = {
   wulfgard: { id: "wulfgard", name: "울프가드", cls: "caster", hp: 2689, attack: 110, speed: 70, ultCost: 90 }, // 열기 캐스터★5. 열기 부착+연소/감전 소모 추가타+강제 연소 궁+불타는 송곳니. 주스탯 힘·보조 민첩
   fluorite: { id: "fluorite", name: "플루라이트", cls: "caster", hp: 2689, attack: 110, speed: 72, ultCost: 100 }, // 자연 캐스터★4. 무료 다중 아츠 부착(연계/궁)+감속+자연 부착. 주스탯 민첩·보조 지능
   tangtang: { id: "tangtang", name: "탕탕", cls: "caster", hp: 2689, attack: 110, speed: 74, ultCost: 90 }, // 냉기 캐스터★6 한정. 즉발 냉기 부착(용오름)+아츠 취약+와류 가속/감속+시간정지 궁+서브딜. 주스탯 민첩·보조 힘
+  lastrite: { id: "lastrite", name: "라스트 라이트", cls: "striker", hp: 2689, attack: 110, speed: 48, ultCost: 240 }, // 냉기 스트라이커★6 한정(첫 스트라이커). 냉기 부착 소모 단일 누킹·자기 충전 궁(240). 주스탯 힘·보조 의지
+  avywenna: { id: "avywenna", name: "아비웨나", cls: "striker", hp: 2689, attack: 110, speed: 62, ultCost: 100 }, // 전기 스트라이커★5. 썬더랜스(투창 설치→회수 중복타) 폭딜·부착 미소모. 주스탯 의지·보조 민첩
+  dapan: { id: "dapan", name: "판", cls: "striker", hp: 2689, attack: 110, speed: 55, ultCost: 90 }, // 물리 스트라이커★5. 방불 4스택 강타 단발 누커·띄우기/넘어뜨리기 빌더. 주스탯 힘·보조 의지
+  laevatain: { id: "laevatain", name: "레바테인", cls: "striker", hp: 2689, attack: 110, speed: 64, ultCost: 300 }, // 열기 스트라이커★6 한정. 열기 부착 흡수→녹아내린 불꽃→강화 배틀·버프형 궁(300 최고)·부활의 불씨. 주스탯 지능·보조 힘
+  yvonne: { id: "yvonne", name: "이본", cls: "striker", hp: 2689, attack: 110, speed: 66, ultCost: 220 }, // 냉기 스트라이커★6 한정. 강제 동결(냉기/자연 소모)+치명타 변신 말뚝딜 궁(220)+빙점. 주스탯 지능·보조 민첩
+  zhuangfangyi: { id: "zhuangfangyi", name: "장방이", cls: "striker", hp: 2689, attack: 110, speed: 62, ultCost: 240 }, // 전기 스트라이커★6 한정. 청뢰검(감전 소모→검, 최대9)+변신 궁(천리의 경지)+지속딜. 주스탯 의지·보조 지능
 };
 
 // 매 유닛 신선한 상태 객체(중첩 객체 공유 참조 방지). defense/resist 기본 0 → 밸런스 무변.

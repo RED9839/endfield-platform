@@ -87,6 +87,10 @@ export type DDSkill = {
   freezeZone?: number; // 빙설 지대: 부착 무관 직접 동결 N스택 + 지속 냉기(스노우샤인 살얼음 추위)
   burnShockConsume?: number; // 연소/감전 상태 소모 → 추가 열기타 + 게이지(울프가드 탄흔의 열기). 소모 시 부착 생략
   forceBurn?: boolean; // 강제 연소 부여(울프가드 늑대의 분노) + 불타는 송곳니
+  cryoNuke?: number; // 냉기 부착 전부 소모 → 스택 비례 누킹 + 저체온증 냉기 취약 + 강제 정지(라스트 라이트 겨울 포식자). 값=스택당 배율
+  lanceRecover?: boolean; // 설치된 썬더랜스 전부 회수 → 투창 수 비례 중복 전기타 + 강력 투창 전기 부착(아비웨나 가로채기)
+  crushAmp?: number; // 강타 payoff 추가 배율(판 조미료 뿌리기 추가 강타 피해 +10% = 1.1)
+  iceBomb?: boolean; // 냉기/자연 부착 전부 소모 → 강제 동결 + 스택 비례 냉기 + 궁충(이본 얼음 폭탄·β형)
   lure?: { power: number; gauge: number }; // 진귀한 린수(알레쉬 연계): 확률로 강화 피해 + 게이지
   grantsMultiHit?: number; // 사용 후 자신에게 연타 부여(아케쿠리 궁 몰입의 시간 — 연타 소모 후 부여)
   requiresStance?: number; // 미브 스탠스 요구(추형≥1, 개천≥2)
@@ -303,8 +307,9 @@ export function applyAnomaly(skill: DDSkill, target: DDUnit, self: DDUnit, log: 
     if (target.physBreak > 0) {
       const n = Math.min(4, target.physBreak);
       target.physBreak = 0;
-      log.push(`  → 강타! 방어 불능 ${n}스택 소모 → ${CRUSH[n - 1] * 100}% 물리`);
-      return shatter + self.attack * buff * CRUSH[n - 1];
+      const cAmp = skill.crushAmp ?? 1; // 판 조미료 뿌리기: 추가 강타 피해 +10%
+      log.push(`  → 강타! 방어 불능 ${n}스택 소모 → ${Math.round(CRUSH[n - 1] * cAmp * 100)}% 물리`);
+      return shatter + self.attack * buff * CRUSH[n - 1] * cAmp;
     }
     target.physBreak = 1; // 방불 없음 → 1스택 부여(자가 빌드는 가능하나 비효율 = 관리자 단점)
     setTimer(target, "physBreak", DUR_BREAK);
@@ -347,6 +352,10 @@ export const living = (s: DDState, side?: "ally" | "enemy") =>
 export function pickTargets(s: DDState, self: DDUnit, skill: DDSkill): DDUnit[] {
   const foes = living(s, self.side === "ally" ? "enemy" : "ally");
   if (skill.target === "self") return [self];
+  // 레바테인 황혼 변신 중: 강화 일반공격은 광역(공격 범위 대폭 증가)
+  if (self.id === "laevatain" && skill.kind === "attack" && (self.timers.twilight || 0) > 0) return foes;
+  // 장방이 천리의 경지 변신 중: 강화 일반공격·배틀(뇌정의 부름) 모두 광역(공격 범위 확대)
+  if (self.id === "zhuangfangyi" && (skill.kind === "attack" || skill.kind === "battle") && (self.timers.heavenly || 0) > 0) return foes;
   if (skill.target === "all") return foes;
   if (skill.target === "row") return [...foes].sort((a, b) => a.pos - b.pos).slice(0, 2);
   if (skill.target === "single-lowhp") return foes.length ? [foes.reduce((lo, e) => (e.hp < lo.hp ? e : lo), foes[0])] : [];
@@ -379,6 +388,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
       // 배틀 → 아군 전체 궁 충전(+6.5). 질베르타 전달자의 노래: 가드/캐스터/서포터 궁충 ×1.07
       const gil = s.units.some((u) => u.id === "gilberta" && u.hp > 0);
       for (const u of living(s, "ally")) {
+        if (u.id === "lastrite" && self.id !== "lastrite") continue; // 라스트 라이트: 자기 배틀/연계로만 궁 충전(타 아군 배틀 무효)
         let g = ULT_BATTLE;
         if (gil && (u.cls === "guard" || u.cls === "caster" || u.cls === "supporter")) g *= 1.07;
         u.ultCharge = Math.min(u.ultCost, u.ultCharge + g);
@@ -395,9 +405,11 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
 
   const elem = skElem(skill);
   const primaryPre = pickTargets(s, self, skill)[0]?.physBreak ?? 0; // 스탠스 판정용(강타 소모 전 방불)
+  const primaryTarget = pickTargets(s, self, skill)[0]; // 광역 스킬의 1회성 효과(청뢰검 생성 등) 기준 대상
   let executed = false; // 일반 공격 처형 여부
   for (const t of pickTargets(s, self, skill)) {
     const preReact = ELEMENTS.reduce((n, e) => n + t.arts[e], 0) + t.frozen; // 아츠 이상/쇄빙 소모 감지용(알레쉬 연계)
+    const yvFrozen = t.frozen > 0, yvCryo = t.arts.cryo > 0; // 이본 빙점 판정(소모 전 상태)
     let raw = baseDamage(skill, self); // 시전자 측 원 피해(공격력×증가×허약×배율)
     if (skill.kind === "attack" && t.staggered) { raw *= EXECUTE_MULT; executed = true; log.push(`  → 처형! 불균형 적 대량 물리`); }
     raw += applyAnomaly(skill, t, self, log); // 물리 이상 payoff(+쇄빙, 연타 미적용)
@@ -412,6 +424,79 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
     if (skill.attach && !burnConsumed) { // 아츠 부착→폭발/이상
       raw += applyAttach(t, skill.attach, self, log);
       if (self.id === "wulfgard" && has(t, "combustion")) { self.amp.heat = Math.max(self.amp.heat || 0, 0.3); setTimer(self, "amp:heat", 2); log.push(`  → 불타는 송곳니! 열기 피해 +30%`); }
+    }
+    if (self.id === "zhuangfangyi") { // 장방이: 청뢰검(procCount) — 연계 강제 감전 / 배틀 감전 소모 → 검 생성 + 뇌격
+      if (skill.kind === "link" && t.arts.electric > 0) { // 변화의 숨결: 전기 부착 소모 → 강제 감전(이미 감전이면 레벨↑)
+        const n = t.arts.electric; t.arts.electric = 0; delete t.timers["arts:electric"];
+        const lvUp = has(t, "shock"); add(t, "shock"); bumpVuln(t, "arts", lvUp ? 0.16 : 0.12);
+        self.ultCharge = Math.min(self.ultCost, self.ultCharge + 10 + 10 * n); s.anomalyConsumed = true;
+        log.push(`  → 변화의 숨결! 전기 ${n}스택 소모 → 강제 감전${lvUp ? "(레벨↑)" : ""}`);
+      }
+      if (skill.kind === "battle") { // 뇌정의 부름: 감전 소모 → 청뢰검 생성(최대 9) + 청뢰검 수 비례 뇌격(마지막 ×6) + 궁충
+        const tw = (self.timers.heavenly || 0) > 0; // 천리의 경지 변신(평타/배틀 광역+강화)
+        if (t === primaryTarget) { // 청뢰검 생성·궁충·증폭은 1회만(변신 중 광역이어도)
+          let gen = 0;
+          if (has(t, "shock")) { rm(t, "shock"); gen = 2; } else if ((self.procCount || 0) < 3) gen = 1;
+          if (tw) gen = Math.max(gen, 3); // 변신 중 강제 3자루
+          self.procCount = Math.min(9, (self.procCount || 0) + gen);
+          self.ultCharge = Math.min(self.ultCost, self.ultCharge + 6 * self.procCount); // 뇌격당 궁 +6
+          self.amp.electric = Math.max(self.amp.electric || 0, 0.18); setTimer(self, "amp:electric", 1); // 천지의 조화
+          log.push(`  → 뇌정의 부름! 청뢰검 ${self.procCount}/9 (생성 ${gen})${tw ? " · 변신 광역 강화" : ""}`);
+        }
+        const per = tw ? 0.36 : 0.2;
+        raw += self.attack * eb(self) * per * (self.procCount + 5); // 청뢰검 비례 뇌격(마지막 ×6) — 모든 대상(변신 시 광역)
+      }
+    }
+    if (skill.iceBomb) { // 이본 얼음 폭탄: 냉기/자연 부착 전부 소모 → 강제 동결 + 스택 비례 냉기 + 궁충
+      const stacks = Math.min(4, t.arts.cryo + t.arts.nature);
+      if (stacks > 0) {
+        t.arts.cryo = 0; t.arts.nature = 0; delete t.timers["arts:cryo"]; delete t.timers["arts:nature"];
+        t.frozen = stacks; add(t, "stun"); setTimer(t, "frozen", DUR_FROZEN); // 강제 동결
+        raw += self.attack * eb(self) * (0.67 + 0.89 * stacks); // 동결 부여 67% + 스택당 89%
+        self.ultCharge = Math.min(self.ultCost, self.ultCharge + 10 + 30 * stacks); // 궁충(동결 10 + 스택당 30)
+        s.anomalyConsumed = true;
+        log.push(`  → 얼음 폭탄! 냉기/자연 ${stacks}스택 소모 → 강제 동결 + 궁 +${10 + 30 * stacks}`);
+      }
+    }
+    if (self.id === "yvonne" && skill.kind === "ult" && t.frozen > 0) { // 아이스 슈터: 동결 적 추가 냉기 + 동결 소모
+      raw += self.attack * eb(self) * 2.67;
+      t.frozen = 0; rm(t, "stun"); delete t.timers["frozen"];
+      log.push(`  → 동결 소모 추가 냉기(267%)`);
+    }
+    if (skill.cryoNuke && t.arts.cryo > 0) { // 라스트 라이트 겨울 포식자: 냉기 부착 전부 소모 → 스택 비례 누킹
+      const n = Math.min(4, t.arts.cryo);
+      raw += self.attack * eb(self) * skill.cryoNuke * n; // 스택당 추가 피해
+      bumpVuln(t, "cryo", n * 0.04, 3); // 저체온증: 소모 스택 ×4% 냉기 취약(15초≈3턴)
+      t.arts.cryo = 0; delete t.timers["arts:cryo"];
+      add(t, "stun"); setTimer(t, "stun", 1); // 얼음송곳 강제 정지(다음 1턴)
+      s.anomalyConsumed = true;
+      log.push(`  → 겨울 포식자! 냉기 ${n}스택 소모 → 스택 누킹 + 냉기 취약 ${n * 4}% + 강제 정지`);
+    }
+    // 레바테인 불꽃의 심장: 일반공격(강일)/배틀/연계 명중 시 주변 열기 부착 흡수 → 녹아내린 불꽃. 배틀이 4스택이면 강화 폭발
+    if (self.id === "laevatain" && (skill.kind === "attack" || skill.kind === "battle" || skill.kind === "link")) {
+      const absorb = t.arts.heat; if (absorb > 0) { t.arts.heat = 0; delete t.timers["arts:heat"]; } // 열기 부착 흡수
+      const gain = absorb + (skill.kind === "battle" || skill.kind === "link" ? 1 : 0); // 흡수 N + 배틀/연계 자체 명중 1
+      if (gain > 0) self.procCount = Math.min(4, (self.procCount || 0) + gain);
+      const tw = (self.timers.twilight || 0) > 0; // 황혼 변신 중
+      if (skill.kind === "battle" && tw) raw += self.attack * eb(self) * 0.85; // 궁 중 강화 배틀 1단계(62→147%)
+      if (skill.kind === "battle" && self.procCount >= 4) { // 4스택 배틀 → 강화 폭발 + 강제 연소 + 궁 +100
+        raw += self.attack * eb(self) * (tw ? 4.0 : 3.42); // 추가 공격(궁 중 400% / 일반 342%)
+        t.dot = Math.round(self.attack * eb(self) * 0.5); setTimer(t, "dot", DUR_DOT); add(t, "combustion"); // 강제 연소
+        self.ultCharge = Math.min(self.ultCost, self.ultCharge + 100); // 궁 +100
+        self.amp.heat = Math.max(self.amp.heat || 0, 0.2); setTimer(self, "amp:heat", 4); // 불꽃의 심장(열기 저항 무시 근사)
+        self.procCount = 0;
+        log.push(`  → 녹아내린 불꽃 4스택 소모! 강화 폭발${tw ? "(궁 중 400%)" : ""} + 강제 연소 + 궁 +100`);
+      } else if (gain > 0) log.push(`  → 녹아내린 불꽃 ${self.procCount}/4 (${skill.kind === "attack" ? "일반공격" : skill.kind === "battle" ? "배틀" : "연계"} 흡수 ${absorb})`);
+    }
+    if (skill.lanceRecover) { // 아비웨나 가로채기: 설치 썬더랜스(procCount=일반 / gaugeRecovered=강력) 전부 회수 → 수 비례 중복 전기타
+      const lances = self.procCount || 0, big = self.gaugeRecovered || 0;
+      if (lances + big > 0) {
+        raw += self.attack * eb(self) * (lances * 0.75 + big * 1.92); // 일반 75% / 강력 192% × 투창 수
+        if (big > 0) raw += applyAttach(t, "electric", self, log); // 강력 썬더랜스 전기 부착
+        self.ultCharge = Math.min(self.ultCost, self.ultCharge + (lances + big) * 4); // 고효율 배송(회수 명중 궁 +4)
+        log.push(`  → 썬더랜스 ${lances + big}개 회수! 중복 전기 폭딜${big ? " + 전기 부착" : ""}`);
+        self.procCount = 0; self.gaugeRecovered = 0; // 회수 완료
+      }
     }
     if (skill.forceBurn && t.hp > 0) { // 울프가드 늑대의 분노: 강제 연소 + 불타는 송곳니
       t.dot = Math.round(self.attack * eb(self) * 0.36); setTimer(t, "dot", DUR_DOT); add(t, "combustion");
@@ -477,9 +562,19 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
       healUnit(self, 60 + self.gearGrade * 0.3, s, log);
       self.multiHit = Math.min(4, self.multiHit + 1);
     }
+    // 레바테인 황혼 변신: 강화 일반공격 ×3(위키 강화 평타 464%/일반 157%≈2.95). 배틀 강화는 흡수 블록에서 처리
+    if (self.id === "laevatain" && skill.kind === "attack" && (self.timers.twilight || 0) > 0) raw *= 3;
+    // 장방이 천리의 경지 변신: 강화 일반공격 ×2.5(궁 중 평타 강화)
+    if (self.id === "zhuangfangyi" && skill.kind === "attack" && (self.timers.heavenly || 0) > 0) raw *= 2.5;
     // 글로벌 배율: 치명타 기댓값(시전자) → 증폭(시전자)+취약(대상,위계+부식) → 불균형(+30%) → 현실정지 → 비호
-    let dmg = raw * (1 + self.critRate * self.critDmg); // 치명타 기댓값(RNG 대신)
-    dmg *= 1 + ampFor(self, elem) + vulnFor(t, elem);
+    let cr = self.critRate, cd = self.critDmg;
+    if (self.id === "yvonne") { // 이본: 아이스 슈터 변신(치확 누적 만스택 +30%·치피 +60%) + 빙점(냉기 적 치피 +20%·동결 ×2 +40%)
+      if (skill.kind === "ult") { cr += 0.3; cd += 0.6; }
+      if (yvFrozen) cd += 0.4; else if (yvCryo) cd += 0.2;
+    }
+    let dmg = raw * (1 + cr * cd); // 치명타 기댓값(RNG 대신)
+    const vMul = self.id === "lastrite" && skill.kind === "ult" ? 1.5 : 1; // 라스트 라이트 저온 취성(궁 냉기/아츠 취약 1.5배 간주)
+    dmg *= 1 + ampFor(self, elem) + vulnFor(t, elem) * vMul;
     if (t.staggered) dmg *= 1.3;
     if (self.id === "perlica" && t.staggered) dmg *= 1.3; // 펠리카 오블리터레이션 프로토콜(불균형 적 추가 +30%)
     if (self.id === "fluorite" && (t.speedMod || 0) < 0) dmg *= 1.2; // 플루라이트 몰락의 조력자(감속 적 +20%)
@@ -502,6 +597,11 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
       s.allyHit = true;
       // 강철에는 강철로(엠버): 피해받을 때 공격력 +9%, 최대 3스택(=+27%), 7초≈2턴
       if (t.id === "ember") { t.atkBuff = Math.min(0.27, (t.atkBuff || 0) + 0.09); setTimer(t, "atkBuff", 2); }
+      // 부활의 불씨(레바테인): HP 40% 이하로 떨어지면 90% 비호 + 회복(120초 쿨 1회)
+      if (t.id === "laevatain" && t.hp / t.maxHp <= 0.4 && (t.timers.embersCd || 0) <= 0) {
+        applyBuff(t, "protection", 0.9, undefined, 2); healUnit(t, Math.round(t.maxHp * 0.1), s, log); setTimer(t, "embersCd", 12);
+        log.push(`  → 부활의 불씨! 90% 비호 + 회복`);
+      }
       // 패링(스노우샤인·카치르): 방패 든 동안 피격 시 반격(공격자=self). 디펜더별 반격 효과 상이.
       if (self.side === "enemy") {
         const snow = s.units.find((u) => u.id === "snowshine" && u.hp > 0 && (u.timers.guard || 0) > 0);
@@ -641,6 +741,44 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
       }
       log.push(`  → 고대의 진! 시간 정지(다음 1턴 행동 불가) + 지속 냉기`);
     }
+  }
+  // 라스트 라이트(스트라이커): 배틀/연계로만 궁 에너지 자가 충전(환영 추격 +16 / 겨울 포식자 +50, 스택 비례 근사)
+  if (self.id === "lastrite") {
+    if (skill.kind === "battle") self.ultCharge = Math.min(self.ultCost, self.ultCharge + 16);
+    if (skill.kind === "link") self.ultCharge = Math.min(self.ultCost, self.ultCharge + 50);
+  }
+  // 아비웨나(스트라이커): 썬더랜스 설치 — 연계 일반 3개(procCount) / 궁 강력 1개(gaugeRecovered). 부착 미소모. 고효율 배송(설치 명중 궁 +4)
+  if (self.id === "avywenna") {
+    if (skill.kind === "link") { self.procCount = (self.procCount || 0) + 3; self.ultCharge = Math.min(self.ultCost, self.ultCharge + 12); log.push(`  → 썬더랜스 3개 설치 (보유 일반 ${self.procCount}/강력 ${self.gaugeRecovered || 0})`); }
+    if (skill.kind === "ult") { self.gaugeRecovered = (self.gaugeRecovered || 0) + 1; log.push(`  → 강력 썬더랜스 설치 (보유 일반 ${self.procCount || 0}/강력 ${self.gaugeRecovered})`); }
+  }
+  // 판(스트라이커): 전분 풀기 — 강타로 방어 불능 소모 시 소모 스택당 물리 피해 +6%(최대 4스택=+24%, 10초≈2턴)
+  if (self.id === "dapan" && skill.kind === "link" && primaryPre >= 1) {
+    const consumed = Math.min(4, primaryPre);
+    self.amp.physical = Math.min(0.24, (self.amp.physical || 0) + 0.06 * consumed); setTimer(self, "amp:physical", 2);
+    log.push(`  → 전분 풀기! 물리 피해 +${Math.round(self.amp.physical * 100)}% (방불 ${consumed} 소모)`);
+  }
+  // 레바테인(스트라이커): 열화 연계 궁 에너지(명중 수 비례). 녹아내린 불꽃 빌드는 흡수 루프에서 처리
+  if (self.id === "laevatain" && skill.kind === "link") {
+    const hits = pickTargets(s, self, skill).length;
+    self.ultCharge = Math.min(self.ultCost, self.ultCharge + (hits >= 3 ? 35 : hits === 2 ? 30 : 25));
+    log.push(`  → 열화 궁 충전 (${hits}명)`);
+  }
+  // 레바테인 황혼: 열화의 마검 변신(15초≈3턴) — 지속 동안 일반공격/배틀 강화(act 배수)
+  if (self.id === "laevatain" && skill.kind === "ult") {
+    setTimer(self, "twilight", 3);
+    log.push(`  → 황혼 변신! 15초간 일반공격·배틀 스킬 강화`);
+  }
+  // 이본(스트라이커): 꽁꽁이 연계 — 명중 시 궁 에너지 +10(여러 목표여도 1회)
+  if (self.id === "yvonne" && skill.kind === "link") {
+    self.ultCharge = Math.min(self.ultCost, self.ultCharge + 10);
+    log.push(`  → 꽁꽁이 궁 충전 (+10)`);
+  }
+  // 장방이(스트라이커): 심판의 폭풍 — 천리의 경지 변신(25초≈4턴, 평타/배틀 강화·방해 면역) + 첫 배틀 무소모 청뢰검 3자루
+  if (self.id === "zhuangfangyi" && skill.kind === "ult") {
+    setTimer(self, "heavenly", 4);
+    self.procCount = Math.min(9, Math.max(self.procCount || 0, 3));
+    log.push(`  → 심판의 폭풍! 천리의 경지 변신 (청뢰검 ${self.procCount}/9)`);
   }
   if (skill.kind === "attack" && self.side === "ally") { // 강력한 일격/처형 → 스킬 게이지 회복
     s.skillGauge = Math.min(s.maxGauge, s.skillGauge + (executed ? EXEC_RECOVER : BASIC_RECOVER));
