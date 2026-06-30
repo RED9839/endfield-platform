@@ -1,6 +1,6 @@
 // ===== DD류 물리 4인 + 적 정의 (프로토타입) =====
 // 스킬은 위키 매핑. 사용 요구(requires)가 카드 모델에서 깨지던 "연계 조건"을 DD류에선 자연 흡수.
-import { bumpVuln, vulnFor, setTimer, ELEMENTS, type DDClass, type DDSkill, type DDUnit } from "./combat";
+import { bumpVuln, vulnFor, setTimer, applyBuff, ELEMENTS, type DDClass, type DDSkill, type DDUnit } from "./combat";
 
 export const SKILLS: Record<string, DDSkill[]> = {
   // 진천우: 최고 방불 누적 + 고계수 단일 누커(보스 삭제기). 빠른 선딜(차지 캔슬)·평타 속도.
@@ -82,16 +82,65 @@ export const SKILLS: Record<string, DDSkill[]> = {
     // 절심(궁 311%, 게이지 80): 강제 띄우기+넘어뜨리기(방불 부여) + 추형 전환.
     { id: "mf-u", name: "절심", kind: "ult", fromPos: [1, 2, 3], target: "single-front", power: 3.11, element: "physical", staggerVal: 20, selfUlt: true, anomaly: "knockdown", setStanceTo: 1, note: "방불 부여(넘어뜨리기) + 추형 전환" },
   ],
-  // 포그라니치니크: 갑옷 파괴(관통). 전선 분쇄로 방불 소모→물리취약.
+  // 카뮤: 열기/장병기 뱅가드(★6 한정, "다 떡칠"). 열기 부착+취약+허약 + 게이지 + 연타 + 회복 + 핏빛날개(배회 디버프).
+  // 재능: 죄를 쫓는 자(연계가 날개 적 명중 시 회복+연타) · 혈류 소생(자기 회복 시 팀 열기 증폭). 주스탯 민첩.
+  camu: [
+    // 사르는 불꽃(배틀 89%, 불균형 10): 열기 + 열기 부착. 핏빛 날개 배회 → 허약 5% + 열기취약 5% + 날개 마킹.
+    { id: "camu-b", name: "사르는 불꽃", kind: "battle", fromPos: [1, 2, 3], target: "single-front", power: 0.89, element: "heat", attach: "heat", staggerVal: 10,
+      apply: (t) => { applyBuff(t, "weaken", 0.05); bumpVuln(t, "heat", 0.05); if (!t.statuses.includes("wing")) t.statuses.push("wing"); setTimer(t, "wing", 8); }, note: "열기 부착 + 허약/열기취약 + 핏빛 날개" },
+    // 영혼의 가시(연계 133%, 쿨 20초): 열기 부착 소모/흡수 후. 게이지 16. 죄를 쫓는 자(날개 적 → 회복+연타).
+    { id: "camu-l", name: "영혼의 가시", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 1.33, element: "heat", staggerVal: 10, cooldown: 4, gaugeGain: 16,
+      requires: (_t, _s, st) => !!st.anomalyConsumed, requiresText: "열기 부착 소모됨", note: "게이지 수급 + (날개 적)회복/연타" },
+    // 선혈의 비(궁 267%, 게이지 130): 광역 열기 + 열기 부착 + 게이지. 추적 교체(근사).
+    { id: "camu-u", name: "선혈의 비", kind: "ult", fromPos: [1, 2, 3], target: "row", power: 2.67, element: "heat", staggerVal: 15, attach: "heat", selfUlt: true, gaugeGain: 32, note: "광역 열기 부착 + 게이지" },
+  ],
+  // 아케쿠리: 열기/한손검 뱅가드(★4, 탈4성 범용). 속성 무관 게이지 수급 — 불균형 조건 연계 + 무딜 궁(게이지 대량 회복) + 연타.
+  // 재능: 승리의 함성(연계 게이지 +지능→장비등급) · 몰입의 시간(궁 지속 중 연타). 열기 부착도 보유.
+  akekuri: [
+    // 열정 분출(배틀 142%, 불균형 10): 열기 + 열기 부착.
+    { id: "ake-b", name: "열정 분출", kind: "battle", fromPos: [1, 2, 3], target: "single-front", power: 1.42, element: "heat", attach: "heat", staggerVal: 10, note: "열기 부착" },
+    // 섬광 돌진(연계 80×2=160%, 쿨 10초): 불균형 상태/불균형 지점 적. 게이지 15(승리의 함성으로 증가).
+    { id: "ake-l", name: "섬광 돌진", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 1.6, element: "physical", staggerVal: 10, cooldown: 2, gaugeGain: 15,
+      requires: (t) => !!t && t.staggered, requiresText: "불균형 적", note: "딜타임 직전 게이지 수급(승리의 함성)" },
+    // 소대, 집합!(궁, 게이지 120): 무딜. 게이지 대량 회복(58) + 연타 획득(몰입의 시간).
+    { id: "ake-u", name: "소대, 집합!", kind: "ult", fromPos: [1, 2, 3], target: "self", power: 0, staggerVal: 0, selfUlt: true, gaugeGain: 58, grantsMultiHit: 1, note: "게이지 대량 회복 + 연타(몰입의 시간, 소모 후 부여)" },
+  ],
+  // 알레쉬: 냉기/한손검 뱅가드(★5). 강제 동결(냉기 단독 동결!) + 게이지 수급 + 아츠이상/결정 소모 연계 + 린수 확률.
+  // → 에스텔라 쇄빙 파티 핵심(동결 공급). 재능: 급속 냉동(동결 시 궁충) · 낚시의 달인(린수 확률, 지능→장비등급).
+  alesh: [
+    // 비정규 루어(배틀 200%, 불균형 10): 물리. 냉기 부착 적이면 냉기 소모 + 강제 동결 + 게이지(10/20/30/40).
+    { id: "ale-b", name: "비정규 루어", kind: "battle", fromPos: [1, 2, 3], target: "single-front", power: 2.0, element: "physical", staggerVal: 10, forceFreeze: true, note: "냉기 부착 적 → 강제 동결 + 게이지" },
+    // 얼음 낚시 기술(연계 133%, 쿨 9초≈2턴): 아츠이상/결정 소모됐을 때. 게이지 10 + 린수 확률(강화 213% + 게이지).
+    { id: "ale-l", name: "얼음 낚시 기술", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 1.33, element: "physical", staggerVal: 10, cooldown: 2, gaugeGain: 10, lure: { power: 2.13, gauge: 10 },
+      requires: (_t, _s, st) => !!st.anomalyConsumed, requiresText: "아츠이상/결정 소모됨", note: "게이지 수급 + 린수 확률 강화" },
+    // 월척이다!(궁 436%, 게이지 100): 광역 냉기 + 냉기 부착 + 게이지. 처치 시 추가 게이지.
+    { id: "ale-u", name: "월척이다!", kind: "ult", fromPos: [1, 2, 3], target: "all", power: 4.36, element: "cryo", staggerVal: 20, attach: "cryo", selfUlt: true, gaugeGain: 20, note: "광역 냉기 부착 + 게이지" },
+  ],
+  // 아크라이트: 전기/한손검 뱅가드(★5). 감전 소모 + 초단쿨(3초) 연계 게이지 수급 + 팀 전기 증폭(지능 비례, 근사).
+  // 재능: 황무지의 방랑자(질풍 3회 발동 시 팀 전기 피해↑ — 미구현 근사) · 만물의 지혜(아츠 부착 면역 — 미구현).
+  arclight: [
+    // 질풍 섬광(배틀 45+45%, 불균형 10): 2회 베기. 감전 적이면 감전 소모 추가 전기(180%) + 게이지 30.
+    { id: "arc-b", name: "질풍 섬광", kind: "battle", fromPos: [1, 2, 3], target: "single-front", power: 0.9, element: "physical", staggerVal: 10, shockBonus: { power: 1.8, gauge: 30 }, note: "감전 적이면 추가 전기 + 게이지 수급" },
+    // 천둥의 울림(연계 155%, 쿨 3초≈1턴): 감전 적/감전 소모됐을 때. 게이지 8 + 궁 에너지. ← 핵심(초단쿨 수급)
+    { id: "arc-l", name: "천둥의 울림", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 1.55, element: "physical", staggerVal: 5, cooldown: 1, gaugeGain: 8,
+      requires: (t) => !!t && t.statuses.includes("shock"), requiresText: "감전 적", note: "초단쿨 연계 게이지 수급" },
+    // 천둥번개(궁 156+244%=400%, 게이지 90): 돌진 전기 + 전기 부착 → 폭파. 전기 부착 적이면 강제 감전.
+    { id: "arc-u", name: "천둥번개", kind: "ult", fromPos: [1, 2, 3], target: "row", power: 4.0, element: "electric", staggerVal: 7, attach: "electric", forceShock: true, selfUlt: true, note: "전기 부착 + 강제 감전" },
+  ],
+  // 포그라니치니크: 물리/한손검 뱅가드(유일 6성 뱅가드). 갑옷 파괴(유일) + 스킬 게이지 수급 + 불균형 누적.
+  // 재능: 생존의 깃발(게이지 80 회복마다 사기 격양 — 미구현 근사) · 전술 지도. 자체 방불 부여는 궁뿐 → 팀 빌더 의존.
   pogranichnik: [
-    { id: "pg-b", name: "전선 분쇄", kind: "battle", fromPos: [1, 2, 3], target: "row", power: 1.5, anomaly: "armor-break", note: "갑옷 파괴(방불 소모→관통)" },
-    { id: "pg-l", name: "보름달 참격", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 2.0,
-      requires: (t) => !!t && (t.physBreak > 0 || t.statuses.includes("armor-break")), requiresText: "방불/갑옷파괴 적", note: "단계별 베기" },
-    { id: "pg-u", name: "방패병 부대, 전진", kind: "ult", fromPos: [1, 2, 3, 4], target: "all", power: 2.0, selfUlt: true, note: "진군 광역타" },
+    // 전선 분쇄(배틀 86+106%=192%, 불균형 10): 갑옷 파괴(유일) + 방불 소모량 비례 게이지 회복(5/10/20/30).
+    { id: "pg-b", name: "전선 분쇄", kind: "battle", fromPos: [1, 2, 3], target: "row", power: 1.92, element: "physical", staggerVal: 10, anomaly: "armor-break", gaugeOnConsume: [5, 10, 20, 30], note: "갑옷 파괴 + 방불 소모 비례 게이지 회복" },
+    // 보름달 참격(연계 42+54+66%=162%, 쿨 18초): 강타/갑옷파괴로 방불 소모됐을 때. 게이지 회복.
+    { id: "pg-l", name: "보름달 참격", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 1.62, element: "physical", staggerVal: 11, cooldown: 4, gaugeGain: 25,
+      requires: (t) => !!t && t.statuses.includes("armor-break"), requiresText: "갑옷파괴(방불 소모) 적", note: "단계별 베기 + 게이지 회복" },
+    // 방패병 부대, 전진(궁 133%, 게이지 90): 몹몰이 진군 + 넘어뜨리기(방불) + 철의 서약 5포인트 부여(물리이상마다 교란/최후의 승부).
+    { id: "pg-u", name: "방패병 부대, 전진", kind: "ult", fromPos: [1, 2, 3], target: "all", power: 1.33, element: "physical", staggerVal: 10, anomaly: "knockdown", selfUlt: true, grantsIronOath: 5, note: "진군 몹몰이 + 방불 + 철의 서약 5(추가타 체인)" },
   ],
 };
 
-type Base = { id: string; name: string; cls: DDClass; hp: number; attack: number; speed: number; ultCost: number; rampAtk?: number };
+type Base = { id: string; name: string; cls: DDClass; hp: number; attack: number; speed: number; ultCost: number; rampAtk?: number; artsImmune?: number };
 const OP_BASE: Record<string, Base> = {
   chenqianyu: { id: "chenqianyu", name: "진천우", cls: "guard", hp: 2689, attack: 95, speed: 86, ultCost: 70, rampAtk: 0.08 }, // 칼날 베기
   lifeng: { id: "lifeng", name: "여풍", cls: "guard", hp: 2689, attack: 110, speed: 69, ultCost: 90 },
@@ -99,15 +148,21 @@ const OP_BASE: Record<string, Base> = {
   estella: { id: "estella", name: "에스텔라", cls: "guard", hp: 2689, attack: 110, speed: 47, ultCost: 70 }, // 냉기/가드, 주스탯 의지·민첩 낮음
   rossi: { id: "rossi", name: "로시", cls: "guard", hp: 2689, attack: 110, speed: 90, ultCost: 110 }, // 물리/열기 하이브리드, 민첩 90(최상위), 궁 게이지 110
   mifu: { id: "mifu", name: "미브", cls: "guard", hp: 2689, attack: 110, speed: 46, ultCost: 80 }, // 물리/양손검 가드(공식). 주스탯 힘·민첩 낮음
-  pogranichnik: { id: "pogranichnik", name: "포그라니치니크", cls: "vanguard", hp: 2700, attack: 130, speed: 47, ultCost: 90 }, // 뱅가드(갑옷 파괴·게이지 회복)
+  arclight: { id: "arclight", name: "아크라이트", cls: "vanguard", hp: 2689, attack: 110, speed: 71, ultCost: 90, artsImmune: 0.5 }, // 전기 뱅가드★5. 만물의 지혜=아츠 부착 50% 확률 면역
+  alesh: { id: "alesh", name: "알레쉬", cls: "vanguard", hp: 2689, attack: 110, speed: 47, ultCost: 100 }, // 냉기 뱅가드★5. 강제 동결, 주스탯 힘·보조 지능
+  akekuri: { id: "akekuri", name: "아케쿠리", cls: "vanguard", hp: 2689, attack: 110, speed: 70, ultCost: 120 }, // 열기 뱅가드★4 범용. 무딜 궁(게이지 120), 주스탯 민첩·보조 지능
+  camu: { id: "camu", name: "카뮤", cls: "vanguard", hp: 2689, attack: 110, speed: 80, ultCost: 130 }, // 열기 뱅가드★6 한정. 만능 유틸+회복, 민첩 80·궁 130
+  pogranichnik: { id: "pogranichnik", name: "포그라니치니크", cls: "vanguard", hp: 2689, attack: 130, speed: 55, ultCost: 90 }, // 뱅가드(갑옷 파괴·게이지 회복). 주스탯 의지·민첩 55
 };
 
 // 매 유닛 신선한 상태 객체(중첩 객체 공유 참조 방지). defense/resist 기본 0 → 밸런스 무변.
-const zero = () => ({ physBreak: 0, stagger: 0, staggered: false, staggerTimer: 0, statuses: [] as DDUnit["statuses"], dot: 0, multiHit: 0, ultCharge: 0, atkBuff: 0, critRate: 0.05, critDmg: 0.5, arts: { heat: 0, electric: 0, cryo: 0, nature: 0 }, frozen: 0, amp: {}, vuln: {}, weakenMul: 1, protection: 0, shield: 0, speedMod: 0, timers: {}, linkCd: 0, defense: 0, resist: { physical: 0, arts: 0 }, stance: 0 });
+const zero = () => ({ physBreak: 0, stagger: 0, staggered: false, staggerTimer: 0, statuses: [] as DDUnit["statuses"], dot: 0, multiHit: 0, ultCharge: 0, atkBuff: 0, critRate: 0.05, critDmg: 0.5, arts: { heat: 0, electric: 0, cryo: 0, nature: 0 }, frozen: 0, amp: {}, vuln: {}, weakenMul: 1, protection: 0, shield: 0, speedMod: 0, timers: {}, linkCd: 0, defense: 0, resist: { physical: 0, arts: 0 }, stance: 0, ironOath: 0, gaugeRecovered: 0, gearGrade: 60, procCount: 0 });
 
 export function makeAlly(id: string, pos: number): DDUnit {
   const b = OP_BASE[id];
-  return { ...b, side: "ally", pos, maxHp: b.hp, staggerMax: 0, ...zero() }; // 아군은 불균형 없음
+  const u: DDUnit = { ...b, side: "ally", pos, maxHp: b.hp, staggerMax: 0, ...zero() }; // 아군은 불균형 없음
+  if (b.artsImmune) u.artsImmune = b.artsImmune; // 만물의 지혜(아크라이트): 아츠 부착 확률 면역
+  return u;
 }
 
 export function alliesPhysical(): DDUnit[] {

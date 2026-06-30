@@ -7,7 +7,7 @@ function unit(over: Partial<DDUnit>): DDUnit {
     physBreak: 0, stagger: 0, staggerMax: 0, staggered: false, staggerTimer: 0,
     statuses: [], dot: 0, multiHit: 0, ultCharge: 0, ultCost: 999, atkBuff: 0,
     arts: { heat: 0, electric: 0, cryo: 0, nature: 0 }, frozen: 0,
-    amp: {}, vuln: {}, weakenMul: 1, protection: 0, shield: 0, speedMod: 0, timers: {}, linkCd: 0, defense: 0, resist: { physical: 0, arts: 0 }, critRate: 0.05, critDmg: 0.5, stance: 0, ...over,
+    amp: {}, vuln: {}, weakenMul: 1, protection: 0, shield: 0, speedMod: 0, timers: {}, linkCd: 0, defense: 0, resist: { physical: 0, arts: 0 }, critRate: 0.05, critDmg: 0.5, stance: 0, ironOath: 0, gaugeRecovered: 0, gearGrade: 60, procCount: 0, ...over,
   };
 }
 const SK = (element: DDSkill["element"] = "physical"): DDSkill =>
