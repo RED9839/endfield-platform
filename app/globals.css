@@ -433,6 +433,43 @@ input[type="checkbox"] {
   background: linear-gradient(90deg, transparent, rgba(207, 159, 62, 0.65) 20%, rgba(232, 197, 106, 0.9) 50%, rgba(207, 159, 62, 0.65) 80%, transparent);
 }
 
+/* ===== 전투 연출 애니메이션(턴제 유지, 게임처럼) ===== */
+@keyframes dd-float-up {
+  0% { opacity: 0; transform: translate(-50%, 6px) scale(0.7); }
+  16% { opacity: 1; transform: translate(-50%, -8px) scale(1.15); }
+  100% { opacity: 0; transform: translate(-50%, -52px) scale(1); }
+}
+@keyframes dd-hit-flash { 0% { opacity: 0.8; } 100% { opacity: 0; } }
+@keyframes dd-shake-a { 0%,100% { transform: translateX(0); } 15% { transform: translateX(-6px); } 35% { transform: translateX(6px); } 55% { transform: translateX(-4px); } 75% { transform: translateX(4px); } 90% { transform: translateX(-2px); } }
+@keyframes dd-shake-b { 0%,100% { transform: translateX(0); } 15% { transform: translateX(-6px); } 35% { transform: translateX(6px); } 55% { transform: translateX(-4px); } 75% { transform: translateX(4px); } 90% { transform: translateX(-2px); } }
+@keyframes dd-act-a { 0%,100% { transform: translateY(0) scale(1); } 45% { transform: translateY(-8px) scale(1.06); } }
+@keyframes dd-act-b { 0%,100% { transform: translateY(0) scale(1); } 45% { transform: translateY(-8px) scale(1.06); } }
+@keyframes dd-active-pulse {
+  0%,100% { box-shadow: 0 0 0 1px rgba(207,159,62,0.55), 0 0 12px rgba(207,159,62,0.3); }
+  50% { box-shadow: 0 0 0 2px rgba(232,197,106,0.95), 0 0 26px rgba(207,159,62,0.6); }
+}
+@keyframes dd-cast-in {
+  0% { opacity: 0; transform: translate(-50%, 8px); }
+  18% { opacity: 1; transform: translate(-50%, 0); }
+  78% { opacity: 1; transform: translate(-50%, -2px); }
+  100% { opacity: 0; transform: translate(-50%, -10px); }
+}
+@keyframes dd-round-in {
+  0% { opacity: 0; letter-spacing: 0.6em; transform: scale(1.15); }
+  25% { opacity: 1; }
+  75% { opacity: 1; letter-spacing: 0.28em; transform: scale(1); }
+  100% { opacity: 0; }
+}
+.dd-float { position: absolute; left: 50%; top: -2px; pointer-events: none; z-index: 30; animation: dd-float-up 1s ease-out forwards; text-shadow: 0 2px 4px #000, 0 0 2px #000; }
+.dd-flash { position: absolute; inset: 0; z-index: 12; pointer-events: none; background: radial-gradient(circle, rgba(255,90,60,0.55), transparent 72%); animation: dd-hit-flash 0.5s ease-out forwards; }
+.dd-shake-a { animation: dd-shake-a 0.42s ease-in-out; }
+.dd-shake-b { animation: dd-shake-b 0.42s ease-in-out; }
+.dd-act-a { animation: dd-act-a 0.5s ease-out; }
+.dd-act-b { animation: dd-act-b 0.5s ease-out; }
+.dd-active { animation: dd-active-pulse 1.1s ease-in-out infinite; }
+.dd-cast { position: absolute; left: 50%; bottom: 100%; margin-bottom: 6px; transform: translateX(-50%); white-space: nowrap; z-index: 30; pointer-events: none; animation: dd-cast-in 1.05s ease-out forwards; }
+.dd-round { animation: dd-round-in 1.1s ease-out forwards; }
+
 /* 스크롤바 — 청동 */
 .dd-realm * { scrollbar-color: #8a6a2c #0a0705; }
 .dd-realm ::-webkit-scrollbar-thumb {
