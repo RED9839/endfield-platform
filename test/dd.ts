@@ -71,12 +71,12 @@ function runBattle(allies: DDUnit[], enemies: DDUnit[], label: string): "ally" |
   return win ?? "enemy";
 }
 
-// 전투 1: 일반전(잡병 2 + 중장 1)
+// 전투 1: 일반전(광석수 소대 — 록하울러 2 + 무장 맹글러)
 runBattle(
   alliesPhysical(),
-  [makeEnemy(ENEMY_DEFS.mob, 1), makeEnemy(ENEMY_DEFS.mob, 2), makeEnemy(ENEMY_DEFS.brute, 3)],
+  [makeEnemy(ENEMY_DEFS.rockhowler, 1), makeEnemy(ENEMY_DEFS.rockhowler, 2), makeEnemy(ENEMY_DEFS.manglerbeast, 3)],
   "전투 1 — 일반전",
 );
 
-// 전투 2: 보스전(단일 고체력 → 진천우 예풍상 + 관리자 강타 활약 기대)
-runBattle(alliesPhysical(), [makeEnemy(ENEMY_DEFS.boss, 1)], "전투 2 — 보스전");
+// 전투 2: 보스전(마블 아겔로미레 — 저항 0 인간형, 물리 파티 정면 승부). 저항 보스는 속성 팀 필요.
+runBattle(alliesPhysical(), [makeEnemy(ENEMY_DEFS["marble-aggelo"], 1)], "전투 2 — 보스전");

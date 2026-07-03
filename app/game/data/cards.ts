@@ -6,6 +6,25 @@ export const CARD_COST: Record<SkillKind, number> = { attack: 1, "battle-skill":
 export const CARD_STAGGER: Record<SkillKind, number> = { attack: 14, "battle-skill": 34, "link-skill": 10, ultimate: 55 };
 export const TACTICAL_STAGGER = 16;
 
+// 오퍼별 스킬 카드 표시문(인게임 고유 기믹 반영). makeCard에서 power 뒤에 붙는다. 재구성 시 오퍼별로 채운다.
+const SKILL_EFFECT_LINES: Record<string, Partial<Record<SkillKind, string>>> = {
+  endministrator: {
+    "battle-skill": "강타(방불 소모 비례)",
+    "link-skill": "결정 부착 · 봉인",
+    ultimate: "결정 파괴 추가타",
+  },
+  lifeng: {
+    "battle-skill": "넘어뜨리기 + 물리 취약(방불 없을 때)",
+    "link-skill": "연타 획득",
+    ultimate: "넘어뜨리기 + 연타 소모 추가타",
+  },
+  chenqianyu: {
+    "battle-skill": "띄우기(방불)",
+    "link-skill": "관통 · 띄우기(방불)",
+    ultimate: "단일 7단 누킹(보스 삭제기)",
+  },
+};
+
 // 카드 삭제 비용(상점): 삭제할수록 점점 비싸진다.
 export const CARD_REMOVE_BASE = 40;
 export const CARD_REMOVE_STEP = 35;
@@ -77,17 +96,21 @@ export function makeCard(op: PartyMember, kind: SkillKind, uid: string, elite = 
   // 아델리아(corrosion-support)는 스킬로 자연 피해를 줘 부식 부착을 거는 디버퍼다. 회복은 재능(healOnCast)으로 처리 → 스킬은 데미지 카드.
   // 방패 디펜더(스노우샤인·카치르): 배틀 스킬만 방패 막기(보호막=비호). 연계(치유/물리딜)·궁극(광역 딜)은 정상 피해 카드.
   const effect = op.skillMechanic === "protective-arts" && kind === "battle-skill" ? "shield" : undefined;
+  // 오퍼별 스킬 표시문(인게임 고유 기믹 반영). 없으면 일반 템플릿으로 폴백. 재구성 시 오퍼별로 채운다.
+  const override = SKILL_EFFECT_LINES[op.id]?.[kind];
   const effectLine = effect === "shield"
     ? "파티 보호막"
     : effect === "heal"
       ? "파티 회복"
-      : kind === "ultimate"
-        ? `전체 · ${power} 피해`
-        : kind === "link-skill"
-          ? `${power} · 불균형 시 강타(×1.5)`
-          : kind === "battle-skill"
-            ? `${power} · 불균형 누적${op.physBreak === "build" ? " · 방어불능+" : op.physBreak === "consume" ? " · 강타 소모" : ""}`
-            : `${power} 피해`;
+      : override
+        ? `${power} · ${override}`
+        : kind === "ultimate"
+          ? `전체 · ${power} 피해`
+          : kind === "link-skill"
+            ? `${power} · 불균형 시 강타(×1.5)`
+            : kind === "battle-skill"
+              ? `${power} · 불균형 누적${op.physBreak === "build" ? " · 방어불능+" : op.physBreak === "consume" ? " · 강타 소모" : ""}`
+              : `${power} 피해`;
   // 불균형치 역할 차등(재분배 — 평균 유지): 물리 빌더 ×1.2, 소비형 ×1.0, 그 외(캐스터·서포터 등) ×0.85.
   const staggerMod = op.physBreak === "build" ? 1.2 : op.physBreak === "consume" ? 1.0 : 0.85;
   const stagger = effect ? 0 : Math.round(upStag(CARD_STAGGER[kind], elite) * staggerMod);

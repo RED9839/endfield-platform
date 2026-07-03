@@ -58,6 +58,7 @@ export const operators: Operator[] = [
     battleAoe: true,
     physBreak: "consume",
     physAnomaly: "crush",
+    anomalySkills: ["battle-skill"], // 강타는 배틀 「구성 시퀀스」 전용(연계=결정 부착, 궁극=결정 파괴)
   },
   {
     id: "perlica",
@@ -139,6 +140,7 @@ export const operators: Operator[] = [
     linkAoe: true,
     physBreak: "build",
     physAnomaly: "launch",
+    anomalySkills: ["battle-skill", "link-skill"], // 띄우기는 배틀 「귀궁우」·연계 「견천하」 전용(궁극 「예풍상」은 순수 단일 누킹, 띄우기 없음)
     ultSingle: true,
   },
   {
@@ -595,6 +597,7 @@ export const extraOperators: Operator[] = [
     battleAoe: true,
     physBreak: "build",
     physAnomaly: "knockdown",
+    anomalySkills: ["battle-skill", "ultimate"], // 넘어뜨리기는 배틀 「신체 정화」·궁극 「움직이지 않는 마음」 전용(연계=물리+연타만)
   },
   {
     id: "gilberta",

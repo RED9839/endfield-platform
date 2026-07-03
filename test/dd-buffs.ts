@@ -7,7 +7,7 @@ function unit(over: Partial<DDUnit>): DDUnit {
     physBreak: 0, stagger: 0, staggerMax: 0, staggered: false, staggerTimer: 0,
     statuses: [], dot: 0, multiHit: 0, ultCharge: 0, ultCost: 999, atkBuff: 0,
     arts: { heat: 0, electric: 0, cryo: 0, nature: 0 }, frozen: 0,
-    amp: {}, vuln: {}, weakenMul: 1, protection: 0, shield: 0, speedMod: 0, timers: {}, linkCd: 0, defense: 0, resist: { physical: 0, arts: 0 }, critRate: 0.05, critDmg: 0.5, stance: 0, ironOath: 0, gaugeRecovered: 0, gearGrade: 60, procCount: 0, ...over,
+    amp: {}, vuln: {}, weakenMul: 1, protection: 0, shield: 0, speedMod: 0, timers: {}, linkCd: 0, defense: 0, resist: { physical: 0, heat: 0, electric: 0, cryo: 0, nature: 0 }, critRate: 0.05, critDmg: 0.5, stance: 0, ironOath: 0, gaugeRecovered: 0, gearGrade: 60, procCount: 0, utilMult: 1, ...over,
   };
 }
 const SK = (element: DDSkill["element"] = "physical"): DDSkill =>
@@ -51,8 +51,9 @@ check("허약×비호 동시", hit({ weakenMul: 0.5 }, { protection: 0.5 }), 25)
 
 console.log("── 방어력/저항(받는 피해 감소) ──");
 check("방어력 140 → 58.3% 감소", hit({}, { defense: 140 }), 41.67);
-check("물리 저항 0.2 → 20% 감소", hit({}, { resist: { physical: 0.2, arts: 0 } }), 80);
-check("아츠 저항은 물리타에 미적용", hit({}, { resist: { physical: 0, arts: 0.5 } }), 100);
+check("물리 저항 0.2 → 20% 감소", hit({}, { resist: { physical: 0.2, heat: 0, electric: 0, cryo: 0, nature: 0 } }), 80);
+check("타 속성 저항은 물리타에 미적용", hit({}, { resist: { physical: 0, heat: 0.5, electric: 0, cryo: 0, nature: 0 } }), 100);
+check("열기 약점(-0.5) → 열기타 +50%", hit({}, { resist: { physical: 0, heat: -0.5, electric: 0, cryo: 0, nature: 0 } }, SK("heat")), 150);
 check("방어력+물리취약 동시(×1.2 ×100/240)", hit({}, { defense: 140, vuln: { physical: 0.2 } }), 50);
 
 console.log("── 치명타(기댓값 ×(1+치확×치피)) ──");

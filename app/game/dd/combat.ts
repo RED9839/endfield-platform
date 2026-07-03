@@ -18,8 +18,9 @@ export type DDUnit = {
   maxHp: number;
   speed: number; // 턴 순서(민첩)
   attack: number;
+  opElement?: "physical" | Element; // 오퍼 주력 속성(장비 부품 속성 피해 보너스용)
   defense: number; // 방어력 → 받는 모든 피해 ×(100/(def+100)). 기본 0(장비로 증가)
-  resist: { physical: number; arts: number }; // 물리/아츠 저항(0~1, 1=100%감소). 민첩→물리·지능→아츠
+  resist: Record<"physical" | Element, number>; // 속성별 저항(물리/열기/전기/냉기/자연, 0~1=1%↓, 음수=약점). 위키 저항표 정합
   // 물리 이상
   physBreak: number; // 방어 불능 스택(표식) 0~4. 자체 효과 없음 — 강타/갑옷파괴로 소모, 띄우기/넘어뜨리기 효과 발동
   // 불균형치(stagger): 가득 차면 불균형 상태 → 행동 불가 + 받는 피해 +30% + 처형 가능
@@ -29,6 +30,8 @@ export type DDUnit = {
   staggerTimer: number; // 불균형 지속 라운드
   statuses: DDStatus[];
   dot: number; // 매 라운드 시작 지속 피해(연소 등)
+  regen?: number; // 매 라운드 시작 지속 회복(시트론/야침 재생 전술 아이템)
+  regenTurns?: number; // 재생 잔여 라운드
   multiHit: number; // 연타 스택: 다음 배틀/궁극 피해 강화(강타엔 미적용)
   ultCharge: number; // 궁극 게이지
   ultCost: number;
@@ -53,7 +56,28 @@ export type DDUnit = {
   gaugeRecovered: number; // 포그 생존의 깃발 누적 게이지(80마다 사기 격양)
   gearGrade: number; // 장비 등급(힘/민첩/지능/의지 통합 치환값, 명함 ~60). 스탯 비례 재능이 이걸 참조
   procCount: number; // 제너릭 재능 카운터(아크라이트 황무지의 방랑자 등)
+  utilMult: number;  // 스킬 단조 유틸 배율(취약·증폭·회복·게이지·지속). M0=1.0
+  lanceN?: number;   // 아비웨나 썬더랜스(적에게 누적, 가로채기로 소모) — 일반
+  lanceBig?: number; // 아비웨나 강력 썬더랜스(적에게 누적) — 강력(전기 부착)
   artsImmune?: number; // 아츠 부착 확률 면역(아크라이트 만물의 지혜 0.5 = 50% 무효)
+  gear?: GearBonus; // 장착 세트 효과(2부위 발동, gear.ts applyGear가 세팅). 데미지·불균형 배율에 가산
+  gearSets?: string[]; // 활성 세트명(조건부 발동 효과 트리거용 — 연소 후 열기+·연계 후 배틀+ 등)
+};
+
+// 장비 세트 전투 배율(gear.ts에서 계산해 유닛에 부착). 즉시 효과(치명·보호막·회복·게이지)는 applyGear가 스탯에 직접 반영.
+export type GearBonus = {
+  kindDmg: Partial<Record<DDSkill["kind"] | "all", number>>; // 스킬 종류별 피해 %
+  elemDmg: Partial<Record<Element | "all", number>>;         // 원소 피해 %
+  vsBroken: number; // 불균형 적 추가 피해 %
+  vsVuln: number;   // 취약 적 추가 피해 %
+  vsArts: number;   // 아츠 부착 적 추가 피해 %
+  staggerMul: number;    // 불균형 누적 증가 %
+  breakEnergy: boolean;  // 불균형 돌파 시 궁 충전
+  selfHpHighPhys: number; // 자신 HP 50%↑ 시 물리 피해 %(순행 전달자)
+  selfHpHighArts: number; // 자신 HP 50%↑ 시 아츠 피해 %(침식 차단)
+  selfHpLowReduce: number; // 자신 HP 50%↓ 시 받는 피해 감소 %(중장갑 전달자)
+  onKillHeal: number;     // 적 처치 시 자신 회복(maxHp %)(통합형 중갑)
+  onKillAtk: number;      // 적 처치 시 자신 공격력 증가(통합형 경갑)
 };
 
 export type DmgKey = "all" | "physical" | Element | "arts"; // 피해 위계 키
@@ -110,6 +134,25 @@ const rm = (u: DDUnit, s: DDStatus) => { u.statuses = u.statuses.filter((x) => x
 
 // 유효 공격력 배율: 공격력 증가(atkBuff) × 허약(weakenMul). 모든 피해 산출에 공통.
 const eb = (u: DDUnit) => (1 + (u.atkBuff || 0)) * (u.weakenMul ?? 1);
+
+// 장비 세트 조건부 발동(원작 그대로·살짝 너프): 이벤트 시 시전자에 amp 버프. 기존 amp 시스템(ampFor)으로 반영.
+// 이벤트: anomaly:<el>(아츠 이상 발동) · attach2(아츠 2부착 폭발) · crush(강타/갑옷파괴) · physBreak(띄우기/넘어뜨리기) · link/battle(스킬 사용)
+export function gearTrigger(self: DDUnit, event: string): void {
+  const gs = self.gearSets; if (!gs || !gs.length) return;
+  const amp = (key: DmgKey, v: number, dur: number, cap = v) => { self.amp[key] = Math.min(cap, (self.amp[key] || 0) + v); setTimer(self, "amp:" + key, dur); };
+  // namu 3.1 원문 실측값. amp(키, 스택당%, 지속턴, 최대누적)
+  if (event === "anomaly:heat" && gs.includes("열 작업용")) amp("heat", 0.5, 2);       // 연소 후 열기 +50%
+  if (event === "anomaly:nature" && gs.includes("열 작업용")) amp("nature", 0.5, 2);    // 부식 후 자연 +50%
+  if (event === "anomaly:electric" && gs.includes("펄스식")) amp("electric", 0.5, 2);   // 감전 후 전기 +50%
+  if (event === "anomaly:cryo" && gs.includes("펄스식")) amp("cryo", 0.5, 2);           // 동결 후 냉기 +50%
+  if ((event === "anomaly:electric" || event === "anomaly:nature") && gs.includes("식양의 흐름")) amp(event.slice(8) as DmgKey, 0.15, 5, 0.45); // 소모 시 +15%(최대 3스택)
+  if (event === "attach2" && gs.includes("조류의 물결")) amp("arts", 0.35, 2);          // 2부착 후 아츠 +35%
+  if (event === "crush" && gs.includes("고검의 잔향")) amp("physical", 0.24, 2, 0.24);   // 강타·갑옷파괴 시 물리 +6%×스택(최대 24%)
+  if (event === "physBreak" && gs.includes("경량 초자연")) amp("physical", 0.16, 2, 0.48); // 방어불능 +8%×4 + 4스택 추가 +16%
+  if (event === "link" && gs.includes("본 크러셔")) amp("all", 0.30, 2);                // 연계 후 다음 배틀 +30%
+  if (event === "link" && gs.includes("청파")) amp("all", 0.20, 2, 0.40);               // 연계 후 모든 스킬 +20%(최대 2스택)
+  if (event === "battle" && gs.includes("응룡 50식")) amp("all", 0.20, 3, 0.60);        // 배틀 후 다음 연계 +20%(최대 3스택)
+}
 const skElem = (skill: DDSkill): "physical" | Element => (skill.element && skill.element !== "physical" ? skill.element : "physical");
 
 // 증폭/취약 위계 합산: all + (physical | arts) + 속성. 상위 효과가 하위 포함.
@@ -159,7 +202,7 @@ function expire(u: DDUnit, key: string): void {
 // 방어 경감: 방어력(%감소) × 물리/아츠 저항. 받는 측 스탯 적용.
 export function mitigate(u: DDUnit, dmg: number, elem: "physical" | Element): number {
   let d = dmg * (100 / (u.defense + 100)); // 방어력: 140 → 58.3% 감소
-  d *= 1 - (elem === "physical" ? u.resist.physical : u.resist.arts); // 물리/아츠 저항(1=1%↓)
+  d *= 1 - u.resist[elem]; // 속성별 저항(1=100%감소, 음수=약점→피해 증가). 위키 물리/열기/전기/냉기/자연 저항 정합
   return d;
 }
 
@@ -204,6 +247,11 @@ const SHATTER = [2.4, 3.6, 4.8, 6.0];       // 쇄빙(동결 스택 비례, 물�
 const ELEC_VULN = [0.12, 0.16, 0.2, 0.24];  // 감전 아츠취약
 const CORR_SHRED = [0.12, 0.16, 0.2, 0.24]; // 부식 저항 감소
 
+// 스킬랭크 계수: roster/combat의 딜 계수는 나무위키 "스킬랭크1(Lv1)" 기준. 유저 밸런스 기준 = 전투스킬 9레벨·단조 0.
+// 나무위키 배율표: 스킬 Lv1~9는 선형(예 변화의 숨결 160→288%), Lv10~12가 단조1~3(→360%=M3). 단조0·Lv9 = Lv1의 ×1.8(288/160).
+// (X→Y% 표기의 Y는 Lv12=M3라 ×2.25 — 그건 단조3이므로 틀림). 아군 딜에 일괄 적용 → 단조0/스킬랭크9 재현.
+export const SKILL_RANK9 = 1.8;
+
 // 자원 경제(전투 시스템 wiki): 스킬 게이지(파티 공유) + 궁극기 에너지(개인)
 const GAUGE_COST = 100;     // 배틀 스킬 1칸 소모
 const GAUGE_REGEN = 45;     // 라운드당 자연 회복(≈12.5초/칸)
@@ -246,6 +294,7 @@ export function applyAttach(target: DDUnit, el: Element, self: DDUnit, log: stri
     // 아츠 이상: 모든 부착 소모, 나중 부착(el) 종류로 결정. 이상 레벨 = 소모 스택 수.
     const level = Math.min(4, ELEMENTS.reduce((n, e) => n + target.arts[e], 0) + 1);
     ELEMENTS.forEach((e) => (target.arts[e] = 0));
+    gearTrigger(self, "anomaly:" + el); // 열작업용(연소/부식)·펄스식(감전/동결)·식양흐름(감전/부식) 발동 버프
     if (el === "heat") { // 연소
       target.dot = Math.round(self.attack * buff * BURN_DOT[level - 1]);
       setTimer(target, "dot", DUR_DOT);
@@ -254,7 +303,7 @@ export function applyAttach(target: DDUnit, el: Element, self: DDUnit, log: stri
       return self.attack * buff * ANOM[level - 1];
     }
     if (el === "electric") { // 감전
-      bumpVuln(target, "arts", ELEC_VULN[level - 1]);
+      bumpVuln(target, "arts", ELEC_VULN[level - 1] * self.utilMult); // 스킬 단조 유틸
       add(target, "shock"); // 감전 상태(아크라이트 질풍/천둥 트리거)
       log.push(`  → 감전! ${ANOM[level - 1] * 100}% 전기 + 아츠취약 ${ELEC_VULN[level - 1] * 100}%`);
       return self.attack * buff * ANOM[level - 1];
@@ -275,6 +324,7 @@ export function applyAttach(target: DDUnit, el: Element, self: DDUnit, log: stri
   target.arts[el] = Math.min(4, target.arts[el] + 1);
   setTimer(target, "arts:" + el, DUR_ATTACH);
   if (target.arts[el] >= 2) {
+    gearTrigger(self, "attach2"); // 조류의 물결: 아츠 2부착 후 아츠 피해+
     log.push(`  → ${EL_NAME[el]} 폭발! 160% ${EL_NAME[el]}`);
     return self.attack * buff * 1.6;
   }
@@ -294,6 +344,7 @@ export function applyAnomaly(skill: DDSkill, target: DDUnit, self: DDUnit, log: 
     const wasBreak = target.physBreak > 0;
     target.physBreak = Math.min(MAX_BREAK, target.physBreak + 1);
     setTimer(target, "physBreak", DUR_BREAK);
+    gearTrigger(self, "physBreak"); // 경량 초자연: 방어 불능 부여 후 물리+
     const label = a === "launch" ? "띄우기" : "넘어뜨리기";
     if (wasBreak) { // 방불 상태 → 120% 물리 + 불균형 10
       target.stagger += 10;
@@ -307,6 +358,7 @@ export function applyAnomaly(skill: DDSkill, target: DDUnit, self: DDUnit, log: 
     if (target.physBreak > 0) {
       const n = Math.min(4, target.physBreak);
       target.physBreak = 0;
+      gearTrigger(self, "crush"); // 고검의 잔향: 강타 후 물리+
       const cAmp = skill.crushAmp ?? 1; // 판 조미료 뿌리기: 추가 강타 피해 +10%
       log.push(`  → 강타! 방어 불능 ${n}스택 소모 → ${Math.round(CRUSH[n - 1] * cAmp * 100)}% 물리`);
       return shatter + self.attack * buff * CRUSH[n - 1] * cAmp;
@@ -320,7 +372,8 @@ export function applyAnomaly(skill: DDSkill, target: DDUnit, self: DDUnit, log: 
     if (target.physBreak > 0) {
       const n = Math.min(4, target.physBreak);
       target.physBreak = 0;
-      bumpVuln(target, "physical", ARMOR_VULN[n - 1]);
+      gearTrigger(self, "crush"); // 고검의 잔향: 갑옷파괴 후 물리+
+      bumpVuln(target, "physical", ARMOR_VULN[n - 1] * self.utilMult); // 스킬 단조 유틸
       add(target, "armor-break");
       log.push(`  → 갑옷 파괴! ${n}스택 소모 → ${ARMOR[n - 1] * 100}% 물리 + 물리취약 ${ARMOR_VULN[n - 1] * 100}%`);
       return shatter + self.attack * buff * ARMOR[n - 1];
@@ -396,7 +449,9 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
     } else if (skill.kind === "link") {
       self.ultCharge = Math.min(self.ultCost, self.ultCharge + ULT_LINK); // 연계 → 시전자 +10
       s.lastLinkAlly = self.id; // 팀 연계 윈도우(관리자 봉인 게이트)
-      self.linkCd = skill.cooldown ?? LINK_CD; // 연계 쿨타임 진입
+      let cd = skill.cooldown ?? LINK_CD;
+      if (self.id === "zhuangfangyi" && (self.timers.heavenly || 0) > 0) cd = Math.max(1, Math.round(cd / 4)); // 천리의 경지: 연계 쿨 4배(변화의 숨결 연타 → 감전 → 청뢰검 폭증)
+      self.linkCd = cd; // 연계 쿨타임 진입
     } else if (skill.kind === "ult") {
       self.ultCharge = 0;
     }
@@ -428,7 +483,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
     if (self.id === "zhuangfangyi") { // 장방이: 청뢰검(procCount) — 연계 강제 감전 / 배틀 감전 소모 → 검 생성 + 뇌격
       if (skill.kind === "link" && t.arts.electric > 0) { // 변화의 숨결: 전기 부착 소모 → 강제 감전(이미 감전이면 레벨↑)
         const n = t.arts.electric; t.arts.electric = 0; delete t.timers["arts:electric"];
-        const lvUp = has(t, "shock"); add(t, "shock"); bumpVuln(t, "arts", lvUp ? 0.16 : 0.12);
+        const lvUp = has(t, "shock"); add(t, "shock"); bumpVuln(t, "arts", (lvUp ? 0.16 : 0.12) * self.utilMult);
         self.ultCharge = Math.min(self.ultCost, self.ultCharge + 10 + 10 * n); s.anomalyConsumed = true;
         log.push(`  → 변화의 숨결! 전기 ${n}스택 소모 → 강제 감전${lvUp ? "(레벨↑)" : ""}`);
       }
@@ -443,7 +498,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
           self.amp.electric = Math.max(self.amp.electric || 0, 0.18); setTimer(self, "amp:electric", 1); // 천지의 조화
           log.push(`  → 뇌정의 부름! 청뢰검 ${self.procCount}/9 (생성 ${gen})${tw ? " · 변신 광역 강화" : ""}`);
         }
-        const per = tw ? 0.36 : 0.2;
+        const per = tw ? 0.36 : 0.2; // 스킬랭크1 계수(전역 SKILL_RANK9가 ×2.25로 스킬랭크9=45%/81% 반영)
         raw += self.attack * eb(self) * per * (self.procCount + 5); // 청뢰검 비례 뇌격(마지막 ×6) — 모든 대상(변신 시 광역)
       }
     }
@@ -466,7 +521,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
     if (skill.cryoNuke && t.arts.cryo > 0) { // 라스트 라이트 겨울 포식자: 냉기 부착 전부 소모 → 스택 비례 누킹
       const n = Math.min(4, t.arts.cryo);
       raw += self.attack * eb(self) * skill.cryoNuke * n; // 스택당 추가 피해
-      bumpVuln(t, "cryo", n * 0.04, 3); // 저체온증: 소모 스택 ×4% 냉기 취약(15초≈3턴)
+      bumpVuln(t, "cryo", n * 0.04 * self.utilMult, 3); // 저체온증: 소모 스택 ×4% 냉기 취약(15초≈3턴) · 스킬 단조 유틸
       t.arts.cryo = 0; delete t.timers["arts:cryo"];
       add(t, "stun"); setTimer(t, "stun", 1); // 얼음송곳 강제 정지(다음 1턴)
       s.anomalyConsumed = true;
@@ -488,14 +543,14 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
         log.push(`  → 녹아내린 불꽃 4스택 소모! 강화 폭발${tw ? "(궁 중 400%)" : ""} + 강제 연소 + 궁 +100`);
       } else if (gain > 0) log.push(`  → 녹아내린 불꽃 ${self.procCount}/4 (${skill.kind === "attack" ? "일반공격" : skill.kind === "battle" ? "배틀" : "연계"} 흡수 ${absorb})`);
     }
-    if (skill.lanceRecover) { // 아비웨나 가로채기: 설치 썬더랜스(procCount=일반 / gaugeRecovered=강력) 전부 회수 → 수 비례 중복 전기타
-      const lances = self.procCount || 0, big = self.gaugeRecovered || 0;
+    if (skill.lanceRecover) { // 아비웨나 가로채기: 대상에게 누적된 썬더랜스(t.lanceN 일반 / t.lanceBig 강력) 전부 회수 → 스택 비례 중복 전기타
+      const lances = t.lanceN || 0, big = t.lanceBig || 0;
       if (lances + big > 0) {
         raw += self.attack * eb(self) * (lances * 0.75 + big * 1.92); // 일반 75% / 강력 192% × 투창 수
         if (big > 0) raw += applyAttach(t, "electric", self, log); // 강력 썬더랜스 전기 부착
         self.ultCharge = Math.min(self.ultCost, self.ultCharge + (lances + big) * 4); // 고효율 배송(회수 명중 궁 +4)
         log.push(`  → 썬더랜스 ${lances + big}개 회수! 중복 전기 폭딜${big ? " + 전기 부착" : ""}`);
-        self.procCount = 0; self.gaugeRecovered = 0; // 회수 완료
+        t.lanceN = 0; t.lanceBig = 0; // 대상 스택 소모
       }
     }
     if (skill.forceBurn && t.hp > 0) { // 울프가드 늑대의 분노: 강제 연소 + 불타는 송곳니
@@ -538,7 +593,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
         log.push(`  → 황무지의 방랑자! 팀 전기 피해 +${(amp * 100).toFixed(1)}% (장비등급 ${self.gearGrade})`);
       }
     }
-    if (skill.forceShock && t.hp > 0) { add(t, "shock"); bumpVuln(t, "arts", 0.12); log.push(`  → 강제 감전(전기 부착 소모)`); }
+    if (skill.forceShock && t.hp > 0) { add(t, "shock"); bumpVuln(t, "arts", 0.12 * self.utilMult); log.push(`  → 강제 감전(전기 부착 소모)`); }
     // 알레쉬: 아츠 이상/쇄빙 소모 감지(연계 조건) + 강제 동결 + 진귀한 린수
     if (ELEMENTS.reduce((n, e) => n + t.arts[e], 0) + t.frozen < preReact) s.anomalyConsumed = true;
     if (skill.forceFreeze && t.arts.cryo > 0) {
@@ -574,25 +629,52 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
     }
     let dmg = raw * (1 + cr * cd); // 치명타 기댓값(RNG 대신)
     const vMul = self.id === "lastrite" && skill.kind === "ult" ? 1.5 : 1; // 라스트 라이트 저온 취성(궁 냉기/아츠 취약 1.5배 간주)
-    dmg *= 1 + ampFor(self, elem) + vulnFor(t, elem) * vMul;
+    dmg *= (1 + ampFor(self, elem)) * (1 + vulnFor(t, elem) * vMul); // 공식 1.5·1.8: 증폭·취약은 별개 곱연산 인자
+    if (self.gear) { // 장비 세트 배율: 스킬 종류·원소 + 조건부(불균형/취약/아츠 부착 적)
+      const g = self.gear;
+      let gb = (g.kindDmg[skill.kind] || 0) + (g.kindDmg.all || 0);
+      if (elem !== "physical") gb += g.elemDmg[elem] || 0;
+      gb += g.elemDmg.all || 0;
+      if (t.staggered) gb += g.vsBroken;
+      if ((t.vuln.all || 0) > 0 || (t.vuln.physical || 0) > 0 || ELEMENTS.some((e) => (t.vuln[e] || 0) > 0)) gb += g.vsVuln;
+      if (ELEMENTS.some((e) => t.arts[e] > 0)) gb += g.vsArts;
+      if (self.hp / self.maxHp > 0.5) gb += elem === "physical" ? g.selfHpHighPhys : g.selfHpHighArts; // 전달자: 고체력 시 물리/아츠 피해+
+      dmg *= 1 + gb;
+    }
     if (t.staggered) dmg *= 1.3;
     if (self.id === "perlica" && t.staggered) dmg *= 1.3; // 펠리카 오블리터레이션 프로토콜(불균형 적 추가 +30%)
     if (self.id === "fluorite" && (t.speedMod || 0) < 0) dmg *= 1.2; // 플루라이트 몰락의 조력자(감속 적 +20%)
     if (hadCrystal && elem === "physical") dmg *= 1.2; // 관리자 현실 정지(물리 한정)
     if (skill.vsWeak && (vulnFor(t, "physical") > 0 || t.staggered)) dmg *= 1 + skill.vsWeak; // 미브 냉정(물취/불균형 적)
     dmg *= 1 - (t.protection || 0); // 비호
+    if (t.gear?.selfHpLowReduce && t.hp / t.maxHp < 0.5) dmg *= 1 - t.gear.selfHpLowReduce; // 중장갑 전달자: 저체력 시 받는 피해 감소
     dmg = mitigate(t, dmg, elem); // 방어력 + 물리/아츠 저항
-    // 불균형치 적립 → 임계 도달 시 불균형 상태
+    // 불균형치 적립 → 임계 도달 시 불균형 상태(검술사 세트 등 stagger 배율 반영)
     if (t.staggerMax > 0) {
-      t.stagger += stg;
+      t.stagger += stg * (1 + (self.gear?.staggerMul || 0));
       if (!t.staggered && t.stagger >= t.staggerMax) {
         t.staggered = true; t.staggerTimer = 1; t.stagger = t.staggerMax;
         log.push(`  ⚡ ${t.name} 불균형 상태! 행동 불가 + 받는 피해 +30%`);
+        if (self.gear?.breakEnergy) self.ultCharge = Math.min(self.ultCost, self.ultCharge + 10); // 재앙 방호: 불균형 돌파 시 궁 충전
       }
     }
     const final = applyDamage(t, dmg); // 보호막(보호) 흡수 → 체력
     log.push(`  ${t.name} -${final} (HP ${t.hp}/${t.maxHp})`);
-    if (t.hp === 0) log.push(`  ✗ ${t.name} 격파!`);
+    if (self.id === "rossi" && final > 0 && skill.kind !== "attack" && self.hp < self.maxHp) healUnit(self, Math.round(self.maxHp * 0.025), s, log); // 로시 끓어오르는 피: 스킬 치명 시 자기 회복(딜탱, 근사)
+    // 펠리카 「순환 프로토콜」: 스킬 명중 시 양옆(인접) 적으로 전기 튕김(50% 전이)
+    if (self.id === "perlica" && skill.kind !== "attack" && final > 0) {
+      for (const adj of living(s, "enemy")) {
+        if (adj !== t && Math.abs(adj.pos - t.pos) === 1) {
+          const bd = applyDamage(adj, mitigate(adj, dmg * 0.5, "electric"));
+          if (bd > 0) log.push(`  ↔ 순환 프로토콜 튕김! ${adj.name} -${bd}`);
+        }
+      }
+    }
+    if (t.hp === 0) {
+      log.push(`  ✗ ${t.name} 격파!`);
+      if (self.gear?.onKillHeal) healUnit(self, Math.round(self.maxHp * self.gear.onKillHeal), s, log); // 통합형 중갑: 처치 시 회복
+      if (self.gear?.onKillAtk) { self.atkBuff = Math.min(0.6, (self.atkBuff || 0) + self.gear.onKillAtk); setTimer(self, "atkBuff", 3); } // 통합형 경갑: 처치 시 공격력+
+    }
     if (t.side === "ally" && final > 0) { // 엠버 연계(전선에서의 지원) 피격 트리거 윈도우
       s.allyHit = true;
       // 강철에는 강철로(엠버): 피해받을 때 공격력 +9%, 최대 3스택(=+27%), 7초≈2턴
@@ -674,12 +756,12 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
         healUnit(tgt, 144 + self.gearGrade * 0.34, s, log); // 기초 144 + 의지→장비등급
       } else { // 오버힐 → 최전열 아군(메인)에 아츠 증폭 9%(25초≈5턴)
         const main = living(s, "ally").filter((a) => a.id !== self.id).sort((a, b) => a.pos - b.pos)[0] || self;
-        main.amp.arts = (main.amp.arts || 0) + 0.09; setTimer(main, "amp:arts", 5);
+        main.amp.arts = (main.amp.arts || 0) + 0.09 * self.utilMult; setTimer(main, "amp:arts", 5);
         log.push(`  → 디도스 오버힐 → ${main.name} 아츠 증폭 +9%`);
       }
     }
     if (skill.kind === "ult") { // 스택 오버플로: 팀 냉기/자연 증폭(12초≈3턴, 지능→장비등급 비례, 상한 30%)
-      const amp = 0.11 + Math.min(0.3, self.gearGrade * 0.003);
+      const amp = 0.11 * self.utilMult + Math.min(0.3, self.gearGrade * 0.003); // 스킬 단조 유틸 + 장비 단조(gearGrade)
       for (const a of living(s, "ally")) {
         a.amp.cryo = (a.amp.cryo || 0) + amp; setTimer(a, "amp:cryo", 3);
         a.amp.nature = (a.amp.nature || 0) + amp; setTimer(a, "amp:nature", 3);
@@ -691,8 +773,8 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
   if (self.id === "antal") {
     if (skill.kind === "ult") { // 오버클럭 타임: 팀 전기/열기 증폭(12초≈3턴)
       for (const a of living(s, "ally")) {
-        a.amp.electric = (a.amp.electric || 0) + 0.08; setTimer(a, "amp:electric", 3);
-        a.amp.heat = (a.amp.heat || 0) + 0.08; setTimer(a, "amp:heat", 3);
+        a.amp.electric = (a.amp.electric || 0) + 0.08 * self.utilMult; setTimer(a, "amp:electric", 3);
+        a.amp.heat = (a.amp.heat || 0) + 0.08 * self.utilMult; setTimer(a, "amp:heat", 3);
       }
       log.push(`  → 오버클럭 타임! 팀 전기/열기 증폭 +8%`);
     }
@@ -723,10 +805,11 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
       const vortex = Math.min(2, self.procCount || 0); const spouts = 1 + vortex; self.procCount = 0;
       for (const t of pickTargets(s, self, skill)) {
         t.dot = Math.round(self.attack * eb(self) * 1.33); setTimer(t, "dot", DUR_DOT); // 용오름 지속 냉기
-        if (spouts >= 2) bumpVuln(t, "arts", spouts >= 3 ? 0.08 : 0.06, 3); // 용오름 2/3개 아츠 취약
+        if (spouts >= 2) { t.vuln.arts = Math.min(0.30, (t.vuln.arts || 0) + (spouts >= 3 ? 0.08 : 0.06) * self.utilMult); setTimer(t, "vuln:arts", 3); } // 용오름 아츠 취약 누적(스킬 단조 유틸)
       }
+      const va = Math.round((pickTargets(s, self, skill)[0]?.vuln.arts || 0) * 100);
       if (vortex > 0) s.skillGauge = Math.min(s.maxGauge, s.skillGauge + vortex * 20); // 와류마다 게이지 20 반환
-      log.push(`  → 용오름 ${spouts}개${spouts >= 2 ? ` · 아츠 취약 ${spouts >= 3 ? 8 : 6}%` : ""}${vortex ? ` · 와류 ${vortex} 소모(게이지 +${vortex * 20})` : ""}`);
+      log.push(`  → 용오름 ${spouts}개${spouts >= 2 ? ` · 아츠 취약 누적 ${va}%` : ""}${vortex ? ` · 와류 ${vortex} 소모(게이지 +${vortex * 20})` : ""}`);
     }
     if (skill.kind === "link") { // 야, 강물!: 와류 생성(최대 2) + 의기투합(아군 가속 / 적 감속)
       self.procCount = Math.min(2, (self.procCount || 0) + 1);
@@ -747,10 +830,11 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
     if (skill.kind === "battle") self.ultCharge = Math.min(self.ultCost, self.ultCharge + 16);
     if (skill.kind === "link") self.ultCharge = Math.min(self.ultCost, self.ultCharge + 50);
   }
-  // 아비웨나(스트라이커): 썬더랜스 설치 — 연계 일반 3개(procCount) / 궁 강력 1개(gaugeRecovered). 부착 미소모. 고효율 배송(설치 명중 궁 +4)
+  // 아비웨나(스트라이커): 썬더랜스를 대상(적)에게 누적 — 연계 일반 3개 / 궁 강력 1개. 가로채기(배틀)로 대상 스택 소모.
   if (self.id === "avywenna") {
-    if (skill.kind === "link") { self.procCount = (self.procCount || 0) + 3; self.ultCharge = Math.min(self.ultCost, self.ultCharge + 12); log.push(`  → 썬더랜스 3개 설치 (보유 일반 ${self.procCount}/강력 ${self.gaugeRecovered || 0})`); }
-    if (skill.kind === "ult") { self.gaugeRecovered = (self.gaugeRecovered || 0) + 1; log.push(`  → 강력 썬더랜스 설치 (보유 일반 ${self.procCount || 0}/강력 ${self.gaugeRecovered})`); }
+    const tg = pickTargets(s, self, skill)[0];
+    if (tg && skill.kind === "link") { tg.lanceN = (tg.lanceN || 0) + 3; self.ultCharge = Math.min(self.ultCost, self.ultCharge + 12); log.push(`  → 썬더랜스 3개 설치 → ${tg.name}(누적 일반 ${tg.lanceN}/강력 ${tg.lanceBig || 0})`); }
+    if (tg && skill.kind === "ult") { tg.lanceBig = (tg.lanceBig || 0) + 1; log.push(`  → 강력 썬더랜스 설치 → ${tg.name}(누적 일반 ${tg.lanceN || 0}/강력 ${tg.lanceBig})`); }
   }
   // 판(스트라이커): 전분 풀기 — 강타로 방어 불능 소모 시 소모 스택당 물리 피해 +6%(최대 4스택=+24%, 10초≈2턴)
   if (self.id === "dapan" && skill.kind === "link" && primaryPre >= 1) {
@@ -816,6 +900,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
   }
   if (self.multiHit > 0 && (skill.kind === "battle" || skill.kind === "ult")) self.multiHit = 0; // 연타 소모
   if (skill.grantsMultiHit) self.multiHit = Math.min(4, self.multiHit + skill.grantsMultiHit); // 몰입의 시간(소모 후 부여)
+  if (self.side === "ally" && (skill.kind === "link" || skill.kind === "battle")) gearTrigger(self, skill.kind); // 본크러셔·청파(연계)·응룡(배틀) 발동 버프
 }
 
 // 라운드 시작: DoT + 불균형 회복
@@ -826,6 +911,7 @@ export function startRound(s: DDState): void {
   s.skillGauge = Math.min(s.maxGauge, s.skillGauge + GAUGE_REGEN); // 스킬 게이지 자연 회복(파티 공유)
   for (const u of living(s)) {
     if (u.dot > 0) { u.hp = Math.max(0, u.hp - u.dot); s.log.push(`${u.name} 지속 피해 -${u.dot}`); }
+    if ((u.regen || 0) > 0 && (u.regenTurns || 0) > 0) { const h = Math.min(u.maxHp - u.hp, u.regen!); if (h > 0) { u.hp += h; s.log.push(`${u.name} 재생 +${h}`); } u.regenTurns = (u.regenTurns || 0) - 1; if ((u.regenTurns || 0) <= 0) u.regen = 0; }
     if (u.staggered) {
       u.staggerTimer -= 1;
       if (u.staggerTimer <= 0) { u.staggered = false; u.stagger = 0; s.log.push(`${u.name} 불균형 회복`); }

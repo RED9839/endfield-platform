@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronLeft, Flag } from "lucide-react";
+import { ChevronLeft, Flag, Swords } from "lucide-react";
 
 import BattleScreen from "./components/BattleScreen";
 import CampScreen from "./components/CampScreen";
@@ -49,6 +49,14 @@ export default function GamePage() {
           </div>
 
           <div className="ml-auto" />
+
+          <Link
+            href="/game/dd"
+            className="flex h-10 items-center gap-1.5 border border-ef-line bg-ef-card px-3 font-mono text-[11px] font-bold uppercase tracking-wider text-ef-muted transition hover:border-ef-accent/40 hover:text-ef-accent-soft"
+            style={CUT_SM}
+          >
+            <Swords className="h-4 w-4" /> DD 전투
+          </Link>
 
           {run.screen !== "summary" && run.screen !== "deployment" && (
             <button

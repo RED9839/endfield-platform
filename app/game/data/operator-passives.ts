@@ -31,6 +31,10 @@ export type PassiveSpec = {
   ultForceFreeze?: boolean; // 궁극이 적중 적을 강제 동결(냉기 부착 미소모) — 스노우샤인 살얼음 추위 빙설 지대
   corrodeConsumeVuln?: number; // 배틀 스킬이 부식 소모 시 물리 취약 + 아츠 취약 x 부여(긴 지속) — 아델리아 질주하는 돌리
   linkLaunch?: boolean; // 연계 스킬이 강제 띄우기 → 방어 불능 1스택(이미 방불이면 띄우기 발동) — 질베르타 매트릭스 이동
+  linkForceShock?: number; // 연계 스킬이 강제 감전 부여(전기 단일로도) → 감전 상태 + 아츠 취약 x — 펠리카 연쇄 섬광
+  ultForceCombustion?: boolean; // 궁극이 적중 적을 강제 연소 부여 — 울프가드 늑대의 분노
+  consumeArtsBonus?: number; // 배틀 스킬이 연소/감전 적을 칠 때 그 상태 소모 + 추가 피해(카드 위력 ×x) — 울프가드 탄흔의 열기
+  boostAttach?: boolean; // 연계/궁극이 기존 냉기/자연 부착에 1스택 더(무료 아츠 부착 지원, 소모 아닌 누적) — 플루라이트
   linkStatDamage?: number; // 연계 스킬 피해 +x — 지능 파생(장비 등급 비례), 알레쉬 낚시의 달인(린수 강화 평균값)
   linkStatGauge?: number; // 연계 스킬 추가 에너지 +x — 지능 파생(장비 등급 비례), 아케쿠리 승리의 함성
   chargeBreakStagger?: number; // 적 차지를 끊었을 때 추가 불균형치(진천우 흐름 끊기)
@@ -43,8 +47,8 @@ export type PassiveSpec = {
 export const OPERATOR_PASSIVES: Record<string, PassiveSpec> = {
   // 본질 붕괴(오리지늄 결정 소모 시 공격력 누적↑) / 현실 정지(결정 부착 적 받는 물리 +20% → getStatusBonus crystal 처리)
   endministrator: { essenceStack: 0.08 },
-  // 오블리터레이션(불균형 적 +20%) / 순환(연계가 방불 적에 1회 더)
-  perlica: { vsBroken: 0.20 },
+  // 오블리터레이션(불균형 적 +20%) / 순환(연계가 방불 적에 1회 더) / 연쇄 섬광 강제 감전(전기 단일로도 → 아츠 취약)
+  perlica: { vsBroken: 0.20, linkForceShock: 0.12 },
   // 칼날 베기(명중마다 공격+8% 5스택) / 흐름 끊기(차지 끊으면 추가 불균형 10)
   chenqianyu: { stackPerHit: 0.08, chargeBreakStagger: 10 },
   // 친구의 그림자(돌리 그림자 회복[의지 비례=장비 등급 비례 healOnCast]) / 마운틴 서퍼(부식 적에 배틀 1회 더)
@@ -81,8 +85,8 @@ export const OPERATOR_PASSIVES: Record<string, PassiveSpec> = {
   laevatain: { stackPerHit: 0.08, damageResist: 0.10 },
   // 저체온증(아츠 소모 후 냉기취약) / 저온 취성(궁이 냉기취약 1.5배)
   lastrite: { vsStatus: 0.22, targetVuln: 0.10 },
-  // 불타는 송곳니(연소 적 자기 열기+30%) / 절제(아츠이상 소모 시 게이지+10)
-  wulfgard: { selfPower: 0.18, breakEnergy: 1 },
+  // 불타는 송곳니(연소 적 자기 열기+30%=selfPower) / 절제(아츠이상 소모 시 게이지=breakEnergy+ULT_ARTS_CONSUME) / 늑대의 분노 강제 연소 / 탄흔의 열기 아츠 이상 소모 추가타
+  wulfgard: { selfPower: 0.18, breakEnergy: 1, ultForceCombustion: true, consumeArtsBonus: 1.4 },
   // 급속 냉동(동결/냉기 부착 시 궁에너지+, 자기 동결이면 추가) / 낚시의 달인(린수 확률) + 비정규 루어 강제 동결
   alesh: { ultOnFreeze: 8, forceFreezeOnCryo: true, linkStatDamage: 0.12 },
   // 공감(쇄빙 시 게이지 반환 → shatterEnergy) / 이유 있는 게으름(냉기 면역, 냉기 -20%) / 생존이 승리다(동결 시 궁충) / 디스토션 물리 취약
@@ -91,8 +95,8 @@ export const OPERATOR_PASSIVES: Record<string, PassiveSpec> = {
   catcher: { shieldOnCast: 14, reflectAttach: true, damageResist: 0.12, breakEnergy: 1 },
   // 즉흥적인 천재성(증폭 팀원 딜 시 회복=healOnCast) / 무의식(30% 물리면역+회복=damageResist) / 지정 연구 대상 전기·열기 취약(targetVuln, 60초 장기 디버프)
   antal: { healOnCast: 10, damageResist: 0.12, targetVuln: 0.10 },
-  // 몰락의 조력자(감속 적 +20%) / 종잡을 수 없는 자(20% 아츠면역+공격+20%)
-  fluorite: { vsStatus: 0.22, damageResist: 0.08 },
+  // 몰락의 조력자(감속 적 +20%→vsStatus 근사, 감속은 status 미존재) / 종잡을 수 없는 자(20% 아츠면역+공격=damageResist) / 특별 보너스·난장판 무료 아츠 부착 지원(boostAttach)
+  fluorite: { vsStatus: 0.22, damageResist: 0.08, boostAttach: true },
   // 승리의 함성(연계 게이지 회복 지능 비례 → linkStatGauge) / 몰입의 시간(궁 중 연타)
   akekuri: { breakEnergy: 1, grantMultiHit: true, linkStatGauge: 2 },
   // 천지의 조화(전기 증폭 누적) / 하늘의 가호(9% 면역+회복)

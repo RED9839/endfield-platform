@@ -752,14 +752,19 @@ export function playCardOnState(current: RunState, uid: string, targetEnemyId?: 
       bleed = Math.max(bleed ?? 0, Math.round(actor.attack * aspec.bleed!));
       noteSet.add(`출혈 ${bleed}/턴`);
     }
-    if (hp > 0 && (actor.element === "physical" || !!actor.physAnomaly) && kind !== "attack") {
+    // 물리 이상 발동 스킬 한정(anomalySkills). 미지정 시 모든 비기본 스킬. 예: 관리자 강타=배틀만 / 여풍 넘어뜨리기=배틀+궁극(연계 제외).
+    const anomalyAllowed = !actor.anomalySkills || actor.anomalySkills.includes(kind);
+    if (hp > 0 && (actor.element === "physical" || !!actor.physAnomaly) && kind !== "attack" && anomalyAllowed) {
       // 물리 단일 오퍼 + 물리 이상을 가진 하이브리드(엠버 heat 넘어뜨리기·에스텔라 cryo 띄우기 등)도 방어 불능 적용
       const anomaly = card.anomalyOverride ?? actor.physAnomaly ?? (actor.physBreak === "consume" ? "crush" : actor.physBreak === "build" ? "launch" : undefined);
       if (anomaly === "launch" || anomaly === "knockdown") {
         // 띄우기/넘어뜨리기: 방어 불능 1스택 부여(빌더 정예화 2차 +1). 이미 방어 불능이면 추가 물리 + 불균형 10 + CC.
-        const add = PHYS_BREAK_BUILD[kind] + (elite >= 2 ? 1 : 0);
+        const wasVuln = physBreakStacks > 0;
+        // 진천우 「견천하」: 연계 띄우기는 '이미 방어 불능' 적에게만 발동(위키 사용 조건). 미충족 시 데미지만, 스택/띄우기 미발동.
+        const cqyLinkBlocked = actor.id === "chenqianyu" && kind === "link-skill" && !wasVuln;
+        const add = cqyLinkBlocked ? 0 : PHYS_BREAK_BUILD[kind] + (elite >= 2 ? 1 : 0);
+        if (cqyLinkBlocked) noteSet.add("방어 불능 필요(띄우기 미발동)");
         if (add > 0) {
-          const wasVuln = physBreakStacks > 0;
           // 여풍 신체 정화: 방어 불능이 없던 적에게만 물리 취약 부여(팀 전체 물리 딜↑).
           if ((aspec.appliesPhysVuln ?? 0) > 0 && !wasVuln && kind === "battle-skill") {
             physVuln = Math.max(physVuln ?? 0, aspec.appliesPhysVuln!);
@@ -787,7 +792,7 @@ export function playCardOnState(current: RunState, uid: string, targetEnemyId?: 
           crushedAny = true; // 본질 붕괴 트리거
           physAnomalyFired = true;
           noteSet.add(`강타 ${crush}${elite ? "↑" : ""}`);
-        } else { physBreakStacks = 1; noteSet.add("방어 불능 1"); } // 방어 불능 없으면 미발동·1스택만
+        } else { noteSet.add("강타 미발동(방불 없음)"); } // 강타는 소모 전용 — 스택 없으면 자가 생성 안 함(관리자 등 전무한 방어 불능 부여)
       } else if (anomaly === "armor-break") {
         if (physBreakStacks > 0) { // 갑옷 파괴: 방어 불능 전 스택 소모 → 물리 + 관통(받는 물리 피해 증가)
           const ab = Math.ceil(card.power * (0.25 + 0.05 * elite) * physBreakStacks);
@@ -801,7 +806,7 @@ export function playCardOnState(current: RunState, uid: string, targetEnemyId?: 
           crushedAny = true;
           physAnomalyFired = true;
           noteSet.add(`갑옷 파괴 ${ab} · 관통`);
-        } else { physBreakStacks = 1; noteSet.add("방어 불능 1"); }
+        } else { noteSet.add("갑옷 파괴 미발동(방불 없음)"); } // 갑옷 파괴도 소모 전용 — 스택 없으면 자가 생성 안 함
       }
     }
     // 에스텔라 「디스토션」: 연계 스킬로 물리 취약 부여(원소 무관 — 냉기 하이브리드).
@@ -815,11 +820,14 @@ export function playCardOnState(current: RunState, uid: string, targetEnemyId?: 
       noteSet.add("강제 띄우기 (방어 불능 1)");
     }
     // ── 관리자 「오리지늄 결정」 ──
-    // 연계 스킬 = 결정 부착(현실 정지로 받는 물리↑). 배틀/궁극 = 결정 파괴 → 추가 물리 + 본질 붕괴(공격력 누적).
+    // 연계 봉인 시퀀스 = 물리 피해(항상) + 결정 부착(조건: 팀 내 다른 오퍼 연계 후에만 발동, 미충족 시 데미지만). 배틀/궁극 = 결정 파괴 → 추가 물리 + 본질 붕괴.
     if (hp > 0 && actor.id === "endministrator") {
-      if (kind === "link-skill" && !statuses.includes("crystal")) {
+      const allyLinked = !!battle.lastLinkOp && battle.lastLinkOp !== "endministrator"; // 아군 연계 조건
+      if (kind === "link-skill" && allyLinked && !statuses.includes("crystal")) {
         statuses = addStatus(statuses, "crystal");
         noteSet.add("오리지늄 결정 부착");
+      } else if (kind === "link-skill" && !allyLinked) {
+        noteSet.add("결정 부착 X(아군 연계 필요)");
       } else if ((kind === "battle-skill" || kind === "ultimate") && statuses.includes("crystal")) {
         const crystalDmg = Math.ceil(card.power * (kind === "ultimate" ? 1.2 : 0.9)); // 결정 파괴 피해(위키 추가/결정파괴 배율 보정)
         hp = Math.max(0, hp - crystalDmg);
@@ -852,7 +860,36 @@ export function playCardOnState(current: RunState, uid: string, targetEnemyId?: 
         noteSet.add(`부식 소모 → 물리·아츠 취약 +${Math.round(vuln * 100)}%`);
       }
     }
-    if (hp > 0 && actor.element !== "physical" && kind !== "attack" && !aspec.noArtsAttach) {
+    // 펠리카 「연쇄 섬광」: 연계로 강제 감전(전기 단일로도, 2단계 아츠 불필요) → 감전 상태 + 아츠 취약.
+    if (hp > 0 && kind === "link-skill" && (aspec.linkForceShock ?? 0) > 0) {
+      statuses = addStatus(statuses, "shock");
+      artsVuln = Math.max(artsVuln ?? 0, aspec.linkForceShock!);
+      noteSet.add(`강제 감전 → 아츠 취약 +${Math.round(aspec.linkForceShock! * 100)}%`);
+    }
+    // 울프가드 「탄흔의 열기」: 배틀이 연소/감전 적을 치면 그 상태를 소모하고 추가 대량 열기(아츠 이상 소모 추가타). 소모 시 열기 부착은 생략.
+    let wulfConsumed = false;
+    if (hp > 0 && kind === "battle-skill" && (aspec.consumeArtsBonus ?? 0) > 0 && (statuses.includes("combustion") || statuses.includes("shock"))) {
+      const consumed: EnemyStatus = statuses.includes("combustion") ? "combustion" : "shock";
+      statuses = withoutStatus(statuses, consumed);
+      const bonus = Math.ceil(card.power * aspec.consumeArtsBonus!);
+      hp = Math.max(0, hp - bonus);
+      totalDamage += bonus;
+      wulfConsumed = true;
+      noteSet.add(`${INFLICTION_LABEL[consumed]} 소모 추가타 ${bonus}`);
+    }
+    // 플루라이트 「특별 보너스 / 난장판」: 연계·궁극이 냉기/자연 '2스택 이상'일 때만 이미 부착된 속성을 1스택 더(무료 부착 지원, 소모 아닌 누적).
+    // ※ 배틀 서프라이즈(자연 부착)와 2스택 미만 스킬은 일반 2단계 아츠를 탄다 → 자연이 기존 냉기와 만나면 부식 이상이 정상 발동(직접 소모기가 아님).
+    let fluoriteBoosted = false;
+    if (hp > 0 && (kind === "link-skill" || kind === "ultimate") && aspec.boostAttach) {
+      const c = attach.cryo ?? 0, n = attach.nature ?? 0;
+      if (c >= 2 || n >= 2) {
+        const tgt: Element = c >= n ? "cryo" : "nature";
+        attach[tgt] = Math.min(4, (attach[tgt] ?? 0) + 1);
+        fluoriteBoosted = true;
+        noteSet.add(`${ELEM_LABEL[tgt]} 부착 +1(무료 지원)`);
+      }
+    }
+    if (hp > 0 && actor.element !== "physical" && kind !== "attack" && !aspec.noArtsAttach && !wulfConsumed && !fluoriteBoosted) {
       const el = actor.element;
       const others = (Object.keys(attach) as Element[]).filter((k) => k !== el && (attach[k] ?? 0) > 0);
       if (aspec.forceFreezeOnCryo && el === "cryo" && kind === "battle-skill" && (attach.cryo ?? 0) > 0) {
@@ -934,7 +971,9 @@ export function playCardOnState(current: RunState, uid: string, targetEnemyId?: 
   if (pe.heal > 0) noteSet.add(`재능 회복 +${pe.heal}`);
   if (pe.shield > 0) noteSet.add(`재능 보호막 +${pe.shield}`);
   // 연타: 소모 시 0, 부여 오퍼(아케쿠리 등)가 스킬 사용 시 +1 (다음 배틀/궁극에 적용)
-  const grantMultiHit = (actor.grantsMultiHit || aspec.grantMultiHit) && kind !== "attack" ? 1 : 0;
+  // 여풍 「분노의 형상」: 연타는 연계 전용 + 물리 취약/갑옷 파괴 적이 대상일 때만(위키 사용 조건). 그 외 오퍼는 종전대로.
+  const lifengGrantOk = actor.id !== "lifeng" || (kind === "link-skill" && ((target.physVuln ?? 0) > 0 || target.statuses.includes("armor-break")));
+  const grantMultiHit = (actor.grantsMultiHit || aspec.grantMultiHit) && kind !== "attack" && lifengGrantOk ? 1 : 0;
   const nextMultiHit = Math.min(4, (multiHitBonus > 0 ? 0 : multiHitStacks) + grantMultiHit);
   if (grantMultiHit > 0) noteSet.add(`연타 부여 → ${nextMultiHit}`);
   // 미브 청파 삼형: 초식 카드(단운1→추형2→개천3) 사용 시 다음 초식을 손패에 추가. 또한 연계(후회없는 주먹)·궁극(절심) 사용 후엔 추형(2식)으로 교체(단운 건너뜀). 중복 방지.
@@ -951,7 +990,7 @@ export function playCardOnState(current: RunState, uid: string, targetEnemyId?: 
   const note = noteSet.size ? ` (${[...noteSet].join(", ")})` : "";
   const logLine = `${actor.name}: ${card.name} → ${aoe ? "모든 적" : target.name} ${totalDamage} 피해${note}`;
   const nextHand = mifuNext ? [...baseBattle.hand, mifuNext] : baseBattle.hand;
-  const nextBattle: BattleState = { ...baseBattle, enemies: after, hand: nextHand, energy: baseBattle.energy + energyBonus, multiHit: nextMultiHit, log: [logLine, ...battle.log].slice(0, 8) };
+  const nextBattle: BattleState = { ...baseBattle, enemies: after, hand: nextHand, energy: baseBattle.energy + energyBonus, multiHit: nextMultiHit, lastLinkOp: kind === "link-skill" ? actor.id : battle.lastLinkOp, log: [logLine, ...battle.log].slice(0, 8) };
   // 시전 오퍼: 반사 피해 + blade-stacks 적립 / 재능 회복·보호막은 파티 전체에 적용.
   // 궁극기 게이지(위키 §2.1.4): 배틀스킬=아군 전체 / 연계스킬=시전자만.
   // 질베르타 「전달자의 노래」: 생존한 보유자가 있으면 가드/캐스터/서포터 아군의 궁극 충전량 ×(1+효율%).
@@ -1046,6 +1085,11 @@ export function useUltimateOnState(current: RunState, operatorId: string, target
   if (passiveSpec(operatorId).ultForceFreeze && struck.battle) {
     const enemies = struck.battle.enemies.map((e) => (e.hp > 0 ? { ...e, statuses: addStatus(e.statuses, "freeze") } : e));
     return { ...struck, battle: { ...struck.battle, enemies, log: [`${actor.name} — 빙설 지대! 강제 동결`, ...struck.battle.log].slice(0, 8) } };
+  }
+  // 울프가드 「늑대의 분노」: 광역 열기 피해 후 적중 적을 강제 연소(레바테인 연계 조건·불타는 송곳니 트리거).
+  if (passiveSpec(operatorId).ultForceCombustion && struck.battle) {
+    const enemies = struck.battle.enemies.map((e) => (e.hp > 0 ? { ...e, statuses: addStatus(e.statuses, "combustion") } : e));
+    return { ...struck, battle: { ...struck.battle, enemies, log: [`${actor.name} — 늑대의 분노! 강제 연소`, ...struck.battle.log].slice(0, 8) } };
   }
   // 포그라니치니크 「방패병 부대, 전진」: 진군 광역타 후 철의 서약 5포인트 부여(이후 적 물리 이상·포그 연계 시 1 소모 → 방패병 추가타+게이지).
   if (operatorId === "pogranichnik" && struck.battle) {
@@ -1164,7 +1208,7 @@ function advanceTempo(current: RunState, ticks: number): RunState {
     }
   }
   enemies = enemies.map((e) => (e.hp > 0 ? { ...e, telegraph: makeIntent(e, battle.turn) } : e));
-  const nextBattle: BattleState = { ...battle, enemies, energy, hand, discardPile, log: logs.length ? [...logs.reverse(), ...battle.log].slice(0, 10) : battle.log };
+  const nextBattle: BattleState = { ...battle, enemies, energy, hand, discardPile, lastLinkOp: readyIds.length ? undefined : battle.lastLinkOp, log: logs.length ? [...logs.reverse(), ...battle.log].slice(0, 10) : battle.log };
   if (party.every((m) => m.hp <= 0)) return { ...current, party, battle: nextBattle, screen: "summary", result: "defeat" };
   return { ...current, party, battle: nextBattle };
 }

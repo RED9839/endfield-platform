@@ -152,6 +152,8 @@ export type Operator = {
   // 물리 이상 세분화(엔드필드): 띄우기·넘어뜨리기=스택 적립+CC, 강타=전소모 대량딜, 갑옷파괴=전소모+받피증.
   //  미지정 시 physBreak로 추론(build→launch, consume→crush).
   physAnomaly?: "launch" | "knockdown" | "crush" | "armor-break";
+  // 물리 이상을 발동하는 스킬 종류 한정(미지정 시 모든 비기본 스킬). 예: 관리자 강타=배틀만, 여풍 넘어뜨리기=배틀+궁극(연계 제외).
+  anomalySkills?: SkillKind[];
   // 연타(連打): 이 오퍼가 스킬 사용 시 파티에 연타 1스택 부여 → 다음 배틀/궁극 카드 피해 증가.
   grantsMultiHit?: boolean;
   // 카드 타겟 설정(컨셉): 배틀/연계 스킬이 광역인지. (궁극은 기본 광역)
@@ -316,6 +318,7 @@ export type BattleState = {
   critBuff?: number; // 치명타 확률 +
   partyRegen?: { amount: number; turns: number }; // 매 턴 파티 지속 회복
   multiHit?: number; // 연타 스택(0~4): 다음 배틀 스킬 +30~75% / 궁극 +20~50% 후 소모
+  lastLinkOp?: string; // 직전 연계 스킬을 쓴 오퍼 id(아군 연계 조건 판정용). 적 행동 시 리셋.
 };
 
 export type RunState = {

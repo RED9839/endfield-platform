@@ -1,6 +1,7 @@
 // ===== DD류 물리 4인 + 적 정의 (프로토타입) =====
 // 스킬은 위키 매핑. 사용 요구(requires)가 카드 모델에서 깨지던 "연계 조건"을 DD류에선 자연 흡수.
-import { bumpVuln, vulnFor, setTimer, applyBuff, ELEMENTS, type DDClass, type DDSkill, type DDUnit } from "./combat";
+import { bumpVuln, vulnFor, setTimer, applyBuff, ELEMENTS, type DDClass, type DDSkill, type DDUnit, type Element } from "./combat";
+import { promoMult, skillMult, skillUtilMult, DEFAULT_PROGRESS, type OpProgress } from "./progress";
 
 export const SKILLS: Record<string, DDSkill[]> = {
   // 진천우: 최고 방불 누적 + 고계수 단일 누커(보스 삭제기). 빠른 선딜(차지 캔슬)·평타 속도.
@@ -305,7 +306,7 @@ export const SKILLS: Record<string, DDSkill[]> = {
   // 재능: 불꽃의 심장(열기 부착 흡수→녹아내린 불꽃, 4스택 열기 저항 무시) · 부활의 불씨(HP 40%↓ 90% 비호+회복). 주스탯 지능·보조 힘.
   laevatain: [
     // 불타오르는 화염(배틀 초기 62%): 열기 + (불꽃의 심장)열기 부착 흡수 → 녹아내린 불꽃. 4스택 시 강화 폭발(추가 342% + 강제 연소 + 궁 +100). 흡수는 일반공격/배틀/연계 공통(엔진 id훅).
-    { id: "lae-b", name: "불타오르는 화염", kind: "battle", fromPos: [1, 2, 3], target: "single-front", power: 0.62, element: "heat", staggerVal: 10, note: "열기 + 녹아내린 불꽃(흡수) · 4스택 강화 폭발+강제 연소+궁100" },
+    { id: "lae-b", name: "불타오르는 화염", kind: "battle", fromPos: [1, 2, 3], target: "single-front", power: 0.62, element: "heat", staggerVal: 10, gaugeCost: 60, note: "열기 + 녹아내린 불꽃(흡수) · 4스택 강화 폭발+강제 연소+궁100 · 원작 상시기(저코스트)로 공유게이지 기아 완화" },
     // 열화(연계 240%, 쿨 10초≈2턴): 연소/부식 적. 광역 열기 + 녹아내린 불꽃(명중당) + 궁충(명중 수 비례).
     { id: "lae-l", name: "열화", kind: "link", fromPos: [1, 2, 3], target: "row", power: 2.4, element: "heat", staggerVal: 10, cooldown: 2,
       requires: (t) => !!t && (t.statuses.includes("combustion") || t.statuses.includes("corrosion")), requiresText: "연소/부식 적", note: "광역 열기 + 녹아내린 불꽃 + 궁충" },
@@ -364,17 +365,56 @@ const OP_BASE: Record<string, Base> = {
   lastrite: { id: "lastrite", name: "라스트 라이트", cls: "striker", hp: 2689, attack: 110, speed: 48, ultCost: 240 }, // 냉기 스트라이커★6 한정(첫 스트라이커). 냉기 부착 소모 단일 누킹·자기 충전 궁(240). 주스탯 힘·보조 의지
   avywenna: { id: "avywenna", name: "아비웨나", cls: "striker", hp: 2689, attack: 110, speed: 62, ultCost: 100 }, // 전기 스트라이커★5. 썬더랜스(투창 설치→회수 중복타) 폭딜·부착 미소모. 주스탯 의지·보조 민첩
   dapan: { id: "dapan", name: "판", cls: "striker", hp: 2689, attack: 110, speed: 55, ultCost: 90 }, // 물리 스트라이커★5. 방불 4스택 강타 단발 누커·띄우기/넘어뜨리기 빌더. 주스탯 힘·보조 의지
-  laevatain: { id: "laevatain", name: "레바테인", cls: "striker", hp: 2689, attack: 110, speed: 64, ultCost: 300 }, // 열기 스트라이커★6 한정. 열기 부착 흡수→녹아내린 불꽃→강화 배틀·버프형 궁(300 최고)·부활의 불씨. 주스탯 지능·보조 힘
+  laevatain: { id: "laevatain", name: "레바테인", cls: "striker", hp: 2689, attack: 110, speed: 64, ultCost: 130 }, // 열기 스트라이커★6 한정. 열기 부착 흡수→녹아내린 불꽃→강화 배틀·버프형 궁·부활의 불씨. 원본 궁300이나 엔진 공유게이지 기아로 변신 미도달 → 실전 S티어 반영 위해 160(자가충전 4스택=+100 감안). 주스탯 지능·보조 힘
   yvonne: { id: "yvonne", name: "이본", cls: "striker", hp: 2689, attack: 110, speed: 66, ultCost: 220 }, // 냉기 스트라이커★6 한정. 강제 동결(냉기/자연 소모)+치명타 변신 말뚝딜 궁(220)+빙점. 주스탯 지능·보조 민첩
   zhuangfangyi: { id: "zhuangfangyi", name: "장방이", cls: "striker", hp: 2689, attack: 110, speed: 62, ultCost: 240 }, // 전기 스트라이커★6 한정. 청뢰검(감전 소모→검, 최대9)+변신 궁(천리의 경지)+지속딜. 주스탯 의지·보조 지능
 };
 
 // 매 유닛 신선한 상태 객체(중첩 객체 공유 참조 방지). defense/resist 기본 0 → 밸런스 무변.
-const zero = () => ({ physBreak: 0, stagger: 0, staggered: false, staggerTimer: 0, statuses: [] as DDUnit["statuses"], dot: 0, multiHit: 0, ultCharge: 0, atkBuff: 0, critRate: 0.05, critDmg: 0.5, arts: { heat: 0, electric: 0, cryo: 0, nature: 0 }, frozen: 0, amp: {}, vuln: {}, weakenMul: 1, protection: 0, shield: 0, speedMod: 0, timers: {}, linkCd: 0, defense: 0, resist: { physical: 0, arts: 0 }, stance: 0, ironOath: 0, gaugeRecovered: 0, gearGrade: 60, procCount: 0 });
+const zero = () => ({ physBreak: 0, stagger: 0, staggered: false, staggerTimer: 0, statuses: [] as DDUnit["statuses"], dot: 0, multiHit: 0, ultCharge: 0, atkBuff: 0, critRate: 0.05, critDmg: 0.5, arts: { heat: 0, electric: 0, cryo: 0, nature: 0 }, frozen: 0, amp: {}, vuln: {}, weakenMul: 1, protection: 0, shield: 0, speedMod: 0, timers: {}, linkCd: 0, defense: 0, resist: { physical: 0, heat: 0, electric: 0, cryo: 0, nature: 0 }, stance: 0, ironOath: 0, gaugeRecovered: 0, gearGrade: 60, procCount: 0, utilMult: 1 });
 
-export function makeAlly(id: string, pos: number): DDUnit {
+// 오퍼레이터 선택 UI용 메타(속성은 스킬의 비물리 원소에서 추론, 없으면 물리)
+export type OpMeta = { id: string; name: string; cls: DDClass; element: "physical" | Element };
+export const OPERATORS: OpMeta[] = Object.values(OP_BASE).map((b) => {
+  const el = (SKILLS[b.id] ?? []).find((s) => s.element && s.element !== "physical")?.element ?? "physical";
+  return { id: b.id, name: b.name, cls: b.cls, element: el as "physical" | Element };
+});
+
+// 아군 저항(공식 1.12): 민첩→물리, 지능→아츠 저항 = 1 − 1/(0.001×스탯+1). 4스탯을 gearGrade로 통합 치환,
+// gearGrade(명함 ~60)를 실제 스탯 스케일로 복원(×10)해 원본 오퍼레이터 내구(≈37.5%) 재현. 좋은 장비=높은 저항.
+export const allyResistFromGear = (gearGrade: number) => +(1 - 1 / (0.001 * gearGrade * 10 + 1)).toFixed(3);
+
+// 오퍼레이터별 스탯 — warfarin.wiki Lv90 데이터마인 → DD 스케일 환산(평균 HP 2689·공격 110 유지). 직군 배율 폐기.
+//  · HP = (기초 6000 + 힘×5) 원작 공식 → 힘 높은 오퍼(디펜더·물리) 탱, 낮은 오퍼 물렁. ×0.4032.
+//  · 공격 = 기초 공격력 × (1 + 주요×0.005 + 보조×0.002) [공식 1.1 능력치 보너스] → 주스탯 큰 오퍼 고화력. ×0.1507. 기본 방어 0.
+const OP_HP: Record<string, number> = {
+  chenqianyu: 2653, lifeng: 2690, endministrator: 2690, estella: 2649, rossi: 2634, mifu: 2799,
+  arclight: 2655, alesh: 2765, akekuri: 2661, camu: 2643, pogranichnik: 2641,
+  ember: 2806, snowshine: 2759, catcher: 2806,
+  ardelia: 2665, xaihi: 2616, antal: 2703, gilberta: 2616,
+  perlica: 2621, wulfgard: 2774, fluorite: 2616, tangtang: 2690,
+  lastrite: 2759, avywenna: 2655, dapan: 2803, laevatain: 2685, yvonne: 2601, zhuangfangyi: 2636,
+};
+const OP_ATTACK: Record<string, number> = {
+  chenqianyu: 106, lifeng: 102, endministrator: 107, estella: 106, rossi: 118, mifu: 114,
+  arclight: 104, alesh: 108, akekuri: 105, camu: 112, pogranichnik: 115,
+  ember: 118, snowshine: 102, catcher: 108,
+  ardelia: 109, xaihi: 100, antal: 107, gilberta: 120,
+  perlica: 106, wulfgard: 103, fluorite: 108, tangtang: 118,
+  lastrite: 114, avywenna: 105, dapan: 108, laevatain: 117, yvonne: 118, zhuangfangyi: 122,
+};
+
+export function makeAlly(id: string, pos: number, progress: OpProgress = DEFAULT_PROGRESS): DDUnit {
   const b = OP_BASE[id];
-  const u: DDUnit = { ...b, side: "ally", pos, maxHp: b.hp, staggerMax: 0, ...zero() }; // 아군은 불균형 없음
+  const pm = promoMult(progress.promotion); // 정예화 → 기초 스탯 배율
+  const hp = Math.round((OP_HP[id] ?? b.hp) * pm);
+  const u: DDUnit = { ...b, side: "ally", pos, hp, maxHp: hp, staggerMax: 0, ...zero() }; // 불균형 없음. HP=6000+힘×5 환산·방어 0
+  u.hp = hp; u.maxHp = hp; // zero()가 hp를 덮지 않도록 재확정
+  u.attack = Math.round((OP_ATTACK[id] ?? b.attack) * pm * skillMult(progress.skillRank)); // Lv90 기초 × 정예화 × 스킬랭크(랭크9=1.8). 모든 딜이 attack 비례 → 균일 스케일
+  u.utilMult = skillUtilMult(progress.skillRank); // 스킬 단조 → 유틸(취약·증폭·회복·게이지·지속) 배율. 장비 능력치(gearGrade)는 applyGear가 세트 실측 부옵으로 처리
+  u.opElement = (SKILLS[id] ?? []).find((s) => s.element && s.element !== "physical")?.element ?? "physical"; // 주력 속성(장비 부품 속성 피해)
+  const rv = allyResistFromGear(u.gearGrade);
+  u.resist = { physical: rv, heat: rv, electric: rv, cryo: rv, nature: rv }; // 민첩→물리·지능→아츠(gearGrade 통합)
   if (b.artsImmune) u.artsImmune = b.artsImmune; // 만물의 지혜(아크라이트): 아츠 부착 확률 면역
   return u;
 }
@@ -384,13 +424,114 @@ export function alliesPhysical(): DDUnit[] {
   return [makeAlly("chenqianyu", 1), makeAlly("lifeng", 2), makeAlly("pogranichnik", 3), makeAlly("endministrator", 4)];
 }
 
-// 적: 간단한 단일 공격 AI(전열 아군 타격). staggerMax = 불균형 게이지 용량.
-export type EnemyDef = { id: string; name: string; hp: number; attack: number; speed: number; staggerMax: number };
-export function makeEnemy(def: EnemyDef, pos: number): DDUnit {
-  return { ...def, side: "enemy", pos, maxHp: def.hp, ultCost: 999, ...zero() };
+// 전열 배치 규칙 — 물몸 딜러(스트라이커/캐스터) 앵커는 전열 몰빵을 피해 pos2로 보호.
+// 단 전열로 세울 건 "진짜 탱(디펜더/가드)"만: 뱅가드·서포터·캐스터는 딜·버프·enabler 코어라 전열 희생 시 파티 딜 붕괴(카뮤·아케쿠리 등).
+// 탱이 없는 물몸 파티는 재배치 무의미 → 앵커 유지(자가생존/버스트에 의존). 탱/가드 앵커(엠버·미브·로시)도 그대로 전열.
+// pos4 가동 가능 유닛(진천우·관리자)은 후열로 몰아 평타 낭비 최소화.
+const POS4_CAPABLE = new Set(["chenqianyu", "endministrator"]); // fromPos에 4 포함(후열 완전 가동)
+export function frontlineOrder(ids: string[]): string[] {
+  if (ids.length < 2) return ids;
+  const clsOf = (id: string) => OP_BASE[id]?.cls ?? "striker";
+  const anchor = ids[0];
+  let ordered = ids;
+  const squishyAnchor = clsOf(anchor) === "striker" || clsOf(anchor) === "caster";
+  if (squishyAnchor) {
+    const rest = ids.slice(1);
+    const tank = rest.find((id) => clsOf(id) === "defender") ?? rest.find((id) => clsOf(id) === "guard");
+    if (tank) ordered = [tank, anchor, ...rest.filter((x) => x !== tank)]; // 전열=진짜 탱, pos2=앵커(보호)
+  }
+  // 후열(pos4)엔 가능하면 pos4 가동 유닛을(앵커 제외)
+  const p4 = ordered.find((id) => POS4_CAPABLE.has(id));
+  if (p4 && p4 !== ordered[ordered.length - 1] && p4 !== anchor) ordered = [...ordered.filter((x) => x !== p4), p4];
+  return ordered;
 }
+
+// ===== 적 데이터: namu.wiki 명일방주 엔드필드 적 문서 정합(세력·저항표·특수능력) =====
+//  세력: 아겔로스(4번협곡 + 무릉="수화자")·랜드브레이커(본 크러셔)·청파채(창적)·야외 생물.
+//  등급: 일반(normal)/강화(enhanced)/정예(elite~)/두목·우두머리(boss). 위키 Lv90 절대 스탯 대신 DD 스케일 티어 매핑.
+//  저항: 속성별(물리/열기/전기/냉기/자연) 위키 저항표 반영 — 무릉=전기·냉기↑, 파조의 상=열기 약점 등.
+export type EnemyTier = "common" | "normal" | "enhanced" | "advanced" | "alpha" | "elite" | "boss";
+export type EnemyBehavior = "melee" | "snipe" | "aoe" | "heavy" | "heal" | "buff"; // 근접·저격(후열)·광역·중장·치유·강화
+export type EnemyDef = {
+  id: string; name: string; faction: string; role: string; tier: EnemyTier;
+  element: "physical" | Element; behavior: EnemyBehavior;
+  attach?: Element;      // 명중 시 아군에 아츠 부착(수화자 냉기·본크러셔 열기 등)
+  bind?: boolean;        // 잡기/속박: 명중 시 확률로 아군 시간 정지 1턴(형상아겔로스·처형자·겁운객)
+  resist?: Partial<Record<"physical" | Element, number>>; // 위키 저항표(속성별, 음수=약점). 미지정 속성=0
+};
+
+// 티어 기준 스탯(DD 스케일: 아군 hp≈2689·공격≈100 대역에 맞춤)
+const TIER_STATS: Record<EnemyTier, { hp: number; attack: number; speed: number; staggerMax: number; defense: number }> = {
+  common:   { hp: 820,  attack: 105, speed: 62, staggerMax: 40,  defense: 10 },
+  normal:   { hp: 1050, attack: 120, speed: 60, staggerMax: 46,  defense: 15 },
+  enhanced: { hp: 1500, attack: 145, speed: 58, staggerMax: 66,  defense: 30 },
+  advanced: { hp: 2100, attack: 168, speed: 55, staggerMax: 96,  defense: 45 },
+  alpha:    { hp: 2600, attack: 208, speed: 52, staggerMax: 116, defense: 55 },
+  elite:    { hp: 3600, attack: 242, speed: 50, staggerMax: 146, defense: 72 },
+  boss:     { hp: 10400, attack: 336, speed: 60, staggerMax: 236, defense: 90 },
+};
+
+// 아군 저항(≈37.5%) 도입에 따른 적 공격 보정: 아군 실피해 유지(1/(1−저항)≈1.5). 원본 손맛(큰 raw→저항 경감).
+const ENEMY_ATK_COMP = 1.5;
+// 아군 스킬9(×1.8) + 풀 장비(오퍼별 실측 피스)로 파티 딜 상승 → 적 체력 ×2.5로 도전성 부여(보스전 클리어율 분산).
+const ENEMY_HP_COMP = 2.3;
+
+export function makeEnemy(def: EnemyDef, pos: number): DDUnit {
+  const b = TIER_STATS[def.tier];
+  let { hp, attack, speed, staggerMax, defense } = b;
+  hp = Math.round(hp * ENEMY_HP_COMP);
+  attack = Math.round(attack * ENEMY_ATK_COMP);
+  // 역할 보정: 중장=체력·공격·불균형↑ 속도↓ / 저격=체력↓ 속도↑ / 광역=공격↓ / 치유·강화=공격↓ 속도↑
+  if (def.behavior === "heavy") { hp = Math.round(hp * 1.35); attack = Math.round(attack * 1.15); speed -= 12; staggerMax = Math.round(staggerMax * 1.25); }
+  else if (def.behavior === "snipe") { hp = Math.round(hp * 0.8); speed += 10; }
+  else if (def.behavior === "aoe") { attack = Math.round(attack * 0.72); speed -= 4; }
+  else if (def.behavior === "heal") { attack = Math.round(attack * 0.5); hp = Math.round(hp * 0.9); speed += 6; }
+  else if (def.behavior === "buff") { attack = Math.round(attack * 0.7); speed += 4; }
+  const u: DDUnit = { ...zero(), id: `${def.id}#${pos}`, name: def.name, side: "enemy", pos, hp, maxHp: hp, speed, attack, staggerMax, ultCost: 999 };
+  u.defense = defense;
+  u.resist = { physical: 0, heat: 0, electric: 0, cryo: 0, nature: 0, ...def.resist };
+  return u;
+}
+
+// 인스턴스 id(`key#pos`)에서 정의 조회
+export const enemyDefFor = (unitId: string): EnemyDef | undefined => ENEMY_DEFS[unitId.split("#")[0]];
+
+// 저항값은 warfarin.wiki 데이터마인(damageTakenScalar) 정합: DD resist = 1 − scalar. S=1.0/A=0.8/B=0.5/C=0.2/D=0 저항.
 export const ENEMY_DEFS: Record<string, EnemyDef> = {
-  mob: { id: "mob", name: "아겔로스 잡병", hp: 1200, attack: 130, speed: 40, staggerMax: 50 },
-  brute: { id: "brute", name: "중장 아겔로스", hp: 2600, attack: 220, speed: 55, staggerMax: 110 },
-  boss: { id: "boss", name: "보스: 티시로슨", hp: 9000, attack: 320, speed: 60, staggerMax: 260 },
+  // ── 야외 생물: 탈로스 II 야생·감염수. 다수가 물리·자연·냉기·전기 저항 보유 → 열기 약점(열기 오퍼 특효) ──
+  rockhowler:       { id: "rockhowler",       name: "록하울러",         faction: "야외 생물", role: "야수",   tier: "normal",   element: "physical", behavior: "melee", resist: { physical: 0.2, nature: 0.2, cryo: 0.2, electric: 0.2 } },
+  "acid-slug":      { id: "acid-slug",        name: "산성원석충",       faction: "야외 생물", role: "원석충", tier: "normal",   element: "nature",   behavior: "snipe", attach: "nature" }, // 저항 0
+  "firemist-slug":  { id: "firemist-slug",    name: "화염원석충",       faction: "야외 생물", role: "자폭",   tier: "normal",   element: "heat",     behavior: "aoe",   resist: { physical: 0.2, heat: 0.2, nature: 0.2 } },
+  quillbeast:       { id: "quillbeast",       name: "활성화된 프릭비스트", faction: "야외 생물", role: "돌격", tier: "enhanced", element: "heat",     behavior: "heavy", resist: { nature: 0.2, cryo: 0.2 } },
+  rakerbeast:       { id: "rakerbeast",       name: "백안의 레이커비스트", faction: "야외 생물", role: "포식", tier: "advanced", element: "physical", behavior: "melee", resist: { heat: 0.2, electric: 0.2 } },
+  manglerbeast:     { id: "manglerbeast",     name: "무장 맹글러",      faction: "야외 생물", role: "중장",   tier: "elite",    element: "physical", behavior: "heavy", resist: { physical: 0.2, nature: 0.2, cryo: 0.2, electric: 0.2 } }, // 열기 약점
+  // ── 아겔로스(4번 협곡): 헤일로 구조체. 일반=저항 0, 강화형부터 물리·열기·자연 0.2. 반사 장갑 ──
+  ram:              { id: "ram",              name: "큰뿔아겔로스",     faction: "아겔로스", role: "돌격", tier: "common",   element: "physical", behavior: "heavy" }, // 일반: 저항 0
+  sting:            { id: "sting",            name: "일미아겔로스",     faction: "아겔로스", role: "투척", tier: "common",   element: "physical", behavior: "snipe" }, // 일반: 저항 0
+  "heavy-sting":    { id: "heavy-sting",      name: "삼미아겔로스",     faction: "아겔로스", role: "포격", tier: "advanced", element: "physical", behavior: "snipe", resist: { physical: 0.2, heat: 0.2, nature: 0.2 } },
+  effigy:           { id: "effigy",           name: "형상아겔로스",     faction: "아겔로스", role: "변신", tier: "advanced", element: "physical", behavior: "melee", bind: true, resist: { physical: 0.2, heat: 0.2, nature: 0.2 } },
+  sentinel:         { id: "sentinel",         name: "보초아겔로스",     faction: "아겔로스", role: "포탑", tier: "elite",    element: "physical", behavior: "snipe", resist: { physical: 0.2, heat: 0.2, nature: 0.2 } },
+  // ── 수화자(무릉 아겔로스): 수생 형성 모델. 전 개체 전기·냉기 0.2 저항(데이터마인 정합). 냉기 부착·보호·동결 ──
+  mudflow:          { id: "mudflow",          name: "탁류아겔로스",     faction: "수화자", role: "돌격",   tier: "common",   element: "cryo",     behavior: "snipe", attach: "cryo", resist: { electric: 0.2, cryo: 0.2 } },
+  hedron:           { id: "hedron",           name: "수정아겔로스",     faction: "수화자", role: "사격",   tier: "common",   element: "cryo",     behavior: "snipe", attach: "cryo", resist: { electric: 0.2, cryo: 0.2 } },
+  prism:            { id: "prism",            name: "굴절아겔로스",     faction: "수화자", role: "증폭",   tier: "enhanced", element: "cryo",     behavior: "buff",  resist: { electric: 0.2, cryo: 0.2 } }, // 주변 아겔로스 보호
+  tidewalker:       { id: "tidewalker",       name: "조류아겔로스",     faction: "수화자", role: "동결",   tier: "elite",    element: "cryo",     behavior: "melee", attach: "cryo", resist: { electric: 0.2, cryo: 0.2 } },
+  // ── 랜드브레이커(본 크러셔): 무장 약탈 집단. 대부분 무저항, 염술사=자연/파괴자=4속성(데이터마인) ──
+  "bk-raider":      { id: "bk-raider",        name: "본 크러셔 약탈자", faction: "랜드브레이커", role: "근접", tier: "normal",   element: "heat", behavior: "melee" }, // 저항 0
+  "bk-pyromancer":  { id: "bk-pyromancer",    name: "본 크러셔 염술사", faction: "랜드브레이커", role: "술사", tier: "enhanced", element: "heat", behavior: "aoe",  attach: "heat", resist: { nature: 0.5 } },
+  "bk-ballista":    { id: "bk-ballista",      name: "본 크러셔 사수",   faction: "랜드브레이커", role: "저격", tier: "advanced", element: "heat", behavior: "snipe" }, // 저항 0
+  "bk-executioner": { id: "bk-executioner",   name: "본 크러셔 처형자", faction: "랜드브레이커", role: "처형", tier: "alpha",    element: "heat", behavior: "melee", bind: true }, // 저항 0
+  "bk-siege":       { id: "bk-siege",         name: "본 크러셔 파괴자", faction: "랜드브레이커", role: "공성", tier: "elite",    element: "heat", behavior: "heavy", resist: { physical: 0.2, heat: 0.2, electric: 0.2, cryo: 0.2 } }, // 자연 약점
+  // ── 청파채(창적): 홍산 관할 불법 무장 세력. 정예는 4속성 저항 → 물리 약점(데이터마인) ──
+  "highway-reaver": { id: "highway-reaver",   name: "막석명",           faction: "청파채", role: "약탈",   tier: "normal",   element: "physical", behavior: "melee" }, // 저항 0
+  "cloud-stalker":  { id: "cloud-stalker",    name: "겁운객",           faction: "청파채", role: "연막",   tier: "enhanced", element: "physical", behavior: "heal", resist: { heat: 0.2, electric: 0.2, cryo: 0.2, nature: 0.2 } }, // 물리 약점
+  "hill-smasher":   { id: "hill-smasher",     name: "최산장",           faction: "청파채", role: "중화기", tier: "alpha",    element: "heat",     behavior: "aoe",  resist: { heat: 0.2, electric: 0.2, cryo: 0.2, nature: 0.2 } }, // 물리 약점
+  "cloud-obliterator": { id: "cloud-obliterator", name: "개천장",       faction: "청파채", role: "중화기", tier: "advanced", element: "heat",     behavior: "aoe",  resist: { heat: 0.2, electric: 0.2, cryo: 0.2, nature: 0.2 } }, // 물리 약점
+  // ── 보스: 본편 검증 스토리 보스(저항 데이터마인 정합) ──
+  craghowler:       { id: "craghowler",       name: "거대한 록하울러",   faction: "야외 생물", role: "우두머리", tier: "boss", element: "physical", behavior: "heavy", resist: { physical: 0.2, nature: 0.2, cryo: 0.2, electric: 0.2 } }, // 열기 약점
+  triaggelos:       { id: "triaggelos",       name: "트리아겔로스",      faction: "아겔로스", role: "삼형태(3P)", tier: "boss", element: "physical", behavior: "aoe", resist: { physical: 0.2, heat: 0.2, nature: 0.2 } }, // 광맥 구역 보스
+  "marble-aggelo":  { id: "marble-aggelo",    name: "마블 아겔로미레",   faction: "아겔로스", role: "4번협곡 최종", tier: "boss", element: "physical", behavior: "snipe" }, // 저항 0(인간형)
+  nefarith:         { id: "nefarith",         name: "'본 크러셔' 네파리스", faction: "랜드브레이커", role: "두목", tier: "boss", element: "electric", behavior: "aoe", attach: "electric" }, // 저항 0
+  "ruan-yi":        { id: "ruan-yi",          name: "원일",             faction: "청파채", role: "채주(탕탕 오빠)", tier: "boss", element: "heat", behavior: "heavy", resist: { heat: 0.2, cryo: 0.2 } },
+  tidalklast:       { id: "tidalklast",       name: "파조의 상",         faction: "수화자", role: "중간보스", tier: "boss", element: "cryo", behavior: "aoe", attach: "cryo", resist: { electric: 0.2, cryo: 0.2 } },
 };
