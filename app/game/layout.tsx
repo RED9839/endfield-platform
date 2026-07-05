@@ -1,6 +1,6 @@
-// DD 원정(닼던식) 라우트 전용 레이아웃 — 고딕 각인체(Cinzel) + 고문서 세리프(EB Garamond) 로드.
+// 던전 원정(닥던식) 라우트 전용 레이아웃 — 고딕 각인체(Cinzel) + 고문서 세리프(EB Garamond) 로드.
 // 폰트는 이 라우트에서만 쓰이므로 여기서 주입(플랫폼 나머지는 Arial 유지).
-export default function DDLayout({ children }: { children: React.ReactNode }) {
+export default function GameLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
       <link rel="preconnect" href="https://fonts.googleapis.com" />

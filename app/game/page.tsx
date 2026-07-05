@@ -1,175 +1,104 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronLeft, Flag, Swords } from "lucide-react";
+import { ChevronLeft, Tent } from "lucide-react";
 
-import BattleScreen from "./components/BattleScreen";
-import CampScreen from "./components/CampScreen";
-import ChallengeScreen from "./components/ChallengeScreen";
-import DeploymentScreen from "./components/DeploymentScreen";
-import DuplicateScreen from "./components/DuplicateScreen";
-import EventScreen from "./components/EventScreen";
-import MapScreen from "./components/MapScreen";
-import RewardScreen from "./components/RewardScreen";
-import RunSummaryScreen from "./components/RunSummaryScreen";
-import { events } from "./data/events";
-import { factions } from "./data/maps";
-import { useRunState } from "./hooks/useRunState";
+import { OPERATORS } from "./dd/roster";
+import { encounterForNode, useDDRun, REST_HEAL } from "./dd/run";
+import BattleView from "./dd/ui/BattleView";
+import RosterSelect from "./dd/ui/RosterSelect";
+import RunMap from "./dd/ui/RunMap";
+import RunHud from "./dd/ui/RunHud";
+import CraftPanel from "./dd/ui/CraftPanel";
+import type { Element } from "./dd/combat";
 
-const PRIMARY = "#ff9a2f";
-const CUT_SM = {
-  clipPath:
-    "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))",
-};
+const PRIMARY = "#c9822c";
+const CUT_SM = { clipPath: "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))" };
+const elementColor: Record<"physical" | Element, string> = { physical: "#d4d4d8", heat: "#fb923c", electric: "#FBCB38", cryo: "#67e8f9", nature: "#86efac" };
 
 export default function GamePage() {
-  const run = useRunState();
-  const activeEvent = events.find((event) => event.id === run.eventId);
+  const run = useDDRun();
 
   return (
-    <main className="min-h-screen bg-ef-bg text-ef-ink">
-      <header className="sticky top-0 z-40 border-b border-ef-line bg-ef-bg/90 backdrop-blur-xl">
+    <main className="dd-realm min-h-screen bg-ef-bg text-ef-ink">
+      <header className="sticky top-0 z-40 border-b border-ef-line bg-ef-bg/85 backdrop-blur-xl">
         <div className="mx-auto flex min-h-16 max-w-[1500px] items-center gap-3 px-4 py-2 sm:px-7">
-          <Link
-            href="/"
-            className="flex h-10 w-10 shrink-0 items-center justify-center border border-ef-line bg-ef-card text-ef-muted transition hover:border-ef-accent/40 hover:text-ef-accent-soft"
-            style={CUT_SM}
-            aria-label="홈으로"
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </Link>
+          <Link href="/" className="flex h-10 w-10 shrink-0 items-center justify-center border border-ef-line bg-ef-card text-ef-muted transition hover:border-ef-accent/40 hover:text-ef-accent-soft" style={CUT_SM} aria-label="홈으로"><ChevronLeft className="h-5 w-5" /></Link>
           <span className="h-3 w-3 shrink-0" style={{ background: PRIMARY }} />
           <div className="min-w-0">
-            <p className="font-mono text-[10px] font-bold uppercase tracking-[0.3em] text-ef-muted">
-              Frontier Protocol
-            </p>
-            <p className="truncate font-mono text-sm font-black uppercase tracking-[0.2em] text-white">
-              탐사 프로토타입
-            </p>
+            <p className="font-mono text-[10px] font-bold uppercase tracking-[0.3em] text-ef-muted">Darkest Protocol</p>
+            <p className="truncate font-mono text-sm font-black uppercase tracking-[0.2em] text-white">던전 원정</p>
           </div>
-
           <div className="ml-auto" />
-
-          <Link
-            href="/game/dd"
-            className="flex h-10 items-center gap-1.5 border border-ef-line bg-ef-card px-3 font-mono text-[11px] font-bold uppercase tracking-wider text-ef-muted transition hover:border-ef-accent/40 hover:text-ef-accent-soft"
-            style={CUT_SM}
-          >
-            <Swords className="h-4 w-4" /> DD 전투
-          </Link>
-
-          {run.screen !== "summary" && run.screen !== "deployment" && (
-            <button
-              type="button"
-              onClick={run.abandonRun}
-              className="flex h-10 w-10 items-center justify-center border border-ef-line bg-ef-card text-ef-muted transition hover:border-red-400/40 hover:text-red-300"
-              style={CUT_SM}
-              aria-label="탐사 중단"
-            >
-              <Flag className="h-4 w-4" />
-            </button>
+          {run.phase !== "select" && (
+            <button type="button" onClick={run.restart} className="border border-ef-line bg-ef-card px-3 py-1.5 font-mono text-[11px] font-bold uppercase tracking-wider text-ef-muted transition hover:border-red-400/40 hover:text-red-300" style={CUT_SM}>원정 포기</button>
           )}
         </div>
       </header>
 
-      {run.screen === "deployment" && (
-        <DeploymentScreen
-          onConfirm={run.confirmDeployment}
-          initialSelected={run.party.map((member) => member.id)}
-          onOpenChallenge={run.openChallenge}
-        />
+      {run.phase === "select" && <RosterSelect onStart={run.startRun} />}
+
+      {run.phase === "map" && (
+        <>
+          <div className="mx-auto max-w-[1500px] px-4 pt-4 sm:px-7"><RunHud faction={run.faction} depth={run.depthReached} maxDepth={run.maxDepth} craft={run.craft} onCraft={run.openCraft} canCraft /></div>
+          <RunMap nodes={run.nodes} frontier={run.frontier} cleared={run.cleared} party={run.party} items={run.items} onEnter={run.enterNode} />
+        </>
       )}
-      {run.screen === "challenge" && (
-        <ChallengeScreen onStart={run.startChallenge} onBack={run.exitChallenge} />
-      )}
-      {run.screen === "map" && (
-        <MapScreen
-          availableNodes={run.availableNodes}
-          visitedNodes={run.visitedNodes}
-          onEnter={run.enterNode}
-        />
-      )}
-      {run.screen === "battle" && run.battle && (
-        <BattleScreen
+
+      {run.phase === "craft" && <CraftPanel craft={run.craft} party={run.party} onCraft={run.craftPiece} onForge={run.forgePiece} onClose={run.closeCraft} />}
+
+      {run.phase === "battle" && run.activeNode && (
+        <BattleView
+          key={run.activeNode.id}
           party={run.party}
-          battle={run.battle}
-          relics={run.relics}
-          potions={run.potions}
-          onPlayCard={run.playCard}
-          onUseUltimate={run.useUltimate}
-          onEndTurn={run.endTurn}
-          onUsePotion={run.usePotion}
+          encounterKey={encounterForNode(run.activeNode.kind)}
+          nodeKind={run.activeNode.kind}
+          faction={run.faction}
+          depth={run.activeNode.depth}
+          maxDepth={run.maxDepth}
+          owned={run.craft.owned}
+          items={run.items}
+          onUseItem={run.useItem}
+          onEnd={run.finishBattle}
         />
       )}
-      {run.screen === "reward" && (
-        <RewardScreen
-          gearSlugs={run.pendingGearSlugs}
-          party={run.party}
-          credits={run.credits}
-          onEquip={run.equipRewardGear}
-          onSkip={run.skipReward}
-          cardOffers={run.pendingCardOffers}
-          onTakeCard={run.takeCardOffer}
-          onSkipCard={run.skipCardOffer}
-          factionName={factions[run.factionIndex]?.name}
-          pendingRelic={run.pendingRelic}
-        />
+
+      {run.phase === "rest" && (
+        <div className="mx-auto max-w-[720px] px-4 py-10 sm:px-7">
+          <div className="dd-frame p-6" style={CUT_SM}>
+            <div className="mb-3 flex items-center gap-2"><Tent className="h-6 w-6 text-ef-accent" /><h2 className="text-2xl">야영지</h2></div>
+            <p className="mb-5 text-sm text-ef-muted">부대가 잠시 정비합니다. 각 생존 대원이 최대 HP의 <b className="text-ef-ink">{Math.round(REST_HEAL * 100)}%</b>를 회복합니다.</p>
+            <div className="mb-5 space-y-2">
+              {run.party.map((m) => {
+                const op = OPERATORS.find((o) => o.id === m.id);
+                const healed = m.hp > 0 ? Math.min(m.maxHp, Math.round(m.hp + m.maxHp * REST_HEAL)) : 0;
+                return (
+                  <div key={m.id} className="flex items-center gap-2">
+                    <span className="h-2 w-2 shrink-0" style={{ background: elementColor[op?.element ?? "physical"] }} />
+                    <span className="w-24 truncate font-mono text-xs font-bold text-white">{op?.name ?? m.id}</span>
+                    <div className="h-2.5 flex-1 overflow-hidden border border-ef-line bg-black/60">
+                      <div className="h-full bg-ef-line/40" style={{ width: `${(healed / m.maxHp) * 100}%` }}>
+                        <div className="h-full" style={{ width: `${(m.hp / Math.max(1, healed)) * 100}%`, background: "#86efac" }} />
+                      </div>
+                    </div>
+                    <span className="w-24 text-right font-mono text-[10px] text-ef-muted">{Math.max(0, m.hp)} → <b className="text-green-300">{healed}</b></span>
+                  </div>
+                );
+              })}
+            </div>
+            <button type="button" onClick={run.rest} className="dd-torch w-full border border-ef-line py-2.5 font-mono text-sm font-bold uppercase tracking-wider transition hover:border-ef-accent/50" style={{ ...CUT_SM, background: PRIMARY, color: "#0a0a0a" }}>정비하고 진행 →</button>
+          </div>
+        </div>
       )}
-      {run.screen === "shop" && (
-        <RewardScreen
-          mode="shop"
-          gearSlugs={run.pendingGearSlugs}
-          party={run.party}
-          credits={run.credits}
-          onEquip={run.buyGear}
-          onSkip={run.skipReward}
-          repairUsed={run.repairUsed}
-          onRepairRest={run.repairRest}
-          onRepairUpgrade={run.repairUpgrade}
-          deck={run.deck}
-          cardsRemoved={run.cardsRemoved}
-          onRemoveCard={run.removeCard}
-          shopRelics={run.shopRelics}
-          shopPotions={run.shopPotions}
-          ownedRelics={run.relics}
-          potionCount={run.potions.length}
-          onBuyRelic={run.buyRelic}
-          onBuyPotion={run.buyPotion}
-        />
-      )}
-      {run.screen === "event" && activeEvent && (
-        <EventScreen event={activeEvent} onChoose={run.resolveEvent} />
-      )}
-      {run.screen === "camp" && (
-        <CampScreen
-          onRest={run.rest}
-          party={run.party}
-          deck={run.deck}
-          onUpgrade={run.upgradeCard}
-        />
-      )}
-      {run.screen === "promote" && (
-        <CampScreen
-          mode="promote"
-          promotesLeft={run.pendingPromotes ?? 0}
-          onRest={run.rest}
-          party={run.party}
-          deck={run.deck}
-          onUpgrade={run.promoteCard}
-          onSkip={run.skipPromote}
-        />
-      )}
-      {run.screen === "duplicate" && (
-        <DuplicateScreen
-          party={run.party}
-          deck={run.deck}
-          candidates={run.pendingDuplicate ?? []}
-          onDuplicate={run.duplicateCard}
-          onSkip={run.skipDuplicate}
-        />
-      )}
-      {run.screen === "summary" && (
-        <RunSummaryScreen state={run} onRestart={run.startRun} onSaveDeck={run.saveDeck} onOpenChallenge={run.openChallenge} />
+
+      {(run.phase === "victory" || run.phase === "defeat") && (
+        <div className="mx-auto max-w-[720px] px-4 py-16 text-center sm:px-7">
+          <div className="dd-frame p-10" style={{ ...CUT_SM, borderColor: run.phase === "victory" ? "#cf9f3e66" : "#b3312a66" }}>
+            <div className="mb-2 text-4xl" style={{ fontFamily: "var(--dd-display)", letterSpacing: "0.18em", color: run.phase === "victory" ? "#e8c56a" : "#c23b32", textShadow: "0 2px 12px rgba(0,0,0,0.9)" }}>{run.phase === "victory" ? "원정 성공" : "원정 실패"}</div>
+            <p className="mb-6 text-base italic text-ef-muted">{run.phase === "victory" ? "던전 심층의 공포를 몰아냈다. 부대가 어둠을 뚫고 귀환한다." : "부대가 던전의 어둠 속으로 사라졌다."}</p>
+            <button type="button" onClick={run.restart} className="dd-torch border border-ef-line px-6 py-2.5 font-mono text-sm font-bold uppercase tracking-wider transition hover:border-ef-accent/50" style={{ ...CUT_SM, background: PRIMARY, color: "#0a0a0a" }}>새 원정 →</button>
+          </div>
+        </div>
       )}
     </main>
   );
