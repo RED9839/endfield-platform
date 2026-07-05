@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { OPERATORS, avatarUrl, type OpMeta } from "../roster";
 import { GEAR_SLOTS, SET_NAMES, activeSets, gearSlotName, setEffectText, recommendedSet, recommendedLoadout, GEAR_PIECE_BY_ID, type GearSlot, type Loadout } from "../gear";
-import { DEFAULT_PROGRESS, PROMO_MAX, SKILL_MAX, GEAR_MAX, PROMO_LABEL, skillLabel, gearLabel, clampProgress, type OpProgress } from "../progress";
+import { DEFAULT_PROGRESS, PROMO_MAX, SKILL_MAX, PROMO_LABEL, skillLabel, clampProgress, type OpProgress } from "../progress";
 import { weaponOf, weaponName, weaponEffectText, OP_WEAPON_STATS, WEAPON_KO, WEAPON_ICON } from "../weapons";
 import { PRESET_PARTIES, ARCHETYPE_LABEL } from "../parties";
 import type { PartyPick } from "../run";
@@ -20,11 +20,10 @@ const classOrder: DDClass[] = ["striker", "guard", "vanguard", "caster", "defend
 // 오퍼 추천 세트(시트 공략 기준, gear.ts OP_RECOMMENDED_SET) — 기본 로드아웃
 const recSet = (op: OpMeta): string => recommendedSet(op.id, op.cls, op.element);
 
-// 성장 3축 스테퍼 정의(라벨·최대치·표시)
+// 성장 2축 스테퍼(정예화·스킬 단조). 장비는 런에서 공업소 제작/단조 — 여기선 목표 빌드만 표시.
 const AXES = [
   { key: "promotion" as const, name: "정예화", max: PROMO_MAX, fmt: (v: number) => PROMO_LABEL[v], tone: "#fbbf24" },
   { key: "skillRank" as const, name: "스킬 단조", max: SKILL_MAX, fmt: (v: number) => skillLabel(v), tone: "#67e8f9" },
-  { key: "gearLevel" as const, name: "장비 단조", max: GEAR_MAX, fmt: (v: number) => gearLabel(v), tone: "#c4b5fd" },
 ];
 const pieceName = (ref?: string) => (ref ? GEAR_PIECE_BY_ID[ref]?.name ?? ref : "—");
 
@@ -69,7 +68,7 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
         <div>
           <p className="font-mono text-[12px] font-bold uppercase tracking-[0.3em] text-ef-muted">Darkest Protocol · 원정 편성</p>
           <h2 className="font-mono text-xl font-black uppercase tracking-[0.15em] text-white">부대 편성</h2>
-          <p className="mt-1 text-xs text-ef-muted">오퍼레이터 4명 선택(선택 순서 = 전열). <b className="text-ef-ink">HP는 전투마다 이어지고</b> 야영에서만 회복. 장비는 <b className="text-ef-ink">같은 세트 2부위</b>부터 효과 발동.</p>
+          <p className="mt-1 text-xs text-ef-muted">오퍼레이터 4명 선택(선택 순서 = 전열). <b className="text-ef-ink">HP는 전투마다 이어지고</b> 야영에서만 회복. 아래 장비는 <b className="text-ef-ink">목표 빌드</b> — <b className="text-ef-accent-soft">맨몸 시작</b>, 런에서 재료 모아 공업소에서 제작(같은 세트 2부위부터 효과).</p>
         </div>
         <div className="flex items-center gap-2">
           <span className="font-mono text-sm text-ef-muted">{selected.length}/4</span>
@@ -129,7 +128,7 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
                 )}
 
                 {/* 성장 3축 — 정예화 · 스킬 단조 · 장비 단조 */}
-                <div className="mb-2 grid grid-cols-3 gap-1.5">
+                <div className="mb-2 grid grid-cols-2 gap-1.5">
                   {AXES.map((ax) => {
                     const v = pr[ax.key];
                     return (

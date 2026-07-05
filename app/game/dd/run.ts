@@ -3,7 +3,7 @@
 import { useCallback, useMemo, useState } from "react";
 
 import { makeAlly } from "./roster";
-import { GEAR_SLOTS, GEAR_PIECE_BY_ID, type Loadout } from "./gear";
+import { type Loadout } from "./gear";
 import { rewardItemPool } from "./items";
 import type { OpProgress } from "./progress";
 import { initialCraft, craftPiece as doCraft, forgePiece as doForge, cloneCraft, type CraftState } from "./craft";
@@ -75,9 +75,6 @@ export function useDDRun() {
 
   const startRun = useCallback((picks: PartyPick[]) => {
     const p = picks.map((pick) => { const u = makeAlly(pick.id, 1, pick.progress); return { id: pick.id, hp: u.maxHp, maxHp: u.maxHp, loadout: pick.loadout, progress: pick.progress }; });
-    // 시작 보유 피스: 각 오퍼 장착 피스(실제 id)를 정예화 장비 단조 레벨로 시드 → 공업소에서 단조로 강화
-    const owned: Record<string, number> = {};
-    for (const pick of picks) { const lo = pick.loadout ?? {}; const lv = pick.progress?.gearLevel ?? 0; for (const slot of GEAR_SLOTS) { const ref = lo[slot]; if (ref && GEAR_PIECE_BY_ID[ref]) owned[ref] = Math.max(owned[ref] ?? 0, lv); } }
     const map = genMap();
     setParty(p);
     setNodes(map);
@@ -86,7 +83,7 @@ export function useDDRun() {
     setDepthReached(0);
     setActiveId(null);
     setItems({ "heal-cap-1": 2, "can-1": 1, "recov-1": 1 }); // 시작 키트
-    setCraft({ mats: { parts: 30, permits: 5 }, owned }); // 시작 제작 재료 + 장착 피스 시드
+    setCraft({ mats: { parts: 80, permits: 10 }, owned: {} }); // 맨몸 시작 — 공업소에서 목표 빌드 직접 제작
     setFaction(pickRand(FACTIONS)); // 이번 런 세력 리전 무작위
     setPhase("map");
   }, []);

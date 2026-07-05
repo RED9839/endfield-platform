@@ -176,7 +176,7 @@ const NODE_TO_KIND: Record<NodeKind, "normal" | "elite" | "boss"> = { battle: "n
 // ===== 드랍테이블 리뉴얼 — 세력·티어·깊이별 재료(장비 부품·관리권) + 아이템 =====
 export function enemyDrop(kind: NodeKind, depth: number, faction: string): { parts: number; permits: number; items: string[] } {
   const k = NODE_TO_KIND[kind];
-  const base = k === "boss" ? { parts: 32, permits: 5 } : k === "elite" ? { parts: 16, permits: 2 } : { parts: 8, permits: 1 };
+  const base = k === "boss" ? { parts: 60, permits: 10 } : k === "elite" ? { parts: 36, permits: 4 } : { parts: 22, permits: 2 };
   const depthBonus = Math.floor(depth * (k === "boss" ? 3 : 1.5)); // 깊을수록 재료↑
   const factionBonus = FACTION_POOL[faction]?.boss.length ? 0 : 0; // (세력별 특화 여지)
   return { parts: base.parts + depthBonus + factionBonus, permits: base.permits + (k === "boss" ? Math.floor(depth / 2) : 0), items: rewardItemPool(k) };
@@ -191,10 +191,10 @@ export function createBattle(party: { id: string; hp?: number; loadout?: Loadout
   const allies = ordered.map((p, i) => {
     const u = makeAlly(p.id, i + 1, p.progress); // 정예화·스킬랭크·장비강화(gearGrade) 반영
     if (p.hp != null) u.hp = Math.max(1, Math.min(u.maxHp, p.hp)); // 지속 HP(소모전)
-    // 부위별 단조: 제작(owned) 보유 피스는 그 단조 레벨, 미보유는 정예화 gearLevel 폴백
-    let levels: Partial<Record<GearSlot, number>> | undefined;
-    if (p.loadout && owned) for (const slot of GEAR_SLOTS) { const ref = p.loadout[slot]; if (ref && owned[ref] != null) (levels ??= {})[slot] = owned[ref]; }
-    bonusGauge += applyGear(u, p.loadout, p.progress?.gearLevel ?? 0, levels); // 세트 효과 + 부위 개별 메인 옵션(제작 단조 스케일)
+    // 맨몸 시작 — 공업소에서 제작(owned)한 피스만 장착. 미제작 슬롯은 미적용(기본 스탯).
+    let equipped: Loadout | undefined; let levels: Partial<Record<GearSlot, number>> | undefined;
+    if (p.loadout && owned) for (const slot of GEAR_SLOTS) { const ref = p.loadout[slot]; if (ref && owned[ref] != null) { (equipped ??= {})[slot] = ref; (levels ??= {})[slot] = owned[ref]; } }
+    bonusGauge += applyGear(u, equipped, 0, levels); // 제작된 피스만: 세트 효과 + 부위 단조 스케일
     applyWeapon(u); // 시그니처 무기: 공격력 +10% + 타입 고유효과
     return u;
   });
