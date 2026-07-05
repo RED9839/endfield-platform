@@ -76,22 +76,22 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
       </div>
 
       <div className="mb-4">
-        <div className="mb-1.5 font-mono text-[13px] font-bold uppercase tracking-[0.2em] text-ef-muted">프리셋 조합 <span className="text-ef-line">· 시트 순서 · 원클릭 로드</span></div>
+        <div className="mb-1.5 font-mono text-[13px] font-bold uppercase tracking-[0.2em] text-ef-muted">프리셋 조합 <span className="text-ef-muted">· 시트 순서 · 원클릭 로드</span></div>
         <div className="flex flex-wrap gap-2">
           {PRESET_PARTIES.map((p, i) => (
             <button key={p.id} type="button" onClick={() => loadPreset(p)} className="group max-w-[340px] border border-ef-line bg-ef-card px-3 py-2 text-left transition hover:border-ef-accent/60" style={CUT_SM}>
               <div className="flex items-center gap-1.5">
-                <span className="font-mono text-[11px] text-ef-line">{i + 1}</span>
+                <span className="font-mono text-[12px] text-ef-muted">{i + 1}</span>
                 <span className="h-2.5 w-2.5 shrink-0" style={{ background: elementColor[p.element] }} />
                 <span className="font-mono text-sm font-bold text-white">{p.name}</span>
-                <span className="font-mono text-[10px] uppercase tracking-wider text-ef-muted">{ARCHETYPE_LABEL[p.archetype]}</span>
+                <span className="font-mono text-[12px] uppercase tracking-wider text-ef-muted">{ARCHETYPE_LABEL[p.archetype]}</span>
               </div>
               <div className="mt-0.5 font-mono text-[12px] text-ef-accent">{p.members.map((id) => OPERATORS.find((o) => o.id === id)?.name ?? id).join("·")}</div>
               <div className="mt-0.5 truncate text-[12px] text-ef-muted group-hover:text-ef-ink">{p.desc}</div>
-              {p.note && <div className="mt-0.5 truncate text-[11px] text-ef-line">{p.note}</div>}
+              {p.note && <div className="mt-0.5 truncate text-[12px] text-ef-muted">{p.note}</div>}
               {p.alternates?.map((alt) => (
-                <div key={alt.role} className="mt-0.5 flex flex-wrap items-center gap-1 text-[11px]">
-                  <span className="text-ef-line">↔ {alt.role}:</span>
+                <div key={alt.role} className="mt-0.5 flex flex-wrap items-center gap-1 text-[12px]">
+                  <span className="text-ef-muted">↔ {alt.role}:</span>
                   {alt.ids.map((id) => <span key={id} className="text-ef-accent-soft">{OPERATORS.find((o) => o.id === id)?.name ?? id}</span>)}
                 </div>
               ))}
@@ -113,7 +113,7 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
                   <b className="font-mono text-sm text-ef-accent">{i + 1}</b>
                   <img src={avatarUrl(op.id)} alt="" loading="lazy" className="h-9 w-9 shrink-0 border object-cover" style={{ borderColor: elementColor[op.element], background: "#000" }} />
                   <span className="font-mono text-[15px] font-bold text-white">{op.name}</span>
-                  <span className="font-mono text-[11px] uppercase tracking-wide text-ef-muted">{classLabel[op.cls]}</span>
+                  <span className="font-mono text-[12px] uppercase tracking-wide text-ef-muted">{classLabel[op.cls]}</span>
                   <button type="button" onClick={() => toggle(id)} className="ml-auto font-mono text-[12px] text-ef-muted transition hover:text-red-300">해제</button>
                 </div>
 
@@ -140,7 +140,7 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
                     const v = pr[ax.key];
                     return (
                       <div key={ax.key} className="border border-ef-line bg-black/40 px-2 py-1.5" style={CUT_SM}>
-                        <div className="font-mono text-[11px] uppercase tracking-wider text-ef-muted">{ax.name}</div>
+                        <div className="font-mono text-[12px] uppercase tracking-wider text-ef-muted">{ax.name}</div>
                         <div className="mt-1 flex items-center justify-between gap-1">
                           <button type="button" onClick={() => bumpProg(id, ax.key, -1)} disabled={v <= 0} className="flex h-5 w-5 items-center justify-center border border-ef-line font-mono text-sm leading-none text-ef-muted transition enabled:hover:border-ef-accent/50 enabled:hover:text-white disabled:opacity-25">−</button>
                           <span className="font-mono text-[15px] font-bold" style={{ color: ax.tone }}>{ax.fmt(v)}</span>
@@ -154,10 +154,10 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
 
                 {/* 목표 빌드(참고) — 장비는 맨몸 시작, 런에서 공업소 제작 */}
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-ef-line/40 pt-2">
-                  <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-ef-muted">목표 세트</span>
+                  <span className="font-mono text-[12px] font-bold uppercase tracking-wider text-ef-muted">목표 세트</span>
                   <span className="font-mono text-[13px] font-bold text-ef-ink">{opSet(id)}</span>
                   {active.map((n) => <span key={n} className="font-mono text-[12px] text-green-300">◆ {setEffectText(n)}</span>)}
-                  <span className="ml-auto font-mono text-[11px] text-ef-line">공업소 제작</span>
+                  <span className="ml-auto font-mono text-[12px] text-ef-muted">공업소 제작</span>
                 </div>
               </div>
             );
@@ -179,7 +179,7 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
                     <img src={avatarUrl(op.id)} alt="" loading="lazy" className="h-9 w-9 shrink-0 border object-cover" style={{ borderColor: elementColor[op.element], background: "#000" }} />
                     <span className="min-w-0">
                       <span className="block truncate font-mono text-sm font-bold text-white">{op.name}</span>
-                      <span className="block font-mono text-[11px] uppercase tracking-wider text-ef-muted">{elementName[op.element]}</span>
+                      <span className="block font-mono text-[12px] uppercase tracking-wider text-ef-muted">{elementName[op.element]}</span>
                     </span>
                   </button>
                 );

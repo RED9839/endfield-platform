@@ -40,7 +40,7 @@ function Bar({ value, max, color, h = "h-2" }: { value: number; max: number; col
   return <div className={`${h} w-full overflow-hidden border border-ef-line bg-black/60`}><div className="h-full transition-all duration-300" style={{ width: `${pct}%`, background: color }} /></div>;
 }
 function Chip({ children, tone = "#a1a1aa" }: { children: React.ReactNode; tone?: string }) {
-  return <span className="border px-1 py-px font-mono text-[11px] font-bold uppercase tracking-wider" style={{ borderColor: `${tone}55`, color: tone }}>{children}</span>;
+  return <span className="border px-1 py-px font-mono text-[12px] font-bold uppercase tracking-wider" style={{ borderColor: `${tone}55`, color: tone }}>{children}</span>;
 }
 function unitChips(u: DDUnit) {
   const c: { k: string; label: string; tone: string }[] = [];
@@ -199,7 +199,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
         {/* 턴 타임라인 */}
         {!winner && upcoming.length > 0 && (
           <div className="hidden items-center gap-1 md:flex" title="이번 라운드 행동 순서">
-            <span className="font-mono text-[11px] uppercase tracking-wider text-ef-muted">순서</span>
+            <span className="font-mono text-[12px] uppercase tracking-wider text-ef-muted">순서</span>
             {upcoming.map((u, i) => (
               <span key={`${u.id}-${i}`} className="h-6 w-6 shrink-0 border" style={{ borderColor: fx.activeId === u.id ? "#e8c56a" : u.side === "ally" ? "#3c2c1a" : "#5a2420", background: u.side === "ally" ? `center/cover url(${avatarUrl(u.id)})` : "#2a1210", opacity: i === 0 ? 1 : 0.55, clipPath: "polygon(50% 0,100% 50%,50% 100%,0 50%)" }} />
             ))}
@@ -247,7 +247,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
                   </div>
                   <Bar value={e.hp} max={e.maxHp} color="#e0655c" />
                   {e.staggerMax > 0 && <div className="mt-1"><Bar value={e.staggered ? e.staggerMax : e.stagger} max={e.staggerMax} color={e.staggered ? "#facc15" : "#a16207"} h="h-1" /></div>}
-                  {e.staggered && <div className="mt-1 font-mono text-[11px] font-bold uppercase tracking-wider text-yellow-400">⚡ 불균형 +30%</div>}
+                  {e.staggered && <div className="mt-1 font-mono text-[12px] font-bold uppercase tracking-wider text-yellow-400">⚡ 불균형 +30%</div>}
                   {ed && <div className="mt-1 flex flex-wrap gap-1"><Chip tone="#e0655c">{ed.faction}</Chip>{ed.resist && (Object.entries(ed.resist) as [Element | "physical", number][]).filter(([, v]) => v < 0).map(([eln, v]) => <Chip key={eln} tone={elementColor[eln]}>{elementName[eln]} 약점{Math.round(-v * 100)}</Chip>)}</div>}
                   <div className="mt-1 flex flex-wrap gap-1">{unitChips(e).map((c) => <Chip key={c.k} tone={c.tone}>{c.label}</Chip>)}</div>
                 </div>
@@ -280,18 +280,18 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
                     <div className="relative h-16 w-16 shrink-0 border border-ef-line" style={{ background: `center top/cover url(${avatarUrl(a.id)}), #0d0906`, boxShadow: `inset 0 0 0 1px ${elementColor[el]}55` }}>
                       <span className="absolute inset-x-0 bottom-0 h-1" style={{ background: elementColor[el] }} />
                       {dead && <span className="absolute inset-0 flex items-center justify-center text-2xl">💀</span>}
-                      {isCur && <span className="absolute -right-1 -top-1 font-mono text-[11px] font-bold text-ef-accent">▶</span>}
+                      {isCur && <span className="absolute -right-1 -top-1 font-mono text-[12px] font-bold text-ef-accent">▶</span>}
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1">
                         <span className="truncate font-mono text-sm font-bold text-white">{a.name}</span>
                         {weaponOf(a.id) && (weaponImage(a.id) ? <img src={weaponImage(a.id)} alt="" loading="lazy" className="h-4 w-4 shrink-0 object-contain" title={`${WEAPON_KO[weaponOf(a.id)!]} · ${weaponEffectText(a.id)}`} /> : <span className="text-[13px] leading-none" title={`${WEAPON_KO[weaponOf(a.id)!]} · ${weaponEffectText(a.id)}`}>{WEAPON_ICON[weaponOf(a.id)!]}</span>)}
-                        {op && <span className="font-mono text-[10px] uppercase text-ef-muted">{classLabel[op.cls]}</span>}
+                        {op && <span className="font-mono text-[12px] uppercase text-ef-muted">{classLabel[op.cls]}</span>}
                       </div>
-                      <div className="mt-0.5 flex justify-between font-mono text-[11px] text-ef-muted"><span>HP</span><span>{Math.max(0, a.hp)}/{a.maxHp}</span></div>
+                      <div className="mt-0.5 flex justify-between font-mono text-[12px] text-ef-muted"><span>HP</span><span>{Math.max(0, a.hp)}/{a.maxHp}</span></div>
                       <Bar value={a.hp} max={a.maxHp} color={lowHp ? "#e0655c" : "#8fb84a"} />
-                      {a.shield > 0 && <div className="mt-0.5 font-mono text-[11px] text-sky-300">보호막 {a.shield}</div>}
-                      <div className="mt-1 flex items-center gap-1"><span className="font-mono text-[10px] uppercase text-ef-muted">궁</span><Bar value={a.ultCharge} max={a.ultCost} color={a.ultCharge >= a.ultCost ? "#e8c56a" : "#8a6d1f"} h="h-1" /></div>
+                      {a.shield > 0 && <div className="mt-0.5 font-mono text-[12px] text-sky-300">보호막 {a.shield}</div>}
+                      <div className="mt-1 flex items-center gap-1"><span className="font-mono text-[12px] uppercase text-ef-muted">궁</span><Bar value={a.ultCharge} max={a.ultCost} color={a.ultCharge >= a.ultCost ? "#e8c56a" : "#8a6d1f"} h="h-1" /></div>
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-1">
@@ -312,7 +312,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
           <div className="flex flex-wrap gap-2">
             {skills.map((sk) => (
               <button key={sk.id} type="button" onClick={() => playerAct(sk)} className="group border border-ef-line bg-ef-card px-3 py-2 text-left transition hover:border-ef-accent/60" style={CUT_SM}>
-                <div className="flex items-center gap-1.5"><span className="border px-1 py-px font-mono text-[11px] font-bold uppercase" style={{ borderColor: `${PRIMARY}66`, color: PRIMARY }}>{kindLabel[sk.kind]}</span><span className="font-mono text-sm font-bold text-white">{sk.name}</span>{sk.power > 0 && <span className="font-mono text-[12px] text-ef-muted">{Math.round(sk.power * 100)}%</span>}</div>
+                <div className="flex items-center gap-1.5"><span className="border px-1 py-px font-mono text-[12px] font-bold uppercase" style={{ borderColor: `${PRIMARY}66`, color: PRIMARY }}>{kindLabel[sk.kind]}</span><span className="font-mono text-sm font-bold text-white">{sk.name}</span>{sk.power > 0 && <span className="font-mono text-[12px] text-ef-muted">{Math.round(sk.power * 100)}%</span>}</div>
                 {sk.note && <div className="mt-0.5 max-w-[230px] truncate text-[12px] text-ef-muted group-hover:text-ef-ink">{sk.note}</div>}
               </button>
             ))}
@@ -320,7 +320,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
           </div>
           {Object.keys(items).length > 0 && (
             <div className="mt-2 border-t border-ef-line/50 pt-2">
-              <div className="mb-1.5 font-mono text-[12px] font-bold uppercase tracking-wider text-ef-muted">전술 아이템 <span className="text-ef-line">· 자유 행동</span></div>
+              <div className="mb-1.5 font-mono text-[12px] font-bold uppercase tracking-wider text-ef-muted">전술 아이템 <span className="text-ef-muted">· 자유 행동</span></div>
               <div className="flex flex-wrap gap-2">
                 {Object.entries(items).map(([id, n]) => {
                   const it = ITEMS[id]; if (!it) return null;
@@ -341,7 +341,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
       {/* 전투 로그 — 보조(접이식) */}
       <div className="mt-3 border border-ef-line bg-ef-card/70" style={CUT_SM}>
         <button type="button" onClick={() => setShowLog((v) => !v)} className="flex w-full items-center gap-2 px-3 py-1.5 font-mono text-[13px] font-bold uppercase tracking-[0.2em] text-ef-muted transition hover:text-ef-ink">
-          <span>전투 기록</span><span className="text-ef-line">{showLog ? "▲ 접기" : "▼ 펼치기"}</span>
+          <span>전투 기록</span><span className="text-ef-muted">{showLog ? "▲ 접기" : "▼ 펼치기"}</span>
           {!showLog && <span className="ml-auto max-w-[60%] truncate font-normal normal-case tracking-normal text-ef-muted/80">{[...s.log].reverse().find((l) => l.includes("→") || l.includes("✗")) ?? ""}</span>}
         </button>
         {showLog && (
