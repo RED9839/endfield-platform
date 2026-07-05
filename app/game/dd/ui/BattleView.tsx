@@ -87,6 +87,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
     stateRef.current = createBattle(party, enc, owned); // 지속 HP + 장비 세트 효과 + 제작 단조 반영
   }
   const queueRef = useRef<DDUnit[]>([]);
+  const dmgRef = useRef<Record<string, number>>({}); // 아군별 누적 가한 피해(데미지 기록)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoRef = useRef(true); // 기본 자동(관전) — 연출을 보며 진행
   const speedRef = useRef(1);
@@ -97,7 +98,8 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
   const [winner, setWinner] = useState<"ally" | "enemy" | null>(null);
   const [fx, setFx] = useState<Fx>(NO_FX);
   const [roundBanner, setRoundBanner] = useState<{ n: number; tick: number } | null>(null);
-  const [showLog, setShowLog] = useState(false);
+  const [showLog, setShowLog] = useState(true);
+  const [tab, setTab] = useState<"dmg" | "log">("dmg"); // 하단 패널: 데미지 기록 / 전투 기록
   const [, bump] = useReducer((x) => x + 1, 0);
 
   const delay = () => 780 / speedRef.current;
@@ -112,6 +114,8 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
     const crit = newLines.some((l) => /폭발|치명/.test(l));
     const floaters: Floater[] = [];
     for (const u of s.units) { const d = u.hp - (before.get(u.id) ?? u.hp); if (d !== 0) floaters.push({ id: u.id, amt: d, crit: crit && d < 0, tone: elementColor[unitElement(actor)] }); }
+    // 데미지 기록: 아군 행동이 적에게 준 총 피해를 액터에 누적
+    if (actor.side === "ally") { let dealt = 0; for (const u of s.units) if (u.side === "enemy") { const d = (before.get(u.id) ?? u.hp) - u.hp; if (d > 0) dealt += d; } if (dealt > 0) dmgRef.current[actor.id] = (dmgRef.current[actor.id] ?? 0) + dealt; }
     fxTick.current += 1;
     setRoundBanner(null);
     setFx({ tick: fxTick.current, activeId: actor.id, actingSide: actor.side, floaters, cast: cast ? { id: actor.id, text: cast } : null });
@@ -198,11 +202,17 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
         </div>
         {/* 턴 타임라인 */}
         {!winner && upcoming.length > 0 && (
-          <div className="hidden items-center gap-1 md:flex" title="이번 라운드 행동 순서">
-            <span className="font-mono text-[12px] uppercase tracking-wider text-ef-muted">순서</span>
-            {upcoming.map((u, i) => (
-              <span key={`${u.id}-${i}`} className="h-6 w-6 shrink-0 border" style={{ borderColor: fx.activeId === u.id ? "#e8c56a" : u.side === "ally" ? "#3c2c1a" : "#5a2420", background: u.side === "ally" ? `center/cover url(${avatarUrl(u.id)})` : "#2a1210", opacity: i === 0 ? 1 : 0.55, clipPath: "polygon(50% 0,100% 50%,50% 100%,0 50%)" }} />
-            ))}
+          <div className="flex items-center gap-1" title="이번 라운드 행동 순서">
+            <span className="font-mono text-[12px] font-bold uppercase tracking-wider text-ef-muted">순서</span>
+            {upcoming.map((u, i) => {
+              const ally = u.side === "ally";
+              const nm = ally ? OPERATORS.find((o) => o.id === u.id)?.name ?? u.id : u.name;
+              return (
+                <span key={`${u.id}-${i}`} className="relative h-7 w-7 shrink-0 border" title={`${i + 1}. ${nm}`} style={{ borderColor: fx.activeId === u.id ? "#ffbe6b" : ally ? "#3c2c1a" : "#5a2420", background: ally ? `center/cover url(${avatarUrl(u.id)})` : "#3a1512", opacity: i === 0 ? 1 : 0.6, clipPath: "polygon(50% 0,100% 50%,50% 100%,0 50%)", boxShadow: fx.activeId === u.id ? "0 0 6px rgba(255,190,107,0.7)" : undefined }}>
+                  {!ally && <span className="absolute inset-0 flex items-center justify-center text-[11px] font-bold text-red-300/90">✦</span>}
+                </span>
+              );
+            })}
           </div>
         )}
         {!winner && <button type="button" onClick={cycleSpeed} className="border border-ef-line bg-ef-card px-2.5 py-1.5 font-mono text-xs font-bold uppercase tracking-wider text-ef-muted transition hover:text-white" style={CUT_SM}>{speed}배속</button>}
@@ -338,20 +348,47 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
         </div>
       )}
 
-      {/* 전투 로그 — 보조(접이식) */}
-      <div className="mt-3 border border-ef-line bg-ef-card/70" style={CUT_SM}>
-        <button type="button" onClick={() => setShowLog((v) => !v)} className="flex w-full items-center gap-2 px-3 py-1.5 font-mono text-[13px] font-bold uppercase tracking-[0.2em] text-ef-muted transition hover:text-ef-ink">
-          <span>전투 기록</span><span className="text-ef-muted">{showLog ? "▲ 접기" : "▼ 펼치기"}</span>
-          {!showLog && <span className="ml-auto max-w-[60%] truncate font-normal normal-case tracking-normal text-ef-muted/80">{[...s.log].reverse().find((l) => l.includes("→") || l.includes("✗")) ?? ""}</span>}
-        </button>
-        {showLog && (
-          <div className="flex max-h-[38vh] flex-col-reverse gap-0.5 overflow-y-auto border-t border-ef-line px-3 py-2 font-mono text-[13px] leading-relaxed">
-            {[...s.log].slice(-160).reverse().map((line, i) => (
-              <div key={s.log.length - i} className={line.startsWith("──") ? "mt-1 font-bold text-ef-accent" : line.includes("불균형 상태") || line.includes("승리") ? "text-yellow-300" : line.includes("→") && !line.startsWith("  ") ? "text-white" : line.includes("✗") ? "text-red-300" : "text-ef-muted"}>{line}</div>
-            ))}
+      {/* 하단 패널 — 데미지 기록 / 전투 기록 탭 */}
+      {(() => {
+        const dmgList = allies.map((a) => ({ id: a.id, name: OPERATORS.find((o) => o.id === a.id)?.name ?? a.id, dmg: Math.round(dmgRef.current[a.id] ?? 0), el: unitElement(a) })).sort((x, y) => y.dmg - x.dmg);
+        const dmgMax = Math.max(1, ...dmgList.map((d) => d.dmg));
+        const dmgTotal = Math.max(1, dmgList.reduce((sum, d) => sum + d.dmg, 0));
+        const TabBtn = ({ k, label }: { k: "dmg" | "log"; label: string }) => (
+          <button type="button" onClick={() => { setTab(k); setShowLog(true); }} className={`border px-2.5 py-1 font-mono text-[12px] font-bold uppercase tracking-wider transition ${tab === k && showLog ? "border-ef-accent/70 bg-ef-accent/15 text-ef-accent" : "border-ef-line bg-ef-card text-ef-muted hover:text-ef-ink"}`} style={CUT_SM}>{label}</button>
+        );
+        return (
+          <div className="mt-3 border border-ef-line bg-ef-card/70" style={CUT_SM}>
+            <div className="flex items-center gap-1.5 px-2.5 py-1.5">
+              <TabBtn k="dmg" label="데미지 기록" />
+              <TabBtn k="log" label="전투 기록" />
+              <button type="button" onClick={() => setShowLog((v) => !v)} className="ml-auto font-mono text-[12px] font-bold uppercase tracking-wider text-ef-muted transition hover:text-ef-ink">{showLog ? "▲ 접기" : "▼ 펼치기"}</button>
+            </div>
+            {showLog && tab === "dmg" && (
+              <div className="flex flex-col gap-1.5 border-t border-ef-line px-3 py-2.5">
+                {dmgList.map((d, i) => (
+                  <div key={d.id} className="flex items-center gap-2">
+                    <span className="w-4 shrink-0 text-right font-mono text-[12px] font-bold text-ef-muted">{i + 1}</span>
+                    <img src={avatarUrl(d.id)} alt="" loading="lazy" className="h-6 w-6 shrink-0 border border-ef-line object-cover" style={{ background: "#000" }} />
+                    <span className="w-20 shrink-0 truncate font-mono text-[13px] font-bold text-white">{d.name}</span>
+                    <div className="relative h-4 flex-1 overflow-hidden border border-ef-line bg-black/50">
+                      <div className="h-full transition-all duration-300" style={{ width: `${(d.dmg / dmgMax) * 100}%`, background: elementColor[d.el] }} />
+                    </div>
+                    <span className="w-28 shrink-0 text-right font-mono text-[13px] tabular-nums text-ef-ink">{d.dmg.toLocaleString()} <span className="text-ef-muted">({Math.round((d.dmg / dmgTotal) * 100)}%)</span></span>
+                  </div>
+                ))}
+                {dmgTotal <= 1 && <div className="py-2 text-center font-mono text-[12px] text-ef-muted">아직 가한 피해 없음</div>}
+              </div>
+            )}
+            {showLog && tab === "log" && (
+              <div className="flex max-h-[38vh] flex-col-reverse gap-0.5 overflow-y-auto border-t border-ef-line px-3 py-2 font-mono text-[13px] leading-relaxed">
+                {[...s.log].slice(-160).reverse().map((line, i) => (
+                  <div key={s.log.length - i} className={line.startsWith("──") ? "mt-1 font-bold text-ef-accent" : line.includes("불균형 상태") || line.includes("승리") ? "text-yellow-300" : line.includes("→") && !line.startsWith("  ") ? "text-white" : line.includes("✗") ? "text-red-300" : "text-ef-muted"}>{line}</div>
+                ))}
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        );
+      })()}
     </div>
   );
 }
