@@ -101,65 +101,63 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
       </div>
 
       {selected.length > 0 && (
-        <div className="mb-5 grid gap-2 sm:grid-cols-2">
+        <div className="mb-5 grid gap-3 sm:grid-cols-2">
           {selected.map((id, i) => {
             const op = OPERATORS.find((o) => o.id === id)!;
             const lo = opLoadout(id);
             const active = activeSets(lo);
             const pr = opProg(id);
             return (
-              <div key={id} className="border border-ef-accent/40 bg-ef-accent/5 p-2.5" style={CUT_SM}>
-                <div className="mb-2 flex items-center gap-1.5">
-                  <b className="font-mono text-xs text-ef-accent">{i + 1}</b>
-                  <img src={avatarUrl(op.id)} alt="" loading="lazy" className="h-8 w-8 shrink-0 border object-cover" style={{ borderColor: elementColor[op.element], background: "#000" }} />
-                  <span className="font-mono text-sm font-bold text-white">{op.name}</span>
-                  <span className="font-mono text-[11px] uppercase text-ef-muted">{classLabel[op.cls]}</span>
-                  <button type="button" onClick={() => toggle(id)} className="ml-auto font-mono text-[12px] text-ef-muted hover:text-red-300">해제</button>
+              <div key={id} className="border border-ef-accent/40 bg-ef-accent/5 p-3" style={CUT_SM}>
+                <div className="mb-2.5 flex items-center gap-2">
+                  <b className="font-mono text-sm text-ef-accent">{i + 1}</b>
+                  <img src={avatarUrl(op.id)} alt="" loading="lazy" className="h-9 w-9 shrink-0 border object-cover" style={{ borderColor: elementColor[op.element], background: "#000" }} />
+                  <span className="font-mono text-[15px] font-bold text-white">{op.name}</span>
+                  <span className="font-mono text-[11px] uppercase tracking-wide text-ef-muted">{classLabel[op.cls]}</span>
+                  <button type="button" onClick={() => toggle(id)} className="ml-auto font-mono text-[12px] text-ef-muted transition hover:text-red-300">해제</button>
                 </div>
 
                 {/* 시그니처 무기 + 시리즈(고유) 스킬 */}
                 {weaponOf(id) && (
-                  <div className="mb-2 flex items-start gap-1.5 border border-ef-line/60 bg-black/30 px-1.5 py-1" style={CUT_SM}>
-                    {weaponImage(id) ? <img src={weaponImage(id)} alt="" loading="lazy" className="mt-0.5 h-7 w-7 shrink-0 object-contain" /> : <span className="text-sm leading-none">{WEAPON_ICON[weaponOf(id)!]}</span>}
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-1">
-                        <span className="min-w-0 truncate font-mono text-[12px] font-bold text-ef-ink">{weaponName(id)} <span className="text-ef-line">{WEAPON_KO[weaponOf(id)!]}</span></span>
-                        <span className="ml-auto shrink-0 font-mono text-[11px] text-ef-accent-soft">공격 {OP_WEAPON_STATS[id]?.atk ?? "-"} · {weaponEffectText(id)}</span>
-                      </div>
-                      {weaponSeriesText(id) && (
-                        <div className="mt-0.5 font-mono text-[10px] leading-snug" title={`${weaponSeriesName(id)} — ${weaponSeriesText(id)}`}>
-                          <span className="font-bold text-purple-300/90">◈ {weaponSeriesName(id)}</span>
-                          <span className="line-clamp-2 text-ef-muted">{weaponSeriesText(id)}</span>
-                        </div>
-                      )}
+                  <div className="mb-2.5 border border-ef-line/60 bg-black/30 px-2 py-1.5" style={CUT_SM}>
+                    <div className="flex items-center gap-2">
+                      {weaponImage(id) ? <img src={weaponImage(id)} alt="" loading="lazy" className="h-8 w-8 shrink-0 object-contain" /> : <span className="text-base leading-none">{WEAPON_ICON[weaponOf(id)!]}</span>}
+                      <span className="min-w-0 flex-1 truncate font-mono text-[13px] font-bold text-ef-ink">{weaponName(id)} <span className="font-normal text-ef-muted">{WEAPON_KO[weaponOf(id)!]}</span></span>
+                      <span className="shrink-0 font-mono text-[12px] font-bold text-ef-accent-soft">공격 {OP_WEAPON_STATS[id]?.atk ?? "-"} · {weaponEffectText(id)}</span>
                     </div>
+                    {weaponSeriesText(id) && (
+                      <div className="mt-1.5 border-t border-ef-line/40 pt-1.5">
+                        <div className="font-mono text-[12px] font-bold text-purple-300">◈ {weaponSeriesName(id)}</div>
+                        <p className="mt-0.5 line-clamp-2 text-[12px] leading-relaxed text-ef-ink/70" title={weaponSeriesText(id)}>{weaponSeriesText(id)}</p>
+                      </div>
+                    )}
                   </div>
                 )}
 
-                {/* 성장 3축 — 정예화 · 스킬 단조 · 장비 단조 */}
-                <div className="mb-2 grid grid-cols-2 gap-1.5">
+                {/* 성장 2축 — 정예화 · 스킬 단조 */}
+                <div className="mb-2.5 grid grid-cols-2 gap-2">
                   {AXES.map((ax) => {
                     const v = pr[ax.key];
                     return (
-                      <div key={ax.key} className="border border-ef-line bg-black/40 px-1.5 py-1" style={CUT_SM}>
-                        <div className="font-mono text-[10px] uppercase tracking-wider text-ef-muted">{ax.name}</div>
-                        <div className="mt-0.5 flex items-center justify-between gap-1">
-                          <button type="button" onClick={() => bumpProg(id, ax.key, -1)} disabled={v <= 0} className="font-mono text-xs leading-none text-ef-muted transition enabled:hover:text-white disabled:opacity-25">−</button>
-                          <span className="font-mono text-xs font-bold" style={{ color: ax.tone }}>{ax.fmt(v)}</span>
-                          <button type="button" onClick={() => bumpProg(id, ax.key, 1)} disabled={v >= ax.max} className="font-mono text-xs leading-none text-ef-muted transition enabled:hover:text-white disabled:opacity-25">+</button>
+                      <div key={ax.key} className="border border-ef-line bg-black/40 px-2 py-1.5" style={CUT_SM}>
+                        <div className="font-mono text-[11px] uppercase tracking-wider text-ef-muted">{ax.name}</div>
+                        <div className="mt-1 flex items-center justify-between gap-1">
+                          <button type="button" onClick={() => bumpProg(id, ax.key, -1)} disabled={v <= 0} className="flex h-5 w-5 items-center justify-center border border-ef-line font-mono text-sm leading-none text-ef-muted transition enabled:hover:border-ef-accent/50 enabled:hover:text-white disabled:opacity-25">−</button>
+                          <span className="font-mono text-[15px] font-bold" style={{ color: ax.tone }}>{ax.fmt(v)}</span>
+                          <button type="button" onClick={() => bumpProg(id, ax.key, 1)} disabled={v >= ax.max} className="flex h-5 w-5 items-center justify-center border border-ef-line font-mono text-sm leading-none text-ef-muted transition enabled:hover:border-ef-accent/50 enabled:hover:text-white disabled:opacity-25">+</button>
                         </div>
-                        <div className="mt-0.5 flex gap-0.5">{Array.from({ length: ax.max }, (_, k) => <span key={k} className="h-0.5 flex-1" style={{ background: k < v ? ax.tone : "#2a2a2a" }} />)}</div>
+                        <div className="mt-1 flex gap-0.5">{Array.from({ length: ax.max }, (_, k) => <span key={k} className="h-1 flex-1" style={{ background: k < v ? ax.tone : "#2a2a2a" }} />)}</div>
                       </div>
                     );
                   })}
                 </div>
 
                 {/* 목표 빌드(참고) — 장비는 맨몸 시작, 런에서 공업소 제작 */}
-                <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 border-t border-ef-line/40 pt-1.5">
-                  <span className="font-mono text-[10px] uppercase tracking-wider text-ef-line">목표 세트</span>
-                  <span className="font-mono text-[12px] font-bold text-ef-ink">{opSet(id)}</span>
-                  {active.map((n) => <span key={n} className="font-mono text-[11px] text-green-300/90">◆ {setEffectText(n)}</span>)}
-                  <span className="ml-auto font-mono text-[10px] text-ef-line">공업소에서 제작</span>
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-ef-line/40 pt-2">
+                  <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-ef-muted">목표 세트</span>
+                  <span className="font-mono text-[13px] font-bold text-ef-ink">{opSet(id)}</span>
+                  {active.map((n) => <span key={n} className="font-mono text-[12px] text-green-300">◆ {setEffectText(n)}</span>)}
+                  <span className="ml-auto font-mono text-[11px] text-ef-line">공업소 제작</span>
                 </div>
               </div>
             );
