@@ -9,8 +9,9 @@ export type CraftState = { mats: CraftMats; owned: Record<string, number> }; // 
 export const initialCraft = (): CraftState => ({ mats: { parts: 0, permits: 0 }, owned: {} });
 export const cloneCraft = (c: CraftState): CraftState => ({ mats: { ...c.mats }, owned: { ...c.owned } });
 
-// 제작 비용(레어도 비례). 5★ 세트 피스 ≈ 부품21·관리권2. (관리권은 병목이라 낮게)
-export const craftCost = (p: GearPiece): CraftMats => { const r = p.rarity || 4; return { parts: 6 + r * 3, permits: r >= 5 ? 2 : 1 }; };
+// 제작 비용(레어도 비례). 5★ 세트 피스 ≈ 부품14·관리권2.
+// 파워의 대부분은 "12피스 소유"에서 나오므로(단조는 부차적), 중반에 풀 커버리지 되도록 부품 낮게.
+export const craftCost = (p: GearPiece): CraftMats => { const r = p.rarity || 4; return { parts: 4 + r * 2, permits: r >= 5 ? 2 : 1 }; };
 // 단조 비용(현재 레벨 → +1). +0→+1→+2→+3.
 export const forgeCost = (lv: number): CraftMats => [{ parts: 5, permits: 1 }, { parts: 9, permits: 1 }, { parts: 15, permits: 2 }][lv] ?? { parts: Infinity, permits: Infinity };
 
