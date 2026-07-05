@@ -6,7 +6,7 @@ import { act, canAct, isOver, startRound, turnOrder, type DDClass, type DDSkill,
 import { OPERATORS, enemyDefFor, avatarUrl } from "../roster";
 import { ENCOUNTERS, allyChoose, createBattle, enemyAct, usableSkills, regionEncounter } from "../sim";
 import { activeSets } from "../gear";
-import { weaponOf, weaponEffectText, WEAPON_KO, WEAPON_ICON } from "../weapons";
+import { weaponOf, weaponEffectText, weaponImage, WEAPON_KO, WEAPON_ICON } from "../weapons";
 import { ITEMS, useItem as applyItem, canUseItem, condText, itemColor, itemImage } from "../items";
 import type { BattleResult, NodeKind, PartyMember } from "../run";
 
@@ -285,7 +285,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1">
                         <span className="truncate font-mono text-sm font-bold text-white">{a.name}</span>
-                        {weaponOf(a.id) && <span className="text-[13px] leading-none" title={`${WEAPON_KO[weaponOf(a.id)!]} · ${weaponEffectText(a.id)}`}>{WEAPON_ICON[weaponOf(a.id)!]}</span>}
+                        {weaponOf(a.id) && (weaponImage(a.id) ? <img src={weaponImage(a.id)} alt="" loading="lazy" className="h-4 w-4 shrink-0 object-contain" title={`${WEAPON_KO[weaponOf(a.id)!]} · ${weaponEffectText(a.id)}`} /> : <span className="text-[13px] leading-none" title={`${WEAPON_KO[weaponOf(a.id)!]} · ${weaponEffectText(a.id)}`}>{WEAPON_ICON[weaponOf(a.id)!]}</span>)}
                         {op && <span className="font-mono text-[10px] uppercase text-ef-muted">{classLabel[op.cls]}</span>}
                       </div>
                       <div className="mt-0.5 flex justify-between font-mono text-[11px] text-ef-muted"><span>HP</span><span>{Math.max(0, a.hp)}/{a.maxHp}</span></div>

@@ -2,6 +2,7 @@
 // 개별 무기 수치/패시브는 소스 미공개 → 타입은 실데이터, 효과는 위키 타입 역할(양손검=불균형↑·아츠유닛=아츠·권총=아츠반응·한손검=근접치명·장병기=스킬) 기반 모델.
 import type { DDUnit } from "./combat";
 import { attrResists, ATTR_AVG, setTimer } from "./combat";
+import { weaponSummaries } from "@/data/weapons-summary-data";
 
 export type WeaponType = "sword" | "greatsword" | "polearm" | "handcannon" | "artsunit";
 export const WEAPON_KO: Record<WeaponType, string> = { sword: "한손검", greatsword: "양손검", polearm: "장병기", handcannon: "권총", artsunit: "아츠 유닛" };
@@ -217,6 +218,9 @@ export function applyWeaponTeam(allies: DDUnit[]): void {
 }
 
 export const weaponOf = (id: string): WeaponType | null => OP_WEAPON[id] ?? null;
+// 전무 실제 무기 이미지(public/weapons). 전무 이름 → weaponSummaries 매칭.
+const WEAPON_IMG: Record<string, string> = Object.fromEntries(weaponSummaries.map((w) => [w.name, w.image]));
+export const weaponImage = (id: string): string => { const j = OP_JEONMU[id]?.[0]; return (j && WEAPON_IMG[j.name]) || ""; };
 // 전무 이름(시트 실측). 딜/폿 분리(엠버)는 "딜:모범 / 폿:과거의 일품".
 export const weaponName = (id: string): string | null => {
   const j = OP_JEONMU[id];

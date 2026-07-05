@@ -5,7 +5,7 @@ import { useState } from "react";
 import { OPERATORS, avatarUrl, type OpMeta } from "../roster";
 import { activeSets, setEffectText, recommendedSet, recommendedLoadout, type Loadout } from "../gear";
 import { DEFAULT_PROGRESS, PROMO_MAX, SKILL_MAX, PROMO_LABEL, skillLabel, clampProgress, type OpProgress } from "../progress";
-import { weaponOf, weaponName, weaponEffectText, OP_WEAPON_STATS, WEAPON_KO, WEAPON_ICON } from "../weapons";
+import { weaponOf, weaponName, weaponEffectText, weaponImage, OP_WEAPON_STATS, WEAPON_KO, WEAPON_ICON } from "../weapons";
 import { PRESET_PARTIES, ARCHETYPE_LABEL } from "../parties";
 import type { PartyPick } from "../run";
 import type { DDClass, Element } from "../combat";
@@ -120,7 +120,7 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
                 {/* 시그니처 무기 */}
                 {weaponOf(id) && (
                   <div className="mb-2 flex items-center gap-1.5 border border-ef-line/60 bg-black/30 px-1.5 py-1" style={CUT_SM}>
-                    <span className="text-sm leading-none">{WEAPON_ICON[weaponOf(id)!]}</span>
+                    {weaponImage(id) ? <img src={weaponImage(id)} alt="" loading="lazy" className="h-6 w-6 shrink-0 object-contain" /> : <span className="text-sm leading-none">{WEAPON_ICON[weaponOf(id)!]}</span>}
                     <span className="min-w-0 truncate font-mono text-[12px] font-bold text-ef-ink" title={`${WEAPON_KO[weaponOf(id)!]} · 6★ · 고유: ${OP_WEAPON_STATS[id]?.uniq ?? ""}`}>{weaponName(id)} <span className="text-ef-line">{WEAPON_KO[weaponOf(id)!]}</span></span>
                     <span className="ml-auto shrink-0 font-mono text-[11px] text-ef-accent-soft">공격 {OP_WEAPON_STATS[id]?.atk ?? "-"} · {weaponEffectText(id)}</span>
                   </div>

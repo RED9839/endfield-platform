@@ -36,23 +36,23 @@ export type SetEffect =
 
 // 밸런스: 2부위 = 강력한 조건부 1개(15~25%) 또는 중간 2개. 카드게임 밸런스 계승.
 export const GEAR_SETS: Record<string, SetEffect[]> = {
-  // ── Lv70 세트(namu 3.1 원문 그대로) — 상시 스탯 + 조건부 발동(combat.ts gearTrigger가 세트명으로 실행) ──
-  "고검의 잔향": [{ type: "atkPct", pct: 0.08 }, { type: "trigger", desc: "강타·갑옷파괴 시 물리 +6%×소모 스택(취약·불균형·결정 시 강화)" }],
-  "식양의 흐름": [{ type: "atkPct", pct: 0.10 }, { type: "trigger", desc: "감전·부식 소모 시 전기·자연 +15%(최대 3스택, 25초)" }],
-  "청파": [{ type: "linkCd", pct: 0.15 }, { type: "trigger", desc: "연계 후 모든 스킬 피해 +20%(최대 2스택, 15초)" }],
-  "식양의 숨결": [{ type: "hp", v: 1000 }, { type: "trigger", desc: "증폭·비호·취약·허약 부여 후 팀 피해 +16%(15초)" }],
-  "조류의 물결": [{ type: "kindDmg", kind: "all", pct: 0.20 }, { type: "trigger", desc: "2스택+ 아츠 부착 후 아츠 피해 +35%(15초)" }],
-  "응룡 50식": [{ type: "atkPct", pct: 0.15 }, { type: "trigger", desc: "팀 배틀 시 다음 연계 피해 +20%(최대 3스택)" }],
-  "M. I. 경찰용": [{ type: "critRate", v: 0.05 }, { type: "trigger", desc: "치명 후 공격력 +5%(최대 5스택), 최대 시 치확 +5%" }],
-  "열 작업용": [{ type: "artsStr", v: 30 }, { type: "trigger", desc: "연소 후 열기 +50%(10초)" }, { type: "trigger", desc: "부식 후 자연 +50%(10초)" }],
-  "개척": [{ type: "linkCd", pct: 0.15 }, { type: "kindDmg", kind: "all", pct: 0.16 }, { type: "trigger", desc: "게이지 회복 후 팀 전체 피해 +16%(15초)" }], // kindDmg = 조건부 팀 버프 근사
-  "펄스식": [{ type: "artsStr", v: 30 }, { type: "trigger", desc: "감전 후 전기 +50%(10초)" }, { type: "trigger", desc: "동결 후 냉기 +50%(10초)" }],
-  "본 크러셔": [{ type: "atkPct", pct: 0.15 }, { type: "trigger", desc: "연계 후 다음 배틀 피해 +30%(최대 2스택)" }],
-  "경량 초자연": [{ type: "atkPct", pct: 0.08 }, { type: "trigger", desc: "방어 불능 부여 후 물리 +8%(최대 4스택), 4스택 시 추가 +16%" }],
-  "생체 보조": [{ type: "startHeal", v: 0.20 }, { type: "trigger", desc: "치유 시 대상 받는 피해 -15%(초과 치유 시 -30%)" }], // 상시: 치유 효율 +20%
-  "검술사": [{ type: "stagger", pct: 0.20 }, { type: "trigger", desc: "물리 이상 부여 후 공격력 250% 추가 물리(15초당 1회)" }],
+  // ── 세트 2부위 — 상시 옵션 + 턴제 조건부 발동(combat.ts gearTrigger). 지속·쿨은 전부 턴 단위. ──
+  "고검의 잔향": [{ type: "atkPct", pct: 0.08 }, { type: "trigger", desc: "강타·갑옷파괴 시 물리 피해 +6%/스택(최대 +24%, 2턴)" }],
+  "식양의 흐름": [{ type: "atkPct", pct: 0.10 }, { type: "trigger", desc: "감전·부식 소모 시 전기·자연 피해 +15%/스택(최대 3스택, 5턴)" }],
+  "청파": [{ type: "linkCd", pct: 0.15 }, { type: "trigger", desc: "연계 후 모든 스킬 피해 +20%(최대 2스택, 2턴)" }],
+  "식양의 숨결": [{ type: "hp", v: 1000 }, { type: "kindDmg", kind: "all", pct: 0.08 }], // 지원 세트: 생명력 + 상시 피해
+  "조류의 물결": [{ type: "kindDmg", kind: "all", pct: 0.20 }, { type: "trigger", desc: "아츠 2부착 후 아츠 피해 +35%(2턴)" }],
+  "응룡 50식": [{ type: "atkPct", pct: 0.15 }, { type: "trigger", desc: "배틀 후 다음 연계 피해 +20%(최대 3스택, 3턴)" }],
+  "M. I. 경찰용": [{ type: "critRate", v: 0.05 }, { type: "atkPct", pct: 0.08 }], // 치명 스택 → 상시 공격력으로 환산
+  "열 작업용": [{ type: "artsStr", v: 30 }, { type: "trigger", desc: "연소 후 열기 피해 +50%(2턴)" }, { type: "trigger", desc: "부식 후 자연 피해 +50%(2턴)" }],
+  "개척": [{ type: "linkCd", pct: 0.15 }, { type: "kindDmg", kind: "all", pct: 0.16 }],
+  "펄스식": [{ type: "artsStr", v: 30 }, { type: "trigger", desc: "감전 후 전기 피해 +50%(2턴)" }, { type: "trigger", desc: "동결 후 냉기 피해 +50%(2턴)" }],
+  "본 크러셔": [{ type: "atkPct", pct: 0.15 }, { type: "trigger", desc: "연계 후 다음 배틀 피해 +30%(2턴)" }],
+  "경량 초자연": [{ type: "atkPct", pct: 0.08 }, { type: "trigger", desc: "방어 불능 부여 후 물리 피해 +16%/스택(최대 +48%, 2턴)" }],
+  "생체 보조": [{ type: "startHeal", v: 0.20 }, { type: "startShield", v: 0.10 }], // 지원/방어: 시작 회복 + 보호막
+  "검술사": [{ type: "stagger", pct: 0.20 }, { type: "dmgVs", cond: "broken", pct: 0.18 }], // 불균형 특화
   // ── Lv50 이하 ──
-  "재앙 방호": [{ type: "startEnergy", v: 50 }, { type: "trigger", desc: "궁충 효율 +20% · 배틀 시 게이지 50 반환(전투당 1회)" }],
+  "재앙 방호": [{ type: "startEnergy", v: 50 }, { type: "breakEnergy" }], // 시작 게이지 + 불균형 돌파 시 궁충
   "아부레이의 메아리": [{ type: "kindDmg", kind: "all", pct: 0.22 }],
   // ── Lv36~50 침식(자체 HP 조건부, warfarin 데이터마인) ──
   "침식 차단": [{ type: "selfHpDmg", dmgType: "arts", pct: 0.18 }], // 고체력 시 아츠 피해
