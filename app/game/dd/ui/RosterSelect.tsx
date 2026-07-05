@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 import { OPERATORS, avatarUrl, type OpMeta } from "../roster";
-import { GEAR_SLOTS, SET_NAMES, activeSets, gearSlotName, setEffectText, recommendedSet, recommendedLoadout, GEAR_PIECE_BY_ID, type GearSlot, type Loadout } from "../gear";
+import { activeSets, setEffectText, recommendedSet, recommendedLoadout, type Loadout } from "../gear";
 import { DEFAULT_PROGRESS, PROMO_MAX, SKILL_MAX, PROMO_LABEL, skillLabel, clampProgress, type OpProgress } from "../progress";
 import { weaponOf, weaponName, weaponEffectText, OP_WEAPON_STATS, WEAPON_KO, WEAPON_ICON } from "../weapons";
 import { PRESET_PARTIES, ARCHETYPE_LABEL } from "../parties";
@@ -25,7 +25,6 @@ const AXES = [
   { key: "promotion" as const, name: "정예화", max: PROMO_MAX, fmt: (v: number) => PROMO_LABEL[v], tone: "#fbbf24" },
   { key: "skillRank" as const, name: "스킬 단조", max: SKILL_MAX, fmt: (v: number) => skillLabel(v), tone: "#67e8f9" },
 ];
-const pieceName = (ref?: string) => (ref ? GEAR_PIECE_BY_ID[ref]?.name ?? ref : "—");
 
 export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]) => void }) {
   const [selected, setSelected] = useState<string[]>([]);
@@ -145,26 +144,13 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
                   })}
                 </div>
 
-                {/* 장착 피스(시트 빌드 + 폴백 세트) */}
-                <div className="flex items-center gap-1.5">
-                  <span className="font-mono text-[11px] uppercase tracking-wider text-ef-line">세트</span>
-                  <select value={opSet(id)} onChange={(e) => setSetChoice((S) => ({ ...S, [id]: e.target.value }))} className="border border-ef-line bg-black/60 px-1 py-0.5 font-mono text-[12px] text-ef-ink focus:border-ef-accent/60 focus:outline-none">
-                    {SET_NAMES.map((n) => <option key={n} value={n}>{n}</option>)}
-                  </select>
-                  <span className="font-mono text-[10px] text-ef-line">누락 슬롯 폴백</span>
+                {/* 목표 빌드(참고) — 장비는 맨몸 시작, 런에서 공업소 제작 */}
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 border-t border-ef-line/40 pt-1.5">
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-ef-line">목표 세트</span>
+                  <span className="font-mono text-[12px] font-bold text-ef-ink">{opSet(id)}</span>
+                  {active.map((n) => <span key={n} className="font-mono text-[11px] text-green-300/90">◆ {setEffectText(n)}</span>)}
+                  <span className="ml-auto font-mono text-[10px] text-ef-line">공업소에서 제작</span>
                 </div>
-                <div className="mt-1 flex flex-wrap gap-1">
-                  {GEAR_SLOTS.map((slot) => (
-                    <span key={slot} className="max-w-[46%] truncate border border-ef-line/50 bg-black/30 px-1 py-0.5 font-mono text-[11px] text-ef-muted" title={pieceName(lo[slot])}>
-                      <b className="text-ef-line">{gearSlotName(slot)}</b> {pieceName(lo[slot])}
-                    </span>
-                  ))}
-                </div>
-                {active.length ? (
-                  active.map((n) => <div key={n} className="mt-1 font-mono text-[12px] text-green-300">◆ {setEffectText(n)}</div>)
-                ) : (
-                  <div className="mt-1 font-mono text-[12px] text-ef-muted">세트 미발동 (같은 세트 2부위 이상)</div>
-                )}
               </div>
             );
           })}
