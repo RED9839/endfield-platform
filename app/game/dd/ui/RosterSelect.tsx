@@ -5,7 +5,7 @@ import { useState } from "react";
 import { OPERATORS, avatarUrl, type OpMeta } from "../roster";
 import { activeSets, setEffectText, recommendedSet, recommendedLoadout, type Loadout } from "../gear";
 import { DEFAULT_PROGRESS, PROMO_MAX, SKILL_MAX, PROMO_LABEL, skillLabel, clampProgress, type OpProgress } from "../progress";
-import { weaponOf, weaponName, weaponEffectText, weaponImage, OP_WEAPON_STATS, WEAPON_KO, WEAPON_ICON } from "../weapons";
+import { weaponOf, weaponName, weaponEffectText, weaponImage, weaponSeriesName, weaponSeriesText, OP_WEAPON_STATS, WEAPON_KO, WEAPON_ICON } from "../weapons";
 import { PRESET_PARTIES, ARCHETYPE_LABEL } from "../parties";
 import type { PartyPick } from "../run";
 import type { DDClass, Element } from "../combat";
@@ -117,12 +117,22 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
                   <button type="button" onClick={() => toggle(id)} className="ml-auto font-mono text-[12px] text-ef-muted hover:text-red-300">해제</button>
                 </div>
 
-                {/* 시그니처 무기 */}
+                {/* 시그니처 무기 + 시리즈(고유) 스킬 */}
                 {weaponOf(id) && (
-                  <div className="mb-2 flex items-center gap-1.5 border border-ef-line/60 bg-black/30 px-1.5 py-1" style={CUT_SM}>
-                    {weaponImage(id) ? <img src={weaponImage(id)} alt="" loading="lazy" className="h-6 w-6 shrink-0 object-contain" /> : <span className="text-sm leading-none">{WEAPON_ICON[weaponOf(id)!]}</span>}
-                    <span className="min-w-0 truncate font-mono text-[12px] font-bold text-ef-ink" title={`${WEAPON_KO[weaponOf(id)!]} · 6★ · 고유: ${OP_WEAPON_STATS[id]?.uniq ?? ""}`}>{weaponName(id)} <span className="text-ef-line">{WEAPON_KO[weaponOf(id)!]}</span></span>
-                    <span className="ml-auto shrink-0 font-mono text-[11px] text-ef-accent-soft">공격 {OP_WEAPON_STATS[id]?.atk ?? "-"} · {weaponEffectText(id)}</span>
+                  <div className="mb-2 flex items-start gap-1.5 border border-ef-line/60 bg-black/30 px-1.5 py-1" style={CUT_SM}>
+                    {weaponImage(id) ? <img src={weaponImage(id)} alt="" loading="lazy" className="mt-0.5 h-7 w-7 shrink-0 object-contain" /> : <span className="text-sm leading-none">{WEAPON_ICON[weaponOf(id)!]}</span>}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1">
+                        <span className="min-w-0 truncate font-mono text-[12px] font-bold text-ef-ink">{weaponName(id)} <span className="text-ef-line">{WEAPON_KO[weaponOf(id)!]}</span></span>
+                        <span className="ml-auto shrink-0 font-mono text-[11px] text-ef-accent-soft">공격 {OP_WEAPON_STATS[id]?.atk ?? "-"} · {weaponEffectText(id)}</span>
+                      </div>
+                      {weaponSeriesText(id) && (
+                        <div className="mt-0.5 flex flex-wrap items-baseline gap-x-1 font-mono text-[10px]">
+                          <span className="shrink-0 font-bold text-purple-300/90">◈ {weaponSeriesName(id)}</span>
+                          <span className="min-w-0 text-ef-muted">{weaponSeriesText(id)}</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
 

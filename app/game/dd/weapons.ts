@@ -131,6 +131,26 @@ export const OP_WEAPON_EFFECTS: Record<string, WeaponFx> = {
 const SUB_KO: Record<string, string> = { atk: "공격력", crit: "치명 확률", hp: "최대 생명력", heal: "치유 효율", energy: "궁충 효율", arts: "아츠 피해", elem: "원소 피해", phys: "물리 피해", skill: "스킬 피해", vsbroken: "방불 적 피해", other: "특수" };
 export const weaponEffectText = (id: string): string => { const w = OP_WEAPON_STATS[id]; if (!w) return ""; return `${SUB_KO[w.sub] ?? w.sub} +${w.subVal}${w.subFlat ? "" : "%"}`; };
 
+// 무기 시리즈(고유) 스킬. 이름 = uniq("{시리즈} · {고유명}"), 효과 = OP_WEAPON_EFFECTS 서술.
+export const weaponSeriesName = (id: string): string => OP_WEAPON_STATS[id]?.uniq ?? "";
+const DMGKIND_KO: Record<string, string> = { all: "물리 피해", arts: "아츠 피해", elem: "속성 피해", battle: "배틀 피해" };
+const TRIG_ON_KO: Record<string, string> = { battle: "배틀", link: "연계", ult: "궁극" };
+const TRIG_K_KO: Record<string, string> = { all: "모든 피해", arts: "아츠 피해", elem: "속성 피해", atk: "공격력" };
+export const weaponSeriesText = (id: string): string => {
+  const fx = OP_WEAPON_EFFECTS[id]; if (!fx) return "";
+  const p: string[] = [];
+  if (fx.dmg) p.push(`${DMGKIND_KO[fx.dmgKind ?? "all"]} +${Math.round(fx.dmg * 100)}%`);
+  if (fx.atk) p.push(`공격력 +${Math.round(fx.atk * 100)}%`);
+  if (fx.crit) p.push(`치명 확률 +${Math.round(fx.crit * 100)}%`);
+  if (fx.energy) p.push(`궁 충전 +${Math.round(fx.energy * 100)}%`);
+  if (fx.heal) p.push(`치유 효율 +${Math.round(fx.heal * 100)}%`);
+  if (fx.vsBroken) p.push(`불균형 적 피해 +${Math.round(fx.vsBroken * 100)}%`);
+  if (fx.teamAtk) p.push(`팀 공격력 +${Math.round(fx.teamAtk * 100)}%`);
+  if (fx.teamArts) p.push(`팀 아츠 피해 +${Math.round(fx.teamArts * 100)}%`);
+  if (fx.trig) { const t = fx.trig; const tgt = t.tgt === "team" ? "팀 " : ""; p.push(`${TRIG_ON_KO[t.on] ?? t.on} 후 ${tgt}${TRIG_K_KO[t.k] ?? t.k} +${Math.round(t.val * 100)}%${t.max ? `(최대 ${Math.round(t.max * 100)}%)` : ""}`); }
+  return p.join(" · ");
+};
+
 // 밸런스 스케일(DD 모델은 오퍼 공격 ~110 → 무기 실측 500대를 스케일). 부가/버프는 실값의 일부만 반영해 밸런스 완충.
 const W_ATK_SCALE = 0.06;   // 기초공격력 → 오퍼 공격 가산(500×0.06≈30)
 const W_BUFF_SCALE = 0.4;   // 능력치 버프 → attrs 가산(156×0.4≈62)
