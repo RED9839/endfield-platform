@@ -35,7 +35,7 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
 
   const opSet = (id: string) => { const op = OPERATORS.find((o) => o.id === id); return setChoice[id] ?? (op ? recSet(op) : "검술사"); };
   const opProg = (id: string) => progress[id] ?? DEFAULT_PROGRESS;
-  const opLoadout = (id: string): Loadout => recommendedLoadout(id, opSet(id));
+  const opLoadout = (id: string): Loadout => recommendedLoadout(id, opSet(id), OPERATORS.find((o) => o.id === id)?.element);
 
   const toggle = (id: string) => {
     setSelected((cur) => {

@@ -196,11 +196,38 @@ export const OP_GEAR: Record<string, Loadout> = {
   catcher: { armor: "item_equip_t4_suit_attri01_body_04", gloves: "item_equip_t4_suit_usp02_hand_01", kit: "item_equip_t4_suit_usp02_edc_01" },
   mifu: { armor: "item_equip_t4_suit_crush_fracture_body_01", gloves: "item_equip_t4_suit_crush_fracture_hand_01", kit: "item_equip_t4_suit_crush_fracture_edc_01" },
 };
+// 자유 슬롯(세트 2부위 초과분)에 낄 개별 효율 최고 피스.
+// 세트 발동은 2부위면 충분 → 남는 1슬롯은 세트 무관 최고 딜 피스가 정배.
+// element 오퍼는 오퍼 속성 피해(elem), 물리 오퍼는 물리 피해(all)를 극대화, 없으면 공격%(atkPct) 폴백.
+export function bestFreePiece(slot: GearSlot, element: string): GearPiece | null {
+  const want = element === "physical" ? "all" : "elem";
+  const cands = GEAR_PIECES.filter((p) => p.slot === slot && p.dmg);
+  const pickMax = (kind: DmgSub["kind"]): GearPiece | null => {
+    let best: GearPiece | null = null;
+    for (const p of cands) {
+      if (p.dmg!.kind !== kind) continue;
+      if (!best || p.dmg!.base > best.dmg!.base || (p.dmg!.base === best.dmg!.base && p.grade.base > best.grade.base)) best = p;
+    }
+    return best;
+  };
+  return pickMax(want) ?? pickMax("atkPct"); // 속성/물리 딜 피스 → 없으면 공격%
+}
+
 // 오퍼 실제 로드아웃: OP_GEAR 피스 + 누락 슬롯은 세트 대표 피스 id로 폴백(세트명 아님 → 모든 슬롯이 개별 단조·제작 가능).
-export function recommendedLoadout(opId: string, setName: string): Loadout {
+// element를 주면 「3부위 전부 같은 세트」일 때 kit(최저 grade)을 개별 효율 최고 피스로 교체(2부위 세트 유지 = 정배).
+export function recommendedLoadout(opId: string, setName: string, element?: string): Loadout {
   const og = OP_GEAR[opId] ?? {};
   const fallback = (slot: GearSlot): string => GEAR_SET_CANON[setName]?.[slot]?.id ?? setName;
-  return { armor: og.armor ?? fallback("armor"), gloves: og.gloves ?? fallback("gloves"), kit: og.kit ?? fallback("kit") };
+  const lo: Loadout = { armor: og.armor ?? fallback("armor"), gloves: og.gloves ?? fallback("gloves"), kit: og.kit ?? fallback("kit") };
+  // 세트 최적화: 3슬롯이 전부 같은 세트면 kit을 자유 슬롯화(armor+gloves로 세트 유지).
+  if (element) {
+    const sets = GEAR_SLOTS.map((s) => refSet(lo[s]!));
+    if (sets[0] === sets[1] && sets[1] === sets[2]) {
+      const bp = bestFreePiece("kit", element);
+      if (bp && refSet(bp.id) !== sets[0]) lo.kit = bp.id; // 세트와 다른 최고 딜 피스일 때만 교체
+    }
+  }
+  return lo;
 }
 
 const refSet = (ref: string): string => GEAR_PIECE_BY_ID[ref]?.set ?? ref; // loadout 항목(세트명|피스id) → 소속 세트
