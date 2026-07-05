@@ -179,7 +179,7 @@ export function enemyDrop(kind: NodeKind, depth: number, faction: string): { par
   const base = k === "boss" ? { parts: 60, permits: 10 } : k === "elite" ? { parts: 38, permits: 6 } : { parts: 24, permits: 4 };
   const depthBonus = Math.floor(depth * (k === "boss" ? 3 : 1.5)); // 깊을수록 재료↑
   const factionBonus = FACTION_POOL[faction]?.boss.length ? 0 : 0; // (세력별 특화 여지)
-  return { parts: base.parts + depthBonus + factionBonus, permits: base.permits + (k === "boss" ? Math.floor(depth / 2) : 0), items: rewardItemPool(k) };
+  return { parts: base.parts + depthBonus + factionBonus, permits: base.permits + (k === "boss" ? Math.floor(depth / 2) : 0), items: rewardItemPool(faction, k, depth) };
 }
 
 // 아군(선택 순서=포지션, 지속 HP·장비 로드아웃) + 인카운터로 전투 상태 생성. 게이지 200/300(+장비 시작 게이지).
