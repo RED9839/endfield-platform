@@ -40,7 +40,7 @@ function Bar({ value, max, color, h = "h-2" }: { value: number; max: number; col
   return <div className={`${h} w-full overflow-hidden border border-ef-line bg-black/60`}><div className="h-full transition-all duration-300" style={{ width: `${pct}%`, background: color }} /></div>;
 }
 function Chip({ children, tone = "#a1a1aa" }: { children: React.ReactNode; tone?: string }) {
-  return <span className="border px-1 py-px font-mono text-[9px] font-bold uppercase tracking-wider" style={{ borderColor: `${tone}55`, color: tone }}>{children}</span>;
+  return <span className="border px-1 py-px font-mono text-[11px] font-bold uppercase tracking-wider" style={{ borderColor: `${tone}55`, color: tone }}>{children}</span>;
 }
 function unitChips(u: DDUnit) {
   const c: { k: string; label: string; tone: string }[] = [];
@@ -72,7 +72,7 @@ function FxLayer({ id, fx }: { id: string; fx: Fx }) {
           {f.amt > 0 ? `+${f.amt}` : f.amt}{f.crit ? "!" : ""}
         </span>
       ))}
-      {fx.cast && fx.cast.id === id && <span key={`ct-${fx.tick}`} className="dd-cast border border-ef-accent/50 bg-black/85 px-2 py-0.5 font-mono text-[10px] font-bold text-ef-accent-soft" style={{ boxShadow: "0 2px 10px rgba(0,0,0,0.7)" }}>{fx.cast.text}</span>}
+      {fx.cast && fx.cast.id === id && <span key={`ct-${fx.tick}`} className="dd-cast border border-ef-accent/50 bg-black/85 px-2 py-0.5 font-mono text-[12px] font-bold text-ef-accent-soft" style={{ boxShadow: "0 2px 10px rgba(0,0,0,0.7)" }}>{fx.cast.text}</span>}
     </>
   );
 }
@@ -193,13 +193,13 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
       <div className="mb-3 flex flex-wrap items-center gap-3">
         <span className="border px-3 py-1.5 font-mono text-sm font-bold" style={{ ...CUT_SM, borderColor: nodeKind === "boss" ? "#b3312a88" : "#3c2c1a", color: nodeKind === "boss" ? "#e0655c" : "#ecdfc2", background: "#150e08" }}>{nodeTitle[nodeKind]} · 라운드 {s.round}</span>
         <div className="min-w-[180px] flex-1">
-          <div className="mb-0.5 flex justify-between font-mono text-[10px] uppercase tracking-wider text-ef-muted"><span>스킬 게이지(공유)</span><span>{Math.round(s.skillGauge)}/{s.maxGauge}</span></div>
+          <div className="mb-0.5 flex justify-between font-mono text-[12px] uppercase tracking-wider text-ef-muted"><span>스킬 게이지(공유)</span><span>{Math.round(s.skillGauge)}/{s.maxGauge}</span></div>
           <Bar value={s.skillGauge} max={s.maxGauge} color={PRIMARY} />
         </div>
         {/* 턴 타임라인 */}
         {!winner && upcoming.length > 0 && (
           <div className="hidden items-center gap-1 md:flex" title="이번 라운드 행동 순서">
-            <span className="font-mono text-[9px] uppercase tracking-wider text-ef-muted">순서</span>
+            <span className="font-mono text-[11px] uppercase tracking-wider text-ef-muted">순서</span>
             {upcoming.map((u, i) => (
               <span key={`${u.id}-${i}`} className="h-6 w-6 shrink-0 border" style={{ borderColor: fx.activeId === u.id ? "#e8c56a" : u.side === "ally" ? "#3c2c1a" : "#5a2420", background: u.side === "ally" ? `center/cover url(/operators/${u.id}/avatar.webp)` : "#2a1210", opacity: i === 0 ? 1 : 0.55, clipPath: "polygon(50% 0,100% 50%,50% 100%,0 50%)" }} />
             ))}
@@ -224,7 +224,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
       {/* ===== 전장 ===== */}
       <div className="relative overflow-hidden border border-ef-line p-3 sm:p-5" style={{ ...CUT_SM, background: "radial-gradient(120% 90% at 50% 0%, rgba(120,40,30,0.18), transparent 55%), radial-gradient(100% 80% at 50% 100%, rgba(201,122,44,0.10), transparent 55%), #0d0906" }}>
         {/* 적진 */}
-        <div className="mb-1.5 flex items-center gap-2 font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-red-300/70"><span className="h-px flex-1 bg-gradient-to-r from-transparent to-red-500/30" />적 {enemies.filter((e) => e.hp > 0).length}/{enemies.length}<span className="h-px flex-1 bg-gradient-to-l from-transparent to-red-500/30" /></div>
+        <div className="mb-1.5 flex items-center gap-2 font-mono text-[13px] font-bold uppercase tracking-[0.2em] text-red-300/70"><span className="h-px flex-1 bg-gradient-to-r from-transparent to-red-500/30" />적 {enemies.filter((e) => e.hp > 0).length}/{enemies.length}<span className="h-px flex-1 bg-gradient-to-l from-transparent to-red-500/30" /></div>
         <div className="flex flex-wrap justify-center gap-2.5">
           {enemies.map((e) => {
             const ed = enemyDefFor(e.id);
@@ -243,11 +243,11 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
                   </div>
                   <div className="mb-1 flex items-center justify-between gap-2">
                     <span className="flex min-w-0 items-center gap-1.5">{ed && <span className="h-2 w-2 shrink-0" style={{ background: elementColor[el] }} />}<span className="truncate font-mono text-sm font-bold text-white">{e.name}</span></span>
-                    <span className="font-mono text-[10px] text-ef-muted">{Math.max(0, e.hp)}</span>
+                    <span className="font-mono text-[12px] text-ef-muted">{Math.max(0, e.hp)}</span>
                   </div>
                   <Bar value={e.hp} max={e.maxHp} color="#e0655c" />
                   {e.staggerMax > 0 && <div className="mt-1"><Bar value={e.staggered ? e.staggerMax : e.stagger} max={e.staggerMax} color={e.staggered ? "#facc15" : "#a16207"} h="h-1" /></div>}
-                  {e.staggered && <div className="mt-1 font-mono text-[9px] font-bold uppercase tracking-wider text-yellow-400">⚡ 불균형 +30%</div>}
+                  {e.staggered && <div className="mt-1 font-mono text-[11px] font-bold uppercase tracking-wider text-yellow-400">⚡ 불균형 +30%</div>}
                   {ed && <div className="mt-1 flex flex-wrap gap-1"><Chip tone="#e0655c">{ed.faction}</Chip>{ed.resist && (Object.entries(ed.resist) as [Element | "physical", number][]).filter(([, v]) => v < 0).map(([eln, v]) => <Chip key={eln} tone={elementColor[eln]}>{elementName[eln]} 약점{Math.round(-v * 100)}</Chip>)}</div>}
                   <div className="mt-1 flex flex-wrap gap-1">{unitChips(e).map((c) => <Chip key={c.k} tone={c.tone}>{c.label}</Chip>)}</div>
                 </div>
@@ -257,10 +257,10 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
         </div>
 
         {/* 교전선 */}
-        <div className="my-4 flex items-center justify-center gap-3"><span className="h-px w-1/4 bg-gradient-to-r from-transparent via-ef-line to-ef-line" /><span className="font-mono text-[10px] uppercase tracking-[0.4em] text-ef-muted">교전</span><span className="h-px w-1/4 bg-gradient-to-l from-transparent via-ef-line to-ef-line" /></div>
+        <div className="my-4 flex items-center justify-center gap-3"><span className="h-px w-1/4 bg-gradient-to-r from-transparent via-ef-line to-ef-line" /><span className="font-mono text-[12px] uppercase tracking-[0.4em] text-ef-muted">교전</span><span className="h-px w-1/4 bg-gradient-to-l from-transparent via-ef-line to-ef-line" /></div>
 
         {/* 아군진 */}
-        <div className="mb-1.5 flex items-center gap-2 font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-ef-accent/70"><span className="h-px flex-1 bg-gradient-to-r from-transparent to-ef-accent/25" />부대<span className="h-px flex-1 bg-gradient-to-l from-transparent to-ef-accent/25" /></div>
+        <div className="mb-1.5 flex items-center gap-2 font-mono text-[13px] font-bold uppercase tracking-[0.2em] text-ef-accent/70"><span className="h-px flex-1 bg-gradient-to-r from-transparent to-ef-accent/25" />부대<span className="h-px flex-1 bg-gradient-to-l from-transparent to-ef-accent/25" /></div>
         <div className="flex flex-wrap justify-center gap-2.5">
           {allies.map((a) => {
             const op = OPERATORS.find((o) => o.id === a.id);
@@ -280,18 +280,18 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
                     <div className="relative h-16 w-16 shrink-0 border border-ef-line" style={{ background: `center top/cover url(/operators/${a.id}/avatar.webp), #0d0906`, boxShadow: `inset 0 0 0 1px ${elementColor[el]}55` }}>
                       <span className="absolute inset-x-0 bottom-0 h-1" style={{ background: elementColor[el] }} />
                       {dead && <span className="absolute inset-0 flex items-center justify-center text-2xl">💀</span>}
-                      {isCur && <span className="absolute -right-1 -top-1 font-mono text-[9px] font-bold text-ef-accent">▶</span>}
+                      {isCur && <span className="absolute -right-1 -top-1 font-mono text-[11px] font-bold text-ef-accent">▶</span>}
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1">
                         <span className="truncate font-mono text-sm font-bold text-white">{a.name}</span>
-                        {weaponOf(a.id) && <span className="text-[11px] leading-none" title={`${WEAPON_KO[weaponOf(a.id)!]} · ${weaponEffectText(a.id)}`}>{WEAPON_ICON[weaponOf(a.id)!]}</span>}
-                        {op && <span className="font-mono text-[8px] uppercase text-ef-muted">{classLabel[op.cls]}</span>}
+                        {weaponOf(a.id) && <span className="text-[13px] leading-none" title={`${WEAPON_KO[weaponOf(a.id)!]} · ${weaponEffectText(a.id)}`}>{WEAPON_ICON[weaponOf(a.id)!]}</span>}
+                        {op && <span className="font-mono text-[10px] uppercase text-ef-muted">{classLabel[op.cls]}</span>}
                       </div>
-                      <div className="mt-0.5 flex justify-between font-mono text-[9px] text-ef-muted"><span>HP</span><span>{Math.max(0, a.hp)}/{a.maxHp}</span></div>
+                      <div className="mt-0.5 flex justify-between font-mono text-[11px] text-ef-muted"><span>HP</span><span>{Math.max(0, a.hp)}/{a.maxHp}</span></div>
                       <Bar value={a.hp} max={a.maxHp} color={lowHp ? "#e0655c" : "#8fb84a"} />
-                      {a.shield > 0 && <div className="mt-0.5 font-mono text-[9px] text-sky-300">보호막 {a.shield}</div>}
-                      <div className="mt-1 flex items-center gap-1"><span className="font-mono text-[8px] uppercase text-ef-muted">궁</span><Bar value={a.ultCharge} max={a.ultCost} color={a.ultCharge >= a.ultCost ? "#e8c56a" : "#8a6d1f"} h="h-1" /></div>
+                      {a.shield > 0 && <div className="mt-0.5 font-mono text-[11px] text-sky-300">보호막 {a.shield}</div>}
+                      <div className="mt-1 flex items-center gap-1"><span className="font-mono text-[10px] uppercase text-ef-muted">궁</span><Bar value={a.ultCharge} max={a.ultCost} color={a.ultCharge >= a.ultCost ? "#e8c56a" : "#8a6d1f"} h="h-1" /></div>
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-1">
@@ -308,27 +308,27 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
       {/* 수동 조작 — 스킬 선택 */}
       {!winner && current && !auto && (
         <div className="mt-3 border border-ef-accent/40 bg-ef-accent/5 p-3" style={CUT_SM}>
-          <div className="mb-2 font-mono text-[11px] font-bold uppercase tracking-wider text-ef-accent">{current.name} — 스킬 선택</div>
+          <div className="mb-2 font-mono text-[13px] font-bold uppercase tracking-wider text-ef-accent">{current.name} — 스킬 선택</div>
           <div className="flex flex-wrap gap-2">
             {skills.map((sk) => (
               <button key={sk.id} type="button" onClick={() => playerAct(sk)} className="group border border-ef-line bg-ef-card px-3 py-2 text-left transition hover:border-ef-accent/60" style={CUT_SM}>
-                <div className="flex items-center gap-1.5"><span className="border px-1 py-px font-mono text-[9px] font-bold uppercase" style={{ borderColor: `${PRIMARY}66`, color: PRIMARY }}>{kindLabel[sk.kind]}</span><span className="font-mono text-sm font-bold text-white">{sk.name}</span>{sk.power > 0 && <span className="font-mono text-[10px] text-ef-muted">{Math.round(sk.power * 100)}%</span>}</div>
-                {sk.note && <div className="mt-0.5 max-w-[230px] truncate text-[10px] text-ef-muted group-hover:text-ef-ink">{sk.note}</div>}
+                <div className="flex items-center gap-1.5"><span className="border px-1 py-px font-mono text-[11px] font-bold uppercase" style={{ borderColor: `${PRIMARY}66`, color: PRIMARY }}>{kindLabel[sk.kind]}</span><span className="font-mono text-sm font-bold text-white">{sk.name}</span>{sk.power > 0 && <span className="font-mono text-[12px] text-ef-muted">{Math.round(sk.power * 100)}%</span>}</div>
+                {sk.note && <div className="mt-0.5 max-w-[230px] truncate text-[12px] text-ef-muted group-hover:text-ef-ink">{sk.note}</div>}
               </button>
             ))}
             {!skills.length && <span className="font-mono text-xs text-ef-muted">사용 가능한 스킬 없음</span>}
           </div>
           {Object.keys(items).length > 0 && (
             <div className="mt-2 border-t border-ef-line/50 pt-2">
-              <div className="mb-1.5 font-mono text-[10px] font-bold uppercase tracking-wider text-ef-muted">전술 아이템 <span className="text-ef-line">· 자유 행동</span></div>
+              <div className="mb-1.5 font-mono text-[12px] font-bold uppercase tracking-wider text-ef-muted">전술 아이템 <span className="text-ef-line">· 자유 행동</span></div>
               <div className="flex flex-wrap gap-2">
                 {Object.entries(items).map(([id, n]) => {
                   const it = ITEMS[id]; if (!it) return null;
                   const usable = canUseItem(s, id);
                   return (
                     <button key={id} type="button" disabled={!usable} onClick={() => playerUseItem(id)} className={`group border bg-black/40 px-2.5 py-1.5 text-left transition ${usable ? "border-ef-line hover:border-ef-accent/60" : "border-ef-line/40 opacity-45"}`} style={CUT_SM}>
-                      <div className="flex items-center gap-1.5"><span className="h-2 w-2 shrink-0" style={{ background: itemColor(it.kind) }} /><span className="font-mono text-xs font-bold text-white">{it.name}</span><span className="font-mono text-[10px] text-ef-accent">×{n}</span></div>
-                      <div className="mt-0.5 max-w-[220px] truncate text-[10px] text-ef-muted group-hover:text-ef-ink">{it.desc} · {condText(it.cond)}</div>
+                      <div className="flex items-center gap-1.5"><span className="h-2 w-2 shrink-0" style={{ background: itemColor(it.kind) }} /><span className="font-mono text-xs font-bold text-white">{it.name}</span><span className="font-mono text-[12px] text-ef-accent">×{n}</span></div>
+                      <div className="mt-0.5 max-w-[220px] truncate text-[12px] text-ef-muted group-hover:text-ef-ink">{it.desc} · {condText(it.cond)}</div>
                     </button>
                   );
                 })}
@@ -340,12 +340,12 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
 
       {/* 전투 로그 — 보조(접이식) */}
       <div className="mt-3 border border-ef-line bg-ef-card/70" style={CUT_SM}>
-        <button type="button" onClick={() => setShowLog((v) => !v)} className="flex w-full items-center gap-2 px-3 py-1.5 font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-ef-muted transition hover:text-ef-ink">
+        <button type="button" onClick={() => setShowLog((v) => !v)} className="flex w-full items-center gap-2 px-3 py-1.5 font-mono text-[13px] font-bold uppercase tracking-[0.2em] text-ef-muted transition hover:text-ef-ink">
           <span>전투 기록</span><span className="text-ef-line">{showLog ? "▲ 접기" : "▼ 펼치기"}</span>
           {!showLog && <span className="ml-auto max-w-[60%] truncate font-normal normal-case tracking-normal text-ef-muted/80">{[...s.log].reverse().find((l) => l.includes("→") || l.includes("✗")) ?? ""}</span>}
         </button>
         {showLog && (
-          <div className="flex max-h-[38vh] flex-col-reverse gap-0.5 overflow-y-auto border-t border-ef-line px-3 py-2 font-mono text-[11px] leading-relaxed">
+          <div className="flex max-h-[38vh] flex-col-reverse gap-0.5 overflow-y-auto border-t border-ef-line px-3 py-2 font-mono text-[13px] leading-relaxed">
             {[...s.log].slice(-160).reverse().map((line, i) => (
               <div key={s.log.length - i} className={line.startsWith("──") ? "mt-1 font-bold text-ef-accent" : line.includes("불균형 상태") || line.includes("승리") ? "text-yellow-300" : line.includes("→") && !line.startsWith("  ") ? "text-white" : line.includes("✗") ? "text-red-300" : "text-ef-muted"}>{line}</div>
             ))}

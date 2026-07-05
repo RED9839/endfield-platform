@@ -29,7 +29,7 @@ function PartyBar({ party }: { party: PartyMember[] }) {
             <div className="mb-1 flex items-center gap-1.5">
               <span className="h-2 w-2 shrink-0" style={{ background: elementColor[op?.element ?? "physical"] }} />
               <span className="truncate font-mono text-xs font-bold text-white">{op?.name ?? m.id}</span>
-              <span className="ml-auto font-mono text-[10px] text-ef-muted">{Math.max(0, m.hp)}/{m.maxHp}</span>
+              <span className="ml-auto font-mono text-[12px] text-ef-muted">{Math.max(0, m.hp)}/{m.maxHp}</span>
             </div>
             <div className="h-2 w-full overflow-hidden border border-ef-line bg-black/60"><div className="h-full transition-all" style={{ width: `${Math.max(0, ratio) * 100}%`, background: dead ? "#7f1d1d" : ratio < 0.35 ? "#f87171" : "#86efac" }} /></div>
           </div>
@@ -46,7 +46,7 @@ export default function RunMap({ nodes, frontier, cleared, party, items, onEnter
   return (
     <div className="mx-auto max-w-[1500px] px-4 py-6 sm:px-7">
       <div className="mb-4">
-        <p className="font-mono text-[10px] font-bold uppercase tracking-[0.3em] text-ef-muted">Darkest Protocol · 던전 진행</p>
+        <p className="font-mono text-[12px] font-bold uppercase tracking-[0.3em] text-ef-muted">Darkest Protocol · 던전 진행</p>
         <h2 className="font-mono text-xl font-black uppercase tracking-[0.15em] text-white">경로 선택</h2>
         <p className="mt-1 text-xs text-ef-muted">진행 가능한 방(강조)을 선택. 정예·보스는 위험하나 보상이 큽니다. HP는 야영에서만 회복.</p>
       </div>
@@ -54,13 +54,13 @@ export default function RunMap({ nodes, frontier, cleared, party, items, onEnter
       <div className="mb-3"><PartyBar party={party} /></div>
 
       <div className="mb-5 flex flex-wrap items-center gap-2">
-        <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-ef-muted">소지 아이템</span>
-        {Object.entries(items).length === 0 && <span className="font-mono text-[10px] text-ef-line">없음</span>}
+        <span className="font-mono text-[12px] font-bold uppercase tracking-wider text-ef-muted">소지 아이템</span>
+        {Object.entries(items).length === 0 && <span className="font-mono text-[12px] text-ef-line">없음</span>}
         {Object.entries(items).map(([id, n]) => { const it = ITEMS[id]; if (!it) return null; return (
           <span key={id} className="flex items-center gap-1 border border-ef-line bg-ef-card px-2 py-0.5" style={CUT_SM}>
             <span className="h-2 w-2 shrink-0" style={{ background: itemColor(it.kind) }} />
-            <span className="font-mono text-[10px] text-ef-ink">{it.name}</span>
-            <span className="font-mono text-[10px] font-bold text-ef-accent">×{n}</span>
+            <span className="font-mono text-[12px] text-ef-ink">{it.name}</span>
+            <span className="font-mono text-[12px] font-bold text-ef-accent">×{n}</span>
           </span>
         ); })}
       </div>
@@ -69,7 +69,7 @@ export default function RunMap({ nodes, frontier, cleared, party, items, onEnter
         <div className="flex min-w-max items-stretch gap-6">
           {depths.map((row, d) => (
             <div key={d} className="flex flex-col justify-center gap-3">
-              <div className="text-center font-mono text-[9px] uppercase tracking-wider text-ef-line">{d === maxDepth ? "심층" : `구역 ${d + 1}`}</div>
+              <div className="text-center font-mono text-[11px] uppercase tracking-wider text-ef-line">{d === maxDepth ? "심층" : `구역 ${d + 1}`}</div>
               {row.map((n) => {
                 const meta = NODE_META[n.kind];
                 const Icon = meta.icon;
@@ -88,8 +88,8 @@ export default function RunMap({ nodes, frontier, cleared, party, items, onEnter
                     <Icon className="h-5 w-5 shrink-0" style={{ color: isCleared ? "#555" : meta.tone }} />
                     <span className="min-w-0">
                       <span className="block font-mono text-sm font-bold" style={{ color: isCleared ? "#666" : "#fff" }}>{meta.label}</span>
-                      {isCleared && <span className="block font-mono text-[9px] uppercase text-ef-line">완료</span>}
-                      {isFrontier && <span className="block font-mono text-[9px] uppercase tracking-wider text-ef-accent">▶ 진입</span>}
+                      {isCleared && <span className="block font-mono text-[11px] uppercase text-ef-line">완료</span>}
+                      {isFrontier && <span className="block font-mono text-[11px] uppercase tracking-wider text-ef-accent">▶ 진입</span>}
                     </span>
                   </button>
                 );

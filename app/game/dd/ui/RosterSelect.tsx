@@ -67,7 +67,7 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
     <div className="mx-auto max-w-[1500px] px-4 py-6 sm:px-7">
       <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="font-mono text-[10px] font-bold uppercase tracking-[0.3em] text-ef-muted">Darkest Protocol · 원정 편성</p>
+          <p className="font-mono text-[12px] font-bold uppercase tracking-[0.3em] text-ef-muted">Darkest Protocol · 원정 편성</p>
           <h2 className="font-mono text-xl font-black uppercase tracking-[0.15em] text-white">부대 편성</h2>
           <p className="mt-1 text-xs text-ef-muted">오퍼레이터 4명 선택(선택 순서 = 전열). <b className="text-ef-ink">HP는 전투마다 이어지고</b> 야영에서만 회복. 장비는 <b className="text-ef-ink">같은 세트 2부위</b>부터 효과 발동.</p>
         </div>
@@ -78,21 +78,21 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
       </div>
 
       <div className="mb-4">
-        <div className="mb-1.5 font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-ef-muted">프리셋 조합 <span className="text-ef-line">· 시트 순서 · 원클릭 로드</span></div>
+        <div className="mb-1.5 font-mono text-[13px] font-bold uppercase tracking-[0.2em] text-ef-muted">프리셋 조합 <span className="text-ef-line">· 시트 순서 · 원클릭 로드</span></div>
         <div className="flex flex-wrap gap-2">
           {PRESET_PARTIES.map((p, i) => (
             <button key={p.id} type="button" onClick={() => loadPreset(p)} className="group max-w-[340px] border border-ef-line bg-ef-card px-3 py-2 text-left transition hover:border-ef-accent/60" style={CUT_SM}>
               <div className="flex items-center gap-1.5">
-                <span className="font-mono text-[9px] text-ef-line">{i + 1}</span>
+                <span className="font-mono text-[11px] text-ef-line">{i + 1}</span>
                 <span className="h-2.5 w-2.5 shrink-0" style={{ background: elementColor[p.element] }} />
                 <span className="font-mono text-sm font-bold text-white">{p.name}</span>
-                <span className="font-mono text-[8px] uppercase tracking-wider text-ef-muted">{ARCHETYPE_LABEL[p.archetype]}</span>
+                <span className="font-mono text-[10px] uppercase tracking-wider text-ef-muted">{ARCHETYPE_LABEL[p.archetype]}</span>
               </div>
-              <div className="mt-0.5 font-mono text-[10px] text-ef-accent">{p.members.map((id) => OPERATORS.find((o) => o.id === id)?.name ?? id).join("·")}</div>
-              <div className="mt-0.5 truncate text-[10px] text-ef-muted group-hover:text-ef-ink">{p.desc}</div>
-              {p.note && <div className="mt-0.5 truncate text-[9px] text-ef-line">{p.note}</div>}
+              <div className="mt-0.5 font-mono text-[12px] text-ef-accent">{p.members.map((id) => OPERATORS.find((o) => o.id === id)?.name ?? id).join("·")}</div>
+              <div className="mt-0.5 truncate text-[12px] text-ef-muted group-hover:text-ef-ink">{p.desc}</div>
+              {p.note && <div className="mt-0.5 truncate text-[11px] text-ef-line">{p.note}</div>}
               {p.alternates?.map((alt) => (
-                <div key={alt.role} className="mt-0.5 flex flex-wrap items-center gap-1 text-[9px]">
+                <div key={alt.role} className="mt-0.5 flex flex-wrap items-center gap-1 text-[11px]">
                   <span className="text-ef-line">↔ {alt.role}:</span>
                   {alt.ids.map((id) => <span key={id} className="text-ef-accent-soft">{OPERATORS.find((o) => o.id === id)?.name ?? id}</span>)}
                 </div>
@@ -115,16 +115,16 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
                   <b className="font-mono text-xs text-ef-accent">{i + 1}</b>
                   <span className="h-2.5 w-2.5 shrink-0" style={{ background: elementColor[op.element] }} />
                   <span className="font-mono text-sm font-bold text-white">{op.name}</span>
-                  <span className="font-mono text-[9px] uppercase text-ef-muted">{classLabel[op.cls]}</span>
-                  <button type="button" onClick={() => toggle(id)} className="ml-auto font-mono text-[10px] text-ef-muted hover:text-red-300">해제</button>
+                  <span className="font-mono text-[11px] uppercase text-ef-muted">{classLabel[op.cls]}</span>
+                  <button type="button" onClick={() => toggle(id)} className="ml-auto font-mono text-[12px] text-ef-muted hover:text-red-300">해제</button>
                 </div>
 
                 {/* 시그니처 무기 */}
                 {weaponOf(id) && (
                   <div className="mb-2 flex items-center gap-1.5 border border-ef-line/60 bg-black/30 px-1.5 py-1" style={CUT_SM}>
                     <span className="text-sm leading-none">{WEAPON_ICON[weaponOf(id)!]}</span>
-                    <span className="min-w-0 truncate font-mono text-[10px] font-bold text-ef-ink" title={`${WEAPON_KO[weaponOf(id)!]} · 6★ · 고유: ${OP_WEAPON_STATS[id]?.uniq ?? ""}`}>{weaponName(id)} <span className="text-ef-line">{WEAPON_KO[weaponOf(id)!]}</span></span>
-                    <span className="ml-auto shrink-0 font-mono text-[9px] text-ef-accent-soft">공격 {OP_WEAPON_STATS[id]?.atk ?? "-"} · {weaponEffectText(id)}</span>
+                    <span className="min-w-0 truncate font-mono text-[12px] font-bold text-ef-ink" title={`${WEAPON_KO[weaponOf(id)!]} · 6★ · 고유: ${OP_WEAPON_STATS[id]?.uniq ?? ""}`}>{weaponName(id)} <span className="text-ef-line">{WEAPON_KO[weaponOf(id)!]}</span></span>
+                    <span className="ml-auto shrink-0 font-mono text-[11px] text-ef-accent-soft">공격 {OP_WEAPON_STATS[id]?.atk ?? "-"} · {weaponEffectText(id)}</span>
                   </div>
                 )}
 
@@ -134,7 +134,7 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
                     const v = pr[ax.key];
                     return (
                       <div key={ax.key} className="border border-ef-line bg-black/40 px-1.5 py-1" style={CUT_SM}>
-                        <div className="font-mono text-[8px] uppercase tracking-wider text-ef-muted">{ax.name}</div>
+                        <div className="font-mono text-[10px] uppercase tracking-wider text-ef-muted">{ax.name}</div>
                         <div className="mt-0.5 flex items-center justify-between gap-1">
                           <button type="button" onClick={() => bumpProg(id, ax.key, -1)} disabled={v <= 0} className="font-mono text-xs leading-none text-ef-muted transition enabled:hover:text-white disabled:opacity-25">−</button>
                           <span className="font-mono text-xs font-bold" style={{ color: ax.tone }}>{ax.fmt(v)}</span>
@@ -148,23 +148,23 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
 
                 {/* 장착 피스(시트 빌드 + 폴백 세트) */}
                 <div className="flex items-center gap-1.5">
-                  <span className="font-mono text-[9px] uppercase tracking-wider text-ef-line">세트</span>
-                  <select value={opSet(id)} onChange={(e) => setSetChoice((S) => ({ ...S, [id]: e.target.value }))} className="border border-ef-line bg-black/60 px-1 py-0.5 font-mono text-[10px] text-ef-ink focus:border-ef-accent/60 focus:outline-none">
+                  <span className="font-mono text-[11px] uppercase tracking-wider text-ef-line">세트</span>
+                  <select value={opSet(id)} onChange={(e) => setSetChoice((S) => ({ ...S, [id]: e.target.value }))} className="border border-ef-line bg-black/60 px-1 py-0.5 font-mono text-[12px] text-ef-ink focus:border-ef-accent/60 focus:outline-none">
                     {SET_NAMES.map((n) => <option key={n} value={n}>{n}</option>)}
                   </select>
-                  <span className="font-mono text-[8px] text-ef-line">누락 슬롯 폴백</span>
+                  <span className="font-mono text-[10px] text-ef-line">누락 슬롯 폴백</span>
                 </div>
                 <div className="mt-1 flex flex-wrap gap-1">
                   {GEAR_SLOTS.map((slot) => (
-                    <span key={slot} className="max-w-[46%] truncate border border-ef-line/50 bg-black/30 px-1 py-0.5 font-mono text-[9px] text-ef-muted" title={pieceName(lo[slot])}>
+                    <span key={slot} className="max-w-[46%] truncate border border-ef-line/50 bg-black/30 px-1 py-0.5 font-mono text-[11px] text-ef-muted" title={pieceName(lo[slot])}>
                       <b className="text-ef-line">{gearSlotName(slot)}</b> {pieceName(lo[slot])}
                     </span>
                   ))}
                 </div>
                 {active.length ? (
-                  active.map((n) => <div key={n} className="mt-1 font-mono text-[10px] text-green-300">◆ {setEffectText(n)}</div>)
+                  active.map((n) => <div key={n} className="mt-1 font-mono text-[12px] text-green-300">◆ {setEffectText(n)}</div>)
                 ) : (
-                  <div className="mt-1 font-mono text-[10px] text-ef-muted">세트 미발동 (같은 세트 2부위 이상)</div>
+                  <div className="mt-1 font-mono text-[12px] text-ef-muted">세트 미발동 (같은 세트 2부위 이상)</div>
                 )}
               </div>
             );
@@ -177,7 +177,7 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
         if (!ops.length) return null;
         return (
           <div key={cls} className="mt-5">
-            <div className="dd-title mb-2 flex items-center gap-2 text-sm text-ef-accent-soft"><span className="h-px w-4 bg-ef-line" />{classLabel[cls]} <span className="font-mono text-[10px] font-normal tracking-normal text-ef-muted">· {ops.length}</span><span className="h-px flex-1 bg-gradient-to-r from-ef-line to-transparent" /></div>
+            <div className="dd-title mb-2 flex items-center gap-2 text-sm text-ef-accent-soft"><span className="h-px w-4 bg-ef-line" />{classLabel[cls]} <span className="font-mono text-[12px] font-normal tracking-normal text-ef-muted">· {ops.length}</span><span className="h-px flex-1 bg-gradient-to-r from-ef-line to-transparent" /></div>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
               {ops.map((op: OpMeta) => {
                 const on = selected.includes(op.id);
@@ -186,7 +186,7 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
                     <span className="h-2.5 w-2.5 shrink-0" style={{ background: elementColor[op.element] }} />
                     <span className="min-w-0">
                       <span className="block truncate font-mono text-sm font-bold text-white">{op.name}</span>
-                      <span className="block font-mono text-[9px] uppercase tracking-wider text-ef-muted">{elementName[op.element]}</span>
+                      <span className="block font-mono text-[11px] uppercase tracking-wider text-ef-muted">{elementName[op.element]}</span>
                     </span>
                   </button>
                 );

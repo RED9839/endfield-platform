@@ -29,7 +29,7 @@ export default function CraftPanel({ craft, party = [], onCraft, onForge, onClos
         <div className="flex items-center gap-2">
           <Hammer className="h-6 w-6 text-ef-accent" />
           <div>
-            <p className="font-mono text-[10px] font-bold uppercase tracking-[0.3em] text-ef-muted">Industry · 장비 제조</p>
+            <p className="font-mono text-[12px] font-bold uppercase tracking-[0.3em] text-ef-muted">Industry · 장비 제조</p>
             <h2 className="font-mono text-xl font-black uppercase tracking-[0.15em] text-white">공업소</h2>
           </div>
         </div>
@@ -42,7 +42,7 @@ export default function CraftPanel({ craft, party = [], onCraft, onForge, onClos
       {/* 부대 장착 장비 — 실제 사용 피스 바로 단조 */}
       {party.length > 0 && (
         <div className="mb-4 border border-ef-accent/25 bg-ef-accent/[0.04] p-2.5" style={CUT}>
-          <div className="mb-2 font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-ef-accent-soft">부대 장착 장비 <span className="text-ef-line">· 단조로 강화</span></div>
+          <div className="mb-2 font-mono text-[13px] font-bold uppercase tracking-[0.2em] text-ef-accent-soft">부대 장착 장비 <span className="text-ef-line">· 단조로 강화</span></div>
           <div className="grid gap-2 sm:grid-cols-2">
             {party.map((m) => (
               <div key={m.id} className="border border-ef-line/60 bg-black/30 p-2" style={CUT}>
@@ -54,15 +54,15 @@ export default function CraftPanel({ craft, party = [], onCraft, onForge, onClos
                     const lv = pieceLevel(craft, p.id); const owned = isOwned(craft, p.id); const fc = forgeCost(lv); const cc = craftCost(p);
                     return (
                       <div key={slot} className="flex items-center gap-1.5">
-                        <span className="w-8 shrink-0 font-mono text-[9px] uppercase text-ef-line">{gearSlotName(slot)}</span>
-                        <span className="min-w-0 flex-1 truncate font-mono text-[10px] text-ef-muted" title={p.name}>{p.name}</span>
-                        {p.dmg && <span className="shrink-0 font-mono text-[9px] text-ef-accent-soft">{dmgText(p)}</span>}
+                        <span className="w-8 shrink-0 font-mono text-[11px] uppercase text-ef-line">{gearSlotName(slot)}</span>
+                        <span className="min-w-0 flex-1 truncate font-mono text-[12px] text-ef-muted" title={p.name}>{p.name}</span>
+                        {p.dmg && <span className="shrink-0 font-mono text-[11px] text-ef-accent-soft">{dmgText(p)}</span>}
                         {!owned ? (
-                          <button type="button" disabled={!affordCraft(p)} onClick={() => onCraft(p.id)} className="shrink-0 border border-ef-line px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wider transition enabled:hover:border-ef-accent/50 enabled:text-ef-ink disabled:opacity-40" style={CUT}>제작 {cc.parts}·{cc.permits}</button>
+                          <button type="button" disabled={!affordCraft(p)} onClick={() => onCraft(p.id)} className="shrink-0 border border-ef-line px-1.5 py-0.5 font-mono text-[11px] font-bold uppercase tracking-wider transition enabled:hover:border-ef-accent/50 enabled:text-ef-ink disabled:opacity-40" style={CUT}>제작 {cc.parts}·{cc.permits}</button>
                         ) : lv < 3 ? (
-                          <button type="button" disabled={!affordForge(lv)} onClick={() => onForge(p.id)} className="shrink-0 border border-ef-accent/40 px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wider text-ef-accent transition enabled:hover:bg-ef-accent/10 disabled:opacity-40" style={CUT}>단조 {lv}→{lv + 1} · {fc.parts}·{fc.permits}</button>
+                          <button type="button" disabled={!affordForge(lv)} onClick={() => onForge(p.id)} className="shrink-0 border border-ef-accent/40 px-1.5 py-0.5 font-mono text-[11px] font-bold uppercase tracking-wider text-ef-accent transition enabled:hover:bg-ef-accent/10 disabled:opacity-40" style={CUT}>단조 {lv}→{lv + 1} · {fc.parts}·{fc.permits}</button>
                         ) : (
-                          <span className="shrink-0 flex items-center gap-0.5 font-mono text-[9px] font-bold text-green-300"><Check className="h-3 w-3" />MAX</span>
+                          <span className="shrink-0 flex items-center gap-0.5 font-mono text-[11px] font-bold text-green-300"><Check className="h-3 w-3" />MAX</span>
                         )}
                       </div>
                     );
@@ -75,10 +75,10 @@ export default function CraftPanel({ craft, party = [], onCraft, onForge, onClos
       )}
 
       {/* 세트 탭 — 대체 피스 제작 카탈로그 */}
-      <div className="mb-2 font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-ef-muted">전체 카탈로그 <span className="text-ef-line">· 대체 피스 제작</span></div>
+      <div className="mb-2 font-mono text-[13px] font-bold uppercase tracking-[0.2em] text-ef-muted">전체 카탈로그 <span className="text-ef-line">· 대체 피스 제작</span></div>
       <div className="mb-4 flex flex-wrap gap-1.5">
         {SETS.map((s) => (
-          <button key={s} type="button" onClick={() => setSet(s)} className={`border px-2.5 py-1 font-mono text-[11px] font-bold transition ${set === s ? "border-ef-accent/70 text-ef-accent" : "border-ef-line text-ef-muted hover:text-ef-ink"}`} style={{ ...CUT, background: set === s ? PRIMARY + "18" : "transparent" }}>{s}</button>
+          <button key={s} type="button" onClick={() => setSet(s)} className={`border px-2.5 py-1 font-mono text-[13px] font-bold transition ${set === s ? "border-ef-accent/70 text-ef-accent" : "border-ef-line text-ef-muted hover:text-ef-ink"}`} style={{ ...CUT, background: set === s ? PRIMARY + "18" : "transparent" }}>{s}</button>
         ))}
       </div>
 
@@ -88,7 +88,7 @@ export default function CraftPanel({ craft, party = [], onCraft, onForge, onClos
           const pieces = GEAR_PIECES_BY_SET_SLOT[set]?.[slot] ?? [];
           return (
             <div key={slot} className="border border-ef-line bg-ef-card/40 p-2.5" style={CUT}>
-              <div className="mb-2 font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-ef-muted">{gearSlotName(slot)} <span className="text-ef-line">· {pieces.length}</span></div>
+              <div className="mb-2 font-mono text-[13px] font-bold uppercase tracking-[0.2em] text-ef-muted">{gearSlotName(slot)} <span className="text-ef-line">· {pieces.length}</span></div>
               <div className="flex flex-col gap-1.5">
                 {pieces.map((p) => {
                   const owned = isOwned(craft, p.id); const lv = pieceLevel(craft, p.id); const cc = craftCost(p); const fc = forgeCost(lv);
@@ -96,28 +96,28 @@ export default function CraftPanel({ craft, party = [], onCraft, onForge, onClos
                     <div key={p.id} className={`border p-2 ${owned ? "border-ef-accent/40 bg-ef-accent/5" : "border-ef-line bg-ef-card"}`} style={CUT}>
                       <div className="flex items-center gap-1.5">
                         <span className="min-w-0 flex-1 truncate font-mono text-xs font-bold text-white">{p.name}</span>
-                        {owned && <span className="font-mono text-[10px] font-bold text-ef-accent">단조 {lv}/3</span>}
+                        {owned && <span className="font-mono text-[12px] font-bold text-ef-accent">단조 {lv}/3</span>}
                       </div>
-                      <div className="mt-0.5 flex flex-wrap gap-x-2 gap-y-0.5 font-mono text-[10px] text-ef-muted">
+                      <div className="mt-0.5 flex flex-wrap gap-x-2 gap-y-0.5 font-mono text-[12px] text-ef-muted">
                         <span>방어 {p.def}</span>
                         <span className="text-ef-ink">능력치 {p.grade.base}</span>
                         {p.dmg && <span className="text-ef-accent-soft">{dmgText(p)}</span>}
                       </div>
                       {!owned ? (
-                        <button type="button" disabled={!affordCraft(p)} onClick={() => onCraft(p.id)} className="mt-1.5 flex w-full items-center justify-center gap-1 border border-ef-line py-1 font-mono text-[10px] font-bold uppercase tracking-wider transition enabled:hover:border-ef-accent/50 enabled:text-ef-ink disabled:opacity-40" style={CUT}>
+                        <button type="button" disabled={!affordCraft(p)} onClick={() => onCraft(p.id)} className="mt-1.5 flex w-full items-center justify-center gap-1 border border-ef-line py-1 font-mono text-[12px] font-bold uppercase tracking-wider transition enabled:hover:border-ef-accent/50 enabled:text-ef-ink disabled:opacity-40" style={CUT}>
                           {affordCraft(p) ? <Hammer className="h-3 w-3" /> : <Lock className="h-3 w-3" />} 제작 · {cc.parts}부품 {cc.permits}관리권
                         </button>
                       ) : lv < 3 ? (
-                        <button type="button" disabled={!affordForge(lv)} onClick={() => onForge(p.id)} className="mt-1.5 flex w-full items-center justify-center gap-1 border border-ef-accent/40 py-1 font-mono text-[10px] font-bold uppercase tracking-wider text-ef-accent transition enabled:hover:bg-ef-accent/10 disabled:opacity-40" style={CUT}>
+                        <button type="button" disabled={!affordForge(lv)} onClick={() => onForge(p.id)} className="mt-1.5 flex w-full items-center justify-center gap-1 border border-ef-accent/40 py-1 font-mono text-[12px] font-bold uppercase tracking-wider text-ef-accent transition enabled:hover:bg-ef-accent/10 disabled:opacity-40" style={CUT}>
                           단조 +1 · {fc.parts}부품 {fc.permits}관리권
                         </button>
                       ) : (
-                        <div className="mt-1.5 flex w-full items-center justify-center gap-1 border border-green-400/30 py-1 font-mono text-[10px] font-bold uppercase tracking-wider text-green-300" style={CUT}><Check className="h-3 w-3" /> 단조 최대</div>
+                        <div className="mt-1.5 flex w-full items-center justify-center gap-1 border border-green-400/30 py-1 font-mono text-[12px] font-bold uppercase tracking-wider text-green-300" style={CUT}><Check className="h-3 w-3" /> 단조 최대</div>
                       )}
                     </div>
                   );
                 })}
-                {!pieces.length && <div className="py-4 text-center font-mono text-[10px] text-ef-line">피스 없음</div>}
+                {!pieces.length && <div className="py-4 text-center font-mono text-[12px] text-ef-line">피스 없음</div>}
               </div>
             </div>
           );
