@@ -83,7 +83,7 @@ export function useDDRun() {
     setDepthReached(0);
     setActiveId(null);
     setItems({ "heal-cap-1": 2, "can-1": 1, "recov-1": 1 }); // 시작 키트
-    setCraft({ mats: { parts: 80, permits: 10 }, owned: {} }); // 맨몸 시작 — 공업소에서 목표 빌드 직접 제작
+    setCraft({ mats: { parts: 100, permits: 16 }, owned: {} }); // 맨몸 시작 — 공업소에서 목표 빌드 직접 제작
     setFaction(pickRand(FACTIONS)); // 이번 런 세력 리전 무작위
     setPhase("map");
   }, []);

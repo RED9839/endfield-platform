@@ -9,10 +9,10 @@ export type CraftState = { mats: CraftMats; owned: Record<string, number> }; // 
 export const initialCraft = (): CraftState => ({ mats: { parts: 0, permits: 0 }, owned: {} });
 export const cloneCraft = (c: CraftState): CraftState => ({ mats: { ...c.mats }, owned: { ...c.owned } });
 
-// 제작 비용(레어도 비례). 5★ 세트 피스 ≈ 부품21·관리권3.
-export const craftCost = (p: GearPiece): CraftMats => { const r = p.rarity || 4; return { parts: 6 + r * 3, permits: 1 + Math.floor(r / 2) }; };
+// 제작 비용(레어도 비례). 5★ 세트 피스 ≈ 부품21·관리권2. (관리권은 병목이라 낮게)
+export const craftCost = (p: GearPiece): CraftMats => { const r = p.rarity || 4; return { parts: 6 + r * 3, permits: r >= 5 ? 2 : 1 }; };
 // 단조 비용(현재 레벨 → +1). +0→+1→+2→+3.
-export const forgeCost = (lv: number): CraftMats => [{ parts: 5, permits: 1 }, { parts: 9, permits: 2 }, { parts: 15, permits: 3 }][lv] ?? { parts: Infinity, permits: Infinity };
+export const forgeCost = (lv: number): CraftMats => [{ parts: 5, permits: 1 }, { parts: 9, permits: 1 }, { parts: 15, permits: 2 }][lv] ?? { parts: Infinity, permits: Infinity };
 
 const afford = (m: CraftMats, c: CraftMats) => m.parts >= c.parts && m.permits >= c.permits;
 const spend = (m: CraftMats, c: CraftMats) => { m.parts -= c.parts; m.permits -= c.permits; };

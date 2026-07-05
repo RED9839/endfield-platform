@@ -176,7 +176,7 @@ const NODE_TO_KIND: Record<NodeKind, "normal" | "elite" | "boss"> = { battle: "n
 // ===== 드랍테이블 리뉴얼 — 세력·티어·깊이별 재료(장비 부품·관리권) + 아이템 =====
 export function enemyDrop(kind: NodeKind, depth: number, faction: string): { parts: number; permits: number; items: string[] } {
   const k = NODE_TO_KIND[kind];
-  const base = k === "boss" ? { parts: 60, permits: 10 } : k === "elite" ? { parts: 36, permits: 4 } : { parts: 22, permits: 2 };
+  const base = k === "boss" ? { parts: 60, permits: 10 } : k === "elite" ? { parts: 38, permits: 6 } : { parts: 24, permits: 4 };
   const depthBonus = Math.floor(depth * (k === "boss" ? 3 : 1.5)); // 깊을수록 재료↑
   const factionBonus = FACTION_POOL[faction]?.boss.length ? 0 : 0; // (세력별 특화 여지)
   return { parts: base.parts + depthBonus + factionBonus, permits: base.permits + (k === "boss" ? Math.floor(depth / 2) : 0), items: rewardItemPool(k) };
