@@ -127,9 +127,9 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
                         <span className="ml-auto shrink-0 font-mono text-[11px] text-ef-accent-soft">공격 {OP_WEAPON_STATS[id]?.atk ?? "-"} · {weaponEffectText(id)}</span>
                       </div>
                       {weaponSeriesText(id) && (
-                        <div className="mt-0.5 flex flex-wrap items-baseline gap-x-1 font-mono text-[10px]">
-                          <span className="shrink-0 font-bold text-purple-300/90">◈ {weaponSeriesName(id)}</span>
-                          <span className="min-w-0 text-ef-muted">{weaponSeriesText(id)}</span>
+                        <div className="mt-0.5 font-mono text-[10px] leading-snug" title={`${weaponSeriesName(id)} — ${weaponSeriesText(id)}`}>
+                          <span className="font-bold text-purple-300/90">◈ {weaponSeriesName(id)}</span>
+                          <span className="line-clamp-2 text-ef-muted">{weaponSeriesText(id)}</span>
                         </div>
                       )}
                     </div>
