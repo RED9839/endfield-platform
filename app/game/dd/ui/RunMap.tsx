@@ -3,7 +3,7 @@
 import { Swords, Skull, Tent, Crown } from "lucide-react";
 
 import { OPERATORS } from "../roster";
-import { ITEMS, itemColor } from "../items";
+import { ITEMS, itemColor, itemImage } from "../items";
 import type { NodeKind, PartyMember, RunNode } from "../run";
 import type { Element } from "../combat";
 
@@ -58,7 +58,7 @@ export default function RunMap({ nodes, frontier, cleared, party, items, onEnter
         {Object.entries(items).length === 0 && <span className="font-mono text-[12px] text-ef-line">없음</span>}
         {Object.entries(items).map(([id, n]) => { const it = ITEMS[id]; if (!it) return null; return (
           <span key={id} className="flex items-center gap-1 border border-ef-line bg-ef-card px-2 py-0.5" style={CUT_SM}>
-            <span className="h-2 w-2 shrink-0" style={{ background: itemColor(it.kind) }} />
+            <img src={itemImage(id)} alt="" loading="lazy" className="h-5 w-5 shrink-0 rounded-sm object-contain" style={{ background: `${itemColor(it.kind)}18` }} />
             <span className="font-mono text-[12px] text-ef-ink">{it.name}</span>
             <span className="font-mono text-[12px] font-bold text-ef-accent">×{n}</span>
           </span>

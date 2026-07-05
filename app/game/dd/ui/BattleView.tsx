@@ -7,7 +7,7 @@ import { OPERATORS, enemyDefFor, avatarUrl } from "../roster";
 import { ENCOUNTERS, allyChoose, createBattle, enemyAct, usableSkills, regionEncounter } from "../sim";
 import { activeSets } from "../gear";
 import { weaponOf, weaponEffectText, WEAPON_KO, WEAPON_ICON } from "../weapons";
-import { ITEMS, useItem as applyItem, canUseItem, condText, itemColor } from "../items";
+import { ITEMS, useItem as applyItem, canUseItem, condText, itemColor, itemImage } from "../items";
 import type { BattleResult, NodeKind, PartyMember } from "../run";
 
 const PRIMARY = "#ff9a2f";
@@ -327,7 +327,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
                   const usable = canUseItem(s, id);
                   return (
                     <button key={id} type="button" disabled={!usable} onClick={() => playerUseItem(id)} className={`group border bg-black/40 px-2.5 py-1.5 text-left transition ${usable ? "border-ef-line hover:border-ef-accent/60" : "border-ef-line/40 opacity-45"}`} style={CUT_SM}>
-                      <div className="flex items-center gap-1.5"><span className="h-2 w-2 shrink-0" style={{ background: itemColor(it.kind) }} /><span className="font-mono text-xs font-bold text-white">{it.name}</span><span className="font-mono text-[12px] text-ef-accent">×{n}</span></div>
+                      <div className="flex items-center gap-1.5"><img src={itemImage(id)} alt="" loading="lazy" className="h-6 w-6 shrink-0 rounded-sm object-contain" style={{ background: `${itemColor(it.kind)}18` }} /><span className="font-mono text-xs font-bold text-white">{it.name}</span><span className="font-mono text-[12px] text-ef-accent">×{n}</span></div>
                       <div className="mt-0.5 max-w-[220px] truncate text-[12px] text-ef-muted group-hover:text-ef-ink">{it.desc} · {condText(it.cond)}</div>
                     </button>
                   );
