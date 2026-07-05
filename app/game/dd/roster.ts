@@ -380,6 +380,9 @@ export const OPERATORS: OpMeta[] = Object.values(OP_BASE).map((b) => {
   return { id: b.id, name: b.name, cls: b.cls, element: el as "physical" | Element };
 });
 
+// 오퍼 얼굴 아이콘 경로 — 관리자만 avatar1.webp, 나머지는 avatar.webp
+export const avatarUrl = (id: string) => `/operators/${id}/${id === "endministrator" ? "avatar1" : "avatar"}.webp`;
+
 // 아군 저항(공식 1.12): 민첩→물리, 지능→아츠 저항 = 1 − 1/(0.001×스탯+1). 4스탯을 gearGrade로 통합 치환,
 // gearGrade(명함 ~60)를 실제 스탯 스케일로 복원(×10)해 원본 오퍼레이터 내구(≈37.5%) 재현. 좋은 장비=높은 저항.
 export const allyResistFromGear = (gearGrade: number) => +(1 - 1 / (0.001 * gearGrade * 10 + 1)).toFixed(3);

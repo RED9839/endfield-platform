@@ -3,7 +3,7 @@
 import { useEffect, useReducer, useRef, useState } from "react";
 
 import { act, canAct, isOver, startRound, turnOrder, type DDClass, type DDSkill, type DDState, type DDUnit, type Element } from "../combat";
-import { OPERATORS, enemyDefFor } from "../roster";
+import { OPERATORS, enemyDefFor, avatarUrl } from "../roster";
 import { ENCOUNTERS, allyChoose, createBattle, enemyAct, usableSkills, regionEncounter } from "../sim";
 import { activeSets } from "../gear";
 import { weaponOf, weaponEffectText, WEAPON_KO, WEAPON_ICON } from "../weapons";
@@ -201,7 +201,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
           <div className="hidden items-center gap-1 md:flex" title="이번 라운드 행동 순서">
             <span className="font-mono text-[11px] uppercase tracking-wider text-ef-muted">순서</span>
             {upcoming.map((u, i) => (
-              <span key={`${u.id}-${i}`} className="h-6 w-6 shrink-0 border" style={{ borderColor: fx.activeId === u.id ? "#e8c56a" : u.side === "ally" ? "#3c2c1a" : "#5a2420", background: u.side === "ally" ? `center/cover url(/operators/${u.id}/avatar.webp)` : "#2a1210", opacity: i === 0 ? 1 : 0.55, clipPath: "polygon(50% 0,100% 50%,50% 100%,0 50%)" }} />
+              <span key={`${u.id}-${i}`} className="h-6 w-6 shrink-0 border" style={{ borderColor: fx.activeId === u.id ? "#e8c56a" : u.side === "ally" ? "#3c2c1a" : "#5a2420", background: u.side === "ally" ? `center/cover url(${avatarUrl(u.id)})` : "#2a1210", opacity: i === 0 ? 1 : 0.55, clipPath: "polygon(50% 0,100% 50%,50% 100%,0 50%)" }} />
             ))}
           </div>
         )}
@@ -277,7 +277,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
                 <div className={`relative border p-2 transition ${dead ? "border-ef-line/40 opacity-40 grayscale" : isCur ? "border-ef-accent bg-ef-accent/10" : "border-ef-line bg-[#150e08]"} ${isAct && !dead ? "dd-active" : ""}`} style={CUT_SM}>
                   <div className="mb-1.5 flex gap-2">
                     {/* 초상 */}
-                    <div className="relative h-16 w-16 shrink-0 border border-ef-line" style={{ background: `center top/cover url(/operators/${a.id}/avatar.webp), #0d0906`, boxShadow: `inset 0 0 0 1px ${elementColor[el]}55` }}>
+                    <div className="relative h-16 w-16 shrink-0 border border-ef-line" style={{ background: `center top/cover url(${avatarUrl(a.id)}), #0d0906`, boxShadow: `inset 0 0 0 1px ${elementColor[el]}55` }}>
                       <span className="absolute inset-x-0 bottom-0 h-1" style={{ background: elementColor[el] }} />
                       {dead && <span className="absolute inset-0 flex items-center justify-center text-2xl">💀</span>}
                       {isCur && <span className="absolute -right-1 -top-1 font-mono text-[11px] font-bold text-ef-accent">▶</span>}

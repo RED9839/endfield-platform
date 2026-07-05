@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { OPERATORS, type OpMeta } from "../roster";
+import { OPERATORS, avatarUrl, type OpMeta } from "../roster";
 import { GEAR_SLOTS, SET_NAMES, activeSets, gearSlotName, setEffectText, recommendedSet, recommendedLoadout, GEAR_PIECE_BY_ID, type GearSlot, type Loadout } from "../gear";
 import { DEFAULT_PROGRESS, PROMO_MAX, SKILL_MAX, GEAR_MAX, PROMO_LABEL, skillLabel, gearLabel, clampProgress, type OpProgress } from "../progress";
 import { weaponOf, weaponName, weaponEffectText, OP_WEAPON_STATS, WEAPON_KO, WEAPON_ICON } from "../weapons";
@@ -113,7 +113,7 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
               <div key={id} className="border border-ef-accent/40 bg-ef-accent/5 p-2.5" style={CUT_SM}>
                 <div className="mb-2 flex items-center gap-1.5">
                   <b className="font-mono text-xs text-ef-accent">{i + 1}</b>
-                  <span className="h-2.5 w-2.5 shrink-0" style={{ background: elementColor[op.element] }} />
+                  <img src={avatarUrl(op.id)} alt="" loading="lazy" className="h-8 w-8 shrink-0 border object-cover" style={{ borderColor: elementColor[op.element], background: "#000" }} />
                   <span className="font-mono text-sm font-bold text-white">{op.name}</span>
                   <span className="font-mono text-[11px] uppercase text-ef-muted">{classLabel[op.cls]}</span>
                   <button type="button" onClick={() => toggle(id)} className="ml-auto font-mono text-[12px] text-ef-muted hover:text-red-300">해제</button>
@@ -182,8 +182,8 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
               {ops.map((op: OpMeta) => {
                 const on = selected.includes(op.id);
                 return (
-                  <button key={op.id} type="button" onClick={() => toggle(op.id)} className={`flex items-center gap-2 border px-2.5 py-2 text-left transition ${on ? "border-ef-accent/70 bg-ef-accent/10" : "border-ef-line bg-ef-card hover:border-ef-line/80"}`} style={CUT_SM}>
-                    <span className="h-2.5 w-2.5 shrink-0" style={{ background: elementColor[op.element] }} />
+                  <button key={op.id} type="button" onClick={() => toggle(op.id)} className={`flex items-center gap-2 border px-2 py-1.5 text-left transition ${on ? "border-ef-accent/70 bg-ef-accent/10" : "border-ef-line bg-ef-card hover:border-ef-line/80"}`} style={CUT_SM}>
+                    <img src={avatarUrl(op.id)} alt="" loading="lazy" className="h-9 w-9 shrink-0 border object-cover" style={{ borderColor: elementColor[op.element], background: "#000" }} />
                     <span className="min-w-0">
                       <span className="block truncate font-mono text-sm font-bold text-white">{op.name}</span>
                       <span className="block font-mono text-[11px] uppercase tracking-wider text-ef-muted">{elementName[op.element]}</span>
