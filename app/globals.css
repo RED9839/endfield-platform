@@ -319,109 +319,95 @@ input[type="checkbox"] {
    DD 화면 전체가 토치 불빛·고문서·낡은 청동 톤으로 리스킨(플랫폼 나머지는 무영향).
 ========================= */
 :root {
-  --dd-display: "Cinzel", "Trajan Pro", "Bookman Old Style", Georgia, serif;
-  --dd-body: "EB Garamond", "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+  --dd-display: "Chakra Petch", "Rajdhani", system-ui, sans-serif;
+  --dd-body: "Chakra Petch", system-ui, -apple-system, sans-serif;
+  --dd-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
 }
 
 .dd-realm {
-  /* 팔레트 — 어둠·토치·핏빛·낡은 금 */
-  --color-ef-bg: #0a0705;
-  --color-ef-card: #150e08;
-  --color-ef-card2: #1e140b;
-  --color-ef-line: #3c2c1a;
-  --color-ef-primary: #c9822c;
-  --color-ef-accent: #cf9f3e;
-  --color-ef-accent-soft: #e8c56a;
-  --color-ef-ink: #e7d7b6;
-  --color-ef-muted: #93805c;
-  --color-ef-danger: #b3312a;
-  --color-ef-success: #7c8a3a;
+  /* 팔레트 — 엔드필드: 클린 다크 뉴트럴 + 시그니처 앰버 오렌지 */
+  --color-ef-bg: #070708;
+  --color-ef-card: #0e0e10;
+  --color-ef-card2: #16161a;
+  --color-ef-line: #262629;
+  --color-ef-primary: #ff9a2f;
+  --color-ef-accent: #ff9a2f;
+  --color-ef-accent-soft: #ffbe6b;
+  --color-ef-ink: #f1f2f4;
+  --color-ef-muted: #85858e;
+  --color-ef-danger: #e5484d;
+  --color-ef-success: #58d3a0;
 
   position: relative;
   isolation: isolate;
   font-family: var(--dd-body);
   color: var(--color-ef-ink);
-  background-color: #0a0705;
+  background-color: #070708;
   background-image:
-    radial-gradient(115% 75% at 50% -8%, rgba(201, 122, 44, 0.18), transparent 55%),
-    radial-gradient(55% 45% at 12% 18%, rgba(176, 88, 30, 0.10), transparent 60%),
-    radial-gradient(55% 45% at 88% 26%, rgba(120, 58, 20, 0.08), transparent 60%),
-    linear-gradient(180deg, #0c0806, #070504);
+    radial-gradient(120% 60% at 50% -12%, rgba(255, 154, 47, 0.10), transparent 60%),
+    linear-gradient(180deg, #09090b, #050506);
 }
 
-/* 어두운 비네트 — 던전 가장자리 어둠 */
+/* 미세 테크니컬 그리드 — 엔드필드 HUD 느낌(아주 은은하게, 상단에서 페이드) */
 .dd-realm::before {
   content: "";
   position: fixed;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  background: radial-gradient(125% 90% at 50% 38%, transparent 42%, rgba(0, 0, 0, 0.62) 100%);
-  mix-blend-mode: multiply;
+  opacity: 0.5;
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.016) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.016) 1px, transparent 1px);
+  background-size: 46px 46px;
+  -webkit-mask-image: radial-gradient(130% 100% at 50% 0%, #000 35%, transparent 100%);
+  mask-image: radial-gradient(130% 100% at 50% 0%, #000 35%, transparent 100%);
 }
-/* 필름 그레인 — 낡은 질감 */
-.dd-realm::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  opacity: 0.05;
-  mix-blend-mode: overlay;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-}
+.dd-realm::after { content: none; }
 .dd-realm > * { position: relative; z-index: 1; }
 
-/* 고문서 세리프 — mono 표기를 우아한 세리프로(숫자 포함, 닼던 감성) */
+/* 테크니컬 모노 — 라벨·수치는 탭ular 모노로(엔드필드 HUD) */
 .dd-realm .font-mono {
-  font-family: var(--dd-body);
-  font-feature-settings: "onum" 1, "kern" 1;
+  font-family: var(--dd-mono);
+  font-feature-settings: "tnum" 1, "kern" 1;
+  letter-spacing: -0.01em;
 }
-/* 순백 → 고문서 크림(리얼름 내 코어 흰색 눅이기) */
-.dd-realm .text-white { color: #ecdfc2; }
-/* 각인체 대문자 타이틀 */
+.dd-realm .text-white { color: #f4f5f7; }
+/* 클린 대문자 타이틀 */
 .dd-realm h1,
 .dd-realm h2,
 .dd-realm .dd-title {
   font-family: var(--dd-display) !important;
   font-weight: 700;
-  letter-spacing: 0.14em;
-  color: var(--color-ef-accent-soft);
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.85), 0 1px 0 rgba(0, 0, 0, 0.9);
+  letter-spacing: 0.1em;
+  color: var(--color-ef-ink);
+  text-shadow: none;
 }
 
-/* 낡은 청동 액자 — 주요 패널 강조 */
+/* 클린 패널 — 얇은 라인 + 은은한 상단 하이라이트 */
 .dd-realm .dd-frame {
   border: 1px solid var(--color-ef-line);
   background:
-    linear-gradient(180deg, rgba(207, 159, 62, 0.05), transparent 24%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.022), transparent 28%),
     var(--color-ef-card);
-  box-shadow:
-    inset 0 0 0 1px rgba(0, 0, 0, 0.6),
-    inset 0 1px 0 rgba(207, 159, 62, 0.18),
-    0 10px 30px rgba(0, 0, 0, 0.55);
+  box-shadow: 0 12px 34px -16px rgba(0, 0, 0, 0.75);
 }
 /* 명패 — 제목 배경 */
 .dd-realm .dd-plaque {
-  background:
-    linear-gradient(180deg, rgba(201, 130, 44, 0.14), rgba(0, 0, 0, 0.35)),
-    #120c07;
+  background: linear-gradient(180deg, rgba(255, 154, 47, 0.08), transparent), #0e0e10;
   border: 1px solid var(--color-ef-line);
-  box-shadow: inset 0 1px 0 rgba(207, 159, 62, 0.25), 0 4px 16px rgba(0, 0, 0, 0.5);
 }
-/* 토치 광 강조 버튼 */
+/* 앰버 강조 버튼 */
 .dd-realm .dd-torch {
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5), 0 0 14px rgba(201, 122, 44, 0.35), inset 0 1px 0 rgba(255, 220, 150, 0.4);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35), 0 0 18px rgba(255, 154, 47, 0.32);
 }
-.dd-realm .dd-torch:hover { box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5), 0 0 22px rgba(207, 159, 62, 0.55), inset 0 1px 0 rgba(255, 230, 170, 0.55); }
+.dd-realm .dd-torch:hover { box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.35), 0 0 26px rgba(255, 154, 47, 0.5); }
 
-/* 헤더 — 토치 배너(금빛 하단 광) */
+/* 헤더 — 클린 앰버 하단선 */
 .dd-realm > header {
-  background-image: linear-gradient(180deg, rgba(201, 122, 44, 0.10), transparent 70%);
+  background-image: linear-gradient(180deg, rgba(255, 154, 47, 0.05), transparent 70%);
   border-bottom-color: transparent !important;
-  box-shadow:
-    0 1px 0 rgba(207, 159, 62, 0.28),
-    0 10px 26px -12px rgba(0, 0, 0, 0.85);
+  box-shadow: 0 10px 26px -18px rgba(0, 0, 0, 0.9);
 }
 .dd-realm > header::after {
   content: "";
@@ -430,7 +416,7 @@ input[type="checkbox"] {
   right: 0;
   bottom: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(207, 159, 62, 0.65) 20%, rgba(232, 197, 106, 0.9) 50%, rgba(207, 159, 62, 0.65) 80%, transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 154, 47, 0.5) 30%, rgba(255, 190, 107, 0.85) 50%, rgba(255, 154, 47, 0.5) 70%, transparent);
 }
 
 /* ===== 전투 연출 애니메이션(턴제 유지, 게임처럼) ===== */
@@ -445,8 +431,8 @@ input[type="checkbox"] {
 @keyframes dd-act-a { 0%,100% { transform: translateY(0) scale(1); } 45% { transform: translateY(-8px) scale(1.06); } }
 @keyframes dd-act-b { 0%,100% { transform: translateY(0) scale(1); } 45% { transform: translateY(-8px) scale(1.06); } }
 @keyframes dd-active-pulse {
-  0%,100% { box-shadow: 0 0 0 1px rgba(207,159,62,0.55), 0 0 12px rgba(207,159,62,0.3); }
-  50% { box-shadow: 0 0 0 2px rgba(232,197,106,0.95), 0 0 26px rgba(207,159,62,0.6); }
+  0%,100% { box-shadow: 0 0 0 1px rgba(255,154,47,0.5), 0 0 12px rgba(255,154,47,0.28); }
+  50% { box-shadow: 0 0 0 2px rgba(255,190,107,0.95), 0 0 26px rgba(255,154,47,0.55); }
 }
 @keyframes dd-cast-in {
   0% { opacity: 0; transform: translate(-50%, 8px); }
@@ -470,12 +456,13 @@ input[type="checkbox"] {
 .dd-cast { position: absolute; left: 50%; bottom: 100%; margin-bottom: 6px; transform: translateX(-50%); white-space: nowrap; z-index: 30; pointer-events: none; animation: dd-cast-in 1.05s ease-out forwards; }
 .dd-round { animation: dd-round-in 1.1s ease-out forwards; }
 
-/* 스크롤바 — 청동 */
-.dd-realm * { scrollbar-color: #8a6a2c #0a0705; }
+/* 스크롤바 — 뉴트럴 */
+.dd-realm * { scrollbar-color: #3a3a40 #0a0a0c; scrollbar-width: thin; }
 .dd-realm ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #a67c30, #6f5220);
-  box-shadow: 0 0 6px rgba(180, 130, 50, 0.5);
+  background: #34343a;
+  border-radius: 2px;
 }
+.dd-realm ::-webkit-scrollbar-thumb:hover { background: #45454c; }
 
 /* =========================
    GAME SPRITES

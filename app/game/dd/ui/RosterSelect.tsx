@@ -10,7 +10,7 @@ import { PRESET_PARTIES, ARCHETYPE_LABEL } from "../parties";
 import type { PartyPick } from "../run";
 import type { DDClass, Element } from "../combat";
 
-const PRIMARY = "#c9822c";
+const PRIMARY = "#ff9a2f";
 const CUT_SM = { clipPath: "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))" };
 const elementColor: Record<"physical" | Element, string> = { physical: "#d4d4d8", heat: "#fb923c", electric: "#FBCB38", cryo: "#67e8f9", nature: "#86efac" };
 const elementName: Record<"physical" | Element, string> = { physical: "물리", heat: "열기", electric: "전기", cryo: "냉기", nature: "자연" };

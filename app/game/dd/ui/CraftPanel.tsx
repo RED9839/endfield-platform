@@ -9,7 +9,7 @@ import { OPERATORS } from "../roster";
 import type { PartyMember } from "../run";
 
 const CUT = { clipPath: "polygon(0 0, calc(100% - 7px) 0, 100% 7px, 100% 100%, 7px 100%, 0 calc(100% - 7px))" };
-const PRIMARY = "#c9822c";
+const PRIMARY = "#ff9a2f";
 const DMG_KO: Record<string, string> = { ult: "궁극 피해", battle: "배틀 피해", link: "연계 피해", attack: "일반 피해", all: "물리 피해", elem: "원소 피해", atkPct: "공격력", hpPct: "생명력", critRate: "치명 확률", critDmg: "치명 피해", energy: "궁충 효율" };
 const dmgText = (p: GearPiece) => { if (!p.dmg) return ""; const pct = ["hpPct"].includes(p.dmg.kind) || p.dmg.base < 1; return `${DMG_KO[p.dmg.kind] ?? p.dmg.kind} +${pct ? Math.round(p.dmg.base * 100) + "%" : Math.round(p.dmg.base)}`; };
 

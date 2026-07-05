@@ -12,7 +12,7 @@ import RunHud from "./dd/ui/RunHud";
 import CraftPanel from "./dd/ui/CraftPanel";
 import type { Element } from "./dd/combat";
 
-const PRIMARY = "#c9822c";
+const PRIMARY = "#ff9a2f";
 const CUT_SM = { clipPath: "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))" };
 const elementColor: Record<"physical" | Element, string> = { physical: "#d4d4d8", heat: "#fb923c", electric: "#FBCB38", cryo: "#67e8f9", nature: "#86efac" };
 
@@ -93,9 +93,9 @@ export default function GamePage() {
 
       {(run.phase === "victory" || run.phase === "defeat") && (
         <div className="mx-auto max-w-[720px] px-4 py-16 text-center sm:px-7">
-          <div className="dd-frame p-10" style={{ ...CUT_SM, borderColor: run.phase === "victory" ? "#cf9f3e66" : "#b3312a66" }}>
-            <div className="mb-2 text-4xl" style={{ fontFamily: "var(--dd-display)", letterSpacing: "0.18em", color: run.phase === "victory" ? "#e8c56a" : "#c23b32", textShadow: "0 2px 12px rgba(0,0,0,0.9)" }}>{run.phase === "victory" ? "원정 성공" : "원정 실패"}</div>
-            <p className="mb-6 text-base italic text-ef-muted">{run.phase === "victory" ? "던전 심층의 공포를 몰아냈다. 부대가 어둠을 뚫고 귀환한다." : "부대가 던전의 어둠 속으로 사라졌다."}</p>
+          <div className="dd-frame p-10" style={{ ...CUT_SM, borderColor: run.phase === "victory" ? "#ff9a2f66" : "#b3312a66" }}>
+            <div className="mb-2 text-4xl font-bold" style={{ fontFamily: "var(--dd-display)", letterSpacing: "0.14em", color: run.phase === "victory" ? "#ffbe6b" : "#e5484d" }}>{run.phase === "victory" ? "원정 성공" : "원정 실패"}</div>
+            <p className="mb-6 text-base text-ef-muted">{run.phase === "victory" ? "던전 심층의 공포를 몰아냈다. 부대가 어둠을 뚫고 귀환한다." : "부대가 던전의 어둠 속으로 사라졌다."}</p>
             <button type="button" onClick={run.restart} className="dd-torch border border-ef-line px-6 py-2.5 font-mono text-sm font-bold uppercase tracking-wider transition hover:border-ef-accent/50" style={{ ...CUT_SM, background: PRIMARY, color: "#0a0a0a" }}>새 원정 →</button>
           </div>
         </div>

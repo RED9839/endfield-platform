@@ -10,7 +10,7 @@ import { weaponOf, weaponEffectText, WEAPON_KO, WEAPON_ICON } from "../weapons";
 import { ITEMS, useItem as applyItem, canUseItem, condText, itemColor } from "../items";
 import type { BattleResult, NodeKind, PartyMember } from "../run";
 
-const PRIMARY = "#c9822c";
+const PRIMARY = "#ff9a2f";
 const CUT_SM = { clipPath: "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))" };
 const elementColor: Record<"physical" | Element, string> = { physical: "#d4d4d8", heat: "#fb923c", electric: "#FBCB38", cryo: "#67e8f9", nature: "#86efac" };
 const elementName: Record<"physical" | Element, string> = { physical: "물리", heat: "열기", electric: "전기", cryo: "냉기", nature: "자연" };
@@ -215,7 +215,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
       )}
 
       {winner && (
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 dd-frame px-4 py-3" style={{ ...CUT_SM, borderColor: winner === "ally" ? "#cf9f3e66" : "#b3312a66" }}>
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 dd-frame px-4 py-3" style={{ ...CUT_SM, borderColor: winner === "ally" ? "#ff9a2f66" : "#b3312a66" }}>
           <span className="text-2xl" style={{ fontFamily: "var(--dd-display)", letterSpacing: "0.16em", color: winner === "ally" ? "#e8c56a" : "#c23b32", textShadow: "0 2px 10px rgba(0,0,0,0.9)" }}>{winner === "ally" ? (nodeKind === "boss" ? "던전 클리어" : "교전 승리") : "부대 전멸"}</span>
           <button type="button" onClick={() => onEnd(winner, allies.map((a) => ({ id: a.id, hp: a.hp })))} className="dd-torch border border-ef-line px-4 py-2 font-mono text-sm font-bold uppercase tracking-wider transition hover:border-ef-accent/50" style={{ ...CUT_SM, background: PRIMARY, color: "#0a0a0a" }}>계속 →</button>
         </div>
