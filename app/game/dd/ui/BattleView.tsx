@@ -6,6 +6,7 @@ import { act, canAct, isOver, startRound, turnOrder, type DDClass, type DDSkill,
 import { OPERATORS, enemyDefFor } from "../roster";
 import { ENCOUNTERS, allyChoose, createBattle, enemyAct, usableSkills, regionEncounter } from "../sim";
 import { activeSets } from "../gear";
+import { weaponOf, weaponEffectText, WEAPON_KO, WEAPON_ICON } from "../weapons";
 import { ITEMS, useItem as applyItem, canUseItem, condText, itemColor } from "../items";
 import type { BattleResult, NodeKind, PartyMember } from "../run";
 
@@ -284,6 +285,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1">
                         <span className="truncate font-mono text-sm font-bold text-white">{a.name}</span>
+                        {weaponOf(a.id) && <span className="text-[11px] leading-none" title={`${WEAPON_KO[weaponOf(a.id)!]} · ${weaponEffectText(a.id)}`}>{WEAPON_ICON[weaponOf(a.id)!]}</span>}
                         {op && <span className="font-mono text-[8px] uppercase text-ef-muted">{classLabel[op.cls]}</span>}
                       </div>
                       <div className="mt-0.5 flex justify-between font-mono text-[9px] text-ef-muted"><span>HP</span><span>{Math.max(0, a.hp)}/{a.maxHp}</span></div>

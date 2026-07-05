@@ -3,7 +3,7 @@
 // 효과는 기존 전투 메커니즘(강타/갑옷파괴=불균형, 부착=아츠, 감전/부식/동결, 치명, 궁충)과 연동.
 // namu.wiki 장비 문서 3.1 캐논 효과 반영. 개별 부위 스탯은 gearGrade로 추상화(카드게임과 동일 방침).
 import type { DDUnit, Element, GearBonus } from "./combat";
-import { ELEMENTS } from "./combat";
+import { ELEMENTS, attrResists } from "./combat";
 import gearPiecesData from "./data/gear-pieces.json";
 
 export type GearSlot = "armor" | "gloves" | "kit";
@@ -30,6 +30,8 @@ export type SetEffect =
   | { type: "atkPct"; pct: number }                                 // 공격력 % 보너스(공식 1.1: 공격력×(1+공격력%))
   | { type: "hp"; v: number }                                       // 생명력 능력치(식양의 숨결 +1000 등 실측)
   | { type: "def"; v: number }                                      // 방어력 능력치(방어형 세트 옵션, mitigate에 작용)
+  | { type: "artsStr"; v: number }                                  // 오리지늄 아츠 강도(열작업/펄스 +30) — 물리/아츠 이상 피해 ×(1+강도/100)
+  | { type: "linkCd"; pct: number }                                 // 연계 스킬 쿨타임 감소(청파/개척 +15%)
   | { type: "trigger"; desc: string };                              // 조건부 발동(원작 그대로) — 실제 적용은 combat.ts gearTrigger가 세트명으로 처리
 
 // 밸런스: 2부위 = 강력한 조건부 1개(15~25%) 또는 중간 2개. 카드게임 밸런스 계승.
@@ -37,14 +39,14 @@ export const GEAR_SETS: Record<string, SetEffect[]> = {
   // ── Lv70 세트(namu 3.1 원문 그대로) — 상시 스탯 + 조건부 발동(combat.ts gearTrigger가 세트명으로 실행) ──
   "고검의 잔향": [{ type: "atkPct", pct: 0.08 }, { type: "trigger", desc: "강타·갑옷파괴 시 물리 +6%×소모 스택(취약·불균형·결정 시 강화)" }],
   "식양의 흐름": [{ type: "atkPct", pct: 0.10 }, { type: "trigger", desc: "감전·부식 소모 시 전기·자연 +15%(최대 3스택, 25초)" }],
-  "청파": [{ type: "trigger", desc: "연계 후 모든 스킬 피해 +20%(최대 2스택, 15초)" }], // 상시: 연계 쿨감 +15%(엔진 미모델)
+  "청파": [{ type: "linkCd", pct: 0.15 }, { type: "trigger", desc: "연계 후 모든 스킬 피해 +20%(최대 2스택, 15초)" }],
   "식양의 숨결": [{ type: "hp", v: 1000 }, { type: "trigger", desc: "증폭·비호·취약·허약 부여 후 팀 피해 +16%(15초)" }],
   "조류의 물결": [{ type: "kindDmg", kind: "all", pct: 0.20 }, { type: "trigger", desc: "2스택+ 아츠 부착 후 아츠 피해 +35%(15초)" }],
   "응룡 50식": [{ type: "atkPct", pct: 0.15 }, { type: "trigger", desc: "팀 배틀 시 다음 연계 피해 +20%(최대 3스택)" }],
   "M. I. 경찰용": [{ type: "critRate", v: 0.05 }, { type: "trigger", desc: "치명 후 공격력 +5%(최대 5스택), 최대 시 치확 +5%" }],
-  "열 작업용": [{ type: "trigger", desc: "연소 후 열기 +50%(10초)" }, { type: "trigger", desc: "부식 후 자연 +50%(10초)" }], // 상시: 오리지늄 아츠 강도 +30
-  "개척": [{ type: "kindDmg", kind: "all", pct: 0.16 }, { type: "trigger", desc: "게이지 회복 후 팀 전체 피해 +16%(15초)" }], // 상시: 연계 쿨감 +15% · 팀 버프를 자기 피해로 근사
-  "펄스식": [{ type: "trigger", desc: "감전 후 전기 +50%(10초)" }, { type: "trigger", desc: "동결 후 냉기 +50%(10초)" }], // 상시: 오리지늄 아츠 강도 +30
+  "열 작업용": [{ type: "artsStr", v: 30 }, { type: "trigger", desc: "연소 후 열기 +50%(10초)" }, { type: "trigger", desc: "부식 후 자연 +50%(10초)" }],
+  "개척": [{ type: "linkCd", pct: 0.15 }, { type: "kindDmg", kind: "all", pct: 0.16 }, { type: "trigger", desc: "게이지 회복 후 팀 전체 피해 +16%(15초)" }], // kindDmg = 조건부 팀 버프 근사
+  "펄스식": [{ type: "artsStr", v: 30 }, { type: "trigger", desc: "감전 후 전기 +50%(10초)" }, { type: "trigger", desc: "동결 후 냉기 +50%(10초)" }],
   "본 크러셔": [{ type: "atkPct", pct: 0.15 }, { type: "trigger", desc: "연계 후 다음 배틀 피해 +30%(최대 2스택)" }],
   "경량 초자연": [{ type: "atkPct", pct: 0.08 }, { type: "trigger", desc: "방어 불능 부여 후 물리 +8%(최대 4스택), 4스택 시 추가 +16%" }],
   "생체 보조": [{ type: "startHeal", v: 0.20 }, { type: "trigger", desc: "치유 시 대상 받는 피해 -15%(초과 치유 시 -30%)" }], // 상시: 치유 효율 +20%
@@ -74,6 +76,8 @@ export function effectText(e: SetEffect): string {
     case "startShield": return `전투 시작 보호막 +${Math.round(e.v * 100)}%`;
     case "startHeal": return `전투 시작 회복 +${Math.round(e.v * 100)}%`;
     case "startEnergy": return `전투 시작 게이지 +${e.v}`;
+    case "artsStr": return `오리지늄 아츠 강도 +${e.v}`;
+    case "linkCd": return `연계 쿨타임 -${Math.round(e.pct * 100)}%`;
     case "breakEnergy": return "불균형 돌파 시 궁 충전";
     case "stagger": return `불균형 누적 +${Math.round(e.pct * 100)}%`;
     case "selfHpDmg": return `고체력 시 ${e.dmgType === "physical" ? "물리" : "아츠"} 피해 +${Math.round(e.pct * 100)}%`;
@@ -228,7 +232,7 @@ export function applyGear(u: DDUnit, loadout: Loadout | undefined, gearLevel = 0
       else g.kindDmg[k] = (g.kindDmg[k] ?? 0) + v; // ult/battle/link/attack
     }
   }
-  if (gradeAdd > 0) { u.gearGrade += Math.round(gradeAdd); const rv = +(1 - 1 / (0.01 * u.gearGrade + 1)).toFixed(3); u.resist = { physical: rv, heat: rv, electric: rv, cryo: rv, nature: rv }; } // 실측 능력치 → 저항 재계산
+  if (gradeAdd > 0) { u.gearGrade += Math.round(gradeAdd); u.resist = attrResists(u.gearGrade, u.attrs); } // 장비 능력치 → 저항 재계산(민첩→물리·지능→아츠 편향 유지)
   const sets = activeSets(loadout);
   if (sets.length) u.gearSets = sets; // 조건부 발동 세트(연소 후 열기+ 등) — combat.ts가 트리거 시 참조
   let shieldPct = 0, healPct = 0;
@@ -250,6 +254,8 @@ export function applyGear(u: DDUnit, loadout: Loadout | undefined, gearLevel = 0
       case "startShield": shieldPct += e.v; break;
       case "startHeal": healPct += e.v; break;
       case "startEnergy": startEnergy += e.v; break;
+      case "artsStr": u.artsStr = (u.artsStr || 0) + e.v; break;               // 오리지늄 아츠 강도 → 이상 피해 강화
+      case "linkCd": u.linkCdMul = (u.linkCdMul ?? 1) * (1 - e.pct); break;    // 연계 쿨감
       case "trigger": break; // 조건부 발동 — combat.ts gearTrigger가 세트명으로 처리(u.gearSets)
     }
   }

@@ -1,6 +1,6 @@
 // ===== DD류 물리 4인 + 적 정의 (프로토타입) =====
 // 스킬은 위키 매핑. 사용 요구(requires)가 카드 모델에서 깨지던 "연계 조건"을 DD류에선 자연 흡수.
-import { bumpVuln, vulnFor, setTimer, applyBuff, ELEMENTS, type DDClass, type DDSkill, type DDUnit, type Element } from "./combat";
+import { bumpVuln, vulnFor, setTimer, applyBuff, ELEMENTS, attrResists, ATTR_AVG, type DDClass, type DDSkill, type DDUnit, type Element } from "./combat";
 import { promoMult, skillMult, skillUtilMult, DEFAULT_PROGRESS, type OpProgress } from "./progress";
 
 export const SKILLS: Record<string, DDSkill[]> = {
@@ -41,7 +41,7 @@ export const SKILLS: Record<string, DDSkill[]> = {
     { id: "adm-u", name: "폭격 시퀀스", kind: "ult", fromPos: [1, 2, 3, 4], target: "all", power: 3.56, element: "physical", staggerVal: 25, selfUlt: true, note: "광역 대량 물리 + 결정 파괴" },
   ],
   // 에스텔라: 냉기/가드. 냉기 부착 + 동결→쇄빙(강제 띄우기) + 물리취약 + 방불. 동결 파트너 의존(자체 동결 불가).
-  // 재능: 공감(쇄빙 시 게이지 반환 — 미구현) · 이유 있는 게으름(냉기 면역 — 미구현). 주스탯 의지.
+  // 재능: 공감(쇄빙 시 게이지 반환 +15, 엔진) · 이유 있는 게으름(냉기 부착 면역, 엔진 cryoImmune). 주스탯 의지.
   estella: [
     // 서스테인(배틀 150%, 불균형 10): 일직선 냉기 + 냉기 부착.
     { id: "est-b", name: "서스테인", kind: "battle", fromPos: [1, 2, 3], target: "row", power: 1.5, element: "cryo", attach: "cryo", staggerVal: 10, note: "일직선 냉기 + 냉기 부착" },
@@ -118,7 +118,7 @@ export const SKILLS: Record<string, DDSkill[]> = {
     { id: "ale-u", name: "월척이다!", kind: "ult", fromPos: [1, 2, 3], target: "all", power: 4.36, element: "cryo", staggerVal: 20, attach: "cryo", selfUlt: true, gaugeGain: 20, note: "광역 냉기 부착 + 게이지" },
   ],
   // 아크라이트: 전기/한손검 뱅가드(★5). 감전 소모 + 초단쿨(3초) 연계 게이지 수급 + 팀 전기 증폭(지능 비례, 근사).
-  // 재능: 황무지의 방랑자(질풍 3회 발동 시 팀 전기 피해↑ — 미구현 근사) · 만물의 지혜(아츠 부착 면역 — 미구현).
+  // 재능: 황무지의 방랑자(질풍 3회 발동 시 팀 전기 피해↑ — 근사) · 만물의 지혜(아츠 부착 50% 면역, 엔진 artsImmune).
   arclight: [
     // 질풍 섬광(배틀 45+45%, 불균형 10): 2회 베기. 감전 적이면 감전 소모 추가 전기(180%) + 게이지 30.
     { id: "arc-b", name: "질풍 섬광", kind: "battle", fromPos: [1, 2, 3], target: "single-front", power: 0.9, element: "physical", staggerVal: 10, shockBonus: { power: 1.8, gauge: 30 }, note: "감전 적이면 추가 전기 + 게이지 수급" },
@@ -129,7 +129,7 @@ export const SKILLS: Record<string, DDSkill[]> = {
     { id: "arc-u", name: "천둥번개", kind: "ult", fromPos: [1, 2, 3], target: "row", power: 4.0, element: "electric", staggerVal: 7, attach: "electric", forceShock: true, selfUlt: true, note: "전기 부착 + 강제 감전" },
   ],
   // 포그라니치니크: 물리/한손검 뱅가드(유일 6성 뱅가드). 갑옷 파괴(유일) + 스킬 게이지 수급 + 불균형 누적.
-  // 재능: 생존의 깃발(게이지 80 회복마다 사기 격양 — 미구현 근사) · 전술 지도. 자체 방불 부여는 궁뿐 → 팀 빌더 의존.
+  // 재능: 생존의 깃발(팀 게이지 80 회복마다 사기 격양=팀 공격력 +6%/3턴, 엔진 gaugeUp) · 전술 지도. 자체 방불 부여는 궁뿐 → 팀 빌더 의존.
   pogranichnik: [
     // 전선 분쇄(배틀 86+106%=192%, 불균형 10): 갑옷 파괴(유일) + 방불 소모량 비례 게이지 회복(5/10/20/30).
     { id: "pg-b", name: "전선 분쇄", kind: "battle", fromPos: [1, 2, 3], target: "row", power: 1.92, element: "physical", staggerVal: 10, anomaly: "armor-break", gaugeOnConsume: [5, 10, 20, 30], note: "갑옷 파괴 + 방불 소모 비례 게이지 회복" },
@@ -338,12 +338,12 @@ export const SKILLS: Record<string, DDSkill[]> = {
   ],
 };
 
-type Base = { id: string; name: string; cls: DDClass; hp: number; attack: number; speed: number; ultCost: number; rampAtk?: number; artsImmune?: number };
+type Base = { id: string; name: string; cls: DDClass; hp: number; attack: number; speed: number; ultCost: number; rampAtk?: number; artsImmune?: number; cryoImmune?: boolean };
 const OP_BASE: Record<string, Base> = {
   chenqianyu: { id: "chenqianyu", name: "진천우", cls: "guard", hp: 2689, attack: 95, speed: 86, ultCost: 70, rampAtk: 0.08 }, // 칼날 베기
   lifeng: { id: "lifeng", name: "여풍", cls: "guard", hp: 2689, attack: 110, speed: 69, ultCost: 90 },
   endministrator: { id: "endministrator", name: "관리자", cls: "guard", hp: 2689, attack: 110, speed: 69, ultCost: 80 }, // 위키: 가드(가드의 탈을 쓴 물리 스트라이커)
-  estella: { id: "estella", name: "에스텔라", cls: "guard", hp: 2689, attack: 110, speed: 47, ultCost: 70 }, // 냉기/가드, 주스탯 의지·민첩 낮음
+  estella: { id: "estella", name: "에스텔라", cls: "guard", hp: 2689, attack: 110, speed: 47, ultCost: 70, cryoImmune: true }, // 냉기/가드. 이유 있는 게으름=냉기 면역
   rossi: { id: "rossi", name: "로시", cls: "guard", hp: 2689, attack: 110, speed: 90, ultCost: 110 }, // 물리/열기 하이브리드, 민첩 90(최상위), 궁 게이지 110
   mifu: { id: "mifu", name: "미브", cls: "guard", hp: 2689, attack: 110, speed: 46, ultCost: 80 }, // 물리/양손검 가드(공식). 주스탯 힘·민첩 낮음
   arclight: { id: "arclight", name: "아크라이트", cls: "vanguard", hp: 2689, attack: 110, speed: 71, ultCost: 90, artsImmune: 0.5 }, // 전기 뱅가드★5. 만물의 지혜=아츠 부착 50% 확률 면역
@@ -404,6 +404,27 @@ const OP_ATTACK: Record<string, number> = {
   lastrite: 114, avywenna: 105, dapan: 108, laevatain: 117, yvonne: 118, zhuangfangyi: 122,
 };
 
+// 오퍼별 실제 능력치(endfield.wiki.gg Lv90 Elite max 실측). 힘→최대HP·민첩→물리저항·지능→아츠저항·의지→회복량.
+export type OpAttrs = { str: number; agi: number; int: number; wil: number };
+export const OP_ATTRS: Record<string, OpAttrs> = {
+  laevatain: { str: 121, agi: 99, int: 177, wil: 89 }, ember: { str: 176, agi: 96, int: 86, wil: 120 },
+  camu: { str: 102, agi: 160, int: 129, wil: 92 }, wulfgard: { str: 161, agi: 95, int: 92, wil: 111 },
+  yvonne: { str: 82, agi: 128, int: 176, wil: 105 }, lastrite: { str: 155, agi: 104, int: 93, wil: 109 },
+  zhuangfangyi: { str: 99, agi: 99, int: 123, wil: 184 }, avywenna: { str: 107, agi: 106, int: 110, wil: 148 },
+  endministrator: { str: 123, agi: 140, int: 96, wil: 107 }, lifeng: { str: 123, agi: 132, int: 115, wil: 117 },
+  mifu: { str: 173, agi: 92, int: 90, wil: 119 }, rossi: { str: 97, agi: 176, int: 118, wil: 89 },
+  chenqianyu: { str: 106, agi: 171, int: 85, wil: 93 }, estella: { str: 104, agi: 97, int: 110, wil: 151 },
+  snowshine: { str: 154, agi: 104, int: 93, wil: 108 }, catcher: { str: 176, agi: 96, int: 86, wil: 106 },
+  ardelia: { str: 112, agi: 93, int: 145, wil: 118 }, gilberta: { str: 89, agi: 92, int: 127, wil: 171 },
+  xaihi: { str: 89, agi: 91, int: 127, wil: 150 }, antal: { str: 129, agi: 86, int: 165, wil: 82 },
+  tangtang: { str: 123, agi: 179, int: 85, wil: 102 }, perlica: { str: 91, agi: 93, int: 161, wil: 113 },
+  fluorite: { str: 90, agi: 168, int: 114, wil: 91 }, dapan: { str: 175, agi: 96, int: 94, wil: 102 },
+  pogranichnik: { str: 101, agi: 110, int: 97, wil: 173 }, alesh: { str: 158, agi: 95, int: 125, wil: 89 },
+  arclight: { str: 107, agi: 145, int: 123, wil: 100 }, akekuri: { str: 110, agi: 140, int: 106, wil: 108 },
+};
+// 역할 기반 속도(턴 순서). 셋업 우선: 서포터·캐스터 → 뱅가드(게이지) → 스트라이커(딜) → 가드 → 디펜더(탱).
+const CLASS_SPEED: Record<DDClass, number> = { supporter: 72, caster: 68, vanguard: 66, striker: 60, guard: 56, defender: 46 };
+
 export function makeAlly(id: string, pos: number, progress: OpProgress = DEFAULT_PROGRESS): DDUnit {
   const b = OP_BASE[id];
   const pm = promoMult(progress.promotion); // 정예화 → 기초 스탯 배율
@@ -413,9 +434,12 @@ export function makeAlly(id: string, pos: number, progress: OpProgress = DEFAULT
   u.attack = Math.round((OP_ATTACK[id] ?? b.attack) * pm * skillMult(progress.skillRank)); // Lv90 기초 × 정예화 × 스킬랭크(랭크9=1.8). 모든 딜이 attack 비례 → 균일 스케일
   u.utilMult = skillUtilMult(progress.skillRank); // 스킬 단조 → 유틸(취약·증폭·회복·게이지·지속) 배율. 장비 능력치(gearGrade)는 applyGear가 세트 실측 부옵으로 처리
   u.opElement = (SKILLS[id] ?? []).find((s) => s.element && s.element !== "physical")?.element ?? "physical"; // 주력 속성(장비 부품 속성 피해)
-  const rv = allyResistFromGear(u.gearGrade);
-  u.resist = { physical: rv, heat: rv, electric: rv, cryo: rv, nature: rv }; // 민첩→물리·지능→아츠(gearGrade 통합)
+  u.speed = CLASS_SPEED[b.cls] ?? u.speed; // 역할 기반 속도: 셋업(서포터·캐스터)→뱅가드→딜러→탱커 순
+  u.attrs = OP_ATTRS[id]; // 실제 능력치(힘/민첩/지능/의지)
+  u.healRecv = u.attrs ? +(u.attrs.wil / ATTR_AVG).toFixed(2) : 1; // 의지 → 받는 회복량 배율
+  u.resist = attrResists(u.gearGrade, u.attrs); // 민첩→물리 저항·지능→아츠 저항(총량 gearGrade 유지)
   if (b.artsImmune) u.artsImmune = b.artsImmune; // 만물의 지혜(아크라이트): 아츠 부착 확률 면역
+  if (b.cryoImmune) u.cryoImmune = b.cryoImmune; // 이유 있는 게으름(에스텔라): 냉기 부착 면역
   return u;
 }
 
@@ -472,9 +496,9 @@ const TIER_STATS: Record<EnemyTier, { hp: number; attack: number; speed: number;
 };
 
 // 아군 저항(≈37.5%) 도입에 따른 적 공격 보정: 아군 실피해 유지(1/(1−저항)≈1.5). 원본 손맛(큰 raw→저항 경감).
-const ENEMY_ATK_COMP = 1.5;
+const ENEMY_ATK_COMP = 2.8;
 // 아군 스킬9(×1.8) + 풀 장비(오퍼별 실측 피스)로 파티 딜 상승 → 적 체력 ×2.5로 도전성 부여(보스전 클리어율 분산).
-const ENEMY_HP_COMP = 2.3;
+const ENEMY_HP_COMP = 2.65;
 
 export function makeEnemy(def: EnemyDef, pos: number): DDUnit {
   const b = TIER_STATS[def.tier];
