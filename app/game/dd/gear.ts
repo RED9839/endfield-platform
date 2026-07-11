@@ -32,6 +32,7 @@ export type SetEffect =
   | { type: "def"; v: number }                                      // 방어력 능력치(방어형 세트 옵션, mitigate에 작용)
   | { type: "artsStr"; v: number }                                  // 오리지늄 아츠 강도(열작업/펄스 +30) — 물리/아츠 이상 피해 ×(1+강도/100)
   | { type: "linkCd"; pct: number }                                 // 연계 스킬 쿨타임 감소(청파/개척 +15%)
+  | { type: "speed"; v: number }                                    // 속도(턴 순서) 부옵 — 빠른 세트가 선공 유리
   | { type: "trigger"; desc: string };                              // 조건부 발동(원작 그대로) — 실제 적용은 combat.ts gearTrigger가 세트명으로 처리
 
 // 밸런스: 2부위 = 강력한 조건부 1개(15~25%) 또는 중간 2개. 카드게임 밸런스 계승.
@@ -39,13 +40,13 @@ export const GEAR_SETS: Record<string, SetEffect[]> = {
   // ── 세트 2부위 — 상시 옵션 + 턴제 조건부 발동(combat.ts gearTrigger). 지속·쿨은 전부 턴 단위. ──
   "고검의 잔향": [{ type: "atkPct", pct: 0.08 }, { type: "trigger", desc: "강타·갑옷파괴 시 물리 피해 +6%/스택(최대 +24%, 2턴)" }],
   "식양의 흐름": [{ type: "atkPct", pct: 0.10 }, { type: "trigger", desc: "감전·부식 소모 시 전기·자연 피해 +15%/스택(최대 3스택, 5턴)" }],
-  "청파": [{ type: "linkCd", pct: 0.15 }, { type: "trigger", desc: "연계 후 모든 스킬 피해 +20%(최대 2스택, 2턴)" }],
+  "청파": [{ type: "linkCd", pct: 0.15 }, { type: "speed", v: 18 }, { type: "trigger", desc: "연계 후 모든 스킬 피해 +20%(최대 2스택, 2턴)" }],
   "식양의 숨결": [{ type: "hp", v: 1000 }, { type: "kindDmg", kind: "all", pct: 0.08 }], // 지원 세트: 생명력 + 상시 피해
   "조류의 물결": [{ type: "kindDmg", kind: "all", pct: 0.20 }, { type: "trigger", desc: "아츠 2부착 후 아츠 피해 +35%(2턴)" }],
   "응룡 50식": [{ type: "atkPct", pct: 0.15 }, { type: "trigger", desc: "배틀 후 다음 연계 피해 +20%(최대 3스택, 3턴)" }],
   "M. I. 경찰용": [{ type: "critRate", v: 0.05 }, { type: "atkPct", pct: 0.08 }], // 치명 스택 → 상시 공격력으로 환산
   "열 작업용": [{ type: "artsStr", v: 30 }, { type: "trigger", desc: "연소 후 열기 피해 +50%(2턴)" }, { type: "trigger", desc: "부식 후 자연 피해 +50%(2턴)" }],
-  "개척": [{ type: "linkCd", pct: 0.15 }, { type: "kindDmg", kind: "all", pct: 0.16 }],
+  "개척": [{ type: "linkCd", pct: 0.15 }, { type: "speed", v: 18 }, { type: "kindDmg", kind: "all", pct: 0.16 }],
   "펄스식": [{ type: "artsStr", v: 30 }, { type: "trigger", desc: "감전 후 전기 피해 +50%(2턴)" }, { type: "trigger", desc: "동결 후 냉기 피해 +50%(2턴)" }],
   "본 크러셔": [{ type: "atkPct", pct: 0.15 }, { type: "trigger", desc: "연계 후 다음 배틀 피해 +30%(2턴)" }],
   "경량 초자연": [{ type: "atkPct", pct: 0.08 }, { type: "trigger", desc: "방어 불능 부여 후 물리 피해 +16%/스택(최대 +48%, 2턴)" }],
@@ -78,6 +79,7 @@ export function effectText(e: SetEffect): string {
     case "startEnergy": return `전투 시작 게이지 +${e.v}`;
     case "artsStr": return `오리지늄 아츠 강도 +${e.v}`;
     case "linkCd": return `연계 쿨타임 -${Math.round(e.pct * 100)}%`;
+    case "speed": return `속도 +${e.v}`;
     case "breakEnergy": return "불균형 돌파 시 궁 충전";
     case "stagger": return `불균형 누적 +${Math.round(e.pct * 100)}%`;
     case "selfHpDmg": return `고체력 시 ${e.dmgType === "physical" ? "물리" : "아츠"} 피해 +${Math.round(e.pct * 100)}%`;
@@ -283,6 +285,7 @@ export function applyGear(u: DDUnit, loadout: Loadout | undefined, gearLevel = 0
       case "startEnergy": startEnergy += e.v; break;
       case "artsStr": u.artsStr = (u.artsStr || 0) + e.v; break;               // 오리지늄 아츠 강도 → 이상 피해 강화
       case "linkCd": u.linkCdMul = (u.linkCdMul ?? 1) * (1 - e.pct); break;    // 연계 쿨감
+      case "speed": u.speed += e.v; break;                                     // 속도 부옵 → 턴 순서 상승
       case "trigger": break; // 조건부 발동 — combat.ts gearTrigger가 세트명으로 처리(u.gearSets)
     }
   }
