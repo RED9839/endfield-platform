@@ -15,7 +15,7 @@ const CUT_SM = { clipPath: "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%
 const elementColor: Record<"physical" | Element, string> = { physical: "#d4d4d8", heat: "#fb923c", electric: "#FBCB38", cryo: "#67e8f9", nature: "#86efac" };
 const elementName: Record<"physical" | Element, string> = { physical: "물리", heat: "열기", electric: "전기", cryo: "냉기", nature: "자연" };
 const classLabel: Record<DDClass, string> = { guard: "가드", caster: "캐스터", striker: "스트라이커", vanguard: "뱅가드", defender: "디펜더", supporter: "서포터" };
-const kindLabel: Record<DDSkill["kind"], string> = { attack: "기본", battle: "배틀", link: "연계", ult: "궁극" };
+const kindLabel: Record<DDSkill["kind"], string> = { attack: "기본공격", battle: "배틀스킬", link: "연계스킬", ult: "궁극기" };
 const statusLabel: Record<string, string> = { stun: "기절", combustion: "연소", corrosion: "부식", crystal: "결정", "armor-break": "갑옷파괴", shock: "감전", wing: "날개" };
 const nodeTitle: Record<NodeKind, string> = { battle: "교전", elite: "정예 교전", boss: "보스 교전", rest: "야영" };
 
@@ -89,10 +89,10 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
   const queueRef = useRef<DDUnit[]>([]);
   const dmgRef = useRef<Record<string, number>>({}); // 아군별 누적 가한 피해(데미지 기록)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const autoRef = useRef(true); // 기본 자동(관전) — 연출을 보며 진행
+  const autoRef = useRef(false); // 기본 수동(전투 스킬 직접 선택). 자동은 토글.
   const speedRef = useRef(1);
   const fxTick = useRef(0);
-  const [auto, setAuto] = useState(true);
+  const [auto, setAuto] = useState(false);
   const [speed, setSpeed] = useState(1);
   const [current, setCurrent] = useState<DDUnit | null>(null);
   const [winner, setWinner] = useState<"ally" | "enemy" | null>(null);
@@ -194,44 +194,36 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
 
   return (
     <div className="dd-battle relative mx-auto max-w-[1500px] px-4 py-5 sm:px-7">
-      {/* 속도바 — 화면 왼쪽 세로 */}
-      {!winner && (
-        <div className="absolute left-1 top-1/2 z-30 flex -translate-y-1/2 flex-col items-center gap-1.5 border border-ef-line bg-ef-card/90 px-1.5 py-2.5 backdrop-blur-sm sm:left-2" style={CUT_SM}>
-          <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-ef-muted">속도</span>
-          {[3, 2, 1].map((n) => (
-            <button key={n} type="button" onClick={() => setSpeedTo(n)} className={`flex h-10 w-10 items-center justify-center border font-mono text-sm font-black transition ${speed === n ? "border-ef-accent/70 bg-ef-accent/20 text-ef-accent" : "border-ef-line bg-ef-card text-ef-muted hover:text-white"}`}>{n}배</button>
-          ))}
+      {/* 행동 순서 — 화면 왼쪽 세로 컬럼(엔필식 턴 오더) */}
+      {!winner && upcoming.length > 0 && (
+        <div className="absolute left-1 top-[68px] z-30 flex flex-col gap-1.5 sm:left-2">
+          <span className="mb-0.5 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-ef-muted">순서</span>
+          {upcoming.slice(0, 6).map((u, i) => {
+            const ally = u.side === "ally";
+            const nm = ally ? OPERATORS.find((o) => o.id === u.id)?.name ?? u.id : u.name;
+            const now = i === 0;
+            return (
+              <div key={`${u.id}-${i}`} className="flex items-center gap-1.5" title={`${i + 1}. ${nm}`}>
+                <span className={`relative shrink-0 border-2 ${now ? "h-12 w-12" : "h-9 w-9"}`} style={{ borderColor: now ? "#ffbe6b" : ally ? "#3c2c1a" : "#5a2420", background: ally ? `center/cover url(${avatarUrl(u.id)})` : "#3a1512", opacity: now ? 1 : 0.7, boxShadow: now ? "0 0 10px rgba(255,190,107,0.75)" : undefined }}>
+                  {!ally && <span className="absolute inset-0 flex items-center justify-center text-base font-bold text-red-300/90">✦</span>}
+                  <span className="absolute -bottom-1.5 -right-1.5 flex h-4 w-4 items-center justify-center border border-ef-line bg-black font-mono text-[10px] font-black" style={{ color: now ? "#ffbe6b" : "#a0a0a0" }}>{i + 1}</span>
+                </span>
+                {now && <span className="font-mono text-[11px] font-black uppercase tracking-wider text-ef-accent">지금</span>}
+              </div>
+            );
+          })}
         </div>
       )}
-      {/* 상단 바 — 교전 정보 · 게이지 · 자동 */}
+      {/* 상단 바 — 교전 정보 · 게이지 · 속도 · 자동 */}
       <div className="mb-2 flex flex-wrap items-center gap-3">
         <span className="border px-3 py-1.5 font-mono text-sm font-bold" style={{ ...CUT_SM, borderColor: nodeKind === "boss" ? "#b3312a88" : "#3c2c1a", color: nodeKind === "boss" ? "#e0655c" : "#ecdfc2", background: "#150e08" }}>{nodeTitle[nodeKind]} · 라운드 {s.round}</span>
         <div className="min-w-[180px] flex-1">
           <div className="mb-0.5 flex justify-between font-mono text-[12px] uppercase tracking-wider text-ef-muted"><span>스킬 게이지(공유)</span><span>{Math.round(s.skillGauge)}/{s.maxGauge}</span></div>
           <Bar value={s.skillGauge} max={s.maxGauge} color={PRIMARY} />
         </div>
+        {!winner && <button type="button" onClick={cycleSpeed} className="border border-ef-line bg-ef-card px-3 py-1.5 font-mono text-[13px] font-bold uppercase tracking-wider text-ef-muted transition hover:text-white" style={CUT_SM} title="재생 속도">{speed}배속</button>}
         {!winner && <button type="button" onClick={toggleAuto} className={`border px-3.5 py-1.5 font-mono text-[13px] font-bold uppercase tracking-wider transition ${auto ? "border-ef-accent/60 bg-ef-accent/15 text-ef-accent" : "border-ef-line bg-ef-card text-ef-muted hover:text-white"}`} style={CUT_SM}>{auto ? "자동 ON" : "수동"}</button>}
       </div>
-
-      {/* 행동 순서 타임라인 — 별도 행(잘 보이게) */}
-      {!winner && upcoming.length > 0 && (
-        <div className="mb-3 flex items-center gap-2 overflow-x-auto border border-ef-line bg-ef-card/40 px-3 py-2" style={CUT_SM}>
-          <span className="shrink-0 font-mono text-[12px] font-bold uppercase tracking-wider text-ef-muted">행동 순서</span>
-          {upcoming.map((u, i) => {
-            const ally = u.side === "ally";
-            const nm = ally ? OPERATORS.find((o) => o.id === u.id)?.name ?? u.id : u.name;
-            const now = i === 0;
-            return (
-              <div key={`${u.id}-${i}`} className="flex shrink-0 flex-col items-center gap-0.5" title={`${i + 1}. ${nm}`}>
-                <span className="relative h-9 w-9 border-2" style={{ borderColor: now ? "#ffbe6b" : ally ? "#3c2c1a" : "#5a2420", background: ally ? `center/cover url(${avatarUrl(u.id)})` : "#3a1512", opacity: now ? 1 : 0.65, clipPath: "polygon(50% 0,100% 50%,50% 100%,0 50%)", boxShadow: now ? "0 0 8px rgba(255,190,107,0.8)" : undefined }}>
-                  {!ally && <span className="absolute inset-0 flex items-center justify-center text-[13px] font-bold text-red-300/90">✦</span>}
-                </span>
-                <span className="max-w-[52px] truncate font-mono text-[10px]" style={{ color: now ? "#ffbe6b" : "#85858e" }}>{now ? "지금" : ally ? nm : "적"}</span>
-              </div>
-            );
-          })}
-        </div>
-      )}
 
       {/* 라운드 배너 */}
       {roundBanner && !winner && (
