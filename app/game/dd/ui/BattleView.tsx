@@ -194,24 +194,22 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
 
   return (
     <div className="dd-battle relative mx-auto max-w-[1500px] px-4 py-5 sm:px-7">
-      {/* 상단 바 — 교전 정보 · 게이지 · 속도/자동 */}
+      {/* 속도바 — 화면 왼쪽 세로 */}
+      {!winner && (
+        <div className="absolute left-1 top-1/2 z-30 flex -translate-y-1/2 flex-col items-center gap-1.5 border border-ef-line bg-ef-card/90 px-1.5 py-2.5 backdrop-blur-sm sm:left-2" style={CUT_SM}>
+          <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-ef-muted">속도</span>
+          {[3, 2, 1].map((n) => (
+            <button key={n} type="button" onClick={() => setSpeedTo(n)} className={`flex h-10 w-10 items-center justify-center border font-mono text-sm font-black transition ${speed === n ? "border-ef-accent/70 bg-ef-accent/20 text-ef-accent" : "border-ef-line bg-ef-card text-ef-muted hover:text-white"}`}>{n}배</button>
+          ))}
+        </div>
+      )}
+      {/* 상단 바 — 교전 정보 · 게이지 · 자동 */}
       <div className="mb-2 flex flex-wrap items-center gap-3">
         <span className="border px-3 py-1.5 font-mono text-sm font-bold" style={{ ...CUT_SM, borderColor: nodeKind === "boss" ? "#b3312a88" : "#3c2c1a", color: nodeKind === "boss" ? "#e0655c" : "#ecdfc2", background: "#150e08" }}>{nodeTitle[nodeKind]} · 라운드 {s.round}</span>
         <div className="min-w-[180px] flex-1">
           <div className="mb-0.5 flex justify-between font-mono text-[12px] uppercase tracking-wider text-ef-muted"><span>스킬 게이지(공유)</span><span>{Math.round(s.skillGauge)}/{s.maxGauge}</span></div>
           <Bar value={s.skillGauge} max={s.maxGauge} color={PRIMARY} />
         </div>
-        {/* 속도 세그먼트 */}
-        {!winner && (
-          <div className="flex items-center gap-1.5">
-            <span className="font-mono text-[12px] font-bold uppercase tracking-wider text-ef-muted">속도</span>
-            <div className="flex">
-              {[1, 2, 3].map((n) => (
-                <button key={n} type="button" onClick={() => setSpeedTo(n)} className={`border px-2.5 py-1.5 font-mono text-[13px] font-bold transition ${speed === n ? "border-ef-accent/70 bg-ef-accent/20 text-ef-accent" : "border-ef-line bg-ef-card text-ef-muted hover:text-white"} ${n > 1 ? "-ml-px" : ""}`}>{n}배</button>
-              ))}
-            </div>
-          </div>
-        )}
         {!winner && <button type="button" onClick={toggleAuto} className={`border px-3.5 py-1.5 font-mono text-[13px] font-bold uppercase tracking-wider transition ${auto ? "border-ef-accent/60 bg-ef-accent/15 text-ef-accent" : "border-ef-line bg-ef-card text-ef-muted hover:text-white"}`} style={CUT_SM}>{auto ? "자동 ON" : "수동"}</button>}
       </div>
 
