@@ -5,7 +5,7 @@ import { useCallback, useMemo, useState } from "react";
 import { makeAlly } from "./roster";
 import { type Loadout } from "./gear";
 import { rewardItemPool } from "./items";
-import { DEFAULT_PROGRESS, PROMO_MAX, PROMO_LABEL, type OpProgress } from "./progress";
+import type { OpProgress } from "./progress";
 import { initialCraft, craftPiece as doCraft, forgePiece as doForge, cloneCraft, type CraftState } from "./craft";
 import { FACTIONS, enemyDrop } from "./sim";
 
@@ -74,8 +74,7 @@ export function useDDRun() {
   const activeNode = activeId ? nodeMap[activeId] : null;
 
   const startRun = useCallback((picks: PartyPick[]) => {
-    // 정예화 0 시작 — 정예/보스 처치로 런 중 성장. 스킬 단조는 편성값 유지.
-    const p = picks.map((pick) => { const prog = { ...(pick.progress ?? DEFAULT_PROGRESS), promotion: 0 }; const u = makeAlly(pick.id, 1, prog); return { id: pick.id, hp: u.maxHp, maxHp: u.maxHp, loadout: pick.loadout, progress: prog }; });
+    const p = picks.map((pick) => { const u = makeAlly(pick.id, 1, pick.progress); return { id: pick.id, hp: u.maxHp, maxHp: u.maxHp, loadout: pick.loadout, progress: pick.progress }; });
     const map = genMap();
     setParty(p);
     setNodes(map);
@@ -105,9 +104,7 @@ export function useDDRun() {
   const finishBattle = useCallback((result: "ally" | "enemy", survivors: BattleResult[]) => {
     if (!activeNode) return;
     if (result === "ally") {
-      // 처치 시 전 부대 정예화 상승(일반 +1 · 정예/보스 +2, 최대 IV). 정예화 0 시작 → 던전 진행하며 성장.
-      const gain = activeNode.kind === "elite" || activeNode.kind === "boss" ? 2 : 1;
-      setParty((cur) => cur.map((m) => { const s = survivors.find((x) => x.id === m.id); const prog = m.progress ? { ...m.progress, promotion: Math.min(PROMO_MAX, m.progress.promotion + gain) } : m.progress; return { ...m, hp: s ? s.hp : 0, progress: prog }; }));
+      setParty((cur) => cur.map((m) => { const s = survivors.find((x) => x.id === m.id); return { ...m, hp: s ? s.hp : 0 }; }));
       const drop = enemyDrop(activeNode.kind, activeNode.depth, faction); // 세력·티어·깊이별 드랍테이블
       setCraft((c) => ({ ...c, mats: { parts: c.mats.parts + drop.parts, permits: c.mats.permits + drop.permits } })); // 제작 재료
       addItem(pickRand(drop.items)); // 소모품
