@@ -184,6 +184,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
   }
   function toggleAuto() { const n = !autoRef.current; autoRef.current = n; setAuto(n); if (n && current) { setCurrent(null); timerRef.current = setTimeout(step, 200); } }
   function cycleSpeed() { const n = speedRef.current >= 3 ? 1 : speedRef.current + 1; speedRef.current = n; setSpeed(n); }
+  function setSpeedTo(n: number) { speedRef.current = n; setSpeed(n); }
 
   const s = stateRef.current!;
   const allies = s.units.filter((u) => u.side === "ally");
@@ -193,31 +194,46 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
 
   return (
     <div className="dd-battle relative mx-auto max-w-[1500px] px-4 py-5 sm:px-7">
-      {/* 상단 바 — 교전 정보 · 게이지 · 배속/자동 */}
-      <div className="mb-3 flex flex-wrap items-center gap-3">
+      {/* 상단 바 — 교전 정보 · 게이지 · 속도/자동 */}
+      <div className="mb-2 flex flex-wrap items-center gap-3">
         <span className="border px-3 py-1.5 font-mono text-sm font-bold" style={{ ...CUT_SM, borderColor: nodeKind === "boss" ? "#b3312a88" : "#3c2c1a", color: nodeKind === "boss" ? "#e0655c" : "#ecdfc2", background: "#150e08" }}>{nodeTitle[nodeKind]} · 라운드 {s.round}</span>
         <div className="min-w-[180px] flex-1">
           <div className="mb-0.5 flex justify-between font-mono text-[12px] uppercase tracking-wider text-ef-muted"><span>스킬 게이지(공유)</span><span>{Math.round(s.skillGauge)}/{s.maxGauge}</span></div>
           <Bar value={s.skillGauge} max={s.maxGauge} color={PRIMARY} />
         </div>
-        {/* 턴 타임라인 */}
-        {!winner && upcoming.length > 0 && (
-          <div className="flex items-center gap-1" title="이번 라운드 행동 순서">
-            <span className="font-mono text-[12px] font-bold uppercase tracking-wider text-ef-muted">순서</span>
-            {upcoming.map((u, i) => {
-              const ally = u.side === "ally";
-              const nm = ally ? OPERATORS.find((o) => o.id === u.id)?.name ?? u.id : u.name;
-              return (
-                <span key={`${u.id}-${i}`} className="relative h-7 w-7 shrink-0 border" title={`${i + 1}. ${nm}`} style={{ borderColor: fx.activeId === u.id ? "#ffbe6b" : ally ? "#3c2c1a" : "#5a2420", background: ally ? `center/cover url(${avatarUrl(u.id)})` : "#3a1512", opacity: i === 0 ? 1 : 0.6, clipPath: "polygon(50% 0,100% 50%,50% 100%,0 50%)", boxShadow: fx.activeId === u.id ? "0 0 6px rgba(255,190,107,0.7)" : undefined }}>
-                  {!ally && <span className="absolute inset-0 flex items-center justify-center text-[11px] font-bold text-red-300/90">✦</span>}
-                </span>
-              );
-            })}
+        {/* 속도 세그먼트 */}
+        {!winner && (
+          <div className="flex items-center gap-1.5">
+            <span className="font-mono text-[12px] font-bold uppercase tracking-wider text-ef-muted">속도</span>
+            <div className="flex">
+              {[1, 2, 3].map((n) => (
+                <button key={n} type="button" onClick={() => setSpeedTo(n)} className={`border px-2.5 py-1.5 font-mono text-[13px] font-bold transition ${speed === n ? "border-ef-accent/70 bg-ef-accent/20 text-ef-accent" : "border-ef-line bg-ef-card text-ef-muted hover:text-white"} ${n > 1 ? "-ml-px" : ""}`}>{n}배</button>
+              ))}
+            </div>
           </div>
         )}
-        {!winner && <button type="button" onClick={cycleSpeed} className="border border-ef-line bg-ef-card px-2.5 py-1.5 font-mono text-xs font-bold uppercase tracking-wider text-ef-muted transition hover:text-white" style={CUT_SM}>{speed}배속</button>}
-        {!winner && <button type="button" onClick={toggleAuto} className={`border px-3 py-1.5 font-mono text-xs font-bold uppercase tracking-wider transition ${auto ? "border-ef-accent/60 bg-ef-accent/15 text-ef-accent" : "border-ef-line bg-ef-card text-ef-muted hover:text-white"}`} style={CUT_SM}>{auto ? "자동 ON" : "수동"}</button>}
+        {!winner && <button type="button" onClick={toggleAuto} className={`border px-3.5 py-1.5 font-mono text-[13px] font-bold uppercase tracking-wider transition ${auto ? "border-ef-accent/60 bg-ef-accent/15 text-ef-accent" : "border-ef-line bg-ef-card text-ef-muted hover:text-white"}`} style={CUT_SM}>{auto ? "자동 ON" : "수동"}</button>}
       </div>
+
+      {/* 행동 순서 타임라인 — 별도 행(잘 보이게) */}
+      {!winner && upcoming.length > 0 && (
+        <div className="mb-3 flex items-center gap-2 overflow-x-auto border border-ef-line bg-ef-card/40 px-3 py-2" style={CUT_SM}>
+          <span className="shrink-0 font-mono text-[12px] font-bold uppercase tracking-wider text-ef-muted">행동 순서</span>
+          {upcoming.map((u, i) => {
+            const ally = u.side === "ally";
+            const nm = ally ? OPERATORS.find((o) => o.id === u.id)?.name ?? u.id : u.name;
+            const now = i === 0;
+            return (
+              <div key={`${u.id}-${i}`} className="flex shrink-0 flex-col items-center gap-0.5" title={`${i + 1}. ${nm}`}>
+                <span className="relative h-9 w-9 border-2" style={{ borderColor: now ? "#ffbe6b" : ally ? "#3c2c1a" : "#5a2420", background: ally ? `center/cover url(${avatarUrl(u.id)})` : "#3a1512", opacity: now ? 1 : 0.65, clipPath: "polygon(50% 0,100% 50%,50% 100%,0 50%)", boxShadow: now ? "0 0 8px rgba(255,190,107,0.8)" : undefined }}>
+                  {!ally && <span className="absolute inset-0 flex items-center justify-center text-[13px] font-bold text-red-300/90">✦</span>}
+                </span>
+                <span className="max-w-[52px] truncate font-mono text-[10px]" style={{ color: now ? "#ffbe6b" : "#85858e" }}>{now ? "지금" : ally ? nm : "적"}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* 라운드 배너 */}
       {roundBanner && !winner && (
@@ -364,19 +380,20 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
               <button type="button" onClick={() => setShowLog((v) => !v)} className="ml-auto font-mono text-[12px] font-bold uppercase tracking-wider text-ef-muted transition hover:text-ef-ink">{showLog ? "▲ 접기" : "▼ 펼치기"}</button>
             </div>
             {showLog && tab === "dmg" && (
-              <div className="flex flex-col gap-1.5 border-t border-ef-line px-3 py-2.5">
+              <div className="flex flex-col gap-2 border-t border-ef-line px-3 py-3">
                 {dmgList.map((d, i) => (
-                  <div key={d.id} className="flex items-center gap-2">
-                    <span className="w-4 shrink-0 text-right font-mono text-[12px] font-bold text-ef-muted">{i + 1}</span>
-                    <img src={avatarUrl(d.id)} alt="" loading="lazy" className="h-6 w-6 shrink-0 border border-ef-line object-cover" style={{ background: "#000" }} />
-                    <span className="w-20 shrink-0 truncate font-mono text-[13px] font-bold text-white">{d.name}</span>
-                    <div className="relative h-4 flex-1 overflow-hidden border border-ef-line bg-black/50">
-                      <div className="h-full transition-all duration-300" style={{ width: `${(d.dmg / dmgMax) * 100}%`, background: elementColor[d.el] }} />
+                  <div key={d.id} className="flex items-center gap-2.5">
+                    <span className="w-5 shrink-0 text-right font-mono text-sm font-black" style={{ color: i === 0 ? "#ffbe6b" : "#85858e" }}>{i + 1}</span>
+                    <img src={avatarUrl(d.id)} alt="" loading="lazy" className="h-8 w-8 shrink-0 border object-cover" style={{ background: "#000", borderColor: i === 0 ? "#ffbe6b88" : "#262629" }} />
+                    <span className="w-24 shrink-0 truncate font-mono text-sm font-bold" style={{ color: i === 0 ? "#fff" : "#e8e8ea" }}>{d.name}</span>
+                    <div className="relative h-6 flex-1 overflow-hidden border border-ef-line bg-black/50">
+                      <div className="h-full transition-all duration-300" style={{ width: `${(d.dmg / dmgMax) * 100}%`, background: `linear-gradient(90deg, ${elementColor[d.el]}cc, ${elementColor[d.el]})` }} />
+                      <span className="absolute inset-y-0 right-2 flex items-center font-mono text-[12px] font-bold tabular-nums text-white" style={{ textShadow: "0 1px 3px #000" }}>{Math.round((d.dmg / dmgTotal) * 100)}%</span>
                     </div>
-                    <span className="w-28 shrink-0 text-right font-mono text-[13px] tabular-nums text-ef-ink">{d.dmg.toLocaleString()} <span className="text-ef-muted">({Math.round((d.dmg / dmgTotal) * 100)}%)</span></span>
+                    <span className="w-24 shrink-0 text-right font-mono text-[15px] font-bold tabular-nums text-ef-ink">{d.dmg.toLocaleString()}</span>
                   </div>
                 ))}
-                {dmgTotal <= 1 && <div className="py-2 text-center font-mono text-[12px] text-ef-muted">아직 가한 피해 없음</div>}
+                {dmgTotal <= 1 && <div className="py-3 text-center font-mono text-[13px] text-ef-muted">아직 가한 피해 없음</div>}
               </div>
             )}
             {showLog && tab === "log" && (
