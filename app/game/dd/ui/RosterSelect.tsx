@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { OPERATORS, avatarUrl, type OpMeta } from "../roster";
 import { activeSets, setEffectText, recommendedSet, recommendedLoadout, type Loadout } from "../gear";
-import { DEFAULT_PROGRESS, PROMO_MAX, SKILL_MAX, PROMO_LABEL, skillLabel, clampProgress, type OpProgress } from "../progress";
+import { DEFAULT_PROGRESS, SKILL_MAX, skillLabel, clampProgress, type OpProgress } from "../progress";
 import { weaponOf, weaponName, weaponEffectText, weaponImage, weaponSeriesName, weaponSeriesText, OP_WEAPON_STATS, WEAPON_KO, WEAPON_ICON } from "../weapons";
 import { PRESET_PARTIES, ARCHETYPE_LABEL } from "../parties";
 import type { PartyPick } from "../run";
@@ -20,9 +20,8 @@ const classOrder: DDClass[] = ["striker", "guard", "vanguard", "caster", "defend
 // 오퍼 추천 세트(시트 공략 기준, gear.ts OP_RECOMMENDED_SET) — 기본 로드아웃
 const recSet = (op: OpMeta): string => recommendedSet(op.id, op.cls, op.element);
 
-// 성장 2축 스테퍼(정예화·스킬 단조). 장비는 런에서 공업소 제작/단조 — 여기선 추천 빌드만 표시.
+// 스킬 단조만 편성에서 지정. 정예화는 런에서 정예/보스 처치로 성장(0 시작), 장비는 공업소 제작.
 const AXES = [
-  { key: "promotion" as const, name: "정예화", max: PROMO_MAX, fmt: (v: number) => PROMO_LABEL[v], tone: "#fbbf24" },
   { key: "skillRank" as const, name: "스킬 단조", max: SKILL_MAX, fmt: (v: number) => skillLabel(v), tone: "#67e8f9" },
 ];
 
@@ -134,7 +133,7 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
                   </div>
                 )}
 
-                {/* 성장 2축 — 정예화 · 스킬 단조 */}
+                {/* 성장 — 스킬 단조(편성 지정) + 정예화(런 성장 안내) */}
                 <div className="mb-2.5 grid grid-cols-2 gap-2">
                   {AXES.map((ax) => {
                     const v = pr[ax.key];
@@ -150,6 +149,12 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
                       </div>
                     );
                   })}
+                  {/* 정예화 — 런 중 성장(읽기용) */}
+                  <div className="border border-ef-line/60 bg-black/20 px-2 py-1.5" style={CUT_SM}>
+                    <div className="font-mono text-[12px] uppercase tracking-wider text-ef-muted">정예화</div>
+                    <div className="mt-1 font-mono text-[13px] font-bold text-amber-300/90">0 → IV 성장</div>
+                    <div className="mt-0.5 font-mono text-[11px] leading-tight text-ef-muted">정예·보스 처치 시 상승</div>
+                  </div>
                 </div>
 
                 {/* 추천 빌드(참고) — 장비는 맨몸 시작, 런에서 공업소 제작 */}

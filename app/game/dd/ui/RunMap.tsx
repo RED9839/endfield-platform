@@ -4,6 +4,7 @@ import { Swords, Skull, Tent, Crown } from "lucide-react";
 
 import { OPERATORS } from "../roster";
 import { ITEMS, itemColor, itemImage } from "../items";
+import { PROMO_LABEL } from "../progress";
 import type { NodeKind, PartyMember, RunNode } from "../run";
 import type { Element } from "../combat";
 
@@ -51,6 +52,11 @@ export default function RunMap({ nodes, frontier, cleared, party, items, onEnter
         <p className="mt-1 text-xs text-ef-muted">진행 가능한 방(강조)을 선택. 정예·보스는 위험하나 보상이 큽니다. HP는 야영에서만 회복.</p>
       </div>
 
+      <div className="mb-2 flex items-center gap-2">
+        <span className="font-mono text-[12px] font-bold uppercase tracking-wider text-ef-muted">부대 정예화</span>
+        <span className="border border-amber-400/40 bg-amber-400/10 px-2 py-0.5 font-mono text-[13px] font-black text-amber-300" style={CUT_SM}>{PROMO_LABEL[party[0]?.progress?.promotion ?? 0]}</span>
+        <span className="font-mono text-[11px] text-ef-muted">정예·보스 처치 시 상승</span>
+      </div>
       <div className="mb-3"><PartyBar party={party} /></div>
 
       <div className="mb-5 flex flex-wrap items-center gap-2">
