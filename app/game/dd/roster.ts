@@ -440,8 +440,7 @@ export const OP_ATTRS: Record<string, OpAttrs> = {
   pogranichnik: { str: 101, agi: 110, int: 97, wil: 173 }, alesh: { str: 158, agi: 95, int: 125, wil: 89 },
   arclight: { str: 107, agi: 145, int: 123, wil: 100 }, akekuri: { str: 110, agi: 140, int: 106, wil: 108 },
 };
-// 역할 기반 속도(턴 순서). 셋업 우선: 서포터·캐스터 → 뱅가드(게이지) → 스트라이커(딜) → 가드 → 디펜더(탱).
-const CLASS_SPEED: Record<DDClass, number> = { supporter: 72, caster: 68, vanguard: 66, striker: 60, guard: 56, defender: 46 };
+// 속도(턴 순서)는 오퍼레이터 개별 값(OP_BASE.speed, 실 민첩 기반) 사용 — makeAlly 참조.
 
 export function makeAlly(id: string, pos: number, progress: OpProgress = DEFAULT_PROGRESS): DDUnit {
   const b = OP_BASE[id];
@@ -452,7 +451,7 @@ export function makeAlly(id: string, pos: number, progress: OpProgress = DEFAULT
   u.attack = Math.round((OP_ATTACK[id] ?? b.attack) * pm * skillMult(progress.skillRank)); // Lv90 기초 × 정예화 × 스킬랭크(랭크9=1.8). 모든 딜이 attack 비례 → 균일 스케일
   u.utilMult = skillUtilMult(progress.skillRank); // 스킬 단조 → 유틸(취약·증폭·회복·게이지·지속) 배율. 장비 능력치(gearGrade)는 applyGear가 세트 실측 부옵으로 처리
   u.opElement = (SKILLS[id] ?? []).find((s) => s.element && s.element !== "physical")?.element ?? "physical"; // 주력 속성(장비 부품 속성 피해)
-  u.speed = CLASS_SPEED[b.cls] ?? u.speed; // 역할 기반 속도: 셋업(서포터·캐스터)→뱅가드→딜러→탱커 순
+  u.speed = b.speed; // 오퍼레이터 개별 속도(실 민첩 기반). 턴 순서가 개체별로 다름.
   u.attrs = OP_ATTRS[id]; // 실제 능력치(힘/민첩/지능/의지)
   u.healRecv = u.attrs ? +(u.attrs.wil / ATTR_AVG).toFixed(2) : 1; // 의지 → 받는 회복량 배율
   u.resist = attrResists(u.gearGrade, u.attrs); // 민첩→물리 저항·지능→아츠 저항(총량 gearGrade 유지)
