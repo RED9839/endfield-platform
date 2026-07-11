@@ -17,7 +17,8 @@ export type DDUnit = {
   pos: number; // 1=전열 … 4=후열
   hp: number;
   maxHp: number;
-  speed: number; // 턴 순서(민첩)
+  speed: number; // 행동 게이지(ATB) 충전 속도(민첩)
+  atb: number;   // 행동 게이지 0~100. 속도만큼 차고 100이면 행동, 초과분 이월.
   attack: number;
   opElement?: "physical" | Element; // 오퍼 주력 속성(장비 부품 속성 피해 보너스용)
   defense: number; // 방어력 → 받는 모든 피해 ×(100/(def+100)). 기본 0(장비로 증가)
@@ -940,21 +941,20 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
 }
 
 // 라운드 시작: DoT + 불균형 회복
+// 라운드(사이클) 공유 효과 — 스킬 게이지 회복 + 트리거 윈도우 리셋. ATB에서 모두 1회 행동마다 호출.
 export function startRound(s: DDState): void {
   s.round++;
   s.anomalyConsumed = false; // 아츠 이상/결정 소모 윈도우 리셋(알레쉬 연계)
   s.allyHit = false; // 피격 트리거 윈도우 리셋(엠버 전선에서의 지원)
   gaugeUp(s, GAUGE_REGEN); // 스킬 게이지 자연 회복(파티 공유)
-  for (const u of living(s)) {
-    if (u.dot > 0) { u.hp = Math.max(0, u.hp - u.dot); s.log.push(`${u.name} 지속 피해 -${u.dot}`); }
-    if ((u.regen || 0) > 0 && (u.regenTurns || 0) > 0) { const h = Math.min(u.maxHp - u.hp, u.regen!); if (h > 0) { u.hp += h; s.log.push(`${u.name} 재생 +${h}`); } u.regenTurns = (u.regenTurns || 0) - 1; if ((u.regenTurns || 0) <= 0) u.regen = 0; }
-    if (u.staggered) {
-      u.staggerTimer -= 1;
-      if (u.staggerTimer <= 0) { u.staggered = false; u.stagger = 0; s.log.push(`${u.name} 불균형 회복`); }
-    }
-    for (const key of Object.keys(u.timers)) { if (--u.timers[key] <= 0) { delete u.timers[key]; expire(u, key); } } // 효과 지속시간 감쇠
-    if (u.linkCd > 0) u.linkCd -= 1; // 연계 쿨타임 감소
-  }
+}
+// 유닛 자기 턴 시작 효과 — 지속피해·재생·불균형 회복·타이머 감쇠·연계 쿨. ATB에서 행동 직전 호출.
+export function perTurn(s: DDState, u: DDUnit): void {
+  if (u.dot > 0) { u.hp = Math.max(0, u.hp - u.dot); s.log.push(`${u.name} 지속 피해 -${u.dot}`); }
+  if ((u.regen || 0) > 0 && (u.regenTurns || 0) > 0) { const h = Math.min(u.maxHp - u.hp, u.regen!); if (h > 0) { u.hp += h; s.log.push(`${u.name} 재생 +${h}`); } u.regenTurns = (u.regenTurns || 0) - 1; if ((u.regenTurns || 0) <= 0) u.regen = 0; }
+  if (u.staggered) { u.staggerTimer -= 1; if (u.staggerTimer <= 0) { u.staggered = false; u.stagger = 0; s.log.push(`${u.name} 불균형 회복`); } }
+  for (const key of Object.keys(u.timers)) { if (--u.timers[key] <= 0) { delete u.timers[key]; expire(u, key); } } // 효과 지속시간 감쇠
+  if (u.linkCd > 0) u.linkCd -= 1; // 연계 쿨타임 감소
 }
 
 export function isOver(s: DDState): "ally" | "enemy" | null {
@@ -963,14 +963,31 @@ export function isOver(s: DDState): "ally" | "enemy" | null {
   return null;
 }
 
-// 속도 높으면 라운드당 추가 행동: (속도 − 임계)/스텝, 최대 +EXTRA_MAX. 추가 행동은 라운드 후반(속도순).
-const EXTRA_THRESHOLD = 66, EXTRA_STEP = 15, EXTRA_MAX = 1;
-export const extraActions = (speed: number) => Math.max(0, Math.min(EXTRA_MAX, Math.floor((speed - EXTRA_THRESHOLD) / EXTRA_STEP)));
-export function turnOrder(s: DDState): DDUnit[] {
-  const spd = (u: DDUnit) => u.speed + (u.speedMod || 0); // 가속/감속 반영
-  const units = living(s).sort((a, b) => spd(b) - spd(a) || a.id.localeCompare(b.id));
-  const extras: DDUnit[] = [];
-  for (const u of units) for (let k = 0; k < extraActions(spd(u)); k++) extras.push(u); // 빠른 유닛 추가 행동
-  extras.sort((a, b) => spd(b) - spd(a) || a.id.localeCompare(b.id));
-  return [...units, ...extras];
+// ATB: 행동 게이지가 100에 도달한 유닛이 행동. 속도만큼 충전 → 빠를수록 자주 행동.
+const atbSpeed = (u: DDUnit) => Math.max(1, u.speed + (u.speedMod || 0));
+// 다음 행동자 결정(게이지 전진, 파괴적). 100 도달자 없으면 최단시간만큼 모두 전진.
+export function nextActor(s: DDState): DDUnit | null {
+  const alive = living(s);
+  if (!alive.length) return null;
+  let ready = alive.filter((u) => u.atb >= 100);
+  if (!ready.length) {
+    const t = Math.min(...alive.map((u) => (100 - u.atb) / atbSpeed(u)));
+    for (const u of alive) u.atb += atbSpeed(u) * t;
+    ready = alive.filter((u) => u.atb >= 99.999);
+  }
+  const actor = ready.sort((a, b) => b.atb - a.atb || atbSpeed(b) - atbSpeed(a) || a.id.localeCompare(b.id))[0];
+  actor.atb -= 100; // 행동 후 게이지 소모(초과분 이월)
+  return actor;
+}
+// 표시용 예측 순서(비파괴) — atb 복제해 다음 n행동 시뮬. UI 순서 컬럼용.
+export function turnOrder(s: DDState, n = 8): DDUnit[] {
+  const sim = living(s).map((u) => ({ u, atb: u.atb }));
+  const out: DDUnit[] = [];
+  for (let i = 0; i < n && sim.length; i++) {
+    let ready = sim.filter((x) => x.atb >= 100);
+    if (!ready.length) { const t = Math.min(...sim.map((x) => (100 - x.atb) / atbSpeed(x.u))); for (const x of sim) x.atb += atbSpeed(x.u) * t; ready = sim.filter((x) => x.atb >= 99.999); }
+    const pick = ready.sort((a, b) => b.atb - a.atb || atbSpeed(b.u) - atbSpeed(a.u) || a.u.id.localeCompare(b.u.id))[0];
+    out.push(pick.u); pick.atb -= 100;
+  }
+  return out;
 }

@@ -2,7 +2,7 @@
 
 import { useEffect, useReducer, useRef, useState } from "react";
 
-import { act, canAct, isOver, startRound, turnOrder, type DDClass, type DDSkill, type DDState, type DDUnit, type Element } from "../combat";
+import { act, canAct, isOver, startRound, perTurn, nextActor, turnOrder, type DDClass, type DDSkill, type DDState, type DDUnit, type Element } from "../combat";
 import { OPERATORS, enemyDefFor, avatarUrl, skillIcon, enemyImage } from "../roster";
 import { ENCOUNTERS, allyChoose, createBattle, enemyAct, usableSkills, regionEncounter } from "../sim";
 import { activeSets } from "../gear";
@@ -86,7 +86,8 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
     const enc = faction ? { ...base, make: () => regionEncounter(faction, nodeKind, depth, maxDepth) } : base; // 세력 리전 편성(깊이별 티어)
     stateRef.current = createBattle(party, enc, owned); // 지속 HP + 장비 세트 효과 + 제작 단조 반영
   }
-  const queueRef = useRef<DDUnit[]>([]);
+  const cycleActsRef = useRef(0); // ATB: 사이클(모두 1회) 내 행동 수
+  const cycleSizeRef = useRef(1); // 사이클 크기(생존 유닛 수)
   const dmgRef = useRef<Record<string, number>>({}); // 아군별 누적 가한 피해(데미지 기록)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoRef = useRef(false); // 기본 수동(전투 스킬 직접 선택). 자동은 토글.
@@ -125,53 +126,57 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
   function finish(w: "ally" | "enemy") { setWinner(w); setCurrent(null); setFx((f) => ({ ...f, activeId: null })); bump(); }
 
   // 스텝 진행: 죽은 유닛은 즉시 건너뛰고, 실제 행동/라운드 전환은 딜레이를 두고 연출
-  function step() {
+  // 한 행동 후 사이클 관리: 모두 1회 행동(사이클)마다 공유 라운드 효과 + 라운드 배너.
+  function afterAction() {
     const s = stateRef.current!;
-    // eslint-disable-next-line no-constant-condition
-    while (true) {
-      const over = isOver(s);
-      if (over) { finish(over); return; }
-      if (!queueRef.current.length) {
-        if (s.round >= 40) { finish("enemy"); return; }
-        startRound(s); s.log.push(`── 라운드 ${s.round} ──`); queueRef.current = turnOrder(s);
-        fxTick.current += 1; setRoundBanner({ n: s.round, tick: fxTick.current }); setFx((f) => ({ ...f, activeId: null, floaters: [], cast: null })); bump();
-        timerRef.current = setTimeout(step, 780); return;
-      }
-      const u = queueRef.current[0];
-      if (u.hp <= 0) { queueRef.current.shift(); continue; }
-      if (!canAct(u)) {
-        if (u.staggered) s.log.push(`${u.name} 불균형 — 행동 불가`);
-        else if ((u.timers.stun || 0) > 0) s.log.push(`${u.name} 시간 정지 — 행동 불가`);
-        queueRef.current.shift();
-        fxTick.current += 1; setFx({ tick: fxTick.current, activeId: u.id, actingSide: u.side, floaters: [], cast: { id: u.id, text: u.staggered ? "불균형!" : "행동 불가" } }); bump();
-        timerRef.current = setTimeout(step, 480 / speedRef.current); return;
-      }
-      if (u.side === "enemy") {
-        doAction(u, () => enemyAct(s, u), null);
-        // 적 스킬명은 액션 후 로그에서 추출
-        const line = stateRef.current!.log.slice(-6).reverse().find((l) => l.startsWith(`${u.name}`) && l.includes("→"));
-        if (line) setFx((f) => ({ ...f, cast: { id: u.id, text: castFromLog(line) ?? "공격" } }));
-        queueRef.current.shift();
-        timerRef.current = setTimeout(step, delay()); return;
-      }
-      if (autoRef.current) {
-        const sk = allyChoose(s, u);
-        doAction(u, () => { if (sk) act(s, u, sk); else s.log.push(`${u.name} 행동 불가(스킬 없음)`); }, sk ? sk.name : null);
-        queueRef.current.shift();
-        timerRef.current = setTimeout(step, delay()); return;
-      }
-      // 수동: 플레이어 입력 대기
-      setCurrent(u); fxTick.current += 1; setFx({ tick: fxTick.current, activeId: u.id, actingSide: "ally", floaters: [], cast: null }); bump(); return;
+    if (++cycleActsRef.current >= cycleSizeRef.current) {
+      cycleActsRef.current = 0;
+      cycleSizeRef.current = Math.max(1, s.units.filter((u) => u.hp > 0).length);
+      startRound(s); // 스킬 게이지 회복·라운드++
+      fxTick.current += 1; setRoundBanner({ n: s.round, tick: fxTick.current });
     }
   }
 
-  useEffect(() => { timerRef.current = setTimeout(step, 420); return () => { if (timerRef.current) clearTimeout(timerRef.current); }; /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
+  // ATB 스텝: 게이지 채워 다음 행동자 결정 → 자기 턴 효과 → 행동(적 자동/아군 자동·수동)
+  function step() {
+    const s = stateRef.current!;
+    const over = isOver(s); if (over) { finish(over); return; }
+    if (s.round >= 40) { finish("enemy"); return; }
+    const u = nextActor(s);
+    if (!u) { finish(isOver(s) ?? "enemy"); return; }
+    perTurn(s, u); // 지속피해·재생·불균형회복·타이머 감쇠
+    if (u.hp <= 0) { afterAction(); timerRef.current = setTimeout(step, 120); return; } // 지속피해로 사망
+    if (!canAct(u)) {
+      if (u.staggered) s.log.push(`${u.name} 불균형 — 행동 불가`);
+      else if ((u.timers.stun || 0) > 0) s.log.push(`${u.name} 시간 정지 — 행동 불가`);
+      fxTick.current += 1; setFx({ tick: fxTick.current, activeId: u.id, actingSide: u.side, floaters: [], cast: { id: u.id, text: u.staggered ? "불균형!" : "행동 불가" } }); bump();
+      afterAction();
+      timerRef.current = setTimeout(step, 480 / speedRef.current); return;
+    }
+    if (u.side === "enemy") {
+      doAction(u, () => enemyAct(s, u), null);
+      const line = stateRef.current!.log.slice(-6).reverse().find((l) => l.startsWith(`${u.name}`) && l.includes("→"));
+      if (line) setFx((f) => ({ ...f, cast: { id: u.id, text: castFromLog(line) ?? "공격" } }));
+      afterAction();
+      timerRef.current = setTimeout(step, delay()); return;
+    }
+    if (autoRef.current) {
+      const sk = allyChoose(s, u);
+      doAction(u, () => { if (sk) act(s, u, sk); else s.log.push(`${u.name} 행동 불가(스킬 없음)`); }, sk ? sk.name : null);
+      afterAction();
+      timerRef.current = setTimeout(step, delay()); return;
+    }
+    // 수동: 플레이어 입력 대기(행동은 playerAct에서)
+    setCurrent(u); fxTick.current += 1; setFx({ tick: fxTick.current, activeId: u.id, actingSide: "ally", floaters: [], cast: null }); bump();
+  }
+
+  useEffect(() => { const s = stateRef.current!; cycleSizeRef.current = Math.max(1, s.units.filter((u) => u.hp > 0).length); timerRef.current = setTimeout(step, 420); return () => { if (timerRef.current) clearTimeout(timerRef.current); }; /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
 
   function playerAct(sk: DDSkill) {
     const s = stateRef.current!; if (!current) return;
     const actor = current;
     doAction(actor, () => act(s, actor, sk), sk.name);
-    queueRef.current.shift(); setCurrent(null);
+    setCurrent(null); afterAction();
     timerRef.current = setTimeout(step, delay());
   }
   function playerUseItem(id: string) {
@@ -191,7 +196,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
   const enemies = s.units.filter((u) => u.side === "enemy");
   const KIND_ORDER: Record<DDSkill["kind"], number> = { attack: 0, battle: 1, link: 2, ult: 3 };
   const skills = current ? [...usableSkills(s, current)].sort((a, b) => KIND_ORDER[a.kind] - KIND_ORDER[b.kind]) : [];
-  const upcoming = queueRef.current.filter((u) => u.hp > 0).slice(0, 8);
+  const upcoming = winner ? [] : turnOrder(s, 6); // ATB 예측 순서(비파괴)
 
   return (
     <div className="dd-battle relative mx-auto max-w-[1500px] px-4 py-5 sm:px-7">
@@ -264,6 +269,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
                     <span className="font-mono text-[12px] text-ef-muted">{Math.max(0, e.hp)}</span>
                   </div>
                   <Bar value={e.hp} max={e.maxHp} color="#e0655c" />
+                  {!dead && <div className="mt-0.5"><Bar value={e.atb} max={100} color="#67e8f9" h="h-1" /></div>}
                   {e.staggerMax > 0 && <div className="mt-1"><Bar value={e.staggered ? e.staggerMax : e.stagger} max={e.staggerMax} color={e.staggered ? "#facc15" : "#a16207"} h="h-1" /></div>}
                   {e.staggered && <div className="mt-1 font-mono text-[12px] font-bold uppercase tracking-wider text-yellow-400">⚡ 불균형 +30%</div>}
                   {ed && <div className="mt-1 flex flex-wrap gap-1"><Chip tone="#e0655c">{ed.faction}</Chip>{ed.resist && (Object.entries(ed.resist) as [Element | "physical", number][]).filter(([, v]) => v < 0).map(([eln, v]) => <Chip key={eln} tone={elementColor[eln]}>{elementName[eln]} 약점{Math.round(-v * 100)}</Chip>)}</div>}
@@ -310,6 +316,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
                       <Bar value={a.hp} max={a.maxHp} color={lowHp ? "#e0655c" : "#8fb84a"} />
                       {a.shield > 0 && <div className="mt-0.5 font-mono text-[12px] text-sky-300">보호막 {a.shield}</div>}
                       <div className="mt-1 flex items-center gap-1"><span className="font-mono text-[12px] uppercase text-ef-muted">궁</span><Bar value={a.ultCharge} max={a.ultCost} color={a.ultCharge >= a.ultCost ? "#e8c56a" : "#8a6d1f"} h="h-1" /></div>
+                      <div className="mt-0.5 flex items-center gap-1"><span className="shrink-0 whitespace-nowrap font-mono text-[11px] text-ef-muted">속도</span><Bar value={a.atb} max={100} color="#67e8f9" h="h-1" /></div>
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-1">

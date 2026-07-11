@@ -371,7 +371,7 @@ const OP_BASE: Record<string, Base> = {
 };
 
 // 매 유닛 신선한 상태 객체(중첩 객체 공유 참조 방지). defense/resist 기본 0 → 밸런스 무변.
-const zero = () => ({ physBreak: 0, stagger: 0, staggered: false, staggerTimer: 0, statuses: [] as DDUnit["statuses"], dot: 0, multiHit: 0, ultCharge: 0, atkBuff: 0, critRate: 0.05, critDmg: 0.5, arts: { heat: 0, electric: 0, cryo: 0, nature: 0 }, frozen: 0, amp: {}, vuln: {}, weakenMul: 1, protection: 0, shield: 0, speedMod: 0, timers: {}, linkCd: 0, defense: 0, resist: { physical: 0, heat: 0, electric: 0, cryo: 0, nature: 0 }, stance: 0, ironOath: 0, gaugeRecovered: 0, gearGrade: 60, procCount: 0, utilMult: 1 });
+const zero = () => ({ physBreak: 0, stagger: 0, staggered: false, staggerTimer: 0, statuses: [] as DDUnit["statuses"], dot: 0, multiHit: 0, ultCharge: 0, atkBuff: 0, critRate: 0.05, critDmg: 0.5, arts: { heat: 0, electric: 0, cryo: 0, nature: 0 }, frozen: 0, amp: {}, vuln: {}, weakenMul: 1, protection: 0, shield: 0, speedMod: 0, timers: {}, linkCd: 0, defense: 0, resist: { physical: 0, heat: 0, electric: 0, cryo: 0, nature: 0 }, stance: 0, ironOath: 0, gaugeRecovered: 0, gearGrade: 60, procCount: 0, utilMult: 1, atb: 0 });
 
 // 오퍼레이터 선택 UI용 메타(속성은 스킬의 비물리 원소에서 추론, 없으면 물리)
 export type OpMeta = { id: string; name: string; cls: DDClass; element: "physical" | Element };
