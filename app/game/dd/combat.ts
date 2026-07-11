@@ -963,7 +963,14 @@ export function isOver(s: DDState): "ally" | "enemy" | null {
   return null;
 }
 
+// 속도 높으면 라운드당 추가 행동: (속도 − 임계)/스텝, 최대 +EXTRA_MAX. 추가 행동은 라운드 후반(속도순).
+const EXTRA_THRESHOLD = 66, EXTRA_STEP = 15, EXTRA_MAX = 1;
+export const extraActions = (speed: number) => Math.max(0, Math.min(EXTRA_MAX, Math.floor((speed - EXTRA_THRESHOLD) / EXTRA_STEP)));
 export function turnOrder(s: DDState): DDUnit[] {
   const spd = (u: DDUnit) => u.speed + (u.speedMod || 0); // 가속/감속 반영
-  return living(s).sort((a, b) => spd(b) - spd(a) || a.id.localeCompare(b.id));
+  const units = living(s).sort((a, b) => spd(b) - spd(a) || a.id.localeCompare(b.id));
+  const extras: DDUnit[] = [];
+  for (const u of units) for (let k = 0; k < extraActions(spd(u)); k++) extras.push(u); // 빠른 유닛 추가 행동
+  extras.sort((a, b) => spd(b) - spd(a) || a.id.localeCompare(b.id));
+  return [...units, ...extras];
 }
