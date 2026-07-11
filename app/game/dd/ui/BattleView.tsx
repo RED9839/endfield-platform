@@ -3,7 +3,7 @@
 import { useEffect, useReducer, useRef, useState } from "react";
 
 import { act, canAct, isOver, startRound, turnOrder, type DDClass, type DDSkill, type DDState, type DDUnit, type Element } from "../combat";
-import { OPERATORS, enemyDefFor, avatarUrl } from "../roster";
+import { OPERATORS, enemyDefFor, avatarUrl, skillIcon, enemyImage } from "../roster";
 import { ENCOUNTERS, allyChoose, createBattle, enemyAct, usableSkills, regionEncounter } from "../sim";
 import { activeSets } from "../gear";
 import { weaponOf, weaponEffectText, weaponImage, WEAPON_KO, WEAPON_ICON } from "../weapons";
@@ -253,9 +253,10 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
               <div key={e.id} className={`relative w-[180px] ${shakeCls(hit, fx.tick)} ${actCls(isAct, fx.tick)}`}>
                 <FxLayer id={e.id} fx={fx} />
                 <div className={`relative border p-2.5 transition ${dead ? "border-ef-line/40 opacity-35 grayscale" : e.staggered ? "border-yellow-400/70 bg-yellow-400/5" : "border-red-500/40 bg-[#1a0e0b]"} ${isAct && !dead ? "dd-active" : ""}`} style={CUT_SM}>
-                  {/* 적 엠블럼 */}
-                  <div className="mb-1.5 flex h-16 items-center justify-center border border-ef-line/50" style={{ background: `radial-gradient(circle at 50% 35%, ${el === "physical" ? "#5a2a22" : elementColor[el] + "40"}, #140a08 70%)` }}>
-                    <span className="text-3xl opacity-80">{nodeKind === "boss" && ed?.role === "boss" ? "☠" : ed?.role === "elite" ? "✧" : "✦"}</span>
+                  {/* 적 이미지 */}
+                  <div className="relative mb-1.5 flex h-16 items-center justify-center overflow-hidden border border-ef-line/50" style={{ background: `radial-gradient(circle at 50% 35%, ${el === "physical" ? "#5a2a22" : elementColor[el] + "40"}, #140a08 70%)` }}>
+                    <span className="absolute text-3xl opacity-40">{nodeKind === "boss" && ed?.role === "boss" ? "☠" : ed?.role === "elite" ? "✧" : "✦"}</span>
+                    <img src={enemyImage(e.id)} alt="" loading="lazy" className="relative h-full w-full object-contain" onError={(ev) => { (ev.currentTarget as HTMLImageElement).style.display = "none"; }} />
                     {dead && <span className="absolute text-3xl">💀</span>}
                   </div>
                   <div className="mb-1 flex items-center justify-between gap-2">
@@ -328,9 +329,12 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
           <div className="mb-2 font-mono text-[13px] font-bold uppercase tracking-wider text-ef-accent">{current.name} — 스킬 선택</div>
           <div className="flex flex-wrap gap-2">
             {skills.map((sk) => (
-              <button key={sk.id} type="button" onClick={() => playerAct(sk)} className="group border border-ef-line bg-ef-card px-3 py-2 text-left transition hover:border-ef-accent/60" style={CUT_SM}>
-                <div className="flex items-center gap-1.5"><span className="border px-1 py-px font-mono text-[12px] font-bold uppercase" style={{ borderColor: `${PRIMARY}66`, color: PRIMARY }}>{kindLabel[sk.kind]}</span><span className="font-mono text-sm font-bold text-white">{sk.name}</span>{sk.power > 0 && <span className="font-mono text-[12px] text-ef-muted">{Math.round(sk.power * 100)}%</span>}</div>
-                {sk.note && <div className="mt-0.5 max-w-[230px] truncate text-[12px] text-ef-muted group-hover:text-ef-ink">{sk.note}</div>}
+              <button key={sk.id} type="button" onClick={() => playerAct(sk)} className="group flex items-start gap-2 border border-ef-line bg-ef-card px-2.5 py-2 text-left transition hover:border-ef-accent/60" style={CUT_SM}>
+                <img src={skillIcon(current!.id, sk.kind)} alt="" loading="lazy" className="mt-0.5 h-9 w-9 shrink-0 border border-ef-line/60 bg-black/40 object-contain p-0.5" onError={(ev) => { (ev.currentTarget as HTMLImageElement).style.visibility = "hidden"; }} />
+                <span className="min-w-0">
+                  <span className="flex items-center gap-1.5"><span className="border px-1 py-px font-mono text-[12px] font-bold uppercase" style={{ borderColor: `${PRIMARY}66`, color: PRIMARY }}>{kindLabel[sk.kind]}</span><span className="font-mono text-sm font-bold text-white">{sk.name}</span>{sk.power > 0 && <span className="font-mono text-[12px] text-ef-muted">{Math.round(sk.power * 100)}%</span>}</span>
+                  {sk.note && <span className="mt-0.5 block max-w-[230px] truncate text-[12px] text-ef-muted group-hover:text-ef-ink">{sk.note}</span>}
+                </span>
               </button>
             ))}
             {!skills.length && <span className="font-mono text-xs text-ef-muted">사용 가능한 스킬 없음</span>}

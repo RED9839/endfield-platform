@@ -383,6 +383,21 @@ export const OPERATORS: OpMeta[] = Object.values(OP_BASE).map((b) => {
 // 오퍼 얼굴 아이콘 경로 — 관리자만 avatar1.webp, 나머지는 avatar.webp
 export const avatarUrl = (id: string) => `/operators/${id}/${id === "endministrator" ? "avatar1" : "avatar"}.webp`;
 
+// 오퍼 스킬 아이콘(public/operators/{id}/skills). 스킬 종류 → 파일.
+const SKILL_ICON_FILE: Record<string, string> = { attack: "normal", battle: "battle", link: "combo", ult: "ultimate" };
+export const skillIcon = (opId: string, kind: string) => `/operators/${opId}/skills/${SKILL_ICON_FILE[kind] ?? "normal"}.webp`;
+
+// 적 이미지(public/enemies). id가 곧 slug, 철자/명칭 다른 것만 오버라이드.
+const ENEMY_IMG: Record<string, string> = {
+  "acid-slug": "acid-originium-slug", "firemist-slug": "firemist-originium-slug",
+  "rakerbeast": "spotted-rakerbeast", "manglerbeast": "armored-manglerbeast",
+  "bk-raider": "bonekrusher-raider", "bk-pyromancer": "bonekrusher-pyromancer",
+  "bk-ballista": "bonekrusher-ballista", "bk-executioner": "bonecrusher-executioner",
+  "bk-siege": "bonekrusher-siegeknuckles", "marble-aggelo": "marble-aggelomoirai-awakened",
+  "nefarith": "nefarith-bonekrusher",
+};
+export const enemyImage = (id: string) => { const base = id.split("#")[0]; return `/enemies/${ENEMY_IMG[base] ?? base}.webp`; };
+
 // 아군 저항(공식 1.12): 민첩→물리, 지능→아츠 저항 = 1 − 1/(0.001×스탯+1). 4스탯을 gearGrade로 통합 치환,
 // gearGrade(명함 ~60)를 실제 스탯 스케일로 복원(×10)해 원본 오퍼레이터 내구(≈37.5%) 재현. 좋은 장비=높은 저항.
 export const allyResistFromGear = (gearGrade: number) => +(1 - 1 / (0.001 * gearGrade * 10 + 1)).toFixed(3);
