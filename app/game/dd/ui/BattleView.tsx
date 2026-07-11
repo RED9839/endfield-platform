@@ -189,7 +189,8 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
   const s = stateRef.current!;
   const allies = s.units.filter((u) => u.side === "ally");
   const enemies = s.units.filter((u) => u.side === "enemy");
-  const skills = current ? usableSkills(s, current) : [];
+  const KIND_ORDER: Record<DDSkill["kind"], number> = { attack: 0, battle: 1, link: 2, ult: 3 };
+  const skills = current ? [...usableSkills(s, current)].sort((a, b) => KIND_ORDER[a.kind] - KIND_ORDER[b.kind]) : [];
   const upcoming = queueRef.current.filter((u) => u.hp > 0).slice(0, 8);
 
   return (
