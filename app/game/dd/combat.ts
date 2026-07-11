@@ -432,7 +432,7 @@ export function baseDamage(skill: DDSkill, self: DDUnit): number {
   return dmg;
 }
 
-export type DDState = { units: DDUnit[]; round: number; log: string[]; lastLinkAlly?: string; skillGauge: number; maxGauge: number; anomalyConsumed?: boolean; allyHit?: boolean; moraleAccum?: number };
+export type DDState = { units: DDUnit[]; round: number; log: string[]; lastLinkAlly?: string; skillGauge: number; maxGauge: number; anomalyConsumed?: boolean; allyHit?: boolean; moraleAccum?: number; forcedTargetId?: string };
 
 export const living = (s: DDState, side?: "ally" | "enemy") =>
   s.units.filter((u) => u.hp > 0 && (!side || u.side === side));
@@ -446,6 +446,8 @@ export function pickTargets(s: DDState, self: DDUnit, skill: DDSkill): DDUnit[] 
   if (self.id === "zhuangfangyi" && (skill.kind === "attack" || skill.kind === "battle") && (self.timers.heavenly || 0) > 0) return foes;
   if (skill.target === "all") return foes;
   if (skill.target === "row") return [...foes].sort((a, b) => a.pos - b.pos).slice(0, 2);
+  // 플레이어 지정 타겟(단일 대상 스킬 한정) — 아군 수동 조작
+  if (s.forcedTargetId) { const t = foes.find((f) => f.id === s.forcedTargetId); if (t) return [t]; }
   if (skill.target === "single-lowhp") return foes.length ? [foes.reduce((lo, e) => (e.hp < lo.hp ? e : lo), foes[0])] : [];
   return foes.length ? [[...foes].sort((a, b) => a.pos - b.pos)[0]] : []; // single-front
 }

@@ -99,6 +99,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
   const [winner, setWinner] = useState<"ally" | "enemy" | null>(null);
   const [fx, setFx] = useState<Fx>(NO_FX);
   const [roundBanner, setRoundBanner] = useState<{ n: number; tick: number } | null>(null);
+  const [aiming, setAiming] = useState<DDSkill | null>(null); // 대상 선택 중인 단일 스킬
   const [showLog, setShowLog] = useState(true);
   const [tab, setTab] = useState<"dmg" | "log">("dmg"); // 하단 패널: 데미지 기록 / 전투 기록
   const [, bump] = useReducer((x) => x + 1, 0);
@@ -172,11 +173,20 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
 
   useEffect(() => { const s = stateRef.current!; cycleSizeRef.current = Math.max(1, s.units.filter((u) => u.hp > 0).length); timerRef.current = setTimeout(step, 420); return () => { if (timerRef.current) clearTimeout(timerRef.current); }; /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
 
-  function playerAct(sk: DDSkill) {
+  // 단일 대상 스킬? (자기/전체/열 대상 제외)
+  const isSingleTarget = (sk: DDSkill) => sk.target !== "self" && sk.target !== "all" && sk.target !== "row";
+  function chooseSkill(sk: DDSkill) {
+    const foes = stateRef.current!.units.filter((u) => u.side === "enemy" && u.hp > 0);
+    if (isSingleTarget(sk) && foes.length > 1) setAiming(sk); // 대상 여러 → 선택 모드
+    else playerAct(sk); // 자동 대상(단일 적/광역/자기)
+  }
+  function playerAct(sk: DDSkill, targetId?: string) {
     const s = stateRef.current!; if (!current) return;
     const actor = current;
+    s.forcedTargetId = targetId; // 플레이어 지정 대상(단일 스킬)
     doAction(actor, () => act(s, actor, sk), sk.name);
-    setCurrent(null); afterAction();
+    s.forcedTargetId = undefined;
+    setCurrent(null); setAiming(null); afterAction();
     timerRef.current = setTimeout(step, delay());
   }
   function playerUseItem(id: string) {
@@ -257,7 +267,8 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
             return (
               <div key={e.id} className={`relative w-[180px] ${shakeCls(hit, fx.tick)} ${actCls(isAct, fx.tick)}`}>
                 <FxLayer id={e.id} fx={fx} />
-                <div className={`relative border p-2.5 transition ${dead ? "border-ef-line/40 opacity-35 grayscale" : e.staggered ? "border-yellow-400/70 bg-yellow-400/5" : "border-red-500/40 bg-[#1a0e0b]"} ${isAct && !dead ? "dd-active" : ""}`} style={CUT_SM}>
+                <div onClick={aiming && !dead ? () => playerAct(aiming, e.id) : undefined} className={`relative border p-2.5 transition ${dead ? "border-ef-line/40 opacity-35 grayscale" : aiming ? "cursor-pointer border-ef-accent bg-ef-accent/10 hover:bg-ef-accent/20" : e.staggered ? "border-yellow-400/70 bg-yellow-400/5" : "border-red-500/40 bg-[#1a0e0b]"} ${isAct && !dead ? "dd-active" : ""}`} style={CUT_SM}>
+                  {aiming && !dead && <span className="absolute right-1 top-1 z-10 font-mono text-[11px] font-bold text-ef-accent">🎯 대상</span>}
                   {/* 적 이미지 */}
                   <div className="relative mb-1.5 flex h-16 items-center justify-center overflow-hidden border border-ef-line/50" style={{ background: `radial-gradient(circle at 50% 35%, ${el === "physical" ? "#5a2a22" : elementColor[el] + "40"}, #140a08 70%)` }}>
                     <span className="absolute text-3xl opacity-40">{nodeKind === "boss" && ed?.role === "boss" ? "☠" : ed?.role === "elite" ? "✧" : "✦"}</span>
@@ -333,10 +344,12 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
       {/* 수동 조작 — 스킬 선택 */}
       {!winner && current && !auto && (
         <div className="mt-3 border border-ef-accent/40 bg-ef-accent/5 p-3" style={CUT_SM}>
-          <div className="mb-2 font-mono text-[13px] font-bold uppercase tracking-wider text-ef-accent">{current.name} — 스킬 선택</div>
-          <div className="flex flex-wrap gap-2">
+          <div className="mb-2 flex items-center gap-2 font-mono text-[13px] font-bold uppercase tracking-wider text-ef-accent">
+            {aiming ? <><span className="text-ef-accent-soft">🎯 {aiming.name} — 공격할 적을 선택</span><button type="button" onClick={() => setAiming(null)} className="ml-auto border border-ef-line px-2 py-0.5 text-[12px] text-ef-muted hover:text-white">취소</button></> : <span>{current.name} — 스킬 선택</span>}
+          </div>
+          <div className={`flex flex-wrap gap-2 ${aiming ? "pointer-events-none opacity-40" : ""}`}>
             {skills.map((sk) => (
-              <button key={sk.id} type="button" onClick={() => playerAct(sk)} className="group flex items-start gap-2 border border-ef-line bg-ef-card px-2.5 py-2 text-left transition hover:border-ef-accent/60" style={CUT_SM}>
+              <button key={sk.id} type="button" onClick={() => chooseSkill(sk)} className="group flex items-start gap-2 border border-ef-line bg-ef-card px-2.5 py-2 text-left transition hover:border-ef-accent/60" style={CUT_SM}>
                 <img src={skillIcon(current!.id, sk.kind)} alt="" loading="lazy" className="mt-0.5 h-9 w-9 shrink-0 border border-ef-line/60 bg-black/40 object-contain p-0.5" onError={(ev) => { (ev.currentTarget as HTMLImageElement).style.visibility = "hidden"; }} />
                 <span className="min-w-0">
                   <span className="flex items-center gap-1.5"><span className="border px-1 py-px font-mono text-[12px] font-bold uppercase" style={{ borderColor: `${PRIMARY}66`, color: PRIMARY }}>{kindLabel[sk.kind]}</span><span className="font-mono text-sm font-bold text-white">{sk.name}</span>{sk.power > 0 && <span className="font-mono text-[12px] text-ef-muted">{Math.round(sk.power * 100)}%</span>}</span>
