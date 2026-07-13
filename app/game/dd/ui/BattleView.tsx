@@ -532,12 +532,19 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
                 <St label="치명" value={`${Math.round(u.critRate * 100)}%`} />
                 <St label="치명피해" value={`${Math.round(u.critDmg * 100)}%`} />
               </div>
-              {/* 저항 */}
-              <Sec title="속성 저항">
-                <div className="flex flex-wrap gap-x-3 gap-y-1">
-                  {resists.map(([k, v]) => <span key={k} className="font-mono text-[13px]" style={{ color: v < 0 ? "#f87171" : elementColor[k] }}>{elementName[k]} {v > 0 ? `저항 ${Math.round(v * 100)}` : v < 0 ? `약점 ${Math.round(-v * 100)}` : "0"}</span>)}
-                </div>
-              </Sec>
+              {/* 상태 효과(버프/디버프) */}
+              {(() => {
+                const chips = unitChips(u);
+                return (
+                  <Sec title="상태 효과">
+                    <div className="flex flex-wrap gap-1.5">
+                      {u.shield > 0 && <Chip tone="#38bdf8">🛡 보호막 {u.shield}</Chip>}
+                      {chips.map((c) => <Chip key={c.k} tone={c.tone}>{c.label}</Chip>)}
+                      {!chips.length && u.shield <= 0 && <span className="font-mono text-[13px] text-ef-muted">활성 효과 없음</span>}
+                    </div>
+                  </Sec>
+                );
+              })()}
               {ally && <>
                 {wId && <Sec title="무기">
                   <div className="flex items-start gap-2.5">
