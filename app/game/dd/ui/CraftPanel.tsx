@@ -24,28 +24,28 @@ export default function CraftPanel({ craft, party = [], onCraft, onForge, onClos
 
   return (
     <div className="mx-auto max-w-[1500px] px-4 py-5 sm:px-7">
-      <div className="mb-4 flex items-center gap-3">
-        <button type="button" onClick={onClose} className="flex h-9 w-9 items-center justify-center border border-ef-line bg-ef-card text-ef-muted transition hover:border-ef-accent/40 hover:text-ef-accent-soft" style={CUT} aria-label="닫기"><ChevronLeft className="h-5 w-5" /></button>
+      <div className="hud-panel dd-cut mb-4 flex items-center gap-3 px-3 py-2.5">
+        <button type="button" onClick={onClose} className="hud-btn flex h-9 w-9 items-center justify-center text-ef-muted" style={CUT} aria-label="닫기"><ChevronLeft className="h-5 w-5" /></button>
         <div className="flex items-center gap-2">
-          <Hammer className="h-6 w-6 text-ef-accent" />
+          <Hammer className="h-6 w-6 text-ef-accent" style={{ filter: "drop-shadow(0 0 6px rgba(255,154,47,0.5))" }} />
           <div>
-            <p className="font-mono text-[12px] font-bold uppercase tracking-[0.3em] text-ef-muted">Industry · 장비 제조</p>
-            <h2 className="font-mono text-xl font-black uppercase tracking-[0.15em] text-white">공업소</h2>
+            <p className="font-mono text-[11px] font-bold uppercase tracking-[0.32em] text-ef-accent/70">Industry · 장비 제조</p>
+            <h2 className="font-mono text-xl font-black uppercase tracking-[0.12em] text-white">공업소</h2>
           </div>
         </div>
         <div className="ml-auto flex items-center gap-2 font-mono text-sm">
-          <span className="border border-ef-line bg-ef-card px-2.5 py-1 text-white" style={CUT}>부품 <b className="text-ef-accent-soft">{craft.mats.parts}</b></span>
-          <span className="border border-ef-line bg-ef-card px-2.5 py-1 text-white" style={CUT}>관리권 <b className="text-yellow-300">{craft.mats.permits}</b></span>
+          <span className="hud-tile px-2.5 py-1 text-white" style={CUT}>부품 <b className="text-ef-accent-soft">{craft.mats.parts}</b></span>
+          <span className="hud-tile px-2.5 py-1 text-white" style={CUT}>관리권 <b className="text-yellow-300">{craft.mats.permits}</b></span>
         </div>
       </div>
 
       {/* 부대 장착 장비 — 실제 사용 피스 바로 단조 */}
       {party.length > 0 && (
-        <div className="mb-4 border border-ef-accent/25 bg-ef-accent/[0.04] p-2.5" style={CUT}>
+        <div className="hud-panel dd-cut mb-4 p-2.5" style={{ borderColor: "rgba(255,154,47,0.3)" }}>
           <div className="mb-2 font-mono text-[13px] font-bold uppercase tracking-[0.2em] text-ef-accent-soft">부대 장착 장비 <span className="text-ef-muted">· 단조로 강화</span></div>
           <div className="grid gap-2 sm:grid-cols-2">
             {party.map((m) => (
-              <div key={m.id} className="border border-ef-line/60 bg-black/30 p-2" style={CUT}>
+              <div key={m.id} className="hud-tile dd-cut p-2">
                 <div className="mb-1.5 font-mono text-xs font-bold text-white">{opName(m.id)}</div>
                 <div className="flex flex-col gap-1">
                   {GEAR_SLOTS.map((slot) => {
@@ -78,7 +78,7 @@ export default function CraftPanel({ craft, party = [], onCraft, onForge, onClos
       <div className="mb-2 font-mono text-[13px] font-bold uppercase tracking-[0.2em] text-ef-muted">전체 카탈로그 <span className="text-ef-muted">· 대체 피스 제작</span></div>
       <div className="mb-4 flex flex-wrap gap-1.5">
         {SETS.map((s) => (
-          <button key={s} type="button" onClick={() => setSet(s)} className={`border px-2.5 py-1 font-mono text-[13px] font-bold transition ${set === s ? "border-ef-accent/70 text-ef-accent" : "border-ef-line text-ef-muted hover:text-ef-ink"}`} style={{ ...CUT, background: set === s ? PRIMARY + "18" : "transparent" }}>{s}</button>
+          <button key={s} type="button" onClick={() => setSet(s)} className={`hud-btn px-2.5 py-1 font-mono text-[13px] font-bold ${set === s ? "hud-btn-on" : "text-ef-muted"}`} style={CUT}>{s}</button>
         ))}
       </div>
 
@@ -87,13 +87,13 @@ export default function CraftPanel({ craft, party = [], onCraft, onForge, onClos
         {GEAR_SLOTS.map((slot: GearSlot) => {
           const pieces = GEAR_PIECES_BY_SET_SLOT[set]?.[slot] ?? [];
           return (
-            <div key={slot} className="border border-ef-line bg-ef-card/40 p-2.5" style={CUT}>
+            <div key={slot} className="hud-panel dd-cut p-2.5">
               <div className="mb-2 font-mono text-[13px] font-bold uppercase tracking-[0.2em] text-ef-muted">{gearSlotName(slot)} <span className="text-ef-muted">· {pieces.length}</span></div>
               <div className="flex flex-col gap-1.5">
                 {pieces.map((p) => {
                   const owned = isOwned(craft, p.id); const lv = pieceLevel(craft, p.id); const cc = craftCost(p); const fc = forgeCost(lv);
                   return (
-                    <div key={p.id} className={`border p-2 ${owned ? "border-ef-accent/40 bg-ef-accent/5" : "border-ef-line bg-ef-card"}`} style={CUT}>
+                    <div key={p.id} className={`hud-tile dd-cut p-2 ${owned ? "!border-ef-accent/50" : ""}`}>
                       <div className="flex items-center gap-1.5">
                         <span className="min-w-0 flex-1 truncate font-mono text-xs font-bold text-white">{p.name}</span>
                         {owned && <span className="font-mono text-[12px] font-bold text-ef-accent">단조 {lv}/3</span>}

@@ -25,13 +25,17 @@ function PartyBar({ party }: { party: PartyMember[] }) {
         const ratio = m.hp / m.maxHp;
         const dead = m.hp <= 0;
         return (
-          <div key={m.id} className={`min-w-[150px] flex-1 border p-2 ${dead ? "border-red-500/40 opacity-50" : "border-ef-line bg-ef-card"}`} style={CUT_SM}>
-            <div className="mb-1 flex items-center gap-1.5">
-              <span className="h-2 w-2 shrink-0" style={{ background: elementColor[op?.element ?? "physical"] }} />
+          <div key={m.id} className={`hud-tile dd-cut relative min-w-[150px] flex-1 overflow-hidden p-2 ${dead ? "opacity-50" : ""}`}>
+            <span className="absolute inset-y-0 left-0 w-1" style={{ background: elementColor[op?.element ?? "physical"], boxShadow: `0 0 8px ${elementColor[op?.element ?? "physical"]}` }} />
+            <div className="mb-1 flex items-center gap-1.5 pl-1">
               <span className="truncate font-mono text-xs font-bold text-white">{op?.name ?? m.id}</span>
               <span className="ml-auto font-mono text-[12px] text-ef-muted">{Math.max(0, m.hp)}/{m.maxHp}</span>
             </div>
-            <div className="h-2 w-full overflow-hidden border border-ef-line bg-black/60"><div className="h-full transition-all" style={{ width: `${Math.max(0, ratio) * 100}%`, background: dead ? "#7f1d1d" : ratio < 0.35 ? "#f87171" : "#86efac" }} /></div>
+            <div className="relative ml-1 h-2 overflow-hidden rounded-[2px] bg-black/75" style={{ boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.05), inset 0 1px 3px rgba(0,0,0,0.9)" }}>
+              <div className="relative h-full rounded-[2px] transition-all duration-300" style={{ width: `${Math.max(0, ratio) * 100}%`, background: dead ? "#7f1d1d" : ratio < 0.35 ? "#f87171" : "#86efac", boxShadow: `0 0 7px ${(dead ? "#7f1d1d" : ratio < 0.35 ? "#f87171" : "#86efac")}77` }}>
+                <span className="pointer-events-none absolute inset-x-0 top-0 h-[45%]" style={{ background: "linear-gradient(180deg, rgba(255,255,255,0.4), transparent)" }} />
+              </div>
+            </div>
           </div>
         );
       })}
@@ -45,10 +49,10 @@ export default function RunMap({ nodes, frontier, cleared, party, items, onEnter
 
   return (
     <div className="mx-auto max-w-[1500px] px-4 py-6 sm:px-7">
-      <div className="mb-4">
-        <p className="font-mono text-[12px] font-bold uppercase tracking-[0.3em] text-ef-muted">Darkest Protocol · 던전 진행</p>
-        <h2 className="font-mono text-xl font-black uppercase tracking-[0.15em] text-white">경로 선택</h2>
-        <p className="mt-1 text-xs text-ef-muted">진행 가능한 방(강조)을 선택. 정예·보스는 위험하나 보상이 큽니다. HP는 야영에서만 회복.</p>
+      <div className="hud-panel dd-cut mb-4 px-4 py-3">
+        <p className="font-mono text-[11px] font-bold uppercase tracking-[0.32em] text-ef-accent/70">Darkest Protocol · 던전 진행</p>
+        <h2 className="font-mono text-2xl font-black uppercase tracking-[0.12em] text-white">경로 선택</h2>
+        <p className="mt-1 text-[13px] text-ef-muted">진행 가능한 방(강조)을 선택. 정예·보스는 위험하나 보상이 큽니다. HP는 야영에서만 회복.</p>
       </div>
 
       <div className="mb-3"><PartyBar party={party} /></div>
@@ -57,7 +61,7 @@ export default function RunMap({ nodes, frontier, cleared, party, items, onEnter
         <span className="font-mono text-[12px] font-bold uppercase tracking-wider text-ef-muted">소지 아이템</span>
         {Object.entries(items).length === 0 && <span className="font-mono text-[12px] text-ef-muted">없음</span>}
         {Object.entries(items).map(([id, n]) => { const it = ITEMS[id]; if (!it) return null; return (
-          <span key={id} className="flex items-center gap-1 border border-ef-line bg-ef-card px-2 py-0.5" style={CUT_SM}>
+          <span key={id} className="hud-tile dd-cut flex items-center gap-1 px-2 py-0.5">
             <img src={itemImage(id)} alt="" loading="lazy" className="h-5 w-5 shrink-0 rounded-sm object-contain" style={{ background: `${itemColor(it.kind)}18` }} />
             <span className="font-mono text-[12px] text-ef-ink">{it.name}</span>
             <span className="font-mono text-[12px] font-bold text-ef-accent">×{n}</span>
@@ -65,7 +69,7 @@ export default function RunMap({ nodes, frontier, cleared, party, items, onEnter
         ); })}
       </div>
 
-      <div className="overflow-x-auto border border-ef-line bg-ef-card/50 p-4" style={CUT_SM}>
+      <div className="hud-panel dd-cut overflow-x-auto p-4">
         <div className="flex min-w-max items-stretch gap-6">
           {depths.map((row, d) => (
             <div key={d} className="flex flex-col justify-center gap-3">
@@ -82,14 +86,14 @@ export default function RunMap({ nodes, frontier, cleared, party, items, onEnter
                     type="button"
                     disabled={!isFrontier}
                     onClick={() => onEnter(n)}
-                    className={`flex w-[120px] items-center gap-2 border px-3 py-2.5 text-left transition ${isFrontier ? "border-ef-accent/70 bg-ef-accent/10 hover:bg-ef-accent/20" : isCleared ? "border-ef-line/60 bg-black/30" : "border-ef-line/40 bg-ef-card/40"} ${dim ? "opacity-45" : ""}`}
-                    style={{ ...CUT_SM, boxShadow: isFrontier ? `0 0 0 1px ${meta.tone}44` : undefined }}
+                    className={`hud-tile dd-cut flex w-[124px] items-center gap-2 px-3 py-2.5 text-left ${isFrontier ? "!border-ef-accent/70 bg-ef-accent/[0.08]" : isCleared ? "opacity-80" : ""} ${dim ? "opacity-45" : ""}`}
+                    style={isFrontier ? { boxShadow: `inset 0 1px 0 rgba(255,255,255,0.06), 0 0 18px -3px ${meta.tone}88` } : undefined}
                   >
-                    <Icon className="h-5 w-5 shrink-0" style={{ color: isCleared ? "#555" : meta.tone }} />
+                    <Icon className="h-5 w-5 shrink-0" style={{ color: isCleared ? "#555" : meta.tone, filter: isFrontier ? `drop-shadow(0 0 5px ${meta.tone})` : undefined }} />
                     <span className="min-w-0">
                       <span className="block font-mono text-sm font-bold" style={{ color: isCleared ? "#666" : "#fff" }}>{meta.label}</span>
                       {isCleared && <span className="block font-mono text-[12px] uppercase text-ef-muted">완료</span>}
-                      {isFrontier && <span className="block font-mono text-[12px] uppercase tracking-wider text-ef-accent">▶ 진입</span>}
+                      {isFrontier && <span className="block font-mono text-[12px] font-bold uppercase tracking-wider text-ef-accent">▶ 진입</span>}
                     </span>
                   </button>
                 );
