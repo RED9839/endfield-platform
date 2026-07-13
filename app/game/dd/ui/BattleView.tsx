@@ -2,9 +2,9 @@
 
 import { useEffect, useReducer, useRef, useState } from "react";
 
-import { act, canAct, isOver, startRound, perTurn, nextActor, turnOrder, type DDClass, type DDSkill, type DDState, type DDUnit, type Element } from "../combat";
+import { act, canAct, isOver, startRound, perTurn, nextActor, turnOrder, usable, BASIC, type DDClass, type DDSkill, type DDState, type DDUnit, type Element } from "../combat";
 import { OPERATORS, SKILLS, enemyDefFor, avatarUrl, skillIcon, enemyImage } from "../roster";
-import { ENCOUNTERS, allyChoose, createBattle, enemyAct, usableSkills, regionEncounter } from "../sim";
+import { ENCOUNTERS, allyChoose, createBattle, enemyAct, regionEncounter } from "../sim";
 import { activeSets, setEffectText } from "../gear";
 import { weaponOf, weaponEffectText, weaponImage, weaponSeriesName, weaponSeriesDesc, WEAPON_KO, WEAPON_ICON } from "../weapons";
 import { OP_TALENTS } from "../operator-talents";
@@ -17,7 +17,17 @@ const elementColor: Record<"physical" | Element, string> = { physical: "#d4d4d8"
 const elementName: Record<"physical" | Element, string> = { physical: "물리", heat: "열기", electric: "전기", cryo: "냉기", nature: "자연" };
 const classLabel: Record<DDClass, string> = { guard: "가드", caster: "캐스터", striker: "스트라이커", vanguard: "뱅가드", defender: "디펜더", supporter: "서포터" };
 const kindLabel: Record<DDSkill["kind"], string> = { attack: "기본공격", battle: "배틀스킬", link: "연계스킬", ult: "궁극기" };
-const targetLabel: Record<DDSkill["target"], string> = { "single-front": "단일", "single-lowhp": "최저 HP", row: "다수(2체)", all: "전체", self: "자신" };
+const targetLabel: Record<DDSkill["target"], string> = { "single-front": "단일", "single-lowhp": "단일", row: "범위", all: "범위", self: "자신" };
+// 스킬 사용 불가 사유(usable()과 동일 순서). null=사용 가능.
+function skillReason(s: DDState, u: DDUnit, sk: DDSkill): string | null {
+  if (usable(s, u, sk)) return null;
+  if (!sk.fromPos.includes(u.pos)) return "위치 제약";
+  if (sk.selfUlt && u.ultCharge < u.ultCost) return "궁 게이지 부족";
+  if (sk.kind === "battle" && s.skillGauge < (sk.gaugeCost ?? 100)) return "스킬 게이지 부족";
+  if (sk.kind === "link" && u.linkCd > 0) return `쿨타임 ${u.linkCd}턴`;
+  if (sk.requiresStance != null && u.stance < sk.requiresStance) return "자세 전환 필요";
+  return sk.requiresText ?? "조건 미충족";
+}
 const statusLabel: Record<string, string> = { stun: "기절", combustion: "연소", corrosion: "부식", crystal: "결정", "armor-break": "갑옷파괴", shock: "감전", wing: "날개" };
 const nodeTitle: Record<NodeKind, string> = { battle: "교전", elite: "정예 교전", boss: "보스 교전", rest: "야영" };
 const behaviorLabel: Record<string, string> = { melee: "근접 돌격", snipe: "원거리 저격", heavy: "중장 강타", aoe: "광역 자폭", heal: "치유 지원", buff: "강화 지원" };
@@ -212,7 +222,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
   const allies = s.units.filter((u) => u.side === "ally");
   const enemies = s.units.filter((u) => u.side === "enemy");
   const KIND_ORDER: Record<DDSkill["kind"], number> = { attack: 0, battle: 1, link: 2, ult: 3 };
-  const skills = current ? [...usableSkills(s, current)].sort((a, b) => KIND_ORDER[a.kind] - KIND_ORDER[b.kind]) : [];
+  const skills = current ? [...(SKILLS[current.id] ?? []), BASIC].sort((a, b) => KIND_ORDER[a.kind] - KIND_ORDER[b.kind]) : []; // 4종 전부(불가 스킬 포함)
   const upcoming = winner ? [] : turnOrder(s, 6); // ATB 예측 순서(비파괴)
 
   return (
@@ -367,13 +377,17 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
               const dmg = sk.power > 0 && current ? Math.round(current.attack * (1 + (current.atkBuff || 0)) * (current.weakenMul ?? 1) * sk.power) : 0;
               const el = sk.element ?? "physical";
               const open = detailId === sk.id;
+              const reason = current ? skillReason(s, current, sk) : null;
+              const off = !!reason;
               return (
-              <button key={sk.id} type="button" onClick={() => chooseSkill(sk)} className={`group relative flex w-[236px] items-start gap-2 border bg-ef-card px-2.5 py-2 pr-8 text-left transition ${open ? "border-ef-accent" : "border-ef-line hover:border-ef-accent/60"}`} style={CUT_SM}>
-                <img src={skillIcon(current!.id, sk.kind)} alt="" loading="lazy" className="mt-0.5 h-9 w-9 shrink-0 border border-ef-line/60 bg-black/40 object-contain p-0.5" onError={(ev) => { (ev.currentTarget as HTMLImageElement).style.visibility = "hidden"; }} />
+              <button key={sk.id} type="button" onClick={() => { if (!off) chooseSkill(sk); }} className={`group relative flex w-[236px] items-start gap-2 border px-2.5 py-2 pr-8 text-left transition ${off ? "cursor-not-allowed border-ef-line/40 bg-black/30" : open ? "border-ef-accent bg-ef-card" : "border-ef-line bg-ef-card hover:border-ef-accent/60"}`} style={CUT_SM}>
+                <img src={skillIcon(current!.id, sk.kind)} alt="" loading="lazy" className={`mt-0.5 h-9 w-9 shrink-0 border border-ef-line/60 bg-black/40 object-contain p-0.5 ${off ? "opacity-40 grayscale" : ""}`} onError={(ev) => { (ev.currentTarget as HTMLImageElement).style.visibility = "hidden"; }} />
                 <span className="min-w-0 flex-1">
-                  <span className="flex items-center gap-1.5"><span className="border px-1 py-px font-mono text-[11px] font-bold uppercase" style={{ borderColor: `${PRIMARY}66`, color: PRIMARY }}>{kindLabel[sk.kind]}</span><span className="truncate font-mono text-sm font-bold text-white">{sk.name}</span></span>
+                  <span className="flex items-center gap-1.5"><span className="border px-1 py-px font-mono text-[11px] font-bold uppercase" style={{ borderColor: `${PRIMARY}66`, color: off ? "#7a6a4a" : PRIMARY }}>{kindLabel[sk.kind]}</span><span className={`truncate font-mono text-sm font-bold ${off ? "text-ef-muted" : "text-white"}`}>{sk.name}</span></span>
                   <span className="mt-1 flex items-center gap-2">
-                    {dmg > 0 ? <span className="font-mono text-[15px] font-bold tabular-nums" style={{ color: elementColor[el] }}>{dmg.toLocaleString()}<span className="ml-0.5 text-[11px] font-normal text-ef-muted">피해</span></span> : <span className="font-mono text-[12px] text-ef-muted">{targetLabel[sk.target] === "자신" ? "버프/유틸" : "유틸"}</span>}
+                    {off ? <span className="font-mono text-[12px] font-bold text-red-400/90">🔒 {reason}</span>
+                      : dmg > 0 ? <span className="font-mono text-[15px] font-bold tabular-nums" style={{ color: elementColor[el] }}>{dmg.toLocaleString()}<span className="ml-0.5 text-[11px] font-normal text-ef-muted">피해</span></span>
+                      : <span className="font-mono text-[12px] text-ef-muted">{sk.target === "self" ? "버프/유틸" : "유틸"}</span>}
                     <span className="font-mono text-[11px] text-ef-muted">{targetLabel[sk.target]}</span>
                   </span>
                 </span>
