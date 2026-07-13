@@ -3,7 +3,7 @@
 import { useEffect, useReducer, useRef, useState } from "react";
 
 import { act, canAct, isOver, startRound, perTurn, nextActor, turnOrder, usable, BASIC, type DDClass, type DDSkill, type DDState, type DDUnit, type Element } from "../combat";
-import { OPERATORS, SKILLS, enemyDefFor, avatarUrl, skillIcon, enemyImage } from "../roster";
+import { OPERATORS, SKILLS, enemyDefFor, avatarUrl, fullUrl, skillIcon, enemyImage } from "../roster";
 import { ENCOUNTERS, allyChoose, createBattle, enemyAct, regionEncounter } from "../sim";
 import { activeSets, setEffectText } from "../gear";
 import { weaponOf, weaponEffectText, weaponImage, weaponSeriesName, weaponSeriesDesc, WEAPON_KO, WEAPON_ICON } from "../weapons";
@@ -283,36 +283,38 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
 
       {/* ===== 전장 ===== */}
       <div className="hud-stage relative overflow-hidden border border-ef-line p-3 sm:p-5" style={{ ...CUT_SM, boxShadow: "inset 0 0 60px -20px rgba(0,0,0,0.9), inset 0 1px 0 rgba(255,255,255,0.04)" }}>
-        {/* 적진 */}
-        <div className="mb-1.5 flex items-center gap-2 font-mono text-[13px] font-bold uppercase tracking-[0.2em] text-red-300/70"><span className="h-px flex-1 bg-gradient-to-r from-transparent to-red-500/30" />적 {enemies.filter((e) => e.hp > 0).length}/{enemies.length}<span className="h-px flex-1 bg-gradient-to-l from-transparent to-red-500/30" /></div>
-        <div className="flex flex-wrap justify-center gap-2.5">
+        {/* ===== 적진 (스테이지 상단, 서 있는 피규어) ===== */}
+        <div className="mb-1 flex items-center gap-2 font-mono text-[12px] font-bold uppercase tracking-[0.2em] text-red-300/70"><span className="h-px flex-1 bg-gradient-to-r from-transparent to-red-500/25" />적 {enemies.filter((e) => e.hp > 0).length}/{enemies.length}<span className="h-px flex-1 bg-gradient-to-l from-transparent to-red-500/25" /></div>
+        <div className="flex flex-wrap items-end justify-center gap-x-4 gap-y-2">
           {enemies.map((e) => {
             const ed = enemyDefFor(e.id);
             const el = ed?.element ?? "physical";
             const dead = e.hp <= 0;
             const hit = fx.floaters.some((f) => f.id === e.id && f.amt < 0);
             const isAct = fx.activeId === e.id;
+            const weak = ed?.resist ? (Object.entries(ed.resist) as [Element | "physical", number][]).filter(([, v]) => v < 0) : [];
             return (
-              <div key={e.id} className={`relative w-[184px] ${shakeCls(hit, fx.tick)} ${actCls(isAct, fx.tick)}`}>
+              <div key={e.id} className={`group relative flex w-[150px] flex-col items-center ${shakeCls(hit, fx.tick)} ${actCls(isAct, fx.tick)}`}>
                 <FxLayer id={e.id} fx={fx} />
-                <div onClick={aiming && !dead ? () => playerAct(aiming, e.id) : () => setInspectId(e.id)} className={`hud-unit dd-cut relative cursor-pointer p-2.5 transition ${dead ? "opacity-35 grayscale" : aiming ? "!border-ef-accent bg-ef-accent/10 hover:bg-ef-accent/20" : e.staggered ? "!border-yellow-400/70 bg-yellow-400/5 hover:!border-yellow-400" : "hud-unit-enemy hover:!border-red-400"} ${isAct && !dead ? "dd-active" : ""}`}>
-                  {aiming && !dead && <span className="absolute right-1 top-1 z-10 font-mono text-[11px] font-bold text-ef-accent">🎯 대상</span>}
-                  {/* 적 이미지 */}
-                  <div className="relative mb-1.5 flex h-20 items-center justify-center overflow-hidden border border-ef-line/50" style={{ background: `radial-gradient(circle at 50% 30%, ${el === "physical" ? "#5a2a22" : elementColor[el] + "40"}, #140a08 72%)` }}>
-                    <span className="absolute text-3xl opacity-40">{nodeKind === "boss" && ed?.role === "boss" ? "☠" : ed?.role === "elite" ? "✧" : "✦"}</span>
-                    <img src={enemyImage(e.id)} alt="" loading="lazy" className="relative h-full w-full object-contain" onError={(ev) => { (ev.currentTarget as HTMLImageElement).style.display = "none"; }} />
-                    {dead && <span className="absolute text-3xl">💀</span>}
-                  </div>
-                  <div className="mb-1 flex items-center justify-between gap-2">
-                    <span className="flex min-w-0 items-center gap-1.5">{ed && <span className="h-2 w-2 shrink-0" style={{ background: elementColor[el] }} />}<span className="truncate font-mono text-sm font-bold text-white">{e.name}</span></span>
-                    <span className="font-mono text-[12px] text-ef-muted">{Math.max(0, e.hp)}</span>
-                  </div>
+                {aiming && !dead && <span className="absolute -top-1 z-20 font-mono text-[11px] font-bold text-ef-accent" style={{ textShadow: "0 0 6px #000" }}>🎯 대상</span>}
+                {/* 아트(접지 그림자·선택 링) */}
+                <div onClick={aiming && !dead ? () => playerAct(aiming, e.id) : () => setInspectId(e.id)} className="relative flex h-32 w-full cursor-pointer items-end justify-center">
+                  <span className="pointer-events-none absolute bottom-1 h-2.5 w-24 rounded-[50%]" style={{ background: "radial-gradient(50% 50% at 50% 50%, rgba(0,0,0,0.6), transparent)" }} />
+                  {isAct && !dead && <span className="pointer-events-none absolute bottom-0 h-6 w-28 rounded-[50%]" style={{ background: `radial-gradient(50% 50% at 50% 50%, ${elementColor[el]}66, transparent 70%)` }} />}
+                  <img src={enemyImage(e.id)} alt="" loading="lazy" className={`relative max-h-full w-auto object-contain transition group-hover:scale-[1.03] ${dead ? "opacity-30 grayscale" : ""}`} style={{ filter: dead ? undefined : aiming ? "drop-shadow(0 3px 10px rgba(255,154,47,0.7))" : e.staggered ? "drop-shadow(0 3px 10px rgba(250,204,21,0.6))" : "drop-shadow(0 6px 12px rgba(0,0,0,0.6))" }} onError={(ev) => { (ev.currentTarget as HTMLImageElement).style.visibility = "hidden"; }} />
+                  {dead && <span className="absolute text-4xl">💀</span>}
+                </div>
+                {/* 정보 */}
+                <div className="w-full">
+                  <div className="flex items-center justify-between gap-1"><span className="flex min-w-0 items-center gap-1"><span className="h-1.5 w-1.5 shrink-0" style={{ background: elementColor[el] }} /><span className="truncate font-mono text-[13px] font-bold text-white" style={{ textShadow: "0 1px 3px #000" }}>{e.name}</span></span><span className="font-mono text-[11px] text-ef-muted">{Math.max(0, e.hp)}</span></div>
                   <Bar value={e.hp} max={e.maxHp} color="#e0655c" />
-                  {!dead && <div className="mt-1 flex items-center gap-1.5"><span className="shrink-0 font-mono text-[11px] font-bold uppercase text-cyan-300/80">속도</span><Bar value={e.atb} max={100} color="#67e8f9" h="h-1.5" /></div>}
-                  {e.staggerMax > 0 && <div className="mt-1"><Bar value={e.staggered ? e.staggerMax : e.stagger} max={e.staggerMax} color={e.staggered ? "#facc15" : "#a16207"} h="h-1" /></div>}
-                  {e.staggered && <div className="mt-1 font-mono text-[12px] font-bold uppercase tracking-wider text-yellow-400">⚡ 불균형 +30%</div>}
-                  {ed && <div className="mt-1 flex flex-wrap gap-1"><Chip tone="#e0655c">{ed.faction}</Chip>{ed.resist && (Object.entries(ed.resist) as [Element | "physical", number][]).filter(([, v]) => v < 0).map(([eln, v]) => <Chip key={eln} tone={elementColor[eln]}>{elementName[eln]} 약점{Math.round(-v * 100)}</Chip>)}</div>}
-                  <div className="mt-1 flex flex-wrap gap-1">{unitChips(e).map((c) => <Chip key={c.k} tone={c.tone}>{c.label}</Chip>)}</div>
+                  {e.staggerMax > 0 && !dead && <div className="mt-0.5"><Bar value={e.staggered ? e.staggerMax : e.stagger} max={e.staggerMax} color={e.staggered ? "#facc15" : "#a16207"} h="h-1" /></div>}
+                  {!dead && <div className="mt-0.5"><Bar value={e.atb} max={100} color="#67e8f9" h="h-1" /></div>}
+                  {!dead && <div className="mt-1 flex flex-wrap justify-center gap-1">
+                    {e.staggered && <Chip tone="#facc15">⚡ 불균형</Chip>}
+                    {weak.map(([eln, v]) => <Chip key={eln} tone={elementColor[eln]}>{elementName[eln]}약점{Math.round(-v * 100)}</Chip>)}
+                    {unitChips(e).map((c) => <Chip key={c.k} tone={c.tone}>{c.label}</Chip>)}
+                  </div>}
                 </div>
               </div>
             );
@@ -320,11 +322,10 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
         </div>
 
         {/* 교전선 */}
-        <div className="my-4 flex items-center justify-center gap-3"><span className="hud-horizon w-1/3" /><span className="font-mono text-[11px] uppercase tracking-[0.45em] text-ef-accent/70">교전</span><span className="hud-horizon w-1/3" /></div>
+        <div className="my-3 flex items-center justify-center gap-3"><span className="hud-horizon w-1/3" /><span className="font-mono text-[11px] uppercase tracking-[0.45em] text-ef-accent/70">교전</span><span className="hud-horizon w-1/3" /></div>
 
-        {/* 아군진 */}
-        <div className="mb-1.5 flex items-center gap-2 font-mono text-[13px] font-bold uppercase tracking-[0.2em] text-ef-accent/70"><span className="h-px flex-1 bg-gradient-to-r from-transparent to-ef-accent/25" />부대<span className="h-px flex-1 bg-gradient-to-l from-transparent to-ef-accent/25" /></div>
-        <div className="flex flex-wrap justify-center gap-2.5">
+        {/* ===== 아군진 (스테이지 하단, 전신 피규어) ===== */}
+        <div className="flex flex-wrap items-end justify-center gap-x-4 gap-y-3">
           {allies.map((a) => {
             const op = OPERATORS.find((o) => o.id === a.id);
             const el = op?.element ?? "physical";
@@ -334,42 +335,41 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
             const isAct = fx.activeId === a.id;
             const isCur = current?.id === a.id;
             const sets = activeSets(party.find((p) => p.id === a.id)?.loadout ?? {});
+            const ready = a.ultCharge >= a.ultCost;
             return (
-              <div key={a.id} className={`relative w-[212px] ${shakeCls(hit, fx.tick)} ${actCls(isAct, fx.tick)}`}>
+              <div key={a.id} className={`group relative flex w-[176px] flex-col items-center ${shakeCls(hit, fx.tick)} ${actCls(isAct, fx.tick)}`}>
                 <FxLayer id={a.id} fx={fx} />
-                <div onClick={() => setInspectId(a.id)} className={`hud-unit dd-cut relative cursor-pointer p-2 transition ${dead ? "opacity-40 grayscale" : isCur ? "!border-ef-accent bg-ef-accent/10" : "hover:!border-ef-accent/40"} ${isAct && !dead ? "dd-active" : ""}`}>
-                  <div className="mb-1.5 flex gap-2">
-                    {/* 초상 */}
-                    <div className="relative h-16 w-16 shrink-0 border border-ef-line" style={{ background: `center top/cover url(${avatarUrl(a.id)}), #0d0906`, boxShadow: `inset 0 0 0 1px ${elementColor[el]}55, 0 0 12px ${elementColor[el]}22` }}>
-                      <span className="absolute inset-x-0 bottom-0 h-1" style={{ background: elementColor[el] }} />
-                      {dead && <span className="absolute inset-0 flex items-center justify-center text-2xl">💀</span>}
-                      {isCur && <span className="absolute -right-1 -top-1 font-mono text-[12px] font-bold text-ef-accent">▶</span>}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-1">
-                        <span className="truncate font-mono text-sm font-bold text-white">{a.name}</span>
-                        {weaponOf(a.id) && (weaponImage(a.id) ? <img src={weaponImage(a.id)} alt="" loading="lazy" className="h-4 w-4 shrink-0 object-contain" title={`${WEAPON_KO[weaponOf(a.id)!]} · ${weaponEffectText(a.id)}`} /> : <span className="text-[13px] leading-none" title={`${WEAPON_KO[weaponOf(a.id)!]} · ${weaponEffectText(a.id)}`}>{WEAPON_ICON[weaponOf(a.id)!]}</span>)}
-                        {op && <span className="font-mono text-[12px] uppercase text-ef-muted">{classLabel[op.cls]}</span>}
-                      </div>
-                      <div className="mt-0.5 flex justify-between font-mono text-[12px] text-ef-muted"><span>HP</span><span>{Math.max(0, a.hp)}/{a.maxHp}</span></div>
-                      <Bar value={a.hp} max={a.maxHp} color={lowHp ? "#e0655c" : "#8fb84a"} />
-                      {a.shield > 0 && <div className="mt-1"><Chip tone="#38bdf8">🛡 보호막 {a.shield}</Chip></div>}
-                      {(() => { const ready = a.ultCharge >= a.ultCost; return (
-                        <div className="mt-1 flex items-center gap-1.5">
-                          <span className={`shrink-0 font-mono text-[11px] font-bold uppercase ${ready ? "text-amber-300" : "text-ef-muted"}`}>궁</span>
-                          <div className="relative flex-1" style={ready ? { filter: "drop-shadow(0 0 5px #f5c54299)" } : undefined}>
-                            <Bar value={a.ultCharge} max={a.ultCost} color={ready ? "#f5c542" : "#7a611c"} h="h-3" />
-                            <span className="pointer-events-none absolute inset-0 flex items-center justify-center font-mono text-[10px] font-bold leading-none" style={{ color: ready ? "#1a1206" : "#e5c98a", textShadow: ready ? "none" : "0 1px 2px #000" }}>{ready ? "⚡ 궁극기 READY" : `${Math.round(a.ultCharge)} / ${a.ultCost}`}</span>
-                          </div>
-                        </div>
-                      ); })()}
-                      <div className="mt-1 flex items-center gap-1.5"><span className="shrink-0 whitespace-nowrap font-mono text-[11px] font-bold uppercase text-cyan-300/80">속도</span><Bar value={a.atb} max={100} color="#67e8f9" h="h-1.5" /></div>
+                {/* 전신 아트 */}
+                <div onClick={() => setInspectId(a.id)} className="relative flex h-52 w-full cursor-pointer items-end justify-center">
+                  <span className="pointer-events-none absolute bottom-1 h-3 w-28 rounded-[50%]" style={{ background: "radial-gradient(50% 50% at 50% 50%, rgba(0,0,0,0.6), transparent)" }} />
+                  {isCur && !dead && <span className="pointer-events-none absolute bottom-0 h-7 w-32 rounded-[50%]" style={{ background: `radial-gradient(50% 50% at 50% 50%, ${elementColor[el]}88, transparent 70%)` }} />}
+                  <img src={fullUrl(a.id)} alt="" loading="lazy" className={`relative max-h-full w-auto object-contain transition group-hover:brightness-110 ${dead ? "opacity-35 grayscale" : ""}`} style={{ filter: dead ? undefined : isCur ? "drop-shadow(0 6px 16px rgba(255,190,107,0.55))" : "drop-shadow(0 8px 16px rgba(0,0,0,0.6))" }} onError={(ev) => { (ev.currentTarget as HTMLImageElement).src = avatarUrl(a.id); }} />
+                  {dead && <span className="absolute inset-0 flex items-center justify-center text-5xl">💀</span>}
+                  {isCur && !dead && <span className="absolute -top-1 z-10 font-mono text-[12px] font-black uppercase tracking-wider text-ef-accent" style={{ textShadow: "0 0 8px #000, 0 0 4px #000" }}>▶ 행동</span>}
+                </div>
+                {/* 정보 패널 */}
+                <div className="hud-tile dd-cut w-full px-2 py-1.5" style={isCur ? { borderColor: `${PRIMARY}aa` } : undefined}>
+                  <div className="flex items-center gap-1">
+                    <span className="h-2 w-2 shrink-0" style={{ background: elementColor[el] }} />
+                    <span className="truncate font-mono text-[13px] font-bold text-white">{a.name}</span>
+                    {weaponOf(a.id) && (weaponImage(a.id) ? <img src={weaponImage(a.id)} alt="" loading="lazy" className="h-4 w-4 shrink-0 object-contain" title={`${WEAPON_KO[weaponOf(a.id)!]} · ${weaponEffectText(a.id)}`} /> : <span className="text-[13px] leading-none" title={WEAPON_KO[weaponOf(a.id)!]}>{WEAPON_ICON[weaponOf(a.id)!]}</span>)}
+                    {op && <span className="ml-auto font-mono text-[10px] uppercase text-ef-muted">{classLabel[op.cls]}</span>}
+                  </div>
+                  <div className="mt-0.5 flex justify-between font-mono text-[11px] text-ef-muted"><span>HP</span><span>{Math.max(0, a.hp)}/{a.maxHp}</span></div>
+                  <Bar value={a.hp} max={a.maxHp} color={lowHp ? "#e0655c" : "#8fb84a"} />
+                  {a.shield > 0 && <div className="mt-0.5"><Chip tone="#38bdf8">🛡 {a.shield}</Chip></div>}
+                  <div className="mt-1 flex items-center gap-1">
+                    <span className={`shrink-0 font-mono text-[10px] font-bold uppercase ${ready ? "text-amber-300" : "text-ef-muted"}`}>궁</span>
+                    <div className="relative flex-1" style={ready ? { filter: "drop-shadow(0 0 4px #f5c54299)" } : undefined}>
+                      <Bar value={a.ultCharge} max={a.ultCost} color={ready ? "#f5c542" : "#7a611c"} h="h-2.5" />
+                      <span className="pointer-events-none absolute inset-0 flex items-center justify-center font-mono text-[9px] font-bold leading-none" style={{ color: ready ? "#1a1206" : "#e5c98a", textShadow: ready ? "none" : "0 1px 2px #000" }}>{ready ? "⚡READY" : `${Math.round(a.ultCharge)}/${a.ultCost}`}</span>
                     </div>
                   </div>
-                  <div className="flex flex-wrap gap-1">
+                  <div className="mt-0.5 flex items-center gap-1"><span className="shrink-0 font-mono text-[10px] font-bold uppercase text-cyan-300/80">속도</span><Bar value={a.atb} max={100} color="#67e8f9" h="h-1.5" /></div>
+                  {(sets.length > 0 || unitChips(a).length > 0) && <div className="mt-1 flex flex-wrap gap-1">
                     {sets.map((n) => <Chip key={`set-${n}`} tone="#c9a227">◆{n}</Chip>)}
                     {unitChips(a).map((c) => <Chip key={c.k} tone={c.tone}>{c.label}</Chip>)}
-                  </div>
+                  </div>}
                 </div>
               </div>
             );
