@@ -889,21 +889,23 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
     self.ultCharge = Math.min(self.ultCost, self.ultCharge + (hits >= 3 ? 35 : hits === 2 ? 30 : 25));
     log.push(`  → 열화 궁 충전 (${hits}명)`);
   }
-  // 레바테인 황혼: 열화의 마검 변신(15초≈3턴) — 지속 동안 일반공격/배틀 강화(act 배수)
+  // 레바테인 황혼: 열화의 마검 변신(15초≈3턴) — 지속 동안 일반공격/배틀 강화(act 배수). 변신 직후 즉시 추가 행동.
   if (self.id === "laevatain" && skill.kind === "ult") {
     setTimer(self, "twilight", 3);
-    log.push(`  → 황혼 변신! 15초간 일반공격·배틀 스킬 강화`);
+    self.atb += 100; // 변신 후 바로 자기 턴(강화 평타/배틀 즉시 활용)
+    log.push(`  → 황혼 변신! 일반공격·배틀 스킬 강화 · 즉시 추가 행동`);
   }
   // 이본(스트라이커): 꽁꽁이 연계 — 명중 시 궁 에너지 +10(여러 목표여도 1회)
   if (self.id === "yvonne" && skill.kind === "link") {
     self.ultCharge = Math.min(self.ultCost, self.ultCharge + 10);
     log.push(`  → 꽁꽁이 궁 충전 (+10)`);
   }
-  // 장방이(스트라이커): 심판의 폭풍 — 천리의 경지 변신(25초≈4턴, 평타/배틀 강화·방해 면역) + 첫 배틀 무소모 청뢰검 3자루
+  // 장방이(스트라이커): 심판의 폭풍 — 천리의 경지 변신(25초≈4턴, 평타/배틀 강화·방해 면역) + 첫 배틀 무소모 청뢰검 3자루. 변신 직후 즉시 추가 행동.
   if (self.id === "zhuangfangyi" && skill.kind === "ult") {
     setTimer(self, "heavenly", 4);
     self.procCount = Math.min(9, Math.max(self.procCount || 0, 3));
-    log.push(`  → 심판의 폭풍! 천리의 경지 변신 (청뢰검 ${self.procCount}/9)`);
+    self.atb += 100; // 변신 후 바로 자기 턴(강화 배틀·청뢰검 즉시 폭발)
+    log.push(`  → 심판의 폭풍! 천리의 경지 변신 (청뢰검 ${self.procCount}/9) · 즉시 추가 행동`);
   }
   if (skill.kind === "attack" && self.side === "ally") { // 강력한 일격/처형 → 스킬 게이지 회복
     gaugeUp(s, (executed ? EXEC_RECOVER : BASIC_RECOVER));
