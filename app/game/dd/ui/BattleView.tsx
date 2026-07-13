@@ -3,10 +3,11 @@
 import { useEffect, useReducer, useRef, useState } from "react";
 
 import { act, canAct, isOver, startRound, perTurn, nextActor, turnOrder, type DDClass, type DDSkill, type DDState, type DDUnit, type Element } from "../combat";
-import { OPERATORS, enemyDefFor, avatarUrl, skillIcon, enemyImage } from "../roster";
+import { OPERATORS, SKILLS, enemyDefFor, avatarUrl, skillIcon, enemyImage } from "../roster";
 import { ENCOUNTERS, allyChoose, createBattle, enemyAct, usableSkills, regionEncounter } from "../sim";
-import { activeSets } from "../gear";
-import { weaponOf, weaponEffectText, weaponImage, WEAPON_KO, WEAPON_ICON } from "../weapons";
+import { activeSets, setEffectText } from "../gear";
+import { weaponOf, weaponEffectText, weaponImage, weaponSeriesName, weaponSeriesDesc, WEAPON_KO, WEAPON_ICON } from "../weapons";
+import { OP_TALENTS } from "../operator-talents";
 import { ITEMS, useItem as applyItem, canUseItem, condText, itemColor, itemImage } from "../items";
 import type { BattleResult, NodeKind, PartyMember } from "../run";
 
@@ -18,6 +19,8 @@ const classLabel: Record<DDClass, string> = { guard: "가드", caster: "캐스�
 const kindLabel: Record<DDSkill["kind"], string> = { attack: "기본공격", battle: "배틀스킬", link: "연계스킬", ult: "궁극기" };
 const statusLabel: Record<string, string> = { stun: "기절", combustion: "연소", corrosion: "부식", crystal: "결정", "armor-break": "갑옷파괴", shock: "감전", wing: "날개" };
 const nodeTitle: Record<NodeKind, string> = { battle: "교전", elite: "정예 교전", boss: "보스 교전", rest: "야영" };
+const behaviorLabel: Record<string, string> = { melee: "근접 돌격", snipe: "원거리 저격", heavy: "중장 강타", aoe: "광역 자폭", heal: "치유 지원", buff: "강화 지원" };
+const tierLabel: Record<string, string> = { normal: "일반", common: "일반", enhanced: "강화", advanced: "정예", elite: "정예", boss: "보스" };
 
 // 유닛 원소색(플로팅 데미지·이펙트용)
 function unitElement(u: DDUnit): "physical" | Element {
@@ -100,6 +103,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
   const [fx, setFx] = useState<Fx>(NO_FX);
   const [roundBanner, setRoundBanner] = useState<{ n: number; tick: number } | null>(null);
   const [aiming, setAiming] = useState<DDSkill | null>(null); // 대상 선택 중인 단일 스킬
+  const [inspectId, setInspectId] = useState<string | null>(null); // 스탯 조회 유닛
   const [showLog, setShowLog] = useState(true);
   const [tab, setTab] = useState<"dmg" | "log">("dmg"); // 하단 패널: 데미지 기록 / 전투 기록
   const [, bump] = useReducer((x) => x + 1, 0);
@@ -267,7 +271,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
             return (
               <div key={e.id} className={`relative w-[180px] ${shakeCls(hit, fx.tick)} ${actCls(isAct, fx.tick)}`}>
                 <FxLayer id={e.id} fx={fx} />
-                <div onClick={aiming && !dead ? () => playerAct(aiming, e.id) : undefined} className={`relative border p-2.5 transition ${dead ? "border-ef-line/40 opacity-35 grayscale" : aiming ? "cursor-pointer border-ef-accent bg-ef-accent/10 hover:bg-ef-accent/20" : e.staggered ? "border-yellow-400/70 bg-yellow-400/5" : "border-red-500/40 bg-[#1a0e0b]"} ${isAct && !dead ? "dd-active" : ""}`} style={CUT_SM}>
+                <div onClick={aiming && !dead ? () => playerAct(aiming, e.id) : () => setInspectId(e.id)} className={`relative border p-2.5 transition ${dead ? "cursor-pointer border-ef-line/40 opacity-35 grayscale" : aiming ? "cursor-pointer border-ef-accent bg-ef-accent/10 hover:bg-ef-accent/20" : e.staggered ? "cursor-pointer border-yellow-400/70 bg-yellow-400/5 hover:border-yellow-400" : "cursor-pointer border-red-500/40 bg-[#1a0e0b] hover:border-red-400"} ${isAct && !dead ? "dd-active" : ""}`} style={CUT_SM}>
                   {aiming && !dead && <span className="absolute right-1 top-1 z-10 font-mono text-[11px] font-bold text-ef-accent">🎯 대상</span>}
                   {/* 적 이미지 */}
                   <div className="relative mb-1.5 flex h-16 items-center justify-center overflow-hidden border border-ef-line/50" style={{ background: `radial-gradient(circle at 50% 35%, ${el === "physical" ? "#5a2a22" : elementColor[el] + "40"}, #140a08 70%)` }}>
@@ -309,7 +313,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
             return (
               <div key={a.id} className={`relative w-[212px] ${shakeCls(hit, fx.tick)} ${actCls(isAct, fx.tick)}`}>
                 <FxLayer id={a.id} fx={fx} />
-                <div className={`relative border p-2 transition ${dead ? "border-ef-line/40 opacity-40 grayscale" : isCur ? "border-ef-accent bg-ef-accent/10" : "border-ef-line bg-[#150e08]"} ${isAct && !dead ? "dd-active" : ""}`} style={CUT_SM}>
+                <div onClick={() => setInspectId(a.id)} className={`relative cursor-pointer border p-2 transition ${dead ? "border-ef-line/40 opacity-40 grayscale" : isCur ? "border-ef-accent bg-ef-accent/10" : "border-ef-line bg-[#150e08] hover:border-ef-accent/40"} ${isAct && !dead ? "dd-active" : ""}`} style={CUT_SM}>
                   <div className="mb-1.5 flex gap-2">
                     {/* 초상 */}
                     <div className="relative h-16 w-16 shrink-0 border border-ef-line" style={{ background: `center top/cover url(${avatarUrl(a.id)}), #0d0906`, boxShadow: `inset 0 0 0 1px ${elementColor[el]}55` }}>
@@ -418,6 +422,91 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
                 ))}
               </div>
             )}
+          </div>
+        );
+      })()}
+
+      {/* 유닛 조회 패널 */}
+      {inspectId && (() => {
+        const u = s.units.find((x) => x.id === inspectId);
+        if (!u) return null;
+        const ally = u.side === "ally";
+        const op = ally ? OPERATORS.find((o) => o.id === u.id) : null;
+        const ed = ally ? null : enemyDefFor(u.id);
+        const el = unitElement(u);
+        const talents = ally ? OP_TALENTS[u.id] ?? [] : [];
+        const uskills = ally ? SKILLS[u.id] ?? [] : [];
+        const sets = ally ? activeSets(party.find((p) => p.id === u.id)?.loadout ?? {}) : [];
+        const wId = ally ? weaponOf(u.id) : null;
+        const resists = Object.entries(u.resist) as [Element | "physical", number][];
+        const close = () => setInspectId(null);
+        const hide = (ev: React.SyntheticEvent<HTMLImageElement>) => { (ev.currentTarget as HTMLImageElement).style.visibility = "hidden"; };
+        const St = ({ label, value }: { label: string; value: string | number }) => (
+          <div className="bg-[#120c07] px-2.5 py-2"><div className="font-mono text-[11px] uppercase tracking-wider text-ef-muted">{label}</div><div className="mt-0.5 font-mono text-[15px] font-bold text-ef-ink">{value}</div></div>
+        );
+        const Sec = ({ title, children }: { title: string; children: React.ReactNode }) => (
+          <div className="border-t border-ef-line p-3"><div className="mb-2 font-mono text-[12px] font-bold uppercase tracking-wider text-ef-accent/70">{title}</div>{children}</div>
+        );
+        return (
+          <div onClick={close} className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4">
+            <div onClick={(e) => e.stopPropagation()} className="max-h-[86vh] w-full max-w-[540px] overflow-y-auto border border-ef-accent/50 bg-[#0d0906]" style={CUT_SM}>
+              {/* 헤더 */}
+              <div className="flex items-center gap-3 border-b border-ef-line p-3.5">
+                <div className="h-14 w-14 shrink-0 border border-ef-line" style={{ background: ally ? `center top/cover url(${avatarUrl(u.id)}), #0d0906` : `center/contain no-repeat url(${enemyImage(u.id)}), radial-gradient(circle at 50% 35%, ${el === "physical" ? "#5a2a22" : elementColor[el] + "40"}, #140a08 70%)` }} />
+                <div className="min-w-0 flex-1">
+                  <div className="font-mono text-lg font-bold text-white">{u.name}</div>
+                  <div className="mt-0.5 flex flex-wrap items-center gap-x-1.5 font-mono text-[13px] text-ef-muted">
+                    <span className="inline-block h-2 w-2" style={{ background: elementColor[el] }} /><span>{elementName[el]}</span>
+                    {op && <span>· {classLabel[op.cls]}</span>}
+                    {ed && <span>· {tierLabel[ed.tier] ?? ed.tier} · {ed.faction} · {ed.role}</span>}
+                  </div>
+                </div>
+                <button type="button" onClick={close} className="shrink-0 border border-ef-line px-2 py-1 font-mono text-sm text-ef-muted transition hover:border-ef-accent/60 hover:text-white">✕</button>
+              </div>
+              {/* 스탯 */}
+              <div className="grid grid-cols-3 gap-px bg-ef-line p-px">
+                <St label="HP" value={`${Math.max(0, u.hp)}/${u.maxHp}`} />
+                <St label="공격력" value={u.attack} />
+                <St label="방어력" value={u.defense} />
+                <St label="속도" value={u.speed + (u.speedMod || 0)} />
+                <St label="치명" value={`${Math.round(u.critRate * 100)}%`} />
+                <St label="치명피해" value={`${Math.round(u.critDmg * 100)}%`} />
+              </div>
+              {/* 저항 */}
+              <Sec title="속성 저항">
+                <div className="flex flex-wrap gap-x-3 gap-y-1">
+                  {resists.map(([k, v]) => <span key={k} className="font-mono text-[13px]" style={{ color: v < 0 ? "#f87171" : elementColor[k] }}>{elementName[k]} {v > 0 ? `저항 ${Math.round(v * 100)}` : v < 0 ? `약점 ${Math.round(-v * 100)}` : "0"}</span>)}
+                </div>
+              </Sec>
+              {ally && <>
+                {wId && <Sec title="무기">
+                  <div className="flex items-start gap-2.5">
+                    {weaponImage(u.id) && <img src={weaponImage(u.id)} alt="" className="h-9 w-9 shrink-0 object-contain" onError={hide} />}
+                    <div className="min-w-0">
+                      <div className="font-mono text-[14px] font-bold text-white">{WEAPON_KO[wId]}{weaponSeriesName(u.id) && <span className="text-ef-muted"> · {weaponSeriesName(u.id)}</span>}</div>
+                      <div className="mt-0.5 font-mono text-[13px] text-ef-accent-soft">{weaponEffectText(u.id)}</div>
+                      {weaponSeriesDesc(u.id) && <div className="mt-0.5 font-mono text-[12px] leading-relaxed text-ef-muted">{weaponSeriesDesc(u.id)}</div>}
+                    </div>
+                  </div>
+                </Sec>}
+                <Sec title="장비 세트">
+                  {sets.length ? sets.map((n) => <div key={n} className="mb-1.5 last:mb-0"><span className="font-mono text-[14px] font-bold text-[#e8c56a]">◆ {n}</span><div className="mt-0.5 font-mono text-[13px] leading-relaxed text-ef-muted">{setEffectText(n)}</div></div>) : <div className="font-mono text-[13px] text-ef-muted">활성 세트 없음</div>}
+                </Sec>
+                <Sec title="스킬">
+                  {[...uskills].sort((a, b) => KIND_ORDER[a.kind] - KIND_ORDER[b.kind]).map((sk) => <div key={sk.id} className="mb-2.5 flex items-start gap-2.5 last:mb-0">
+                    <img src={skillIcon(u.id, sk.kind)} alt="" className="h-9 w-9 shrink-0 border border-ef-line object-cover" onError={hide} />
+                    <div className="min-w-0"><div><span className="font-mono text-[14px] font-bold text-white">{sk.name}</span> <span className="font-mono text-[11px] uppercase text-ef-accent/70">{kindLabel[sk.kind]}</span></div>{sk.note && <div className="mt-0.5 font-mono text-[13px] leading-relaxed text-ef-muted">{sk.note}</div>}</div>
+                  </div>)}
+                </Sec>
+                {talents.length > 0 && <Sec title="재능">
+                  {talents.map((t, i) => <div key={i} className="mb-2.5 flex items-start gap-2.5 last:mb-0">
+                    {t.icon && <img src={t.icon} alt="" className="h-9 w-9 shrink-0 border border-ef-line object-cover" onError={hide} />}
+                    <div className="min-w-0"><div className="font-mono text-[14px] font-bold text-white">{t.name}</div><div className="mt-0.5 font-mono text-[13px] leading-relaxed text-ef-muted">{t.desc}</div></div>
+                  </div>)}
+                </Sec>}
+              </>}
+              {ed && <Sec title="행동 유형"><div className="font-mono text-[13px] text-ef-muted">{behaviorLabel[ed.behavior] ?? ed.behavior}</div></Sec>}
+            </div>
           </div>
         );
       })()}
