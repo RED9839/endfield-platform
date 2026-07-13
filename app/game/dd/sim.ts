@@ -2,7 +2,7 @@
 import { BASIC, DDState, DDUnit, DDSkill, Element, applyAttach, applyDamage, healUnit, living, mitigate, usable, pickTargets, vulnFor } from "./combat";
 import { SKILLS, makeAlly, makeEnemy, ENEMY_DEFS, enemyDefFor, frontlineOrder } from "./roster";
 import { applyGear, GEAR_SLOTS, type Loadout, type GearSlot } from "./gear";
-import { applyWeapon, applyWeaponTeam } from "./weapons";
+import { applyWeapon } from "./weapons";
 import type { OpProgress } from "./progress";
 import { rewardItemPool } from "./items";
 
@@ -198,7 +198,6 @@ export function createBattle(party: { id: string; hp?: number; loadout?: Loadout
     applyWeapon(u); // 시그니처 무기: 공격력 +10% + 타입 고유효과
     return u;
   });
-  applyWeaponTeam(allies); // 무기 팀 버프(흐름·의료 팀 공격 / 추격·고통 팀 아츠)
   const enemies = enc.make();
   return { units: [...allies, ...enemies], round: 0, log: [], skillGauge: Math.min(300, 200 + bonusGauge), maxGauge: 300 };
 }

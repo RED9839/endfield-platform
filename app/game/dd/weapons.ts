@@ -93,55 +93,104 @@ export const OP_WEAPON_STATS: Record<string, WeaponStats> = {
   mifu: { atk: 510, buff: "str", buffVal: 156, sub: "atk", subVal: 39, uniq: "기예 · 붉은색의 단절" },
 };
 
-// 무기 시리즈 스킬(3번째=고유효과) — 무기별 개별 consolidated 효과(상시+조건부 반영).
-// 같은 시리즈명이어도 무기마다 값·효과 다름 → 무기 단위로 실측 기반 매핑. dmgKind: all(물리)/arts/elem(오퍼속성)/battle(배틀·궁).
-// flat=상시 피해%/유틸(실측), trig=조건부 트리거(이벤트 발동). trig.on: ult/battle/link/anomaly/crush/physBreak/launch/heal.
-type WeaponTrig = { on: string; tgt: "self" | "team"; k: "all" | "arts" | "elem" | "attack" | "atk"; val: number; max?: number };
-type WeaponFx = { atk?: number; crit?: number; dmg?: number; dmgKind?: "all" | "arts" | "elem" | "battle"; vsBroken?: number; teamAtk?: number; teamArts?: number; heal?: number; energy?: number; trig?: WeaponTrig };
+// ===== 무기 시리즈 스킬 (턴제 전용 재설계 — 표시=실제) =====
+// 상시 패시브 1 + 조건부 턴 트리거 1. 값은 DD 최종 적용값(은닉 스케일 없음) → 조회창 문구가 실제 발동과 정확히 일치.
+// passive.kind: atk(공격%)/crit(치확)/critDmg(치피)/all(전 피해)/arts(아츠)/elem(오퍼속성)/battle(배틀)/heal(치유효율)/energy(시작 궁게이지)/vsBroken(불균형적 피해)/stagger(불균형누적).
+// trig.on: ult/battle/link(스킬 종류) · anomaly(아츠이상 소모) · crush(강타) · physBreak(방불 부여). trig.k: atk/all/arts/elem. dur=지속 턴, max=누적 상한(스택).
+export type WPassive = { kind: "atk" | "crit" | "critDmg" | "all" | "arts" | "elem" | "battle" | "heal" | "vsBroken" | "stagger" | "energy"; v: number };
+export type WTrigEvent = "ult" | "battle" | "link" | "anomaly" | "crush" | "physBreak";
+export type WTrig = { on: WTrigEvent; tgt: "self" | "team"; k: "atk" | "all" | "arts" | "elem"; v: number; dur: number; max?: number };
+export type WeaponFx = { passive: WPassive; trig?: WTrig };
 export const OP_WEAPON_EFFECTS: Record<string, WeaponFx> = {
-  laevatain: { dmg: 0.448, dmgKind: "elem", trig: { on: "ult", tgt: "self", k: "all", val: 0.7 } },     // 어둠: 열기 + 궁 후 평타 +210%
-  ember: { dmg: 0.28, dmgKind: "all", trig: { on: "battle", tgt: "self", k: "all", val: 0.28, max: 0.84 } }, // 억제: 물리 + 배틀/궁 명중 물리 3스택
-  wulfgard: { dmg: 0.336, dmgKind: "arts", trig: { on: "battle", tgt: "self", k: "arts", val: 0.28 } },   // 고통: 아츠 + 아츠이상 소모 취약
-  akekuri: { atk: 0.28, trig: { on: "battle", tgt: "team", k: "atk", val: 0.14, max: 0.28 } },             // 흐름: 공격 + 게이지 후 팀 공격
-  camu: { energy: 0.504, trig: { on: "battle", tgt: "team", k: "atk", val: 0.168 } },                      // 흐름: 궁충 + 스킬 후 팀 공격
-  yvonne: { dmg: 0.448, dmgKind: "elem", trig: { on: "battle", tgt: "self", k: "elem", val: 0.392, max: 1.176 } }, // 골절: 냉기 + 치명 후 냉기 3스택
-  lastrite: { dmg: 0.56, dmgKind: "battle", trig: { on: "battle", tgt: "self", k: "elem", val: 0.56 } },   // 방출: 스킬 + 냉기 조건
-  tangtang: { dmg: 0.448, dmgKind: "elem", trig: { on: "battle", tgt: "self", k: "elem", val: 0.56 } },    // 방출: 냉기 + 냉기 부착
-  snowshine: { heal: 0.35 },                                                                                // 효율: 치유 + 비호 피격 추가회복
-  xaihi: { heal: 0.28, trig: { on: "battle", tgt: "team", k: "atk", val: 0.252 } },                          // 의료: 치유 + 치유 후 팀 공격
-  alesh: { atk: 0.28, trig: { on: "battle", tgt: "team", k: "atk", val: 0.14, max: 0.28 } },               // 흐름
-  estella: { dmg: 0.224, dmgKind: "elem", trig: { on: "battle", tgt: "self", k: "atk", val: 0.336 } },    // 고통: 냉기/동결적 + 동결소모 공격
-  zhuangfangyi: { dmg: 0.448, dmgKind: "elem", trig: { on: "battle", tgt: "self", k: "elem", val: 0.56 } }, // 억제: 전기 + 아츠이상소모 전기
-  avywenna: { dmg: 0.336, dmgKind: "arts", trig: { on: "battle", tgt: "self", k: "arts", val: 0.336 } },   // 억제: 아츠 + 배틀/연계 아츠
-  perlica: { crit: 0.14, trig: { on: "ult", tgt: "self", k: "arts", val: 0.672 } },                        // 어둠: 치명 + 궁/연계 후 아츠
-  arclight: { atk: 0.28, trig: { on: "battle", tgt: "team", k: "atk", val: 0.14, max: 0.28 } },            // 흐름
-  antal: { atk: 0.06, trig: { on: "battle", tgt: "team", k: "arts", val: 0.252 } }, // +보조 능력치 근사                                  // 방출: 아츠폭발 시 팀 아츠취약
-  gilberta: { dmg: 0.448, dmgKind: "elem", trig: { on: "link", tgt: "team", k: "arts", val: 0.336 } },   // 추격: 자연 + 띄우기 후 팀 아츠
-  ardelia: { atk: 0.09, trig: { on: "link", tgt: "team", k: "arts", val: 0.28 } }, // +보조 능력치 근사                                 // 고통: 부식 소모 아츠취약(팀)
-  fluorite: { atk: 0.14, trig: { on: "battle", tgt: "self", k: "arts", val: 0.14, max: 0.56 } },          // 방출: 공격 + 아츠소모 자연 스택
-  pogranichnik: { atk: 0.28, trig: { on: "battle", tgt: "team", k: "atk", val: 0.14, max: 0.28 } },        // 흐름
-  lifeng: { vsBroken: 0.56, trig: { on: "battle", tgt: "self", k: "all", val: 0.2 } },                  // 효율: 방불 적 + 방불부여 능력치
-  endministrator: { dmg: 0.4, dmgKind: "all", trig: { on: "battle", tgt: "self", k: "all", val: 0.35, max: 0.7 } }, // +오리지늄 아츠 강도(물리이상)                   // 고통: 오리지늄 + 결정/동결 후 물리
-  rossi: { atk: 0.448, trig: { on: "battle", tgt: "self", k: "all", val: 0.14, max: 0.45 } },              // 골절: 공격 + 치명 후 물리/열기 스택
-  chenqianyu: { dmg: 0.42, dmgKind: "battle", vsBroken: 0.98 },                                            // 어둠: 배틀/궁 물리 + 불균형 적 +98%
-  dapan: { dmg: 0.28, dmgKind: "all", trig: { on: "battle", tgt: "self", k: "all", val: 0.28, max: 0.84 } }, // 억제 (모범)
-  catcher: { heal: 0.35 },                                                                                  // 효율
-  mifu: { dmg: 0.448, dmgKind: "all", trig: { on: "battle", tgt: "self", k: "all", val: 0.252, max: 0.5 } }, // 기예: 물리 + 물리취약/강타 물리
+  // ── 어둠: 궁극기 폭발 ──
+  laevatain: { passive: { kind: "elem", v: 0.14 }, trig: { on: "ult", tgt: "self", k: "all", v: 0.30, dur: 3 } },
+  perlica: { passive: { kind: "crit", v: 0.14 }, trig: { on: "ult", tgt: "self", k: "arts", v: 0.38, dur: 3 } },
+  chenqianyu: { passive: { kind: "vsBroken", v: 0.50 }, trig: { on: "battle", tgt: "self", k: "all", v: 0.15, dur: 2 } },
+  // ── 억제: 배틀/궁 명중 누적 ──
+  ember: { passive: { kind: "all", v: 0.12 }, trig: { on: "battle", tgt: "self", k: "all", v: 0.14, dur: 3, max: 0.42 } },
+  dapan: { passive: { kind: "all", v: 0.12 }, trig: { on: "battle", tgt: "self", k: "all", v: 0.14, dur: 3, max: 0.42 } },
+  avywenna: { passive: { kind: "arts", v: 0.14 }, trig: { on: "battle", tgt: "self", k: "arts", v: 0.18, dur: 3 } },
+  zhuangfangyi: { passive: { kind: "elem", v: 0.14 }, trig: { on: "battle", tgt: "self", k: "elem", v: 0.25, dur: 3 } },
+  // ── 고통: 아츠 이상 소모 / 강타 ──
+  wulfgard: { passive: { kind: "arts", v: 0.14 }, trig: { on: "anomaly", tgt: "self", k: "arts", v: 0.25, dur: 3 } },
+  estella: { passive: { kind: "elem", v: 0.12 }, trig: { on: "anomaly", tgt: "self", k: "elem", v: 0.25, dur: 3 } },
+  ardelia: { passive: { kind: "arts", v: 0.14 }, trig: { on: "link", tgt: "team", k: "arts", v: 0.18, dur: 3 } },
+  endministrator: { passive: { kind: "all", v: 0.12 }, trig: { on: "crush", tgt: "self", k: "all", v: 0.30, dur: 3 } },
+  // ── 흐름: 스킬 후 팀 공격 ──
+  akekuri: { passive: { kind: "atk", v: 0.14 }, trig: { on: "battle", tgt: "team", k: "atk", v: 0.08, dur: 3, max: 0.16 } },
+  alesh: { passive: { kind: "atk", v: 0.14 }, trig: { on: "battle", tgt: "team", k: "atk", v: 0.08, dur: 3, max: 0.16 } },
+  arclight: { passive: { kind: "atk", v: 0.14 }, trig: { on: "battle", tgt: "team", k: "atk", v: 0.08, dur: 3, max: 0.16 } },
+  pogranichnik: { passive: { kind: "atk", v: 0.14 }, trig: { on: "battle", tgt: "team", k: "atk", v: 0.08, dur: 3, max: 0.16 } },
+  camu: { passive: { kind: "energy", v: 25 }, trig: { on: "battle", tgt: "team", k: "atk", v: 0.10, dur: 3 } },
+  // ── 골절: 배틀 후 원소/공격 누적 ──
+  yvonne: { passive: { kind: "elem", v: 0.14 }, trig: { on: "battle", tgt: "self", k: "elem", v: 0.22, dur: 3, max: 0.66 } },
+  rossi: { passive: { kind: "atk", v: 0.14 }, trig: { on: "battle", tgt: "self", k: "all", v: 0.12, dur: 3, max: 0.45 } },
+  // ── 방출: 부착/스킬 강화 ──
+  lastrite: { passive: { kind: "all", v: 0.16 }, trig: { on: "battle", tgt: "self", k: "elem", v: 0.25, dur: 3 } },
+  tangtang: { passive: { kind: "elem", v: 0.14 }, trig: { on: "battle", tgt: "self", k: "elem", v: 0.25, dur: 3 } },
+  antal: { passive: { kind: "arts", v: 0.14 }, trig: { on: "battle", tgt: "team", k: "arts", v: 0.14, dur: 3 } },
+  fluorite: { passive: { kind: "atk", v: 0.12 }, trig: { on: "anomaly", tgt: "self", k: "elem", v: 0.14, dur: 3, max: 0.56 } },
+  // ── 효율/의료: 치유·방불 ──
+  snowshine: { passive: { kind: "heal", v: 0.20 } },
+  catcher: { passive: { kind: "heal", v: 0.20 } },
+  lifeng: { passive: { kind: "vsBroken", v: 0.32 }, trig: { on: "physBreak", tgt: "self", k: "all", v: 0.18, dur: 3 } },
+  xaihi: { passive: { kind: "heal", v: 0.16 }, trig: { on: "battle", tgt: "team", k: "atk", v: 0.12, dur: 3 } },
+  // ── 추격: 연계(띄우기) 후 팀 아츠 ──
+  gilberta: { passive: { kind: "elem", v: 0.14 }, trig: { on: "link", tgt: "team", k: "arts", v: 0.18, dur: 3 } },
+  // ── 기예: 강타 물리 ──
+  mifu: { passive: { kind: "all", v: 0.14 }, trig: { on: "crush", tgt: "self", k: "all", v: 0.25, dur: 3 } },
+};
+// 오퍼 속성(시리즈 문구·elem 적용용) — roster 순환 import 회피 위해 로컬 보관.
+const OP_ELEM: Record<string, "physical" | "heat" | "electric" | "cryo" | "nature"> = {
+  laevatain: "heat", rossi: "heat", akekuri: "heat", camu: "heat", ember: "heat", wulfgard: "heat",
+  estella: "cryo", alesh: "cryo", snowshine: "cryo", xaihi: "cryo", tangtang: "cryo", lastrite: "cryo", yvonne: "cryo",
+  arclight: "electric", antal: "electric", perlica: "electric", avywenna: "electric", zhuangfangyi: "electric",
+  ardelia: "nature", gilberta: "nature", fluorite: "nature",
+  chenqianyu: "physical", lifeng: "physical", endministrator: "physical", mifu: "physical", pogranichnik: "physical", catcher: "physical", dapan: "physical",
 };
 
 const SUB_KO: Record<string, string> = { atk: "공격력", crit: "치명 확률", hp: "최대 생명력", heal: "치유 효율", energy: "궁충 효율", arts: "아츠 피해", elem: "원소 피해", phys: "물리 피해", skill: "스킬 피해", vsbroken: "방불 적 피해", other: "특수" };
 export const weaponEffectText = (id: string): string => { const w = OP_WEAPON_STATS[id]; if (!w) return ""; return `${SUB_KO[w.sub] ?? w.sub} +${w.subVal}${w.subFlat ? "" : "%"}`; };
 
-// 무기 시리즈(고유) 스킬 — 실제 무기 소스(식각 rank4) 서술. OP_WEAPON_SERIES(weapon-series.ts)에서.
+// 무기 시리즈 이름 — 실제 무기 소스(어둠·울부짖는 불길 등). OP_WEAPON_SERIES(weapon-series.ts).
 export const weaponSeriesName = (id: string): string => OP_WEAPON_SERIES[id]?.name ?? OP_WEAPON_STATS[id]?.uniq ?? "";
-export const weaponSeriesDesc = (id: string): string => OP_WEAPON_SERIES[id]?.desc ?? "";
+// 무기 시리즈 설명 — OP_WEAPON_EFFECTS에서 생성(표시=실제 발동). 상시 패시브 + 조건부 턴 트리거.
+const ELEM_KO2: Record<string, string> = { heat: "열기", electric: "전기", cryo: "냉기", nature: "자연", physical: "물리" };
+const pctW = (v: number) => `${+(v * 100).toFixed(1)}%`;
+function passiveText(p: WPassive, el: string): string {
+  switch (p.kind) {
+    case "atk": return `공격력 +${pctW(p.v)}`;
+    case "crit": return `치명타 확률 +${pctW(p.v)}`;
+    case "critDmg": return `치명타 피해 +${pctW(p.v)}`;
+    case "all": return `전 피해 +${pctW(p.v)}`;
+    case "arts": return `아츠 피해 +${pctW(p.v)}`;
+    case "elem": return `${ELEM_KO2[el]} 피해 +${pctW(p.v)}`;
+    case "battle": return `배틀 스킬 피해 +${pctW(p.v)}`;
+    case "heal": return `치유 효율 +${pctW(p.v)}`;
+    case "vsBroken": return `불균형 상태 적에게 주는 피해 +${pctW(p.v)}`;
+    case "stagger": return `불균형 누적 +${pctW(p.v)}`;
+    case "energy": return `전투 시작 시 궁극기 게이지 +${p.v}`;
+  }
+}
+const WEV_KO: Record<WTrigEvent, string> = { ult: "궁극기 사용", battle: "배틀 스킬 사용", link: "연계 스킬 사용", anomaly: "아츠 이상 소모", crush: "강타 명중", physBreak: "방어 불능 부여" };
+function trigText(t: WTrig, el: string): string {
+  const tgt = t.tgt === "team" ? "팀 전체 " : "";
+  const k = t.k === "atk" ? "공격력" : t.k === "arts" ? "아츠 피해" : t.k === "elem" ? `${ELEM_KO2[el]} 피해` : "피해";
+  const stack = t.max ? ` (최대 ${Math.round(t.max / t.v)}스택)` : "";
+  return `${WEV_KO[t.on]} 후 ${tgt}${k} +${pctW(t.v)}, ${t.dur}턴 지속${stack}`;
+}
+export const weaponSeriesDesc = (id: string): string => {
+  const fx = OP_WEAPON_EFFECTS[id];
+  if (!fx) return "";
+  const el = OP_ELEM[id] ?? "physical";
+  return passiveText(fx.passive, el) + (fx.trig ? `. ${trigText(fx.trig, el)}.` : ".");
+};
 export const weaponSeriesText = weaponSeriesDesc; // (하위호환 별칭)
 
 // 밸런스 스케일(DD 모델은 오퍼 공격 ~110 → 무기 실측 500대를 스케일). 부가/버프는 실값의 일부만 반영해 밸런스 완충.
 const W_ATK_SCALE = 0.06;   // 기초공격력 → 오퍼 공격 가산(500×0.06≈30)
 const W_BUFF_SCALE = 0.4;   // 능력치 버프 → attrs 가산(156×0.4≈62)
 const W_SUB_SCALE = 0.5;    // 부가스탯 % → DD 반영 비율(39%→~20%)
-const W_SER_SCALE = 0.286;  // 시리즈 rank4(식각완료 9/9/4) × 밸런스 완충 (rank9×0.571=rank4)
 
 // 무기 적용 — createBattle에서 applyGear 직후 호출. 실측 기초공격력 + 능력치 버프 + 부가스탯.
 export function applyWeapon(u: DDUnit): WeaponType | null {
@@ -177,50 +226,40 @@ export function applyWeapon(u: DDUnit): WeaponType | null {
   else if (g && w.sub === "phys") g.kindDmg.all = (g.kindDmg.all ?? 0) + v;
   else if (w.sub === "heal") u.healRecv = +((u.healRecv ?? 1) * (1 + v)).toFixed(2);
   else if (w.sub === "energy") u.ultCharge = Math.min(u.ultCost, u.ultCharge + u.ultCost * v);
-  // 4) 시리즈 스킬(무기별 고유효과) — 상시 + 조건부를 consolidated 반영. 팀 버프는 applyWeaponTeam.
+  // 4) 시리즈 스킬 — 상시 패시브(최종값, 은닉 스케일 없음). 조건부는 weaponTrigger에서.
   const fx = OP_WEAPON_EFFECTS[u.id];
-  if (fx) {
-    const sc = W_SER_SCALE;
-    if (fx.atk) u.attack = Math.round(u.attack * (1 + fx.atk * sc));
-    if (fx.crit) u.critRate += fx.crit * sc;
-    if (fx.dmg && g) {
-      const dv = fx.dmg * sc;
-      if (fx.dmgKind === "arts") g.elemDmg.all = (g.elemDmg.all ?? 0) + dv;
-      else if (fx.dmgKind === "elem") { if (u.opElement && u.opElement !== "physical") g.elemDmg[u.opElement] = (g.elemDmg[u.opElement] ?? 0) + dv; else g.kindDmg.all = (g.kindDmg.all ?? 0) + dv; }
-      else if (fx.dmgKind === "battle") { g.kindDmg.battle = (g.kindDmg.battle ?? 0) + dv; g.kindDmg.ult = (g.kindDmg.ult ?? 0) + dv; }
-      else g.kindDmg.all = (g.kindDmg.all ?? 0) + dv;
+  if (fx && g) {
+    const p = fx.passive;
+    switch (p.kind) {
+      case "atk": u.attack = Math.round(u.attack * (1 + p.v)); break;
+      case "crit": u.critRate += p.v; break;
+      case "critDmg": u.critDmg += p.v; break;
+      case "all": g.kindDmg.all = (g.kindDmg.all ?? 0) + p.v; break;
+      case "battle": g.kindDmg.battle = (g.kindDmg.battle ?? 0) + p.v; break;
+      case "arts": g.elemDmg.all = (g.elemDmg.all ?? 0) + p.v; break;
+      case "elem": if (u.opElement && u.opElement !== "physical") g.elemDmg[u.opElement] = (g.elemDmg[u.opElement] ?? 0) + p.v; else g.kindDmg.all = (g.kindDmg.all ?? 0) + p.v; break;
+      case "vsBroken": g.vsBroken += p.v; break;
+      case "stagger": g.staggerMul += p.v; break;
+      case "heal": u.healRecv = +((u.healRecv ?? 1) * (1 + p.v)).toFixed(2); break;
+      case "energy": u.ultCharge = Math.min(u.ultCost, u.ultCharge + p.v); break;
     }
-    if (fx.vsBroken && g) g.vsBroken += fx.vsBroken * sc;
-    if (fx.heal) u.healRecv = +((u.healRecv ?? 1) * (1 + fx.heal * sc)).toFixed(2);
-    if (fx.energy) u.ultCharge = Math.min(u.ultCost, u.ultCharge + u.ultCost * fx.energy * sc);
   }
   return t;
 }
 
-const W_TRIG_SCALE = 0.286; // 시리즈 조건부 rank4 × 완충
-
-// 무기 시리즈 조건부 트리거 — act()에서 스킬 종류(battle/link/ult)로 호출. 발동 시 self/team amp·공격 버프(3턴).
+// 무기 시리즈 조건부 트리거 — act()의 스킬(battle/link/ult)·이상(anomaly)·강타(crush)·방불(physBreak) 훅에서 호출.
+// 발동 시 self/team amp(속성/전 피해) 또는 공격 버프. 지속·상한은 무기별(dur/max) — 표시 문구와 동일.
 export function weaponTrigger(self: DDUnit, event: string, allies?: DDUnit[]): void {
   const t = OP_WEAPON_EFFECTS[self.id]?.trig;
-  if (!t || t.on !== event) return;
-  const v = t.val * W_TRIG_SCALE;
-  const cap = (t.max ?? t.val) * W_TRIG_SCALE;
+  if (!t) return;
+  const ev = event.startsWith("anomaly") ? "anomaly" : event;
+  if (t.on !== ev) return;
+  const cap = t.max ?? t.v;
   const apply = (u: DDUnit) => {
-    if (t.k === "atk") { u.atkBuff = Math.min((u.atkBuff || 0) + v, 0.6); setTimer(u, "atkBuff", 3); }
-    else { const key = t.k === "elem" ? (u.opElement && u.opElement !== "physical" ? u.opElement : "all") : (t.k as "all" | "arts"); u.amp[key] = Math.min((u.amp[key] || 0) + v, cap); setTimer(u, "amp:" + key, 3); }
+    if (t.k === "atk") { u.atkBuff = Math.min((u.atkBuff || 0) + t.v, cap); setTimer(u, "atkBuff", t.dur); }
+    else { const key = t.k === "elem" ? (u.opElement && u.opElement !== "physical" ? u.opElement : "all") : (t.k as "all" | "arts"); u.amp[key] = Math.min((u.amp[key] || 0) + t.v, cap); setTimer(u, "amp:" + key, t.dur); }
   };
   if (t.tgt === "team" && allies) allies.forEach(apply); else apply(self);
-}
-
-// 무기 팀 버프(흐름·의료 팀 공격 / 추격·고통 팀 아츠) — createBattle에서 applyWeapon 후 1회 호출.
-export function applyWeaponTeam(allies: DDUnit[]): void {
-  let teamAtk = 0, teamArts = 0;
-  for (const u of allies) { const fx = OP_WEAPON_EFFECTS[u.id]; if (fx) { teamAtk += fx.teamAtk ?? 0; teamArts += fx.teamArts ?? 0; } }
-  if (teamAtk <= 0 && teamArts <= 0) return;
-  for (const u of allies) {
-    if (teamAtk > 0) u.attack = Math.round(u.attack * (1 + teamAtk * W_SER_SCALE));
-    if (teamArts > 0 && u.gear) u.gear.elemDmg.all = (u.gear.elemDmg.all ?? 0) + teamArts * W_SER_SCALE;
-  }
 }
 
 export const weaponOf = (id: string): WeaponType | null => OP_WEAPON[id] ?? null;

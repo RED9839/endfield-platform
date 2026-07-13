@@ -330,6 +330,7 @@ export function applyAttach(target: DDUnit, el: Element, self: DDUnit, log: stri
     const level = Math.min(4, ELEMENTS.reduce((n, e) => n + target.arts[e], 0) + 1);
     ELEMENTS.forEach((e) => (target.arts[e] = 0));
     gearTrigger(self, "anomaly:" + el); // 열작업용(연소/부식)·펄스식(감전/동결)·식양흐름(감전/부식) 발동 버프
+    if (self.side === "ally") weaponTrigger(self, "anomaly:" + el); // 고통(울프가드·에스텔라)·방출(플루오라이트): 아츠 이상 소모 후 버프
     if (el === "heat") { // 연소
       target.dot = Math.round(self.attack * buff * BURN_DOT[level - 1]);
       setTimer(target, "dot", DUR_DOT);
@@ -380,6 +381,7 @@ export function applyAnomaly(skill: DDSkill, target: DDUnit, self: DDUnit, log: 
     target.physBreak = Math.min(MAX_BREAK, target.physBreak + 1);
     setTimer(target, "physBreak", DUR_BREAK);
     gearTrigger(self, "physBreak"); // 경량 초자연: 방어 불능 부여 후 물리+
+    if (self.side === "ally") weaponTrigger(self, "physBreak"); // 효율(리펑): 방어 불능 부여 후 전 피해+
     const label = a === "launch" ? "띄우기" : "넘어뜨리기";
     if (wasBreak) { // 방불 상태 → 120% 물리 + 불균형 10
       target.stagger += 10;
@@ -394,6 +396,7 @@ export function applyAnomaly(skill: DDSkill, target: DDUnit, self: DDUnit, log: 
       const n = Math.min(4, target.physBreak);
       target.physBreak = 0;
       gearTrigger(self, "crush"); // 고검의 잔향: 강타 후 물리+
+      if (self.side === "ally") weaponTrigger(self, "crush"); // 고통(관리자)·기예(미후): 강타 후 전 피해+
       const cAmp = skill.crushAmp ?? 1; // 판 조미료 뿌리기: 추가 강타 피해 +10%
       log.push(`  → 강타! 방어 불능 ${n}스택 소모 → ${Math.round(CRUSH[n - 1] * cAmp * 100)}% 물리`);
       return shatter + self.attack * buff * CRUSH[n - 1] * cAmp;
