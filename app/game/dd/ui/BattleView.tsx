@@ -50,7 +50,13 @@ const NO_FX: Fx = { tick: 0, activeId: null, actingSide: null, floaters: [], cas
 
 function Bar({ value, max, color, h = "h-2" }: { value: number; max: number; color: string; h?: string }) {
   const pct = Math.max(0, Math.min(100, (value / Math.max(1, max)) * 100));
-  return <div className={`${h} w-full overflow-hidden border border-ef-line bg-black/60`}><div className="h-full transition-all duration-300" style={{ width: `${pct}%`, background: color }} /></div>;
+  return (
+    <div className={`${h} relative w-full overflow-hidden rounded-[2px] bg-black/75`} style={{ boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.05), inset 0 1px 3px rgba(0,0,0,0.9)" }}>
+      <div className="relative h-full rounded-[2px] transition-all duration-300 ease-out" style={{ width: `${pct}%`, background: color, boxShadow: `0 0 7px ${color}77` }}>
+        <span className="pointer-events-none absolute inset-x-0 top-0 h-[45%] rounded-t-[2px]" style={{ background: "linear-gradient(180deg, rgba(255,255,255,0.42), transparent)" }} />
+      </div>
+    </div>
+  );
 }
 function Chip({ children, tone = "#a1a1aa" }: { children: React.ReactNode; tone?: string }) {
   return <span className="inline-flex items-center border px-1.5 py-0.5 font-mono text-[12px] font-bold leading-none tracking-wide" style={{ borderColor: `${tone}99`, color: tone, background: `${tone}22` }}>{children}</span>;
@@ -248,13 +254,13 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
       )}
       {/* 상단 바 — 교전 정보 · 게이지 · 속도 · 자동 */}
       <div className="mb-2 flex flex-wrap items-center gap-3">
-        <span className="border px-3 py-1.5 font-mono text-sm font-bold" style={{ ...CUT_SM, borderColor: nodeKind === "boss" ? "#b3312a88" : "#3c2c1a", color: nodeKind === "boss" ? "#e0655c" : "#ecdfc2", background: "#150e08" }}>{nodeTitle[nodeKind]} · 라운드 {s.round}</span>
+        <span className="dd-cut inline-flex items-center gap-2 px-3.5 py-1.5 font-mono text-sm font-bold" style={{ border: `1px solid ${nodeKind === "boss" ? "#b3312a99" : "#4a3822"}`, color: nodeKind === "boss" ? "#f0776e" : "#f0e2c4", background: nodeKind === "boss" ? "linear-gradient(180deg,#2a100d,#180b09)" : "linear-gradient(180deg,#1c140c,#120c07)", boxShadow: nodeKind === "boss" ? "0 0 16px -4px rgba(180,49,42,0.5)" : "inset 0 1px 0 rgba(255,255,255,0.05)" }}><span className="h-1.5 w-1.5 rounded-full" style={{ background: nodeKind === "boss" ? "#e0655c" : "#ff9a2f", boxShadow: `0 0 6px ${nodeKind === "boss" ? "#e0655c" : "#ff9a2f"}` }} />{nodeTitle[nodeKind]} · 라운드 {s.round}</span>
         <div className="min-w-[180px] flex-1">
           <div className="mb-0.5 flex justify-between font-mono text-[12px] uppercase tracking-wider text-ef-muted"><span>스킬 게이지(공유)</span><span>{Math.round(s.skillGauge)}/{s.maxGauge}</span></div>
           <Bar value={s.skillGauge} max={s.maxGauge} color={PRIMARY} />
         </div>
-        {!winner && <button type="button" onClick={cycleSpeed} className="border border-ef-line bg-ef-card px-3 py-1.5 font-mono text-[13px] font-bold uppercase tracking-wider text-ef-muted transition hover:text-white" style={CUT_SM} title="재생 속도">{speed}배속</button>}
-        {!winner && <button type="button" onClick={toggleAuto} className={`border px-3.5 py-1.5 font-mono text-[13px] font-bold uppercase tracking-wider transition ${auto ? "border-ef-accent/60 bg-ef-accent/15 text-ef-accent" : "border-ef-line bg-ef-card text-ef-muted hover:text-white"}`} style={CUT_SM}>{auto ? "자동 ON" : "수동"}</button>}
+        {!winner && <button type="button" onClick={cycleSpeed} className="hud-btn dd-cut px-3 py-1.5 font-mono text-[13px] font-bold uppercase tracking-wider text-ef-muted" title="재생 속도">{speed}배속</button>}
+        {!winner && <button type="button" onClick={toggleAuto} className={`hud-btn dd-cut px-3.5 py-1.5 font-mono text-[13px] font-bold uppercase tracking-wider ${auto ? "hud-btn-on" : "text-ef-muted"}`}>{auto ? "자동 ON" : "수동"}</button>}
       </div>
 
       {/* 라운드 배너 */}
@@ -270,7 +276,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
       )}
 
       {/* ===== 전장 ===== */}
-      <div className="relative overflow-hidden border border-ef-line p-3 sm:p-5" style={{ ...CUT_SM, background: "radial-gradient(120% 90% at 50% 0%, rgba(120,40,30,0.18), transparent 55%), radial-gradient(100% 80% at 50% 100%, rgba(201,122,44,0.10), transparent 55%), #0d0906" }}>
+      <div className="hud-stage relative overflow-hidden border border-ef-line p-3 sm:p-5" style={{ ...CUT_SM, boxShadow: "inset 0 0 60px -20px rgba(0,0,0,0.9), inset 0 1px 0 rgba(255,255,255,0.04)" }}>
         {/* 적진 */}
         <div className="mb-1.5 flex items-center gap-2 font-mono text-[13px] font-bold uppercase tracking-[0.2em] text-red-300/70"><span className="h-px flex-1 bg-gradient-to-r from-transparent to-red-500/30" />적 {enemies.filter((e) => e.hp > 0).length}/{enemies.length}<span className="h-px flex-1 bg-gradient-to-l from-transparent to-red-500/30" /></div>
         <div className="flex flex-wrap justify-center gap-2.5">
@@ -281,12 +287,12 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
             const hit = fx.floaters.some((f) => f.id === e.id && f.amt < 0);
             const isAct = fx.activeId === e.id;
             return (
-              <div key={e.id} className={`relative w-[180px] ${shakeCls(hit, fx.tick)} ${actCls(isAct, fx.tick)}`}>
+              <div key={e.id} className={`relative w-[184px] ${shakeCls(hit, fx.tick)} ${actCls(isAct, fx.tick)}`}>
                 <FxLayer id={e.id} fx={fx} />
-                <div onClick={aiming && !dead ? () => playerAct(aiming, e.id) : () => setInspectId(e.id)} className={`relative border p-2.5 transition ${dead ? "cursor-pointer border-ef-line/40 opacity-35 grayscale" : aiming ? "cursor-pointer border-ef-accent bg-ef-accent/10 hover:bg-ef-accent/20" : e.staggered ? "cursor-pointer border-yellow-400/70 bg-yellow-400/5 hover:border-yellow-400" : "cursor-pointer border-red-500/40 bg-[#1a0e0b] hover:border-red-400"} ${isAct && !dead ? "dd-active" : ""}`} style={CUT_SM}>
+                <div onClick={aiming && !dead ? () => playerAct(aiming, e.id) : () => setInspectId(e.id)} className={`hud-unit dd-cut relative cursor-pointer p-2.5 transition ${dead ? "opacity-35 grayscale" : aiming ? "!border-ef-accent bg-ef-accent/10 hover:bg-ef-accent/20" : e.staggered ? "!border-yellow-400/70 bg-yellow-400/5 hover:!border-yellow-400" : "hud-unit-enemy hover:!border-red-400"} ${isAct && !dead ? "dd-active" : ""}`}>
                   {aiming && !dead && <span className="absolute right-1 top-1 z-10 font-mono text-[11px] font-bold text-ef-accent">🎯 대상</span>}
                   {/* 적 이미지 */}
-                  <div className="relative mb-1.5 flex h-16 items-center justify-center overflow-hidden border border-ef-line/50" style={{ background: `radial-gradient(circle at 50% 35%, ${el === "physical" ? "#5a2a22" : elementColor[el] + "40"}, #140a08 70%)` }}>
+                  <div className="relative mb-1.5 flex h-20 items-center justify-center overflow-hidden border border-ef-line/50" style={{ background: `radial-gradient(circle at 50% 30%, ${el === "physical" ? "#5a2a22" : elementColor[el] + "40"}, #140a08 72%)` }}>
                     <span className="absolute text-3xl opacity-40">{nodeKind === "boss" && ed?.role === "boss" ? "☠" : ed?.role === "elite" ? "✧" : "✦"}</span>
                     <img src={enemyImage(e.id)} alt="" loading="lazy" className="relative h-full w-full object-contain" onError={(ev) => { (ev.currentTarget as HTMLImageElement).style.display = "none"; }} />
                     {dead && <span className="absolute text-3xl">💀</span>}
@@ -308,7 +314,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
         </div>
 
         {/* 교전선 */}
-        <div className="my-4 flex items-center justify-center gap-3"><span className="h-px w-1/4 bg-gradient-to-r from-transparent via-ef-line to-ef-line" /><span className="font-mono text-[12px] uppercase tracking-[0.4em] text-ef-muted">교전</span><span className="h-px w-1/4 bg-gradient-to-l from-transparent via-ef-line to-ef-line" /></div>
+        <div className="my-4 flex items-center justify-center gap-3"><span className="hud-horizon w-1/3" /><span className="font-mono text-[11px] uppercase tracking-[0.45em] text-ef-accent/70">교전</span><span className="hud-horizon w-1/3" /></div>
 
         {/* 아군진 */}
         <div className="mb-1.5 flex items-center gap-2 font-mono text-[13px] font-bold uppercase tracking-[0.2em] text-ef-accent/70"><span className="h-px flex-1 bg-gradient-to-r from-transparent to-ef-accent/25" />부대<span className="h-px flex-1 bg-gradient-to-l from-transparent to-ef-accent/25" /></div>
@@ -325,10 +331,10 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
             return (
               <div key={a.id} className={`relative w-[212px] ${shakeCls(hit, fx.tick)} ${actCls(isAct, fx.tick)}`}>
                 <FxLayer id={a.id} fx={fx} />
-                <div onClick={() => setInspectId(a.id)} className={`relative cursor-pointer border p-2 transition ${dead ? "border-ef-line/40 opacity-40 grayscale" : isCur ? "border-ef-accent bg-ef-accent/10" : "border-ef-line bg-[#150e08] hover:border-ef-accent/40"} ${isAct && !dead ? "dd-active" : ""}`} style={CUT_SM}>
+                <div onClick={() => setInspectId(a.id)} className={`hud-unit dd-cut relative cursor-pointer p-2 transition ${dead ? "opacity-40 grayscale" : isCur ? "!border-ef-accent bg-ef-accent/10" : "hover:!border-ef-accent/40"} ${isAct && !dead ? "dd-active" : ""}`}>
                   <div className="mb-1.5 flex gap-2">
                     {/* 초상 */}
-                    <div className="relative h-16 w-16 shrink-0 border border-ef-line" style={{ background: `center top/cover url(${avatarUrl(a.id)}), #0d0906`, boxShadow: `inset 0 0 0 1px ${elementColor[el]}55` }}>
+                    <div className="relative h-16 w-16 shrink-0 border border-ef-line" style={{ background: `center top/cover url(${avatarUrl(a.id)}), #0d0906`, boxShadow: `inset 0 0 0 1px ${elementColor[el]}55, 0 0 12px ${elementColor[el]}22` }}>
                       <span className="absolute inset-x-0 bottom-0 h-1" style={{ background: elementColor[el] }} />
                       {dead && <span className="absolute inset-0 flex items-center justify-center text-2xl">💀</span>}
                       {isCur && <span className="absolute -right-1 -top-1 font-mono text-[12px] font-bold text-ef-accent">▶</span>}
@@ -379,7 +385,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
               const reason = current ? skillReason(s, current, sk) : null;
               const off = !!reason;
               return (
-              <button key={sk.id} type="button" onClick={() => { if (!off) chooseSkill(sk); }} className={`group relative flex w-[236px] items-start gap-2 border px-2.5 py-2 pr-8 text-left transition ${off ? "cursor-not-allowed border-ef-line/40 bg-black/30" : open ? "border-ef-accent bg-ef-card" : "border-ef-line bg-ef-card hover:border-ef-accent/60"}`} style={CUT_SM}>
+              <button key={sk.id} type="button" onClick={() => { if (!off) chooseSkill(sk); }} className={`hud-tile dd-cut group relative flex w-[236px] items-start gap-2 px-2.5 py-2 pr-8 text-left ${off ? "cursor-not-allowed opacity-55 hover:!border-ef-line/40" : open ? "!border-ef-accent" : ""}`}>
                 <img src={skillIcon(current!.id, sk.kind)} alt="" loading="lazy" className={`mt-0.5 h-9 w-9 shrink-0 border border-ef-line/60 bg-black/40 object-contain p-0.5 ${off ? "opacity-40 grayscale" : ""}`} onError={(ev) => { (ev.currentTarget as HTMLImageElement).style.visibility = "hidden"; }} />
                 <span className="min-w-0 flex-1">
                   <span className="flex items-center gap-1.5"><span className="border px-1 py-px font-mono text-[11px] font-bold uppercase" style={{ borderColor: `${PRIMARY}66`, color: off ? "#7a6a4a" : PRIMARY }}>{kindLabel[sk.kind]}</span><span className={`truncate font-mono text-sm font-bold ${off ? "text-ef-muted" : "text-white"}`}>{sk.name}</span></span>
