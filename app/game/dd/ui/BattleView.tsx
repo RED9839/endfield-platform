@@ -43,23 +43,24 @@ function Bar({ value, max, color, h = "h-2" }: { value: number; max: number; col
   return <div className={`${h} w-full overflow-hidden border border-ef-line bg-black/60`}><div className="h-full transition-all duration-300" style={{ width: `${pct}%`, background: color }} /></div>;
 }
 function Chip({ children, tone = "#a1a1aa" }: { children: React.ReactNode; tone?: string }) {
-  return <span className="border px-1 py-px font-mono text-[12px] font-bold uppercase tracking-wider" style={{ borderColor: `${tone}55`, color: tone }}>{children}</span>;
+  return <span className="inline-flex items-center border px-1.5 py-0.5 font-mono text-[12px] font-bold leading-none tracking-wide" style={{ borderColor: `${tone}99`, color: tone, background: `${tone}22` }}>{children}</span>;
 }
+// 상태 칩. dir: +1=버프(▲), -1=디버프(▼), 0=중립. 방향 표시로 아군/적 상태를 한눈에 구분.
 function unitChips(u: DDUnit) {
   const c: { k: string; label: string; tone: string }[] = [];
-  if (u.physBreak > 0) c.push({ k: "pb", label: `방불 ${u.physBreak}`, tone: "#fca5a5" });
-  if (u.frozen > 0) c.push({ k: "fz", label: `동결 ${u.frozen}`, tone: "#67e8f9" });
-  for (const st of u.statuses) c.push({ k: st, label: statusLabel[st] ?? st, tone: "#fbbf24" });
+  if (u.physBreak > 0) c.push({ k: "pb", label: `▼ 방불 ${u.physBreak}`, tone: "#fca5a5" });
+  if (u.frozen > 0) c.push({ k: "fz", label: `❄ 동결 ${u.frozen}`, tone: "#67e8f9" });
+  for (const st of u.statuses) c.push({ k: st, label: `▼ ${statusLabel[st] ?? st}`, tone: "#fbbf24" });
   (["heat", "electric", "cryo", "nature"] as Element[]).forEach((e) => { if (u.arts[e] > 0) c.push({ k: e, label: `${elementName[e]}부착 ${u.arts[e]}`, tone: elementColor[e] }); });
-  if (u.dot > 0) c.push({ k: "dot", label: `지속 ${u.dot}`, tone: "#fb923c" });
-  if ((u.atkBuff ?? 0) > 0) c.push({ k: "atk", label: `공격+${Math.round(u.atkBuff * 100)}%`, tone: "#ffd24a" });
-  if (u.weakenMul < 1) c.push({ k: "wk", label: `허약 ${Math.round((1 - u.weakenMul) * 100)}%`, tone: "#c084fc" });
+  if (u.dot > 0) c.push({ k: "dot", label: `🔥 지속 ${u.dot}`, tone: "#fb923c" });
+  if ((u.atkBuff ?? 0) > 0) c.push({ k: "atk", label: `▲ 공격 +${Math.round(u.atkBuff * 100)}%`, tone: "#ffd24a" });
+  if (u.weakenMul < 1) c.push({ k: "wk", label: `▼ 허약 ${Math.round((1 - u.weakenMul) * 100)}%`, tone: "#c084fc" });
   const amp = (Object.values(u.amp) as number[]).reduce((a, b) => a + b, 0);
-  if (amp > 0) c.push({ k: "amp", label: `증폭 ${Math.round(amp * 100)}%`, tone: "#86efac" });
+  if (amp > 0) c.push({ k: "amp", label: `▲ 증폭 ${Math.round(amp * 100)}%`, tone: "#86efac" });
   const vuln = (Object.values(u.vuln) as number[]).reduce((a, b) => a + b, 0);
-  if (vuln > 0) c.push({ k: "vuln", label: `취약 ${Math.round(vuln * 100)}%`, tone: "#f87171" });
-  if (u.protection > 0) c.push({ k: "prot", label: `비호 ${Math.round(u.protection * 100)}%`, tone: "#38bdf8" });
-  if (u.multiHit > 0) c.push({ k: "mh", label: `연타 ${u.multiHit}`, tone: "#fb923c" });
+  if (vuln > 0) c.push({ k: "vuln", label: `▼ 취약 ${Math.round(vuln * 100)}%`, tone: "#f87171" });
+  if (u.protection > 0) c.push({ k: "prot", label: `▲ 비호 ${Math.round(u.protection * 100)}%`, tone: "#38bdf8" });
+  if (u.multiHit > 0) c.push({ k: "mh", label: `▲ 연타 ${u.multiHit}`, tone: "#fb923c" });
   return c;
 }
 
@@ -284,7 +285,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
                     <span className="font-mono text-[12px] text-ef-muted">{Math.max(0, e.hp)}</span>
                   </div>
                   <Bar value={e.hp} max={e.maxHp} color="#e0655c" />
-                  {!dead && <div className="mt-0.5"><Bar value={e.atb} max={100} color="#67e8f9" h="h-1" /></div>}
+                  {!dead && <div className="mt-1 flex items-center gap-1.5"><span className="shrink-0 font-mono text-[11px] font-bold uppercase text-cyan-300/80">속도</span><Bar value={e.atb} max={100} color="#67e8f9" h="h-1.5" /></div>}
                   {e.staggerMax > 0 && <div className="mt-1"><Bar value={e.staggered ? e.staggerMax : e.stagger} max={e.staggerMax} color={e.staggered ? "#facc15" : "#a16207"} h="h-1" /></div>}
                   {e.staggered && <div className="mt-1 font-mono text-[12px] font-bold uppercase tracking-wider text-yellow-400">⚡ 불균형 +30%</div>}
                   {ed && <div className="mt-1 flex flex-wrap gap-1"><Chip tone="#e0655c">{ed.faction}</Chip>{ed.resist && (Object.entries(ed.resist) as [Element | "physical", number][]).filter(([, v]) => v < 0).map(([eln, v]) => <Chip key={eln} tone={elementColor[eln]}>{elementName[eln]} 약점{Math.round(-v * 100)}</Chip>)}</div>}
@@ -329,9 +330,17 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
                       </div>
                       <div className="mt-0.5 flex justify-between font-mono text-[12px] text-ef-muted"><span>HP</span><span>{Math.max(0, a.hp)}/{a.maxHp}</span></div>
                       <Bar value={a.hp} max={a.maxHp} color={lowHp ? "#e0655c" : "#8fb84a"} />
-                      {a.shield > 0 && <div className="mt-0.5 font-mono text-[12px] text-sky-300">보호막 {a.shield}</div>}
-                      <div className="mt-1 flex items-center gap-1"><span className="font-mono text-[12px] uppercase text-ef-muted">궁</span><Bar value={a.ultCharge} max={a.ultCost} color={a.ultCharge >= a.ultCost ? "#e8c56a" : "#8a6d1f"} h="h-1" /></div>
-                      <div className="mt-0.5 flex items-center gap-1"><span className="shrink-0 whitespace-nowrap font-mono text-[11px] text-ef-muted">속도</span><Bar value={a.atb} max={100} color="#67e8f9" h="h-1" /></div>
+                      {a.shield > 0 && <div className="mt-1"><Chip tone="#38bdf8">🛡 보호막 {a.shield}</Chip></div>}
+                      {(() => { const ready = a.ultCharge >= a.ultCost; return (
+                        <div className="mt-1 flex items-center gap-1.5">
+                          <span className={`shrink-0 font-mono text-[11px] font-bold uppercase ${ready ? "text-amber-300" : "text-ef-muted"}`}>궁</span>
+                          <div className="relative flex-1" style={ready ? { filter: "drop-shadow(0 0 5px #f5c54299)" } : undefined}>
+                            <Bar value={a.ultCharge} max={a.ultCost} color={ready ? "#f5c542" : "#7a611c"} h="h-3" />
+                            <span className="pointer-events-none absolute inset-0 flex items-center justify-center font-mono text-[10px] font-bold leading-none" style={{ color: ready ? "#1a1206" : "#e5c98a", textShadow: ready ? "none" : "0 1px 2px #000" }}>{ready ? "⚡ 궁극기 READY" : `${Math.round(a.ultCharge)} / ${a.ultCost}`}</span>
+                          </div>
+                        </div>
+                      ); })()}
+                      <div className="mt-1 flex items-center gap-1.5"><span className="shrink-0 whitespace-nowrap font-mono text-[11px] font-bold uppercase text-cyan-300/80">속도</span><Bar value={a.atb} max={100} color="#67e8f9" h="h-1.5" /></div>
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-1">
