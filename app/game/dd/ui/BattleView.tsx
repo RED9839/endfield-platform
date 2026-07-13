@@ -61,22 +61,25 @@ function Bar({ value, max, color, h = "h-2" }: { value: number; max: number; col
 function Chip({ children, tone = "#a1a1aa" }: { children: React.ReactNode; tone?: string }) {
   return <span className="inline-flex items-center border px-1.5 py-0.5 font-mono text-[12px] font-bold leading-none tracking-wide" style={{ borderColor: `${tone}99`, color: tone, background: `${tone}22` }}>{children}</span>;
 }
-// 상태 칩. dir: +1=버프(▲), -1=디버프(▼), 0=중립. 방향 표시로 아군/적 상태를 한눈에 구분.
-function unitChips(u: DDUnit) {
-  const c: { k: string; label: string; tone: string }[] = [];
-  if (u.physBreak > 0) c.push({ k: "pb", label: `▼ 방불 ${u.physBreak}`, tone: "#fca5a5" });
-  if (u.frozen > 0) c.push({ k: "fz", label: `❄ 동결 ${u.frozen}`, tone: "#67e8f9" });
-  for (const st of u.statuses) c.push({ k: st, label: `▼ ${statusLabel[st] ?? st}`, tone: "#fbbf24" });
-  (["heat", "electric", "cryo", "nature"] as Element[]).forEach((e) => { if (u.arts[e] > 0) c.push({ k: e, label: `${elementName[e]}부착 ${u.arts[e]}`, tone: elementColor[e] }); });
-  if (u.dot > 0) c.push({ k: "dot", label: `🔥 지속 ${u.dot}`, tone: "#fb923c" });
-  if ((u.atkBuff ?? 0) > 0) c.push({ k: "atk", label: `▲ 공격 +${Math.round(u.atkBuff * 100)}%`, tone: "#ffd24a" });
-  if (u.weakenMul < 1) c.push({ k: "wk", label: `▼ 허약 ${Math.round((1 - u.weakenMul) * 100)}%`, tone: "#c084fc" });
+// 상태 칩. dir: +1=버프(▲), -1=디버프(▼), 0=중립(부착 등). turns=잔여 지속 턴(u.timers, 없으면 상시/소모형).
+type StatusChip = { k: string; label: string; tone: string; dir: number; turns?: number };
+function unitChips(u: DDUnit): StatusChip[] {
+  const T = u.timers || {};
+  const maxT = (pre: string) => { let m = 0; for (const k in T) if (k.startsWith(pre)) m = Math.max(m, T[k]); return m || undefined; };
+  const c: StatusChip[] = [];
+  if (u.physBreak > 0) c.push({ k: "pb", label: `▼ 방불 ${u.physBreak}`, tone: "#fca5a5", dir: -1, turns: T.physBreak });
+  if (u.frozen > 0) c.push({ k: "fz", label: `❄ 동결 ${u.frozen}`, tone: "#67e8f9", dir: -1, turns: T.frozen });
+  for (const st of u.statuses) c.push({ k: st, label: `▼ ${statusLabel[st] ?? st}`, tone: "#fbbf24", dir: -1, turns: T[st] });
+  (["heat", "electric", "cryo", "nature"] as Element[]).forEach((e) => { if (u.arts[e] > 0) c.push({ k: e, label: `${elementName[e]}부착 ${u.arts[e]}`, tone: elementColor[e], dir: 0, turns: T["arts:" + e] }); });
+  if (u.dot > 0) c.push({ k: "dot", label: `🔥 지속 ${u.dot}`, tone: "#fb923c", dir: -1, turns: T.dot });
+  if ((u.atkBuff ?? 0) > 0) c.push({ k: "atk", label: `▲ 공격 +${Math.round(u.atkBuff * 100)}%`, tone: "#ffd24a", dir: 1, turns: T.atkBuff });
+  if (u.weakenMul < 1) c.push({ k: "wk", label: `▼ 허약 ${Math.round((1 - u.weakenMul) * 100)}%`, tone: "#c084fc", dir: -1, turns: T.weaken });
   const amp = (Object.values(u.amp) as number[]).reduce((a, b) => a + b, 0);
-  if (amp > 0) c.push({ k: "amp", label: `▲ 증폭 ${Math.round(amp * 100)}%`, tone: "#86efac" });
+  if (amp > 0) c.push({ k: "amp", label: `▲ 증폭 ${Math.round(amp * 100)}%`, tone: "#86efac", dir: 1, turns: maxT("amp:") });
   const vuln = (Object.values(u.vuln) as number[]).reduce((a, b) => a + b, 0);
-  if (vuln > 0) c.push({ k: "vuln", label: `▼ 취약 ${Math.round(vuln * 100)}%`, tone: "#f87171" });
-  if (u.protection > 0) c.push({ k: "prot", label: `▲ 비호 ${Math.round(u.protection * 100)}%`, tone: "#38bdf8" });
-  if (u.multiHit > 0) c.push({ k: "mh", label: `▲ 연타 ${u.multiHit}`, tone: "#fb923c" });
+  if (vuln > 0) c.push({ k: "vuln", label: `▼ 취약 ${Math.round(vuln * 100)}%`, tone: "#f87171", dir: -1, turns: maxT("vuln:") });
+  if (u.protection > 0) c.push({ k: "prot", label: `▲ 비호 ${Math.round(u.protection * 100)}%`, tone: "#38bdf8", dir: 1, turns: T.protection });
+  if (u.multiHit > 0) c.push({ k: "mh", label: `▲ 연타 ${u.multiHit}`, tone: "#fb923c", dir: 1 });
   return c;
 }
 
@@ -532,16 +535,24 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
                 <St label="치명" value={`${Math.round(u.critRate * 100)}%`} />
                 <St label="치명피해" value={`${Math.round(u.critDmg * 100)}%`} />
               </div>
-              {/* 상태 효과(버프/디버프) */}
+              {/* 상태 효과(버프/디버프) — 방향 분류 + 잔여 턴 */}
               {(() => {
-                const chips = unitChips(u);
+                const all = [...(u.shield > 0 ? [{ k: "shield", label: `🛡 보호막 ${u.shield}`, tone: "#38bdf8", dir: 1, turns: u.timers?.shield } as StatusChip] : []), ...unitChips(u)];
+                const chipEl = (c: StatusChip) => <Chip key={c.k} tone={c.tone}>{c.label}{c.turns ? <span className="ml-1 opacity-75">· {c.turns}턴</span> : null}</Chip>;
+                const group = (label: string, tone: string, dir: (n: number) => boolean) => {
+                  const list = all.filter((c) => dir(c.dir));
+                  if (!list.length) return null;
+                  return <div className="flex flex-wrap items-center gap-1.5"><span className="mr-0.5 w-10 shrink-0 font-mono text-[11px] font-bold uppercase tracking-wider" style={{ color: tone }}>{label}</span>{list.map(chipEl)}</div>;
+                };
                 return (
                   <Sec title="상태 효과">
-                    <div className="flex flex-wrap gap-1.5">
-                      {u.shield > 0 && <Chip tone="#38bdf8">🛡 보호막 {u.shield}</Chip>}
-                      {chips.map((c) => <Chip key={c.k} tone={c.tone}>{c.label}</Chip>)}
-                      {!chips.length && u.shield <= 0 && <span className="font-mono text-[13px] text-ef-muted">활성 효과 없음</span>}
-                    </div>
+                    {all.length ? (
+                      <div className="space-y-1.5">
+                        {group("버프", "#86efac", (n) => n > 0)}
+                        {group("디버프", "#f87171", (n) => n < 0)}
+                        {group("상태", "#a1a1aa", (n) => n === 0)}
+                      </div>
+                    ) : <span className="font-mono text-[13px] text-ef-muted">활성 효과 없음</span>}
                   </Sec>
                 );
               })()}
