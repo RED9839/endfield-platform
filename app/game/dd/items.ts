@@ -24,8 +24,10 @@ const ult = (v: number): ItemDef["run"] => (s) => { const t = living(s, "ally").
 const revive = (pct: number): ItemDef["run"] => (s) => { const d = deadAlly(s); if (!d) return; d.hp = Math.round(d.maxHp * pct); s.log.push(`→ ${d.name} 부활! HP ${d.hp}/${d.maxHp}`); };
 const dmgBuff = (pct: number): ItemDef["run"] => (s, c) => { c.amp.all = (c.amp.all ?? 0) + pct; setTimer(c, "amp:all", 99); s.log.push(`→ ${c.name} 모든 피해 +${Math.round(pct * 100)}%`); };
 
-const H60 = { type: "hp", below: 0.6 } as const;
-const H50 = { type: "hp", below: 0.5 } as const;
+// 사용 게이트: 부대가 강해 60%↓로 잘 안 떨어져 소비템이 사실상 봉인됐던 문제 완화.
+// 즉시회복=95%↓(피해 조금만 받아도 사용 가능), 재생=90%↓(살짝 더 여유). 만피 낭비만 방지.
+const H60 = { type: "hp", below: 0.95 } as const;
+const H50 = { type: "hp", below: 0.9 } as const;
 
 // ── 계열별 4등급 정규화 로스터 (즉시회복=메밀꽃·금초 / 재생=시트론·야침, 값은 계열 무관 동일) ──
 // 파티 HP 중앙값 ~2806 기준 실효 회복: r2 ~12% · r3 ~22% · r4 ~47%(보호막 포함) · r6 ~67%.
