@@ -17,6 +17,7 @@ const elementColor: Record<"physical" | Element, string> = { physical: "#d4d4d8"
 const elementName: Record<"physical" | Element, string> = { physical: "물리", heat: "열기", electric: "전기", cryo: "냉기", nature: "자연" };
 const classLabel: Record<DDClass, string> = { guard: "가드", caster: "캐스터", striker: "스트라이커", vanguard: "뱅가드", defender: "디펜더", supporter: "서포터" };
 const kindLabel: Record<DDSkill["kind"], string> = { attack: "기본공격", battle: "배틀스킬", link: "연계스킬", ult: "궁극기" };
+const targetLabel: Record<DDSkill["target"], string> = { "single-front": "전열 단일", "single-lowhp": "최저 HP 단일", row: "직선 관통", all: "전체", self: "자신" };
 const statusLabel: Record<string, string> = { stun: "기절", combustion: "연소", corrosion: "부식", crystal: "결정", "armor-break": "갑옷파괴", shock: "감전", wing: "날개" };
 const nodeTitle: Record<NodeKind, string> = { battle: "교전", elite: "정예 교전", boss: "보스 교전", rest: "야영" };
 const behaviorLabel: Record<string, string> = { melee: "근접 돌격", snipe: "원거리 저격", heavy: "중장 강타", aoe: "광역 자폭", heal: "치유 지원", buff: "강화 지원" };
@@ -105,6 +106,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
   const [roundBanner, setRoundBanner] = useState<{ n: number; tick: number } | null>(null);
   const [aiming, setAiming] = useState<DDSkill | null>(null); // 대상 선택 중인 단일 스킬
   const [inspectId, setInspectId] = useState<string | null>(null); // 스탯 조회 유닛
+  const [detailId, setDetailId] = useState<string | null>(null); // 스킬 상세 펼침
   const [showLog, setShowLog] = useState(true);
   const [tab, setTab] = useState<"dmg" | "log">("dmg"); // 하단 패널: 데미지 기록 / 전투 기록
   const [, bump] = useReducer((x) => x + 1, 0);
@@ -361,17 +363,47 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
             {aiming ? <><span className="text-ef-accent-soft">🎯 {aiming.name} — 공격할 적을 선택</span><button type="button" onClick={() => setAiming(null)} className="ml-auto border border-ef-line px-2 py-0.5 text-[12px] text-ef-muted hover:text-white">취소</button></> : <span>{current.name} — 스킬 선택</span>}
           </div>
           <div className={`flex flex-wrap gap-2 ${aiming ? "pointer-events-none opacity-40" : ""}`}>
-            {skills.map((sk) => (
-              <button key={sk.id} type="button" onClick={() => chooseSkill(sk)} className="group flex items-start gap-2 border border-ef-line bg-ef-card px-2.5 py-2 text-left transition hover:border-ef-accent/60" style={CUT_SM}>
+            {skills.map((sk) => {
+              const dmg = sk.power > 0 && current ? Math.round(current.attack * (1 + (current.atkBuff || 0)) * (current.weakenMul ?? 1) * sk.power) : 0;
+              const el = sk.element ?? "physical";
+              const open = detailId === sk.id;
+              return (
+              <button key={sk.id} type="button" onClick={() => chooseSkill(sk)} className={`group relative flex w-[236px] items-start gap-2 border bg-ef-card px-2.5 py-2 pr-8 text-left transition ${open ? "border-ef-accent" : "border-ef-line hover:border-ef-accent/60"}`} style={CUT_SM}>
                 <img src={skillIcon(current!.id, sk.kind)} alt="" loading="lazy" className="mt-0.5 h-9 w-9 shrink-0 border border-ef-line/60 bg-black/40 object-contain p-0.5" onError={(ev) => { (ev.currentTarget as HTMLImageElement).style.visibility = "hidden"; }} />
-                <span className="min-w-0">
-                  <span className="flex items-center gap-1.5"><span className="border px-1 py-px font-mono text-[12px] font-bold uppercase" style={{ borderColor: `${PRIMARY}66`, color: PRIMARY }}>{kindLabel[sk.kind]}</span><span className="font-mono text-sm font-bold text-white">{sk.name}</span>{sk.power > 0 && <span className="font-mono text-[12px] text-ef-muted">{Math.round(sk.power * 100)}%</span>}</span>
-                  {sk.note && <span className="mt-0.5 block max-w-[230px] truncate text-[12px] text-ef-muted group-hover:text-ef-ink">{sk.note}</span>}
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-center gap-1.5"><span className="border px-1 py-px font-mono text-[11px] font-bold uppercase" style={{ borderColor: `${PRIMARY}66`, color: PRIMARY }}>{kindLabel[sk.kind]}</span><span className="truncate font-mono text-sm font-bold text-white">{sk.name}</span></span>
+                  <span className="mt-1 flex items-center gap-2">
+                    {dmg > 0 ? <span className="font-mono text-[15px] font-bold tabular-nums" style={{ color: elementColor[el] }}>{dmg.toLocaleString()}<span className="ml-0.5 text-[11px] font-normal text-ef-muted">피해</span></span> : <span className="font-mono text-[12px] text-ef-muted">{targetLabel[sk.target] === "자신" ? "버프/유틸" : "유틸"}</span>}
+                    <span className="font-mono text-[11px] text-ef-muted">{targetLabel[sk.target]}</span>
+                  </span>
                 </span>
+                <span onClick={(ev) => { ev.stopPropagation(); setDetailId(open ? null : sk.id); }} className={`absolute right-1 top-1 flex h-5 w-5 items-center justify-center border font-mono text-[12px] font-bold transition ${open ? "border-ef-accent bg-ef-accent/20 text-ef-accent" : "border-ef-line text-ef-muted hover:border-ef-accent/60 hover:text-ef-accent"}`} title="상세">{open ? "×" : "ⓘ"}</span>
               </button>
-            ))}
+            ); })}
             {!skills.length && <span className="font-mono text-xs text-ef-muted">사용 가능한 스킬 없음</span>}
           </div>
+          {/* 스킬 상세 */}
+          {(() => {
+            const sk = skills.find((x) => x.id === detailId);
+            if (!sk || !current) return null;
+            const el = sk.element ?? "physical";
+            const dmg = sk.power > 0 ? Math.round(current.attack * (1 + (current.atkBuff || 0)) * (current.weakenMul ?? 1) * sk.power) : 0;
+            const Row = ({ k, v, tone }: { k: string; v: string; tone?: string }) => <div className="flex items-baseline gap-1.5"><span className="w-14 shrink-0 font-mono text-[11px] uppercase tracking-wider text-ef-muted">{k}</span><span className="font-mono text-[13px] font-bold" style={{ color: tone ?? "#e6e1d6" }}>{v}</span></div>;
+            return (
+              <div className="mt-2 border border-ef-accent/40 bg-black/40 p-3" style={CUT_SM}>
+                <div className="mb-2 flex items-center gap-2"><span className="border px-1 py-px font-mono text-[11px] font-bold uppercase" style={{ borderColor: `${PRIMARY}66`, color: PRIMARY }}>{kindLabel[sk.kind]}</span><span className="font-mono text-sm font-bold text-white">{sk.name}</span><button type="button" onClick={() => setDetailId(null)} className="ml-auto border border-ef-line px-1.5 py-0.5 font-mono text-[12px] text-ef-muted hover:border-ef-accent/60 hover:text-white">✕</button></div>
+                <div className="grid grid-cols-2 gap-x-5 gap-y-1.5">
+                  {dmg > 0 ? <Row k="예상 피해" v={`${dmg.toLocaleString()} (배율 ${Math.round(sk.power * 100)}%)`} tone={elementColor[el]} /> : <Row k="유형" v="버프 / 유틸" />}
+                  <Row k="대상" v={targetLabel[sk.target]} />
+                  <Row k="속성" v={elementName[el]} tone={elementColor[el]} />
+                  {(sk.staggerVal ?? 0) > 0 && <Row k="불균형" v={`+${sk.staggerVal}`} tone="#facc15" />}
+                  {sk.kind === "link" && <Row k="쿨타임" v={`${sk.cooldown ?? 3}턴`} />}
+                  {sk.requiresText && <Row k="발동 조건" v={sk.requiresText} tone="#fca5a5" />}
+                </div>
+                {sk.note && <div className="mt-2 border-t border-ef-line/50 pt-2 font-mono text-[13px] leading-relaxed text-ef-muted">{sk.note}</div>}
+              </div>
+            );
+          })()}
           {Object.keys(items).length > 0 && (
             <div className="mt-2 border-t border-ef-line/50 pt-2">
               <div className="mb-1.5 font-mono text-[12px] font-bold uppercase tracking-wider text-ef-muted">전술 아이템 <span className="text-ef-muted">· 자유 행동</span></div>
