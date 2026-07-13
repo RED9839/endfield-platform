@@ -237,7 +237,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
   const upcoming = winner ? [] : turnOrder(s, 6); // ATB 예측 순서(비파괴)
 
   return (
-    <div className="dd-battle relative mx-auto max-w-[1500px] px-4 py-5 sm:px-7">
+    <div className="dd-battle relative mx-auto max-w-[1640px] px-3 py-4 sm:px-5">
       {/* 행동 순서 — 화면 왼쪽 세로 컬럼(엔필식 턴 오더) */}
       {!winner && upcoming.length > 0 && (
         <div className="absolute left-1 top-[68px] z-30 flex flex-col gap-1.5 sm:left-2">
@@ -258,15 +258,20 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
           })}
         </div>
       )}
-      {/* 상단 바 — 교전 정보 · 게이지 · 속도 · 자동 */}
-      <div className="mb-2 flex flex-wrap items-center gap-3">
-        <span className="dd-cut inline-flex items-center gap-2 px-3.5 py-1.5 font-mono text-sm font-bold" style={{ border: `1px solid ${nodeKind === "boss" ? "#b3312a99" : "#4a3822"}`, color: nodeKind === "boss" ? "#f0776e" : "#f0e2c4", background: nodeKind === "boss" ? "linear-gradient(180deg,#2a100d,#180b09)" : "linear-gradient(180deg,#1c140c,#120c07)", boxShadow: nodeKind === "boss" ? "0 0 16px -4px rgba(180,49,42,0.5)" : "inset 0 1px 0 rgba(255,255,255,0.05)" }}><span className="h-1.5 w-1.5 rounded-full" style={{ background: nodeKind === "boss" ? "#e0655c" : "#ff9a2f", boxShadow: `0 0 6px ${nodeKind === "boss" ? "#e0655c" : "#ff9a2f"}` }} />{nodeTitle[nodeKind]} · 라운드 {s.round}</span>
-        <div className="min-w-[180px] flex-1">
-          <div className="mb-0.5 flex justify-between font-mono text-[12px] uppercase tracking-wider text-ef-muted"><span>스킬 게이지(공유)</span><span>{Math.round(s.skillGauge)}/{s.maxGauge}</span></div>
-          <Bar value={s.skillGauge} max={s.maxGauge} color={PRIMARY} />
+      {/* 상단 HUD — 스킬 게이지(좌) · 라운드 인디케이터(중앙) · 컨트롤(우) */}
+      <div className="hud-panel dd-cut mb-3 flex items-center gap-3 px-3 py-2 sm:gap-5 sm:px-4">
+        <div className="ml-8 min-w-[150px] flex-1 sm:ml-12">
+          <div className="mb-1 flex justify-between font-mono text-[11px] uppercase tracking-wider text-ef-muted"><span>스킬 게이지 · 공유</span><span className="font-bold text-ef-ink">{Math.round(s.skillGauge)}/{s.maxGauge}</span></div>
+          <Bar value={s.skillGauge} max={s.maxGauge} color={PRIMARY} h="h-2.5" />
         </div>
-        {!winner && <button type="button" onClick={cycleSpeed} className="hud-btn dd-cut px-3 py-1.5 font-mono text-[13px] font-bold uppercase tracking-wider text-ef-muted" title="재생 속도">{speed}배속</button>}
-        {!winner && <button type="button" onClick={toggleAuto} className={`hud-btn dd-cut px-3.5 py-1.5 font-mono text-[13px] font-bold uppercase tracking-wider ${auto ? "hud-btn-on" : "text-ef-muted"}`}>{auto ? "자동 ON" : "수동"}</button>}
+        <div className="flex shrink-0 flex-col items-center px-1">
+          <span className="font-mono text-[10px] font-bold uppercase tracking-[0.32em]" style={{ color: nodeKind === "boss" ? "#f0776e" : "#ff9a2f" }}>{nodeTitle[nodeKind]}</span>
+          <span className="font-mono text-2xl font-black uppercase leading-none tracking-wide" style={{ color: nodeKind === "boss" ? "#f0776e" : "#f4e9d2", textShadow: `0 2px 12px ${nodeKind === "boss" ? "rgba(180,49,42,0.6)" : "rgba(0,0,0,0.7)"}` }}>R{s.round}</span>
+        </div>
+        <div className="flex min-w-[150px] flex-1 items-center justify-end gap-2">
+          {!winner && <button type="button" onClick={cycleSpeed} className="hud-btn dd-cut px-3 py-1.5 font-mono text-[13px] font-bold uppercase tracking-wider text-ef-muted" title="재생 속도">{speed}배속</button>}
+          {!winner && <button type="button" onClick={toggleAuto} className={`hud-btn dd-cut px-3.5 py-1.5 font-mono text-[13px] font-bold uppercase tracking-wider ${auto ? "hud-btn-on" : "text-ef-muted"}`}>{auto ? "자동 ON" : "수동"}</button>}
+        </div>
       </div>
 
       {/* 라운드 배너 */}
@@ -282,7 +287,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
       )}
 
       {/* ===== 전장 ===== */}
-      <div className="hud-stage relative overflow-hidden border border-ef-line p-3 sm:p-5" style={{ ...CUT_SM, boxShadow: "inset 0 0 60px -20px rgba(0,0,0,0.9), inset 0 1px 0 rgba(255,255,255,0.04)" }}>
+      <div className="hud-stage relative flex min-h-[56vh] flex-col justify-center gap-2 overflow-hidden border border-ef-line px-3 py-6 sm:px-6" style={{ ...CUT_SM, boxShadow: "inset 0 0 80px -20px rgba(0,0,0,0.95), inset 0 1px 0 rgba(255,255,255,0.04)" }}>
         {/* ===== 적진 (스테이지 상단, 서 있는 피규어) ===== */}
         <div className="mb-1 flex items-center gap-2 font-mono text-[12px] font-bold uppercase tracking-[0.2em] text-red-300/70"><span className="h-px flex-1 bg-gradient-to-r from-transparent to-red-500/25" />적 {enemies.filter((e) => e.hp > 0).length}/{enemies.length}<span className="h-px flex-1 bg-gradient-to-l from-transparent to-red-500/25" /></div>
         <div className="flex flex-wrap items-end justify-center gap-x-4 gap-y-2">
@@ -379,7 +384,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
 
       {/* 수동 조작 — 스킬 선택 */}
       {!winner && current && !auto && (
-        <div className="mt-3 border border-ef-accent/40 bg-ef-accent/5 p-3" style={CUT_SM}>
+        <div className="hud-panel dd-cut mt-3 p-3" style={{ borderColor: "rgba(255,154,47,0.4)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.05), 0 -8px 30px -20px rgba(255,154,47,0.4)" }}>
           <div className="mb-2 flex items-center gap-2 font-mono text-[13px] font-bold uppercase tracking-wider text-ef-accent">
             {aiming ? <><span className="text-ef-accent-soft">🎯 {aiming.name} — 공격할 적을 선택</span><button type="button" onClick={() => setAiming(null)} className="ml-auto border border-ef-line px-2 py-0.5 text-[12px] text-ef-muted hover:text-white">취소</button></> : <span>{current.name} — 스킬 선택</span>}
           </div>
