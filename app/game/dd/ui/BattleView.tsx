@@ -21,7 +21,6 @@ const targetLabel: Record<DDSkill["target"], string> = { "single-front": "단일
 // 스킬 사용 불가 사유(usable()과 동일 순서). null=사용 가능.
 function skillReason(s: DDState, u: DDUnit, sk: DDSkill): string | null {
   if (usable(s, u, sk)) return null;
-  if (!sk.fromPos.includes(u.pos)) return "위치 제약";
   if (sk.selfUlt && u.ultCharge < u.ultCost) return "궁 게이지 부족";
   if (sk.kind === "battle" && s.skillGauge < (sk.gaugeCost ?? 100)) return "스킬 게이지 부족";
   if (sk.kind === "link" && u.linkCd > 0) return `쿨타임 ${u.linkCd}턴`;

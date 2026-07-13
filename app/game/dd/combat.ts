@@ -457,7 +457,7 @@ export function pickTargets(s: DDState, self: DDUnit, skill: DDSkill): DDUnit[] 
 
 // 스킬이 지금 사용 가능한가(위치 + 게이지 + 요구사항)
 export function usable(s: DDState, self: DDUnit, skill: DDSkill): boolean {
-  if (!skill.fromPos.includes(self.pos)) return false;
+  // 위치(fromPos) 제약 제거 — 플레이어가 배치를 보거나 바꿀 수 없어 숨은 페널티만 됨. 모든 슬롯에서 전 스킬 사용 가능.
   if (skill.selfUlt && self.ultCharge < self.ultCost) return false;
   if (skill.kind === "battle" && self.side === "ally" && s.skillGauge < (skill.gaugeCost ?? GAUGE_COST)) return false; // 스킬 게이지 부족
   if (skill.kind === "link" && self.linkCd > 0) return false; // 연계 쿨타임
