@@ -51,6 +51,7 @@ export type DDUnit = {
   shield: number; // 보호막(보호): 피해 흡수
   speedMod: number; // 가속(+)/감속(-): 턴 순서 보정
   timers: Record<string, number>; // 효과키 → 잔여 턴(1턴=5초). 라운드 시작 감쇠, 재적용 시 리셋
+  effectSrc: Record<string, EffectSrc>; // 효과키 → 출처(누가·무엇으로 걸었나). setTimer 시 SRC_CTX로 기록
   linkCd: number; // 연계 스킬 쿨타임(잔여 턴)
   rampAtk?: number; // 진천우 칼날 베기: 스킬 명중마다 공격력 누적(스택당 값, 최대 5스택)
   stance: number; // 미브 청파 삼형 스탠스(0=단운 / 1=추형 / 2=개천)
@@ -146,19 +147,19 @@ const eb = (u: DDUnit) => (1 + (u.atkBuff || 0)) * (u.weakenMul ?? 1);
 // 이벤트: anomaly:<el>(아츠 이상 발동) · attach2(아츠 2부착 폭발) · crush(강타/갑옷파괴) · physBreak(띄우기/넘어뜨리기) · link/battle(스킬 사용)
 export function gearTrigger(self: DDUnit, event: string): void {
   const gs = self.gearSets; if (!gs || !gs.length) return;
-  const amp = (key: DmgKey, v: number, dur: number, cap = v) => { self.amp[key] = Math.min(cap, (self.amp[key] || 0) + v); setTimer(self, "amp:" + key, dur); };
-  // namu 3.1 원문 실측값. amp(키, 스택당%, 지속턴, 최대누적)
-  if (event === "anomaly:heat" && gs.includes("열 작업용")) amp("heat", 0.5, 2);       // 연소 후 열기 +50%
-  if (event === "anomaly:nature" && gs.includes("열 작업용")) amp("nature", 0.5, 2);    // 부식 후 자연 +50%
-  if (event === "anomaly:electric" && gs.includes("펄스식")) amp("electric", 0.5, 2);   // 감전 후 전기 +50%
-  if (event === "anomaly:cryo" && gs.includes("펄스식")) amp("cryo", 0.5, 2);           // 동결 후 냉기 +50%
-  if ((event === "anomaly:electric" || event === "anomaly:nature") && gs.includes("식양의 흐름")) amp(event.slice(8) as DmgKey, 0.15, 5, 0.45); // 소모 시 +15%(최대 3스택)
-  if (event === "attach2" && gs.includes("조류의 물결")) amp("arts", 0.35, 2);          // 2부착 후 아츠 +35%
-  if (event === "crush" && gs.includes("고검의 잔향")) amp("physical", 0.24, 2, 0.24);   // 강타·갑옷파괴 시 물리 +6%×스택(최대 24%)
-  if (event === "physBreak" && gs.includes("경량 초자연")) amp("physical", 0.16, 2, 0.48); // 방어불능 +8%×4 + 4스택 추가 +16%
-  if (event === "link" && gs.includes("본 크러셔")) amp("all", 0.30, 2);                // 연계 후 다음 배틀 +30%
-  if (event === "link" && gs.includes("청파")) amp("all", 0.20, 2, 0.40);               // 연계 후 모든 스킬 +20%(최대 2스택)
-  if (event === "battle" && gs.includes("응룡 50식")) amp("all", 0.20, 3, 0.60);        // 배틀 후 다음 연계 +20%(최대 3스택)
+  // amp(세트명, 키, 스택당%, 지속턴, 최대누적) — 출처를 장비 세트로 기록. namu 3.1 원문 실측값.
+  const amp = (set: string, key: DmgKey, v: number, dur: number, cap = v) => { self.amp[key] = Math.min(cap, (self.amp[key] || 0) + v); const prev = pushSrc({ by: self.name, via: set, kind: "gear" }); setTimer(self, "amp:" + key, dur); popSrc(prev); };
+  if (event === "anomaly:heat" && gs.includes("열 작업용")) amp("열 작업용", "heat", 0.5, 2);       // 연소 후 열기 +50%
+  if (event === "anomaly:nature" && gs.includes("열 작업용")) amp("열 작업용", "nature", 0.5, 2);    // 부식 후 자연 +50%
+  if (event === "anomaly:electric" && gs.includes("펄스식")) amp("펄스식", "electric", 0.5, 2);   // 감전 후 전기 +50%
+  if (event === "anomaly:cryo" && gs.includes("펄스식")) amp("펄스식", "cryo", 0.5, 2);           // 동결 후 냉기 +50%
+  if ((event === "anomaly:electric" || event === "anomaly:nature") && gs.includes("식양의 흐름")) amp("식양의 흐름", event.slice(8) as DmgKey, 0.15, 5, 0.45); // 소모 시 +15%(최대 3스택)
+  if (event === "attach2" && gs.includes("조류의 물결")) amp("조류의 물결", "arts", 0.35, 2);          // 2부착 후 아츠 +35%
+  if (event === "crush" && gs.includes("고검의 잔향")) amp("고검의 잔향", "physical", 0.24, 2, 0.24);   // 강타·갑옷파괴 시 물리 +6%×스택(최대 24%)
+  if (event === "physBreak" && gs.includes("경량 초자연")) amp("경량 초자연", "physical", 0.16, 2, 0.48); // 방어불능 +8%×4 + 4스택 추가 +16%
+  if (event === "link" && gs.includes("본 크러셔")) amp("본 크러셔", "all", 0.30, 2);                // 연계 후 다음 배틀 +30%
+  if (event === "link" && gs.includes("청파")) amp("청파", "all", 0.20, 2, 0.40);               // 연계 후 모든 스킬 +20%(최대 2스택)
+  if (event === "battle" && gs.includes("응룡 50식")) amp("응룡 50식", "all", 0.20, 3, 0.60);        // 배틀 후 다음 연계 +20%(최대 3스택)
 }
 const skElem = (skill: DDSkill): "physical" | Element => (skill.element && skill.element !== "physical" ? skill.element : "physical");
 
@@ -174,7 +175,13 @@ export const ampFor = (u: DDUnit, elem: "physical" | Element) => tierSum(u.amp, 
 export const vulnFor = (u: DDUnit, elem: "physical" | Element) => tierSum(u.vuln, elem);
 
 // 효과 타이머 세팅(재적용 시 리셋). 라운드 시작 시 감쇠 → 0이면 expire.
-export const setTimer = (u: DDUnit, key: string, turns: number) => { u.timers[key] = turns; };
+// 효과 출처(누가·무엇으로). kind: 스킬/무기 시리즈/장비 세트/아이템.
+export type EffectSrc = { by: string; via: string; kind: "skill" | "weapon" | "gear" | "item" };
+// 현재 효과 적용 컨텍스트 — act()가 스킬 출처로 세팅, gearTrigger/weaponTrigger가 일시 override. setTimer가 이걸 기록.
+let SRC_CTX: EffectSrc | null = null;
+export function pushSrc(ctx: EffectSrc | null): EffectSrc | null { const prev = SRC_CTX; SRC_CTX = ctx; return prev; }
+export function popSrc(prev: EffectSrc | null): void { SRC_CTX = prev; }
+export const setTimer = (u: DDUnit, key: string, turns: number) => { u.timers[key] = turns; if (SRC_CTX) u.effectSrc[key] = SRC_CTX; else delete u.effectSrc[key]; };
 export function bumpVuln(u: DDUnit, key: DmgKey, val: number, turns = DUR_VULN) {
   u.vuln[key] = Math.max(u.vuln[key] || 0, val);
   setTimer(u, "vuln:" + key, turns);
@@ -248,7 +255,7 @@ export function cleanse(u: DDUnit): void {
   u.statuses = u.statuses.filter((s) => s === "crystal");
   u.arts = { heat: 0, electric: 0, cryo: 0, nature: 0 };
   for (const k of Object.keys(u.timers)) // 디버프 타이머만 제거(버프는 유지)
-    if (k.startsWith("vuln:") || k.startsWith("arts:") || ["weaken", "dot", "frozen", "physBreak"].includes(k)) delete u.timers[k];
+    if (k.startsWith("vuln:") || k.startsWith("arts:") || ["weaken", "dot", "frozen", "physBreak"].includes(k)) { delete u.timers[k]; delete u.effectSrc[k]; }
 }
 
 // 강타/갑옷파괴/연타 계수(스택 1~4) — 전투 시스템 wiki 정합
@@ -473,6 +480,7 @@ export const canAct = (u: DDUnit) => u.hp > 0 && !(u.side === "enemy" && (u.stag
 export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
   const log = s.log;
   log.push(`${self.name}[pos${self.pos}] → ${skill.name}`);
+  SRC_CTX = { by: self.name, via: skill.name, kind: "skill" }; // 이 스킬로 걸리는 효과의 기본 출처(무기/장비 트리거가 일시 override)
   // 자원: 스킬 게이지(파티 공유) 소모 + 궁극기 에너지(개인) 충전 — 위키 정합
   if (self.side === "ally") {
     if (skill.kind === "battle") {
@@ -963,7 +971,7 @@ export function perTurn(s: DDState, u: DDUnit): void {
   if (u.dot > 0) { u.hp = Math.max(0, u.hp - u.dot); s.log.push(`${u.name} 지속 피해 -${u.dot}`); }
   if ((u.regen || 0) > 0 && (u.regenTurns || 0) > 0) { const h = Math.min(u.maxHp - u.hp, u.regen!); if (h > 0) { u.hp += h; s.log.push(`${u.name} 재생 +${h}`); } u.regenTurns = (u.regenTurns || 0) - 1; if ((u.regenTurns || 0) <= 0) u.regen = 0; }
   if (u.staggered) { u.staggerTimer -= 1; if (u.staggerTimer <= 0) { u.staggered = false; u.stagger = 0; s.log.push(`${u.name} 불균형 회복`); } }
-  for (const key of Object.keys(u.timers)) { if (--u.timers[key] <= 0) { delete u.timers[key]; expire(u, key); } } // 효과 지속시간 감쇠
+  for (const key of Object.keys(u.timers)) { if (--u.timers[key] <= 0) { delete u.timers[key]; delete u.effectSrc[key]; expire(u, key); } } // 효과 지속시간 감쇠
   if (u.linkCd > 0) u.linkCd -= 1; // 연계 쿨타임 감소
 }
 
@@ -977,6 +985,7 @@ export function isOver(s: DDState): "ally" | "enemy" | null {
 const atbSpeed = (u: DDUnit) => Math.max(1, u.speed + (u.speedMod || 0));
 // 다음 행동자 결정(게이지 전진, 파괴적). 100 도달자 없으면 최단시간만큼 모두 전진.
 export function nextActor(s: DDState): DDUnit | null {
+  SRC_CTX = null; // 행동 사이 컨텍스트 초기화(스킬 밖 setTimer는 출처 없음)
   const alive = living(s);
   if (!alive.length) return null;
   let ready = alive.filter((u) => u.atb >= 100);

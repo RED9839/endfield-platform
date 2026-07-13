@@ -1,7 +1,7 @@
 // 오퍼레이터 시그니처 무기(엔드필드식) — 실제 무기 타입(위키 헤더 실측) + 6★ 공격력 + 타입 고유효과.
 // 개별 무기 수치/패시브는 소스 미공개 → 타입은 실데이터, 효과는 위키 타입 역할(양손검=불균형↑·아츠유닛=아츠·권총=아츠반응·한손검=근접치명·장병기=스킬) 기반 모델.
 import type { DDUnit } from "./combat";
-import { attrResists, ATTR_AVG, setTimer } from "./combat";
+import { attrResists, ATTR_AVG, setTimer, pushSrc, popSrc } from "./combat";
 import { weaponSummaries } from "@/data/weapons-summary-data";
 import { OP_WEAPON_SERIES } from "./weapon-series";
 
@@ -255,11 +255,13 @@ export function weaponTrigger(self: DDUnit, event: string, allies?: DDUnit[]): v
   const ev = event.startsWith("anomaly") ? "anomaly" : event;
   if (t.on !== ev) return;
   const cap = t.max ?? t.v;
+  const prev = pushSrc({ by: self.name, via: weaponSeriesName(self.id), kind: "weapon" }); // 출처를 무기 시리즈로 기록
   const apply = (u: DDUnit) => {
     if (t.k === "atk") { u.atkBuff = Math.min((u.atkBuff || 0) + t.v, cap); setTimer(u, "atkBuff", t.dur); }
     else { const key = t.k === "elem" ? (u.opElement && u.opElement !== "physical" ? u.opElement : "all") : (t.k as "all" | "arts"); u.amp[key] = Math.min((u.amp[key] || 0) + t.v, cap); setTimer(u, "amp:" + key, t.dur); }
   };
   if (t.tgt === "team" && allies) allies.forEach(apply); else apply(self);
+  popSrc(prev);
 }
 
 export const weaponOf = (id: string): WeaponType | null => OP_WEAPON[id] ?? null;
