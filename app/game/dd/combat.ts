@@ -662,6 +662,9 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
     if (self.id === "laevatain" && skill.kind === "attack" && (self.timers.twilight || 0) > 0) raw *= 3;
     // 장방이 천리의 경지 변신: 강화 일반공격 ×2.5(궁 중 평타 강화)
     if (self.id === "zhuangfangyi" && skill.kind === "attack" && (self.timers.heavenly || 0) > 0) raw *= 2.5;
+    // 엠버: 평타 주력 딜러 — 실제 돌진 검술 4단 콤보(≈431% 물리, lv9) 반영. 범용 평타 0.5 → ×8.6≈431%.
+    // 불균형 적엔 처형 공격(실 720%) → 추가 배수. 진군(방불 셋업)→경량 초자연 물리 증폭→평타 페이오프.
+    if (self.id === "ember" && skill.kind === "attack") raw *= t.staggered ? 14 : 8.6;
     // 글로벌 배율: 치명타 기댓값(시전자) → 증폭(시전자)+취약(대상,위계+부식) → 불균형(+30%) → 현실정지 → 비호
     let cr = self.critRate, cd = self.critDmg;
     if (self.id === "yvonne") { // 이본: 아이스 슈터 변신(치확 누적 만스택 +30%·치피 +60%) + 빙점(냉기 적 치피 +20%·동결 ×2 +40%)

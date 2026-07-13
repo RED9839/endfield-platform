@@ -16,7 +16,7 @@ export function allyChoose(s: DDState, self: DDUnit): DDSkill | null {
   const score = (sk: DDSkill) => {
     const t = pickTargets(s, self, sk)[0];
     if (sk.kind === "attack") {
-      let v = 1;
+      let v = self.id === "ember" ? 2.6 : 1; // 엠버: 평타 주력 딜러 → 강화 평타 우선(진군 방불 셋업은 knockdown 보너스로 여전히 우선)
       if (t && t.staggered) v += 12; // 처형
       if (s.skillGauge < 100) v += 3; // 게이지 회복
       return v;
