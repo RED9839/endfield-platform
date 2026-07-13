@@ -128,10 +128,10 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
           })}
         </div>
 
-        {/* 가운데: 스포트라이트 아트 */}
-        <div className="hud-stage dd-cut relative flex min-h-[420px] items-end justify-center overflow-hidden" style={{ background: `radial-gradient(90% 70% at 50% 8%, ${elementColor[el]}22, transparent 60%), linear-gradient(180deg,#0f0b09,#080605)` }}>
+        {/* 가운데: 스포트라이트 아트 — 세로(높이)에 맞춤, 폭 넘치면 좌우 크롭 */}
+        <div className="hud-stage dd-cut relative flex h-[74vh] min-h-[440px] items-end justify-center overflow-hidden" style={{ background: `radial-gradient(90% 70% at 50% 8%, ${elementColor[el]}22, transparent 60%), linear-gradient(180deg,#0f0b09,#080605)` }}>
           <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-40 bg-gradient-to-t from-black/85 to-transparent" />
-          <img key={focusId} src={fullUrl(focusId)} alt={op.name} className="relative z-0 max-h-[72vh] w-auto max-w-full object-contain drop-shadow-[0_10px_40px_rgba(0,0,0,0.7)]" style={{ animation: "op-spotlight 0.4s ease-out" }} onError={(e) => { (e.currentTarget as HTMLImageElement).src = avatarUrl(focusId); }} />
+          <img key={focusId} src={fullUrl(focusId)} alt={op.name} className="relative z-0 h-full w-auto max-w-none object-contain object-bottom drop-shadow-[0_10px_40px_rgba(0,0,0,0.7)]" style={{ animation: "op-spotlight 0.4s ease-out" }} onError={(e) => { (e.currentTarget as HTMLImageElement).src = avatarUrl(focusId); }} />
           <div className="absolute bottom-4 left-5 z-20">
             <div className="flex items-center gap-2">
               <span className="h-2.5 w-2.5" style={{ background: elementColor[el], boxShadow: `0 0 8px ${elementColor[el]}`, clipPath: "polygon(50% 0,100% 50%,50% 100%,0 50%)" }} />
