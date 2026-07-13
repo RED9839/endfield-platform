@@ -203,7 +203,7 @@ export const SKILLS: Record<string, DDSkill[]> = {
   antal: [
     // 지정 연구 대상(배틀 89%): 전기 단일 포커싱 + 전기 취약 + 열기 취약(60초≈12턴 장지속). 단일 1명 한정.
     { id: "ant-b", name: "지정 연구 대상", kind: "battle", fromPos: [1, 2, 3], target: "single-front", power: 0.89, element: "electric", staggerVal: 10,
-      apply: (t) => { bumpVuln(t, "electric", 0.05, 12); bumpVuln(t, "heat", 0.05, 12); }, note: "전기/열기 취약(60초 장지속)" },
+      apply: (t) => { bumpVuln(t, "electric", 0.05, 12); bumpVuln(t, "heat", 0.05, 12); }, note: "전기/열기 취약(12턴 장지속)" },
     // 자기 폭풍 실험장(연계 151%, 쿨 25초≈5턴): 포커싱 적 물리이상/아츠부착 시. 전기 + 이상/부착 재부여(지속 갱신, 엔진 id훅).
     { id: "ant-l", name: "자기 폭풍 실험장", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 1.51, element: "electric", staggerVal: 10, cooldown: 5,
       requires: (t) => !!t && (t.physBreak > 0 || ELEMENTS.some((e) => t.arts[e] > 0)), requiresText: "물리이상/아츠부착 적", note: "전기 + 아츠부착/물리이상 갱신(폭발 유닛 시너지)" },
@@ -311,7 +311,7 @@ export const SKILLS: Record<string, DDSkill[]> = {
     { id: "lae-l", name: "열화", kind: "link", fromPos: [1, 2, 3], target: "row", power: 2.4, element: "heat", staggerVal: 10, cooldown: 2,
       requires: (t) => !!t && (t.statuses.includes("combustion") || t.statuses.includes("corrosion")), requiresText: "연소/부식 적", note: "광역 열기 + 녹아내린 불꽃 + 궁충" },
     // 황혼(궁, 게이지 300 최고): 변신 — 즉발 도마 내리찍기(열기 부착) + 15초간 일반공격 ×3·배틀 ×2.5 강화(엔진 twilight). 딜 지분은 변신 중 강화 평타.
-    { id: "lae-u", name: "황혼", kind: "ult", fromPos: [1, 2, 3], target: "all", power: 3.0, element: "heat", attach: "heat", staggerVal: 20, selfUlt: true, note: "변신(15초): 일반공격/배틀 강화 + 즉발 열기 부착" },
+    { id: "lae-u", name: "황혼", kind: "ult", fromPos: [1, 2, 3], target: "all", power: 3.0, element: "heat", attach: "heat", staggerVal: 20, selfUlt: true, note: "변신(3턴): 일반공격/배틀 강화 + 즉발 열기 부착" },
   ],
   // 이본: 냉기/권총 스트라이커(★6 한정). 냉기/자연 부착 소모 강제 동결(배틀) + 치명타 변신 말뚝딜 궁(아이스 슈터) + 빙점(냉기/동결 적 치피). 간결한 부착-배틀-동결-궁 구조. 쇄빙 파티 동결 공급.
   // 재능: 빙점(냉기 적 치피 +20%, 동결 ×2=+40%, 엔진) · 하이테크 버스트(동결 후 즉발 강일 — 근사). 주스탯 지능·보조 민첩.
