@@ -382,6 +382,7 @@ export const OPERATORS: OpMeta[] = Object.values(OP_BASE).map((b) => {
 
 // 오퍼 얼굴 아이콘 경로 — 관리자만 avatar1.webp, 나머지는 avatar.webp
 export const avatarUrl = (id: string) => `/operators/${id}/${id === "endministrator" ? "avatar1" : "avatar"}.webp`;
+export const fullUrl = (id: string) => `/operators/${id}/${id === "endministrator" ? "full1" : "full"}.webp`; // 전신 아트(스포트라이트)
 
 // 오퍼 스킬 아이콘(public/operators/{id}/skills). 스킬 종류 → 파일.
 const SKILL_ICON_FILE: Record<string, string> = { attack: "normal", battle: "battle", link: "combo", ult: "ultimate" };
