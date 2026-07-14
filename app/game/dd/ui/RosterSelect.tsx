@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { OPERATORS, SKILLS, OP_BASIC, avatarUrl, fullUrl, skillIcon, makeAlly, type OpMeta } from "../roster";
 import { OP_TALENTS } from "../operator-talents";
-import { activeSets, setEffectText, recommendedSet, recommendedLoadout, loadoutPieces, pieceImage, gearSlotName, bestFreePiece, GEAR_SET_CANON, SET_NAMES, type Loadout } from "../gear";
+import { activeSets, setEffectText, recommendedSet, recommendedLoadout, loadoutPieces, pieceImage, gearSlotName, bestFreePiece, slotOptions, GEAR_SET_CANON, SET_NAMES, type Loadout, type GearSlot } from "../gear";
 import { DEFAULT_PROGRESS, SKILL_MAX, skillLabel, clampProgress, type OpProgress } from "../progress";
 import { weaponOf, weaponName, weaponEffectText, weaponImage, weaponSeriesName, weaponSeriesText, OP_WEAPON_STATS, WEAPON_KO, WEAPON_ICON } from "../weapons";
 import { PRESET_PARTIES, ARCHETYPE_LABEL } from "../parties";
@@ -31,6 +31,8 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
   const [progress, setProgress] = useState<Record<string, OpProgress>>({});
   const [focusId, setFocusId] = useState<string>(OPERATORS[0].id);
   const [setPicker, setSetPicker] = useState(false); // 목표 세트 선택 피커
+  const [pieceChoice, setPieceChoice] = useState<Record<string, Partial<Record<GearSlot, string>>>>({}); // 부위별 직접 교체(오퍼→슬롯→피스id)
+  const [pickSlot, setPickSlot] = useState<GearSlot | null>(null); // 부위 교체 피커 열림 슬롯
   const opRecSet = (id: string) => { const op = OPERATORS.find((o) => o.id === id); return op ? recSet(op) : "검술사"; };
   const opSet = (id: string) => setChoice[id] ?? opRecSet(id);
   const opProg = (id: string) => progress[id] ?? DEFAULT_PROGRESS;
@@ -39,15 +41,17 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
   const opLoadout = (id: string): Loadout => {
     const set = opSet(id);
     const element = OPERATORS.find((o) => o.id === id)?.element;
+    let base: Loadout;
     if (set !== opRecSet(id)) {
       const free = bestFreePiece("kit", element ?? "physical");
-      return {
+      base = {
         armor: GEAR_SET_CANON[set]?.armor?.id ?? set,
         gloves: GEAR_SET_CANON[set]?.gloves?.id ?? set,
         kit: free?.id ?? GEAR_SET_CANON[set]?.kit?.id ?? set,
       };
-    }
-    return recommendedLoadout(id, set, element);
+    } else base = recommendedLoadout(id, set, element);
+    const pc = pieceChoice[id]; // 부위별 직접 교체 override
+    return pc ? { ...base, ...pc } : base;
   };
 
   const toggle = (id: string) => {
@@ -139,7 +143,7 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
                   {ops.map((o) => {
                     const on = selected.includes(o.id); const order = selected.indexOf(o.id) + 1; const foc = focusId === o.id;
                     return (
-                      <button key={o.id} type="button" onClick={() => { setFocusId(o.id); setSetPicker(false); }} title={o.name} className="group relative aspect-square overflow-hidden border transition" style={{ ...CUT, borderColor: foc ? "#ffbe6b" : on ? elementColor[o.element] : `${elementColor[o.element]}44`, background: `center top/cover url(${avatarUrl(o.id)}), #000`, boxShadow: foc ? "0 0 14px -2px rgba(255,190,107,0.8)" : on ? `0 0 10px -3px ${elementColor[o.element]}` : "none" }}>
+                      <button key={o.id} type="button" onClick={() => { setFocusId(o.id); setSetPicker(false); setPickSlot(null); }} title={o.name} className="group relative aspect-square overflow-hidden border transition" style={{ ...CUT, borderColor: foc ? "#ffbe6b" : on ? elementColor[o.element] : `${elementColor[o.element]}44`, background: `center top/cover url(${avatarUrl(o.id)}), #000`, boxShadow: foc ? "0 0 14px -2px rgba(255,190,107,0.8)" : on ? `0 0 10px -3px ${elementColor[o.element]}` : "none" }}>
                         <span className="absolute inset-x-0 bottom-0 h-[3px]" style={{ background: elementColor[o.element] }} />
                         {on && <span className="absolute left-0 top-0 flex h-4 w-4 items-center justify-center bg-ef-accent font-mono text-[10px] font-black text-black">{order}</span>}
                         {!on && selected.length >= 4 && <span className="absolute inset-0 bg-black/50" />}
@@ -277,16 +281,31 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
               </div>
             )}
             <div className="space-y-1.5">
-              {pcs.map((pc) => { const named = pc.set && pc.set !== "?"; const on = named && active.includes(pc.set); const empty = pc.name === "없음"; return (
-                <div key={pc.slot} className="flex items-center gap-2">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center border border-ef-line/60 bg-black/40">{!empty && pieceImage(pc.name) ? <img src={pieceImage(pc.name)} alt="" className="h-full w-full object-contain" onError={(e) => ((e.currentTarget as HTMLImageElement).style.visibility = "hidden")} /> : <span className="text-[10px] text-ef-muted">—</span>}</span>
-                  <span className="w-9 shrink-0 font-mono text-[10px] uppercase tracking-wider text-ef-accent/70">{gearSlotName(pc.slot)}</span>
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate font-mono text-[12px] font-bold text-ef-ink" title={pc.name}>{pc.name}</div>
-                    {empty ? <div className="font-mono text-[10px] text-ef-muted">미장착</div>
-                      : <div className="font-mono text-[10px] text-ef-muted">능력치 <b className="text-ef-ink/80">+{pc.grade}</b> · 방어 <b className="text-ef-ink/80">+{pc.def}</b>{pc.dmg ? <> · <span className="text-ef-accent-soft">{pieceDmg(pc)}</span></> : null}</div>}
+              {pcs.map((pc) => { const named = pc.set && pc.set !== "?"; const on = named && active.includes(pc.set); const empty = pc.name === "없음"; const opening = pickSlot === pc.slot; const swapped = !!pieceChoice[focusId]?.[pc.slot]; return (
+                <div key={pc.slot}>
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center border border-ef-line/60 bg-black/40">{!empty && pieceImage(pc.name) ? <img src={pieceImage(pc.name)} alt="" className="h-full w-full object-contain" onError={(e) => ((e.currentTarget as HTMLImageElement).style.visibility = "hidden")} /> : <span className="text-[10px] text-ef-muted">—</span>}</span>
+                    <span className="w-9 shrink-0 font-mono text-[10px] uppercase tracking-wider text-ef-accent/70">{gearSlotName(pc.slot)}</span>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate font-mono text-[12px] font-bold text-ef-ink" title={pc.name}>{pc.name}{swapped && <span className="ml-1 text-[9px] text-ef-accent">교체됨</span>}</div>
+                      {empty ? <div className="font-mono text-[10px] text-ef-muted">미장착</div>
+                        : <div className="font-mono text-[10px] text-ef-muted">능력치 <b className="text-ef-ink/80">+{pc.grade}</b> · 방어 <b className="text-ef-ink/80">+{pc.def}</b>{pc.dmg ? <> · <span className="text-ef-accent-soft">{pieceDmg(pc)}</span></> : null} · {named ? <span style={{ color: on ? "#e8c56a" : "#8a8a92" }}>{on ? "◆" : "◇"} {pc.set}</span> : <span className="text-[#67e8f9aa]">자유</span>}</div>}
+                    </div>
+                    <button type="button" onClick={() => setPickSlot(opening ? null : pc.slot)} className={`dd-cut shrink-0 border px-2 py-0.5 font-mono text-[10px] font-bold uppercase transition ${opening ? "border-ef-accent bg-ef-accent/15 text-ef-accent" : "border-ef-line text-ef-muted hover:border-ef-accent/60 hover:text-ef-accent"}`}>{opening ? "닫기" : "교체 ▾"}</button>
                   </div>
-                  <span className="shrink-0 font-mono text-[10px]" style={{ color: on ? "#e8c56a" : named ? "#8a8a92" : "#67e8f9aa" }}>{named ? `${on ? "◆" : "◇"} ${pc.set}` : "자유"}</span>
+                  {opening && (
+                    <div className="mt-1 mb-1 border-y border-ef-line/40 py-1.5 pl-11">
+                      <div className="grid max-h-44 grid-cols-2 gap-1 overflow-y-auto pr-1">
+                        {slotOptions(pc.slot, op.element).map((opt) => { const sel = lo[pc.slot] === opt.id; return (
+                          <button key={opt.id} type="button" onClick={() => { setPieceChoice((c) => ({ ...c, [focusId]: { ...c[focusId], [pc.slot]: opt.id } })); setPickSlot(null); }} className={`dd-cut flex items-center gap-1.5 border p-1 text-left transition ${sel ? "border-ef-accent bg-ef-accent/10" : "border-ef-line hover:border-ef-accent/50"}`}>
+                            <span className="flex h-7 w-7 shrink-0 items-center justify-center border border-ef-line/50 bg-black/40">{pieceImage(opt.name) ? <img src={pieceImage(opt.name)} alt="" className="h-full w-full object-contain" onError={(e) => ((e.currentTarget as HTMLImageElement).style.visibility = "hidden")} /> : null}</span>
+                            <span className="min-w-0"><span className="block truncate font-mono text-[11px] font-bold text-white">{opt.name}</span><span className="font-mono text-[10px] text-ef-accent-soft">능력치 +{opt.grade.base} · {pieceDmg(opt)}</span></span>
+                          </button>
+                        ); })}
+                      </div>
+                      {swapped && <button type="button" onClick={() => { setPieceChoice((c) => { const n = { ...c }; const s = { ...n[focusId] }; delete s[pc.slot]; if (Object.keys(s).length) n[focusId] = s; else delete n[focusId]; return n; }); setPickSlot(null); }} className="mt-1 w-full border border-ef-line py-1 font-mono text-[10px] font-bold uppercase text-ef-muted transition hover:border-ef-accent/50 hover:text-ef-ink">↺ 추천 부위로 복원</button>}
+                    </div>
+                  )}
                 </div>
               ); })}
             </div>
