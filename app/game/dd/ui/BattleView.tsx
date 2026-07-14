@@ -128,7 +128,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
   const [aiming, setAiming] = useState<DDSkill | null>(null); // 대상 선택 중인 단일 스킬
   const [inspectId, setInspectId] = useState<string | null>(null); // 스탯 조회 유닛
   const [detailId, setDetailId] = useState<string | null>(null); // 스킬 상세 펼침
-  const [showLog, setShowLog] = useState(true);
+  const [showLog, setShowLog] = useState(false);
   const [tab, setTab] = useState<"dmg" | "log">("dmg"); // 하단 패널: 데미지 기록 / 전투 기록
   const [, bump] = useReducer((x) => x + 1, 0);
 
@@ -269,10 +269,52 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
           <span className="font-mono text-2xl font-black uppercase leading-none tracking-wide" style={{ color: nodeKind === "boss" ? "#f0776e" : "#f4e9d2", textShadow: `0 2px 12px ${nodeKind === "boss" ? "rgba(180,49,42,0.6)" : "rgba(0,0,0,0.7)"}` }}>R{s.round}</span>
         </div>
         <div className="flex min-w-[150px] flex-1 items-center justify-end gap-2">
+          <button type="button" onClick={() => setShowLog((v) => !v)} className={`hud-btn dd-cut px-3 py-1.5 font-mono text-[13px] font-bold uppercase tracking-wider ${showLog ? "hud-btn-on" : "text-ef-muted"}`} title="데미지·전투 기록">기록 {showLog ? "▴" : "▾"}</button>
           {!winner && <button type="button" onClick={cycleSpeed} className="hud-btn dd-cut px-3 py-1.5 font-mono text-[13px] font-bold uppercase tracking-wider text-ef-muted" title="재생 속도">{speed}배속</button>}
           {!winner && <button type="button" onClick={toggleAuto} className={`hud-btn dd-cut px-3.5 py-1.5 font-mono text-[13px] font-bold uppercase tracking-wider ${auto ? "hud-btn-on" : "text-ef-muted"}`}>{auto ? "자동 ON" : "수동"}</button>}
         </div>
       </div>
+
+      {/* 데미지·전투 기록 — 상단 드롭다운(기본 접힘) */}
+      {showLog && (() => {
+        const dmgList = allies.map((a) => ({ id: a.id, name: OPERATORS.find((o) => o.id === a.id)?.name ?? a.id, dmg: Math.round(dmgRef.current[a.id] ?? 0), el: unitElement(a) })).sort((x, y) => y.dmg - x.dmg);
+        const dmgMax = Math.max(1, ...dmgList.map((d) => d.dmg));
+        const dmgTotal = Math.max(1, dmgList.reduce((sum, d) => sum + d.dmg, 0));
+        return (
+          <div className="absolute inset-x-3 top-[62px] z-40 sm:inset-x-5">
+            <div className="hud-panel dd-cut mx-auto max-w-[820px] shadow-2xl">
+              <div className="flex items-center gap-1.5 border-b border-ef-line px-2.5 py-1.5">
+                {(["dmg", "log"] as const).map((k) => <button key={k} type="button" onClick={() => setTab(k)} className={`dd-cut px-2.5 py-1 font-mono text-[12px] font-bold uppercase tracking-wider transition ${tab === k ? "border border-ef-accent/70 bg-ef-accent/15 text-ef-accent" : "border border-ef-line text-ef-muted hover:text-ef-ink"}`}>{k === "dmg" ? "데미지 기록" : "전투 기록"}</button>)}
+                <button type="button" onClick={() => setShowLog(false)} className="ml-auto border border-ef-line px-2 py-1 font-mono text-[12px] font-bold text-ef-muted transition hover:border-ef-accent/60 hover:text-white">✕ 닫기</button>
+              </div>
+              {tab === "dmg" && (
+                <div className="flex flex-col gap-2 px-3 py-3">
+                  {dmgList.map((d, i) => (
+                    <div key={d.id} className="flex items-center gap-2.5">
+                      <span className="w-5 shrink-0 text-right font-mono text-sm font-black" style={{ color: i === 0 ? "#ffbe6b" : "#85858e" }}>{i + 1}</span>
+                      <img src={avatarUrl(d.id)} alt="" loading="lazy" className="h-8 w-8 shrink-0 border object-cover" style={{ background: "#000", borderColor: i === 0 ? "#ffbe6b88" : "#262629" }} />
+                      <span className="w-24 shrink-0 truncate font-mono text-sm font-bold" style={{ color: i === 0 ? "#fff" : "#e8e8ea" }}>{d.name}</span>
+                      <div className="relative h-6 flex-1 overflow-hidden border border-ef-line bg-black/50">
+                        <div className="h-full transition-all duration-300" style={{ width: `${(d.dmg / dmgMax) * 100}%`, background: `linear-gradient(90deg, ${elementColor[d.el]}cc, ${elementColor[d.el]})` }} />
+                        <span className="absolute inset-y-0 right-2 flex items-center font-mono text-[12px] font-bold tabular-nums text-white" style={{ textShadow: "0 1px 3px #000" }}>{Math.round((d.dmg / dmgTotal) * 100)}%</span>
+                      </div>
+                      <span className="w-24 shrink-0 text-right font-mono text-[15px] font-bold tabular-nums text-ef-ink">{d.dmg.toLocaleString()}</span>
+                    </div>
+                  ))}
+                  {dmgTotal <= 1 && <div className="py-3 text-center font-mono text-[13px] text-ef-muted">아직 가한 피해 없음</div>}
+                </div>
+              )}
+              {tab === "log" && (
+                <div className="flex max-h-[42vh] flex-col-reverse gap-0.5 overflow-y-auto px-3 py-2 font-mono text-[13px] leading-relaxed">
+                  {[...s.log].slice(-160).reverse().map((line, i) => (
+                    <div key={s.log.length - i} className={line.startsWith("──") ? "mt-1 font-bold text-ef-accent" : line.includes("불균형 상태") || line.includes("승리") ? "text-yellow-300" : line.includes("→") && !line.startsWith("  ") ? "text-white" : line.includes("✗") ? "text-red-300" : "text-ef-muted"}>{line}</div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* 라운드 배너 */}
       {roundBanner && !winner && (
@@ -398,6 +440,16 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
       {/* 수동 조작 — 스킬 선택 */}
       {!winner && current && !auto && (
         <div className="hud-panel dd-cut mt-3 p-3" style={{ borderColor: "rgba(255,154,47,0.4)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.05), 0 -8px 30px -20px rgba(255,154,47,0.4)" }}>
+          <div className="flex gap-3">
+          {/* 행동 오퍼레이터 아트(에픽세븐식) */}
+          <div className="relative hidden w-24 shrink-0 self-stretch overflow-hidden border sm:block" style={{ ...CUT_SM, minHeight: 156, borderColor: `${elementColor[unitElement(current)]}99`, background: `radial-gradient(80% 55% at 50% 12%, ${elementColor[unitElement(current)]}33, transparent 65%), #0d0906` }}>
+            <img src={fullUrl(current.id)} alt="" className="absolute inset-0 h-full w-full object-cover object-top" onError={(ev) => { (ev.currentTarget as HTMLImageElement).src = avatarUrl(current!.id); }} />
+            <div className="absolute inset-x-0 top-0 bg-gradient-to-b from-black/85 to-transparent px-1 py-1 text-center font-mono text-[10px] font-black uppercase tracking-wider text-ef-accent" style={{ textShadow: "0 0 6px #000" }}>▶ 행동</div>
+            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 to-transparent px-1 pb-2 pt-3 text-center font-mono text-[12px] font-bold text-white" style={{ textShadow: "0 1px 3px #000" }}>{current.name}</div>
+            <span className="absolute inset-x-0 bottom-0 h-[3px]" style={{ background: elementColor[unitElement(current)] }} />
+          </div>
+          {/* 스킬 영역 */}
+          <div className="min-w-0 flex-1">
           <div className="mb-2 flex items-center gap-2 font-mono text-[13px] font-bold uppercase tracking-wider text-ef-accent">
             {aiming ? <><span className="text-ef-accent-soft">🎯 {aiming.name} — 공격할 적을 선택</span><button type="button" onClick={() => setAiming(null)} className="ml-auto border border-ef-line px-2 py-0.5 text-[12px] text-ef-muted hover:text-white">취소</button></> : <span>{current.name} — 스킬 선택</span>}
           </div>
@@ -447,6 +499,8 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
               </div>
             );
           })()}
+          </div>{/* /스킬 영역 */}
+          </div>{/* /flex 행 */}
           {Object.keys(items).length > 0 && (
             <div className="mt-2 border-t border-ef-line/50 pt-2">
               <div className="mb-1.5 font-mono text-[12px] font-bold uppercase tracking-wider text-ef-muted">전술 아이템 <span className="text-ef-muted">· 자유 행동</span></div>
@@ -467,48 +521,6 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
         </div>
       )}
 
-      {/* 하단 패널 — 데미지 기록 / 전투 기록 탭 */}
-      {(() => {
-        const dmgList = allies.map((a) => ({ id: a.id, name: OPERATORS.find((o) => o.id === a.id)?.name ?? a.id, dmg: Math.round(dmgRef.current[a.id] ?? 0), el: unitElement(a) })).sort((x, y) => y.dmg - x.dmg);
-        const dmgMax = Math.max(1, ...dmgList.map((d) => d.dmg));
-        const dmgTotal = Math.max(1, dmgList.reduce((sum, d) => sum + d.dmg, 0));
-        const TabBtn = ({ k, label }: { k: "dmg" | "log"; label: string }) => (
-          <button type="button" onClick={() => { setTab(k); setShowLog(true); }} className={`border px-2.5 py-1 font-mono text-[12px] font-bold uppercase tracking-wider transition ${tab === k && showLog ? "border-ef-accent/70 bg-ef-accent/15 text-ef-accent" : "border-ef-line bg-ef-card text-ef-muted hover:text-ef-ink"}`} style={CUT_SM}>{label}</button>
-        );
-        return (
-          <div className="mt-3 border border-ef-line bg-ef-card/70" style={CUT_SM}>
-            <div className="flex items-center gap-1.5 px-2.5 py-1.5">
-              <TabBtn k="dmg" label="데미지 기록" />
-              <TabBtn k="log" label="전투 기록" />
-              <button type="button" onClick={() => setShowLog((v) => !v)} className="ml-auto font-mono text-[12px] font-bold uppercase tracking-wider text-ef-muted transition hover:text-ef-ink">{showLog ? "▲ 접기" : "▼ 펼치기"}</button>
-            </div>
-            {showLog && tab === "dmg" && (
-              <div className="flex flex-col gap-2 border-t border-ef-line px-3 py-3">
-                {dmgList.map((d, i) => (
-                  <div key={d.id} className="flex items-center gap-2.5">
-                    <span className="w-5 shrink-0 text-right font-mono text-sm font-black" style={{ color: i === 0 ? "#ffbe6b" : "#85858e" }}>{i + 1}</span>
-                    <img src={avatarUrl(d.id)} alt="" loading="lazy" className="h-8 w-8 shrink-0 border object-cover" style={{ background: "#000", borderColor: i === 0 ? "#ffbe6b88" : "#262629" }} />
-                    <span className="w-24 shrink-0 truncate font-mono text-sm font-bold" style={{ color: i === 0 ? "#fff" : "#e8e8ea" }}>{d.name}</span>
-                    <div className="relative h-6 flex-1 overflow-hidden border border-ef-line bg-black/50">
-                      <div className="h-full transition-all duration-300" style={{ width: `${(d.dmg / dmgMax) * 100}%`, background: `linear-gradient(90deg, ${elementColor[d.el]}cc, ${elementColor[d.el]})` }} />
-                      <span className="absolute inset-y-0 right-2 flex items-center font-mono text-[12px] font-bold tabular-nums text-white" style={{ textShadow: "0 1px 3px #000" }}>{Math.round((d.dmg / dmgTotal) * 100)}%</span>
-                    </div>
-                    <span className="w-24 shrink-0 text-right font-mono text-[15px] font-bold tabular-nums text-ef-ink">{d.dmg.toLocaleString()}</span>
-                  </div>
-                ))}
-                {dmgTotal <= 1 && <div className="py-3 text-center font-mono text-[13px] text-ef-muted">아직 가한 피해 없음</div>}
-              </div>
-            )}
-            {showLog && tab === "log" && (
-              <div className="flex max-h-[38vh] flex-col-reverse gap-0.5 overflow-y-auto border-t border-ef-line px-3 py-2 font-mono text-[13px] leading-relaxed">
-                {[...s.log].slice(-160).reverse().map((line, i) => (
-                  <div key={s.log.length - i} className={line.startsWith("──") ? "mt-1 font-bold text-ef-accent" : line.includes("불균형 상태") || line.includes("승리") ? "text-yellow-300" : line.includes("→") && !line.startsWith("  ") ? "text-white" : line.includes("✗") ? "text-red-300" : "text-ef-muted"}>{line}</div>
-                ))}
-              </div>
-            )}
-          </div>
-        );
-      })()}
 
       {/* 유닛 조회 패널 */}
       {inspectId && (() => {
