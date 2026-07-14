@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { OPERATORS, SKILLS, avatarUrl, fullUrl, skillIcon, makeAlly, type OpMeta } from "../roster";
+import { OPERATORS, SKILLS, OP_BASIC, avatarUrl, fullUrl, skillIcon, makeAlly, type OpMeta } from "../roster";
 import { OP_TALENTS } from "../operator-talents";
 import { activeSets, setEffectText, recommendedSet, recommendedLoadout, loadoutPieces, pieceImage, gearSlotName, bestFreePiece, GEAR_SET_CANON, SET_NAMES, type Loadout } from "../gear";
 import { DEFAULT_PROGRESS, SKILL_MAX, skillLabel, clampProgress, type OpProgress } from "../progress";
@@ -77,7 +77,10 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
   const lo = opLoadout(focusId);
   const active = activeSets(lo);
   const pr = opProg(focusId);
-  const skills = [...(SKILLS[focusId] ?? [])].sort((a, b) => KIND_ORDER[a.kind] - KIND_ORDER[b.kind]);
+  const skills = [
+    ...(OP_BASIC[focusId] ? [{ id: `${focusId}-basic`, name: OP_BASIC[focusId].name, kind: "attack" as const, note: OP_BASIC[focusId].note }] : []),
+    ...(SKILLS[focusId] ?? []).map((s) => ({ id: s.id, name: s.name, kind: s.kind, note: s.note })),
+  ].sort((a, b) => KIND_ORDER[a.kind] - KIND_ORDER[b.kind]);
   const talents = OP_TALENTS[focusId] ?? [];
   const unit = makeAlly(focusId, 1, pr); // 기초 전투 스탯(정예화·스킬강화 반영)
   const pcs = loadoutPieces(lo);

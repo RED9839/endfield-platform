@@ -3,7 +3,7 @@
 import { useEffect, useReducer, useRef, useState } from "react";
 
 import { act, canAct, isOver, startRound, perTurn, nextActor, turnOrder, usable, BASIC, type DDClass, type DDSkill, type DDState, type DDUnit, type Element } from "../combat";
-import { OPERATORS, SKILLS, enemyDefFor, avatarUrl, fullUrl, skillIcon, enemyImage, enemyArchetype } from "../roster";
+import { OPERATORS, SKILLS, OP_BASIC, enemyDefFor, avatarUrl, fullUrl, skillIcon, enemyImage, enemyArchetype } from "../roster";
 import { ENCOUNTERS, allyChoose, createBattle, enemyAct, regionEncounter } from "../sim";
 import { activeSets, setEffectText, loadoutPieces } from "../gear";
 import { weaponOf, weaponEffectText, weaponImage, weaponSeriesName, weaponSeriesDesc, WEAPON_KO, WEAPON_ICON } from "../weapons";
@@ -532,9 +532,15 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
         const ed = ally ? null : enemyDefFor(u.id);
         const el = unitElement(u);
         const talents = ally ? OP_TALENTS[u.id] ?? [] : [];
-        const uskills = ally ? SKILLS[u.id] ?? [] : [];
+        const uskills = ally ? [
+          ...(OP_BASIC[u.id] ? [{ id: `${u.id}-basic`, name: OP_BASIC[u.id].name, kind: "attack" as const, note: OP_BASIC[u.id].note }] : []),
+          ...(SKILLS[u.id] ?? []).map((s) => ({ id: s.id, name: s.name, kind: s.kind, note: s.note })),
+        ] : [];
         const loadout = ally ? party.find((p) => p.id === u.id)?.loadout ?? {} : {};
-        const sets = ally ? activeSets(loadout) : [];
+        const ownedMap = owned ?? {};
+        const craftedSlot = (slot: string) => { const ref = (loadout as Record<string, string>)[slot]; return !!(ref && ownedMap[ref] != null); }; // 공업소에서 제작(장착)된 슬롯만
+        const equipped = Object.fromEntries(Object.entries(loadout).filter(([slot]) => craftedSlot(slot)));
+        const sets = ally ? activeSets(equipped as never) : []; // 실제 장착(제작)된 피스로만 세트 발동
         const pieces = ally ? loadoutPieces(loadout) : [];
         const wId = ally ? weaponOf(u.id) : null;
         const RES_ELEMS: (Element | "physical")[] = ["physical", "heat", "electric", "cryo", "nature"];
@@ -636,26 +642,27 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
                   </div>
                 </Sec>}
                 <Sec title="장비">
-                  {/* 슬롯별 착용 피스 */}
+                  {/* 슬롯별 목표 피스 — 공업소 제작(장착)된 것만 활성, 미제작은 목표(회색) 표시 */}
                   <div className="mb-2 space-y-1.5">
-                    {pieces.map((p) => { const named = p.set && p.set !== "?"; const on = named && sets.includes(p.set); const empty = p.name === "없음"; return (
-                      <div key={p.slot} className="flex items-center gap-2">
+                    {pieces.map((p) => { const named = p.set && p.set !== "?"; const empty = p.name === "없음"; const crafted = craftedSlot(p.slot); const on = crafted && named && sets.includes(p.set); return (
+                      <div key={p.slot} className={`flex items-center gap-2 ${!crafted && !empty ? "opacity-45" : ""}`}>
                         <span className="w-9 shrink-0 font-mono text-[10px] font-bold uppercase tracking-wider text-ef-muted">{p.slotName}</span>
                         <span className="flex h-8 w-8 shrink-0 items-center justify-center border border-ef-line/60 bg-black/40" style={{ boxShadow: on ? "inset 0 0 0 1px #e8c56a55" : undefined }}>
-                          {p.image ? <img src={p.image} alt="" loading="lazy" className="h-full w-full object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = "hidden"; }} /> : <span className="font-mono text-[10px] text-ef-muted">—</span>}
+                          {p.image ? <img src={p.image} alt="" loading="lazy" className={`h-full w-full object-contain ${!crafted && !empty ? "grayscale" : ""}`} onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = "hidden"; }} /> : <span className="font-mono text-[10px] text-ef-muted">—</span>}
                         </span>
                         <div className="min-w-0 flex-1">
                           <div className="truncate font-mono text-[13px] font-bold text-ef-ink" title={p.name}>{p.name}</div>
                           {empty ? <div className="font-mono text-[10px] text-ef-muted">미장착</div>
-                            : <div className="font-mono text-[10px] text-ef-muted">능력치 <b className="text-ef-ink/80">+{p.grade}</b> · 방어 <b className="text-ef-ink/80">+{p.def}</b>{p.dmg ? <> · <span className="text-ef-accent-soft">{pieceDmgText(p.dmg)}</span></> : null}</div>}
+                            : crafted ? <div className="font-mono text-[10px] text-ef-muted">능력치 <b className="text-ef-ink/80">+{p.grade}</b> · 방어 <b className="text-ef-ink/80">+{p.def}</b>{p.dmg ? <> · <span className="text-ef-accent-soft">{pieceDmgText(p.dmg)}</span></> : null}</div>
+                            : <div className="font-mono text-[10px] text-amber-500/80">미제작 — 공업소에서 제작 필요 (능력치 미적용)</div>}
                         </div>
-                        <span className="shrink-0 font-mono text-[10px]" style={{ color: on ? "#e8c56a" : named ? "#8a8a92" : "#67e8f9aa" }}>{named ? `${on ? "◆" : "◇"} ${p.set}` : "자유"}</span>
+                        <span className="shrink-0 font-mono text-[10px]" style={{ color: empty ? "#8a8a92" : !crafted ? "#d99a3a" : on ? "#e8c56a" : named ? "#8a8a92" : "#67e8f9aa" }}>{empty ? "" : !crafted ? "미제작" : named ? `${on ? "◆" : "◇"} ${p.set}` : "자유"}</span>
                       </div>
                     ); })}
                   </div>
-                  {/* 활성 세트 효과 */}
+                  {/* 활성 세트 효과 — 제작된 피스 기준 */}
                   <div className="border-t border-ef-line/40 pt-2">
-                    {sets.length ? sets.map((n) => <div key={n} className="mb-1.5 last:mb-0"><span className="font-mono text-[14px] font-bold text-[#e8c56a]">◆ {n} <span className="text-[12px] font-normal text-ef-muted">2부위</span></span><div className="mt-0.5 font-mono text-[13px] leading-relaxed text-ef-muted">{setEffectText(n)}</div></div>) : <div className="font-mono text-[13px] text-ef-muted">활성 세트 없음(같은 세트 2부위 필요)</div>}
+                    {sets.length ? sets.map((n) => <div key={n} className="mb-1.5 last:mb-0"><span className="font-mono text-[14px] font-bold text-[#e8c56a]">◆ {n} <span className="text-[12px] font-normal text-ef-muted">2부위</span></span><div className="mt-0.5 font-mono text-[13px] leading-relaxed text-ef-muted">{setEffectText(n)}</div></div>) : <div className="font-mono text-[13px] text-ef-muted">활성 세트 없음 — 공업소에서 같은 세트 2부위 제작 필요</div>}
                   </div>
                 </Sec>
                 <Sec title="스킬">

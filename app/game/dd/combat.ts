@@ -803,6 +803,13 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
     const tgt = hurt.length ? hurt.reduce((lo, a) => (a.hp / a.maxHp < lo.hp / lo.maxHp ? a : lo), hurt[0]) : self;
     healUnit(tgt, heal, s, log);
   }
+  // 미브(가드): 분노 — 연계 후 최대 HP 30% 보호막(방해 저항 근사). 12턴마다 1회.
+  if (self.id === "mifu" && skill.kind === "link" && (self.timers.furyCd || 0) <= 0) {
+    applyBuff(self, "shield", Math.round(self.maxHp * 0.30), undefined, 2); setTimer(self, "furyCd", 12);
+    log.push(`  → 분노! 보호막 (최대 HP 30%)`);
+  }
+  // 판: 간 맞추기 — 궁(채 썰어 웍) 후 식재료 준비 → 이후 연계(조미료) 쿨 40% 단축(근사).
+  if (self.id === "dapan" && skill.kind === "ult") { self.linkCdMul = 0.6; log.push(`  → 간 맞추기! 연계 쿨 40% 단축`); }
   // 자이히(서포터): 디도스(치유 / 오버힐 시 아츠 증폭) · 스택 오버플로(팀 냉기/자연 증폭, 지능→장비등급)
   if (self.id === "xaihi") {
     if (skill.kind === "battle") { // 디도스: 지원 결정체 → 메인 치유, 오버힐이면 아츠 증폭. 연계 활성 윈도우.

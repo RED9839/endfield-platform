@@ -8,11 +8,11 @@ export const SKILLS: Record<string, DDSkill[]> = {
   // 재능: 칼날 베기(스킬마다 공격력 +8%, 최대 5스택=+40%, rampAtk) · 흐름 끊기(차지 끊기 추가 불균형, 차지 미모델).
   chenqianyu: [
     // 귀궁우(배틀 169%, 불균형 10): 올려치기 띄우기. 자체 방불 빌드.
-    { id: "cqy-b", name: "귀궁우", kind: "battle", fromPos: [1, 2, 3, 4], target: "single-front", power: 1.69, element: "physical", staggerVal: 10, anomaly: "launch", note: "올려치기·띄우기(자체 빌드)" },
+    { id: "cqy-b", name: "귀궁우", kind: "battle", fromPos: [1, 2, 3, 4], target: "single-front", power: 1.69, element: "physical", staggerVal: 10, anomaly: "launch", note: "올려치기 + 띄우기(방어 불능 누적)" },
     // 견천하(연계 120%, 쿨 16초): 방어 불능 적일 때. 관통 돌진(경로 모든 적) 띄우기. 게이지 무소모.
     { id: "cqy-l", name: "견천하", kind: "link", fromPos: [1, 2, 3, 4], target: "row", power: 1.2, element: "physical", staggerVal: 10, cooldown: 3, anomaly: "launch", requires: (t) => !!t && t.physBreak > 0, requiresText: "방어 불능 적", note: "관통 돌진·띄우기" },
     // 예풍상(궁 671%=36×6+455, 불균형 35, 게이지 70): 7단 단일 누킹. 보스 삭제기(현 최고 단일 계수).
-    { id: "cqy-u", name: "예풍상", kind: "ult", fromPos: [1, 2], target: "single-lowhp", power: 6.71, element: "physical", staggerVal: 35, selfUlt: true, note: "7단 단일 누킹(보스 삭제기)" },
+    { id: "cqy-u", name: "예풍상", kind: "ult", fromPos: [1, 2], target: "single-lowhp", power: 6.71, element: "physical", staggerVal: 35, selfUlt: true, note: "7단 단일 대량 물리" },
   ],
   // 여풍: 물리 파티 올라운더(가드). 넘어뜨리기로 방불 빌드 + 물리취약(딜버프) + 복마 추가타 + 연타 궁 폭딜.
   // 재능: 돈오(지능+의지→공격력, attack에 baked) · 복마(넘어뜨리기마다 +공격력 100% 물리, selfPhysBonus).
@@ -69,14 +69,14 @@ export const SKILLS: Record<string, DDSkill[]> = {
     { id: "ros-u", name: "기습 '날카로운 발톱'", kind: "ult", fromPos: [1, 2], target: "single-front", power: 7.19, element: "heat", attach: "heat", staggerVal: 25, selfUlt: true, note: "다단 열기 단일 누킹 + 열기 부착" },
   ],
   // 미브: 물리/양손검 가드. 청파 삼형(단운→추형→개천 3스탠스) + 물리취약 연계 + 방불 부여 궁.
-  // 재능: 냉정(개천이 물취/불균형 적에 ×1.2) · 분노(연계 후 보호막 — 보호막 근사). 자체 방불 부여는 궁뿐 → 팀 방불 보조 필요.
+  // 재능: 냉정(개천이 물취/불균형 적에 ×1.2, vsWeak) · 분노(연계 후 최대 HP 30% 보호막, 엔진). 자체 방불 부여는 궁뿐 → 팀 방불 보조 필요.
   mifu: [
     // 단운(배틀, 게이지 100·환불 50): 포승줄 몹몰이. → 추형(스탠스 1) 전환.
     { id: "mf-b1", name: "청파 삼형·단운", kind: "battle", fromPos: [1, 2, 3], target: "row", power: 0.67, element: "physical", staggerVal: 5, gaugeRefund: 50, setStanceTo: 1, note: "몹몰이 + 추형 전환(게이지 50 반환)" },
     // 추형(배틀, 게이지 50, 스탠스 1 요구): 강타. 방불 3+ 소모 시 → 개천(스탠스 2).
     { id: "mf-b2", name: "청파 삼형·추형", kind: "battle", fromPos: [1, 2, 3], target: "single-front", power: 0.89, element: "physical", staggerVal: 5, gaugeCost: 50, requiresStance: 1, anomaly: "crush", stanceFromCrush: true, note: "강타 + (방불 3+ 소모)개천 전환" },
     // 개천(배틀, 게이지 50, 스탠스 2 요구): 주력 딜(강타 간주). 냉정: 물취/불균형 적 ×1.2.
-    { id: "mf-b3", name: "청파 삼형·개천", kind: "battle", fromPos: [1, 2, 3], target: "row", power: 4.0, element: "physical", staggerVal: 10, gaugeCost: 50, requiresStance: 2, vsWeak: 0.2, note: "주력 딜(강타 간주) · 냉정 ×1.2" },
+    { id: "mf-b3", name: "청파 삼형·개천", kind: "battle", fromPos: [1, 2, 3], target: "row", power: 4.0, element: "physical", staggerVal: 10, gaugeCost: 50, requiresStance: 2, vsWeak: 0.2, note: "주력 딜(강타) · 냉정: 물리취약/불균형 적 피해 ×1.2" },
     // 후회 없는 주먹(연계 111%, 쿨 20초): 방불 3+ 적. 물리취약 + 추형 전환.
     { id: "mf-l", name: "후회 없는 주먹", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 1.11, element: "physical", staggerVal: 10, cooldown: 4, setStanceTo: 1,
       requires: (t) => !!t && t.physBreak >= 3, requiresText: "방불 3+ 적", apply: (t) => bumpVuln(t, "physical", 0.05), note: "물리취약 + 추형 전환" },
@@ -91,7 +91,7 @@ export const SKILLS: Record<string, DDSkill[]> = {
       apply: (t) => { applyBuff(t, "weaken", 0.05); bumpVuln(t, "heat", 0.05); if (!t.statuses.includes("wing")) t.statuses.push("wing"); setTimer(t, "wing", 8); }, note: "열기 부착 + 허약/열기취약 + 핏빛 날개" },
     // 영혼의 가시(연계 133%, 쿨 20초): 열기 부착 소모/흡수 후. 게이지 16. 죄를 쫓는 자(날개 적 → 회복+연타).
     { id: "camu-l", name: "영혼의 가시", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 1.33, element: "heat", staggerVal: 10, cooldown: 4, gaugeGain: 16,
-      requires: (_t, _s, st) => !!st.anomalyConsumed, requiresText: "열기 부착 소모됨", note: "게이지 수급 + (날개 적)회복/연타" },
+      requires: (_t, _s, st) => !!st.anomalyConsumed, requiresText: "열기 부착 소모됨", note: "열기 부착 소모 후 발동 · 핏빛 날개 적 명중 시 회복 + 연타 획득" },
     // 선혈의 비(궁 267%, 게이지 130): 광역 열기 + 열기 부착 + 게이지. 추적 교체(근사).
     { id: "camu-u", name: "선혈의 비", kind: "ult", fromPos: [1, 2, 3], target: "row", power: 2.67, element: "heat", staggerVal: 15, attach: "heat", selfUlt: true, gaugeGain: 32, note: "광역 열기 부착 + 게이지" },
   ],
@@ -102,7 +102,7 @@ export const SKILLS: Record<string, DDSkill[]> = {
     { id: "ake-b", name: "열정 분출", kind: "battle", fromPos: [1, 2, 3], target: "single-front", power: 1.42, element: "heat", attach: "heat", staggerVal: 10, note: "열기 부착" },
     // 섬광 돌진(연계 80×2=160%, 쿨 10초): 불균형 상태/불균형 지점 적. 게이지 15(승리의 함성으로 증가).
     { id: "ake-l", name: "섬광 돌진", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 1.6, element: "physical", staggerVal: 10, cooldown: 2, gaugeGain: 15,
-      requires: (t) => !!t && t.staggered, requiresText: "불균형 적", note: "딜타임 직전 게이지 수급(승리의 함성)" },
+      requires: (t) => !!t && t.staggered, requiresText: "불균형 적", note: "게이지 대량 수급(승리의 함성)" },
     // 소대, 집합!(궁, 게이지 120): 무딜. 게이지 대량 회복(58) + 연타 획득(몰입의 시간).
     { id: "ake-u", name: "소대, 집합!", kind: "ult", fromPos: [1, 2, 3], target: "self", power: 0, staggerVal: 0, selfUlt: true, gaugeGain: 58, grantsMultiHit: 1, note: "게이지 대량 회복 + 연타(몰입의 시간, 소모 후 부여)" },
   ],
@@ -182,7 +182,7 @@ export const SKILLS: Record<string, DDSkill[]> = {
     // 화산 분화(연계 45+111%=156%, 쿨 18초≈4턴): 방불·아츠부착 없는 적에 강일 후. 자연 + 주변 강제 부식 7초(취약 셋업).
     { id: "ard-l", name: "화산 분화", kind: "link", fromPos: [1, 2, 3], target: "all", power: 1.56, element: "nature", staggerVal: 10, cooldown: 4,
       requires: (t) => !!t && t.physBreak === 0 && ELEMENTS.every((e) => t.arts[e] === 0), requiresText: "방불·아츠부착 없는 적",
-      apply: (t) => { bumpVuln(t, "all", 0.12, 3); if (!t.statuses.includes("corrosion")) t.statuses.push("corrosion"); }, note: "자연 + 강제 부식(취약 셋업)" },
+      apply: (t) => { bumpVuln(t, "all", 0.12, 3); if (!t.statuses.includes("corrosion")) t.statuses.push("corrosion"); }, note: "자연 부착 + 강제 부식(전 속성 저항↓)" },
     // 복슬복슬 파티(궁 73%×3≈219%, 게이지 90): 광역 다단 자연 + 확률 회복(친구의 그림자).
     { id: "ard-u", name: "복슬복슬 파티", kind: "ult", fromPos: [1, 2, 3], target: "all", power: 2.19, element: "nature", staggerVal: 2, selfUlt: true, note: "광역 다단 자연 + 회복" },
   ],
@@ -240,7 +240,7 @@ export const SKILLS: Record<string, DDSkill[]> = {
     { id: "wlf-b", name: "탄흔의 열기", kind: "battle", fromPos: [1, 2, 3], target: "single-front", power: 1.02, element: "heat", attach: "heat", staggerVal: 5, burnShockConsume: 3.78, note: "열기 부착 / 연소·감전 소모 대량 추가타" },
     // 폭렬 수류탄·β형(연계 60%, 쿨 20초≈4턴): 아츠 부착 적 있을 때. 범위 열기 + 열기 부착.
     { id: "wlf-l", name: "폭렬 수류탄 · β형", kind: "link", fromPos: [1, 2, 3], target: "row", power: 0.6, element: "heat", attach: "heat", staggerVal: 10, cooldown: 4,
-      requires: (t) => !!t && ELEMENTS.some((e) => t.arts[e] > 0), requiresText: "아츠 부착 적", note: "범위 열기 부착(부착 셋업)" },
+      requires: (t) => !!t && ELEMENTS.some((e) => t.arts[e] > 0), requiresText: "아츠 부착 적", note: "범위 열기 부착" },
     // 늑대의 분노(궁 32%×5=160%, 게이지 90): 광역 다단 열기 + 강제 연소 + 불타는 송곳니.
     { id: "wlf-u", name: "늑대의 분노", kind: "ult", fromPos: [1, 2, 3], target: "all", power: 1.6, element: "heat", staggerVal: 15, selfUlt: true, forceBurn: true, note: "광역 열기 + 강제 연소" },
   ],
@@ -257,7 +257,7 @@ export const SKILLS: Record<string, DDSkill[]> = {
     { id: "flr-u", name: "난장판으로 만들어주지", kind: "ult", fromPos: [1, 2, 3], target: "all", power: 4.44, element: "nature", staggerVal: 20, selfUlt: true, note: "광역 다단 자연 + 무료 아츠 부착" },
   ],
   // 탕탕: 냉기/권총 캐스터(★6 한정). 즉발 냉기 부착(용오름) + 용오름 개수 비례 아츠 취약 + 와류(가속/감속) + 시간 정지 궁 + 준수한 서브딜. 냉기팟 핵심(라스트 라이트/이본 부착 보조).
-  // 재능: 의기투합(와류 주변 아군 가속/적 감속, 엔진) · 풍랑의 주재자(낙하 공격 용오름 — 미모델). 주스탯 민첩·보조 힘.
+  // 재능: 의기투합(와류 주변 아군 가속/적 감속, 엔진) · 풍랑의 주재자(배틀 스킬 와류→용오름 강화, 엔진). 주스탯 민첩·보조 힘.
   tangtang: [
     // 우당탕탕 파도!(배틀 사격 80% + 용오름 133% = 213%): 즉발 냉기 부착 + 용오름(와류 소모로 개수↑ → 아츠 취약·지속 냉기·게이지). 엔진 id훅.
     { id: "tt-b", name: "우당탕탕 파도!", kind: "battle", fromPos: [1, 2, 3], target: "row", power: 2.13, element: "cryo", attach: "cryo", staggerVal: 10, note: "즉발 냉기 부착 + 용오름(아츠 취약·지속 냉기·게이지)" },
@@ -291,10 +291,10 @@ export const SKILLS: Record<string, DDSkill[]> = {
       apply: (t) => bumpVuln(t, "electric", 0.1, 2), note: "광역 전기 + 강력 썬더랜스 설치 + 전기 취약" },
   ],
   // 판: 물리/양손검 스트라이커(★5, 유일 비6성 물리 스트라이커). 방어 불능 4스택 강타 단발 누커(관리자 유사). 띄우기/넘어뜨리기 방불 빌더 + 강타 화력 몰빵.
-  // 재능: 전분 풀기(방불 소모 시 물리 +6%/스택, 엔진) · 간 맞추기(궁→연계 쿨 회복 — 미모델). 주스탯 힘·보조 의지.
+  // 재능: 전분 풀기(방불 소모 시 물리 +6%/스택, 엔진) · 간 맞추기(궁 후 연계 쿨 40% 단축, 엔진). 주스탯 힘·보조 의지.
   dapan: [
     // 뒤집어 주지!(배틀 133%): 웍 던져 물리 + 띄우기(방불 빌더).
-    { id: "dp-b", name: "뒤집어 주지!", kind: "battle", fromPos: [1, 2, 3], target: "single-front", power: 1.33, element: "physical", staggerVal: 10, anomaly: "launch", note: "물리 + 띄우기(방불 빌더)" },
+    { id: "dp-b", name: "뒤집어 주지!", kind: "battle", fromPos: [1, 2, 3], target: "single-front", power: 1.33, element: "physical", staggerVal: 10, anomaly: "launch", note: "물리 + 띄우기(방어 불능 누적)" },
     // 조미료 뿌리기!(연계 289% + 강타, 쿨 20초≈4턴): 방불 4스택 적. 대량 물리 + 강타(추가 강타 +10%) + 전분 풀기. SP 무소모.
     { id: "dp-l", name: "조미료 뿌리기!", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 2.89, element: "physical", staggerVal: 15, cooldown: 4, anomaly: "crush", crushAmp: 1.1,
       requires: (t) => !!t && t.physBreak >= 4, requiresText: "방어 불능 4스택", note: "대량 물리 + 강타(추가 +10%) + 전분 풀기" },
@@ -306,7 +306,7 @@ export const SKILLS: Record<string, DDSkill[]> = {
   // 재능: 불꽃의 심장(열기 부착 흡수→녹아내린 불꽃, 4스택 열기 저항 무시) · 부활의 불씨(HP 40%↓ 90% 비호+회복). 주스탯 지능·보조 힘.
   laevatain: [
     // 불타오르는 화염(배틀 초기 62%): 열기 + (불꽃의 심장)열기 부착 흡수 → 녹아내린 불꽃. 4스택 시 강화 폭발(추가 342% + 강제 연소 + 궁 +100). 흡수는 일반공격/배틀/연계 공통(엔진 id훅).
-    { id: "lae-b", name: "불타오르는 화염", kind: "battle", fromPos: [1, 2, 3], target: "single-front", power: 0.62, element: "heat", staggerVal: 10, gaugeCost: 60, note: "열기 + 녹아내린 불꽃(흡수) · 4스택 강화 폭발+강제 연소+궁100 · 원작 상시기(저코스트)로 공유게이지 기아 완화" },
+    { id: "lae-b", name: "불타오르는 화염", kind: "battle", fromPos: [1, 2, 3], target: "single-front", power: 0.62, element: "heat", staggerVal: 10, gaugeCost: 60, note: "열기 + 주변 열기 부착 흡수(녹아내린 불꽃) · 4스택 시 강화 폭발 + 강제 연소 + 궁 +100" },
     // 열화(연계 240%, 쿨 10초≈2턴): 연소/부식 적. 광역 열기 + 녹아내린 불꽃(명중당) + 궁충(명중 수 비례).
     { id: "lae-l", name: "열화", kind: "link", fromPos: [1, 2, 3], target: "row", power: 2.4, element: "heat", staggerVal: 10, cooldown: 2,
       requires: (t) => !!t && (t.statuses.includes("combustion") || t.statuses.includes("corrosion")), requiresText: "연소/부식 적", note: "광역 열기 + 녹아내린 불꽃 + 궁충" },
@@ -379,6 +379,24 @@ export const OPERATORS: OpMeta[] = Object.values(OP_BASE).map((b) => {
   const el = (SKILLS[b.id] ?? []).find((s) => s.element && s.element !== "physical")?.element ?? "physical";
   return { id: b.id, name: b.name, cls: b.cls, element: el as "physical" | Element };
 });
+
+// 오퍼별 기본공격(일반 공격) — 실제 명칭·연타/속성(operators-source). 게임 엔진은 공용 BASIC로 처리하되 표시는 고유 이름으로.
+export const OP_BASIC: Record<string, { name: string; note: string }> = {
+  chenqianyu: { name: "파비하", note: "물리 단타" }, lifeng: { name: "업보 파괴", note: "물리 단타" },
+  endministrator: { name: "훼손 시퀀스", note: "물리 단타" }, estella: { name: "노이즈", note: "물리 단타" },
+  rossi: { name: "끓어오르는 늑대의 피", note: "물리 단타" }, mifu: { name: "검권 합일", note: "물리 단타" },
+  arclight: { name: "추적 사냥", note: "물리 단타" }, alesh: { name: "캐스팅의 기본", note: "물리 단타" },
+  akekuri: { name: "진취의 검날", note: "물리 단타" }, camu: { name: "피의 속죄", note: "열기 단타" },
+  pogranichnik: { name: "전면 공세", note: "물리 단타" }, ember: { name: "돌진 검술", note: "물리 단타" },
+  snowshine: { name: "저체온 강타", note: "물리 단타" }, catcher: { name: "기초 전술", note: "물리 단타" },
+  ardelia: { name: "바위의 속삭임", note: "자연 단타" }, xaihi: { name: "쿨타임", note: "냉기 단타" },
+  antal: { name: "교환 전류", note: "전기 단타" }, gilberta: { name: "비전 지팡이 · 에너지 제어", note: "자연 단타" },
+  perlica: { name: "프로토콜α · 돌파", note: "전기 단타" }, wulfgard: { name: "다중 연사", note: "열기 단타" },
+  fluorite: { name: "독자적인 사격술", note: "자연 단타" }, tangtang: { name: "정신 똑바로 차려!", note: "냉기 단타" },
+  lastrite: { name: "혹한의 춤", note: "냉기 단타" }, avywenna: { name: "썬더랜스 · 신속 공격", note: "물리 단타" },
+  dapan: { name: "돌려가며 썰기!", note: "물리 단타" }, laevatain: { name: "재", note: "열기 단타" },
+  yvonne: { name: "점프 트리거", note: "냉기 단타" }, zhuangfangyi: { name: "전격술", note: "전기 단타" },
+};
 
 // 오퍼 얼굴 아이콘 경로 — 관리자만 avatar1.webp, 나머지는 avatar.webp
 export const avatarUrl = (id: string) => `/operators/${id}/${id === "endministrator" ? "avatar1" : "avatar"}.webp`;
