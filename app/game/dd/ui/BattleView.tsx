@@ -238,26 +238,35 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
 
   return (
     <div className="dd-battle relative mx-auto max-w-[1640px] px-3 py-4 sm:px-5">
-      {/* 행동 순서 — 화면 왼쪽 세로 컬럼(엔필식 턴 오더) */}
+      {/* 행동 순서 — 속도 기반 턴 오더(이름·연결선·아군/적 색·현재 강조) */}
       {!winner && upcoming.length > 0 && (
-        <div className="absolute left-1 top-[68px] z-30 flex flex-col gap-1.5 sm:left-2">
-          <span className="mb-0.5 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-ef-muted">순서</span>
-          {upcoming.slice(0, 6).map((u, i) => {
-            const ally = u.side === "ally";
-            const nm = ally ? OPERATORS.find((o) => o.id === u.id)?.name ?? u.id : u.name;
-            const now = i === 0;
-            return (
-              <div key={`${u.id}-${i}`} className="flex items-center gap-1.5" title={`${i + 1}. ${nm}`}>
-                <span className={`relative shrink-0 overflow-hidden border-2 ${now ? "h-12 w-12" : "h-9 w-9"}`} style={{ borderColor: now ? "#ffbe6b" : ally ? "#3c2c1a" : "#5a2420", background: ally ? `center/cover url(${avatarUrl(u.id)})` : "#3a1512", opacity: now ? 1 : 0.7, boxShadow: now ? "0 0 10px rgba(255,190,107,0.75)" : undefined }}>
-                  {!ally && <span className="absolute inset-0 flex items-center justify-center text-base font-bold text-red-300/90">✦</span>}
-                  {/* HP% 스트립(체력을 순서 레일에서 표시) */}
-                  {(() => { const r = Math.max(0, Math.min(1, u.hp / u.maxHp)); const c = r < 0.35 ? "#e0655c" : ally ? "#8fb84a" : "#e0655c"; return <span className="absolute inset-x-0 bottom-0 h-1" style={{ background: `linear-gradient(90deg, ${c} ${r * 100}%, rgba(0,0,0,0.8) ${r * 100}%)` }} />; })()}
-                  <span className="absolute -bottom-1.5 -right-1.5 z-10 flex h-4 w-4 items-center justify-center border border-ef-line bg-black font-mono text-[10px] font-black" style={{ color: now ? "#ffbe6b" : "#a0a0a0" }}>{i + 1}</span>
-                </span>
-                {now && <span className="font-mono text-[11px] font-black uppercase tracking-wider text-ef-accent">지금</span>}
-              </div>
-            );
-          })}
+        <div className="absolute left-1 top-[60px] z-30 sm:left-2">
+          <div className="mb-1.5 flex items-center gap-1 font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-ef-accent/80">⏱ 속도 순서</div>
+          <div className="relative flex flex-col gap-1">
+            {/* 흐름 연결선 */}
+            <span className="pointer-events-none absolute bottom-4 left-[17px] top-4 w-0.5 bg-gradient-to-b from-ef-accent/60 via-ef-line to-transparent" />
+            {upcoming.slice(0, 6).map((u, i) => {
+              const ally = u.side === "ally";
+              const nm = ally ? OPERATORS.find((o) => o.id === u.id)?.name ?? u.id : u.name;
+              const el = ally ? (OPERATORS.find((o) => o.id === u.id)?.element ?? "physical") : (enemyDefFor(u.id)?.element ?? "physical");
+              const tone = ally ? elementColor[el] : "#e0655c";
+              const now = i === 0;
+              const r = Math.max(0, Math.min(1, u.hp / u.maxHp));
+              return (
+                <div key={`${u.id}-${i}`} className="relative flex items-center gap-2" style={{ opacity: now ? 1 : Math.max(0.5, 1 - i * 0.11) }}>
+                  <span className={`relative z-10 shrink-0 overflow-hidden border-2 transition-all ${now ? "h-11 w-11" : "h-8 w-8"}`} style={{ borderColor: now ? "#ffbe6b" : tone, background: ally ? `center/cover url(${avatarUrl(u.id)})` : `radial-gradient(circle at 50% 35%, ${tone}66, #2a1210 75%)`, boxShadow: now ? `0 0 12px ${tone}, 0 0 0 2px #ffbe6b` : `0 0 0 1px ${tone}55` }}>
+                    {!ally && <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-red-200/90">✦</span>}
+                    <span className="absolute inset-x-0 bottom-0 h-1" style={{ background: `linear-gradient(90deg, ${r < 0.35 ? "#e0655c" : ally ? "#8fb84a" : "#e0655c"} ${r * 100}%, rgba(0,0,0,0.85) ${r * 100}%)` }} />
+                  </span>
+                  <span className={`dd-cut flex items-center gap-1 border px-1.5 py-0.5 font-mono leading-none ${now ? "text-[12px] font-black" : "text-[11px] font-bold"}`} style={{ borderColor: now ? "#ffbe6b99" : `${tone}44`, background: now ? "linear-gradient(90deg, rgba(255,190,107,0.2), rgba(13,9,6,0.6))" : "rgba(13,9,6,0.8)", color: now ? "#ffdf9e" : ally ? "#e6e6e8" : "#f0a8a0" }}>
+                    {now ? <span className="text-ef-accent">▶ 지금</span> : nm}
+                    {!now && <span className="text-[9px] text-ef-muted">{ally ? "" : "·적"}</span>}
+                  </span>
+                  {now && <span className="font-mono text-[11px] font-bold text-white/90">{nm}</span>}
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
       {/* 상단 HUD — 스킬 게이지(좌) · 라운드 인디케이터(중앙) · 컨트롤(우) */}
