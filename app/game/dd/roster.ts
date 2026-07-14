@@ -162,7 +162,7 @@ export const SKILLS: Record<string, DDSkill[]> = {
     { id: "snow-u", name: "살얼음 추위", kind: "ult", fromPos: [1, 2, 3], target: "row", power: 2.0, element: "cryo", staggerVal: 15, selfUlt: true, freezeZone: 1, note: "광역 냉기 + 강제 동결(부착 무관, 쇄빙 보조)" },
   ],
   // 카치르: 물리/양손검 디펜더(★4 배포). 정석 패링 탱커 — 반격 방어 불능 부여 + 보호막 + 허약/넘어뜨리기 궁. 엠버 하위 호환이나 2디펜더 안정성.
-  // 재능: 강인한 방어선(의지→방어력, 보호막 스케일) · 전장을 꿰뚫는 통찰(궁 마지막 3회 충격파 ×45%). 주스탯 힘·보조 의지.
+  // 재능: 강인한 방어선(의지→방어력 baked + 보호막 스케일) · 전장을 꿰뚫는 통찰(궁 마지막 3회 충격파 ×45%). 주스탯 힘·보조 의지.
   catcher: [
     // 강력한 저지(배틀 178%, 게이지 100·반환 30): 자신+주변 90% 비호 + 반격 태세. 피격 시 반격 → 방어 불능 1스택(엔진).
     { id: "cat-b", name: "강력한 저지", kind: "battle", fromPos: [1, 2, 3], target: "self", power: 0, staggerVal: 0, gaugeRefund: 30, note: "90% 비호 + 게이지 반환 + 반격 태세(피격 시 방어 불능)" },
@@ -473,6 +473,7 @@ export function makeAlly(id: string, pos: number, progress: OpProgress = DEFAULT
   u.attrs = OP_ATTRS[id]; // 실제 능력치(힘/민첩/지능/의지)
   u.speed = u.attrs ? Math.round(u.attrs.agi * 0.42 + 12) : b.speed; // 민첩 기반 속도(적 속도대와 겹치게 스케일)
   u.healRecv = u.attrs ? +(u.attrs.wil / ATTR_AVG).toFixed(2) : 1; // 의지 → 받는 회복량 배율
+  if (id === "catcher" && u.attrs) u.defense += Math.round(u.attrs.wil * 0.12); // 카치르 강인한 방어선: 의지 10당 방어력 +1.2
   u.resist = attrResists(u.gearGrade, u.attrs); // 민첩→물리 저항·지능→아츠 저항(총량 gearGrade 유지)
   if (b.artsImmune) u.artsImmune = b.artsImmune; // 만물의 지혜(아크라이트): 아츠 부착 확률 면역
   if (b.cryoImmune) u.cryoImmune = b.cryoImmune; // 이유 있는 게으름(에스텔라): 냉기 부착 면역

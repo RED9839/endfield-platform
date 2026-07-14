@@ -479,6 +479,26 @@ export function usable(s: DDState, self: DDUnit, skill: DDSkill): boolean {
   return true;
 }
 
+// 아군 피격 시 방어 트리거 — act()(아군 자해/반사)와 enemyAct()(적 공격) 양쪽에서 호출. self=공격자, t=피격 아군.
+export function onAllyHit(s: DDState, self: DDUnit, t: DDUnit, final: number, log: string[]): void {
+  if (!(t.side === "ally" && final > 0)) return;
+  s.allyHit = true; // 엠버 전선에서의 지원 피격 윈도우
+  // 강철에는 강철로(엠버): 피격 시 공격력 +9%, 최대 3스택(=+27%), 2턴
+  if (t.id === "ember") { t.atkBuff = Math.min(0.27, (t.atkBuff || 0) + 0.09); setTimer(t, "atkBuff", 2); }
+  // 부활의 불씨(레바테인): HP 40% 이하로 떨어지면 90% 비호 + 회복(12턴 쿨 1회)
+  if (t.id === "laevatain" && t.hp / t.maxHp <= 0.4 && (t.timers.embersCd || 0) <= 0) {
+    applyBuff(t, "protection", 0.9, undefined, 2); healUnit(t, Math.round(t.maxHp * 0.1), s, log); setTimer(t, "embersCd", 12);
+    log.push(`  → 부활의 불씨! 90% 비호 + 회복`);
+  }
+  // 패링(스노우샤인·카치르): 방패 태세 중 아군 피격 시 반격(공격자=self).
+  if (self.side === "enemy") {
+    const snow = s.units.find((u) => u.id === "snowshine" && u.hp > 0 && (u.timers.guard || 0) > 0);
+    if (snow) { log.push(`  → 스노우샤인 반격(패링)!`); applyAttach(self, "cryo", snow, log); snow.ultCharge = Math.min(snow.ultCost, snow.ultCharge + 10); }
+    const cat = s.units.find((u) => u.id === "catcher" && u.hp > 0 && (u.timers.guard || 0) > 0);
+    if (cat) { self.physBreak = Math.min(MAX_BREAK, self.physBreak + 1); setTimer(self, "physBreak", DUR_BREAK); log.push(`  → 카치르 반격(패링)! 방어 불능 1스택 (방불 ${self.physBreak})`); }
+  }
+}
+
 export const canAct = (u: DDUnit) => u.hp > 0 && !(u.side === "enemy" && (u.staggered || (u.timers.stun || 0) > 0 || u.frozen > 0)); // 불균형/시간 정지/동결 적은 행동 불가
 
 // 한 유닛의 행동 실행
@@ -732,30 +752,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
       if (self.gear?.onKillHeal) healUnit(self, Math.round(self.maxHp * self.gear.onKillHeal), s, log); // 통합형 중갑: 처치 시 회복
       if (self.gear?.onKillAtk) { self.atkBuff = Math.min(0.6, (self.atkBuff || 0) + self.gear.onKillAtk); setTimer(self, "atkBuff", 3); } // 통합형 경갑: 처치 시 공격력+
     }
-    if (t.side === "ally" && final > 0) { // 엠버 연계(전선에서의 지원) 피격 트리거 윈도우
-      s.allyHit = true;
-      // 강철에는 강철로(엠버): 피해받을 때 공격력 +9%, 최대 3스택(=+27%), 7초≈2턴
-      if (t.id === "ember") { t.atkBuff = Math.min(0.27, (t.atkBuff || 0) + 0.09); setTimer(t, "atkBuff", 2); }
-      // 부활의 불씨(레바테인): HP 40% 이하로 떨어지면 90% 비호 + 회복(120초 쿨 1회)
-      if (t.id === "laevatain" && t.hp / t.maxHp <= 0.4 && (t.timers.embersCd || 0) <= 0) {
-        applyBuff(t, "protection", 0.9, undefined, 2); healUnit(t, Math.round(t.maxHp * 0.1), s, log); setTimer(t, "embersCd", 12);
-        log.push(`  → 부활의 불씨! 90% 비호 + 회복`);
-      }
-      // 패링(스노우샤인·카치르): 방패 든 동안 피격 시 반격(공격자=self). 디펜더별 반격 효과 상이.
-      if (self.side === "enemy") {
-        const snow = s.units.find((u) => u.id === "snowshine" && u.hp > 0 && (u.timers.guard || 0) > 0);
-        if (snow) { // 포화성 방어: 냉기 부착 + 궁 에너지(구조 전문가)
-          log.push(`  → 스노우샤인 반격(패링)!`);
-          applyAttach(self, "cryo", snow, log);
-          snow.ultCharge = Math.min(snow.ultCost, snow.ultCharge + 10);
-        }
-        const cat = s.units.find((u) => u.id === "catcher" && u.hp > 0 && (u.timers.guard || 0) > 0);
-        if (cat) { // 강력한 저지: 방어 불능 1스택 부여
-          self.physBreak = Math.min(MAX_BREAK, self.physBreak + 1); setTimer(self, "physBreak", DUR_BREAK);
-          log.push(`  → 카치르 반격(패링)! 방어 불능 1스택 (방불 ${self.physBreak})`);
-        }
-      }
-    }
+    onAllyHit(s, self, t, final, log); // 아군 피격 트리거(엠버 강철·레바테인 불씨·디펜더 패링) — 적 공격(enemyAct)에서도 호출
   }
   // 엠버(디펜더): 전진의 결의(배틀·연계 시 50% 비호) · 전선에서의 지원 치유 · 다시 불타오르는 맹세 팀 보호막
   if (self.id === "ember") {
@@ -829,8 +826,11 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
       for (const a of living(s, "ally")) {
         a.amp.cryo = (a.amp.cryo || 0) + amp; setTimer(a, "amp:cryo", 3);
         a.amp.nature = (a.amp.nature || 0) + amp; setTimer(a, "amp:nature", 3);
+        // 프리징 프로토콜: 팀 전체 냉기 부착·동결 정화
+        a.arts.cryo = 0; delete a.timers["arts:cryo"];
+        if (a.frozen > 0) { a.frozen = 0; rm(a, "stun"); delete a.timers["frozen"]; }
       }
-      log.push(`  → 스택 오버플로! 팀 냉기/자연 증폭 +${(amp * 100).toFixed(0)}%`);
+      log.push(`  → 스택 오버플로! 팀 냉기/자연 증폭 +${(amp * 100).toFixed(0)}% · 냉기/동결 정화`);
     }
   }
   // 안탈(서포터): 오버클럭 타임(팀 전기/열기 증폭) · 자기 폭풍 실험장(포커싱 적 부착/물리 이상 갱신)

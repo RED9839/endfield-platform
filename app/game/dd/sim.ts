@@ -1,5 +1,5 @@
 // DD 전투 시뮬 헬퍼 — AI(아군 자동/적) + 인카운터 + 전투 생성. UI와 테스트가 공유(부작용 없음).
-import { BASIC, DDState, DDUnit, DDSkill, Element, applyAttach, applyDamage, healUnit, living, mitigate, usable, pickTargets, vulnFor } from "./combat";
+import { BASIC, DDState, DDUnit, DDSkill, Element, applyAttach, applyDamage, healUnit, living, mitigate, usable, pickTargets, vulnFor, onAllyHit } from "./combat";
 import { SKILLS, makeAlly, makeEnemy, ENEMY_DEFS, enemyDefFor, frontlineOrder, enemyArchetype } from "./roster";
 import { applyGear, GEAR_SLOTS, type Loadout, type GearSlot } from "./gear";
 import { applyWeapon } from "./weapons";
@@ -91,6 +91,7 @@ export function enemyAct(s: DDState, self: DDUnit): void {
     const raw = self.attack * atkMul * powerMul * (1 + vulnFor(t, elem)) * (1 - (t.protection || 0));
     const dmg = applyDamage(t, mitigate(t, raw, elem));
     s.log.push(`${self.name}[적] → ${t.name} ${elem !== "physical" ? EL_TAG[elem] : ""}공격 -${dmg} (HP ${t.hp}/${t.maxHp})`);
+    onAllyHit(s, self, t, dmg, s.log); // 아군 피격 트리거(엠버 강철·레바테인 불씨·디펜더 패링)
     if (t.hp <= 0) { s.log.push(`  ✗ ${t.name} 전투불능!`); continue; }
     // 아츠 부착(침식체 냉기·염술사 열기): 아군에 부착 → 연소/동결 등 이상 유발
     if (def?.attach) { const ex = applyAttach(t, def.attach, self, s.log); if (ex > 0) applyDamage(t, mitigate(t, ex, def.attach)); }
