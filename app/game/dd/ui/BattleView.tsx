@@ -352,26 +352,39 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
                   {dead && <span className="absolute inset-0 flex items-center justify-center text-5xl">💀</span>}
                   {isCur && !dead && <span className="absolute -top-1 z-10 font-mono text-[12px] font-black uppercase tracking-wider text-ef-accent" style={{ textShadow: "0 0 8px #000, 0 0 4px #000" }}>▶ 행동</span>}
                 </div>
-                {/* 정보 패널 */}
-                <div className="hud-tile dd-cut w-full px-2 py-1.5" style={isCur ? { borderColor: `${PRIMARY}aa` } : undefined}>
-                  <div className="flex items-center gap-1">
-                    <span className="h-2 w-2 shrink-0" style={{ background: elementColor[el] }} />
+                {/* 정보 패널 — 라벨 정렬·값 오버레이로 깔끔하게 */}
+                <div className="hud-tile dd-cut w-full px-2.5 py-2" style={isCur ? { borderColor: `${PRIMARY}aa`, boxShadow: `inset 0 1px 0 rgba(255,255,255,0.06), 0 -5px 16px -9px ${PRIMARY}` } : undefined}>
+                  {/* 헤더 */}
+                  <div className="flex items-center gap-1.5">
+                    <span className="h-2.5 w-2.5 shrink-0" style={{ background: elementColor[el], boxShadow: `0 0 5px ${elementColor[el]}`, clipPath: "polygon(50% 0,100% 50%,50% 100%,0 50%)" }} />
                     <span className="truncate font-mono text-[13px] font-bold text-white">{a.name}</span>
-                    {weaponOf(a.id) && (weaponImage(a.id) ? <img src={weaponImage(a.id)} alt="" loading="lazy" className="h-4 w-4 shrink-0 object-contain" title={`${WEAPON_KO[weaponOf(a.id)!]} · ${weaponEffectText(a.id)}`} /> : <span className="text-[13px] leading-none" title={WEAPON_KO[weaponOf(a.id)!]}>{WEAPON_ICON[weaponOf(a.id)!]}</span>)}
-                    {op && <span className="ml-auto font-mono text-[10px] uppercase text-ef-muted">{classLabel[op.cls]}</span>}
+                    {weaponOf(a.id) && (weaponImage(a.id) ? <img src={weaponImage(a.id)} alt="" loading="lazy" className="h-4 w-4 shrink-0 object-contain opacity-90" title={`${WEAPON_KO[weaponOf(a.id)!]} · ${weaponEffectText(a.id)}`} /> : <span className="text-[13px] leading-none" title={WEAPON_KO[weaponOf(a.id)!]}>{WEAPON_ICON[weaponOf(a.id)!]}</span>)}
+                    {op && <span className="ml-auto shrink-0 font-mono text-[10px] uppercase tracking-wider text-ef-muted">{classLabel[op.cls]}</span>}
                   </div>
-                  <div className="mt-0.5 flex justify-between font-mono text-[11px] text-ef-muted"><span>HP</span><span>{Math.max(0, a.hp)}/{a.maxHp}</span></div>
-                  <Bar value={a.hp} max={a.maxHp} color={lowHp ? "#e0655c" : "#8fb84a"} />
-                  {a.shield > 0 && <div className="mt-0.5"><Chip tone="#38bdf8">🛡 {a.shield}</Chip></div>}
-                  <div className="mt-1 flex items-center gap-1">
-                    <span className={`shrink-0 font-mono text-[10px] font-bold uppercase ${ready ? "text-amber-300" : "text-ef-muted"}`}>궁</span>
-                    <div className="relative flex-1" style={ready ? { filter: "drop-shadow(0 0 4px #f5c54299)" } : undefined}>
-                      <Bar value={a.ultCharge} max={a.ultCost} color={ready ? "#f5c542" : "#7a611c"} h="h-2.5" />
-                      <span className="pointer-events-none absolute inset-0 flex items-center justify-center font-mono text-[9px] font-bold leading-none" style={{ color: ready ? "#1a1206" : "#e5c98a", textShadow: ready ? "none" : "0 1px 2px #000" }}>{ready ? "⚡READY" : `${Math.round(a.ultCharge)}/${a.ultCost}`}</span>
+                  {/* 스탯 바(라벨 정렬 + 값 오버레이) */}
+                  <div className="mt-2 space-y-1">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-7 shrink-0 text-right font-mono text-[9px] font-bold uppercase text-ef-muted">HP</span>
+                      <div className="relative flex-1">
+                        <Bar value={a.hp} max={a.maxHp} color={lowHp ? "#e0655c" : "#8fb84a"} h="h-3" />
+                        <span className="pointer-events-none absolute inset-0 flex items-center justify-end pr-1 font-mono text-[9px] font-bold tabular-nums leading-none text-white" style={{ textShadow: "0 1px 2px #000" }}>{Math.max(0, a.hp)}/{a.maxHp}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className={`w-7 shrink-0 text-right font-mono text-[9px] font-bold uppercase ${ready ? "text-amber-300" : "text-ef-muted"}`}>궁</span>
+                      <div className="relative flex-1" style={ready ? { filter: "drop-shadow(0 0 4px #f5c54299)" } : undefined}>
+                        <Bar value={a.ultCharge} max={a.ultCost} color={ready ? "#f5c542" : "#7a611c"} h="h-3" />
+                        <span className="pointer-events-none absolute inset-0 flex items-center justify-center font-mono text-[9px] font-bold leading-none" style={{ color: ready ? "#1a1206" : "#e5c98a", textShadow: ready ? "none" : "0 1px 2px #000" }}>{ready ? "⚡ READY" : `${Math.round(a.ultCharge)}/${a.ultCost}`}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-7 shrink-0 text-right font-mono text-[9px] font-bold uppercase text-cyan-300/80">속도</span>
+                      <div className="flex-1"><Bar value={a.atb} max={100} color="#67e8f9" h="h-1.5" /></div>
                     </div>
                   </div>
-                  <div className="mt-0.5 flex items-center gap-1"><span className="shrink-0 font-mono text-[10px] font-bold uppercase text-cyan-300/80">속도</span><Bar value={a.atb} max={100} color="#67e8f9" h="h-1.5" /></div>
-                  {(sets.length > 0 || unitChips(a).length > 0) && <div className="mt-1 flex flex-wrap gap-1">
+                  {/* 보호막 · 세트 · 상태 */}
+                  {(a.shield > 0 || sets.length > 0 || unitChips(a).length > 0) && <div className="mt-2 flex flex-wrap gap-1 border-t border-ef-line/40 pt-1.5">
+                    {a.shield > 0 && <Chip tone="#38bdf8">🛡 {a.shield}</Chip>}
                     {sets.map((n) => <Chip key={`set-${n}`} tone="#c9a227">◆{n}</Chip>)}
                     {unitChips(a).map((c) => <Chip key={c.k} tone={c.tone}>{c.label}</Chip>)}
                   </div>}
