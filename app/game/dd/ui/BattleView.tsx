@@ -599,8 +599,11 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
                   {/* 슬롯별 착용 피스 */}
                   <div className="mb-2 space-y-1">
                     {pieces.map((p) => { const named = p.set && p.set !== "?"; const on = named && sets.includes(p.set); return (
-                      <div key={p.slot} className="flex items-baseline gap-2">
-                        <span className="w-11 shrink-0 font-mono text-[11px] font-bold uppercase tracking-wider text-ef-muted">{p.slotName}</span>
+                      <div key={p.slot} className="flex items-center gap-2">
+                        <span className="w-9 shrink-0 font-mono text-[11px] font-bold uppercase tracking-wider text-ef-muted">{p.slotName}</span>
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center border border-ef-line/60 bg-black/40" style={{ boxShadow: on ? "inset 0 0 0 1px #e8c56a55" : undefined }}>
+                          {p.image ? <img src={p.image} alt="" loading="lazy" className="h-full w-full object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = "hidden"; }} /> : <span className="font-mono text-[10px] text-ef-muted">—</span>}
+                        </span>
                         <span className="min-w-0 flex-1 truncate font-mono text-[13px] text-ef-ink" title={p.name}>{p.name}</span>
                         <span className="shrink-0 font-mono text-[11px]" style={{ color: on ? "#e8c56a" : named ? "#8a8a92" : "#67e8f9aa" }}>{named ? `${on ? "◆" : "◇"} ${p.set}` : "자유 슬롯"}</span>
                       </div>

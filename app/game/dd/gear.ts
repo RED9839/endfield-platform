@@ -5,6 +5,7 @@
 import type { DDUnit, Element, GearBonus } from "./combat";
 import { ELEMENTS, attrResists } from "./combat";
 import gearPiecesData from "./data/gear-pieces.json";
+import { gearSummaries } from "@/data/gear-summary-data";
 
 export type GearSlot = "armor" | "gloves" | "kit";
 export type Loadout = Partial<Record<GearSlot, string>>; // 슬롯 → 세트명
@@ -120,12 +121,17 @@ export const hasSetEffect = (setName: string) => Boolean(GEAR_SETS[setName]);
 export const setEffectText = (setName: string) => hasSetEffect(setName) ? `2부위: ${GEAR_SETS[setName].map(effectText).join(" · ")}` : "세트 효과 없음";
 export const SET_NAMES = Object.keys(GEAR_SETS);
 
+// 피스명 → 실제 장비 이미지(gear-summary-data). 변형 마커(· I/II) 제거 후 매칭.
+const GEAR_IMG_BY_NAME: Record<string, string> = {};
+for (const g of gearSummaries) GEAR_IMG_BY_NAME[g.name] = g.image;
+export const pieceImage = (name: string): string => GEAR_IMG_BY_NAME[name] ?? GEAR_IMG_BY_NAME[name.replace(/\s*·\s*(I{1,3}|IV|V)$/, "").trim()] ?? "";
+
 // 로드아웃 → 슬롯별 착용 피스(방어구/장갑/부품). ref가 피스 id면 그 피스, 세트명이면 세트 대표 피스.
-export function loadoutPieces(loadout: Loadout | undefined): { slot: GearSlot; slotName: string; name: string; set: string }[] {
+export function loadoutPieces(loadout: Loadout | undefined): { slot: GearSlot; slotName: string; name: string; set: string; image: string }[] {
   return GEAR_SLOTS.map((slot) => {
     const ref = loadout?.[slot];
     const p = ref ? (GEAR_PIECE_BY_ID[ref] ?? GEAR_SET_CANON[ref]?.[slot]) : undefined;
-    return { slot, slotName: SLOT_KO[slot], name: p?.name ?? "없음", set: p?.set ?? "" };
+    return { slot, slotName: SLOT_KO[slot], name: p?.name ?? "없음", set: p?.set ?? "", image: p ? pieceImage(p.name) : "" };
   });
 }
 
