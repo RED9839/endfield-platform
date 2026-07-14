@@ -5,7 +5,7 @@ import { useEffect, useReducer, useRef, useState } from "react";
 import { act, canAct, isOver, startRound, perTurn, nextActor, turnOrder, usable, BASIC, type DDClass, type DDSkill, type DDState, type DDUnit, type Element } from "../combat";
 import { OPERATORS, SKILLS, enemyDefFor, avatarUrl, fullUrl, skillIcon, enemyImage } from "../roster";
 import { ENCOUNTERS, allyChoose, createBattle, enemyAct, regionEncounter } from "../sim";
-import { activeSets, setEffectText } from "../gear";
+import { activeSets, setEffectText, loadoutPieces } from "../gear";
 import { weaponOf, weaponEffectText, weaponImage, weaponSeriesName, weaponSeriesDesc, WEAPON_KO, WEAPON_ICON } from "../weapons";
 import { OP_TALENTS } from "../operator-talents";
 import { ITEMS, useItem as applyItem, canUseItem, condText, itemColor, itemImage } from "../items";
@@ -520,7 +520,9 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
         const el = unitElement(u);
         const talents = ally ? OP_TALENTS[u.id] ?? [] : [];
         const uskills = ally ? SKILLS[u.id] ?? [] : [];
-        const sets = ally ? activeSets(party.find((p) => p.id === u.id)?.loadout ?? {}) : [];
+        const loadout = ally ? party.find((p) => p.id === u.id)?.loadout ?? {} : {};
+        const sets = ally ? activeSets(loadout) : [];
+        const pieces = ally ? loadoutPieces(loadout) : [];
         const wId = ally ? weaponOf(u.id) : null;
         const resists = Object.entries(u.resist) as [Element | "physical", number][];
         const close = () => setInspectId(null);
@@ -593,8 +595,21 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
                     </div>
                   </div>
                 </Sec>}
-                <Sec title="장비 세트">
-                  {sets.length ? sets.map((n) => <div key={n} className="mb-1.5 last:mb-0"><span className="font-mono text-[14px] font-bold text-[#e8c56a]">◆ {n}</span><div className="mt-0.5 font-mono text-[13px] leading-relaxed text-ef-muted">{setEffectText(n)}</div></div>) : <div className="font-mono text-[13px] text-ef-muted">활성 세트 없음</div>}
+                <Sec title="장비">
+                  {/* 슬롯별 착용 피스 */}
+                  <div className="mb-2 space-y-1">
+                    {pieces.map((p) => { const named = p.set && p.set !== "?"; const on = named && sets.includes(p.set); return (
+                      <div key={p.slot} className="flex items-baseline gap-2">
+                        <span className="w-11 shrink-0 font-mono text-[11px] font-bold uppercase tracking-wider text-ef-muted">{p.slotName}</span>
+                        <span className="min-w-0 flex-1 truncate font-mono text-[13px] text-ef-ink" title={p.name}>{p.name}</span>
+                        <span className="shrink-0 font-mono text-[11px]" style={{ color: on ? "#e8c56a" : named ? "#8a8a92" : "#67e8f9aa" }}>{named ? `${on ? "◆" : "◇"} ${p.set}` : "자유 슬롯"}</span>
+                      </div>
+                    ); })}
+                  </div>
+                  {/* 활성 세트 효과 */}
+                  <div className="border-t border-ef-line/40 pt-2">
+                    {sets.length ? sets.map((n) => <div key={n} className="mb-1.5 last:mb-0"><span className="font-mono text-[14px] font-bold text-[#e8c56a]">◆ {n} <span className="text-[12px] font-normal text-ef-muted">2부위</span></span><div className="mt-0.5 font-mono text-[13px] leading-relaxed text-ef-muted">{setEffectText(n)}</div></div>) : <div className="font-mono text-[13px] text-ef-muted">활성 세트 없음(같은 세트 2부위 필요)</div>}
+                  </div>
                 </Sec>
                 <Sec title="스킬">
                   {[...uskills].sort((a, b) => KIND_ORDER[a.kind] - KIND_ORDER[b.kind]).map((sk) => <div key={sk.id} className="mb-2.5 flex items-start gap-2.5 last:mb-0">
