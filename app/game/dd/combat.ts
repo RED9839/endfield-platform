@@ -62,6 +62,7 @@ export type DDUnit = {
   healRecv?: number; // 의지 → 받는 회복량 배율(1.0 기준). 회복 시 곱연산
   procCount: number; // 제너릭 재능 카운터(아크라이트 황무지의 방랑자 등)
   utilMult: number;  // 스킬 단조 유틸 배율(취약·증폭·회복·게이지·지속). M0=1.0
+  killPriority?: number; // 아군 자동 타겟 처치 우선(적 한정): 3=지원(치유/증폭) 2=원거리 1=전열
   lanceN?: number;   // 아비웨나 썬더랜스(적에게 누적, 가로채기로 소모) — 일반
   lanceBig?: number; // 아비웨나 강력 썬더랜스(적에게 누적) — 강력(전기 부착)
   artsImmune?: number; // 아츠 부착 확률 면역(아크라이트 만물의 지혜 0.5 = 50% 무효)
@@ -459,7 +460,11 @@ export function pickTargets(s: DDState, self: DDUnit, skill: DDSkill): DDUnit[] 
   // 플레이어 지정 타겟(단일 대상 스킬 한정) — 아군 수동 조작
   if (s.forcedTargetId) { const t = foes.find((f) => f.id === s.forcedTargetId); if (t) return [t]; }
   if (skill.target === "single-lowhp") return foes.length ? [foes.reduce((lo, e) => (e.hp < lo.hp ? e : lo), foes[0])] : [];
-  return foes.length ? [[...foes].sort((a, b) => a.pos - b.pos)[0]] : []; // single-front
+  // single-front 자동/기본 대상(수동 조준 없을 때·자동 전투): '전열 고정' 제거 → 처치 우선순위
+  //  불균형(처형) > 지원 적(치유·증폭) > 저체력% 마무리 > 전열. 무의미한 랜덤성 없이 스마트 포커스.
+  if (!foes.length) return [];
+  const prio = (e: DDUnit) => (e.staggered ? 4 : 0) + (e.killPriority ?? 1);
+  return [[...foes].sort((a, b) => prio(b) - prio(a) || a.hp / a.maxHp - b.hp / b.maxHp || a.pos - b.pos)[0]];
 }
 
 // 스킬이 지금 사용 가능한가(위치 + 게이지 + 요구사항)
@@ -474,7 +479,7 @@ export function usable(s: DDState, self: DDUnit, skill: DDSkill): boolean {
   return true;
 }
 
-export const canAct = (u: DDUnit) => u.hp > 0 && !(u.side === "enemy" && (u.staggered || (u.timers.stun || 0) > 0)); // 불균형/시간 정지 적은 행동 불가
+export const canAct = (u: DDUnit) => u.hp > 0 && !(u.side === "enemy" && (u.staggered || (u.timers.stun || 0) > 0 || u.frozen > 0)); // 불균형/시간 정지/동결 적은 행동 불가
 
 // 한 유닛의 행동 실행
 export function act(s: DDState, self: DDUnit, skill: DDSkill): void {

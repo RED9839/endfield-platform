@@ -518,18 +518,49 @@ const ENEMY_ATK_COMP = 2.8;
 // 아군 스킬9(×1.8) + 풀 장비(오퍼별 실측 피스)로 파티 딜 상승 → 적 체력 ×2.5로 도전성 부여(보스전 클리어율 분산).
 const ENEMY_HP_COMP = 2.65;
 
+// 적 컨셉(역할) → 속도 아키타입 + 우선 타겟. 턴 순서·조준을 컨셉에 맞춰 전략성 부여.
+//  front=전열(낮은 pos, 탱/뱅가드) / wounded=저체력%(부상 딜러 마무리) / threat=최고위협(강화된 딜러 직격)
+export type EnemyTarget = "front" | "wounded" | "threat";
+export function enemyArchetype(role: string, behavior: string): { spd: number; tgt: EnemyTarget } {
+  const has = (k: string) => role.includes(k);
+  // 대구경 포격·포탑·중화기·공성: 굼뜨지만 후방 고위협(딜러) 직격
+  if (has("포격") || has("포탑")) return { spd: -15, tgt: "threat" };
+  if (has("공성") || has("중화기")) return { spd: -13, tgt: "threat" };
+  if (has("중장")) return { spd: -18, tgt: "front" };                                  // 최저속, 전열 압살
+  if (has("저격") || has("사격") || has("투척") || has("처형")) return { spd: 12, tgt: "wounded" }; // 기민, 부상자 저격/처형
+  if (has("돌격") || has("포식")) return { spd: 16, tgt: "front" };                     // 최고속 강습
+  if (has("근접") || has("약탈") || has("야수")) return { spd: 9, tgt: "front" };        // 빠른 근접
+  if (has("증폭")) return { spd: 12, tgt: "front" };                                    // 지원: 빠른 반응
+  if (has("연막")) return { spd: 7, tgt: "wounded" };
+  if (has("술사")) return { spd: 3, tgt: "front" };
+  if (has("자폭")) return { spd: -8, tgt: "front" };                                    // 굼뜬 폭탄
+  if (has("원석충")) return { spd: -4, tgt: "wounded" };
+  if (has("동결") || has("변신")) return { spd: 0, tgt: "front" };                       // 제어형 중속
+  if (has("최종") || has("두목")) return { spd: 13, tgt: "threat" };                     // 보스: 고속 위협
+  if (has("우두머리") || has("채주")) return { spd: -9, tgt: "front" };                   // 보스: 둔중
+  const byBeh: Record<string, { spd: number; tgt: EnemyTarget }> = {                    // 폴백(behavior)
+    heavy: { spd: -14, tgt: "front" }, snipe: { spd: 10, tgt: "wounded" }, aoe: { spd: -4, tgt: "front" },
+    heal: { spd: 6, tgt: "wounded" }, buff: { spd: 10, tgt: "front" }, melee: { spd: 6, tgt: "front" },
+  };
+  return byBeh[behavior] ?? { spd: 0, tgt: "front" };
+}
+
 export function makeEnemy(def: EnemyDef, pos: number): DDUnit {
   const b = TIER_STATS[def.tier];
   let { hp, attack, speed, staggerMax, defense } = b;
   hp = Math.round(hp * ENEMY_HP_COMP);
   attack = Math.round(attack * ENEMY_ATK_COMP);
-  // 역할 보정: 중장=체력·공격·불균형↑ 속도↓ / 저격=체력↓ 속도↑ / 광역=공격↓ / 치유·강화=공격↓ 속도↑
-  if (def.behavior === "heavy") { hp = Math.round(hp * 1.35); attack = Math.round(attack * 1.15); speed -= 12; staggerMax = Math.round(staggerMax * 1.25); }
-  else if (def.behavior === "snipe") { hp = Math.round(hp * 0.8); speed += 10; }
-  else if (def.behavior === "aoe") { attack = Math.round(attack * 0.72); speed -= 4; }
-  else if (def.behavior === "heal") { attack = Math.round(attack * 0.5); hp = Math.round(hp * 0.9); speed += 6; }
-  else if (def.behavior === "buff") { attack = Math.round(attack * 0.7); speed += 4; }
+  // 역할 파워 보정(체력·공격·불균형) — 속도는 아래 컨셉 아키타입에서 별도 산정
+  if (def.behavior === "heavy") { hp = Math.round(hp * 1.35); attack = Math.round(attack * 1.15); staggerMax = Math.round(staggerMax * 1.25); }
+  else if (def.behavior === "snipe") { hp = Math.round(hp * 0.8); }
+  else if (def.behavior === "aoe") { attack = Math.round(attack * 0.72); }
+  else if (def.behavior === "heal") { attack = Math.round(attack * 0.5); hp = Math.round(hp * 0.9); }
+  else if (def.behavior === "buff") { attack = Math.round(attack * 0.7); }
+  // 컨셉(역할) 속도 아키타입: 돌격·기민형↑ / 포격·중장형↓ → 턴 순서 전략성 (최저 20)
+  speed = Math.max(20, speed + enemyArchetype(def.role, def.behavior).spd);
   const u: DDUnit = { ...zero(), id: `${def.id}#${pos}`, name: def.name, side: "enemy", pos, hp, maxHp: hp, speed, attack, staggerMax, ultCost: 999 };
+  // 아군 자동 타겟 처치 우선순위: 지원(치유·증폭)=3 최우선 제거 대상 / 원거리(저격·광역)=2 / 전열(근접·중장)=1
+  u.killPriority = def.behavior === "heal" || def.behavior === "buff" ? 3 : def.behavior === "snipe" || def.behavior === "aoe" ? 2 : 1;
   u.defense = defense;
   u.resist = { physical: 0, heat: 0, electric: 0, cryo: 0, nature: 0, ...def.resist };
   return u;

@@ -64,13 +64,13 @@ export const ITEM_LIST = Object.values(ITEMS);
 export const getItem = (id: string) => ITEMS[id];
 export const itemImage = (id: string) => { const it = ITEMS[id]; return it ? `/items/${encodeURIComponent(it.name)}.webp` : ""; };
 
+// 조건부 게이트 제거 — 소비 아이템은 자기 턴에 조건 없이 상시 사용(자유 행동).
+// 부활만 전투 불능 대상이 있어야 의미가 있어 그때만 활성(빈 부활 낭비 방지).
 export function canUseItem(s: DDState, id: string): boolean {
   const it = ITEMS[id]; if (!it) return false;
   if (!living(s, "ally").length) return false;
-  if (it.cond.type === "always") return true;
-  if (it.cond.type === "dead") return !!deadAlly(s);
-  const t = lowestAlly(s); if (!t) return false;
-  return t.hp / t.maxHp < it.cond.below;
+  if (it.kind === "revive") return !!deadAlly(s);
+  return true;
 }
 export function condText(c: ItemCond): string {
   return c.type === "hp" ? `HP<${Math.round(c.below * 100)}%` : c.type === "dead" ? "전투 불능 시" : "상시";

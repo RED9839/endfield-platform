@@ -1,6 +1,6 @@
 // DD 전투 시뮬 헬퍼 — AI(아군 자동/적) + 인카운터 + 전투 생성. UI와 테스트가 공유(부작용 없음).
 import { BASIC, DDState, DDUnit, DDSkill, Element, applyAttach, applyDamage, healUnit, living, mitigate, usable, pickTargets, vulnFor } from "./combat";
-import { SKILLS, makeAlly, makeEnemy, ENEMY_DEFS, enemyDefFor, frontlineOrder } from "./roster";
+import { SKILLS, makeAlly, makeEnemy, ENEMY_DEFS, enemyDefFor, frontlineOrder, enemyArchetype } from "./roster";
 import { applyGear, GEAR_SLOTS, type Loadout, type GearSlot } from "./gear";
 import { applyWeapon } from "./weapons";
 import type { OpProgress } from "./progress";
@@ -61,12 +61,16 @@ export function enemyAct(s: DDState, self: DDUnit): void {
     if (tgt) { tgt.atkBuff = 0.4; tgt.timers.atkBuff = 3; s.log.push(`${self.name}[적] → ${tgt.name} 강화(공격력 +40%)`); return; }
   }
 
-  // 타겟팅: 광역=전체 나눔공격(격턴)/평시 단일 / 저격=최저 체력(후열 저격) / 그 외=전열
+  // 타겟팅: 컨셉(역할) 아키타입별 우선 대상 — 대형의 다른 부위를 위협해 배치·보호 전략 유도
+  //  front=전열(탱커 벽) / wounded=저체력%(부상 딜러 마무리) / threat=최고위협(강화된 딜러 직격)
+  const tgt = enemyArchetype(def?.role ?? "", behavior).tgt;
   const byFront = [...foes].sort((a, b) => a.pos - b.pos);
+  const byWounded = [...foes].sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp || a.pos - b.pos);
+  const byThreat = [...foes].sort((a, b) => b.attack * (1 + (b.atkBuff || 0)) - a.attack * (1 + (a.atkBuff || 0)) || a.pos - b.pos);
+  const pick = () => (tgt === "wounded" ? byWounded[0] : tgt === "threat" ? byThreat[0] : byFront[0]);
   let targets: DDUnit[];
-  if (behavior === "aoe") { const wide = (self.procCount = (self.procCount || 0) + 1) % 2 === 1; targets = wide ? foes : [byFront[0]]; }
-  else if (behavior === "snipe") targets = [[...foes].sort((a, b) => a.hp - b.hp)[0]];
-  else targets = [byFront[0]];
+  if (behavior === "aoe") { const wide = (self.procCount = (self.procCount || 0) + 1) % 2 === 1; targets = wide ? foes : [pick()]; } // 광역: 전체 나눔공격(격턴)/평시 단일
+  else targets = [pick()];
   const powerMul = behavior === "heavy" ? 1.55 : 1; // aoe는 makeEnemy에서 공격력 이미 하향
   const atkMul = 1 + (self.atkBuff || 0);
 

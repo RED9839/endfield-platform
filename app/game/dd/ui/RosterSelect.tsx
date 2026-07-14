@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { OPERATORS, SKILLS, avatarUrl, fullUrl, skillIcon, type OpMeta } from "../roster";
+import { OPERATORS, SKILLS, avatarUrl, fullUrl, skillIcon, makeAlly, type OpMeta } from "../roster";
 import { OP_TALENTS } from "../operator-talents";
 import { activeSets, setEffectText, recommendedSet, recommendedLoadout, loadoutPieces, pieceImage, gearSlotName, GEAR_PIECES, type Loadout } from "../gear";
 import { DEFAULT_PROGRESS, SKILL_MAX, skillLabel, clampProgress, type OpProgress } from "../progress";
@@ -23,7 +23,7 @@ const KIND_ORDER: Record<DDSkill["kind"], number> = { attack: 0, battle: 1, link
 const recSet = (op: OpMeta): string => recommendedSet(op.id, op.cls, op.element);
 const DMG_KO: Record<string, string> = { ult: "궁극", battle: "배틀", link: "연계", attack: "일반", all: "물리", elem: "원소", atkPct: "공격력", hpPct: "생명력", critRate: "치명확", critDmg: "치명피", energy: "궁충" };
 const pieceDmg = (p: { dmg?: { kind: string; base: number } }) => { if (!p.dmg) return ""; const pct = p.dmg.kind === "hpPct" || p.dmg.base < 1; return `${DMG_KO[p.dmg.kind] ?? p.dmg.kind} +${pct ? Math.round(p.dmg.base * 100) + "%" : Math.round(p.dmg.base)}`; };
-const AXES = [{ key: "skillRank" as const, name: "스킬 단조", max: SKILL_MAX, fmt: (v: number) => skillLabel(v), tone: "#67e8f9" }];
+const AXES = [{ key: "skillRank" as const, name: "스킬 강화", max: SKILL_MAX, fmt: (v: number) => skillLabel(v), tone: "#67e8f9" }];
 
 export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]) => void }) {
   const [selected, setSelected] = useState<string[]>([]);
@@ -75,6 +75,10 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
   const pr = opProg(focusId);
   const skills = [...(SKILLS[focusId] ?? [])].sort((a, b) => KIND_ORDER[a.kind] - KIND_ORDER[b.kind]);
   const talents = OP_TALENTS[focusId] ?? [];
+  const unit = makeAlly(focusId, 1, pr); // 기초 전투 스탯(정예화·스킬강화 반영)
+  const pcs = loadoutPieces(lo);
+  const gearGrade = pcs.reduce((n, p) => n + p.grade, 0); // 장비 능력치 합
+  const gearDef = pcs.reduce((n, p) => n + p.def, 0);     // 장비 방어 합
 
   return (
     <div className="mx-auto max-w-[1640px] px-4 py-5 sm:px-6">
@@ -174,6 +178,26 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
             </div>
           )}
 
+          {/* 능력치 */}
+          <div className="hud-tile dd-cut mb-2.5 px-2.5 py-2">
+            <div className="mb-1.5 font-mono text-[11px] font-bold uppercase tracking-wider text-ef-muted">능력치 <span className="font-normal text-ef-accent/60">· 장비 포함</span></div>
+            <div className="grid grid-cols-4 gap-x-2 gap-y-1">
+              {([["HP", unit.maxHp], ["공격", unit.attack], ["속도", unit.speed], ["방어", gearDef]] as [string, number][]).map(([k, v]) => (
+                <div key={k} className="flex flex-col leading-tight">
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-ef-muted">{k}</span>
+                  <span className="font-mono text-[15px] font-black tabular-nums text-white">{v}</span>
+                </div>
+              ))}
+            </div>
+            {unit.attrs && (
+              <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 border-t border-ef-line/40 pt-1.5 font-mono text-[11px]">
+                {([["힘", unit.attrs.str], ["민첩", unit.attrs.agi], ["지능", unit.attrs.int], ["의지", unit.attrs.wil]] as [string, number][]).map(([k, v]) => (
+                  <span key={k} className="text-ef-muted">{k} <b className="text-ef-ink">{v}</b></span>
+                ))}
+              </div>
+            )}
+          </div>
+
           {/* 스킬 */}
           <div className="mb-2.5">
             <div className="mb-1.5 font-mono text-[12px] font-bold uppercase tracking-[0.2em] text-ef-accent/70">스킬</div>
@@ -202,7 +226,7 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
             </div>
           )}
 
-          {/* 스킬 단조 + 추천 세트 */}
+          {/* 스킬 강화 + 추천 세트 */}
           <div className="mb-3 flex flex-wrap gap-2">
             {AXES.map((ax) => {
               const v = pr[ax.key];
@@ -222,17 +246,22 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
 
           {/* 장비 — 방어구/장갑/부품(부품 교체 가능) */}
           <div className="hud-tile dd-cut mb-3 px-2.5 py-2.5">
-            <div className="mb-2 flex items-center gap-2">
+            <div className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-0.5">
               <span className="font-mono text-[11px] uppercase tracking-wider text-ef-muted">장비</span>
               <span className="font-mono text-[13px] font-bold text-ef-ink">{opSet(focusId)} 세트</span>
-              {active.map((n) => <span key={n} className="truncate font-mono text-[11px] text-green-300">◆ {setEffectText(n)}</span>)}
+              <span className="ml-auto font-mono text-[11px] text-ef-accent-soft">능력치 +{gearGrade} · 방어 +{gearDef}</span>
+              {active.map((n) => <span key={n} className="w-full truncate font-mono text-[11px] text-green-300">◆ {setEffectText(n)}</span>)}
             </div>
-            <div className="space-y-1">
-              {loadoutPieces(lo).map((pc) => { const isKit = pc.slot === "kit"; const named = pc.set && pc.set !== "?"; const on = named && active.includes(pc.set); return (
+            <div className="space-y-1.5">
+              {pcs.map((pc) => { const isKit = pc.slot === "kit"; const named = pc.set && pc.set !== "?"; const on = named && active.includes(pc.set); const empty = pc.name === "없음"; return (
                 <div key={pc.slot} className="flex items-center gap-2">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center border border-ef-line/60 bg-black/40">{pieceImage(pc.name) ? <img src={pieceImage(pc.name)} alt="" className="h-full w-full object-contain" onError={(e) => ((e.currentTarget as HTMLImageElement).style.visibility = "hidden")} /> : <span className="text-[10px] text-ef-muted">—</span>}</span>
-                  <span className="w-10 shrink-0 font-mono text-[11px] uppercase tracking-wider text-ef-accent/70">{gearSlotName(pc.slot)}</span>
-                  <span className="min-w-0 flex-1 truncate font-mono text-[12px] text-ef-ink" title={pc.name}>{pc.name}</span>
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center border border-ef-line/60 bg-black/40">{!empty && pieceImage(pc.name) ? <img src={pieceImage(pc.name)} alt="" className="h-full w-full object-contain" onError={(e) => ((e.currentTarget as HTMLImageElement).style.visibility = "hidden")} /> : <span className="text-[10px] text-ef-muted">—</span>}</span>
+                  <span className="w-9 shrink-0 font-mono text-[10px] uppercase tracking-wider text-ef-accent/70">{gearSlotName(pc.slot)}</span>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate font-mono text-[12px] font-bold text-ef-ink" title={pc.name}>{pc.name}</div>
+                    {empty ? <div className="font-mono text-[10px] text-ef-muted">미장착</div>
+                      : <div className="font-mono text-[10px] text-ef-muted">능력치 <b className="text-ef-ink/80">+{pc.grade}</b> · 방어 <b className="text-ef-ink/80">+{pc.def}</b>{pc.dmg ? <> · <span className="text-ef-accent-soft">{pieceDmg(pc)}</span></> : null}</div>}
+                  </div>
                   {isKit
                     ? <button type="button" onClick={() => setKitPicker((v) => !v)} className={`dd-cut shrink-0 border px-2 py-0.5 font-mono text-[11px] font-bold uppercase transition ${kitPicker ? "border-ef-accent bg-ef-accent/15 text-ef-accent" : "border-ef-line text-ef-muted hover:border-ef-accent/60 hover:text-ef-accent"}`}>{kitPicker ? "닫기" : "변경 ▾"}</button>
                     : <span className="shrink-0 font-mono text-[10px]" style={{ color: on ? "#e8c56a" : named ? "#8a8a92" : "#67e8f9aa" }}>{named ? `${on ? "◆" : "◇"} ${pc.set}` : "자유"}</span>}

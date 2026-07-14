@@ -3,12 +3,12 @@
 import { useEffect, useReducer, useRef, useState } from "react";
 
 import { act, canAct, isOver, startRound, perTurn, nextActor, turnOrder, usable, BASIC, type DDClass, type DDSkill, type DDState, type DDUnit, type Element } from "../combat";
-import { OPERATORS, SKILLS, enemyDefFor, avatarUrl, fullUrl, skillIcon, enemyImage } from "../roster";
+import { OPERATORS, SKILLS, enemyDefFor, avatarUrl, fullUrl, skillIcon, enemyImage, enemyArchetype } from "../roster";
 import { ENCOUNTERS, allyChoose, createBattle, enemyAct, regionEncounter } from "../sim";
 import { activeSets, setEffectText, loadoutPieces } from "../gear";
 import { weaponOf, weaponEffectText, weaponImage, weaponSeriesName, weaponSeriesDesc, WEAPON_KO, WEAPON_ICON } from "../weapons";
 import { OP_TALENTS } from "../operator-talents";
-import { ITEMS, useItem as applyItem, canUseItem, condText, itemColor, itemImage } from "../items";
+import { ITEMS, useItem as applyItem, canUseItem, itemColor, itemImage } from "../items";
 import type { BattleResult, NodeKind, PartyMember } from "../run";
 
 const PRIMARY = "#ff9a2f";
@@ -30,6 +30,7 @@ function skillReason(s: DDState, u: DDUnit, sk: DDSkill): string | null {
 const statusLabel: Record<string, string> = { stun: "기절", combustion: "연소", corrosion: "부식", crystal: "결정", "armor-break": "갑옷파괴", shock: "감전", wing: "날개" };
 const nodeTitle: Record<NodeKind, string> = { battle: "교전", elite: "정예 교전", boss: "보스 교전", rest: "야영" };
 const behaviorLabel: Record<string, string> = { melee: "근접 돌격", snipe: "원거리 저격", heavy: "중장 강타", aoe: "광역 자폭", heal: "치유 지원", buff: "강화 지원" };
+const targetDesc: Record<string, string> = { front: "전열 강타 — 최전열(탱커) 우선", wounded: "부상자 저격 — 체력% 낮은 대상 마무리", threat: "고위협 직격 — 공격력 높은 딜러 조준" };
 const tierLabel: Record<string, string> = { normal: "일반", common: "일반", enhanced: "강화", advanced: "정예", elite: "정예", boss: "보스" };
 
 // 유닛 원소색(플로팅 데미지·이펙트용)
@@ -177,8 +178,9 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
     if (u.hp <= 0) { afterAction(); timerRef.current = setTimeout(step, 120); return; } // 지속피해로 사망
     if (!canAct(u)) {
       if (u.staggered) s.log.push(`${u.name} 불균형 — 행동 불가`);
+      else if (u.frozen > 0) s.log.push(`${u.name} 동결 — 행동 불가`);
       else if ((u.timers.stun || 0) > 0) s.log.push(`${u.name} 시간 정지 — 행동 불가`);
-      fxTick.current += 1; setFx({ tick: fxTick.current, activeId: u.id, actingSide: u.side, floaters: [], cast: { id: u.id, text: u.staggered ? "불균형!" : "행동 불가" } }); bump();
+      fxTick.current += 1; setFx({ tick: fxTick.current, activeId: u.id, actingSide: u.side, floaters: [], cast: { id: u.id, text: u.staggered ? "불균형!" : u.frozen > 0 ? "동결!" : "행동 불가" } }); bump();
       afterAction();
       timerRef.current = setTimeout(step, 480 / speedRef.current); return;
     }
@@ -508,7 +510,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
                   return (
                     <button key={id} type="button" disabled={!usable} onClick={() => playerUseItem(id)} className={`group border bg-black/40 px-2.5 py-1.5 text-left transition ${usable ? "border-ef-line hover:border-ef-accent/60" : "border-ef-line/40 opacity-45"}`} style={CUT_SM}>
                       <div className="flex items-center gap-1.5"><img src={itemImage(id)} alt="" loading="lazy" className="h-6 w-6 shrink-0 rounded-sm object-contain" style={{ background: `${itemColor(it.kind)}18` }} /><span className="font-mono text-xs font-bold text-white">{it.name}</span><span className="font-mono text-[12px] text-ef-accent">×{n}</span></div>
-                      <div className="mt-0.5 max-w-[220px] truncate text-[12px] text-ef-muted group-hover:text-ef-ink">{it.desc} · {condText(it.cond)}</div>
+                      <div className="mt-0.5 max-w-[220px] truncate text-[12px] text-ef-muted group-hover:text-ef-ink">{it.desc}</div>
                     </button>
                   );
                 })}
@@ -563,7 +565,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
                 <St label="HP" value={`${Math.max(0, u.hp)}/${u.maxHp}`} />
                 <St label="공격력" value={u.attack} />
                 <St label="방어력" value={u.defense} />
-                <St label="속도" value={u.speed + (u.speedMod || 0)} />
+                <St label="속도" value={Math.max(1, u.speed + (u.speedMod || 0))} />
                 <St label="치명" value={`${Math.round(u.critRate * 100)}%`} />
                 <St label="치명피해" value={`${Math.round(u.critDmg * 100)}%`} />
               </div>
@@ -636,7 +638,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
                   </div>)}
                 </Sec>}
               </>}
-              {ed && <Sec title="행동 유형"><div className="font-mono text-[13px] text-ef-muted">{behaviorLabel[ed.behavior] ?? ed.behavior}</div></Sec>}
+              {ed && <Sec title="행동 유형"><div className="font-mono text-[13px] text-ef-muted">{behaviorLabel[ed.behavior] ?? ed.behavior}</div><div className="mt-1 font-mono text-[12px] text-ef-accent-soft">🎯 {targetDesc[enemyArchetype(ed.role, ed.behavior).tgt]}</div></Sec>}
             </div>
           </div>
         );
