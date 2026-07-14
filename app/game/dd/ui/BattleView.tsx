@@ -309,14 +309,13 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
                   <img src={enemyImage(e.id)} alt="" loading="lazy" className={`relative max-h-full w-auto object-contain transition group-hover:scale-[1.03] ${dead ? "opacity-30 grayscale" : ""}`} style={{ filter: dead ? undefined : aiming ? "drop-shadow(0 3px 10px rgba(255,154,47,0.7))" : e.staggered ? "drop-shadow(0 3px 10px rgba(250,204,21,0.6))" : "drop-shadow(0 6px 12px rgba(0,0,0,0.6))" }} onError={(ev) => { (ev.currentTarget as HTMLImageElement).style.visibility = "hidden"; }} />
                   {dead && <span className="absolute text-4xl">💀</span>}
                 </div>
-                {/* 정보 */}
-                <div className="w-full">
-                  <div className="flex items-center justify-between gap-1"><span className="flex min-w-0 items-center gap-1"><span className="h-1.5 w-1.5 shrink-0" style={{ background: elementColor[el] }} /><span className="truncate font-mono text-[13px] font-bold text-white" style={{ textShadow: "0 1px 3px #000" }}>{e.name}</span></span><span className="font-mono text-[11px] text-ef-muted">{Math.max(0, e.hp)}</span></div>
-                  <Bar value={e.hp} max={e.maxHp} color="#e0655c" />
-                  {e.staggerMax > 0 && !dead && <div className="mt-0.5"><Bar value={e.staggered ? e.staggerMax : e.stagger} max={e.staggerMax} color={e.staggered ? "#facc15" : "#a16207"} h="h-1" /></div>}
-                  {!dead && <div className="mt-0.5"><Bar value={e.atb} max={100} color="#67e8f9" h="h-1" /></div>}
-                  {!dead && <div className="mt-1 flex flex-wrap justify-center gap-1">
-                    {e.staggered && <Chip tone="#facc15">⚡ 불균형</Chip>}
+                {/* 정보 — 미니멀(이름·HP·불균형·상태만) */}
+                <div className="w-full border-t-2 px-2 pb-1.5 pt-1.5" style={{ borderColor: e.staggered ? "#facc15" : `${elementColor[el]}88`, background: "linear-gradient(180deg, rgba(19,11,10,0.9), rgba(19,11,10,0.7))" }}>
+                  <div className="flex items-baseline gap-1.5"><span className="truncate font-mono text-[13px] font-bold text-white">{e.name}</span><span className="ml-auto shrink-0 font-mono text-[10px] tabular-nums text-ef-muted">{Math.max(0, e.hp)}</span></div>
+                  <div className="mt-1"><Bar value={e.hp} max={e.maxHp} color="#e0655c" /></div>
+                  {e.staggerMax > 0 && !dead && <div className="mt-1"><Bar value={e.staggered ? e.staggerMax : e.stagger} max={e.staggerMax} color={e.staggered ? "#facc15" : "#7a5a12"} h="h-1" /></div>}
+                  {!dead && (e.staggered || weak.length > 0 || unitChips(e).length > 0) && <div className="mt-1.5 flex flex-wrap justify-center gap-1">
+                    {e.staggered && <Chip tone="#facc15">⚡불균형</Chip>}
                     {weak.map(([eln, v]) => <Chip key={eln} tone={elementColor[eln]}>{elementName[eln]}약점{Math.round(-v * 100)}</Chip>)}
                     {unitChips(e).map((c) => <Chip key={c.k} tone={c.tone}>{c.label}</Chip>)}
                   </div>}
@@ -352,27 +351,16 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
                   {dead && <span className="absolute inset-0 flex items-center justify-center text-5xl">💀</span>}
                   {isCur && !dead && <span className="absolute -top-1 z-10 font-mono text-[12px] font-black uppercase tracking-wider text-ef-accent" style={{ textShadow: "0 0 8px #000, 0 0 4px #000" }}>▶ 행동</span>}
                 </div>
-                {/* 정보 패널 */}
-                <div className="hud-tile dd-cut w-full px-2 py-1.5" style={isCur ? { borderColor: `${PRIMARY}aa` } : undefined}>
-                  <div className="flex items-center gap-1">
-                    <span className="h-2 w-2 shrink-0" style={{ background: elementColor[el] }} />
+                {/* 정보 패널 — 미니멀(이름·HP·궁·상태만) */}
+                <div className="w-full border-t-2 px-2 pb-1.5 pt-1.5" style={{ borderColor: isCur ? PRIMARY : `${elementColor[el]}99`, background: "linear-gradient(180deg, rgba(14,14,16,0.9), rgba(14,14,16,0.72))", boxShadow: isCur ? `0 -6px 16px -8px ${PRIMARY}` : undefined }}>
+                  <div className="flex items-baseline gap-1.5">
                     <span className="truncate font-mono text-[13px] font-bold text-white">{a.name}</span>
-                    {weaponOf(a.id) && (weaponImage(a.id) ? <img src={weaponImage(a.id)} alt="" loading="lazy" className="h-4 w-4 shrink-0 object-contain" title={`${WEAPON_KO[weaponOf(a.id)!]} · ${weaponEffectText(a.id)}`} /> : <span className="text-[13px] leading-none" title={WEAPON_KO[weaponOf(a.id)!]}>{WEAPON_ICON[weaponOf(a.id)!]}</span>)}
-                    {op && <span className="ml-auto font-mono text-[10px] uppercase text-ef-muted">{classLabel[op.cls]}</span>}
+                    <span className="ml-auto shrink-0 font-mono text-[10px] tabular-nums text-ef-muted">{Math.max(0, a.hp)}</span>
                   </div>
-                  <div className="mt-0.5 flex justify-between font-mono text-[11px] text-ef-muted"><span>HP</span><span>{Math.max(0, a.hp)}/{a.maxHp}</span></div>
-                  <Bar value={a.hp} max={a.maxHp} color={lowHp ? "#e0655c" : "#8fb84a"} />
-                  {a.shield > 0 && <div className="mt-0.5"><Chip tone="#38bdf8">🛡 {a.shield}</Chip></div>}
-                  <div className="mt-1 flex items-center gap-1">
-                    <span className={`shrink-0 font-mono text-[10px] font-bold uppercase ${ready ? "text-amber-300" : "text-ef-muted"}`}>궁</span>
-                    <div className="relative flex-1" style={ready ? { filter: "drop-shadow(0 0 4px #f5c54299)" } : undefined}>
-                      <Bar value={a.ultCharge} max={a.ultCost} color={ready ? "#f5c542" : "#7a611c"} h="h-2.5" />
-                      <span className="pointer-events-none absolute inset-0 flex items-center justify-center font-mono text-[9px] font-bold leading-none" style={{ color: ready ? "#1a1206" : "#e5c98a", textShadow: ready ? "none" : "0 1px 2px #000" }}>{ready ? "⚡READY" : `${Math.round(a.ultCharge)}/${a.ultCost}`}</span>
-                    </div>
-                  </div>
-                  <div className="mt-0.5 flex items-center gap-1"><span className="shrink-0 font-mono text-[10px] font-bold uppercase text-cyan-300/80">속도</span><Bar value={a.atb} max={100} color="#67e8f9" h="h-1.5" /></div>
-                  {(sets.length > 0 || unitChips(a).length > 0) && <div className="mt-1 flex flex-wrap gap-1">
-                    {sets.map((n) => <Chip key={`set-${n}`} tone="#c9a227">◆{n}</Chip>)}
+                  <div className="mt-1"><Bar value={a.hp} max={a.maxHp} color={lowHp ? "#e0655c" : "#8fb84a"} /></div>
+                  <div className="mt-1 relative" style={ready ? { filter: "drop-shadow(0 0 4px #f5c54288)" } : undefined}><Bar value={a.ultCharge} max={a.ultCost} color={ready ? "#f5c542" : "#5c4a18"} h="h-1.5" /></div>
+                  {(a.shield > 0 || unitChips(a).length > 0) && <div className="mt-1.5 flex flex-wrap justify-center gap-1">
+                    {a.shield > 0 && <Chip tone="#38bdf8">🛡{a.shield}</Chip>}
                     {unitChips(a).map((c) => <Chip key={c.k} tone={c.tone}>{c.label}</Chip>)}
                   </div>}
                 </div>
