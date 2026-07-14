@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ChevronLeft, Hammer, Check, Lock, Package, KeyRound } from "lucide-react";
 
-import { GEAR_PIECES_BY_SET_SLOT, GEAR_PIECE_BY_ID, GEAR_SLOTS, gearSlotName, pieceImage, type GearPiece, type GearSlot } from "../gear";
+import { GEAR_PIECES_BY_SET_SLOT, GEAR_PIECE_BY_ID, GEAR_SLOTS, gearSlotName, pieceImage, slotOptions, type GearPiece, type GearSlot } from "../gear";
 import { craftCost, forgeCost, pieceLevel, isOwned, type CraftState } from "../craft";
 import { OPERATORS, avatarUrl } from "../roster";
 import type { PartyMember } from "../run";
@@ -22,19 +22,21 @@ function Cost({ parts, permits, ok }: { parts: number; permits: number; ok: bool
   return <span className={`font-mono text-[10px] tabular-nums ${ok ? "text-ef-muted" : "text-red-400/90"}`}>{parts}<span className="opacity-55">부품</span> {permits}<span className="opacity-55">권</span></span>;
 }
 
-export default function CraftPanel({ craft, party = [], onCraft, onForge, onClose }: { craft: CraftState; party?: PartyMember[]; onCraft: (id: string) => boolean; onForge: (id: string) => boolean; onClose: () => void }) {
+export default function CraftPanel({ craft, party = [], onCraft, onForge, onSwap, onClose }: { craft: CraftState; party?: PartyMember[]; onCraft: (id: string) => boolean; onForge: (id: string) => boolean; onSwap?: (opId: string, slot: GearSlot, pieceId: string) => void; onClose: () => void }) {
   const [set, setSet] = useState(SETS[0]);
   const [tab, setTab] = useState<"party" | "catalog">(party.length > 0 ? "party" : "catalog");
+  const [swap, setSwap] = useState<{ opId: string; slot: GearSlot } | null>(null); // 교체 피커 열림 슬롯
   const affordCraft = (p: GearPiece) => { const c = craftCost(p); return craft.mats.parts >= c.parts && craft.mats.permits >= c.permits; };
   const affordForge = (lv: number) => { const c = forgeCost(lv); return craft.mats.parts >= c.parts && craft.mats.permits >= c.permits; };
   const opName = (id: string) => OPERATORS.find((o) => o.id === id)?.name ?? id;
 
-  // 피스 타일(부대·카탈로그 공용)
-  const PieceTile = ({ p, slotLabel }: { p: GearPiece; slotLabel?: boolean }) => {
+  // 피스 타일(부대·카탈로그 공용). onSwapClick 주면 "변경" 버튼 표시(부대 장비 슬롯 교체).
+  const PieceTile = ({ p, slotLabel, onSwapClick, swapOpen }: { p: GearPiece; slotLabel?: boolean; onSwapClick?: () => void; swapOpen?: boolean }) => {
     const owned = isOwned(craft, p.id); const lv = pieceLevel(craft, p.id); const cc = craftCost(p); const fc = forgeCost(lv);
     const img = pieceImage(p.name); const canC = affordCraft(p); const canF = affordForge(lv);
     return (
       <div className={`hud-tile dd-cut flex items-center gap-2 p-1.5 ${owned ? "!border-ef-accent/45" : ""}`}>
+        {onSwapClick && <button type="button" onClick={onSwapClick} title="장비 교체" className={`dd-cut flex h-7 w-7 shrink-0 items-center justify-center border font-mono text-[13px] font-bold transition ${swapOpen ? "border-ef-accent bg-ef-accent/15 text-ef-accent" : "border-ef-line text-ef-muted hover:border-ef-accent/60 hover:text-ef-accent"}`}>⇄</button>}
         <span className="relative flex h-12 w-12 shrink-0 items-center justify-center border border-ef-line/60 bg-black/50" style={owned ? { boxShadow: "inset 0 0 0 1px #ff9a2f44" } : undefined}>
           {img ? <img src={img} alt="" loading="lazy" className="h-full w-full object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = "hidden"; }} /> : <span className="font-mono text-[10px] text-ef-muted">—</span>}
           {owned && <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 rounded-sm bg-black/90 px-1 py-px"><ForgePips lv={lv} /></span>}
@@ -100,7 +102,26 @@ export default function CraftPanel({ craft, party = [], onCraft, onForge, onClos
                   {op && <span className="font-mono text-[11px] uppercase text-ef-muted">{op.element}</span>}
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  {GEAR_SLOTS.map((slot) => { const ref = m.loadout?.[slot]; const p = ref ? GEAR_PIECE_BY_ID[ref] : undefined; return p ? <PieceTile key={slot} p={p} slotLabel /> : null; })}
+                  {GEAR_SLOTS.map((slot) => {
+                    const ref = m.loadout?.[slot]; const p = ref ? GEAR_PIECE_BY_ID[ref] : undefined;
+                    const open = swap?.opId === m.id && swap.slot === slot;
+                    return (
+                      <div key={slot}>
+                        {p ? <PieceTile p={p} slotLabel onSwapClick={onSwap ? () => setSwap(open ? null : { opId: m.id, slot }) : undefined} swapOpen={open} /> : null}
+                        {/* 교체 피커 */}
+                        {open && onSwap && (
+                          <div className="mt-1 grid max-h-48 grid-cols-2 gap-1 overflow-y-auto border border-ef-accent/30 bg-black/40 p-1.5" style={CUT}>
+                            {slotOptions(slot, op?.element).map((opt) => { const sel = ref === opt.id; return (
+                              <button key={opt.id} type="button" onClick={() => { onSwap(m.id, slot, opt.id); setSwap(null); }} className={`dd-cut flex items-center gap-1.5 border p-1 text-left transition ${sel ? "border-ef-accent bg-ef-accent/10" : "border-ef-line hover:border-ef-accent/50"}`}>
+                                <span className="flex h-7 w-7 shrink-0 items-center justify-center border border-ef-line/50 bg-black/40">{pieceImage(opt.name) ? <img src={pieceImage(opt.name)} alt="" className="h-full w-full object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = "hidden"; }} /> : null}</span>
+                                <span className="min-w-0"><span className="block truncate font-mono text-[11px] font-bold text-white">{opt.name}</span><span className="font-mono text-[10px] text-ef-accent-soft">{dmgText(opt)}</span></span>
+                              </button>
+                            ); })}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             );

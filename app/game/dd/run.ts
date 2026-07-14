@@ -69,6 +69,8 @@ export function useDDRun() {
   // 피스 제작 / 단조 — 성공 시 상태 갱신, 성공 여부 반환
   const craftPiece = useCallback((pieceId: string) => { let ok = false; setCraft((c) => { const n = cloneCraft(c); ok = doCraft(n, pieceId); return ok ? n : c; }); return ok; }, []);
   const forgePiece = useCallback((pieceId: string) => { let ok = false; setCraft((c) => { const n = cloneCraft(c); ok = doForge(n, pieceId); return ok ? n : c; }); return ok; }, []);
+  // 장비 슬롯 교체(런 중) — 파티원 로드아웃의 해당 슬롯을 다른 피스로. 다음 전투 createBattle에 반영.
+  const swapGear = useCallback((opId: string, slot: keyof Loadout, pieceId: string) => setParty((ps) => ps.map((p) => p.id === opId ? { ...p, loadout: { ...p.loadout, [slot]: pieceId } } : p)), []);
 
   const nodeMap = useMemo(() => Object.fromEntries(nodes.map((n) => [n.id, n])), [nodes]);
   const activeNode = activeId ? nodeMap[activeId] : null;
@@ -126,5 +128,5 @@ export function useDDRun() {
   const openCraft = useCallback(() => setPhase("craft"), []);
   const closeCraft = useCallback(() => setPhase("map"), []);
 
-  return { phase, party, nodes, frontier, cleared, activeNode, depthReached, faction, maxDepth: MAX_DEPTH, items, useItem, addItem, craft, craftPiece, forgePiece, openCraft, closeCraft, startRun, enterNode, finishBattle, rest, restart };
+  return { phase, party, nodes, frontier, cleared, activeNode, depthReached, faction, maxDepth: MAX_DEPTH, items, useItem, addItem, craft, craftPiece, forgePiece, swapGear, openCraft, closeCraft, startRun, enterNode, finishBattle, rest, restart };
 }

@@ -228,6 +228,15 @@ export function bestFreePiece(slot: GearSlot, element: string): GearPiece | null
   return pickMax(want) ?? pickMax("atkPct"); // 속성/물리 딜 피스 → 없으면 공격%
 }
 
+// 슬롯 교체 후보(피커용) — 오퍼 속성 딜(elem/all) 우선, 이름 중복 제거, 상위 N개. 무소속 제외.
+export function slotOptions(slot: GearSlot, element?: string, n = 16): GearPiece[] {
+  const want = element === "physical" ? "all" : "elem";
+  const seen = new Set<string>(); const out: GearPiece[] = [];
+  const sorted = [...GEAR_PIECES].filter((p) => p.slot === slot && p.dmg && p.set !== "?").sort((a, b) => (a.dmg!.kind === want ? 0 : 1) - (b.dmg!.kind === want ? 0 : 1) || b.dmg!.base - a.dmg!.base);
+  for (const p of sorted) { const base = p.name.replace(/\s*·\s*[IVX]+$/, "").trim(); if (seen.has(base)) continue; seen.add(base); out.push(p); }
+  return out.slice(0, n);
+}
+
 // 오퍼 실제 로드아웃: OP_GEAR 피스 + 누락 슬롯은 세트 대표 피스 id로 폴백(세트명 아님 → 모든 슬롯이 개별 단조·제작 가능).
 // element를 주면 「3부위 전부 같은 세트」일 때 kit(최저 grade)을 개별 효율 최고 피스로 교체(2부위 세트 유지 = 정배).
 export function recommendedLoadout(opId: string, setName: string, element?: string): Loadout {
