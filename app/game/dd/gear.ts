@@ -93,17 +93,14 @@ export function effectText(e: SetEffect): string {
   }
 }
 // 시트(공략 빌드) 기준 오퍼별 추천 세트 — recSet 기본값·프리셋 로드아웃의 단일 소스.
+// 공략 시트(구글) 1순위 빌드 기준 — 오퍼별 추천 세트(2부위 세트명).
 export const OP_RECOMMENDED_SET: Record<string, string> = {
-  laevatain: "열 작업용", ember: "경량 초자연", wulfgard: "청파", yvonne: "M. I. 경찰용",
-  lastrite: "조류의 물결", zhuangfangyi: "식양의 흐름", avywenna: "본 크러셔", perlica: "펄스식",
-  dapan: "검술사", chenqianyu: "응룡 50식", rossi: "M. I. 경찰용", mifu: "고검의 잔향", // 시트 교정: 진천우=응룡 50식
-  alesh: "개척", arclight: "개척", pogranichnik: "응룡 50식", // 시트 교정: 포그=응룡 50식
-  tangtang: "청파", // 시트 기준(냉기 캐스터·향수 무기 행). 이전 파티 이미지의 본 크러셔에서 교정
-  ardelia: "식양의 숨결", xaihi: "식양의 숨결", antal: "식양의 숨결", gilberta: "식양의 숨결",
-  snowshine: "식양의 숨결", catcher: "식양의 숨결",
-  lifeng: "식양의 숨결", endministrator: "고검의 잔향", estella: "식양의 숨결", // 시트: 미등록 3인 추가
-  // warfarin gear.data 대조: 개척자=개척(suit_atb01 피스명), 궁극기충전=재앙방호(suit_usp01=ult skill point)
-  camu: "개척", akekuri: "재앙 방호", fluorite: "재앙 방호",
+  laevatain: "열 작업용", ember: "경량 초자연", wulfgard: "청파", akekuri: "재앙 방호", camu: "개척",
+  yvonne: "M. I. 경찰용", lastrite: "조류의 물결", tangtang: "청파", snowshine: "식양의 숨결", xaihi: "식양의 숨결",
+  alesh: "개척", estella: "식양의 숨결", zhuangfangyi: "식양의 흐름", avywenna: "본 크러셔", perlica: "펄스식",
+  arclight: "개척", antal: "식양의 숨결", gilberta: "식양의 숨결", ardelia: "식양의 숨결", fluorite: "재앙 방호",
+  pogranichnik: "응룡 50식", lifeng: "식양의 숨결", endministrator: "고검의 잔향", rossi: "M. I. 경찰용",
+  chenqianyu: "응룡 50식", dapan: "검술사", catcher: "식양의 숨결", mifu: "고검의 잔향",
 };
 // 오퍼 추천 세트(시트 우선, 없으면 직군·속성 폴백)
 export function recommendedSet(id: string, cls: string, element: string): string {
@@ -182,35 +179,35 @@ for (const p of GEAR_PIECES) ((GEAR_PIECES_BY_SET_SLOT[p.set] ??= {})[p.slot] ??
 export const GEAR_SET_CANON: Record<string, Partial<Record<GearSlot, GearPiece>>> = {};
 for (const p of GEAR_PIECES) { if (/[·•]/.test(p.name)) continue; const s = (GEAR_SET_CANON[p.set] ??= {}); if (!s[p.slot]) s[p.slot] = p; }
 
-// 오퍼별 실제 장착 피스(시트 지정 빌드 — 오퍼마다 다른 변형). 누락 슬롯은 recommendedLoadout에서 세트 대표로 폴백.
+// 오퍼별 장착 피스 — 공략 시트(구글) 1순위 빌드 3슬롯 전부 지정(방어구/장갑/부품).
 export const OP_GEAR: Record<string, Loadout> = {
-  laevatain: { gloves: "item_equip_t4_suit_fire_natr01_hand_03", kit: "item_equip_t4_suit_fire_natr01_edc_02" },
+  laevatain: { armor: "item_equip_t4_suit_fire_natr01_body_02", gloves: "item_equip_t4_suit_fire_natr01_hand_02", kit: "item_equip_t4_suit_fire_natr01_edc_02" },
   ember: { armor: "item_equip_t4_suit_poise01_body_01", gloves: "item_equip_t4_suit_phy01_hand_01", kit: "item_equip_t4_suit_poise01_edc_01" },
-  wulfgard: { armor: "item_equip_t4_suit_combo_cd01_body_01", gloves: "item_equip_t4_suit_attri01_hand_01", kit: "item_equip_t4_suit_combo_cd01_edc_02" },
+  wulfgard: { armor: "item_equip_t4_suit_combo_cd01_body_01", gloves: "item_equip_t4_suit_heal01_hand_01", kit: "item_equip_t4_suit_combo_cd01_edc_02" },
   akekuri: { armor: "item_equip_t4_parts_wuling01_body_02", gloves: "item_equip_t4_suit_usp02_hand_01", kit: "item_equip_t4_parts_wuling01_edc_03" },
-  camu: { armor: "item_equip_t4_suit_atb01_body_05", gloves: "item_equip_t4_suit_atb01_hand_02", kit: "item_equip_t4_suit_atb01_edc_04" },
-  yvonne: { armor: "item_equip_t4_suit_criti01_body_04", gloves: "item_equip_t4_suit_criti01_hand_03", kit: "item_equip_t4_suit_criti01_edc_03" },
+  camu: { armor: "item_equip_t4_suit_atb01_body_05", gloves: "item_equip_t4_suit_atb01_hand_03", kit: "item_equip_t4_suit_atb01_edc_06" },
+  yvonne: { armor: "item_equip_t4_suit_criti01_body_02", gloves: "item_equip_t4_suit_criti01_hand_02", kit: "item_equip_t4_suit_criti01_edc_03" },
   lastrite: { armor: "item_equip_t4_suit_phy01_body_01", gloves: "item_equip_t4_suit_burst01_hand_01", kit: "item_equip_t4_suit_burst01_edc_01" },
   tangtang: { armor: "item_equip_t4_suit_combo_cd01_body_01", gloves: "item_equip_t4_suit_criti01_hand_01", kit: "item_equip_t4_suit_combo_cd01_edc_01" },
   snowshine: { armor: "item_equip_t4_suit_heal01_body_01", gloves: "item_equip_t4_suit_usp02_hand_01", kit: "item_equip_t4_suit_usp02_edc_01" },
-  xaihi: { armor: "item_equip_t4_parts_wuling01_body_02", gloves: "item_equip_t4_suit_usp02_hand_01", kit: "item_equip_t4_suit_usp02_edc_03" },
-  alesh: { armor: "item_equip_t4_parts_wuling01_body_02", gloves: "item_equip_t4_suit_atb01_hand_02", kit: "item_equip_t4_suit_atb01_edc_04" },
-  estella: { armor: "item_equip_t4_suit_attri01_body_04", gloves: "item_equip_t4_suit_usp02_hand_01", kit: "item_equip_t4_suit_usp02_edc_03" },
+  xaihi: { armor: "item_equip_t4_parts_wuling01_body_02", gloves: "item_equip_t4_suit_usp02_hand_02", kit: "item_equip_t4_suit_usp02_edc_03" },
+  alesh: { armor: "item_equip_t4_parts_wuling01_body_02", gloves: "item_equip_t4_suit_atb01_hand_03", kit: "item_equip_t4_suit_atb01_edc_06" },
+  estella: { armor: "item_equip_t4_suit_attri01_body_04", gloves: "item_equip_t4_suit_usp02_hand_02", kit: "item_equip_t4_suit_usp02_edc_03" },
   zhuangfangyi: { armor: "item_equip_t4_suit_expend_spell01_body_02", gloves: "item_equip_t4_suit_expend_spell01_hand_02", kit: "item_equip_t4_suit_expend_spell01_edc_02" },
-  avywenna: { armor: "item_equip_t4_suit_attri01_body_04", gloves: "item_equip_t4_suit_attri01_hand_03", kit: "item_equip_t4_suit_attri01_edc_06" },
+  avywenna: { armor: "item_equip_t4_suit_attri01_body_04", gloves: "item_equip_t4_suit_attri01_hand_03", kit: "item_equip_t4_suit_attri01_edc_03" },
   perlica: { armor: "item_equip_t4_suit_pulse_cryst01_body_01", gloves: "item_equip_t4_suit_pulse_cryst01_hand_01", kit: "item_equip_t4_suit_pulse_cryst01_edc_02" },
-  arclight: { armor: "item_equip_t4_suit_atb01_body_05", gloves: "item_equip_t4_suit_atb01_hand_02", kit: "item_equip_t4_parts_wuling01_edc_03" },
+  arclight: { armor: "item_equip_t4_suit_atb01_body_05", gloves: "item_equip_t4_suit_atb01_hand_03", kit: "item_equip_t4_parts_wuling01_edc_03" },
   antal: { armor: "item_equip_t4_suit_burst01_body_01", gloves: "item_equip_t4_suit_usp02_hand_01", kit: "item_equip_t4_suit_usp02_edc_01" },
-  gilberta: { armor: "item_equip_t4_suit_usp02_body_01", gloves: "item_equip_t4_suit_usp02_hand_01", kit: "item_equip_t4_suit_usp02_edc_03" },
-  ardelia: { armor: "item_equip_t4_suit_usp02_body_01", gloves: "item_equip_t4_suit_usp02_hand_01", kit: "item_equip_t4_suit_usp02_edc_03" },
-  fluorite: { armor: "item_equip_t4_suit_attri01_body_05", gloves: "item_equip_t4_suit_usp02_hand_01", kit: "item_equip_t4_suit_usp02_edc_01" },
+  gilberta: { armor: "item_equip_t4_suit_usp02_body_01", gloves: "item_equip_t4_suit_usp02_hand_02", kit: "item_equip_t4_suit_usp02_edc_03" },
+  ardelia: { armor: "item_equip_t4_suit_usp02_body_01", gloves: "item_equip_t4_suit_usp02_hand_02", kit: "item_equip_t4_suit_usp02_edc_03" },
+  fluorite: { armor: "item_equip_t4_suit_attri01_body_01", gloves: "item_equip_t4_suit_usp02_hand_01", kit: "item_equip_t4_suit_usp02_edc_01" },
   pogranichnik: { armor: "item_equip_t4_suit_attri01_body_04", gloves: "item_equip_t4_suit_atk02_hand_02", kit: "item_equip_t4_suit_atk02_edc_04" },
   lifeng: { armor: "item_equip_t4_suit_atk02_body_02", gloves: "item_equip_t4_suit_usp02_hand_01", kit: "item_equip_t4_suit_usp02_edc_01" },
-  endministrator: { armor: "item_equip_t4_suit_crush_fracture_body_01", gloves: "item_equip_t4_suit_crush_fracture_hand_01", kit: "item_equip_t4_suit_crush_fracture_edc_01" },
+  endministrator: { armor: "item_equip_t4_suit_crush_fracture_body_02", gloves: "item_equip_t4_suit_crush_fracture_hand_02", kit: "item_equip_t4_suit_crush_fracture_edc_02" },
   rossi: { armor: "item_equip_t4_suit_criti01_body_06", gloves: "item_equip_t4_parts_wuling01_hand_01", kit: "item_equip_t4_suit_criti01_edc_06" },
-  chenqianyu: { armor: "item_equip_t4_suit_atk02_body_02", gloves: "item_equip_t4_parts_wuling01_hand_01", kit: "item_equip_t4_suit_atk02_edc_03" },
+  chenqianyu: { armor: "item_equip_t4_suit_atk02_body_02", gloves: "item_equip_t4_parts_wuling01_hand_01", kit: "item_equip_t4_suit_atk02_edc_02" },
   dapan: { armor: "item_equip_t4_suit_phy01_body_01", gloves: "item_equip_t4_suit_fire_natr01_hand_01", kit: "item_equip_t4_suit_phy01_edc_01" },
-  catcher: { armor: "item_equip_t4_suit_attri01_body_04", gloves: "item_equip_t4_suit_usp02_hand_01", kit: "item_equip_t4_suit_usp02_edc_01" },
+  catcher: { armor: "item_equip_t4_suit_attri01_body_04", gloves: "item_equip_t4_suit_usp02_hand_02", kit: "item_equip_t4_suit_usp02_edc_01" },
   mifu: { armor: "item_equip_t4_suit_crush_fracture_body_01", gloves: "item_equip_t4_suit_crush_fracture_hand_01", kit: "item_equip_t4_suit_crush_fracture_edc_01" },
 };
 // 자유 슬롯(세트 2부위 초과분)에 낄 개별 효율 최고 피스.
@@ -237,8 +234,8 @@ export function recommendedLoadout(opId: string, setName: string, element?: stri
   const og = OP_GEAR[opId] ?? {};
   const fallback = (slot: GearSlot): string => GEAR_SET_CANON[setName]?.[slot]?.id ?? setName;
   const lo: Loadout = { armor: og.armor ?? fallback("armor"), gloves: og.gloves ?? fallback("gloves"), kit: og.kit ?? fallback("kit") };
-  // 세트 최적화: 3슬롯이 전부 같은 세트면 kit을 자유 슬롯화(armor+gloves로 세트 유지).
-  if (element) {
+  // 세트 최적화: 시트가 kit을 지정하지 않은 오퍼만 자유 슬롯화(시트 지정 빌드는 그대로 존중).
+  if (element && !og.kit) {
     const sets = GEAR_SLOTS.map((s) => refSet(lo[s]!));
     if (sets[0] === sets[1] && sets[1] === sets[2]) {
       const bp = bestFreePiece("kit", element);
