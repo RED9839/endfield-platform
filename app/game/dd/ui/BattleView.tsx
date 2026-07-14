@@ -32,6 +32,8 @@ const nodeTitle: Record<NodeKind, string> = { battle: "교전", elite: "정예 �
 const behaviorLabel: Record<string, string> = { melee: "근접 돌격", snipe: "원거리 저격", heavy: "중장 강타", aoe: "광역 자폭", heal: "치유 지원", buff: "강화 지원" };
 const targetDesc: Record<string, string> = { front: "전열 강타 — 최전열(탱커) 우선", wounded: "부상자 저격 — 체력% 낮은 대상 마무리", threat: "고위협 직격 — 공격력 높은 딜러 조준" };
 const tierLabel: Record<string, string> = { normal: "일반", common: "일반", enhanced: "강화", advanced: "정예", elite: "정예", boss: "보스" };
+const DMG_KO: Record<string, string> = { ult: "궁극", battle: "배틀", link: "연계", attack: "일반", all: "물리", elem: "원소", atkPct: "공격력", hpPct: "생명력", critRate: "치명확", critDmg: "치명피", energy: "궁충" };
+const pieceDmgText = (d?: { kind: string; base: number }) => { if (!d) return ""; const pct = d.kind === "hpPct" || d.base < 1; return `${DMG_KO[d.kind] ?? d.kind} +${pct ? Math.round(d.base * 100) + "%" : Math.round(d.base)}`; };
 
 // 유닛 원소색(플로팅 데미지·이펙트용)
 function unitElement(u: DDUnit): "physical" | Element {
@@ -635,15 +637,19 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
                 </Sec>}
                 <Sec title="장비">
                   {/* 슬롯별 착용 피스 */}
-                  <div className="mb-2 space-y-1">
-                    {pieces.map((p) => { const named = p.set && p.set !== "?"; const on = named && sets.includes(p.set); return (
+                  <div className="mb-2 space-y-1.5">
+                    {pieces.map((p) => { const named = p.set && p.set !== "?"; const on = named && sets.includes(p.set); const empty = p.name === "없음"; return (
                       <div key={p.slot} className="flex items-center gap-2">
-                        <span className="w-9 shrink-0 font-mono text-[11px] font-bold uppercase tracking-wider text-ef-muted">{p.slotName}</span>
+                        <span className="w-9 shrink-0 font-mono text-[10px] font-bold uppercase tracking-wider text-ef-muted">{p.slotName}</span>
                         <span className="flex h-8 w-8 shrink-0 items-center justify-center border border-ef-line/60 bg-black/40" style={{ boxShadow: on ? "inset 0 0 0 1px #e8c56a55" : undefined }}>
                           {p.image ? <img src={p.image} alt="" loading="lazy" className="h-full w-full object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = "hidden"; }} /> : <span className="font-mono text-[10px] text-ef-muted">—</span>}
                         </span>
-                        <span className="min-w-0 flex-1 truncate font-mono text-[13px] text-ef-ink" title={p.name}>{p.name}</span>
-                        <span className="shrink-0 font-mono text-[11px]" style={{ color: on ? "#e8c56a" : named ? "#8a8a92" : "#67e8f9aa" }}>{named ? `${on ? "◆" : "◇"} ${p.set}` : "자유 슬롯"}</span>
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate font-mono text-[13px] font-bold text-ef-ink" title={p.name}>{p.name}</div>
+                          {empty ? <div className="font-mono text-[10px] text-ef-muted">미장착</div>
+                            : <div className="font-mono text-[10px] text-ef-muted">능력치 <b className="text-ef-ink/80">+{p.grade}</b> · 방어 <b className="text-ef-ink/80">+{p.def}</b>{p.dmg ? <> · <span className="text-ef-accent-soft">{pieceDmgText(p.dmg)}</span></> : null}</div>}
+                        </div>
+                        <span className="shrink-0 font-mono text-[10px]" style={{ color: on ? "#e8c56a" : named ? "#8a8a92" : "#67e8f9aa" }}>{named ? `${on ? "◆" : "◇"} ${p.set}` : "자유"}</span>
                       </div>
                     ); })}
                   </div>

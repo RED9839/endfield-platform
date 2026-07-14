@@ -961,6 +961,18 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
   if (skill.grantsMultiHit) self.multiHit = Math.min(4, self.multiHit + skill.grantsMultiHit); // 몰입의 시간(소모 후 부여)
   if (self.side === "ally" && (skill.kind === "link" || skill.kind === "battle")) gearTrigger(self, skill.kind); // 본크러셔·청파(연계)·응룡(배틀) 발동 버프
   if (self.side === "ally") weaponTrigger(self, skill.kind, living(s, "ally")); // 무기 시리즈 조건부 트리거(궁후평타·명중스택·팀버프 등)
+  // 팀 피해 버프 세트(gearTrigger 밖에서 처리) — 지원 스킬 사용 시 팀 주는 피해 +16%(3턴, 미중첩).
+  //  식양의 숨결: 증폭·비호·취약·허약 부여 후 → "다른 팀원". 개척: 스킬로 게이지 회복 후 → "팀 전체(자신 포함)".
+  if (self.side === "ally" && skill.kind !== "attack") {
+    const xiran = self.gearSets?.includes("식양의 숨결"), pioneer = self.gearSets?.includes("개척");
+    if (xiran || pioneer) {
+      const set = xiran ? "식양의 숨결" : "개척";
+      const prev = pushSrc({ by: self.name, via: set, kind: "gear" });
+      for (const a of living(s, "ally")) { if (xiran && a === self) continue; a.amp.all = Math.max(a.amp.all || 0, 0.16); setTimer(a, "amp:all", 3); }
+      popSrc(prev);
+      log.push(`  → ${set}! ${xiran ? "다른 " : ""}팀 피해 +16% (3턴)`);
+    }
+  }
 }
 
 // 라운드 시작: DoT + 불균형 회복

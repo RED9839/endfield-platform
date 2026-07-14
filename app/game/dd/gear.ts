@@ -41,29 +41,19 @@ export const GEAR_SETS: Record<string, SetEffect[]> = {
   // ── 세트 2부위 — 상시 옵션 + 턴제 조건부 발동(combat.ts gearTrigger). 지속·쿨은 전부 턴 단위. ──
   "고검의 잔향": [{ type: "atkPct", pct: 0.08 }, { type: "trigger", desc: "강타·갑옷파괴 시 물리 피해 +6%/스택(최대 +24%, 2턴)" }],
   "식양의 흐름": [{ type: "atkPct", pct: 0.10 }, { type: "trigger", desc: "감전·부식 소모 시 전기·자연 피해 +15%/스택(최대 3스택, 5턴)" }],
-  "청파": [{ type: "linkCd", pct: 0.15 }, { type: "speed", v: 18 }, { type: "trigger", desc: "연계 후 모든 스킬 피해 +20%(최대 2스택, 2턴)" }],
-  "식양의 숨결": [{ type: "hp", v: 1000 }, { type: "kindDmg", kind: "all", pct: 0.08 }], // 지원 세트: 생명력 + 상시 피해
+  "청파": [{ type: "linkCd", pct: 0.15 }, { type: "trigger", desc: "연계 후 모든 스킬 피해 +20%(최대 2스택, 3턴)" }],
+  "식양의 숨결": [{ type: "hp", v: 1000 }, { type: "trigger", desc: "증폭·비호·취약·허약 부여 후 다른 팀원 피해 +16% (3턴)" }], // 지원 세트: 생명력 + 팀 피해 버프(combat.ts gearTrigger 외 처리)
   "조류의 물결": [{ type: "kindDmg", kind: "all", pct: 0.20 }, { type: "trigger", desc: "아츠 2부착 후 아츠 피해 +35%(2턴)" }],
   "응룡 50식": [{ type: "atkPct", pct: 0.15 }, { type: "trigger", desc: "배틀 후 다음 연계 피해 +20%(최대 3스택, 3턴)" }],
   "M. I. 경찰용": [{ type: "critRate", v: 0.05 }, { type: "atkPct", pct: 0.08 }], // 치명 스택 → 상시 공격력으로 환산
   "열 작업용": [{ type: "artsStr", v: 30 }, { type: "trigger", desc: "연소 후 열기 피해 +50%(2턴)" }, { type: "trigger", desc: "부식 후 자연 피해 +50%(2턴)" }],
-  "개척": [{ type: "linkCd", pct: 0.15 }, { type: "speed", v: 18 }, { type: "kindDmg", kind: "all", pct: 0.16 }],
+  "개척": [{ type: "linkCd", pct: 0.15 }, { type: "trigger", desc: "스킬 게이지 회복 후 팀 전체 피해 +16% (3턴)" }], // 팀 피해 버프(combat.ts gearTrigger 외 처리)
   "펄스식": [{ type: "artsStr", v: 30 }, { type: "trigger", desc: "감전 후 전기 피해 +50%(2턴)" }, { type: "trigger", desc: "동결 후 냉기 피해 +50%(2턴)" }],
   "본 크러셔": [{ type: "atkPct", pct: 0.15 }, { type: "trigger", desc: "연계 후 다음 배틀 피해 +30%(2턴)" }],
   "경량 초자연": [{ type: "atkPct", pct: 0.08 }, { type: "trigger", desc: "방어 불능 부여 후 물리 피해 +16%/스택(최대 +48%, 2턴)" }],
   "생체 보조": [{ type: "startHeal", v: 0.20 }, { type: "startShield", v: 0.10 }], // 지원/방어: 시작 회복 + 보호막
   "검술사": [{ type: "stagger", pct: 0.20 }, { type: "dmgVs", cond: "broken", pct: 0.18 }], // 불균형 특화
-  // ── Lv50 이하 ──
-  "재앙 방호": [{ type: "startEnergy", v: 50 }, { type: "breakEnergy" }], // 시작 게이지 + 불균형 돌파 시 궁충
-  "아부레이의 메아리": [{ type: "kindDmg", kind: "all", pct: 0.22 }],
-  // ── Lv36~50 침식(자체 HP 조건부, warfarin 데이터마인) ──
-  "침식 차단": [{ type: "selfHpDmg", dmgType: "arts", pct: 0.18 }], // 고체력 시 아츠 피해
-  "침식 방호": [{ type: "startHeal", v: 0.14 }, { type: "startShield", v: 0.08 }], // 저체력 치유 강화(방어 지원)
-  // ── Lv28 전달자·통합형(warfarin) ──
-  "순행 전달자": [{ type: "selfHpDmg", dmgType: "physical", pct: 0.15 }], // 고체력 시 물리 피해
-  "중장갑 전달자": [{ type: "selfHpReduce", pct: 0.2 }],  // 탱커: 방어력 + 저체력 시 받는 피해 감소
-  "통합형 중갑": [{ type: "onKill", effect: "heal", pct: 0.08 }],        // 처치 시 회복
-  "통합형 경갑": [{ type: "onKill", effect: "atk", pct: 0.15 }],         // 처치 시 공격력
+  // ── Lv50 이하 세트(재앙 방호·아부레이·침식·전달자·통합형)는 전면 제거 — Lv70 세트만 운용 ──
 };
 
 const ELEMENT_KO: Record<Element | "all", string> = { heat: "열기", electric: "전기", cryo: "냉기", nature: "자연", all: "전 속성" };
@@ -95,10 +85,10 @@ export function effectText(e: SetEffect): string {
 // 시트(공략 빌드) 기준 오퍼별 추천 세트 — recSet 기본값·프리셋 로드아웃의 단일 소스.
 // 공략 시트(구글) 1순위 빌드 기준 — 오퍼별 추천 세트(2부위 세트명).
 export const OP_RECOMMENDED_SET: Record<string, string> = {
-  laevatain: "열 작업용", ember: "경량 초자연", wulfgard: "청파", akekuri: "재앙 방호", camu: "개척",
+  laevatain: "열 작업용", ember: "경량 초자연", wulfgard: "청파", akekuri: "개척", camu: "개척",
   yvonne: "M. I. 경찰용", lastrite: "조류의 물결", tangtang: "청파", snowshine: "식양의 숨결", xaihi: "식양의 숨결",
   alesh: "개척", estella: "식양의 숨결", zhuangfangyi: "식양의 흐름", avywenna: "본 크러셔", perlica: "펄스식",
-  arclight: "개척", antal: "식양의 숨결", gilberta: "식양의 숨결", ardelia: "식양의 숨결", fluorite: "재앙 방호",
+  arclight: "개척", antal: "식양의 숨결", gilberta: "식양의 숨결", ardelia: "식양의 숨결", fluorite: "식양의 숨결",
   pogranichnik: "응룡 50식", lifeng: "식양의 숨결", endministrator: "고검의 잔향", rossi: "M. I. 경찰용",
   chenqianyu: "응룡 50식", dapan: "검술사", catcher: "식양의 숨결", mifu: "고검의 잔향",
 };
@@ -171,7 +161,8 @@ const GRADE_FACTOR = 0.13; // 실측 능력치 합 → gearGrade 환산(3부위 
 
 // ── 전 220 피스 레지스트리 (data/gear-pieces.json). loadout이 피스 id를 참조하면 그 피스 실측 스탯, 세트명이면 대표 피스(GEAR_SET_STATS). ──
 export type GearPiece = { id: string; name: string; set: string; slot: GearSlot; rarity: number; def: number; grade: { base: number; enh: number[] }; dmg?: { kind: DmgSub["kind"]; base: number; enh: number[] } };
-export const GEAR_PIECES = gearPiecesData as GearPiece[];
+// Lv50 이하(rarity<5) 장비 전면 제거 — Lv70(rarity 5) 세트 장비만 사용.
+export const GEAR_PIECES = (gearPiecesData as GearPiece[]).filter((p) => p.rarity >= 5);
 export const GEAR_PIECE_BY_ID: Record<string, GearPiece> = Object.fromEntries(GEAR_PIECES.map((p) => [p.id, p]));
 export const GEAR_PIECES_BY_SET_SLOT: Record<string, Partial<Record<GearSlot, GearPiece[]>>> = {};
 for (const p of GEAR_PIECES) ((GEAR_PIECES_BY_SET_SLOT[p.set] ??= {})[p.slot] ??= []).push(p);
