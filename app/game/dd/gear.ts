@@ -69,7 +69,7 @@ export function effectText(e: SetEffect): string {
     case "startHeal": return `전투 시작 회복 +${Math.round(e.v * 100)}%`;
     case "startEnergy": return `전투 시작 게이지 +${e.v}`;
     case "artsStr": return `오리지늄 아츠 강도 +${e.v}`;
-    case "linkCd": return `연계 쿨타임 -${Math.round(e.pct * 100)}%`;
+    case "linkCd": return `연계 쿨타임 -1턴`; // 원작 -15%의 턴제 환산(쿨 2턴 이상 -1턴)
     case "speed": return `속도 +${e.v}`;
     case "breakEnergy": return "불균형 돌파 시 궁 충전";
     case "stagger": return `불균형 누적 +${Math.round(e.pct * 100)}%`;

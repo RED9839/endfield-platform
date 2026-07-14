@@ -524,7 +524,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
       s.lastLinkAlly = self.id; // 팀 연계 윈도우(관리자 봉인 게이트)
       let cd = skill.cooldown ?? LINK_CD;
       if (self.id === "zhuangfangyi" && (self.timers.heavenly || 0) > 0) cd = Math.max(1, Math.round(cd / 4)); // 천리의 경지: 연계 쿨 4배(변화의 숨결 연타 → 감전 → 청뢰검 폭증)
-      self.linkCd = Math.max(1, Math.round(cd * (self.linkCdMul ?? 1))); // 연계 쿨타임 진입
+      self.linkCd = Math.max(1, Math.floor(cd * (self.linkCdMul ?? 1))); // 연계 쿨타임 진입(쿨감은 내림 → 퍼센트 쿨감이 턴 단위로 실효: ×0.85면 쿨 2턴 이상 −1턴)
     } else if (skill.kind === "ult") {
       self.ultCharge = 0;
     }
