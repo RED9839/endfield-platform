@@ -218,7 +218,8 @@ export const OP_GEAR: Record<string, Loadout> = {
 // element 오퍼는 오퍼 속성 피해(elem), 물리 오퍼는 물리 피해(all)를 극대화, 없으면 공격%(atkPct) 폴백.
 export function bestFreePiece(slot: GearSlot, element: string): GearPiece | null {
   const want = element === "physical" ? "all" : "elem";
-  const cands = GEAR_PIECES.filter((p) => p.slot === slot && p.dmg);
+  // 무소속("?") 피스 제외 — 위기 탈출(Redeemer) 계열은 substat 데이터가 시트와 어긋나(elem 오표기 등) 오픽 유발.
+  const cands = GEAR_PIECES.filter((p) => p.slot === slot && p.dmg && p.set !== "?");
   const pickMax = (kind: DmgSub["kind"]): GearPiece | null => {
     let best: GearPiece | null = null;
     for (const p of cands) {
@@ -241,7 +242,10 @@ export function recommendedLoadout(opId: string, setName: string, element?: stri
     const sets = GEAR_SLOTS.map((s) => refSet(lo[s]!));
     if (sets[0] === sets[1] && sets[1] === sets[2]) {
       const bp = bestFreePiece("kit", element);
-      if (bp && refSet(bp.id) !== sets[0]) lo.kit = bp.id; // 세트와 다른 최고 딜 피스일 때만 교체
+      const cur = GEAR_PIECE_BY_ID[lo.kit!] ?? GEAR_SET_CANON[lo.kit!]?.kit; // 현재 kit(시트 지정) 피스
+      const curVal = cur?.dmg?.base ?? 0;
+      // 시트 kit과 다른 세트 & 실제로 더 높은 딜 substat일 때만 교체(동일 값이면 시트 유지).
+      if (bp && refSet(bp.id) !== sets[0] && (bp.dmg?.base ?? 0) > curVal) lo.kit = bp.id;
     }
   }
   return lo;
