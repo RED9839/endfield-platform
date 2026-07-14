@@ -535,11 +535,13 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
         const sets = ally ? activeSets(loadout) : [];
         const pieces = ally ? loadoutPieces(loadout) : [];
         const wId = ally ? weaponOf(u.id) : null;
-        const resists = Object.entries(u.resist) as [Element | "physical", number][];
+        const RES_ELEMS: (Element | "physical")[] = ["physical", "heat", "electric", "cryo", "nature"];
+        const hpR = u.maxHp > 0 ? u.hp / u.maxHp : 0;
+        const hpTone = hpR > 0.5 ? "#7cc04a" : hpR > 0.25 ? "#f0b429" : "#e5484d";
         const close = () => setInspectId(null);
         const hide = (ev: React.SyntheticEvent<HTMLImageElement>) => { (ev.currentTarget as HTMLImageElement).style.visibility = "hidden"; };
         const St = ({ label, value }: { label: string; value: string | number }) => (
-          <div className="bg-[#120c07] px-2.5 py-2"><div className="font-mono text-[11px] uppercase tracking-wider text-ef-muted">{label}</div><div className="mt-0.5 font-mono text-[15px] font-bold text-ef-ink">{value}</div></div>
+          <div className="bg-[#120c07] px-2 py-1.5 text-center"><div className="font-mono text-[10px] uppercase tracking-wider text-ef-muted">{label}</div><div className="mt-0.5 font-mono text-[14px] font-bold text-ef-ink">{value}</div></div>
         );
         const Sec = ({ title, children }: { title: string; children: React.ReactNode }) => (
           <div className="border-t border-ef-line p-3"><div className="mb-2 font-mono text-[12px] font-bold uppercase tracking-wider text-ef-accent/70">{title}</div>{children}</div>
@@ -560,14 +562,39 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
                 </div>
                 <button type="button" onClick={close} className="shrink-0 border border-ef-line px-2 py-1 font-mono text-sm text-ef-muted transition hover:border-ef-accent/60 hover:text-white">✕</button>
               </div>
-              {/* 스탯 */}
-              <div className="grid grid-cols-3 gap-px bg-ef-line p-px">
-                <St label="HP" value={`${Math.max(0, u.hp)}/${u.maxHp}`} />
-                <St label="공격력" value={u.attack} />
-                <St label="방어력" value={u.defense} />
-                <St label="속도" value={Math.max(1, u.speed + (u.speedMod || 0))} />
-                <St label="치명" value={`${Math.round(u.critRate * 100)}%`} />
-                <St label="치명피해" value={`${Math.round(u.critDmg * 100)}%`} />
+              {/* 체력 바 + 핵심 스탯 */}
+              <div className="border-b border-ef-line px-3 py-2.5">
+                <div className="mb-1 flex items-baseline justify-between font-mono">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-ef-muted">체력</span>
+                  <span className="text-[13px] font-bold text-ef-ink">{Math.max(0, u.hp).toLocaleString()} <span className="text-[11px] font-normal text-ef-muted">/ {u.maxHp.toLocaleString()}</span>{u.shield > 0 && <span className="ml-1.5 text-[12px] text-sky-300">🛡 {u.shield}</span>}</span>
+                </div>
+                <div className="relative mb-2.5 h-2.5 overflow-hidden rounded-[2px] bg-black/70" style={{ boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.05)" }}>
+                  <div className="h-full rounded-[2px] transition-all" style={{ width: `${Math.max(0, Math.min(100, hpR * 100))}%`, background: hpTone, boxShadow: `0 0 8px ${hpTone}99` }} />
+                </div>
+                <div className="grid grid-cols-4 gap-1">
+                  <St label="공격" value={u.attack} />
+                  <St label="방어" value={u.defense} />
+                  <St label="속도" value={Math.max(1, u.speed + (u.speedMod || 0))} />
+                  {ally ? <St label="치명" value={`${Math.round(u.critRate * 100)}%`} /> : <St label="불균형" value={`${Math.round(u.stagger)}/${u.staggerMax}`} />}
+                </div>
+                {ally && u.attrs && (
+                  <div className="mt-1.5 flex flex-wrap justify-between gap-x-2 gap-y-0.5 font-mono text-[11px]">
+                    {([["힘", u.attrs.str], ["민첩", u.attrs.agi], ["지능", u.attrs.int], ["의지", u.attrs.wil]] as [string, number][]).map(([k, v]) => <span key={k} className="text-ef-muted">{k} <b className="text-ef-ink">{v}</b></span>)}
+                  </div>
+                )}
+              </div>
+              {/* 속성 저항 — 0%=약점(풀 피해) 초록 강조, 고저항 붉게 */}
+              <div className="border-b border-ef-line px-3 py-2.5">
+                <div className="mb-1.5 flex items-center gap-1.5 font-mono text-[12px] font-bold uppercase tracking-wider text-ef-accent/70">속성 저항{!ally && <span className="font-normal normal-case tracking-normal text-ef-muted">· 초록=약점</span>}</div>
+                <div className="grid grid-cols-5 gap-1">
+                  {RES_ELEMS.map((e) => { const r = u.resist[e] ?? 0; const weak = r <= 0.001; const strong = r >= 0.5; return (
+                    <div key={e} className="flex flex-col items-center gap-0.5 border py-1" style={{ borderColor: weak ? "#7cc04a66" : strong ? "#f8717155" : "#ffffff12", background: weak ? "#7cc04a15" : "transparent" }}>
+                      <span className="h-2 w-2" style={{ background: elementColor[e], boxShadow: `0 0 5px ${elementColor[e]}` }} />
+                      <span className="font-mono text-[10px] text-ef-muted">{elementName[e]}</span>
+                      <span className="font-mono text-[11px] font-bold" style={{ color: weak ? "#8fd36a" : strong ? "#f87171" : "#c8c8cc" }}>{weak ? "약점" : `${Math.round(r * 100)}%`}</span>
+                    </div>
+                  ); })}
+                </div>
               </div>
               {/* 상태 효과(버프/디버프) — 방향 분류 + 잔여 턴 + 출처(누가·무엇으로) */}
               {(() => {
