@@ -245,7 +245,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
           <div className="relative flex flex-col gap-1">
             {/* 흐름 연결선 */}
             <span className="pointer-events-none absolute bottom-4 left-[17px] top-4 w-0.5 bg-gradient-to-b from-ef-accent/60 via-ef-line to-transparent" />
-            {upcoming.slice(0, 6).map((u, i) => {
+            {(current && upcoming[0] !== current ? [current, ...upcoming] : upcoming).slice(0, 6).map((u, i) => {
               const ally = u.side === "ally";
               const nm = ally ? OPERATORS.find((o) => o.id === u.id)?.name ?? u.id : u.name;
               const el = ally ? (OPERATORS.find((o) => o.id === u.id)?.element ?? "physical") : (enemyDefFor(u.id)?.element ?? "physical");
