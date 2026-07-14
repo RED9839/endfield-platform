@@ -1,128 +1,135 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronLeft, Hammer, Check, Lock } from "lucide-react";
+import { ChevronLeft, Hammer, Check, Lock, Package, KeyRound } from "lucide-react";
 
-import { GEAR_PIECES_BY_SET_SLOT, GEAR_PIECE_BY_ID, GEAR_SLOTS, gearSlotName, type GearPiece, type GearSlot } from "../gear";
+import { GEAR_PIECES_BY_SET_SLOT, GEAR_PIECE_BY_ID, GEAR_SLOTS, gearSlotName, pieceImage, type GearPiece, type GearSlot } from "../gear";
 import { craftCost, forgeCost, pieceLevel, isOwned, type CraftState } from "../craft";
-import { OPERATORS } from "../roster";
+import { OPERATORS, avatarUrl } from "../roster";
 import type { PartyMember } from "../run";
 
 const CUT = { clipPath: "polygon(0 0, calc(100% - 7px) 0, 100% 7px, 100% 100%, 7px 100%, 0 calc(100% - 7px))" };
-const PRIMARY = "#ff9a2f";
 const DMG_KO: Record<string, string> = { ult: "궁극 피해", battle: "배틀 피해", link: "연계 피해", attack: "일반 피해", all: "물리 피해", elem: "원소 피해", atkPct: "공격력", hpPct: "생명력", critRate: "치명 확률", critDmg: "치명 피해", energy: "궁충 효율" };
 const dmgText = (p: GearPiece) => { if (!p.dmg) return ""; const pct = ["hpPct"].includes(p.dmg.kind) || p.dmg.base < 1; return `${DMG_KO[p.dmg.kind] ?? p.dmg.kind} +${pct ? Math.round(p.dmg.base * 100) + "%" : Math.round(p.dmg.base)}`; };
-
-// 오퍼 사용 세트만(카탈로그 정리)
 const SETS = ["개척", "열 작업용", "M. I. 경찰용", "본 크러셔", "식양의 흐름", "고검의 잔향", "검술사", "생체 보조", "식양의 숨결", "조류의 물결", "청파", "응룡 50식", "펄스식", "재앙 방호"];
+
+// 단조 레벨(0~3) 핍
+function ForgePips({ lv }: { lv: number }) {
+  return <span className="inline-flex items-center gap-0.5">{[0, 1, 2].map((i) => <span key={i} className="h-1.5 w-1.5 rounded-full" style={{ background: i < lv ? "#ff9a2f" : "#3a3a40", boxShadow: i < lv ? "0 0 4px #ff9a2f" : undefined }} />)}</span>;
+}
+// 재료 비용(감당 가능 여부 색상)
+function Cost({ parts, permits, ok }: { parts: number; permits: number; ok: boolean }) {
+  return <span className={`font-mono text-[10px] tabular-nums ${ok ? "text-ef-muted" : "text-red-400/90"}`}>{parts}<span className="opacity-55">부품</span> {permits}<span className="opacity-55">권</span></span>;
+}
 
 export default function CraftPanel({ craft, party = [], onCraft, onForge, onClose }: { craft: CraftState; party?: PartyMember[]; onCraft: (id: string) => boolean; onForge: (id: string) => boolean; onClose: () => void }) {
   const [set, setSet] = useState(SETS[0]);
+  const [tab, setTab] = useState<"party" | "catalog">(party.length > 0 ? "party" : "catalog");
   const affordCraft = (p: GearPiece) => { const c = craftCost(p); return craft.mats.parts >= c.parts && craft.mats.permits >= c.permits; };
   const affordForge = (lv: number) => { const c = forgeCost(lv); return craft.mats.parts >= c.parts && craft.mats.permits >= c.permits; };
   const opName = (id: string) => OPERATORS.find((o) => o.id === id)?.name ?? id;
 
-  return (
-    <div className="mx-auto max-w-[1500px] px-4 py-5 sm:px-7">
-      <div className="hud-panel dd-cut mb-4 flex items-center gap-3 px-3 py-2.5">
-        <button type="button" onClick={onClose} className="hud-btn flex h-9 w-9 items-center justify-center text-ef-muted" style={CUT} aria-label="닫기"><ChevronLeft className="h-5 w-5" /></button>
-        <div className="flex items-center gap-2">
-          <Hammer className="h-6 w-6 text-ef-accent" style={{ filter: "drop-shadow(0 0 6px rgba(255,154,47,0.5))" }} />
-          <div>
-            <p className="font-mono text-[11px] font-bold uppercase tracking-[0.32em] text-ef-accent/70">Industry · 장비 제조</p>
-            <h2 className="font-mono text-xl font-black uppercase tracking-[0.12em] text-white">공업소</h2>
+  // 피스 타일(부대·카탈로그 공용)
+  const PieceTile = ({ p, slotLabel }: { p: GearPiece; slotLabel?: boolean }) => {
+    const owned = isOwned(craft, p.id); const lv = pieceLevel(craft, p.id); const cc = craftCost(p); const fc = forgeCost(lv);
+    const img = pieceImage(p.name); const canC = affordCraft(p); const canF = affordForge(lv);
+    return (
+      <div className={`hud-tile dd-cut flex items-center gap-2 p-1.5 ${owned ? "!border-ef-accent/45" : ""}`}>
+        <span className="relative flex h-12 w-12 shrink-0 items-center justify-center border border-ef-line/60 bg-black/50" style={owned ? { boxShadow: "inset 0 0 0 1px #ff9a2f44" } : undefined}>
+          {img ? <img src={img} alt="" loading="lazy" className="h-full w-full object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = "hidden"; }} /> : <span className="font-mono text-[10px] text-ef-muted">—</span>}
+          {owned && <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 rounded-sm bg-black/90 px-1 py-px"><ForgePips lv={lv} /></span>}
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="truncate font-mono text-[12px] font-bold text-white" title={p.name}>{slotLabel && <span className="text-ef-accent/70">{gearSlotName(p.slot)}</span>} {p.name}</div>
+          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 font-mono text-[11px] text-ef-muted">
+            <span>방어 <b className="text-ef-ink/80">{p.def}</b></span>
+            <span>능력치 <b className="text-ef-ink/80">{p.grade.base}</b></span>
+            {p.dmg && <span className="text-ef-accent-soft">{dmgText(p)}</span>}
           </div>
         </div>
-        <div className="ml-auto flex items-center gap-2 font-mono text-sm">
-          <span className="hud-tile px-2.5 py-1 text-white" style={CUT}>부품 <b className="text-ef-accent-soft">{craft.mats.parts}</b></span>
-          <span className="hud-tile px-2.5 py-1 text-white" style={CUT}>관리권 <b className="text-yellow-300">{craft.mats.permits}</b></span>
+        {!owned ? (
+          <button type="button" disabled={!canC} onClick={() => onCraft(p.id)} className={`dd-cut flex shrink-0 flex-col items-center gap-0.5 border px-2.5 py-1.5 transition disabled:opacity-45 ${canC ? "border-ef-accent/50 text-ef-accent hover:bg-ef-accent/10" : "border-ef-line text-ef-muted"}`}>
+            <span className="flex items-center gap-1 font-mono text-[12px] font-bold uppercase">{canC ? <Hammer className="h-3 w-3" /> : <Lock className="h-3 w-3" />}제작</span>
+            <Cost parts={cc.parts} permits={cc.permits} ok={canC} />
+          </button>
+        ) : lv < 3 ? (
+          <button type="button" disabled={!canF} onClick={() => onForge(p.id)} className={`dd-cut flex shrink-0 flex-col items-center gap-0.5 border px-2.5 py-1.5 transition disabled:opacity-45 ${canF ? "border-ef-accent/60 text-ef-accent-soft hover:bg-ef-accent/10" : "border-ef-line text-ef-muted"}`}>
+            <span className="font-mono text-[12px] font-bold uppercase">단조 {lv}→{lv + 1}</span>
+            <Cost parts={fc.parts} permits={fc.permits} ok={canF} />
+          </button>
+        ) : (
+          <span className="flex shrink-0 flex-col items-center gap-0.5 border border-green-400/30 px-2.5 py-1.5 font-mono text-[12px] font-bold uppercase text-green-300" style={CUT}><Check className="h-3.5 w-3.5" />최대</span>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <div className="mx-auto max-w-[1400px] px-4 py-5 sm:px-6">
+      {/* 헤더 */}
+      <div className="hud-panel dd-cut mb-3 flex items-center gap-3 px-3 py-2.5">
+        <button type="button" onClick={onClose} className="hud-btn flex h-9 w-9 items-center justify-center text-ef-muted" style={CUT} aria-label="닫기"><ChevronLeft className="h-5 w-5" /></button>
+        <Hammer className="h-6 w-6 text-ef-accent" style={{ filter: "drop-shadow(0 0 6px rgba(255,154,47,0.5))" }} />
+        <div>
+          <p className="font-mono text-[11px] font-bold uppercase tracking-[0.32em] text-ef-accent/70">Industry · 장비 제조</p>
+          <h2 className="font-mono text-xl font-black uppercase tracking-[0.12em] text-white">공업소</h2>
+        </div>
+        <div className="ml-auto flex items-center gap-2">
+          <span className="hud-tile flex items-center gap-1.5 px-2.5 py-1.5 font-mono text-sm" style={CUT} title="장비 부품"><Package className="h-4 w-4 text-ef-accent-soft" /><b className="text-white">{craft.mats.parts}</b><span className="text-[11px] text-ef-muted">부품</span></span>
+          <span className="hud-tile flex items-center gap-1.5 px-2.5 py-1.5 font-mono text-sm" style={CUT} title="관리권"><KeyRound className="h-4 w-4 text-yellow-300" /><b className="text-white">{craft.mats.permits}</b><span className="text-[11px] text-ef-muted">관리권</span></span>
         </div>
       </div>
 
-      {/* 부대 장착 장비 — 실제 사용 피스 바로 단조 */}
-      {party.length > 0 && (
-        <div className="hud-panel dd-cut mb-4 p-2.5" style={{ borderColor: "rgba(255,154,47,0.3)" }}>
-          <div className="mb-2 font-mono text-[13px] font-bold uppercase tracking-[0.2em] text-ef-accent-soft">부대 장착 장비 <span className="text-ef-muted">· 단조로 강화</span></div>
-          <div className="grid gap-2 sm:grid-cols-2">
-            {party.map((m) => (
-              <div key={m.id} className="hud-tile dd-cut p-2">
-                <div className="mb-1.5 font-mono text-xs font-bold text-white">{opName(m.id)}</div>
-                <div className="flex flex-col gap-1">
-                  {GEAR_SLOTS.map((slot) => {
-                    const ref = m.loadout?.[slot]; const p = ref ? GEAR_PIECE_BY_ID[ref] : undefined;
-                    if (!p) return null;
-                    const lv = pieceLevel(craft, p.id); const owned = isOwned(craft, p.id); const fc = forgeCost(lv); const cc = craftCost(p);
-                    return (
-                      <div key={slot} className="flex items-center gap-1.5">
-                        <span className="w-8 shrink-0 font-mono text-[12px] uppercase text-ef-muted">{gearSlotName(slot)}</span>
-                        <span className="min-w-0 flex-1 truncate font-mono text-[12px] text-ef-muted" title={p.name}>{p.name}</span>
-                        {p.dmg && <span className="shrink-0 font-mono text-[12px] text-ef-accent-soft">{dmgText(p)}</span>}
-                        {!owned ? (
-                          <button type="button" disabled={!affordCraft(p)} onClick={() => onCraft(p.id)} className="shrink-0 border border-ef-line px-1.5 py-0.5 font-mono text-[12px] font-bold uppercase tracking-wider transition enabled:hover:border-ef-accent/50 enabled:text-ef-ink disabled:opacity-40" style={CUT}>제작 {cc.parts}·{cc.permits}</button>
-                        ) : lv < 3 ? (
-                          <button type="button" disabled={!affordForge(lv)} onClick={() => onForge(p.id)} className="shrink-0 border border-ef-accent/40 px-1.5 py-0.5 font-mono text-[12px] font-bold uppercase tracking-wider text-ef-accent transition enabled:hover:bg-ef-accent/10 disabled:opacity-40" style={CUT}>단조 {lv}→{lv + 1} · {fc.parts}·{fc.permits}</button>
-                        ) : (
-                          <span className="shrink-0 flex items-center gap-0.5 font-mono text-[12px] font-bold text-green-300"><Check className="h-3 w-3" />MAX</span>
-                        )}
-                      </div>
-                    );
-                  })}
+      {/* 탭: 부대 장비 / 전체 카탈로그 */}
+      <div className="mb-3 flex items-center gap-2">
+        {party.length > 0 && <button type="button" onClick={() => setTab("party")} className={`hud-btn dd-cut px-3.5 py-1.5 font-mono text-[13px] font-bold uppercase tracking-wider ${tab === "party" ? "hud-btn-on" : "text-ef-muted"}`}>부대 장비</button>}
+        <button type="button" onClick={() => setTab("catalog")} className={`hud-btn dd-cut px-3.5 py-1.5 font-mono text-[13px] font-bold uppercase tracking-wider ${tab === "catalog" ? "hud-btn-on" : "text-ef-muted"}`}>전체 카탈로그</button>
+        <span className="ml-1 font-mono text-[11px] text-ef-muted">{tab === "party" ? "부대가 실제 착용한 피스 — 제작·단조 우선" : "세트별 대체 피스 제작"}</span>
+      </div>
+
+      {/* 부대 장비 */}
+      {tab === "party" && (
+        <div className="grid gap-3 lg:grid-cols-2">
+          {party.map((m) => {
+            const op = OPERATORS.find((o) => o.id === m.id);
+            return (
+              <div key={m.id} className="hud-panel dd-cut p-3">
+                <div className="mb-2 flex items-center gap-2">
+                  <img src={avatarUrl(m.id)} alt="" loading="lazy" className="h-9 w-9 shrink-0 border border-ef-line object-cover" style={{ background: "#000" }} />
+                  <span className="font-mono text-[15px] font-bold text-white">{opName(m.id)}</span>
+                  {op && <span className="font-mono text-[11px] uppercase text-ef-muted">{op.element}</span>}
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  {GEAR_SLOTS.map((slot) => { const ref = m.loadout?.[slot]; const p = ref ? GEAR_PIECE_BY_ID[ref] : undefined; return p ? <PieceTile key={slot} p={p} slotLabel /> : null; })}
                 </div>
               </div>
-            ))}
-          </div>
+            );
+          })}
         </div>
       )}
 
-      {/* 세트 탭 — 대체 피스 제작 카탈로그 */}
-      <div className="mb-2 font-mono text-[13px] font-bold uppercase tracking-[0.2em] text-ef-muted">전체 카탈로그 <span className="text-ef-muted">· 대체 피스 제작</span></div>
-      <div className="mb-4 flex flex-wrap gap-1.5">
-        {SETS.map((s) => (
-          <button key={s} type="button" onClick={() => setSet(s)} className={`hud-btn px-2.5 py-1 font-mono text-[13px] font-bold ${set === s ? "hud-btn-on" : "text-ef-muted"}`} style={CUT}>{s}</button>
-        ))}
-      </div>
-
-      {/* 부위별 피스 */}
-      <div className="grid gap-3 md:grid-cols-3">
-        {GEAR_SLOTS.map((slot: GearSlot) => {
-          const pieces = GEAR_PIECES_BY_SET_SLOT[set]?.[slot] ?? [];
-          return (
-            <div key={slot} className="hud-panel dd-cut p-2.5">
-              <div className="mb-2 font-mono text-[13px] font-bold uppercase tracking-[0.2em] text-ef-muted">{gearSlotName(slot)} <span className="text-ef-muted">· {pieces.length}</span></div>
-              <div className="flex flex-col gap-1.5">
-                {pieces.map((p) => {
-                  const owned = isOwned(craft, p.id); const lv = pieceLevel(craft, p.id); const cc = craftCost(p); const fc = forgeCost(lv);
-                  return (
-                    <div key={p.id} className={`hud-tile dd-cut p-2 ${owned ? "!border-ef-accent/50" : ""}`}>
-                      <div className="flex items-center gap-1.5">
-                        <span className="min-w-0 flex-1 truncate font-mono text-xs font-bold text-white">{p.name}</span>
-                        {owned && <span className="font-mono text-[12px] font-bold text-ef-accent">단조 {lv}/3</span>}
-                      </div>
-                      <div className="mt-0.5 flex flex-wrap gap-x-2 gap-y-0.5 font-mono text-[12px] text-ef-muted">
-                        <span>방어 {p.def}</span>
-                        <span className="text-ef-ink">능력치 {p.grade.base}</span>
-                        {p.dmg && <span className="text-ef-accent-soft">{dmgText(p)}</span>}
-                      </div>
-                      {!owned ? (
-                        <button type="button" disabled={!affordCraft(p)} onClick={() => onCraft(p.id)} className="mt-1.5 flex w-full items-center justify-center gap-1 border border-ef-line py-1 font-mono text-[12px] font-bold uppercase tracking-wider transition enabled:hover:border-ef-accent/50 enabled:text-ef-ink disabled:opacity-40" style={CUT}>
-                          {affordCraft(p) ? <Hammer className="h-3 w-3" /> : <Lock className="h-3 w-3" />} 제작 · {cc.parts}부품 {cc.permits}관리권
-                        </button>
-                      ) : lv < 3 ? (
-                        <button type="button" disabled={!affordForge(lv)} onClick={() => onForge(p.id)} className="mt-1.5 flex w-full items-center justify-center gap-1 border border-ef-accent/40 py-1 font-mono text-[12px] font-bold uppercase tracking-wider text-ef-accent transition enabled:hover:bg-ef-accent/10 disabled:opacity-40" style={CUT}>
-                          단조 +1 · {fc.parts}부품 {fc.permits}관리권
-                        </button>
-                      ) : (
-                        <div className="mt-1.5 flex w-full items-center justify-center gap-1 border border-green-400/30 py-1 font-mono text-[12px] font-bold uppercase tracking-wider text-green-300" style={CUT}><Check className="h-3 w-3" /> 단조 최대</div>
-                      )}
-                    </div>
-                  );
-                })}
-                {!pieces.length && <div className="py-4 text-center font-mono text-[12px] text-ef-muted">피스 없음</div>}
-              </div>
-            </div>
-          );
-        })}
-      </div>
+      {/* 전체 카탈로그 */}
+      {tab === "catalog" && (
+        <>
+          <div className="mb-3 flex flex-wrap gap-1.5">
+            {SETS.map((s) => <button key={s} type="button" onClick={() => setSet(s)} className={`hud-btn dd-cut px-2.5 py-1 font-mono text-[13px] font-bold ${set === s ? "hud-btn-on" : "text-ef-muted"}`}>{s}</button>)}
+          </div>
+          <div className="grid gap-3 md:grid-cols-3">
+            {GEAR_SLOTS.map((slot: GearSlot) => {
+              const pieces = GEAR_PIECES_BY_SET_SLOT[set]?.[slot] ?? [];
+              return (
+                <div key={slot} className="hud-panel dd-cut p-2.5">
+                  <div className="mb-2 font-mono text-[13px] font-bold uppercase tracking-[0.2em] text-ef-accent/80">{gearSlotName(slot)} <span className="font-normal text-ef-muted">· {pieces.length}</span></div>
+                  <div className="flex flex-col gap-1.5">
+                    {pieces.map((p) => <PieceTile key={p.id} p={p} />)}
+                    {!pieces.length && <div className="py-4 text-center font-mono text-[12px] text-ef-muted">피스 없음</div>}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
     </div>
   );
 }
