@@ -18,6 +18,7 @@ const elementName: Record<"physical" | Element, string> = { physical: "물리", 
 const classLabel: Record<DDClass, string> = { guard: "가드", caster: "캐스터", striker: "스트라이커", vanguard: "뱅가드", defender: "디펜더", supporter: "서포터" };
 const classOrder: DDClass[] = ["striker", "guard", "vanguard", "caster", "defender", "supporter"];
 const kindLabel: Record<DDSkill["kind"], string> = { attack: "기본", battle: "배틀", link: "연계", ult: "궁극" };
+const tgtType = (t?: string) => (t === "self" ? "자신" : t === "all" || t === "row" ? "범위" : "단일");
 const KIND_ORDER: Record<DDSkill["kind"], number> = { attack: 0, battle: 1, link: 2, ult: 3 };
 
 const recSet = (op: OpMeta): string => recommendedSet(op.id, op.cls, op.element);
@@ -30,9 +31,8 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
   const [setChoice, setSetChoice] = useState<Record<string, string>>({});
   const [progress, setProgress] = useState<Record<string, OpProgress>>({});
   const [focusId, setFocusId] = useState<string>(OPERATORS[0].id);
-  const [setPicker, setSetPicker] = useState(false); // 목표 세트 선택 피커
   const [pieceChoice, setPieceChoice] = useState<Record<string, Partial<Record<GearSlot, string>>>>({}); // 부위별 직접 교체(오퍼→슬롯→피스id)
-  const [pickSlot, setPickSlot] = useState<GearSlot | null>(null); // 부위 교체 피커 열림 슬롯
+  const [gearTab, setGearTab] = useState<"set" | GearSlot | null>(null); // 장비 변경 모달 탭(null=닫힘)
   const opRecSet = (id: string) => { const op = OPERATORS.find((o) => o.id === id); return op ? recSet(op) : "검술사"; };
   const opSet = (id: string) => setChoice[id] ?? opRecSet(id);
   const opProg = (id: string) => progress[id] ?? DEFAULT_PROGRESS;
@@ -82,8 +82,8 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
   const active = activeSets(lo);
   const pr = opProg(focusId);
   const skills = [
-    ...(OP_BASIC[focusId] ? [{ id: `${focusId}-basic`, name: OP_BASIC[focusId].name, kind: "attack" as const, note: OP_BASIC[focusId].note }] : []),
-    ...(SKILLS[focusId] ?? []).map((s) => ({ id: s.id, name: s.name, kind: s.kind, note: s.note })),
+    ...(OP_BASIC[focusId] ? [{ id: `${focusId}-basic`, name: OP_BASIC[focusId].name, kind: "attack" as const, note: OP_BASIC[focusId].note, power: 0.5, target: "single-front" }] : []),
+    ...(SKILLS[focusId] ?? []).map((s) => ({ id: s.id, name: s.name, kind: s.kind, note: s.note, power: s.power, target: s.target })),
   ].sort((a, b) => KIND_ORDER[a.kind] - KIND_ORDER[b.kind]);
   const talents = OP_TALENTS[focusId] ?? [];
   const unit = makeAlly(focusId, 1, pr); // 기초 전투 스탯(정예화·스킬강화 반영)
@@ -143,7 +143,7 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
                   {ops.map((o) => {
                     const on = selected.includes(o.id); const order = selected.indexOf(o.id) + 1; const foc = focusId === o.id;
                     return (
-                      <button key={o.id} type="button" onClick={() => { setFocusId(o.id); setSetPicker(false); setPickSlot(null); }} title={o.name} className="group relative aspect-square overflow-hidden border transition" style={{ ...CUT, borderColor: foc ? "#ffbe6b" : on ? elementColor[o.element] : `${elementColor[o.element]}44`, background: `center top/cover url(${avatarUrl(o.id)}), #000`, boxShadow: foc ? "0 0 14px -2px rgba(255,190,107,0.8)" : on ? `0 0 10px -3px ${elementColor[o.element]}` : "none" }}>
+                      <button key={o.id} type="button" onClick={() => { setFocusId(o.id); setGearTab(null); }} title={o.name} className="group relative aspect-square overflow-hidden border transition" style={{ ...CUT, borderColor: foc ? "#ffbe6b" : on ? elementColor[o.element] : `${elementColor[o.element]}44`, background: `center top/cover url(${avatarUrl(o.id)}), #000`, boxShadow: foc ? "0 0 14px -2px rgba(255,190,107,0.8)" : on ? `0 0 10px -3px ${elementColor[o.element]}` : "none" }}>
                         <span className="absolute inset-x-0 bottom-0 h-[3px]" style={{ background: elementColor[o.element] }} />
                         {on && <span className="absolute left-0 top-0 flex h-4 w-4 items-center justify-center bg-ef-accent font-mono text-[10px] font-black text-black">{order}</span>}
                         {!on && selected.length >= 4 && <span className="absolute inset-0 bg-black/50" />}
@@ -216,7 +216,7 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
               {skills.map((sk) => (
                 <div key={sk.id} className="flex items-start gap-2">
                   <img src={skillIcon(focusId, sk.kind)} alt="" className="h-8 w-8 shrink-0 border border-ef-line/60 bg-black/40 object-cover" onError={(e) => ((e.currentTarget as HTMLImageElement).style.visibility = "hidden")} />
-                  <div className="min-w-0"><div><span className="font-mono text-[13px] font-bold text-white">{sk.name}</span> <span className="font-mono text-[10px] uppercase text-ef-accent/70">{kindLabel[sk.kind]}</span></div>{sk.note && <div className="text-[12px] leading-snug text-ef-muted">{sk.note}</div>}</div>
+                  <div className="min-w-0"><div className="flex flex-wrap items-baseline gap-x-1.5"><span className="font-mono text-[13px] font-bold text-white">{sk.name}</span><span className="font-mono text-[10px] uppercase text-ef-accent/70">{kindLabel[sk.kind]}</span>{sk.power > 0 && <span className="font-mono text-[10px] text-ef-accent-soft">배율 {Math.round(sk.power * 100)}% · {tgtType(sk.target)}</span>}</div>{sk.note && <div className="text-[12px] leading-snug text-ef-muted">{sk.note}</div>}</div>
                 </div>
               ))}
             </div>
@@ -255,57 +255,27 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
             })}
           </div>
 
-          {/* 목표 장비 — 맨몸 시작 → 공업소에서 이 빌드를 목표로 제작. 세트(빌드) 선택 가능. */}
+          {/* 목표 장비 — 맨몸 시작 → 공업소에서 이 빌드를 목표로 제작. [장비 변경] 모달에서 세트·부위 교체. */}
           <div className="hud-tile dd-cut mb-3 px-2.5 py-2.5">
             <div className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-0.5">
               <span className="font-mono text-[11px] uppercase tracking-wider text-ef-muted">목표 장비</span>
               <span className="font-mono text-[13px] font-bold text-ef-ink">{opSet(focusId)} 세트</span>
               {opSet(focusId) === opRecSet(focusId) && <span className="font-mono text-[10px] text-ef-accent">★추천</span>}
-              <button type="button" onClick={() => setSetPicker((v) => !v)} className={`dd-cut ml-auto shrink-0 border px-2 py-0.5 font-mono text-[11px] font-bold uppercase transition ${setPicker ? "border-ef-accent bg-ef-accent/15 text-ef-accent" : "border-ef-line text-ef-muted hover:border-ef-accent/60 hover:text-ef-accent"}`}>{setPicker ? "닫기" : "세트 변경 ▾"}</button>
+              <button type="button" onClick={() => setGearTab("set")} className="dd-cut ml-auto shrink-0 border border-ef-line px-2.5 py-0.5 font-mono text-[11px] font-bold uppercase text-ef-muted transition hover:border-ef-accent/60 hover:text-ef-accent">⚙ 장비 변경</button>
               <span className="w-full font-mono text-[10px] text-ef-muted">맨몸으로 시작 · 공업소에서 이 빌드를 목표로 제작 · <span className="font-mono text-[11px] text-ef-accent-soft">능력치 +{gearGrade} · 방어 +{gearDef}</span></span>
               {active.map((n) => <span key={n} className="w-full truncate font-mono text-[11px] text-green-300">◆ {setEffectText(n)}</span>)}
             </div>
-            {/* 목표 세트(빌드) 선택 — 추천 강제 아님 */}
-            {setPicker && (
-              <div className="mb-2 border-b border-ef-line/40 pb-2">
-                <div className="grid max-h-56 grid-cols-1 gap-1 overflow-y-auto pr-1">
-                  {[...SET_NAMES].sort((a, b) => (a === opRecSet(focusId) ? -1 : 0) - (b === opRecSet(focusId) ? -1 : 0)).map((sn) => { const sel = opSet(focusId) === sn; const rec = sn === opRecSet(focusId); return (
-                    <button key={sn} type="button" onClick={() => { setSetChoice((c) => { const n = { ...c }; if (rec) delete n[focusId]; else n[focusId] = sn; return n; }); setSetPicker(false); }} className={`dd-cut flex items-start gap-1.5 border px-2 py-1 text-left transition ${sel ? "border-ef-accent bg-ef-accent/10" : "border-ef-line hover:border-ef-accent/50"}`}>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-1.5"><span className="font-mono text-[12px] font-bold text-white">{sn}</span>{rec && <span className="font-mono text-[9px] text-ef-accent">★추천</span>}{sel && <span className="font-mono text-[9px] text-ef-accent-soft">● 선택</span>}</div>
-                        <div className="truncate font-mono text-[10px] text-ef-muted">{setEffectText(sn)}</div>
-                      </div>
-                    </button>
-                  ); })}
-                </div>
-              </div>
-            )}
             <div className="space-y-1.5">
-              {pcs.map((pc) => { const named = pc.set && pc.set !== "?"; const on = named && active.includes(pc.set); const empty = pc.name === "없음"; const opening = pickSlot === pc.slot; const swapped = !!pieceChoice[focusId]?.[pc.slot]; return (
-                <div key={pc.slot}>
-                  <div className="flex items-center gap-2">
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center border border-ef-line/60 bg-black/40">{!empty && pieceImage(pc.name) ? <img src={pieceImage(pc.name)} alt="" className="h-full w-full object-contain" onError={(e) => ((e.currentTarget as HTMLImageElement).style.visibility = "hidden")} /> : <span className="text-[10px] text-ef-muted">—</span>}</span>
-                    <span className="w-9 shrink-0 font-mono text-[10px] uppercase tracking-wider text-ef-accent/70">{gearSlotName(pc.slot)}</span>
-                    <div className="min-w-0 flex-1">
-                      <div className="truncate font-mono text-[12px] font-bold text-ef-ink" title={pc.name}>{pc.name}{swapped && <span className="ml-1 text-[9px] text-ef-accent">교체됨</span>}</div>
-                      {empty ? <div className="font-mono text-[10px] text-ef-muted">미장착</div>
-                        : <div className="font-mono text-[10px] text-ef-muted">능력치 <b className="text-ef-ink/80">+{pc.grade}</b> · 방어 <b className="text-ef-ink/80">+{pc.def}</b>{pc.dmg ? <> · <span className="text-ef-accent-soft">{pieceDmg(pc)}</span></> : null} · {named ? <span style={{ color: on ? "#e8c56a" : "#8a8a92" }}>{on ? "◆" : "◇"} {pc.set}</span> : <span className="text-[#67e8f9aa]">자유</span>}</div>}
-                    </div>
-                    <button type="button" onClick={() => setPickSlot(opening ? null : pc.slot)} className={`dd-cut shrink-0 border px-2 py-0.5 font-mono text-[10px] font-bold uppercase transition ${opening ? "border-ef-accent bg-ef-accent/15 text-ef-accent" : "border-ef-line text-ef-muted hover:border-ef-accent/60 hover:text-ef-accent"}`}>{opening ? "닫기" : "교체 ▾"}</button>
+              {pcs.map((pc) => { const named = pc.set && pc.set !== "?"; const on = named && active.includes(pc.set); const empty = pc.name === "없음"; const swapped = !!pieceChoice[focusId]?.[pc.slot]; return (
+                <div key={pc.slot} className="flex items-center gap-2">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center border border-ef-line/60 bg-black/40">{!empty && pieceImage(pc.name) ? <img src={pieceImage(pc.name)} alt="" className="h-full w-full object-contain" onError={(e) => ((e.currentTarget as HTMLImageElement).style.visibility = "hidden")} /> : <span className="text-[10px] text-ef-muted">—</span>}</span>
+                  <span className="w-9 shrink-0 font-mono text-[10px] uppercase tracking-wider text-ef-accent/70">{gearSlotName(pc.slot)}</span>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate font-mono text-[12px] font-bold text-ef-ink" title={pc.name}>{pc.name}{swapped && <span className="ml-1 text-[9px] text-ef-accent">교체됨</span>}</div>
+                    {empty ? <div className="font-mono text-[10px] text-ef-muted">미장착</div>
+                      : <div className="font-mono text-[10px] text-ef-muted">능력치 <b className="text-ef-ink/80">+{pc.grade}</b> · 방어 <b className="text-ef-ink/80">+{pc.def}</b>{pc.dmg ? <> · <span className="text-ef-accent-soft">{pieceDmg(pc)}</span></> : null} · {named ? <span style={{ color: on ? "#e8c56a" : "#8a8a92" }}>{on ? "◆" : "◇"} {pc.set}</span> : <span className="text-[#67e8f9aa]">자유</span>}</div>}
                   </div>
-                  {opening && (
-                    <div className="mt-1 mb-1 border-y border-ef-line/40 py-1.5 pl-11">
-                      <div className="grid max-h-44 grid-cols-2 gap-1 overflow-y-auto pr-1">
-                        {slotOptions(pc.slot, op.element).map((opt) => { const sel = lo[pc.slot] === opt.id; return (
-                          <button key={opt.id} type="button" onClick={() => { setPieceChoice((c) => ({ ...c, [focusId]: { ...c[focusId], [pc.slot]: opt.id } })); setPickSlot(null); }} className={`dd-cut flex items-center gap-1.5 border p-1 text-left transition ${sel ? "border-ef-accent bg-ef-accent/10" : "border-ef-line hover:border-ef-accent/50"}`}>
-                            <span className="flex h-7 w-7 shrink-0 items-center justify-center border border-ef-line/50 bg-black/40">{pieceImage(opt.name) ? <img src={pieceImage(opt.name)} alt="" className="h-full w-full object-contain" onError={(e) => ((e.currentTarget as HTMLImageElement).style.visibility = "hidden")} /> : null}</span>
-                            <span className="min-w-0"><span className="block truncate font-mono text-[11px] font-bold text-white">{opt.name}</span><span className="font-mono text-[10px] text-ef-accent-soft">능력치 +{opt.grade.base} · {pieceDmg(opt)}</span></span>
-                          </button>
-                        ); })}
-                      </div>
-                      {swapped && <button type="button" onClick={() => { setPieceChoice((c) => { const n = { ...c }; const s = { ...n[focusId] }; delete s[pc.slot]; if (Object.keys(s).length) n[focusId] = s; else delete n[focusId]; return n; }); setPickSlot(null); }} className="mt-1 w-full border border-ef-line py-1 font-mono text-[10px] font-bold uppercase text-ef-muted transition hover:border-ef-accent/50 hover:text-ef-ink">↺ 추천 부위로 복원</button>}
-                    </div>
-                  )}
+                  <button type="button" onClick={() => setGearTab(pc.slot)} className="dd-cut shrink-0 border border-ef-line px-2 py-0.5 font-mono text-[10px] font-bold uppercase text-ef-muted transition hover:border-ef-accent/60 hover:text-ef-accent">교체</button>
                 </div>
               ); })}
             </div>
@@ -318,6 +288,54 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
           </button>
         </div>
       </div>
+
+      {/* 장비 변경 모달 — 세트/부위별 교체 */}
+      {gearTab && (
+        <div onClick={() => setGearTab(null)} className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4">
+          <div onClick={(e) => e.stopPropagation()} className="flex max-h-[88vh] w-full max-w-[640px] flex-col border border-ef-accent/50 bg-[#0d0906]" style={CUT}>
+            {/* 헤더 */}
+            <div className="flex items-center gap-2 border-b border-ef-line p-3.5">
+              <span className="font-mono text-lg font-bold text-white">장비 변경 <span className="text-sm text-ef-muted">— {op.name}</span></span>
+              <span className="ml-2 font-mono text-[11px] text-ef-accent-soft">능력치 +{gearGrade} · 방어 +{gearDef}</span>
+              <button type="button" onClick={() => setGearTab(null)} className="ml-auto shrink-0 border border-ef-line px-2 py-1 font-mono text-sm text-ef-muted transition hover:border-ef-accent/60 hover:text-white">✕</button>
+            </div>
+            {/* 탭: 세트 / 방어구 / 장갑 / 부품 */}
+            <div className="flex gap-1 border-b border-ef-line px-3 py-2">
+              {(["set", "armor", "gloves", "kit"] as const).map((tab) => (
+                <button key={tab} type="button" onClick={() => setGearTab(tab)} className={`dd-cut flex-1 border px-2 py-1.5 font-mono text-[12px] font-bold uppercase tracking-wider transition ${gearTab === tab ? "border-ef-accent bg-ef-accent/15 text-ef-accent" : "border-ef-line text-ef-muted hover:border-ef-accent/50 hover:text-ef-ink"}`}>
+                  {tab === "set" ? "세트" : gearSlotName(tab)}
+                </button>
+              ))}
+            </div>
+            {/* 콘텐츠 */}
+            <div className="overflow-y-auto p-3">
+              {gearTab === "set" ? (
+                <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+                  {[...SET_NAMES].sort((a, b) => (a === opRecSet(focusId) ? -1 : 0) - (b === opRecSet(focusId) ? -1 : 0)).map((sn) => { const sel = opSet(focusId) === sn; const rec = sn === opRecSet(focusId); return (
+                    <button key={sn} type="button" onClick={() => { setSetChoice((c) => { const n = { ...c }; if (rec) delete n[focusId]; else n[focusId] = sn; return n; }); }} className={`dd-cut border px-2.5 py-1.5 text-left transition ${sel ? "border-ef-accent bg-ef-accent/10" : "border-ef-line hover:border-ef-accent/50"}`}>
+                      <div className="flex items-center gap-1.5"><span className="font-mono text-[13px] font-bold text-white">{sn}</span>{rec && <span className="font-mono text-[9px] text-ef-accent">★추천</span>}{sel && <span className="font-mono text-[9px] text-ef-accent-soft">● 선택</span>}</div>
+                      <div className="mt-0.5 font-mono text-[11px] leading-snug text-ef-muted">{setEffectText(sn)}</div>
+                    </button>
+                  ); })}
+                </div>
+              ) : (
+                <>
+                  <div className="mb-2 font-mono text-[11px] text-ef-muted">{gearSlotName(gearTab)} 후보 · <span className="text-ef-accent-soft">{op.element} 효율순</span></div>
+                  <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+                    {slotOptions(gearTab, op.element).map((opt) => { const sel = lo[gearTab as GearSlot] === opt.id; return (
+                      <button key={opt.id} type="button" onClick={() => { const slot = gearTab as GearSlot; setPieceChoice((c) => ({ ...c, [focusId]: { ...c[focusId], [slot]: opt.id } })); }} className={`dd-cut flex items-center gap-2 border p-2 text-left transition ${sel ? "border-ef-accent bg-ef-accent/10" : "border-ef-line hover:border-ef-accent/50"}`}>
+                        <span className="flex h-11 w-11 shrink-0 items-center justify-center border border-ef-line/50 bg-black/40">{pieceImage(opt.name) ? <img src={pieceImage(opt.name)} alt="" className="h-full w-full object-contain" onError={(e) => ((e.currentTarget as HTMLImageElement).style.visibility = "hidden")} /> : null}</span>
+                        <span className="min-w-0 flex-1"><span className="block truncate font-mono text-[13px] font-bold text-white">{opt.name}{sel && <span className="ml-1 text-[9px] text-ef-accent">● 착용</span>}</span><span className="font-mono text-[11px] text-ef-accent-soft">능력치 +{opt.grade.base} · 방어 +{opt.def} · {pieceDmg(opt)}</span><span className="block font-mono text-[10px] text-ef-muted">{opt.set !== "?" ? opt.set + " 세트" : "자유 슬롯"}</span></span>
+                      </button>
+                    ); })}
+                  </div>
+                  {!!pieceChoice[focusId]?.[gearTab as GearSlot] && <button type="button" onClick={() => { const slot = gearTab as GearSlot; setPieceChoice((c) => { const n = { ...c }; const st = { ...n[focusId] }; delete st[slot]; if (Object.keys(st).length) n[focusId] = st; else delete n[focusId]; return n; }); }} className="mt-2 w-full border border-ef-line py-1.5 font-mono text-[11px] font-bold uppercase text-ef-muted transition hover:border-ef-accent/50 hover:text-ef-ink">↺ 추천 부위로 복원</button>}
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

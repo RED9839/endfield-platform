@@ -533,8 +533,8 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
         const el = unitElement(u);
         const talents = ally ? OP_TALENTS[u.id] ?? [] : [];
         const uskills = ally ? [
-          ...(OP_BASIC[u.id] ? [{ id: `${u.id}-basic`, name: OP_BASIC[u.id].name, kind: "attack" as const, note: OP_BASIC[u.id].note }] : []),
-          ...(SKILLS[u.id] ?? []).map((s) => ({ id: s.id, name: s.name, kind: s.kind, note: s.note })),
+          ...(OP_BASIC[u.id] ? [{ id: `${u.id}-basic`, name: OP_BASIC[u.id].name, kind: "attack" as const, note: OP_BASIC[u.id].note, power: 0.5, target: "single-front", element: unitElement(u) }] : []),
+          ...(SKILLS[u.id] ?? []).map((s) => ({ id: s.id, name: s.name, kind: s.kind, note: s.note, power: s.power, target: s.target, element: s.element ?? "physical" })),
         ] : [];
         const loadout = ally ? party.find((p) => p.id === u.id)?.loadout ?? {} : {};
         const ownedMap = owned ?? {};
@@ -668,7 +668,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
                 <Sec title="스킬">
                   {[...uskills].sort((a, b) => KIND_ORDER[a.kind] - KIND_ORDER[b.kind]).map((sk) => <div key={sk.id} className="mb-2.5 flex items-start gap-2.5 last:mb-0">
                     <img src={skillIcon(u.id, sk.kind)} alt="" className="h-9 w-9 shrink-0 border border-ef-line object-cover" onError={hide} />
-                    <div className="min-w-0"><div><span className="font-mono text-[14px] font-bold text-white">{sk.name}</span> <span className="font-mono text-[11px] uppercase text-ef-accent/70">{kindLabel[sk.kind]}</span></div>{sk.note && <div className="mt-0.5 font-mono text-[13px] leading-relaxed text-ef-muted">{sk.note}</div>}</div>
+                    <div className="min-w-0"><div className="flex flex-wrap items-baseline gap-x-1.5"><span className="font-mono text-[14px] font-bold text-white">{sk.name}</span><span className="font-mono text-[11px] uppercase text-ef-accent/70">{kindLabel[sk.kind]}</span>{sk.power > 0 && <span className="font-mono text-[11px]" style={{ color: elementColor[sk.element as Element | "physical"] ?? "#e8c56a" }}>배율 {Math.round(sk.power * 100)}% · {targetLabel[sk.target as DDSkill["target"]]} · ~{Math.round(u.attack * (1 + (u.atkBuff || 0)) * (u.weakenMul ?? 1) * sk.power).toLocaleString()}</span>}</div>{sk.note && <div className="mt-0.5 font-mono text-[13px] leading-relaxed text-ef-muted">{sk.note}</div>}</div>
                   </div>)}
                 </Sec>
                 {talents.length > 0 && <Sec title="재능">
