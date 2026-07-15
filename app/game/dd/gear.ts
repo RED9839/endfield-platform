@@ -119,7 +119,7 @@ export function loadoutPieces(loadout: Loadout | undefined): { slot: GearSlot; s
     const ref = loadout?.[slot];
     const p = ref ? (GEAR_PIECE_BY_ID[ref] ?? GEAR_SET_CANON[ref]?.[slot]) : undefined;
     const m = slotMul(slot); // 부품은 원작 2슬롯 몫 → 표시도 실효치로
-    return { slot, slotName: SLOT_KO[slot], name: p?.name ?? "없음", set: p?.set ?? "", image: p ? pieceImage(p.name) : "", grade: (p?.grade.base ?? 0) * m, def: (p?.def ?? 0) * m, dmg: p?.dmg ? { kind: p.dmg.kind, base: p.dmg.base } : undefined, slots: m };
+    return { slot, slotName: SLOT_KO[slot], name: p?.name ?? "없음", set: p?.set ?? "", image: p ? pieceImage(p.name) : "", grade: (p?.grade.base ?? 0) * m, def: (p?.def ?? 0) * m, dmg: p?.dmg ? { kind: p.dmg.kind, base: +(p.dmg.base * m).toFixed(4) } : undefined, slots: m };
   });
 }
 
@@ -272,7 +272,7 @@ export function applyGear(u: DDUnit, loadout: Loadout | undefined, gearLevel = 0
     if (!r) { u.defense += GEAR_DEFENSE[slot] * m; continue; }
     u.defense += r.def * m; // 주옵: 방어(피스별 실측)
     gradeAdd += r.grade * GRADE_FACTOR * m; // 실측 능력치 → gearGrade
-    if (r.dmg) { const v = r.dmg.v, k = r.dmg.kind; // 실측 피해 부옵
+    if (r.dmg) { const v = r.dmg.v * m, k = r.dmg.kind; // 실측 피해 부옵(부품은 2슬롯 몫)
       if (k === "atkPct") atkPct += v;
       else if (k === "hpPct") { const h = Math.round(u.maxHp * v); u.maxHp += h; u.hp += h; }
       else if (k === "critRate") u.critRate += v;

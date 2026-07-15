@@ -23,7 +23,7 @@ const KIND_ORDER: Record<DDSkill["kind"], number> = { attack: 0, battle: 1, link
 
 const recSet = (op: OpMeta): string => recommendedSet(op.id, op.cls, op.element);
 const DMG_KO: Record<string, string> = { ult: "궁극", battle: "배틀", link: "연계", attack: "일반", all: "전체", elem: "속성", atkPct: "공격력", hpPct: "생명력", critRate: "치명확", critDmg: "치명피", energy: "게이지", ultEff: "궁충효율", artsStr: "아츠강도", vsBroken: "불균형피해" };
-const pieceDmg = (p: { dmg?: { kind: string; base: number } }) => { if (!p.dmg) return ""; const pct = p.dmg.kind === "hpPct" || p.dmg.base < 1; return `${DMG_KO[p.dmg.kind] ?? p.dmg.kind} +${pct ? Math.round(p.dmg.base * 100) + "%" : Math.round(p.dmg.base)}`; };
+const pieceDmg = (p: { dmg?: { kind: string; base: number } }, mul = 1) => { if (!p.dmg) return ""; const v = p.dmg.base * mul; const pct = p.dmg.kind === "hpPct" || p.dmg.base < 1; return `${DMG_KO[p.dmg.kind] ?? p.dmg.kind} +${pct ? Math.round(v * 100) + "%" : Math.round(v)}`; };
 const AXES = [{ key: "skillRank" as const, name: "스킬 강화", max: SKILL_MAX, fmt: (v: number) => skillLabel(v), tone: "#67e8f9" }];
 
 export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]) => void }) {
@@ -273,7 +273,7 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
                   <div className="min-w-0 flex-1">
                     <div className="truncate font-mono text-[14px] font-bold text-ef-ink" title={pc.name}>{pc.name}{swapped && <span className="ml-1 text-[11px] text-ef-accent">교체됨</span>}</div>
                     {empty ? <div className="font-mono text-[12px] text-ef-muted">미장착</div>
-                      : <div className="font-mono text-[12px] text-ef-muted">능력치 <b className="text-ef-ink/80">+{pc.grade}</b> · 방어 <b className="text-ef-ink/80">+{pc.def}</b>{pc.slots > 1 ? <span className="text-ef-muted/70" title="원작 부품 2슬롯 → 능력치·방어 2배 적용"> (2슬롯)</span> : null}{pc.dmg ? <> · <span className="text-ef-accent-soft">{pieceDmg(pc)}</span></> : null} ·{named ? <span style={{ color: on ? "#e8c56a" : "#8a8a92" }}>{on ? "◆" : "◇"} {pc.set}</span> : <span className="text-[#67e8f9aa]">자유</span>}</div>}
+                      : <div className="font-mono text-[12px] text-ef-muted">능력치 <b className="text-ef-ink/80">+{pc.grade}</b> · 방어 <b className="text-ef-ink/80">+{pc.def}</b>{pc.dmg ? <> · <span className="text-ef-accent-soft">{pieceDmg(pc)}</span></> : null}{pc.slots > 1 ? <span className="text-ef-muted/70" title="원작은 부품 2슬롯 — 2슬롯 몫으로 2배 적용"> (2슬롯)</span> : null} ·{named ? <span style={{ color: on ? "#e8c56a" : "#8a8a92" }}>{on ? "◆" : "◇"} {pc.set}</span> : <span className="text-[#67e8f9aa]">자유</span>}</div>}
                   </div>
                   <button type="button" onClick={() => setGearTab(pc.slot)} className="dd-cut shrink-0 border border-ef-line px-2 py-0.5 font-mono text-[12px] font-bold uppercase text-ef-muted transition hover:border-ef-accent/60 hover:text-ef-accent">교체</button>
                 </div>
@@ -325,7 +325,7 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
                     {slotOptions(gearTab, op.element).map((opt) => { const sel = lo[gearTab as GearSlot] === opt.id; return (
                       <button key={opt.id} type="button" onClick={() => { const slot = gearTab as GearSlot; setPieceChoice((c) => ({ ...c, [focusId]: { ...c[focusId], [slot]: opt.id } })); }} className={`dd-cut flex items-center gap-2 border p-2 text-left transition ${sel ? "border-ef-accent bg-ef-accent/10" : "border-ef-line hover:border-ef-accent/50"}`}>
                         <span className="flex h-11 w-11 shrink-0 items-center justify-center border border-ef-line/50 bg-black/40">{pieceImage(opt.name) ? <img src={pieceImage(opt.name)} alt="" className="h-full w-full object-contain" onError={(e) => ((e.currentTarget as HTMLImageElement).style.visibility = "hidden")} /> : null}</span>
-                        <span className="min-w-0 flex-1"><span className="block truncate font-mono text-[15px] font-bold text-white">{opt.name}{sel && <span className="ml-1 text-[11px] text-ef-accent">● 착용</span>}</span><span className="font-mono text-[13px] text-ef-accent-soft">능력치 +{opt.grade.base * (gearTab === "kit" ? KIT_SLOTS : 1)} · 방어 +{opt.def * (gearTab === "kit" ? KIT_SLOTS : 1)} · {pieceDmg(opt)}</span><span className="block font-mono text-[12px] text-ef-muted">{opt.set !== "?" ? opt.set + " 세트" : "자유 슬롯"}</span></span>
+                        <span className="min-w-0 flex-1"><span className="block truncate font-mono text-[15px] font-bold text-white">{opt.name}{sel && <span className="ml-1 text-[11px] text-ef-accent">● 착용</span>}</span><span className="font-mono text-[13px] text-ef-accent-soft">능력치 +{opt.grade.base * (gearTab === "kit" ? KIT_SLOTS : 1)} · 방어 +{opt.def * (gearTab === "kit" ? KIT_SLOTS : 1)} · {pieceDmg(opt, gearTab === "kit" ? KIT_SLOTS : 1)}</span><span className="block font-mono text-[12px] text-ef-muted">{opt.set !== "?" ? opt.set + " 세트" : "자유 슬롯"}</span></span>
                       </button>
                     ); })}
                   </div>
