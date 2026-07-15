@@ -114,11 +114,12 @@ for (const g of gearSummaries) GEAR_IMG_BY_NAME[g.name] = g.image;
 export const pieceImage = (name: string): string => GEAR_IMG_BY_NAME[name] ?? GEAR_IMG_BY_NAME[name.replace(/\s*·\s*(I{1,3}|IV|V)$/, "").trim()] ?? "";
 
 // 로드아웃 → 슬롯별 착용 피스(방어구/장갑/부품). ref가 피스 id면 그 피스, 세트명이면 세트 대표 피스.
-export function loadoutPieces(loadout: Loadout | undefined): { slot: GearSlot; slotName: string; name: string; set: string; image: string; grade: number; def: number; dmg?: { kind: string; base: number } }[] {
+export function loadoutPieces(loadout: Loadout | undefined): { slot: GearSlot; slotName: string; name: string; set: string; image: string; grade: number; def: number; dmg?: { kind: string; base: number }; slots: number }[] {
   return GEAR_SLOTS.map((slot) => {
     const ref = loadout?.[slot];
     const p = ref ? (GEAR_PIECE_BY_ID[ref] ?? GEAR_SET_CANON[ref]?.[slot]) : undefined;
-    return { slot, slotName: SLOT_KO[slot], name: p?.name ?? "없음", set: p?.set ?? "", image: p ? pieceImage(p.name) : "", grade: p?.grade.base ?? 0, def: p?.def ?? 0, dmg: p?.dmg ? { kind: p.dmg.kind, base: p.dmg.base } : undefined };
+    const m = slotMul(slot); // 부품은 원작 2슬롯 몫 → 표시도 실효치로
+    return { slot, slotName: SLOT_KO[slot], name: p?.name ?? "없음", set: p?.set ?? "", image: p ? pieceImage(p.name) : "", grade: (p?.grade.base ?? 0) * m, def: (p?.def ?? 0) * m, dmg: p?.dmg ? { kind: p.dmg.kind, base: p.dmg.base } : undefined, slots: m };
   });
 }
 
@@ -158,6 +159,10 @@ export const GEAR_SET_STATS: Record<string, Partial<Record<GearSlot, { grade: nu
   "재앙 방호": { armor: { grade: 102, dmg: { kind: "ult", v: 0.184 } }, gloves: { grade: 76, dmg: { kind: "hpPct", v: 0.122 } }, kit: { grade: 38, dmg: { kind: "hpPct", v: 0.147 } } },
 };
 const GRADE_FACTOR = 0.13; // 실측 능력치 합 → gearGrade 환산(3부위 ≈ +40 → 저항 ~50%)
+// 원작은 부품(kit) 2슬롯(방어구·장갑·부품×2 = 4슬롯, 세트 3부위 발동). 본 게임은 3슬롯 모델이라
+// 부품 1개가 원작 2개 몫을 하도록 능력치/방어를 2배 환산(부옵은 단일 — 원작 2번째 부품은 통상 다른 부옵).
+export const KIT_SLOTS = 2;
+const slotMul = (slot: GearSlot) => (slot === "kit" ? KIT_SLOTS : 1);
 
 // ── 전 220 피스 레지스트리 (data/gear-pieces.json). loadout이 피스 id를 참조하면 그 피스 실측 스탯, 세트명이면 대표 피스(GEAR_SET_STATS). ──
 export type GearPiece = { id: string; name: string; set: string; slot: GearSlot; rarity: number; def: number; grade: { base: number; enh: number[] }; dmg?: { kind: DmgSub["kind"]; base: number; enh: number[] } };
@@ -263,9 +268,10 @@ export function applyGear(u: DDUnit, loadout: Loadout | undefined, gearLevel = 0
   for (const slot of GEAR_SLOTS) if (loadout[slot]) {
     const lv = Math.max(0, Math.min(3, levels?.[slot] ?? gearLevel)); // 부위별 단조(제작) 우선, 없으면 통합 gearLevel
     const r = resolveGear(loadout[slot]!, slot, lv); // 피스 id 또는 세트명 → 실측 스탯(단조 반영)
-    if (!r) { u.defense += GEAR_DEFENSE[slot]; continue; }
-    u.defense += r.def; // 주옵: 방어(피스별 실측)
-    gradeAdd += r.grade * GRADE_FACTOR; // 실측 능력치 → gearGrade
+    const m = slotMul(slot); // 부품은 원작 2슬롯 몫
+    if (!r) { u.defense += GEAR_DEFENSE[slot] * m; continue; }
+    u.defense += r.def * m; // 주옵: 방어(피스별 실측)
+    gradeAdd += r.grade * GRADE_FACTOR * m; // 실측 능력치 → gearGrade
     if (r.dmg) { const v = r.dmg.v, k = r.dmg.kind; // 실측 피해 부옵
       if (k === "atkPct") atkPct += v;
       else if (k === "hpPct") { const h = Math.round(u.maxHp * v); u.maxHp += h; u.hp += h; }

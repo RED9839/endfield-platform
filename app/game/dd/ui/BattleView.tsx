@@ -653,7 +653,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
                         <div className="min-w-0 flex-1">
                           <div className="truncate font-mono text-[15px] font-bold text-ef-ink" title={p.name}>{p.name}</div>
                           {empty ? <div className="font-mono text-[12px] text-ef-muted">미장착</div>
-                            : crafted ? <div className="font-mono text-[12px] text-ef-muted">능력치 <b className="text-ef-ink/80">+{p.grade}</b> · 방어 <b className="text-ef-ink/80">+{p.def}</b>{p.dmg ? <> · <span className="text-ef-accent-soft">{pieceDmgText(p.dmg)}</span></> : null}</div>
+                            : crafted ? <div className="font-mono text-[12px] text-ef-muted">능력치 <b className="text-ef-ink/80">+{p.grade}</b> · 방어 <b className="text-ef-ink/80">+{p.def}</b>{p.slots > 1 ? <span className="text-ef-muted/70" title="원작 부품 2슬롯 → 능력치·방어 2배 적용"> (2슬롯)</span> : null}{p.dmg ? <> · <span className="text-ef-accent-soft">{pieceDmgText(p.dmg)}</span></> : null}</div>
                             : <div className="font-mono text-[12px] text-amber-500/80">미제작 — 공업소에서 제작 필요 (능력치 미적용)</div>}
                         </div>
                         <span className="shrink-0 font-mono text-[12px]" style={{ color: empty ? "#8a8a92" : !crafted ? "#d99a3a" : on ? "#e8c56a" : named ? "#8a8a92" : "#67e8f9aa" }}>{empty ? "" : !crafted ? "미제작" : named ? `${on ? "◆" : "◇"} ${p.set}` : "자유"}</span>
