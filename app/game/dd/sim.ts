@@ -8,17 +8,20 @@ import { rewardItemPool } from "./items";
 
 const EL_TAG: Record<Element, string> = { heat: "열기 ", electric: "전기 ", cryo: "냉기 ", nature: "자연 " };
 
-// 연계 연쇄 provider 등록 — combat.ts가 roster(SKILLS)를 직접 import하면 순환이라 주입 방식.
-// 아군이 행동한 직후, 조건이 서고 쿨타임이 아닌 연계를 가진 다른 아군을 찾아 턴을 앞당긴다.
-// 여럿이면 배율 높은 쪽. 자기 자신·이미 행동 순번이 한참 남은 오퍼도 대상 — atb를 소모하므로 총 행동 수는 불변.
+// 연계/궁 연쇄 provider 등록 — combat.ts가 roster(SKILLS)를 직접 import하면 순환이라 주입 방식.
+// 원작은 연계도 궁도 "메인 행동에 반응해 즉시 끼어드는" 즉발이다(레바테인 궁 → 울프가드 연계 → 울프가드 궁).
+// 우리는 ATB 속도순 독립 턴이라 셋업이 느리면 페이오프가 창을 못 받아먹음 → 셋업 직후 턴을 앞당겨 쓰게 한다.
+// allyChoose를 그대로 재사용 → 보스 전 궁 보류·셋업 가치·상태 인지 등 기존 판단이 전부 유지된다.
+// 끼어든 오퍼는 atb -= 100(자기 턴 소진)이라 총 행동 수는 불변.
 setLinkChain((s, self) => {
   let best: { unit: DDUnit; skill: DDSkill } | null = null;
   for (const a of living(s, "ally")) {
     if (a === self) continue;
-    for (const sk of SKILLS[a.id] ?? []) {
-      if (sk.kind !== "link" || !usable(s, a, sk)) continue;
-      if (!best || sk.power > best.skill.power) best = { unit: a, skill: sk };
-    }
+    const pick = allyChoose(s, a);
+    // 연계만 끼어든다. 궁도 원작은 즉발이지만, 연쇄 대상에 넣어도 궁 비중이 3%에서 안 움직였다
+    // — 병목이 "턴을 못 잡아서"가 아니라 "충전을 못 해서"라 기회를 줘도 쓸 게 없음. 부작용(순서 흔들림)만 남아 제외.
+    if (!pick || pick.kind !== "link") continue;
+    if (!best || pick.power > best.skill.power) best = { unit: a, skill: pick };
   }
   return best;
 });

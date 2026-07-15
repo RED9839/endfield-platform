@@ -1113,7 +1113,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
     const nx = linkChainProvider(s, self);
     if (nx) {
       nx.unit.atb -= 100; // 턴 앞당김(= 나중 차례를 지금 쓴 것)
-      log.push(`  ⇢ 연계 발동! ${nx.unit.name} 「${nx.skill.name}」`);
+      log.push(`  ⇢ ${nx.skill.kind === "ult" ? "궁극기" : "연계"} 발동! ${nx.unit.name} 「${nx.skill.name}」`);
       act(s, nx.unit, nx.skill);
     }
     s.chaining = false;
