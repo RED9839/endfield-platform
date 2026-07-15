@@ -601,6 +601,20 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
         raw += self.attack * eb(self) * per * (self.procCount + 5); // 청뢰검 비례 뇌격(마지막 ×6) — 모든 대상(변신 시 광역)
       }
     }
+    // 라스트라이트 「세쉬카의 비전」(배틀): 원문 표 "획득하는 궁극기 에너지 16". 궁 「마지막 인사」가
+    // "자신의 배틀/연계로만 궁 에너지 획득" 제약이라 이 두 경로가 유일한 수급원(비용 240).
+    if (self.id === "lastrite" && skill.kind === "battle") {
+      const ug = 16 * (self.ultEffMul ?? 1) * (self.wilMul ?? 1);
+      self.ultCharge = Math.min(self.ultCost, self.ultCharge + ug);
+      log.push(`  → 세쉬카의 비전 궁 +${Math.round(ug)}`);
+    }
+    // 알레쉬 재능: "주변 적에게 동결/오리지늄 결정 부착 후 궁 +3. **자기가 동결을 부여**했으면 +6."
+    if (self.id === "alesh" && (t.frozen > 0 || has(t, "crystal"))) {
+      const own = !!skill.forceFreeze; // 자기 강제 동결로 발동
+      const ug = (own ? 6 : 3) * (self.ultEffMul ?? 1) * (self.wilMul ?? 1);
+      self.ultCharge = Math.min(self.ultCost, self.ultCharge + ug);
+      log.push(`  → 낚시꾼의 감각! 궁 +${Math.round(ug)}${own ? " (자기 동결)" : ""}`);
+    }
     // 로시 「그림자가 타오르는 순간」: 2타에 아츠 부착 전부 소모 → 소모 스택당 +80% 물리 + 자신 치확/치피(15초≈3턴).
     // 원문 Lv1 기준: 치확 +15% · 치피 +30% (가산). 예전 구현은 절대값 세팅(0.3/1.0 = M3값)이라 랭크 무관하게 만렙치였음.
     if (self.id === "rossi" && skill.kind === "link") {
@@ -638,7 +652,10 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
       t.arts.cryo = 0; delete t.timers["arts:cryo"];
       add(t, "stun"); setTimer(t, "stun", 1); // 얼음송곳 강제 정지(다음 1턴)
       s.anomalyConsumed = true;
-      log.push(`  → 겨울 포식자! 냉기 ${n}스택 소모 → 스택 누킹 + 냉기 취약 ${n * 4}% + 강제 정지`);
+      // 원문 표: 기초 궁 에너지 40 + 소모 스택당 15 (4스택이면 100). 라스트라이트 궁(240)의 주 수급원.
+      const ug = (40 + 15 * n) * (self.ultEffMul ?? 1) * (self.wilMul ?? 1);
+      self.ultCharge = Math.min(self.ultCost, self.ultCharge + ug);
+      log.push(`  → 겨울 포식자! 냉기 ${n}스택 소모 → 스택 누킹 + 냉기 취약 ${n * 4}% + 강제 정지 + 궁 +${Math.round(ug)}`);
     }
     // 레바테인 「불꽃의 심장」 — 원문: "강력한 일격이나 처형이 명중한 후, 레바테인이 **주변 적의** 열기 부착을 흡수.
     // 열기 부착 1스택 흡수마다 녹아내린 불꽃 1스택(최대 4)". 흡수는 **본인의 강평/처형(일반 공격)**에서만 일어난다.
