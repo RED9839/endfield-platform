@@ -1,1 +1,5268 @@
-[{"id":"item_equip_t0_parts_tundra01_body_01","name":"간편 방어구","set":"?","slot":"armor","rarity":1,"def":8,"grade":{"base":25,"enh":[25,25,25]}},{"id":"item_equip_t3_suit_will01_body_01","name":"침식 방호 조끼 · I","set":"침식 방호","slot":"armor","rarity":4,"def":40,"grade":{"base":102,"enh":[102,102,102]}},{"id":"item_equip_t4_parts_wuling01_edc_03","name":"위기 탈출 도장","set":"?","slot":"kit","rarity":5,"def":21,"grade":{"base":43,"enh":[47,51,55]},"dmg":{"kind":"critRate","base":0.2571,"enh":[0.2829,0.3086,0.3343]}},{"id":"item_equip_t0_parts_tundra01_body_02","name":"간편 방호복","set":"?","slot":"armor","rarity":1,"def":8,"grade":{"base":25,"enh":[25,25,25]}},{"id":"item_equip_t3_suit_str01_body_01","name":"중장갑 전달자 재킷 · I","set":"중장갑 전달자","slot":"armor","rarity":4,"def":40,"grade":{"base":102,"enh":[102,102,102]}},{"id":"item_equip_t0_parts_tundra01_hand_01","name":"간편 금속 장갑","set":"?","slot":"gloves","rarity":1,"def":6,"grade":{"base":18,"enh":[18,18,18]}},{"id":"item_equip_t0_parts_tundra01_hand_02","name":"간편 보호 장갑","set":"?","slot":"gloves","rarity":1,"def":6,"grade":{"base":18,"enh":[18,18,18]}},{"id":"item_equip_t2_suit_agi01_edc_01","name":"순행 전달자 팽이","set":"순행 전달자","slot":"kit","rarity":3,"def":11,"grade":{"base":21,"enh":[21,21,21]}},{"id":"item_equip_t3_suit_usp01_edc_03","name":"재앙 방호 필터","set":"재앙 방호","slot":"kit","rarity":4,"def":15,"grade":{"base":38,"enh":[38,38,38]},"dmg":{"kind":"hpPct","base":0.147,"enh":[0.147,0.147,0.147]}},{"id":"item_equip_t4_suit_criti01_edc_01","name":"M. I. 경찰용 암밴드","set":"M. I. 경찰용","slot":"kit","rarity":5,"def":21,"grade":{"base":53,"enh":[58,63,68]},"dmg":{"kind":"atkPct","base":0.23,"enh":[0.253,0.276,0.299]}},{"id":"item_equip_t1_parts_tundra01_body_01","name":"광산 방어구","set":"?","slot":"armor","rarity":2,"def":16,"grade":{"base":45,"enh":[45,45,45]}},{"id":"item_equip_t3_suit_agi01_edc_03","name":"순행 전달자 팽이 · I","set":"순행 전달자","slot":"kit","rarity":4,"def":15,"grade":{"base":38,"enh":[38,38,38]}},{"id":"item_equip_t1_parts_tundra01_body_02","name":"광산 방호복","set":"?","slot":"armor","rarity":2,"def":16,"grade":{"base":45,"enh":[45,45,45]}},{"id":"item_equip_t4_suit_attri01_body_04","name":"본 크러셔 머플러 · I","set":"본 크러셔","slot":"armor","rarity":5,"def":56,"grade":{"base":145,"enh":[158,173,188]},"dmg":{"kind":"critRate","base":0.1232,"enh":[0.1355,0.1479,0.1602]}},{"id":"item_equip_t1_parts_tundra01_body_03","name":"시험형 중갑","set":"?","slot":"armor","rarity":2,"def":22,"grade":{"base":62,"enh":[62,62,62]}},{"id":"item_equip_t3_suit_str01_hand_02","name":"중장갑 전달자 장갑 · II","set":"중장갑 전달자","slot":"gloves","rarity":4,"def":30,"grade":{"base":76,"enh":[76,76,76]},"dmg":{"kind":"elem","base":0.245,"enh":[0.245,0.245,0.245]}},{"id":"item_equip_t4_suit_attri01_body_05","name":"본 크러셔 중갑 방어구 · II","set":"본 크러셔","slot":"armor","rarity":5,"def":56,"grade":{"base":145,"enh":[158,173,188]},"dmg":{"kind":"atkPct","base":0.115,"enh":[0.1265,0.138,0.1495]}},{"id":"item_equip_t1_parts_tundra01_body_04","name":"시험형 중갑 · I","set":"?","slot":"armor","rarity":2,"def":22,"grade":{"base":62,"enh":[62,62,62]}},{"id":"item_equip_t1_parts_tundra01_body_05","name":"광산 경갑","set":"?","slot":"armor","rarity":2,"def":22,"grade":{"base":62,"enh":[62,62,62]}},{"id":"item_equip_t1_suit_stragi01_edc_02","name":"통합형 합금판","set":"통합형 중갑","slot":"kit","rarity":2,"def":8,"grade":{"base":16,"enh":[16,16,16]},"dmg":{"kind":"atkPct","base":0.3,"enh":[0.3,0.3,0.3]}},{"id":"item_equip_t1_parts_tundra01_body_06","name":"광산 방진복","set":"?","slot":"armor","rarity":2,"def":22,"grade":{"base":62,"enh":[62,62,62]}},{"id":"item_equip_t2_suit_wisd01_edc_01","name":"침식 차단 스패너","set":"침식 차단","slot":"kit","rarity":3,"def":11,"grade":{"base":21,"enh":[21,21,21]}},{"id":"item_equip_t4_suit_attri01_edc_06","name":"본 크러셔 조각상 · I","set":"본 크러셔","slot":"kit","rarity":5,"def":21,"grade":{"base":53,"enh":[58,63,68]},"dmg":{"kind":"elem","base":0.414,"enh":[0.4554,0.4968,0.5382]}},{"id":"item_equip_t1_parts_tundra01_edc_01","name":"응급 통신기","set":"?","slot":"kit","rarity":2,"def":6,"grade":{"base":0,"enh":[0,0,0]},"dmg":{"kind":"attack","base":0.066,"enh":[0.066,0.066,0.066]}},{"id":"item_equip_t4_suit_attri01_edc_03","name":"본 크러셔 조각상","set":"본 크러셔","slot":"kit","rarity":5,"def":21,"grade":{"base":53,"enh":[58,63,68]},"dmg":{"kind":"all","base":0.414,"enh":[0.4554,0.4968,0.5382]}},{"id":"item_equip_t1_parts_tundra01_edc_02","name":"응급 압축 장치","set":"?","slot":"kit","rarity":2,"def":6,"grade":{"base":0,"enh":[0,0,0]}},{"id":"item_equip_t1_parts_tundra01_hand_01","name":"광산 금속 장갑","set":"?","slot":"gloves","rarity":2,"def":12,"grade":{"base":33,"enh":[33,33,33]}},{"id":"item_equip_t4_suit_expend_spell01_hand_02","name":"식양의 흐름 보호 장갑","set":"식양의 흐름","slot":"gloves","rarity":5,"def":42,"grade":{"base":108,"enh":[118,129,139]},"dmg":{"kind":"atkPct","base":0.1917,"enh":[0.2108,0.23,0.2492]}},{"id":"item_equip_t1_parts_tundra01_hand_02","name":"광산 장갑(손목)","set":"?","slot":"gloves","rarity":2,"def":17,"grade":{"base":46,"enh":[46,46,46]}},{"id":"item_equip_t4_suit_criti01_hand_03","name":"M. I. 경찰용 장갑(팔찌) · I","set":"M. I. 경찰용","slot":"gloves","rarity":5,"def":42,"grade":{"base":108,"enh":[118,129,139]},"dmg":{"kind":"attack","base":0.0862,"enh":[0.0949,0.1035,0.1121]}},{"id":"item_equip_t4_suit_crush_fracture_hand_01","name":"고검의 잔향 금속 장갑","set":"고검의 잔향","slot":"gloves","rarity":5,"def":42,"grade":{"base":108,"enh":[118,129,139]},"dmg":{"kind":"hpPct","base":0.1725,"enh":[0.1898,0.207,0.2243]}},{"id":"item_equip_t1_parts_tundra01_hand_03","name":"광산 장갑","set":"?","slot":"gloves","rarity":2,"def":12,"grade":{"base":33,"enh":[33,33,33]}},{"id":"item_equip_t4_parts_wuling01_hand_02","name":"위기 탈출 장갑","set":"?","slot":"gloves","rarity":5,"def":42,"grade":{"base":86,"enh":[94,103,111]},"dmg":{"kind":"atkPct","base":0.24,"enh":[0.264,0.288,0.3]}},{"id":"item_equip_t1_parts_tundra01_hand_04","name":"광산 보호 장갑","set":"?","slot":"gloves","rarity":2,"def":17,"grade":{"base":46,"enh":[46,46,46]}},{"id":"item_equip_t1_suit_stragi01_body_01","name":"통합형 중갑","set":"통합형 중갑","slot":"armor","rarity":2,"def":22,"grade":{"base":60,"enh":[60,60,60]},"dmg":{"kind":"atkPct","base":0.3,"enh":[0.3,0.3,0.3]}},{"id":"item_equip_t4_suit_attri01_hand_01","name":"본 크러셔 장갑(손목)","set":"본 크러셔","slot":"gloves","rarity":5,"def":42,"grade":{"base":108,"enh":[118,129,139]},"dmg":{"kind":"atkPct","base":0.1917,"enh":[0.2108,0.23,0.2492]}},{"id":"item_equip_t4_suit_phy01_edc_03","name":"검술사 부싯돌","set":"검술사","slot":"kit","rarity":5,"def":21,"grade":{"base":53,"enh":[58,63,68]},"dmg":{"kind":"critDmg","base":0.23,"enh":[0.253,0.276,0.299]}},{"id":"item_equip_t1_suit_stragi01_edc_01","name":"통합형 중갑판","set":"통합형 중갑","slot":"kit","rarity":2,"def":8,"grade":{"base":16,"enh":[16,16,16]},"dmg":{"kind":"atkPct","base":0.3,"enh":[0.3,0.3,0.3]}},{"id":"item_equip_t4_suit_heal01_hand_01","name":"생체 보조 장갑(팔목)","set":"생체 보조","slot":"gloves","rarity":5,"def":42,"grade":{"base":108,"enh":[118,129,139]},"dmg":{"kind":"critRate","base":0.2054,"enh":[0.2259,0.2464,0.267]}},{"id":"item_equip_t1_suit_stragi01_hand_01","name":"통합형 금속 장갑","set":"통합형 중갑","slot":"gloves","rarity":2,"def":17,"grade":{"base":46,"enh":[46,46,46]},"dmg":{"kind":"atkPct","base":0.3,"enh":[0.3,0.3,0.3]}},{"id":"item_equip_t4_suit_usp02_hand_01","name":"식양의 숨결 보호 장갑","set":"식양의 숨결","slot":"gloves","rarity":5,"def":42,"grade":{"base":108,"enh":[118,129,139]},"dmg":{"kind":"critRate","base":0.2054,"enh":[0.2259,0.2464,0.267]}},{"id":"item_equip_t1_suit_wisdwill01_body_01","name":"통합형 경갑","set":"통합형 경갑","slot":"armor","rarity":2,"def":22,"grade":{"base":60,"enh":[60,60,60]},"dmg":{"kind":"all","base":0.081,"enh":[0.081,0.081,0.081]}},{"id":"item_equip_t1_suit_wisdwill01_edc_01","name":"통합형 경갑판","set":"통합형 경갑","slot":"kit","rarity":2,"def":8,"grade":{"base":16,"enh":[16,16,16]},"dmg":{"kind":"elem","base":0.162,"enh":[0.162,0.162,0.162]}},{"id":"item_equip_t4_suit_heal01_body_01","name":"생체 보조 중갑","set":"생체 보조","slot":"armor","rarity":5,"def":56,"grade":{"base":145,"enh":[158,173,188]},"dmg":{"kind":"battle","base":0.1035,"enh":[0.1139,0.1242,0.1346]}},{"id":"item_equip_t1_suit_wisdwill01_edc_02","name":"통합형 세라믹판","set":"통합형 경갑","slot":"kit","rarity":2,"def":8,"grade":{"base":16,"enh":[16,16,16]},"dmg":{"kind":"all","base":0.162,"enh":[0.162,0.162,0.162]}},{"id":"item_equip_t1_suit_wisdwill01_hand_01","name":"통합형 전술 장갑","set":"통합형 경갑","slot":"gloves","rarity":2,"def":17,"grade":{"base":46,"enh":[46,46,46]},"dmg":{"kind":"elem","base":0.135,"enh":[0.135,0.135,0.135]}},{"id":"item_equip_t4_suit_attri01_body_02","name":"본 크러셔 중갑 방어구 · I","set":"본 크러셔","slot":"armor","rarity":5,"def":56,"grade":{"base":145,"enh":[158,173,188]},"dmg":{"kind":"elem","base":0.207,"enh":[0.2277,0.2484,0.2691]}},{"id":"item_equip_t2_parts_tundra01_edc_01","name":"광산 과급기","set":"?","slot":"kit","rarity":3,"def":11,"grade":{"base":22,"enh":[22,22,22]},"dmg":{"kind":"elem","base":0.228,"enh":[0.228,0.228,0.228]}},{"id":"item_equip_t4_suit_burst01_hand_01","name":"조류의 물결 금속 장갑","set":"조류의 물결","slot":"gloves","rarity":5,"def":42,"grade":{"base":108,"enh":[118,129,139]},"dmg":{"kind":"atkPct","base":0.1917,"enh":[0.2108,0.23,0.2492]}},{"id":"item_equip_t2_parts_tundra01_edc_02","name":"광산 전동기","set":"?","slot":"kit","rarity":3,"def":11,"grade":{"base":22,"enh":[22,22,22]},"dmg":{"kind":"attack","base":0.057,"enh":[0.057,0.057,0.057]}},{"id":"item_equip_t3_suit_str01_edc_01","name":"중장갑 전달자 팽이 · I","set":"중장갑 전달자","slot":"kit","rarity":4,"def":15,"grade":{"base":38,"enh":[38,38,38]}},{"id":"item_equip_t2_parts_tundra01_edc_03","name":"광산 압축 장치","set":"?","slot":"kit","rarity":3,"def":11,"grade":{"base":22,"enh":[22,22,22]},"dmg":{"kind":"attack","base":0.057,"enh":[0.057,0.057,0.057]}},{"id":"item_equip_t3_suit_will01_edc_01","name":"침식 방호 배터리 · I","set":"침식 방호","slot":"kit","rarity":4,"def":15,"grade":{"base":38,"enh":[38,38,38]},"dmg":{"kind":"battle","base":0.147,"enh":[0.147,0.147,0.147]}},{"id":"item_equip_t4_suit_atb01_hand_02","name":"개척자 섬유 장갑","set":"개척","slot":"gloves","rarity":5,"def":42,"grade":{"base":108,"enh":[118,129,139]},"dmg":{"kind":"atkPct","base":0.23,"enh":[0.253,0.276,0.299]}},{"id":"item_equip_t2_parts_tundra01_edc_04","name":"광산 통신기","set":"?","slot":"kit","rarity":3,"def":11,"grade":{"base":22,"enh":[22,22,22]}},{"id":"item_equip_t2_parts_tundra01_hand_01","name":"광산 금속 장갑 · I","set":"?","slot":"gloves","rarity":3,"def":22,"grade":{"base":60,"enh":[60,60,60]}},{"id":"item_equip_t2_parts_tundra01_hand_02","name":"광산 장갑 · I","set":"?","slot":"gloves","rarity":3,"def":22,"grade":{"base":60,"enh":[60,60,60]}},{"id":"item_equip_t2_suit_agi01_body_01","name":"순행 전달자 재킷","set":"순행 전달자","slot":"armor","rarity":3,"def":29,"grade":{"base":73,"enh":[73,73,73]}},{"id":"item_equip_t4_suit_usp02_body_01","name":"식양의 숨결 경장갑","set":"식양의 숨결","slot":"armor","rarity":5,"def":56,"grade":{"base":145,"enh":[158,173,188]},"dmg":{"kind":"hpPct","base":0.1035,"enh":[0.1138,0.1242,0.1346]}},{"id":"item_equip_t2_suit_agi01_edc_02","name":"순행 전달자 손전등","set":"순행 전달자","slot":"kit","rarity":3,"def":11,"grade":{"base":21,"enh":[21,21,21]},"dmg":{"kind":"elem","base":0.21,"enh":[0.21,0.21,0.21]}},{"id":"item_equip_t3_suit_agi01_body_01","name":"순행 전달자 재킷 · I","set":"순행 전달자","slot":"armor","rarity":4,"def":40,"grade":{"base":102,"enh":[102,102,102]}},{"id":"item_equip_t4_suit_criti01_edc_04","name":"M. I. 경찰용 단검","set":"M. I. 경찰용","slot":"kit","rarity":5,"def":21,"grade":{"base":53,"enh":[58,63,68]},"dmg":{"kind":"atkPct","base":0.23,"enh":[0.253,0.276,0.299]}},{"id":"item_equip_t2_suit_agi01_hand_01","name":"순행 전달자 장갑","set":"순행 전달자","slot":"gloves","rarity":3,"def":22,"grade":{"base":55,"enh":[55,55,55]},"dmg":{"kind":"critDmg","base":0.0972,"enh":[0.0972,0.0972,0.0972]}},{"id":"item_equip_t2_suit_str01_body_01","name":"중장갑 전달자 재킷","set":"중장갑 전달자","slot":"armor","rarity":3,"def":29,"grade":{"base":73,"enh":[73,73,73]}},{"id":"item_equip_t2_suit_str01_edc_01","name":"중장갑 전달자 팽이","set":"중장갑 전달자","slot":"kit","rarity":3,"def":11,"grade":{"base":21,"enh":[21,21,21]}},{"id":"item_equip_t4_suit_fire_natr01_body_02","name":"열 작업용 보조 골격","set":"열 작업용","slot":"armor","rarity":5,"def":56,"grade":{"base":145,"enh":[158,173,188]},"dmg":{"kind":"atkPct","base":0.115,"enh":[0.1265,0.138,0.1495]}},{"id":"item_equip_t2_suit_str01_edc_02","name":"중장갑 전달자 손전등","set":"중장갑 전달자","slot":"kit","rarity":3,"def":11,"grade":{"base":21,"enh":[21,21,21]}},{"id":"item_equip_t2_suit_str01_hand_01","name":"중장갑 전달자 장갑","set":"중장갑 전달자","slot":"gloves","rarity":3,"def":22,"grade":{"base":55,"enh":[55,55,55]},"dmg":{"kind":"atkPct","base":0.3,"enh":[0.3,0.3,0.3]}},{"id":"item_equip_t4_suit_combo_cd01_hand_02","name":"청파 보호 장갑","set":"청파","slot":"gloves","rarity":5,"def":42,"grade":{"base":108,"enh":[118,129,139]},"dmg":{"kind":"critRate","base":0.2054,"enh":[0.2259,0.2464,0.267]}},{"id":"item_equip_t2_suit_will01_body_01","name":"침식 방호 조끼","set":"침식 방호","slot":"armor","rarity":3,"def":29,"grade":{"base":73,"enh":[73,73,73]}},{"id":"item_equip_t2_suit_will01_edc_01","name":"침식 방호 스패너","set":"침식 방호","slot":"kit","rarity":3,"def":11,"grade":{"base":21,"enh":[21,21,21]}},{"id":"item_equip_t2_suit_will01_edc_02","name":"침식 방호 배터리","set":"침식 방호","slot":"kit","rarity":3,"def":11,"grade":{"base":21,"enh":[21,21,21]},"dmg":{"kind":"battle","base":0.105,"enh":[0.105,0.105,0.105]}},{"id":"item_equip_t4_suit_fire_natr01_hand_03","name":"열 작업용 금속 장갑 · I","set":"열 작업용","slot":"gloves","rarity":5,"def":42,"grade":{"base":108,"enh":[118,129,139]},"dmg":{"kind":"atkPct","base":0.1917,"enh":[0.2108,0.23,0.2492]}},{"id":"item_equip_t2_suit_will01_hand_01","name":"침식 방호 장갑","set":"침식 방호","slot":"gloves","rarity":3,"def":22,"grade":{"base":55,"enh":[55,55,55]},"dmg":{"kind":"battle","base":0.0875,"enh":[0.0875,0.0875,0.0875]}},{"id":"item_equip_t2_suit_wisd01_body_01","name":"침식 차단 조끼","set":"침식 차단","slot":"armor","rarity":3,"def":29,"grade":{"base":73,"enh":[73,73,73]}},{"id":"item_equip_t2_suit_wisd01_edc_02","name":"침식 차단 스패너 · I","set":"침식 차단","slot":"kit","rarity":3,"def":11,"grade":{"base":21,"enh":[21,21,21]},"dmg":{"kind":"atkPct","base":0.1167,"enh":[0.1167,0.1167,0.1167]}},{"id":"item_equip_t2_suit_wisd01_edc_03","name":"침식 차단 배터리","set":"침식 차단","slot":"kit","rarity":3,"def":11,"grade":{"base":21,"enh":[21,21,21]},"dmg":{"kind":"attack","base":0.0525,"enh":[0.0525,0.0525,0.0525]}},{"id":"item_equip_t4_suit_atb01_edc_01","name":"개척자 통신기","set":"개척","slot":"kit","rarity":5,"def":21,"grade":{"base":53,"enh":[58,63,68]},"dmg":{"kind":"elem","base":0.414,"enh":[0.4554,0.4968,0.5382]}},{"id":"item_equip_t2_suit_wisd01_hand_01","name":"침식 차단 장갑","set":"침식 차단","slot":"gloves","rarity":3,"def":22,"grade":{"base":55,"enh":[55,55,55]},"dmg":{"kind":"atkPct","base":0.0921,"enh":[0.0921,0.0921,0.0921]}},{"id":"item_equip_t3_parts_tundra01_body_01","name":"광산 방어구 · I","set":"?","slot":"armor","rarity":4,"def":40,"grade":{"base":108,"enh":[108,108,108]},"dmg":{"kind":"attack","base":0.039,"enh":[0.039,0.039,0.039]}},{"id":"item_equip_t3_parts_tundra01_body_02","name":"광산 방호복 · I","set":"?","slot":"armor","rarity":4,"def":40,"grade":{"base":108,"enh":[108,108,108]}},{"id":"item_equip_t3_parts_tundra01_edc_01","name":"광산 과급기 · I","set":"?","slot":"kit","rarity":4,"def":15,"grade":{"base":31,"enh":[31,31,31]},"dmg":{"kind":"atkPct","base":0.3,"enh":[0.3,0.3,0.3]}},{"id":"item_equip_t3_suit_atk01_edc_02","name":"아부레이 도청 칩","set":"아부레이의 메아리","slot":"kit","rarity":4,"def":15,"grade":{"base":38,"enh":[38,38,38]},"dmg":{"kind":"elem","base":0.294,"enh":[0.294,0.294,0.294]}},{"id":"item_equip_t4_suit_attri01_hand_02","name":"본 크러셔 장갑(손목) · I","set":"본 크러셔","slot":"gloves","rarity":5,"def":42,"grade":{"base":108,"enh":[118,129,139]},"dmg":{"kind":"atkPct","base":0.1917,"enh":[0.2108,0.23,0.2492]}},{"id":"item_equip_t3_parts_tundra01_edc_02","name":"광산 전동기 · I","set":"?","slot":"kit","rarity":4,"def":15,"grade":{"base":31,"enh":[31,31,31]},"dmg":{"kind":"elem","base":0.312,"enh":[0.312,0.312,0.312]}},{"id":"item_equip_t3_suit_atk01_edc_03","name":"아부레이 도청 칩 · I","set":"아부레이의 메아리","slot":"kit","rarity":4,"def":15,"grade":{"base":38,"enh":[38,38,38]},"dmg":{"kind":"elem","base":0.294,"enh":[0.294,0.294,0.294]}},{"id":"item_equip_t4_suit_heal01_body_02","name":"생체 보조 흉갑","set":"생체 보조","slot":"armor","rarity":5,"def":56,"grade":{"base":145,"enh":[158,173,188]},"dmg":{"kind":"battle","base":0.1035,"enh":[0.1139,0.1242,0.1346]}},{"id":"item_equip_t4_suit_phy01_body_03","name":"검술사 중장갑 · I","set":"검술사","slot":"armor","rarity":5,"def":56,"grade":{"base":145,"enh":[158,173,188]},"dmg":{"kind":"critDmg","base":0.115,"enh":[0.1265,0.138,0.1495]}},{"id":"item_equip_t3_parts_tundra01_edc_03","name":"광산 압축 장치 · I","set":"?","slot":"kit","rarity":4,"def":15,"grade":{"base":31,"enh":[31,31,31]},"dmg":{"kind":"critRate","base":0.1857,"enh":[0.1857,0.1857,0.1857]}},{"id":"item_equip_t3_suit_atk01_edc_04","name":"아부레이 조명 장치","set":"아부레이의 메아리","slot":"kit","rarity":4,"def":15,"grade":{"base":38,"enh":[38,38,38]},"dmg":{"kind":"critRate","base":0.175,"enh":[0.175,0.175,0.175]}},{"id":"item_equip_t3_parts_tundra01_edc_04","name":"광산 통신기 · I","set":"?","slot":"kit","rarity":4,"def":15,"grade":{"base":31,"enh":[31,31,31]},"dmg":{"kind":"battle","base":0.156,"enh":[0.156,0.156,0.156]}},{"id":"item_equip_t3_suit_atk01_edc_05","name":"아부레이 센서 칩","set":"아부레이의 메아리","slot":"kit","rarity":4,"def":15,"grade":{"base":38,"enh":[38,38,38]},"dmg":{"kind":"all","base":0.294,"enh":[0.294,0.294,0.294]}},{"id":"item_equip_t3_parts_tundra01_hand_01","name":"광산 장갑 · II","set":"?","slot":"gloves","rarity":4,"def":30,"grade":{"base":81,"enh":[81,81,81]}},{"id":"item_equip_t3_suit_agi01_hand_01","name":"순행 전달자 장갑 · I","set":"순행 전달자","slot":"gloves","rarity":4,"def":30,"grade":{"base":76,"enh":[76,76,76]}},{"id":"item_equip_t3_suit_wisd01_edc_02","name":"침식 차단 배터리 · I","set":"침식 차단","slot":"kit","rarity":4,"def":15,"grade":{"base":29,"enh":[29,29,29]},"dmg":{"kind":"critRate","base":0.175,"enh":[0.175,0.175,0.175]}},{"id":"item_equip_t3_parts_tundra01_hand_02","name":"광산 보호 장갑 · I","set":"?","slot":"gloves","rarity":4,"def":30,"grade":{"base":81,"enh":[81,81,81]},"dmg":{"kind":"critRate","base":0.1548,"enh":[0.1548,0.1548,0.1548]}},{"id":"item_equip_t3_suit_wisd01_edc_01","name":"침식 차단 스패너 · II","set":"침식 차단","slot":"kit","rarity":4,"def":15,"grade":{"base":38,"enh":[38,38,38]}},{"id":"item_equip_t3_suit_agi01_edc_01","name":"순행 전달자 손전등 · I","set":"순행 전달자","slot":"kit","rarity":4,"def":15,"grade":{"base":38,"enh":[38,38,38]},"dmg":{"kind":"elem","base":0.294,"enh":[0.294,0.294,0.294]}},{"id":"item_equip_t4_parts_wuling01_edc_04","name":"위기 탈출 도장 · I","set":"?","slot":"kit","rarity":5,"def":21,"grade":{"base":43,"enh":[47,51,55]},"dmg":{"kind":"attack","base":0.108,"enh":[0.1188,0.1296,0.1404]}},{"id":"item_equip_t3_suit_agi01_edc_02","name":"순행 전달자 손전등 · II","set":"순행 전달자","slot":"kit","rarity":4,"def":15,"grade":{"base":38,"enh":[38,38,38]},"dmg":{"kind":"ult","base":0.3675,"enh":[0.3675,0.3675,0.3675]}},{"id":"item_equip_t3_suit_atk01_body_01","name":"아부레이 중갑","set":"아부레이의 메아리","slot":"armor","rarity":4,"def":40,"grade":{"base":102,"enh":[102,102,102]},"dmg":{"kind":"atkPct","base":0.098,"enh":[0.098,0.098,0.098]}},{"id":"item_equip_t3_suit_atk01_body_02","name":"아부레이 중갑 · I","set":"아부레이의 메아리","slot":"armor","rarity":4,"def":40,"grade":{"base":102,"enh":[102,102,102]},"dmg":{"kind":"elem","base":0.147,"enh":[0.147,0.147,0.147]}},{"id":"item_equip_t3_suit_atk01_body_03","name":"아부레이 경갑","set":"아부레이의 메아리","slot":"armor","rarity":4,"def":40,"grade":{"base":102,"enh":[102,102,102]},"dmg":{"kind":"critRate","base":0.0875,"enh":[0.0875,0.0875,0.0875]}},{"id":"item_equip_t3_suit_atk01_body_04","name":"아부레이 경갑 · I","set":"아부레이의 메아리","slot":"armor","rarity":4,"def":40,"grade":{"base":102,"enh":[102,102,102]},"dmg":{"kind":"all","base":0.147,"enh":[0.147,0.147,0.147]}},{"id":"item_equip_t3_suit_atk01_edc_01","name":"아부레이 UV 램프","set":"아부레이의 메아리","slot":"kit","rarity":4,"def":15,"grade":{"base":38,"enh":[38,38,38]},"dmg":{"kind":"atkPct","base":0.196,"enh":[0.196,0.196,0.196]}},{"id":"item_equip_t3_suit_atk01_edc_06","name":"아부레이 센서 칩 · I","set":"아부레이의 메아리","slot":"kit","rarity":4,"def":15,"grade":{"base":38,"enh":[38,38,38]},"dmg":{"kind":"all","base":0.294,"enh":[0.294,0.294,0.294]}},{"id":"item_equip_t4_parts_wuling01_edc_02","name":"위기 탈출 식별 패널 · I","set":"?","slot":"kit","rarity":5,"def":21,"grade":{"base":43,"enh":[47,51,55]},"dmg":{"kind":"elem","base":0.432,"enh":[0.4752,0.5184,0.5616]}},{"id":"item_equip_t3_suit_atk01_hand_01","name":"아부레이 금속 장갑","set":"아부레이의 메아리","slot":"gloves","rarity":4,"def":30,"grade":{"base":76,"enh":[76,76,76]},"dmg":{"kind":"elem","base":0.245,"enh":[0.245,0.245,0.245]}},{"id":"item_equip_t3_suit_usp01_body_02","name":"재앙 방호 중갑 · I","set":"재앙 방호","slot":"armor","rarity":4,"def":40,"grade":{"base":102,"enh":[102,102,102]},"dmg":{"kind":"critRate","base":0.0875,"enh":[0.0875,0.0875,0.0875]}},{"id":"item_equip_t4_suit_phy01_edc_02","name":"검술사 초소형 필터","set":"검술사","slot":"kit","rarity":5,"def":21,"grade":{"base":53,"enh":[58,63,68]},"dmg":{"kind":"critDmg","base":0.23,"enh":[0.253,0.276,0.299]}},{"id":"item_equip_t3_suit_str01_edc_02","name":"중장갑 전달자 손전등 · I","set":"중장갑 전달자","slot":"kit","rarity":4,"def":15,"grade":{"base":38,"enh":[38,38,38]},"dmg":{"kind":"attack","base":0.0735,"enh":[0.0735,0.0735,0.0735]}},{"id":"item_equip_t3_suit_str01_hand_01","name":"중장갑 전달자 장갑 · I","set":"중장갑 전달자","slot":"gloves","rarity":4,"def":30,"grade":{"base":76,"enh":[76,76,76]}},{"id":"item_equip_t4_suit_atk02_edc_03","name":"응룡 50식 탐지기 · II","set":"응룡 50식","slot":"kit","rarity":5,"def":21,"grade":{"base":53,"enh":[58,63,68]},"dmg":{"kind":"elem","base":0.414,"enh":[0.4554,0.4968,0.5382]}},{"id":"item_equip_t3_suit_usp01_body_01","name":"재앙 방호 중갑","set":"재앙 방호","slot":"armor","rarity":4,"def":40,"grade":{"base":102,"enh":[102,102,102]},"dmg":{"kind":"ult","base":0.1837,"enh":[0.1837,0.1837,0.1837]}},{"id":"item_equip_t4_suit_atk02_hand_02","name":"응룡 50식 보호 장갑 · I","set":"응룡 50식","slot":"gloves","rarity":5,"def":42,"grade":{"base":108,"enh":[118,129,139]},"dmg":{"kind":"elem","base":0.345,"enh":[0.3795,0.414,0.4485]}},{"id":"item_equip_t3_suit_usp01_edc_01","name":"재앙 방호 정화 코어","set":"재앙 방호","slot":"kit","rarity":4,"def":15,"grade":{"base":38,"enh":[38,38,38]},"dmg":{"kind":"ult","base":0.3675,"enh":[0.3675,0.3675,0.3675]}},{"id":"item_equip_t3_suit_usp01_edc_02","name":"재앙 방호 정화 코어 · I","set":"재앙 방호","slot":"kit","rarity":4,"def":15,"grade":{"base":38,"enh":[38,38,38]},"dmg":{"kind":"atkPct","base":0.147,"enh":[0.147,0.147,0.147]}},{"id":"item_equip_t4_suit_criti01_edc_06","name":"M. I. 경찰용 조준기 · I","set":"M. I. 경찰용","slot":"kit","rarity":5,"def":21,"grade":{"base":53,"enh":[58,63,68]},"dmg":{"kind":"attack","base":0.1035,"enh":[0.1139,0.1242,0.1346]}},{"id":"item_equip_t4_suit_fire_natr01_body_01","name":"열 작업용 강화 골격","set":"열 작업용","slot":"armor","rarity":5,"def":56,"grade":{"base":145,"enh":[158,173,188]},"dmg":{"kind":"atkPct","base":0.115,"enh":[0.1265,0.138,0.1495]}},{"id":"item_equip_t3_suit_usp01_hand_01","name":"재앙 방호 장갑","set":"재앙 방호","slot":"gloves","rarity":4,"def":30,"grade":{"base":76,"enh":[76,76,76]},"dmg":{"kind":"hpPct","base":0.1225,"enh":[0.1225,0.1225,0.1225]}},{"id":"item_equip_t3_suit_will01_edc_02","name":"침식 방호 스패너 · I","set":"침식 방호","slot":"kit","rarity":4,"def":15,"grade":{"base":38,"enh":[38,38,38]}},{"id":"item_equip_t3_suit_will01_hand_01","name":"침식 방호 장갑 · I","set":"침식 방호","slot":"gloves","rarity":4,"def":30,"grade":{"base":76,"enh":[76,76,76]}},{"id":"item_equip_t3_suit_wisd01_body_01","name":"침식 차단 조끼 · I","set":"침식 차단","slot":"armor","rarity":4,"def":40,"grade":{"base":102,"enh":[102,102,102]},"dmg":{"kind":"energy","base":0.098,"enh":[0.098,0.098,0.098]}},{"id":"item_equip_t4_parts_wuling01_hand_01","name":"위기 탈출 보호 장갑","set":"?","slot":"gloves","rarity":5,"def":42,"grade":{"base":86,"enh":[94,103,111]},"dmg":{"kind":"ult","base":0.45,"enh":[0.495,0.54,0.585]}},{"id":"item_equip_t3_suit_wisd01_body_02","name":"침식 차단 조끼 · II","set":"침식 차단","slot":"armor","rarity":4,"def":40,"grade":{"base":102,"enh":[102,102,102]}},{"id":"item_equip_t3_suit_wisd01_hand_01","name":"침식 차단 장갑 · I","set":"침식 차단","slot":"gloves","rarity":4,"def":30,"grade":{"base":76,"enh":[76,76,76]}},{"id":"item_equip_t4_parts_wuling01_body_01","name":"위기 탈출 중장갑","set":"?","slot":"armor","rarity":5,"def":56,"grade":{"base":115,"enh":[126,138,149]},"dmg":{"kind":"energy","base":0.144,"enh":[0.1584,0.1728,0.1872]}},{"id":"item_equip_t4_suit_usp02_hand_02","name":"식양의 숨결 보호 장갑 · I","set":"식양의 숨결","slot":"gloves","rarity":5,"def":42,"grade":{"base":108,"enh":[118,129,139]},"dmg":{"kind":"critRate","base":0.2054,"enh":[0.2259,0.2464,0.267]}},{"id":"item_equip_t4_parts_wuling01_body_02","name":"위기 탈출 방어구","set":"?","slot":"armor","rarity":5,"def":56,"grade":{"base":115,"enh":[126,138,149]},"dmg":{"kind":"critRate","base":0.1286,"enh":[0.1414,0.1543,0.1671]}},{"id":"item_equip_t4_suit_atb01_edc_02","name":"개척자 통신기 · I","set":"개척","slot":"kit","rarity":5,"def":21,"grade":{"base":53,"enh":[58,63,68]},"dmg":{"kind":"atkPct","base":0.23,"enh":[0.253,0.276,0.299]}},{"id":"item_equip_t4_suit_fire_natr01_edc_01","name":"열 작업용 에너지 저장함","set":"열 작업용","slot":"kit","rarity":5,"def":21,"grade":{"base":53,"enh":[58,63,68]},"dmg":{"kind":"hpPct","base":0.207,"enh":[0.2277,0.2484,0.2691]}},{"id":"item_equip_t4_parts_wuling01_edc_01","name":"위기 탈출 식별 패널","set":"?","slot":"kit","rarity":5,"def":21,"grade":{"base":43,"enh":[47,51,55]},"dmg":{"kind":"atkPct","base":0.3,"enh":[0.3,0.3,0.3]}},{"id":"item_equip_t4_suit_fire_natr01_hand_01","name":"열 작업용 장갑","set":"열 작업용","slot":"gloves","rarity":5,"def":42,"grade":{"base":108,"enh":[118,129,139]},"dmg":{"kind":"hpPct","base":0.1725,"enh":[0.1898,0.207,0.2243]}},{"id":"item_equip_t4_suit_pulse_cryst01_edc_01","name":"펄스식 시험침","set":"펄스식","slot":"kit","rarity":5,"def":21,"grade":{"base":53,"enh":[58,63,68]},"dmg":{"kind":"hpPct","base":0.207,"enh":[0.2277,0.2484,0.2691]}},{"id":"item_equip_t4_suit_atb01_body_01","name":"개척자 방어구","set":"개척","slot":"armor","rarity":5,"def":56,"grade":{"base":145,"enh":[158,173,188]},"dmg":{"kind":"ult","base":0.2587,"enh":[0.2846,0.3105,0.3364]}},{"id":"item_equip_t4_suit_heal01_edc_02","name":"생체 보조 접속기 · II","set":"생체 보조","slot":"kit","rarity":5,"def":21,"grade":{"base":41,"enh":[45,49,53]}},{"id":"item_equip_t4_suit_atb01_body_02","name":"개척자 방어구 · I","set":"개척","slot":"armor","rarity":5,"def":56,"grade":{"base":145,"enh":[158,173,188]},"dmg":{"kind":"all","base":0.207,"enh":[0.2277,0.2484,0.2691]}},{"id":"item_equip_t4_suit_attri01_edc_05","name":"본 크러셔 마스크 · I","set":"본 크러셔","slot":"kit","rarity":5,"def":21,"grade":{"base":53,"enh":[58,63,68]},"dmg":{"kind":"attack","base":0.1035,"enh":[0.1139,0.1242,0.1346]}},{"id":"item_equip_t4_suit_criti01_body_04","name":"M. I. 경찰용 망토 · II","set":"M. I. 경찰용","slot":"armor","rarity":5,"def":56,"grade":{"base":145,"enh":[158,173,188]},"dmg":{"kind":"all","base":0.207,"enh":[0.2277,0.2484,0.2691]}},{"id":"item_equip_t4_suit_atb01_body_03","name":"개척자 방어구 · II","set":"개척","slot":"armor","rarity":5,"def":56,"grade":{"base":145,"enh":[158,173,188]},"dmg":{"kind":"all","base":0.207,"enh":[0.2277,0.2484,0.2691]}},{"id":"item_equip_t4_suit_pulse_cryst01_edc_03","name":"펄스식 침입 코어","set":"펄스식","slot":"kit","rarity":5,"def":21,"grade":{"base":41,"enh":[45,49,53]},"dmg":{"kind":"ult","base":0.5175,"enh":[0.5693,0.621,0.6727]}},{"id":"item_equip_t4_suit_atb01_body_04","name":"개척자 방어구 · III","set":"개척","slot":"armor","rarity":5,"def":56,"grade":{"base":145,"enh":[158,173,188]},"dmg":{"kind":"atkPct","base":0.1035,"enh":[0.1139,0.1242,0.1346]}},{"id":"item_equip_t4_suit_atk02_body_02","name":"응룡 50식 중갑 · I","set":"응룡 50식","slot":"armor","rarity":5,"def":56,"grade":{"base":145,"enh":[158,173,188]},"dmg":{"kind":"critRate","base":0.1232,"enh":[0.1355,0.1479,0.1602]}},{"id":"item_equip_t4_suit_atb01_body_05","name":"개척자 방호복","set":"개척","slot":"armor","rarity":5,"def":56,"grade":{"base":145,"enh":[158,173,188]},"dmg":{"kind":"critRate","base":0.1232,"enh":[0.1355,0.1479,0.1602]}},{"id":"item_equip_t4_suit_atk02_body_03","name":"응룡 50식 중갑 · II","set":"응룡 50식","slot":"armor","rarity":5,"def":56,"grade":{"base":145,"enh":[158,173,188]},"dmg":{"kind":"elem","base":0.207,"enh":[0.2277,0.2484,0.2691]}},{"id":"item_equip_t4_suit_atb01_edc_03","name":"개척자 분석 장치","set":"개척","slot":"kit","rarity":5,"def":21,"grade":{"base":41,"enh":[45,49,53]},"dmg":{"kind":"ult","base":0.5175,"enh":[0.5693,0.621,0.6727]}},{"id":"item_equip_t4_suit_atb01_edc_04","name":"개척자 증량 산소 공급 장치","set":"개척","slot":"kit","rarity":5,"def":21,"grade":{"base":53,"enh":[58,63,68]},"dmg":{"kind":"atkPct","base":0.207,"enh":[0.2277,0.2484,0.2691]}},{"id":"item_equip_t4_suit_criti01_body_06","name":"M. I. 경찰용 방어구 · I","set":"M. I. 경찰용","slot":"armor","rarity":5,"def":56,"grade":{"base":145,"enh":[158,173,188]},"dmg":{"kind":"critRate","base":0.1232,"enh":[0.1355,0.1479,0.1602]}},{"id":"item_equip_t4_suit_atb01_edc_05","name":"개척자 산소 공급 장치","set":"개척","slot":"kit","rarity":5,"def":21,"grade":{"base":41,"enh":[45,49,53]},"dmg":{"kind":"critDmg","base":0.23,"enh":[0.253,0.276,0.299]}},{"id":"item_equip_t4_suit_atb01_edc_06","name":"개척자 증량 산소 공급 장치 · I","set":"개척","slot":"kit","rarity":5,"def":21,"grade":{"base":53,"enh":[58,63,68]},"dmg":{"kind":"atkPct","base":0.207,"enh":[0.2277,0.2484,0.2691]}},{"id":"item_equip_t4_suit_poise01_body_01","name":"경량 초자연 보호판","set":"경량 초자연","slot":"armor","rarity":5,"def":56,"grade":{"base":145,"enh":[158,173,188]},"dmg":{"kind":"elem","base":0.207,"enh":[0.2277,0.2484,0.2691]}},{"id":"item_equip_t4_suit_atb01_hand_01","name":"개척자 내부식성 장갑","set":"개척","slot":"gloves","rarity":5,"def":42,"grade":{"base":108,"enh":[118,129,139]},"dmg":{"kind":"all","base":0.345,"enh":[0.3795,0.414,0.4485]}},{"id":"item_equip_t4_suit_atb01_hand_03","name":"개척자 섬유 장갑 · I","set":"개척","slot":"gloves","rarity":5,"def":42,"grade":{"base":108,"enh":[118,129,139]},"dmg":{"kind":"critRate","base":0.2054,"enh":[0.2259,0.2464,0.267]}},{"id":"item_equip_t4_suit_criti01_hand_01","name":"M. I. 경찰용 장갑","set":"M. I. 경찰용","slot":"gloves","rarity":5,"def":42,"grade":{"base":108,"enh":[118,129,139]},"dmg":{"kind":"all","base":0.345,"enh":[0.3795,0.414,0.4485]}},{"id":"item_equip_t4_suit_atk02_body_01","name":"응룡 50식 중갑","set":"응룡 50식","slot":"armor","rarity":5,"def":56,"grade":{"base":145,"enh":[158,173,188]},"dmg":{"kind":"critDmg","base":0.115,"enh":[0.1265,0.138,0.1495]}},{"id":"item_equip_t4_suit_atk02_body_04","name":"응룡 50식 경갑","set":"응룡 50식","slot":"armor","rarity":5,"def":56,"grade":{"base":145,"enh":[158,173,188]},"dmg":{"kind":"atkPct","base":0.138,"enh":[0.1518,0.1656,0.1794]}},{"id":"item_equip_t4_suit_atk02_edc_01","name":"응룡 50식 탐지기","set":"응룡 50식","slot":"kit","rarity":5,"def":21,"grade":{"base":53,"enh":[58,63,68]},"dmg":{"kind":"critDmg","base":0.23,"enh":[0.253,0.276,0.299]}},{"id":"item_equip_t4_suit_atk02_edc_02","name":"응룡 50식 탐지기 · I","set":"응룡 50식","slot":"kit","rarity":5,"def":21,"grade":{"base":53,"enh":[58,63,68]},"dmg":{"kind":"ult","base":0.5175,"enh":[0.5693,0.621,0.6727]}},{"id":"item_equip_t4_suit_atk02_edc_04","name":"응룡 50식 단검","set":"응룡 50식","slot":"kit","rarity":5,"def":21,"grade":{"base":53,"enh":[58,63,68]},"dmg":{"kind":"elem","base":0.414,"enh":[0.4554,0.4968,0.5382]}},{"id":"item_equip_t4_suit_atk02_edc_05","name":"응룡 50식 단검 · I","set":"응룡 50식","slot":"kit","rarity":5,"def":21,"grade":{"base":53,"enh":[58,63,68]},"dmg":{"kind":"atkPct","base":0.276,"enh":[0.3,0.3,0.3]}},{"id":"item_equip_t4_suit_atk02_hand_01","name":"응룡 50식 보호 장갑","set":"응룡 50식","slot":"gloves","rarity":5,"def":42,"grade":{"base":108,"enh":[118,129,139]},"dmg":{"kind":"elem","base":0.345,"enh":[0.3795,0.414,0.4485]}},{"id":"item_equip_t4_suit_attri01_body_01","name":"본 크러셔 중갑 방어구","set":"본 크러셔","slot":"armor","rarity":5,"def":56,"grade":{"base":145,"enh":[158,173,188]},"dmg":{"kind":"critRate","base":0.1232,"enh":[0.1355,0.1479,0.1602]}},{"id":"item_equip_t4_suit_attri01_body_03","name":"본 크러셔 머플러","set":"본 크러셔","slot":"armor","rarity":5,"def":56,"grade":{"base":145,"enh":[158,173,188]},"dmg":{"kind":"elem","base":0.207,"enh":[0.2277,0.2484,0.2691]}},{"id":"item_equip_t4_suit_poise01_edc_03","name":"경량 초자연 안정판 · I","set":"경량 초자연","slot":"kit","rarity":5,"def":21,"grade":{"base":53,"enh":[58,63,68]},"dmg":{"kind":"critDmg","base":0.23,"enh":[0.253,0.276,0.299]}},{"id":"item_equip_t4_suit_attri01_edc_02","name":"본 크러셔 조각상 · II","set":"본 크러셔","slot":"kit","rarity":5,"def":21,"grade":{"base":53,"enh":[58,63,68]},"dmg":{"kind":"all","base":0.414,"enh":[0.4554,0.4968,0.5382]}},{"id":"item_equip_t4_suit_attri01_edc_04","name":"본 크러셔 마스크","set":"본 크러셔","slot":"kit","rarity":5,"def":21,"grade":{"base":53,"enh":[58,63,68]},"dmg":{"kind":"elem","base":0.414,"enh":[0.4554,0.4968,0.5382]}},{"id":"item_equip_t4_suit_criti01_edc_03","name":"M. I. 경찰용 다용도 공구","set":"M. I. 경찰용","slot":"kit","rarity":5,"def":21,"grade":{"base":53,"enh":[58,63,68]},"dmg":{"kind":"attack","base":0.1035,"enh":[0.1139,0.1242,0.1346]}},{"id":"item_equip_t4_suit_attri01_edc_07","name":"본 크러셔 마스크 · II","set":"본 크러셔","slot":"kit","rarity":5,"def":21,"grade":{"base":53,"enh":[58,63,68]},"dmg":{"kind":"all","base":0.414,"enh":[0.4554,0.4968,0.5382]}},{"id":"item_equip_t4_suit_criti01_edc_02","name":"M. I. 경찰용 조준기","set":"M. I. 경찰용","slot":"kit","rarity":5,"def":21,"grade":{"base":53,"enh":[58,63,68]},"dmg":{"kind":"all","base":0.414,"enh":[0.4554,0.4968,0.5382]}},{"id":"item_equip_t4_suit_attri01_hand_03","name":"본 크러셔 장갑","set":"본 크러셔","slot":"gloves","rarity":5,"def":42,"grade":{"base":108,"enh":[118,129,139]},"dmg":{"kind":"atkPct","base":0.1917,"enh":[0.2108,0.23,0.2492]}},{"id":"item_equip_t4_suit_burst01_body_01","name":"낙조 경갑","set":"조류의 물결","slot":"armor","rarity":5,"def":56,"grade":{"base":145,"enh":[158,173,188]},"dmg":{"kind":"critRate","base":0.1232,"enh":[0.1355,0.1479,0.1602]}},{"id":"item_equip_t4_suit_burst01_edc_01","name":"현하 산소 공급 장치","set":"조류의 물결","slot":"kit","rarity":5,"def":21,"grade":{"base":53,"enh":[58,63,68]},"dmg":{"kind":"atkPct","base":0.23,"enh":[0.253,0.276,0.299]}},{"id":"item_equip_t4_suit_expend_spell01_edc_02","name":"식양의 흐름 단봉","set":"식양의 흐름","slot":"kit","rarity":5,"def":21,"grade":{"base":53,"enh":[58,63,68]},"dmg":{"kind":"all","base":0.414,"enh":[0.4554,0.4968,0.5382]}},{"id":"item_equip_t4_suit_burst01_edc_02","name":"탁류 화염 절단기","set":"조류의 물결","slot":"kit","rarity":5,"def":21,"grade":{"base":53,"enh":[58,63,68]},"dmg":{"kind":"energy","base":0.276,"enh":[0.3036,0.3312,0.3588]}},{"id":"item_equip_t4_suit_combo_cd01_body_01","name":"청파 중갑","set":"청파","slot":"armor","rarity":5,"def":56,"grade":{"base":145,"enh":[158,173,188]},"dmg":{"kind":"critRate","base":0.1232,"enh":[0.1355,0.1479,0.1602]}},{"id":"item_equip_t4_suit_combo_cd01_body_02","name":"청파 경갑","set":"청파","slot":"armor","rarity":5,"def":56,"grade":{"base":145,"enh":[158,173,188]},"dmg":{"kind":"hpPct","base":0.1035,"enh":[0.1138,0.1242,0.1346]}},{"id":"item_equip_t4_suit_combo_cd01_edc_01","name":"청파 위치 지정기","set":"청파","slot":"kit","rarity":5,"def":21,"grade":{"base":53,"enh":[58,63,68]},"dmg":{"kind":"all","base":0.414,"enh":[0.4554,0.4968,0.5382]}},{"id":"item_equip_t4_suit_combo_cd01_edc_02","name":"청파죽인","set":"청파","slot":"kit","rarity":5,"def":21,"grade":{"base":53,"enh":[58,63,68]},"dmg":{"kind":"atkPct","base":0.23,"enh":[0.253,0.276,0.299]}},{"id":"item_equip_t4_suit_criti01_body_01","name":"M. I. 경찰용 방어구","set":"M. I. 경찰용","slot":"armor","rarity":5,"def":56,"grade":{"base":145,"enh":[158,173,188]},"dmg":{"kind":"hpPct","base":0.1035,"enh":[0.1138,0.1242,0.1346]}},{"id":"item_equip_t4_suit_combo_cd01_edc_03","name":"청파 물 항아리","set":"청파","slot":"kit","rarity":5,"def":21,"grade":{"base":53,"enh":[58,63,68]},"dmg":{"kind":"hpPct","base":0.207,"enh":[0.2277,0.2484,0.2691]}},{"id":"item_equip_t4_suit_heal01_hand_02","name":"생체 보조 금속 장갑","set":"생체 보조","slot":"gloves","rarity":5,"def":42,"grade":{"base":108,"enh":[118,129,139]},"dmg":{"kind":"battle","base":0.1725,"enh":[0.1898,0.207,0.2243]}},{"id":"item_equip_t4_suit_combo_cd01_edc_04","name":"청파 위치 지정기 · I","set":"청파","slot":"kit","rarity":5,"def":21,"grade":{"base":53,"enh":[58,63,68]},"dmg":{"kind":"critDmg","base":0.23,"enh":[0.253,0.276,0.299]}},{"id":"item_equip_t4_suit_combo_cd01_hand_01","name":"청파 금속 장갑","set":"청파","slot":"gloves","rarity":5,"def":42,"grade":{"base":108,"enh":[118,129,139]},"dmg":{"kind":"atkPct","base":0.23,"enh":[0.253,0.276,0.299]}},{"id":"item_equip_t4_suit_criti01_body_02","name":"M. I. 경찰용 망토","set":"M. I. 경찰용","slot":"armor","rarity":5,"def":56,"grade":{"base":145,"enh":[158,173,188]},"dmg":{"kind":"energy","base":0.138,"enh":[0.1518,0.1656,0.1794]}},{"id":"item_equip_t4_suit_criti01_body_03","name":"M. I. 경찰용 망토 · I","set":"M. I. 경찰용","slot":"armor","rarity":5,"def":56,"grade":{"base":145,"enh":[158,173,188]},"dmg":{"kind":"attack","base":0.0517,"enh":[0.0569,0.0621,0.0673]}},{"id":"item_equip_t4_suit_criti01_edc_05","name":"M. I. 경찰용 단검 · I","set":"M. I. 경찰용","slot":"kit","rarity":5,"def":21,"grade":{"base":53,"enh":[58,63,68]},"dmg":{"kind":"all","base":0.414,"enh":[0.4554,0.4968,0.5382]}},{"id":"item_equip_t4_suit_criti01_hand_02","name":"M. I. 경찰용 장갑(팔찌)","set":"M. I. 경찰용","slot":"gloves","rarity":5,"def":42,"grade":{"base":108,"enh":[118,129,139]},"dmg":{"kind":"energy","base":0.23,"enh":[0.253,0.276,0.299]}},{"id":"item_equip_t4_suit_criti01_hand_04","name":"M. I. 경찰용 장갑 · I","set":"M. I. 경찰용","slot":"gloves","rarity":5,"def":42,"grade":{"base":108,"enh":[118,129,139]},"dmg":{"kind":"ult","base":0.4313,"enh":[0.4744,0.5175,0.5606]}},{"id":"item_equip_t4_suit_poise01_edc_04","name":"경량 초자연 손목시계","set":"경량 초자연","slot":"kit","rarity":5,"def":21,"grade":{"base":53,"enh":[58,63,68]},"dmg":{"kind":"all","base":0.414,"enh":[0.4554,0.4968,0.5382]}},{"id":"item_equip_t4_suit_crush_fracture_body_01","name":"고검의 잔향 장갑","set":"고검의 잔향","slot":"armor","rarity":5,"def":56,"grade":{"base":145,"enh":[158,173,188]},"dmg":{"kind":"critDmg","base":0.115,"enh":[0.1265,0.138,0.1495]}},{"id":"item_equip_t4_suit_crush_fracture_body_02","name":"고검의 잔향 장갑 · I","set":"고검의 잔향","slot":"armor","rarity":5,"def":56,"grade":{"base":145,"enh":[158,173,188]},"dmg":{"kind":"hpPct","base":0.1035,"enh":[0.1138,0.1242,0.1346]}},{"id":"item_equip_t4_suit_crush_fracture_edc_01","name":"고검의 잔향 단검","set":"고검의 잔향","slot":"kit","rarity":5,"def":21,"grade":{"base":53,"enh":[58,63,68]},"dmg":{"kind":"critDmg","base":0.23,"enh":[0.253,0.276,0.299]}},{"id":"item_equip_t4_suit_crush_fracture_edc_02","name":"고검의 잔향 단검 · I","set":"고검의 잔향","slot":"kit","rarity":5,"def":21,"grade":{"base":53,"enh":[58,63,68]},"dmg":{"kind":"critDmg","base":0.23,"enh":[0.253,0.276,0.299]}},{"id":"item_equip_t4_suit_crush_fracture_hand_02","name":"고검의 잔향 금속 장갑 · I","set":"고검의 잔향","slot":"gloves","rarity":5,"def":42,"grade":{"base":108,"enh":[118,129,139]},"dmg":{"kind":"hpPct","base":0.1725,"enh":[0.1898,0.207,0.2243]}},{"id":"item_equip_t4_suit_expend_spell01_body_02","name":"식양의 흐름 경갑","set":"식양의 흐름","slot":"armor","rarity":5,"def":56,"grade":{"base":145,"enh":[158,173,188]},"dmg":{"kind":"atkPct","base":0.115,"enh":[0.1265,0.138,0.1495]}},{"id":"item_equip_t4_suit_fire_natr01_edc_02","name":"열 작업용 온도 측정기","set":"열 작업용","slot":"kit","rarity":5,"def":21,"grade":{"base":41,"enh":[45,49,53]},"dmg":{"kind":"all","base":0.414,"enh":[0.4554,0.4968,0.5382]}},{"id":"item_equip_t4_suit_fire_natr01_edc_03","name":"열 작업용 전력 상자","set":"열 작업용","slot":"kit","rarity":5,"def":21,"grade":{"base":53,"enh":[58,63,68]},"dmg":{"kind":"hpPct","base":0.207,"enh":[0.2277,0.2484,0.2691]}},{"id":"item_equip_t4_suit_fire_natr01_hand_02","name":"열 작업용 금속 장갑","set":"열 작업용","slot":"gloves","rarity":5,"def":42,"grade":{"base":108,"enh":[118,129,139]},"dmg":{"kind":"atkPct","base":0.1917,"enh":[0.2108,0.23,0.2492]}},{"id":"item_equip_t4_suit_phy01_edc_04","name":"검술사 단검","set":"검술사","slot":"kit","rarity":5,"def":21,"grade":{"base":53,"enh":[58,63,68]},"dmg":{"kind":"ult","base":0.5175,"enh":[0.5693,0.621,0.6727]}},{"id":"item_equip_t4_suit_heal01_edc_01","name":"생체 보조 접속기","set":"생체 보조","slot":"kit","rarity":5,"def":21,"grade":{"base":53,"enh":[58,63,68]},"dmg":{"kind":"atkPct","base":0.3,"enh":[0.3,0.3,0.3]}},{"id":"item_equip_t4_suit_heal01_edc_03","name":"생체 보조 보호판","set":"생체 보조","slot":"kit","rarity":5,"def":21,"grade":{"base":53,"enh":[58,63,68]},"dmg":{"kind":"atkPct","base":0.207,"enh":[0.2277,0.2484,0.2691]}},{"id":"item_equip_t4_suit_heal01_edc_04","name":"생체 보조 보호 주사기","set":"생체 보조","slot":"kit","rarity":5,"def":21,"grade":{"base":41,"enh":[45,49,53]},"dmg":{"kind":"battle","base":0.207,"enh":[0.2277,0.2484,0.2691]}},{"id":"item_equip_t4_suit_heal01_edc_05","name":"생체 보조 접속기 · I","set":"생체 보조","slot":"kit","rarity":5,"def":21,"grade":{"base":53,"enh":[58,63,68]}},{"id":"item_equip_t4_suit_phy01_body_01","name":"검술사 경장갑","set":"검술사","slot":"armor","rarity":5,"def":56,"grade":{"base":145,"enh":[158,173,188]},"dmg":{"kind":"critRate","base":0.1232,"enh":[0.1355,0.1479,0.1602]}},{"id":"item_equip_t4_suit_phy01_body_02","name":"검술사 중장갑","set":"검술사","slot":"armor","rarity":5,"def":56,"grade":{"base":145,"enh":[158,173,188]},"dmg":{"kind":"hpPct","base":0.1035,"enh":[0.1138,0.1242,0.1346]}},{"id":"item_equip_t4_suit_phy01_body_04","name":"검술사 섬유 방어구","set":"검술사","slot":"armor","rarity":5,"def":56,"grade":{"base":145,"enh":[158,173,188]},"dmg":{"kind":"critDmg","base":0.115,"enh":[0.1265,0.138,0.1495]}},{"id":"item_equip_t4_suit_phy01_edc_01","name":"검술사 위치 신호기","set":"검술사","slot":"kit","rarity":5,"def":21,"grade":{"base":41,"enh":[45,49,53]},"dmg":{"kind":"hpPct","base":0.207,"enh":[0.2277,0.2484,0.2691]}},{"id":"item_equip_t4_suit_phy01_hand_01","name":"검술사 전술 장갑","set":"검술사","slot":"gloves","rarity":5,"def":42,"grade":{"base":108,"enh":[118,129,139]},"dmg":{"kind":"critDmg","base":0.1917,"enh":[0.2108,0.23,0.2492]}},{"id":"item_equip_t4_suit_phy01_hand_02","name":"검술사 전술 금속 장갑","set":"검술사","slot":"gloves","rarity":5,"def":42,"grade":{"base":108,"enh":[118,129,139]},"dmg":{"kind":"ult","base":0.4313,"enh":[0.4744,0.5175,0.5606]}},{"id":"item_equip_t4_suit_usp02_edc_01","name":"식양의 숨결 충전 코어","set":"식양의 숨결","slot":"kit","rarity":5,"def":21,"grade":{"base":53,"enh":[58,63,68]},"dmg":{"kind":"critRate","base":0.2464,"enh":[0.2711,0.2957,0.3204]}},{"id":"item_equip_t4_suit_phy01_hand_03","name":"검술사 전술 금속 장갑 · I","set":"검술사","slot":"gloves","rarity":5,"def":42,"grade":{"base":108,"enh":[118,129,139]},"dmg":{"kind":"hpPct","base":0.1725,"enh":[0.1898,0.207,0.2243]}},{"id":"item_equip_t4_suit_poise01_edc_01","name":"경량 초자연 분석 반지","set":"경량 초자연","slot":"kit","rarity":5,"def":21,"grade":{"base":53,"enh":[58,63,68]},"dmg":{"kind":"critDmg","base":0.23,"enh":[0.253,0.276,0.299]}},{"id":"item_equip_t4_suit_poise01_edc_02","name":"경량 초자연 안정판","set":"경량 초자연","slot":"kit","rarity":5,"def":21,"grade":{"base":53,"enh":[58,63,68]},"dmg":{"kind":"hpPct","base":0.207,"enh":[0.2277,0.2484,0.2691]}},{"id":"item_equip_t4_suit_poise01_hand_01","name":"경량 초자연 보호 장갑","set":"경량 초자연","slot":"gloves","rarity":5,"def":42,"grade":{"base":108,"enh":[118,129,139]},"dmg":{"kind":"hpPct","base":0.1725,"enh":[0.1898,0.207,0.2243]}},{"id":"item_equip_t4_suit_poise01_hand_02","name":"경량 초자연 경량 보호 장갑","set":"경량 초자연","slot":"gloves","rarity":5,"def":42,"grade":{"base":108,"enh":[118,129,139]},"dmg":{"kind":"atkPct","base":0.23,"enh":[0.253,0.276,0.299]}},{"id":"item_equip_t4_suit_pulse_cryst01_body_01","name":"펄스식 교란 방어구","set":"펄스식","slot":"armor","rarity":5,"def":56,"grade":{"base":145,"enh":[158,173,188]},"dmg":{"kind":"hpPct","base":0.1035,"enh":[0.1138,0.1242,0.1346]}},{"id":"item_equip_t4_suit_pulse_cryst01_edc_02","name":"펄스식 교정기","set":"펄스식","slot":"kit","rarity":5,"def":21,"grade":{"base":41,"enh":[45,49,53]},"dmg":{"kind":"hpPct","base":0.207,"enh":[0.2277,0.2484,0.2691]}},{"id":"item_equip_t4_suit_pulse_cryst01_hand_01","name":"펄스식 장갑","set":"펄스식","slot":"gloves","rarity":5,"def":42,"grade":{"base":108,"enh":[118,129,139]},"dmg":{"kind":"atkPct","base":0.1917,"enh":[0.2108,0.23,0.2492]}},{"id":"item_equip_t4_suit_usp02_edc_02","name":"식양의 숨결 충전 코어 · I","set":"식양의 숨결","slot":"kit","rarity":5,"def":21,"grade":{"base":53,"enh":[58,63,68]},"dmg":{"kind":"battle","base":0.207,"enh":[0.2277,0.2484,0.2691]}},{"id":"item_equip_t4_suit_usp02_edc_03","name":"식양의 숨결 보조 어깨","set":"식양의 숨결","slot":"kit","rarity":5,"def":21,"grade":{"base":53,"enh":[58,63,68]},"dmg":{"kind":"critRate","base":0.2464,"enh":[0.2711,0.2957,0.3204]}}]
+[
+ {
+  "id": "item_equip_t0_parts_tundra01_body_01",
+  "name": "간편 방어구",
+  "set": "?",
+  "slot": "armor",
+  "rarity": 1,
+  "def": 8,
+  "grade": {
+   "base": 25,
+   "enh": [
+    25,
+    25,
+    25
+   ]
+  },
+  "dmg": {
+   "kind": "hpPct",
+   "base": 46,
+   "enh": [
+    46,
+    46,
+    46
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t3_suit_will01_body_01",
+  "name": "침식 방호 조끼 · I",
+  "set": "침식 방호",
+  "slot": "armor",
+  "rarity": 4,
+  "def": 40,
+  "grade": {
+   "base": 102,
+   "enh": [
+    102,
+    102,
+    102
+   ]
+  },
+  "dmg": {
+   "kind": "hpPct",
+   "base": 0.147,
+   "enh": [
+    0.147,
+    0.147,
+    0.147
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_parts_wuling01_edc_03",
+  "name": "위기 탈출 도장",
+  "set": "?",
+  "slot": "kit",
+  "rarity": 5,
+  "def": 21,
+  "grade": {
+   "base": 43,
+   "enh": [
+    47,
+    51,
+    55
+   ]
+  },
+  "dmg": {
+   "kind": "ultEff",
+   "base": 0.257,
+   "enh": [
+    0.283,
+    0.309,
+    0.334
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t0_parts_tundra01_body_02",
+  "name": "간편 방호복",
+  "set": "?",
+  "slot": "armor",
+  "rarity": 1,
+  "def": 8,
+  "grade": {
+   "base": 25,
+   "enh": [
+    25,
+    25,
+    25
+   ]
+  },
+  "dmg": {
+   "kind": "hpPct",
+   "base": 46,
+   "enh": [
+    46,
+    46,
+    46
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t3_suit_str01_body_01",
+  "name": "중장갑 전달자 재킷 · I",
+  "set": "중장갑 전달자",
+  "slot": "armor",
+  "rarity": 4,
+  "def": 40,
+  "grade": {
+   "base": 102,
+   "enh": [
+    102,
+    102,
+    102
+   ]
+  },
+  "dmg": {
+   "kind": "hpPct",
+   "base": 0.147,
+   "enh": [
+    0.147,
+    0.147,
+    0.147
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t0_parts_tundra01_hand_01",
+  "name": "간편 금속 장갑",
+  "set": "?",
+  "slot": "gloves",
+  "rarity": 1,
+  "def": 6,
+  "grade": {
+   "base": 18,
+   "enh": [
+    18,
+    18,
+    18
+   ]
+  },
+  "dmg": {
+   "kind": "hpPct",
+   "base": 77,
+   "enh": [
+    77,
+    77,
+    77
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t0_parts_tundra01_hand_02",
+  "name": "간편 보호 장갑",
+  "set": "?",
+  "slot": "gloves",
+  "rarity": 1,
+  "def": 6,
+  "grade": {
+   "base": 18,
+   "enh": [
+    18,
+    18,
+    18
+   ]
+  },
+  "dmg": {
+   "kind": "hpPct",
+   "base": 77,
+   "enh": [
+    77,
+    77,
+    77
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t2_suit_agi01_edc_01",
+  "name": "순행 전달자 팽이",
+  "set": "순행 전달자",
+  "slot": "kit",
+  "rarity": 3,
+  "def": 11,
+  "grade": {
+   "base": 21,
+   "enh": [
+    21,
+    21,
+    21
+   ]
+  },
+  "dmg": {
+   "kind": "atkPct",
+   "base": 0.105,
+   "enh": [
+    0.105,
+    0.105,
+    0.105
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t3_suit_usp01_edc_03",
+  "name": "재앙 방호 필터",
+  "set": "재앙 방호",
+  "slot": "kit",
+  "rarity": 4,
+  "def": 15,
+  "grade": {
+   "base": 38,
+   "enh": [
+    38,
+    38,
+    38
+   ]
+  },
+  "dmg": {
+   "kind": "artsStr",
+   "base": 0.147,
+   "enh": [
+    0.147,
+    0.147,
+    0.147
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_criti01_edc_01",
+  "name": "M. I. 경찰용 암밴드",
+  "set": "M. I. 경찰용",
+  "slot": "kit",
+  "rarity": 5,
+  "def": 21,
+  "grade": {
+   "base": 53,
+   "enh": [
+    58,
+    63,
+    68
+   ]
+  },
+  "dmg": {
+   "kind": "elem",
+   "base": 0.23,
+   "enh": [
+    0.253,
+    0.276,
+    0.299
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t1_parts_tundra01_body_01",
+  "name": "광산 방어구",
+  "set": "?",
+  "slot": "armor",
+  "rarity": 2,
+  "def": 16,
+  "grade": {
+   "base": 45,
+   "enh": [
+    45,
+    45,
+    45
+   ]
+  },
+  "dmg": {
+   "kind": "hpPct",
+   "base": 125,
+   "enh": [
+    125,
+    125,
+    125
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t3_suit_agi01_edc_03",
+  "name": "순행 전달자 팽이 · I",
+  "set": "순행 전달자",
+  "slot": "kit",
+  "rarity": 4,
+  "def": 15,
+  "grade": {
+   "base": 38,
+   "enh": [
+    38,
+    38,
+    38
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t1_parts_tundra01_body_02",
+  "name": "광산 방호복",
+  "set": "?",
+  "slot": "armor",
+  "rarity": 2,
+  "def": 16,
+  "grade": {
+   "base": 45,
+   "enh": [
+    45,
+    45,
+    45
+   ]
+  },
+  "dmg": {
+   "kind": "hpPct",
+   "base": 125,
+   "enh": [
+    125,
+    125,
+    125
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_attri01_body_04",
+  "name": "본 크러셔 머플러 · I",
+  "set": "본 크러셔",
+  "slot": "armor",
+  "rarity": 5,
+  "def": 56,
+  "grade": {
+   "base": 145,
+   "enh": [
+    158,
+    173,
+    188
+   ]
+  },
+  "dmg": {
+   "kind": "critRate",
+   "base": 0.1232,
+   "enh": [
+    0.1355,
+    0.1479,
+    0.1602
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t1_parts_tundra01_body_03",
+  "name": "시험형 중갑",
+  "set": "?",
+  "slot": "armor",
+  "rarity": 2,
+  "def": 22,
+  "grade": {
+   "base": 62,
+   "enh": [
+    62,
+    62,
+    62
+   ]
+  },
+  "dmg": {
+   "kind": "atkPct",
+   "base": 11,
+   "enh": [
+    11,
+    11,
+    11
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t3_suit_str01_hand_02",
+  "name": "중장갑 전달자 장갑 · II",
+  "set": "중장갑 전달자",
+  "slot": "gloves",
+  "rarity": 4,
+  "def": 30,
+  "grade": {
+   "base": 76,
+   "enh": [
+    76,
+    76,
+    76
+   ]
+  },
+  "dmg": {
+   "kind": "link",
+   "base": 0.245,
+   "enh": [
+    0.245,
+    0.245,
+    0.245
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_attri01_body_05",
+  "name": "본 크러셔 중갑 방어구 · II",
+  "set": "본 크러셔",
+  "slot": "armor",
+  "rarity": 5,
+  "def": 56,
+  "grade": {
+   "base": 145,
+   "enh": [
+    158,
+    173,
+    188
+   ]
+  },
+  "dmg": {
+   "kind": "atkPct",
+   "base": 0.115,
+   "enh": [
+    0.1265,
+    0.138,
+    0.1495
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t1_parts_tundra01_body_04",
+  "name": "시험형 중갑 · I",
+  "set": "?",
+  "slot": "armor",
+  "rarity": 2,
+  "def": 22,
+  "grade": {
+   "base": 62,
+   "enh": [
+    62,
+    62,
+    62
+   ]
+  },
+  "dmg": {
+   "kind": "atkPct",
+   "base": 11,
+   "enh": [
+    11,
+    11,
+    11
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t1_parts_tundra01_body_05",
+  "name": "광산 경갑",
+  "set": "?",
+  "slot": "armor",
+  "rarity": 2,
+  "def": 22,
+  "grade": {
+   "base": 62,
+   "enh": [
+    62,
+    62,
+    62
+   ]
+  },
+  "dmg": {
+   "kind": "hpPct",
+   "base": 0.09,
+   "enh": [
+    0.09,
+    0.09,
+    0.09
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t1_suit_stragi01_edc_02",
+  "name": "통합형 합금판",
+  "set": "통합형 중갑",
+  "slot": "kit",
+  "rarity": 2,
+  "def": 8,
+  "grade": {
+   "base": 16,
+   "enh": [
+    16,
+    16,
+    16
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t1_parts_tundra01_body_06",
+  "name": "광산 방진복",
+  "set": "?",
+  "slot": "armor",
+  "rarity": 2,
+  "def": 22,
+  "grade": {
+   "base": 62,
+   "enh": [
+    62,
+    62,
+    62
+   ]
+  },
+  "dmg": {
+   "kind": "hpPct",
+   "base": 0.09,
+   "enh": [
+    0.09,
+    0.09,
+    0.09
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t2_suit_wisd01_edc_01",
+  "name": "침식 차단 스패너",
+  "set": "침식 차단",
+  "slot": "kit",
+  "rarity": 3,
+  "def": 11,
+  "grade": {
+   "base": 21,
+   "enh": [
+    21,
+    21,
+    21
+   ]
+  },
+  "dmg": {
+   "kind": "atkPct",
+   "base": 0.105,
+   "enh": [
+    0.105,
+    0.105,
+    0.105
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_attri01_edc_06",
+  "name": "본 크러셔 조각상 · I",
+  "set": "본 크러셔",
+  "slot": "kit",
+  "rarity": 5,
+  "def": 21,
+  "grade": {
+   "base": 53,
+   "enh": [
+    58,
+    63,
+    68
+   ]
+  },
+  "dmg": {
+   "kind": "elem",
+   "base": 0.414,
+   "enh": [
+    0.4554,
+    0.4968,
+    0.5382
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t1_parts_tundra01_edc_01",
+  "name": "응급 통신기",
+  "set": "?",
+  "slot": "kit",
+  "rarity": 2,
+  "def": 6,
+  "grade": {
+   "base": 0,
+   "enh": [
+    0,
+    0,
+    0
+   ]
+  },
+  "dmg": {
+   "kind": "critRate",
+   "base": 0.066,
+   "enh": [
+    0.066,
+    0.066,
+    0.066
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_attri01_edc_03",
+  "name": "본 크러셔 조각상",
+  "set": "본 크러셔",
+  "slot": "kit",
+  "rarity": 5,
+  "def": 21,
+  "grade": {
+   "base": 53,
+   "enh": [
+    58,
+    63,
+    68
+   ]
+  },
+  "dmg": {
+   "kind": "battle",
+   "base": 0.414,
+   "enh": [
+    0.455,
+    0.497,
+    0.538
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t1_parts_tundra01_edc_02",
+  "name": "응급 압축 장치",
+  "set": "?",
+  "slot": "kit",
+  "rarity": 2,
+  "def": 6,
+  "grade": {
+   "base": 0,
+   "enh": [
+    0,
+    0,
+    0
+   ]
+  },
+  "dmg": {
+   "kind": "atkPct",
+   "base": 0.132,
+   "enh": [
+    0.132,
+    0.132,
+    0.132
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t1_parts_tundra01_hand_01",
+  "name": "광산 금속 장갑",
+  "set": "?",
+  "slot": "gloves",
+  "rarity": 2,
+  "def": 12,
+  "grade": {
+   "base": 33,
+   "enh": [
+    33,
+    33,
+    33
+   ]
+  },
+  "dmg": {
+   "kind": "hpPct",
+   "base": 0.11,
+   "enh": [
+    0.11,
+    0.11,
+    0.11
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_expend_spell01_hand_02",
+  "name": "식양의 흐름 보호 장갑",
+  "set": "식양의 흐름",
+  "slot": "gloves",
+  "rarity": 5,
+  "def": 42,
+  "grade": {
+   "base": 108,
+   "enh": [
+    118,
+    129,
+    139
+   ]
+  },
+  "dmg": {
+   "kind": "elem",
+   "base": 0.192,
+   "enh": [
+    0.211,
+    0.23,
+    0.249
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t1_parts_tundra01_hand_02",
+  "name": "광산 장갑(손목)",
+  "set": "?",
+  "slot": "gloves",
+  "rarity": 2,
+  "def": 17,
+  "grade": {
+   "base": 46,
+   "enh": [
+    46,
+    46,
+    46
+   ]
+  },
+  "dmg": {
+   "kind": "hpPct",
+   "base": 0.15,
+   "enh": [
+    0.15,
+    0.15,
+    0.15
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_criti01_hand_03",
+  "name": "M. I. 경찰용 장갑(팔찌) · I",
+  "set": "M. I. 경찰용",
+  "slot": "gloves",
+  "rarity": 5,
+  "def": 42,
+  "grade": {
+   "base": 108,
+   "enh": [
+    118,
+    129,
+    139
+   ]
+  },
+  "dmg": {
+   "kind": "attack",
+   "base": 0.0862,
+   "enh": [
+    0.0949,
+    0.1035,
+    0.1121
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_crush_fracture_hand_01",
+  "name": "고검의 잔향 금속 장갑",
+  "set": "고검의 잔향",
+  "slot": "gloves",
+  "rarity": 5,
+  "def": 42,
+  "grade": {
+   "base": 108,
+   "enh": [
+    118,
+    129,
+    139
+   ]
+  },
+  "dmg": {
+   "kind": "artsStr",
+   "base": 34,
+   "enh": [
+    37,
+    41,
+    44
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t1_parts_tundra01_hand_03",
+  "name": "광산 장갑",
+  "set": "?",
+  "slot": "gloves",
+  "rarity": 2,
+  "def": 12,
+  "grade": {
+   "base": 33,
+   "enh": [
+    33,
+    33,
+    33
+   ]
+  },
+  "dmg": {
+   "kind": "hpPct",
+   "base": 0.11,
+   "enh": [
+    0.11,
+    0.11,
+    0.11
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_parts_wuling01_hand_02",
+  "name": "위기 탈출 장갑",
+  "set": "?",
+  "slot": "gloves",
+  "rarity": 5,
+  "def": 42,
+  "grade": {
+   "base": 86,
+   "enh": [
+    94,
+    103,
+    111
+   ]
+  },
+  "dmg": {
+   "kind": "all",
+   "base": 0.24,
+   "enh": [
+    0.264,
+    0.288,
+    0.312
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t1_parts_tundra01_hand_04",
+  "name": "광산 보호 장갑",
+  "set": "?",
+  "slot": "gloves",
+  "rarity": 2,
+  "def": 17,
+  "grade": {
+   "base": 46,
+   "enh": [
+    46,
+    46,
+    46
+   ]
+  },
+  "dmg": {
+   "kind": "hpPct",
+   "base": 0.15,
+   "enh": [
+    0.15,
+    0.15,
+    0.15
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t1_suit_stragi01_body_01",
+  "name": "통합형 중갑",
+  "set": "통합형 중갑",
+  "slot": "armor",
+  "rarity": 2,
+  "def": 22,
+  "grade": {
+   "base": 60,
+   "enh": [
+    60,
+    60,
+    60
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_attri01_hand_01",
+  "name": "본 크러셔 장갑(손목)",
+  "set": "본 크러셔",
+  "slot": "gloves",
+  "rarity": 5,
+  "def": 42,
+  "grade": {
+   "base": 108,
+   "enh": [
+    118,
+    129,
+    139
+   ]
+  },
+  "dmg": {
+   "kind": "elem",
+   "base": 0.192,
+   "enh": [
+    0.211,
+    0.23,
+    0.249
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_phy01_edc_03",
+  "name": "검술사 부싯돌",
+  "set": "검술사",
+  "slot": "kit",
+  "rarity": 5,
+  "def": 21,
+  "grade": {
+   "base": 53,
+   "enh": [
+    58,
+    63,
+    68
+   ]
+  },
+  "dmg": {
+   "kind": "all",
+   "base": 0.23,
+   "enh": [
+    0.253,
+    0.276,
+    0.299
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t1_suit_stragi01_edc_01",
+  "name": "통합형 중갑판",
+  "set": "통합형 중갑",
+  "slot": "kit",
+  "rarity": 2,
+  "def": 8,
+  "grade": {
+   "base": 16,
+   "enh": [
+    16,
+    16,
+    16
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_heal01_hand_01",
+  "name": "생체 보조 장갑(팔목)",
+  "set": "생체 보조",
+  "slot": "gloves",
+  "rarity": 5,
+  "def": 42,
+  "grade": {
+   "base": 108,
+   "enh": [
+    118,
+    129,
+    139
+   ]
+  },
+  "dmg": {
+   "kind": "ultEff",
+   "base": 0.205,
+   "enh": [
+    0.226,
+    0.246,
+    0.267
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t1_suit_stragi01_hand_01",
+  "name": "통합형 금속 장갑",
+  "set": "통합형 중갑",
+  "slot": "gloves",
+  "rarity": 2,
+  "def": 17,
+  "grade": {
+   "base": 46,
+   "enh": [
+    46,
+    46,
+    46
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_usp02_hand_01",
+  "name": "식양의 숨결 보호 장갑",
+  "set": "식양의 숨결",
+  "slot": "gloves",
+  "rarity": 5,
+  "def": 42,
+  "grade": {
+   "base": 108,
+   "enh": [
+    118,
+    129,
+    139
+   ]
+  },
+  "dmg": {
+   "kind": "ultEff",
+   "base": 0.205,
+   "enh": [
+    0.226,
+    0.246,
+    0.267
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t1_suit_wisdwill01_body_01",
+  "name": "통합형 경갑",
+  "set": "통합형 경갑",
+  "slot": "armor",
+  "rarity": 2,
+  "def": 22,
+  "grade": {
+   "base": 60,
+   "enh": [
+    60,
+    60,
+    60
+   ]
+  },
+  "dmg": {
+   "kind": "battle",
+   "base": 0.081,
+   "enh": [
+    0.081,
+    0.081,
+    0.081
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t1_suit_wisdwill01_edc_01",
+  "name": "통합형 경갑판",
+  "set": "통합형 경갑",
+  "slot": "kit",
+  "rarity": 2,
+  "def": 8,
+  "grade": {
+   "base": 16,
+   "enh": [
+    16,
+    16,
+    16
+   ]
+  },
+  "dmg": {
+   "kind": "link",
+   "base": 0.162,
+   "enh": [
+    0.162,
+    0.162,
+    0.162
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_heal01_body_01",
+  "name": "생체 보조 중갑",
+  "set": "생체 보조",
+  "slot": "armor",
+  "rarity": 5,
+  "def": 56,
+  "grade": {
+   "base": 145,
+   "enh": [
+    158,
+    173,
+    188
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t1_suit_wisdwill01_edc_02",
+  "name": "통합형 세라믹판",
+  "set": "통합형 경갑",
+  "slot": "kit",
+  "rarity": 2,
+  "def": 8,
+  "grade": {
+   "base": 16,
+   "enh": [
+    16,
+    16,
+    16
+   ]
+  },
+  "dmg": {
+   "kind": "battle",
+   "base": 0.162,
+   "enh": [
+    0.162,
+    0.162,
+    0.162
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t1_suit_wisdwill01_hand_01",
+  "name": "통합형 전술 장갑",
+  "set": "통합형 경갑",
+  "slot": "gloves",
+  "rarity": 2,
+  "def": 17,
+  "grade": {
+   "base": 46,
+   "enh": [
+    46,
+    46,
+    46
+   ]
+  },
+  "dmg": {
+   "kind": "link",
+   "base": 0.135,
+   "enh": [
+    0.135,
+    0.135,
+    0.135
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_attri01_body_02",
+  "name": "본 크러셔 중갑 방어구 · I",
+  "set": "본 크러셔",
+  "slot": "armor",
+  "rarity": 5,
+  "def": 56,
+  "grade": {
+   "base": 145,
+   "enh": [
+    158,
+    173,
+    188
+   ]
+  },
+  "dmg": {
+   "kind": "elem",
+   "base": 0.207,
+   "enh": [
+    0.2277,
+    0.2484,
+    0.2691
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t2_parts_tundra01_edc_01",
+  "name": "광산 과급기",
+  "set": "?",
+  "slot": "kit",
+  "rarity": 3,
+  "def": 11,
+  "grade": {
+   "base": 22,
+   "enh": [
+    22,
+    22,
+    22
+   ]
+  },
+  "dmg": {
+   "kind": "link",
+   "base": 0.228,
+   "enh": [
+    0.228,
+    0.228,
+    0.228
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_burst01_hand_01",
+  "name": "조류의 물결 금속 장갑",
+  "set": "조류의 물결",
+  "slot": "gloves",
+  "rarity": 5,
+  "def": 42,
+  "grade": {
+   "base": 108,
+   "enh": [
+    118,
+    129,
+    139
+   ]
+  },
+  "dmg": {
+   "kind": "elem",
+   "base": 0.192,
+   "enh": [
+    0.211,
+    0.23,
+    0.249
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t2_parts_tundra01_edc_02",
+  "name": "광산 전동기",
+  "set": "?",
+  "slot": "kit",
+  "rarity": 3,
+  "def": 11,
+  "grade": {
+   "base": 22,
+   "enh": [
+    22,
+    22,
+    22
+   ]
+  },
+  "dmg": {
+   "kind": "critRate",
+   "base": 0.057,
+   "enh": [
+    0.057,
+    0.057,
+    0.057
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t3_suit_str01_edc_01",
+  "name": "중장갑 전달자 팽이 · I",
+  "set": "중장갑 전달자",
+  "slot": "kit",
+  "rarity": 4,
+  "def": 15,
+  "grade": {
+   "base": 38,
+   "enh": [
+    38,
+    38,
+    38
+   ]
+  },
+  "dmg": {
+   "kind": "atkPct",
+   "base": 0.147,
+   "enh": [
+    0.147,
+    0.147,
+    0.147
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t2_parts_tundra01_edc_03",
+  "name": "광산 압축 장치",
+  "set": "?",
+  "slot": "kit",
+  "rarity": 3,
+  "def": 11,
+  "grade": {
+   "base": 22,
+   "enh": [
+    22,
+    22,
+    22
+   ]
+  },
+  "dmg": {
+   "kind": "critRate",
+   "base": 0.057,
+   "enh": [
+    0.057,
+    0.057,
+    0.057
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t3_suit_will01_edc_01",
+  "name": "침식 방호 배터리 · I",
+  "set": "침식 방호",
+  "slot": "kit",
+  "rarity": 4,
+  "def": 15,
+  "grade": {
+   "base": 38,
+   "enh": [
+    38,
+    38,
+    38
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_atb01_hand_02",
+  "name": "개척자 섬유 장갑",
+  "set": "개척",
+  "slot": "gloves",
+  "rarity": 5,
+  "def": 42,
+  "grade": {
+   "base": 108,
+   "enh": [
+    118,
+    129,
+    139
+   ]
+  },
+  "dmg": {
+   "kind": "all",
+   "base": 0.23,
+   "enh": [
+    0.253,
+    0.276,
+    0.299
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t2_parts_tundra01_edc_04",
+  "name": "광산 통신기",
+  "set": "?",
+  "slot": "kit",
+  "rarity": 3,
+  "def": 11,
+  "grade": {
+   "base": 22,
+   "enh": [
+    22,
+    22,
+    22
+   ]
+  },
+  "dmg": {
+   "kind": "hpPct",
+   "base": 0.228,
+   "enh": [
+    0.228,
+    0.228,
+    0.228
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t2_parts_tundra01_hand_01",
+  "name": "광산 금속 장갑 · I",
+  "set": "?",
+  "slot": "gloves",
+  "rarity": 3,
+  "def": 22,
+  "grade": {
+   "base": 60,
+   "enh": [
+    60,
+    60,
+    60
+   ]
+  },
+  "dmg": {
+   "kind": "atkPct",
+   "base": 0.095,
+   "enh": [
+    0.095,
+    0.095,
+    0.095
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t2_parts_tundra01_hand_02",
+  "name": "광산 장갑 · I",
+  "set": "?",
+  "slot": "gloves",
+  "rarity": 3,
+  "def": 22,
+  "grade": {
+   "base": 60,
+   "enh": [
+    60,
+    60,
+    60
+   ]
+  },
+  "dmg": {
+   "kind": "hpPct",
+   "base": 0.19,
+   "enh": [
+    0.19,
+    0.19,
+    0.19
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t2_suit_agi01_body_01",
+  "name": "순행 전달자 재킷",
+  "set": "순행 전달자",
+  "slot": "armor",
+  "rarity": 3,
+  "def": 29,
+  "grade": {
+   "base": 73,
+   "enh": [
+    73,
+    73,
+    73
+   ]
+  },
+  "dmg": {
+   "kind": "atkPct",
+   "base": 16,
+   "enh": [
+    16,
+    16,
+    16
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_usp02_body_01",
+  "name": "식양의 숨결 경장갑",
+  "set": "식양의 숨결",
+  "slot": "armor",
+  "rarity": 5,
+  "def": 56,
+  "grade": {
+   "base": 145,
+   "enh": [
+    158,
+    173,
+    188
+   ]
+  },
+  "dmg": {
+   "kind": "artsStr",
+   "base": 20,
+   "enh": [
+    22,
+    24,
+    26
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t2_suit_agi01_edc_02",
+  "name": "순행 전달자 손전등",
+  "set": "순행 전달자",
+  "slot": "kit",
+  "rarity": 3,
+  "def": 11,
+  "grade": {
+   "base": 21,
+   "enh": [
+    21,
+    21,
+    21
+   ]
+  },
+  "dmg": {
+   "kind": "link",
+   "base": 0.21,
+   "enh": [
+    0.21,
+    0.21,
+    0.21
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t3_suit_agi01_body_01",
+  "name": "순행 전달자 재킷 · I",
+  "set": "순행 전달자",
+  "slot": "armor",
+  "rarity": 4,
+  "def": 40,
+  "grade": {
+   "base": 102,
+   "enh": [
+    102,
+    102,
+    102
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_criti01_edc_04",
+  "name": "M. I. 경찰용 단검",
+  "set": "M. I. 경찰용",
+  "slot": "kit",
+  "rarity": 5,
+  "def": 21,
+  "grade": {
+   "base": 53,
+   "enh": [
+    58,
+    63,
+    68
+   ]
+  },
+  "dmg": {
+   "kind": "elem",
+   "base": 0.23,
+   "enh": [
+    0.253,
+    0.276,
+    0.299
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t2_suit_agi01_hand_01",
+  "name": "순행 전달자 장갑",
+  "set": "순행 전달자",
+  "slot": "gloves",
+  "rarity": 3,
+  "def": 22,
+  "grade": {
+   "base": 55,
+   "enh": [
+    55,
+    55,
+    55
+   ]
+  },
+  "dmg": {
+   "kind": "all",
+   "base": 0.097,
+   "enh": [
+    0.097,
+    0.097,
+    0.097
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t2_suit_str01_body_01",
+  "name": "중장갑 전달자 재킷",
+  "set": "중장갑 전달자",
+  "slot": "armor",
+  "rarity": 3,
+  "def": 29,
+  "grade": {
+   "base": 73,
+   "enh": [
+    73,
+    73,
+    73
+   ]
+  },
+  "dmg": {
+   "kind": "hpPct",
+   "base": 0.105,
+   "enh": [
+    0.105,
+    0.105,
+    0.105
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t2_suit_str01_edc_01",
+  "name": "중장갑 전달자 팽이",
+  "set": "중장갑 전달자",
+  "slot": "kit",
+  "rarity": 3,
+  "def": 11,
+  "grade": {
+   "base": 21,
+   "enh": [
+    21,
+    21,
+    21
+   ]
+  },
+  "dmg": {
+   "kind": "atkPct",
+   "base": 0.105,
+   "enh": [
+    0.105,
+    0.105,
+    0.105
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_fire_natr01_body_02",
+  "name": "열 작업용 보조 골격",
+  "set": "열 작업용",
+  "slot": "armor",
+  "rarity": 5,
+  "def": 56,
+  "grade": {
+   "base": 145,
+   "enh": [
+    158,
+    173,
+    188
+   ]
+  },
+  "dmg": {
+   "kind": "elem",
+   "base": 0.115,
+   "enh": [
+    0.127,
+    0.138,
+    0.149
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t2_suit_str01_edc_02",
+  "name": "중장갑 전달자 손전등",
+  "set": "중장갑 전달자",
+  "slot": "kit",
+  "rarity": 3,
+  "def": 11,
+  "grade": {
+   "base": 21,
+   "enh": [
+    21,
+    21,
+    21
+   ]
+  },
+  "dmg": {
+   "kind": "hpPct",
+   "base": 0.21,
+   "enh": [
+    0.21,
+    0.21,
+    0.21
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t2_suit_str01_hand_01",
+  "name": "중장갑 전달자 장갑",
+  "set": "중장갑 전달자",
+  "slot": "gloves",
+  "rarity": 3,
+  "def": 22,
+  "grade": {
+   "base": 55,
+   "enh": [
+    55,
+    55,
+    55
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_combo_cd01_hand_02",
+  "name": "청파 보호 장갑",
+  "set": "청파",
+  "slot": "gloves",
+  "rarity": 5,
+  "def": 42,
+  "grade": {
+   "base": 108,
+   "enh": [
+    118,
+    129,
+    139
+   ]
+  },
+  "dmg": {
+   "kind": "ultEff",
+   "base": 0.205,
+   "enh": [
+    0.226,
+    0.246,
+    0.267
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t2_suit_will01_body_01",
+  "name": "침식 방호 조끼",
+  "set": "침식 방호",
+  "slot": "armor",
+  "rarity": 3,
+  "def": 29,
+  "grade": {
+   "base": 73,
+   "enh": [
+    73,
+    73,
+    73
+   ]
+  },
+  "dmg": {
+   "kind": "hpPct",
+   "base": 0.105,
+   "enh": [
+    0.105,
+    0.105,
+    0.105
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t2_suit_will01_edc_01",
+  "name": "침식 방호 스패너",
+  "set": "침식 방호",
+  "slot": "kit",
+  "rarity": 3,
+  "def": 11,
+  "grade": {
+   "base": 21,
+   "enh": [
+    21,
+    21,
+    21
+   ]
+  },
+  "dmg": {
+   "kind": "atkPct",
+   "base": 0.105,
+   "enh": [
+    0.105,
+    0.105,
+    0.105
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t2_suit_will01_edc_02",
+  "name": "침식 방호 배터리",
+  "set": "침식 방호",
+  "slot": "kit",
+  "rarity": 3,
+  "def": 11,
+  "grade": {
+   "base": 21,
+   "enh": [
+    21,
+    21,
+    21
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_fire_natr01_hand_03",
+  "name": "열 작업용 금속 장갑 · I",
+  "set": "열 작업용",
+  "slot": "gloves",
+  "rarity": 5,
+  "def": 42,
+  "grade": {
+   "base": 108,
+   "enh": [
+    118,
+    129,
+    139
+   ]
+  },
+  "dmg": {
+   "kind": "atkPct",
+   "base": 0.1917,
+   "enh": [
+    0.2108,
+    0.23,
+    0.2492
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t2_suit_will01_hand_01",
+  "name": "침식 방호 장갑",
+  "set": "침식 방호",
+  "slot": "gloves",
+  "rarity": 3,
+  "def": 22,
+  "grade": {
+   "base": 55,
+   "enh": [
+    55,
+    55,
+    55
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t2_suit_wisd01_body_01",
+  "name": "침식 차단 조끼",
+  "set": "침식 차단",
+  "slot": "armor",
+  "rarity": 3,
+  "def": 29,
+  "grade": {
+   "base": 73,
+   "enh": [
+    73,
+    73,
+    73
+   ]
+  },
+  "dmg": {
+   "kind": "atkPct",
+   "base": 16,
+   "enh": [
+    16,
+    16,
+    16
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t2_suit_wisd01_edc_02",
+  "name": "침식 차단 스패너 · I",
+  "set": "침식 차단",
+  "slot": "kit",
+  "rarity": 3,
+  "def": 11,
+  "grade": {
+   "base": 21,
+   "enh": [
+    21,
+    21,
+    21
+   ]
+  },
+  "dmg": {
+   "kind": "elem",
+   "base": 0.117,
+   "enh": [
+    0.117,
+    0.117,
+    0.117
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t2_suit_wisd01_edc_03",
+  "name": "침식 차단 배터리",
+  "set": "침식 차단",
+  "slot": "kit",
+  "rarity": 3,
+  "def": 11,
+  "grade": {
+   "base": 21,
+   "enh": [
+    21,
+    21,
+    21
+   ]
+  },
+  "dmg": {
+   "kind": "critRate",
+   "base": 0.053,
+   "enh": [
+    0.053,
+    0.053,
+    0.053
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_atb01_edc_01",
+  "name": "개척자 통신기",
+  "set": "개척",
+  "slot": "kit",
+  "rarity": 5,
+  "def": 21,
+  "grade": {
+   "base": 53,
+   "enh": [
+    58,
+    63,
+    68
+   ]
+  },
+  "dmg": {
+   "kind": "link",
+   "base": 0.414,
+   "enh": [
+    0.455,
+    0.497,
+    0.538
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t2_suit_wisd01_hand_01",
+  "name": "침식 차단 장갑",
+  "set": "침식 차단",
+  "slot": "gloves",
+  "rarity": 3,
+  "def": 22,
+  "grade": {
+   "base": 55,
+   "enh": [
+    55,
+    55,
+    55
+   ]
+  },
+  "dmg": {
+   "kind": "elem",
+   "base": 0.092,
+   "enh": [
+    0.092,
+    0.092,
+    0.092
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t3_parts_tundra01_body_01",
+  "name": "광산 방어구 · I",
+  "set": "?",
+  "slot": "armor",
+  "rarity": 4,
+  "def": 40,
+  "grade": {
+   "base": 108,
+   "enh": [
+    108,
+    108,
+    108
+   ]
+  },
+  "dmg": {
+   "kind": "critRate",
+   "base": 0.039,
+   "enh": [
+    0.039,
+    0.039,
+    0.039
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t3_parts_tundra01_body_02",
+  "name": "광산 방호복 · I",
+  "set": "?",
+  "slot": "armor",
+  "rarity": 4,
+  "def": 40,
+  "grade": {
+   "base": 108,
+   "enh": [
+    108,
+    108,
+    108
+   ]
+  },
+  "dmg": {
+   "kind": "atkPct",
+   "base": 0.078,
+   "enh": [
+    0.078,
+    0.078,
+    0.078
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t3_parts_tundra01_edc_01",
+  "name": "광산 과급기 · I",
+  "set": "?",
+  "slot": "kit",
+  "rarity": 4,
+  "def": 15,
+  "grade": {
+   "base": 31,
+   "enh": [
+    31,
+    31,
+    31
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t3_suit_atk01_edc_02",
+  "name": "아부레이 도청 칩",
+  "set": "아부레이의 메아리",
+  "slot": "kit",
+  "rarity": 4,
+  "def": 15,
+  "grade": {
+   "base": 38,
+   "enh": [
+    38,
+    38,
+    38
+   ]
+  },
+  "dmg": {
+   "kind": "vsBroken",
+   "base": 0.294,
+   "enh": [
+    0.294,
+    0.294,
+    0.294
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_attri01_hand_02",
+  "name": "본 크러셔 장갑(손목) · I",
+  "set": "본 크러셔",
+  "slot": "gloves",
+  "rarity": 5,
+  "def": 42,
+  "grade": {
+   "base": 108,
+   "enh": [
+    118,
+    129,
+    139
+   ]
+  },
+  "dmg": {
+   "kind": "atkPct",
+   "base": 0.1917,
+   "enh": [
+    0.2108,
+    0.23,
+    0.2492
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t3_parts_tundra01_edc_02",
+  "name": "광산 전동기 · I",
+  "set": "?",
+  "slot": "kit",
+  "rarity": 4,
+  "def": 15,
+  "grade": {
+   "base": 31,
+   "enh": [
+    31,
+    31,
+    31
+   ]
+  },
+  "dmg": {
+   "kind": "link",
+   "base": 0.312,
+   "enh": [
+    0.312,
+    0.312,
+    0.312
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t3_suit_atk01_edc_03",
+  "name": "아부레이 도청 칩 · I",
+  "set": "아부레이의 메아리",
+  "slot": "kit",
+  "rarity": 4,
+  "def": 15,
+  "grade": {
+   "base": 38,
+   "enh": [
+    38,
+    38,
+    38
+   ]
+  },
+  "dmg": {
+   "kind": "elem",
+   "base": 0.294,
+   "enh": [
+    0.294,
+    0.294,
+    0.294
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_heal01_body_02",
+  "name": "생체 보조 흉갑",
+  "set": "생체 보조",
+  "slot": "armor",
+  "rarity": 5,
+  "def": 56,
+  "grade": {
+   "base": 145,
+   "enh": [
+    158,
+    173,
+    188
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_phy01_body_03",
+  "name": "검술사 중장갑 · I",
+  "set": "검술사",
+  "slot": "armor",
+  "rarity": 5,
+  "def": 56,
+  "grade": {
+   "base": 145,
+   "enh": [
+    158,
+    173,
+    188
+   ]
+  },
+  "dmg": {
+   "kind": "all",
+   "base": 0.115,
+   "enh": [
+    0.127,
+    0.138,
+    0.149
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t3_parts_tundra01_edc_03",
+  "name": "광산 압축 장치 · I",
+  "set": "?",
+  "slot": "kit",
+  "rarity": 4,
+  "def": 15,
+  "grade": {
+   "base": 31,
+   "enh": [
+    31,
+    31,
+    31
+   ]
+  },
+  "dmg": {
+   "kind": "ultEff",
+   "base": 0.186,
+   "enh": [
+    0.186,
+    0.186,
+    0.186
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t3_suit_atk01_edc_04",
+  "name": "아부레이 조명 장치",
+  "set": "아부레이의 메아리",
+  "slot": "kit",
+  "rarity": 4,
+  "def": 15,
+  "grade": {
+   "base": 38,
+   "enh": [
+    38,
+    38,
+    38
+   ]
+  },
+  "dmg": {
+   "kind": "ultEff",
+   "base": 0.175,
+   "enh": [
+    0.175,
+    0.175,
+    0.175
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t3_parts_tundra01_edc_04",
+  "name": "광산 통신기 · I",
+  "set": "?",
+  "slot": "kit",
+  "rarity": 4,
+  "def": 15,
+  "grade": {
+   "base": 31,
+   "enh": [
+    31,
+    31,
+    31
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t3_suit_atk01_edc_05",
+  "name": "아부레이 센서 칩",
+  "set": "아부레이의 메아리",
+  "slot": "kit",
+  "rarity": 4,
+  "def": 15,
+  "grade": {
+   "base": 38,
+   "enh": [
+    38,
+    38,
+    38
+   ]
+  },
+  "dmg": {
+   "kind": "battle",
+   "base": 0.294,
+   "enh": [
+    0.294,
+    0.294,
+    0.294
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t3_parts_tundra01_hand_01",
+  "name": "광산 장갑 · II",
+  "set": "?",
+  "slot": "gloves",
+  "rarity": 4,
+  "def": 30,
+  "grade": {
+   "base": 81,
+   "enh": [
+    81,
+    81,
+    81
+   ]
+  },
+  "dmg": {
+   "kind": "atkPct",
+   "base": 0.13,
+   "enh": [
+    0.13,
+    0.13,
+    0.13
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t3_suit_agi01_hand_01",
+  "name": "순행 전달자 장갑 · I",
+  "set": "순행 전달자",
+  "slot": "gloves",
+  "rarity": 4,
+  "def": 30,
+  "grade": {
+   "base": 76,
+   "enh": [
+    76,
+    76,
+    76
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t3_suit_wisd01_edc_02",
+  "name": "침식 차단 배터리 · I",
+  "set": "침식 차단",
+  "slot": "kit",
+  "rarity": 4,
+  "def": 15,
+  "grade": {
+   "base": 29,
+   "enh": [
+    29,
+    29,
+    29
+   ]
+  },
+  "dmg": {
+   "kind": "ultEff",
+   "base": 0.175,
+   "enh": [
+    0.175,
+    0.175,
+    0.175
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t3_parts_tundra01_hand_02",
+  "name": "광산 보호 장갑 · I",
+  "set": "?",
+  "slot": "gloves",
+  "rarity": 4,
+  "def": 30,
+  "grade": {
+   "base": 81,
+   "enh": [
+    81,
+    81,
+    81
+   ]
+  },
+  "dmg": {
+   "kind": "ultEff",
+   "base": 0.155,
+   "enh": [
+    0.155,
+    0.155,
+    0.155
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t3_suit_wisd01_edc_01",
+  "name": "침식 차단 스패너 · II",
+  "set": "침식 차단",
+  "slot": "kit",
+  "rarity": 4,
+  "def": 15,
+  "grade": {
+   "base": 38,
+   "enh": [
+    38,
+    38,
+    38
+   ]
+  },
+  "dmg": {
+   "kind": "atkPct",
+   "base": 0.147,
+   "enh": [
+    0.147,
+    0.147,
+    0.147
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t3_suit_agi01_edc_01",
+  "name": "순행 전달자 손전등 · I",
+  "set": "순행 전달자",
+  "slot": "kit",
+  "rarity": 4,
+  "def": 15,
+  "grade": {
+   "base": 38,
+   "enh": [
+    38,
+    38,
+    38
+   ]
+  },
+  "dmg": {
+   "kind": "elem",
+   "base": 0.294,
+   "enh": [
+    0.294,
+    0.294,
+    0.294
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_parts_wuling01_edc_04",
+  "name": "위기 탈출 도장 · I",
+  "set": "?",
+  "slot": "kit",
+  "rarity": 5,
+  "def": 21,
+  "grade": {
+   "base": 43,
+   "enh": [
+    47,
+    51,
+    55
+   ]
+  },
+  "dmg": {
+   "kind": "critRate",
+   "base": 0.108,
+   "enh": [
+    0.119,
+    0.13,
+    0.14
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t3_suit_agi01_edc_02",
+  "name": "순행 전달자 손전등 · II",
+  "set": "순행 전달자",
+  "slot": "kit",
+  "rarity": 4,
+  "def": 15,
+  "grade": {
+   "base": 38,
+   "enh": [
+    38,
+    38,
+    38
+   ]
+  },
+  "dmg": {
+   "kind": "ult",
+   "base": 0.3675,
+   "enh": [
+    0.3675,
+    0.3675,
+    0.3675
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t3_suit_atk01_body_01",
+  "name": "아부레이 중갑",
+  "set": "아부레이의 메아리",
+  "slot": "armor",
+  "rarity": 4,
+  "def": 40,
+  "grade": {
+   "base": 102,
+   "enh": [
+    102,
+    102,
+    102
+   ]
+  },
+  "dmg": {
+   "kind": "all",
+   "base": 0.098,
+   "enh": [
+    0.098,
+    0.098,
+    0.098
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t3_suit_atk01_body_02",
+  "name": "아부레이 중갑 · I",
+  "set": "아부레이의 메아리",
+  "slot": "armor",
+  "rarity": 4,
+  "def": 40,
+  "grade": {
+   "base": 102,
+   "enh": [
+    102,
+    102,
+    102
+   ]
+  },
+  "dmg": {
+   "kind": "elem",
+   "base": 0.147,
+   "enh": [
+    0.147,
+    0.147,
+    0.147
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t3_suit_atk01_body_03",
+  "name": "아부레이 경갑",
+  "set": "아부레이의 메아리",
+  "slot": "armor",
+  "rarity": 4,
+  "def": 40,
+  "grade": {
+   "base": 102,
+   "enh": [
+    102,
+    102,
+    102
+   ]
+  },
+  "dmg": {
+   "kind": "ultEff",
+   "base": 0.088,
+   "enh": [
+    0.088,
+    0.088,
+    0.088
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t3_suit_atk01_body_04",
+  "name": "아부레이 경갑 · I",
+  "set": "아부레이의 메아리",
+  "slot": "armor",
+  "rarity": 4,
+  "def": 40,
+  "grade": {
+   "base": 102,
+   "enh": [
+    102,
+    102,
+    102
+   ]
+  },
+  "dmg": {
+   "kind": "all",
+   "base": 0.147,
+   "enh": [
+    0.147,
+    0.147,
+    0.147
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t3_suit_atk01_edc_01",
+  "name": "아부레이 UV 램프",
+  "set": "아부레이의 메아리",
+  "slot": "kit",
+  "rarity": 4,
+  "def": 15,
+  "grade": {
+   "base": 38,
+   "enh": [
+    38,
+    38,
+    38
+   ]
+  },
+  "dmg": {
+   "kind": "all",
+   "base": 0.196,
+   "enh": [
+    0.196,
+    0.196,
+    0.196
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t3_suit_atk01_edc_06",
+  "name": "아부레이 센서 칩 · I",
+  "set": "아부레이의 메아리",
+  "slot": "kit",
+  "rarity": 4,
+  "def": 15,
+  "grade": {
+   "base": 38,
+   "enh": [
+    38,
+    38,
+    38
+   ]
+  },
+  "dmg": {
+   "kind": "all",
+   "base": 0.294,
+   "enh": [
+    0.294,
+    0.294,
+    0.294
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_parts_wuling01_edc_02",
+  "name": "위기 탈출 식별 패널 · I",
+  "set": "?",
+  "slot": "kit",
+  "rarity": 5,
+  "def": 21,
+  "grade": {
+   "base": 43,
+   "enh": [
+    47,
+    51,
+    55
+   ]
+  },
+  "dmg": {
+   "kind": "link",
+   "base": 0.432,
+   "enh": [
+    0.475,
+    0.518,
+    0.562
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t3_suit_atk01_hand_01",
+  "name": "아부레이 금속 장갑",
+  "set": "아부레이의 메아리",
+  "slot": "gloves",
+  "rarity": 4,
+  "def": 30,
+  "grade": {
+   "base": 76,
+   "enh": [
+    76,
+    76,
+    76
+   ]
+  },
+  "dmg": {
+   "kind": "vsBroken",
+   "base": 0.245,
+   "enh": [
+    0.245,
+    0.245,
+    0.245
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t3_suit_usp01_body_02",
+  "name": "재앙 방호 중갑 · I",
+  "set": "재앙 방호",
+  "slot": "armor",
+  "rarity": 4,
+  "def": 40,
+  "grade": {
+   "base": 102,
+   "enh": [
+    102,
+    102,
+    102
+   ]
+  },
+  "dmg": {
+   "kind": "ultEff",
+   "base": 0.18,
+   "enh": [
+    0.18,
+    0.18,
+    0.18
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_phy01_edc_02",
+  "name": "검술사 초소형 필터",
+  "set": "검술사",
+  "slot": "kit",
+  "rarity": 5,
+  "def": 21,
+  "grade": {
+   "base": 53,
+   "enh": [
+    58,
+    63,
+    68
+   ]
+  },
+  "dmg": {
+   "kind": "all",
+   "base": 0.23,
+   "enh": [
+    0.253,
+    0.276,
+    0.299
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t3_suit_str01_edc_02",
+  "name": "중장갑 전달자 손전등 · I",
+  "set": "중장갑 전달자",
+  "slot": "kit",
+  "rarity": 4,
+  "def": 15,
+  "grade": {
+   "base": 38,
+   "enh": [
+    38,
+    38,
+    38
+   ]
+  },
+  "dmg": {
+   "kind": "critRate",
+   "base": 0.073,
+   "enh": [
+    0.073,
+    0.073,
+    0.073
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t3_suit_str01_hand_01",
+  "name": "중장갑 전달자 장갑 · I",
+  "set": "중장갑 전달자",
+  "slot": "gloves",
+  "rarity": 4,
+  "def": 30,
+  "grade": {
+   "base": 76,
+   "enh": [
+    76,
+    76,
+    76
+   ]
+  },
+  "dmg": {
+   "kind": "atkPct",
+   "base": 0.123,
+   "enh": [
+    0.123,
+    0.123,
+    0.123
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_atk02_edc_03",
+  "name": "응룡 50식 탐지기 · II",
+  "set": "응룡 50식",
+  "slot": "kit",
+  "rarity": 5,
+  "def": 21,
+  "grade": {
+   "base": 53,
+   "enh": [
+    58,
+    63,
+    68
+   ]
+  },
+  "dmg": {
+   "kind": "elem",
+   "base": 0.414,
+   "enh": [
+    0.4554,
+    0.4968,
+    0.5382
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t3_suit_usp01_body_01",
+  "name": "재앙 방호 중갑",
+  "set": "재앙 방호",
+  "slot": "armor",
+  "rarity": 4,
+  "def": 40,
+  "grade": {
+   "base": 102,
+   "enh": [
+    102,
+    102,
+    102
+   ]
+  },
+  "dmg": {
+   "kind": "ult",
+   "base": 0.245,
+   "enh": [
+    0.245,
+    0.245,
+    0.245
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_atk02_hand_02",
+  "name": "응룡 50식 보호 장갑 · I",
+  "set": "응룡 50식",
+  "slot": "gloves",
+  "rarity": 5,
+  "def": 42,
+  "grade": {
+   "base": 108,
+   "enh": [
+    118,
+    129,
+    139
+   ]
+  },
+  "dmg": {
+   "kind": "elem",
+   "base": 0.345,
+   "enh": [
+    0.3795,
+    0.414,
+    0.4485
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t3_suit_usp01_edc_01",
+  "name": "재앙 방호 정화 코어",
+  "set": "재앙 방호",
+  "slot": "kit",
+  "rarity": 4,
+  "def": 15,
+  "grade": {
+   "base": 38,
+   "enh": [
+    38,
+    38,
+    38
+   ]
+  },
+  "dmg": {
+   "kind": "ult",
+   "base": 0.147,
+   "enh": [
+    0.147,
+    0.147,
+    0.147
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t3_suit_usp01_edc_02",
+  "name": "재앙 방호 정화 코어 · I",
+  "set": "재앙 방호",
+  "slot": "kit",
+  "rarity": 4,
+  "def": 15,
+  "grade": {
+   "base": 38,
+   "enh": [
+    38,
+    38,
+    38
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_criti01_edc_06",
+  "name": "M. I. 경찰용 조준기 · I",
+  "set": "M. I. 경찰용",
+  "slot": "kit",
+  "rarity": 5,
+  "def": 21,
+  "grade": {
+   "base": 53,
+   "enh": [
+    58,
+    63,
+    68
+   ]
+  },
+  "dmg": {
+   "kind": "attack",
+   "base": 0.1035,
+   "enh": [
+    0.1139,
+    0.1242,
+    0.1346
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_fire_natr01_body_01",
+  "name": "열 작업용 강화 골격",
+  "set": "열 작업용",
+  "slot": "armor",
+  "rarity": 5,
+  "def": 56,
+  "grade": {
+   "base": 145,
+   "enh": [
+    158,
+    173,
+    188
+   ]
+  },
+  "dmg": {
+   "kind": "elem",
+   "base": 0.115,
+   "enh": [
+    0.127,
+    0.138,
+    0.149
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t3_suit_usp01_hand_01",
+  "name": "재앙 방호 장갑",
+  "set": "재앙 방호",
+  "slot": "gloves",
+  "rarity": 4,
+  "def": 30,
+  "grade": {
+   "base": 76,
+   "enh": [
+    76,
+    76,
+    76
+   ]
+  },
+  "dmg": {
+   "kind": "artsStr",
+   "base": 0.245,
+   "enh": [
+    0.245,
+    0.245,
+    0.245
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t3_suit_will01_edc_02",
+  "name": "침식 방호 스패너 · I",
+  "set": "침식 방호",
+  "slot": "kit",
+  "rarity": 4,
+  "def": 15,
+  "grade": {
+   "base": 38,
+   "enh": [
+    38,
+    38,
+    38
+   ]
+  },
+  "dmg": {
+   "kind": "atkPct",
+   "base": 0.147,
+   "enh": [
+    0.147,
+    0.147,
+    0.147
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t3_suit_will01_hand_01",
+  "name": "침식 방호 장갑 · I",
+  "set": "침식 방호",
+  "slot": "gloves",
+  "rarity": 4,
+  "def": 30,
+  "grade": {
+   "base": 76,
+   "enh": [
+    76,
+    76,
+    76
+   ]
+  },
+  "dmg": {
+   "kind": "atkPct",
+   "base": 0.123,
+   "enh": [
+    0.123,
+    0.123,
+    0.123
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t3_suit_wisd01_body_01",
+  "name": "침식 차단 조끼 · I",
+  "set": "침식 차단",
+  "slot": "armor",
+  "rarity": 4,
+  "def": 40,
+  "grade": {
+   "base": 102,
+   "enh": [
+    102,
+    102,
+    102
+   ]
+  },
+  "dmg": {
+   "kind": "attack",
+   "base": 0.098,
+   "enh": [
+    0.098,
+    0.098,
+    0.098
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_parts_wuling01_hand_01",
+  "name": "위기 탈출 보호 장갑",
+  "set": "?",
+  "slot": "gloves",
+  "rarity": 5,
+  "def": 42,
+  "grade": {
+   "base": 86,
+   "enh": [
+    94,
+    103,
+    111
+   ]
+  },
+  "dmg": {
+   "kind": "ult",
+   "base": 0.45,
+   "enh": [
+    0.495,
+    0.54,
+    0.585
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t3_suit_wisd01_body_02",
+  "name": "침식 차단 조끼 · II",
+  "set": "침식 차단",
+  "slot": "armor",
+  "rarity": 4,
+  "def": 40,
+  "grade": {
+   "base": 102,
+   "enh": [
+    102,
+    102,
+    102
+   ]
+  },
+  "dmg": {
+   "kind": "hpPct",
+   "base": 0.147,
+   "enh": [
+    0.147,
+    0.147,
+    0.147
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t3_suit_wisd01_hand_01",
+  "name": "침식 차단 장갑 · I",
+  "set": "침식 차단",
+  "slot": "gloves",
+  "rarity": 4,
+  "def": 30,
+  "grade": {
+   "base": 76,
+   "enh": [
+    76,
+    76,
+    76
+   ]
+  },
+  "dmg": {
+   "kind": "atkPct",
+   "base": 0.123,
+   "enh": [
+    0.123,
+    0.123,
+    0.123
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_parts_wuling01_body_01",
+  "name": "위기 탈출 중장갑",
+  "set": "?",
+  "slot": "armor",
+  "rarity": 5,
+  "def": 56,
+  "grade": {
+   "base": 115,
+   "enh": [
+    126,
+    138,
+    149
+   ]
+  },
+  "dmg": {
+   "kind": "attack",
+   "base": 0.144,
+   "enh": [
+    0.158,
+    0.173,
+    0.187
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_usp02_hand_02",
+  "name": "식양의 숨결 보호 장갑 · I",
+  "set": "식양의 숨결",
+  "slot": "gloves",
+  "rarity": 5,
+  "def": 42,
+  "grade": {
+   "base": 108,
+   "enh": [
+    118,
+    129,
+    139
+   ]
+  },
+  "dmg": {
+   "kind": "critRate",
+   "base": 0.2054,
+   "enh": [
+    0.2259,
+    0.2464,
+    0.267
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_parts_wuling01_body_02",
+  "name": "위기 탈출 방어구",
+  "set": "?",
+  "slot": "armor",
+  "rarity": 5,
+  "def": 56,
+  "grade": {
+   "base": 115,
+   "enh": [
+    126,
+    138,
+    149
+   ]
+  },
+  "dmg": {
+   "kind": "ultEff",
+   "base": 0.129,
+   "enh": [
+    0.141,
+    0.154,
+    0.167
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_atb01_edc_02",
+  "name": "개척자 통신기 · I",
+  "set": "개척",
+  "slot": "kit",
+  "rarity": 5,
+  "def": 21,
+  "grade": {
+   "base": 53,
+   "enh": [
+    58,
+    63,
+    68
+   ]
+  },
+  "dmg": {
+   "kind": "elem",
+   "base": 0.23,
+   "enh": [
+    0.253,
+    0.276,
+    0.299
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_fire_natr01_edc_01",
+  "name": "열 작업용 에너지 저장함",
+  "set": "열 작업용",
+  "slot": "kit",
+  "rarity": 5,
+  "def": 21,
+  "grade": {
+   "base": 53,
+   "enh": [
+    58,
+    63,
+    68
+   ]
+  },
+  "dmg": {
+   "kind": "artsStr",
+   "base": 41,
+   "enh": [
+    45,
+    49,
+    53
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_parts_wuling01_edc_01",
+  "name": "위기 탈출 식별 패널",
+  "set": "?",
+  "slot": "kit",
+  "rarity": 5,
+  "def": 21,
+  "grade": {
+   "base": 43,
+   "enh": [
+    47,
+    51,
+    55
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_fire_natr01_hand_01",
+  "name": "열 작업용 장갑",
+  "set": "열 작업용",
+  "slot": "gloves",
+  "rarity": 5,
+  "def": 42,
+  "grade": {
+   "base": 108,
+   "enh": [
+    118,
+    129,
+    139
+   ]
+  },
+  "dmg": {
+   "kind": "artsStr",
+   "base": 34,
+   "enh": [
+    37,
+    41,
+    44
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_pulse_cryst01_edc_01",
+  "name": "펄스식 시험침",
+  "set": "펄스식",
+  "slot": "kit",
+  "rarity": 5,
+  "def": 21,
+  "grade": {
+   "base": 53,
+   "enh": [
+    58,
+    63,
+    68
+   ]
+  },
+  "dmg": {
+   "kind": "artsStr",
+   "base": 41,
+   "enh": [
+    45,
+    49,
+    53
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_atb01_body_01",
+  "name": "개척자 방어구",
+  "set": "개척",
+  "slot": "armor",
+  "rarity": 5,
+  "def": 56,
+  "grade": {
+   "base": 145,
+   "enh": [
+    158,
+    173,
+    188
+   ]
+  },
+  "dmg": {
+   "kind": "ult",
+   "base": 0.259,
+   "enh": [
+    0.285,
+    0.311,
+    0.336
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_heal01_edc_02",
+  "name": "생체 보조 접속기 · II",
+  "set": "생체 보조",
+  "slot": "kit",
+  "rarity": 5,
+  "def": 21,
+  "grade": {
+   "base": 41,
+   "enh": [
+    45,
+    49,
+    53
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_atb01_body_02",
+  "name": "개척자 방어구 · I",
+  "set": "개척",
+  "slot": "armor",
+  "rarity": 5,
+  "def": 56,
+  "grade": {
+   "base": 145,
+   "enh": [
+    158,
+    173,
+    188
+   ]
+  },
+  "dmg": {
+   "kind": "battle",
+   "base": 0.207,
+   "enh": [
+    0.228,
+    0.248,
+    0.269
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_attri01_edc_05",
+  "name": "본 크러셔 마스크 · I",
+  "set": "본 크러셔",
+  "slot": "kit",
+  "rarity": 5,
+  "def": 21,
+  "grade": {
+   "base": 53,
+   "enh": [
+    58,
+    63,
+    68
+   ]
+  },
+  "dmg": {
+   "kind": "attack",
+   "base": 0.1035,
+   "enh": [
+    0.1139,
+    0.1242,
+    0.1346
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_criti01_body_04",
+  "name": "M. I. 경찰용 망토 · II",
+  "set": "M. I. 경찰용",
+  "slot": "armor",
+  "rarity": 5,
+  "def": 56,
+  "grade": {
+   "base": 145,
+   "enh": [
+    158,
+    173,
+    188
+   ]
+  },
+  "dmg": {
+   "kind": "all",
+   "base": 0.207,
+   "enh": [
+    0.2277,
+    0.2484,
+    0.2691
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_atb01_body_03",
+  "name": "개척자 방어구 · II",
+  "set": "개척",
+  "slot": "armor",
+  "rarity": 5,
+  "def": 56,
+  "grade": {
+   "base": 145,
+   "enh": [
+    158,
+    173,
+    188
+   ]
+  },
+  "dmg": {
+   "kind": "battle",
+   "base": 0.207,
+   "enh": [
+    0.228,
+    0.248,
+    0.269
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_pulse_cryst01_edc_03",
+  "name": "펄스식 침입 코어",
+  "set": "펄스식",
+  "slot": "kit",
+  "rarity": 5,
+  "def": 21,
+  "grade": {
+   "base": 41,
+   "enh": [
+    45,
+    49,
+    53
+   ]
+  },
+  "dmg": {
+   "kind": "ult",
+   "base": 0.517,
+   "enh": [
+    0.569,
+    0.621,
+    0.673
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_atb01_body_04",
+  "name": "개척자 방어구 · III",
+  "set": "개척",
+  "slot": "armor",
+  "rarity": 5,
+  "def": 56,
+  "grade": {
+   "base": 145,
+   "enh": [
+    158,
+    173,
+    188
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_atk02_body_02",
+  "name": "응룡 50식 중갑 · I",
+  "set": "응룡 50식",
+  "slot": "armor",
+  "rarity": 5,
+  "def": 56,
+  "grade": {
+   "base": 145,
+   "enh": [
+    158,
+    173,
+    188
+   ]
+  },
+  "dmg": {
+   "kind": "critRate",
+   "base": 0.1232,
+   "enh": [
+    0.1355,
+    0.1479,
+    0.1602
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_atb01_body_05",
+  "name": "개척자 방호복",
+  "set": "개척",
+  "slot": "armor",
+  "rarity": 5,
+  "def": 56,
+  "grade": {
+   "base": 145,
+   "enh": [
+    158,
+    173,
+    188
+   ]
+  },
+  "dmg": {
+   "kind": "ultEff",
+   "base": 0.123,
+   "enh": [
+    0.136,
+    0.148,
+    0.16
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_atk02_body_03",
+  "name": "응룡 50식 중갑 · II",
+  "set": "응룡 50식",
+  "slot": "armor",
+  "rarity": 5,
+  "def": 56,
+  "grade": {
+   "base": 145,
+   "enh": [
+    158,
+    173,
+    188
+   ]
+  },
+  "dmg": {
+   "kind": "elem",
+   "base": 0.207,
+   "enh": [
+    0.2277,
+    0.2484,
+    0.2691
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_atb01_edc_03",
+  "name": "개척자 분석 장치",
+  "set": "개척",
+  "slot": "kit",
+  "rarity": 5,
+  "def": 21,
+  "grade": {
+   "base": 41,
+   "enh": [
+    45,
+    49,
+    53
+   ]
+  },
+  "dmg": {
+   "kind": "ult",
+   "base": 0.517,
+   "enh": [
+    0.569,
+    0.621,
+    0.673
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_atb01_edc_04",
+  "name": "개척자 증량 산소 공급 장치",
+  "set": "개척",
+  "slot": "kit",
+  "rarity": 5,
+  "def": 21,
+  "grade": {
+   "base": 53,
+   "enh": [
+    58,
+    63,
+    68
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_criti01_body_06",
+  "name": "M. I. 경찰용 방어구 · I",
+  "set": "M. I. 경찰용",
+  "slot": "armor",
+  "rarity": 5,
+  "def": 56,
+  "grade": {
+   "base": 145,
+   "enh": [
+    158,
+    173,
+    188
+   ]
+  },
+  "dmg": {
+   "kind": "critRate",
+   "base": 0.1232,
+   "enh": [
+    0.1355,
+    0.1479,
+    0.1602
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_atb01_edc_05",
+  "name": "개척자 산소 공급 장치",
+  "set": "개척",
+  "slot": "kit",
+  "rarity": 5,
+  "def": 21,
+  "grade": {
+   "base": 41,
+   "enh": [
+    45,
+    49,
+    53
+   ]
+  },
+  "dmg": {
+   "kind": "all",
+   "base": 0.23,
+   "enh": [
+    0.253,
+    0.276,
+    0.299
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_atb01_edc_06",
+  "name": "개척자 증량 산소 공급 장치 · I",
+  "set": "개척",
+  "slot": "kit",
+  "rarity": 5,
+  "def": 21,
+  "grade": {
+   "base": 53,
+   "enh": [
+    58,
+    63,
+    68
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_poise01_body_01",
+  "name": "경량 초자연 보호판",
+  "set": "경량 초자연",
+  "slot": "armor",
+  "rarity": 5,
+  "def": 56,
+  "grade": {
+   "base": 145,
+   "enh": [
+    158,
+    173,
+    188
+   ]
+  },
+  "dmg": {
+   "kind": "vsBroken",
+   "base": 0.207,
+   "enh": [
+    0.228,
+    0.248,
+    0.269
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_atb01_hand_01",
+  "name": "개척자 내부식성 장갑",
+  "set": "개척",
+  "slot": "gloves",
+  "rarity": 5,
+  "def": 42,
+  "grade": {
+   "base": 108,
+   "enh": [
+    118,
+    129,
+    139
+   ]
+  },
+  "dmg": {
+   "kind": "battle",
+   "base": 0.345,
+   "enh": [
+    0.38,
+    0.414,
+    0.449
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_atb01_hand_03",
+  "name": "개척자 섬유 장갑 · I",
+  "set": "개척",
+  "slot": "gloves",
+  "rarity": 5,
+  "def": 42,
+  "grade": {
+   "base": 108,
+   "enh": [
+    118,
+    129,
+    139
+   ]
+  },
+  "dmg": {
+   "kind": "ultEff",
+   "base": 0.205,
+   "enh": [
+    0.226,
+    0.246,
+    0.267
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_criti01_hand_01",
+  "name": "M. I. 경찰용 장갑",
+  "set": "M. I. 경찰용",
+  "slot": "gloves",
+  "rarity": 5,
+  "def": 42,
+  "grade": {
+   "base": 108,
+   "enh": [
+    118,
+    129,
+    139
+   ]
+  },
+  "dmg": {
+   "kind": "battle",
+   "base": 0.345,
+   "enh": [
+    0.38,
+    0.414,
+    0.449
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_atk02_body_01",
+  "name": "응룡 50식 중갑",
+  "set": "응룡 50식",
+  "slot": "armor",
+  "rarity": 5,
+  "def": 56,
+  "grade": {
+   "base": 145,
+   "enh": [
+    158,
+    173,
+    188
+   ]
+  },
+  "dmg": {
+   "kind": "all",
+   "base": 0.115,
+   "enh": [
+    0.127,
+    0.138,
+    0.149
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_atk02_body_04",
+  "name": "응룡 50식 경갑",
+  "set": "응룡 50식",
+  "slot": "armor",
+  "rarity": 5,
+  "def": 56,
+  "grade": {
+   "base": 145,
+   "enh": [
+    158,
+    173,
+    188
+   ]
+  },
+  "dmg": {
+   "kind": "all",
+   "base": 0.138,
+   "enh": [
+    0.152,
+    0.166,
+    0.179
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_atk02_edc_01",
+  "name": "응룡 50식 탐지기",
+  "set": "응룡 50식",
+  "slot": "kit",
+  "rarity": 5,
+  "def": 21,
+  "grade": {
+   "base": 53,
+   "enh": [
+    58,
+    63,
+    68
+   ]
+  },
+  "dmg": {
+   "kind": "all",
+   "base": 0.23,
+   "enh": [
+    0.253,
+    0.276,
+    0.299
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_atk02_edc_02",
+  "name": "응룡 50식 탐지기 · I",
+  "set": "응룡 50식",
+  "slot": "kit",
+  "rarity": 5,
+  "def": 21,
+  "grade": {
+   "base": 53,
+   "enh": [
+    58,
+    63,
+    68
+   ]
+  },
+  "dmg": {
+   "kind": "ult",
+   "base": 0.5175,
+   "enh": [
+    0.5693,
+    0.621,
+    0.6727
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_atk02_edc_04",
+  "name": "응룡 50식 단검",
+  "set": "응룡 50식",
+  "slot": "kit",
+  "rarity": 5,
+  "def": 21,
+  "grade": {
+   "base": 53,
+   "enh": [
+    58,
+    63,
+    68
+   ]
+  },
+  "dmg": {
+   "kind": "link",
+   "base": 0.414,
+   "enh": [
+    0.455,
+    0.497,
+    0.538
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_atk02_edc_05",
+  "name": "응룡 50식 단검 · I",
+  "set": "응룡 50식",
+  "slot": "kit",
+  "rarity": 5,
+  "def": 21,
+  "grade": {
+   "base": 53,
+   "enh": [
+    58,
+    63,
+    68
+   ]
+  },
+  "dmg": {
+   "kind": "atkPct",
+   "base": 0.276,
+   "enh": [
+    0.3,
+    0.3,
+    0.3
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_atk02_hand_01",
+  "name": "응룡 50식 보호 장갑",
+  "set": "응룡 50식",
+  "slot": "gloves",
+  "rarity": 5,
+  "def": 42,
+  "grade": {
+   "base": 108,
+   "enh": [
+    118,
+    129,
+    139
+   ]
+  },
+  "dmg": {
+   "kind": "link",
+   "base": 0.345,
+   "enh": [
+    0.38,
+    0.414,
+    0.449
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_attri01_body_01",
+  "name": "본 크러셔 중갑 방어구",
+  "set": "본 크러셔",
+  "slot": "armor",
+  "rarity": 5,
+  "def": 56,
+  "grade": {
+   "base": 145,
+   "enh": [
+    158,
+    173,
+    188
+   ]
+  },
+  "dmg": {
+   "kind": "ultEff",
+   "base": 0.123,
+   "enh": [
+    0.136,
+    0.148,
+    0.16
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_attri01_body_03",
+  "name": "본 크러셔 머플러",
+  "set": "본 크러셔",
+  "slot": "armor",
+  "rarity": 5,
+  "def": 56,
+  "grade": {
+   "base": 145,
+   "enh": [
+    158,
+    173,
+    188
+   ]
+  },
+  "dmg": {
+   "kind": "link",
+   "base": 0.207,
+   "enh": [
+    0.228,
+    0.248,
+    0.269
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_poise01_edc_03",
+  "name": "경량 초자연 안정판 · I",
+  "set": "경량 초자연",
+  "slot": "kit",
+  "rarity": 5,
+  "def": 21,
+  "grade": {
+   "base": 53,
+   "enh": [
+    58,
+    63,
+    68
+   ]
+  },
+  "dmg": {
+   "kind": "critDmg",
+   "base": 0.23,
+   "enh": [
+    0.253,
+    0.276,
+    0.299
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_attri01_edc_02",
+  "name": "본 크러셔 조각상 · II",
+  "set": "본 크러셔",
+  "slot": "kit",
+  "rarity": 5,
+  "def": 21,
+  "grade": {
+   "base": 53,
+   "enh": [
+    58,
+    63,
+    68
+   ]
+  },
+  "dmg": {
+   "kind": "battle",
+   "base": 0.414,
+   "enh": [
+    0.455,
+    0.497,
+    0.538
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_attri01_edc_04",
+  "name": "본 크러셔 마스크",
+  "set": "본 크러셔",
+  "slot": "kit",
+  "rarity": 5,
+  "def": 21,
+  "grade": {
+   "base": 53,
+   "enh": [
+    58,
+    63,
+    68
+   ]
+  },
+  "dmg": {
+   "kind": "vsBroken",
+   "base": 0.414,
+   "enh": [
+    0.455,
+    0.497,
+    0.538
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_criti01_edc_03",
+  "name": "M. I. 경찰용 다용도 공구",
+  "set": "M. I. 경찰용",
+  "slot": "kit",
+  "rarity": 5,
+  "def": 21,
+  "grade": {
+   "base": 53,
+   "enh": [
+    58,
+    63,
+    68
+   ]
+  },
+  "dmg": {
+   "kind": "critRate",
+   "base": 0.103,
+   "enh": [
+    0.114,
+    0.124,
+    0.135
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_attri01_edc_07",
+  "name": "본 크러셔 마스크 · II",
+  "set": "본 크러셔",
+  "slot": "kit",
+  "rarity": 5,
+  "def": 21,
+  "grade": {
+   "base": 53,
+   "enh": [
+    58,
+    63,
+    68
+   ]
+  },
+  "dmg": {
+   "kind": "all",
+   "base": 0.414,
+   "enh": [
+    0.4554,
+    0.4968,
+    0.5382
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_criti01_edc_02",
+  "name": "M. I. 경찰용 조준기",
+  "set": "M. I. 경찰용",
+  "slot": "kit",
+  "rarity": 5,
+  "def": 21,
+  "grade": {
+   "base": 53,
+   "enh": [
+    58,
+    63,
+    68
+   ]
+  },
+  "dmg": {
+   "kind": "battle",
+   "base": 0.414,
+   "enh": [
+    0.455,
+    0.497,
+    0.538
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_attri01_hand_03",
+  "name": "본 크러셔 장갑",
+  "set": "본 크러셔",
+  "slot": "gloves",
+  "rarity": 5,
+  "def": 42,
+  "grade": {
+   "base": 108,
+   "enh": [
+    118,
+    129,
+    139
+   ]
+  },
+  "dmg": {
+   "kind": "elem",
+   "base": 0.192,
+   "enh": [
+    0.211,
+    0.23,
+    0.249
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_burst01_body_01",
+  "name": "낙조 경갑",
+  "set": "조류의 물결",
+  "slot": "armor",
+  "rarity": 5,
+  "def": 56,
+  "grade": {
+   "base": 145,
+   "enh": [
+    158,
+    173,
+    188
+   ]
+  },
+  "dmg": {
+   "kind": "ultEff",
+   "base": 0.123,
+   "enh": [
+    0.136,
+    0.148,
+    0.16
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_burst01_edc_01",
+  "name": "현하 산소 공급 장치",
+  "set": "조류의 물결",
+  "slot": "kit",
+  "rarity": 5,
+  "def": 21,
+  "grade": {
+   "base": 53,
+   "enh": [
+    58,
+    63,
+    68
+   ]
+  },
+  "dmg": {
+   "kind": "elem",
+   "base": 0.23,
+   "enh": [
+    0.253,
+    0.276,
+    0.299
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_expend_spell01_edc_02",
+  "name": "식양의 흐름 단봉",
+  "set": "식양의 흐름",
+  "slot": "kit",
+  "rarity": 5,
+  "def": 21,
+  "grade": {
+   "base": 53,
+   "enh": [
+    58,
+    63,
+    68
+   ]
+  },
+  "dmg": {
+   "kind": "battle",
+   "base": 0.414,
+   "enh": [
+    0.455,
+    0.497,
+    0.538
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_burst01_edc_02",
+  "name": "탁류 화염 절단기",
+  "set": "조류의 물결",
+  "slot": "kit",
+  "rarity": 5,
+  "def": 21,
+  "grade": {
+   "base": 53,
+   "enh": [
+    58,
+    63,
+    68
+   ]
+  },
+  "dmg": {
+   "kind": "attack",
+   "base": 0.276,
+   "enh": [
+    0.304,
+    0.331,
+    0.359
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_combo_cd01_body_01",
+  "name": "청파 중갑",
+  "set": "청파",
+  "slot": "armor",
+  "rarity": 5,
+  "def": 56,
+  "grade": {
+   "base": 145,
+   "enh": [
+    158,
+    173,
+    188
+   ]
+  },
+  "dmg": {
+   "kind": "ultEff",
+   "base": 0.123,
+   "enh": [
+    0.136,
+    0.148,
+    0.16
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_combo_cd01_body_02",
+  "name": "청파 경갑",
+  "set": "청파",
+  "slot": "armor",
+  "rarity": 5,
+  "def": 56,
+  "grade": {
+   "base": 145,
+   "enh": [
+    158,
+    173,
+    188
+   ]
+  },
+  "dmg": {
+   "kind": "artsStr",
+   "base": 20,
+   "enh": [
+    22,
+    24,
+    26
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_combo_cd01_edc_01",
+  "name": "청파 위치 지정기",
+  "set": "청파",
+  "slot": "kit",
+  "rarity": 5,
+  "def": 21,
+  "grade": {
+   "base": 53,
+   "enh": [
+    58,
+    63,
+    68
+   ]
+  },
+  "dmg": {
+   "kind": "battle",
+   "base": 0.414,
+   "enh": [
+    0.455,
+    0.497,
+    0.538
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_combo_cd01_edc_02",
+  "name": "청파죽인",
+  "set": "청파",
+  "slot": "kit",
+  "rarity": 5,
+  "def": 21,
+  "grade": {
+   "base": 53,
+   "enh": [
+    58,
+    63,
+    68
+   ]
+  },
+  "dmg": {
+   "kind": "elem",
+   "base": 0.23,
+   "enh": [
+    0.253,
+    0.276,
+    0.299
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_criti01_body_01",
+  "name": "M. I. 경찰용 방어구",
+  "set": "M. I. 경찰용",
+  "slot": "armor",
+  "rarity": 5,
+  "def": 56,
+  "grade": {
+   "base": 145,
+   "enh": [
+    158,
+    173,
+    188
+   ]
+  },
+  "dmg": {
+   "kind": "artsStr",
+   "base": 20,
+   "enh": [
+    22,
+    24,
+    26
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_combo_cd01_edc_03",
+  "name": "청파 물 항아리",
+  "set": "청파",
+  "slot": "kit",
+  "rarity": 5,
+  "def": 21,
+  "grade": {
+   "base": 53,
+   "enh": [
+    58,
+    63,
+    68
+   ]
+  },
+  "dmg": {
+   "kind": "artsStr",
+   "base": 41,
+   "enh": [
+    45,
+    49,
+    53
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_heal01_hand_02",
+  "name": "생체 보조 금속 장갑",
+  "set": "생체 보조",
+  "slot": "gloves",
+  "rarity": 5,
+  "def": 42,
+  "grade": {
+   "base": 108,
+   "enh": [
+    118,
+    129,
+    139
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_combo_cd01_edc_04",
+  "name": "청파 위치 지정기 · I",
+  "set": "청파",
+  "slot": "kit",
+  "rarity": 5,
+  "def": 21,
+  "grade": {
+   "base": 53,
+   "enh": [
+    58,
+    63,
+    68
+   ]
+  },
+  "dmg": {
+   "kind": "all",
+   "base": 0.23,
+   "enh": [
+    0.253,
+    0.276,
+    0.299
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_combo_cd01_hand_01",
+  "name": "청파 금속 장갑",
+  "set": "청파",
+  "slot": "gloves",
+  "rarity": 5,
+  "def": 42,
+  "grade": {
+   "base": 108,
+   "enh": [
+    118,
+    129,
+    139
+   ]
+  },
+  "dmg": {
+   "kind": "all",
+   "base": 0.23,
+   "enh": [
+    0.253,
+    0.276,
+    0.299
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_criti01_body_02",
+  "name": "M. I. 경찰용 망토",
+  "set": "M. I. 경찰용",
+  "slot": "armor",
+  "rarity": 5,
+  "def": 56,
+  "grade": {
+   "base": 145,
+   "enh": [
+    158,
+    173,
+    188
+   ]
+  },
+  "dmg": {
+   "kind": "attack",
+   "base": 0.138,
+   "enh": [
+    0.152,
+    0.166,
+    0.179
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_criti01_body_03",
+  "name": "M. I. 경찰용 망토 · I",
+  "set": "M. I. 경찰용",
+  "slot": "armor",
+  "rarity": 5,
+  "def": 56,
+  "grade": {
+   "base": 145,
+   "enh": [
+    158,
+    173,
+    188
+   ]
+  },
+  "dmg": {
+   "kind": "attack",
+   "base": 0.0517,
+   "enh": [
+    0.0569,
+    0.0621,
+    0.0673
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_criti01_edc_05",
+  "name": "M. I. 경찰용 단검 · I",
+  "set": "M. I. 경찰용",
+  "slot": "kit",
+  "rarity": 5,
+  "def": 21,
+  "grade": {
+   "base": 53,
+   "enh": [
+    58,
+    63,
+    68
+   ]
+  },
+  "dmg": {
+   "kind": "all",
+   "base": 0.414,
+   "enh": [
+    0.4554,
+    0.4968,
+    0.5382
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_criti01_hand_02",
+  "name": "M. I. 경찰용 장갑(팔찌)",
+  "set": "M. I. 경찰용",
+  "slot": "gloves",
+  "rarity": 5,
+  "def": 42,
+  "grade": {
+   "base": 108,
+   "enh": [
+    118,
+    129,
+    139
+   ]
+  },
+  "dmg": {
+   "kind": "attack",
+   "base": 0.23,
+   "enh": [
+    0.253,
+    0.276,
+    0.299
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_criti01_hand_04",
+  "name": "M. I. 경찰용 장갑 · I",
+  "set": "M. I. 경찰용",
+  "slot": "gloves",
+  "rarity": 5,
+  "def": 42,
+  "grade": {
+   "base": 108,
+   "enh": [
+    118,
+    129,
+    139
+   ]
+  },
+  "dmg": {
+   "kind": "ult",
+   "base": 0.4313,
+   "enh": [
+    0.4744,
+    0.5175,
+    0.5606
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_poise01_edc_04",
+  "name": "경량 초자연 손목시계",
+  "set": "경량 초자연",
+  "slot": "kit",
+  "rarity": 5,
+  "def": 21,
+  "grade": {
+   "base": 53,
+   "enh": [
+    58,
+    63,
+    68
+   ]
+  },
+  "dmg": {
+   "kind": "battle",
+   "base": 0.414,
+   "enh": [
+    0.455,
+    0.497,
+    0.538
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_crush_fracture_body_01",
+  "name": "고검의 잔향 장갑",
+  "set": "고검의 잔향",
+  "slot": "armor",
+  "rarity": 5,
+  "def": 56,
+  "grade": {
+   "base": 145,
+   "enh": [
+    158,
+    173,
+    188
+   ]
+  },
+  "dmg": {
+   "kind": "all",
+   "base": 0.115,
+   "enh": [
+    0.127,
+    0.138,
+    0.149
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_crush_fracture_body_02",
+  "name": "고검의 잔향 장갑 · I",
+  "set": "고검의 잔향",
+  "slot": "armor",
+  "rarity": 5,
+  "def": 56,
+  "grade": {
+   "base": 145,
+   "enh": [
+    158,
+    173,
+    188
+   ]
+  },
+  "dmg": {
+   "kind": "artsStr",
+   "base": 20,
+   "enh": [
+    22,
+    24,
+    26
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_crush_fracture_edc_01",
+  "name": "고검의 잔향 단검",
+  "set": "고검의 잔향",
+  "slot": "kit",
+  "rarity": 5,
+  "def": 21,
+  "grade": {
+   "base": 53,
+   "enh": [
+    58,
+    63,
+    68
+   ]
+  },
+  "dmg": {
+   "kind": "all",
+   "base": 0.23,
+   "enh": [
+    0.253,
+    0.276,
+    0.299
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_crush_fracture_edc_02",
+  "name": "고검의 잔향 단검 · I",
+  "set": "고검의 잔향",
+  "slot": "kit",
+  "rarity": 5,
+  "def": 21,
+  "grade": {
+   "base": 53,
+   "enh": [
+    58,
+    63,
+    68
+   ]
+  },
+  "dmg": {
+   "kind": "all",
+   "base": 0.23,
+   "enh": [
+    0.253,
+    0.276,
+    0.299
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_crush_fracture_hand_02",
+  "name": "고검의 잔향 금속 장갑 · I",
+  "set": "고검의 잔향",
+  "slot": "gloves",
+  "rarity": 5,
+  "def": 42,
+  "grade": {
+   "base": 108,
+   "enh": [
+    118,
+    129,
+    139
+   ]
+  },
+  "dmg": {
+   "kind": "artsStr",
+   "base": 34,
+   "enh": [
+    37,
+    41,
+    44
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_expend_spell01_body_02",
+  "name": "식양의 흐름 경갑",
+  "set": "식양의 흐름",
+  "slot": "armor",
+  "rarity": 5,
+  "def": 56,
+  "grade": {
+   "base": 145,
+   "enh": [
+    158,
+    173,
+    188
+   ]
+  },
+  "dmg": {
+   "kind": "elem",
+   "base": 0.115,
+   "enh": [
+    0.127,
+    0.138,
+    0.149
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_fire_natr01_edc_02",
+  "name": "열 작업용 온도 측정기",
+  "set": "열 작업용",
+  "slot": "kit",
+  "rarity": 5,
+  "def": 21,
+  "grade": {
+   "base": 41,
+   "enh": [
+    45,
+    49,
+    53
+   ]
+  },
+  "dmg": {
+   "kind": "battle",
+   "base": 0.414,
+   "enh": [
+    0.455,
+    0.497,
+    0.538
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_fire_natr01_edc_03",
+  "name": "열 작업용 전력 상자",
+  "set": "열 작업용",
+  "slot": "kit",
+  "rarity": 5,
+  "def": 21,
+  "grade": {
+   "base": 53,
+   "enh": [
+    58,
+    63,
+    68
+   ]
+  },
+  "dmg": {
+   "kind": "artsStr",
+   "base": 41,
+   "enh": [
+    45,
+    49,
+    53
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_fire_natr01_hand_02",
+  "name": "열 작업용 금속 장갑",
+  "set": "열 작업용",
+  "slot": "gloves",
+  "rarity": 5,
+  "def": 42,
+  "grade": {
+   "base": 108,
+   "enh": [
+    118,
+    129,
+    139
+   ]
+  },
+  "dmg": {
+   "kind": "elem",
+   "base": 0.192,
+   "enh": [
+    0.211,
+    0.23,
+    0.249
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_phy01_edc_04",
+  "name": "검술사 단검",
+  "set": "검술사",
+  "slot": "kit",
+  "rarity": 5,
+  "def": 21,
+  "grade": {
+   "base": 53,
+   "enh": [
+    58,
+    63,
+    68
+   ]
+  },
+  "dmg": {
+   "kind": "ult",
+   "base": 0.517,
+   "enh": [
+    0.569,
+    0.621,
+    0.673
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_heal01_edc_01",
+  "name": "생체 보조 접속기",
+  "set": "생체 보조",
+  "slot": "kit",
+  "rarity": 5,
+  "def": 21,
+  "grade": {
+   "base": 53,
+   "enh": [
+    58,
+    63,
+    68
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_heal01_edc_03",
+  "name": "생체 보조 보호판",
+  "set": "생체 보조",
+  "slot": "kit",
+  "rarity": 5,
+  "def": 21,
+  "grade": {
+   "base": 53,
+   "enh": [
+    58,
+    63,
+    68
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_heal01_edc_04",
+  "name": "생체 보조 보호 주사기",
+  "set": "생체 보조",
+  "slot": "kit",
+  "rarity": 5,
+  "def": 21,
+  "grade": {
+   "base": 41,
+   "enh": [
+    45,
+    49,
+    53
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_heal01_edc_05",
+  "name": "생체 보조 접속기 · I",
+  "set": "생체 보조",
+  "slot": "kit",
+  "rarity": 5,
+  "def": 21,
+  "grade": {
+   "base": 53,
+   "enh": [
+    58,
+    63,
+    68
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_phy01_body_01",
+  "name": "검술사 경장갑",
+  "set": "검술사",
+  "slot": "armor",
+  "rarity": 5,
+  "def": 56,
+  "grade": {
+   "base": 145,
+   "enh": [
+    158,
+    173,
+    188
+   ]
+  },
+  "dmg": {
+   "kind": "ultEff",
+   "base": 0.123,
+   "enh": [
+    0.136,
+    0.148,
+    0.16
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_phy01_body_02",
+  "name": "검술사 중장갑",
+  "set": "검술사",
+  "slot": "armor",
+  "rarity": 5,
+  "def": 56,
+  "grade": {
+   "base": 145,
+   "enh": [
+    158,
+    173,
+    188
+   ]
+  },
+  "dmg": {
+   "kind": "artsStr",
+   "base": 20,
+   "enh": [
+    22,
+    24,
+    26
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_phy01_body_04",
+  "name": "검술사 섬유 방어구",
+  "set": "검술사",
+  "slot": "armor",
+  "rarity": 5,
+  "def": 56,
+  "grade": {
+   "base": 145,
+   "enh": [
+    158,
+    173,
+    188
+   ]
+  },
+  "dmg": {
+   "kind": "all",
+   "base": 0.115,
+   "enh": [
+    0.127,
+    0.138,
+    0.149
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_phy01_edc_01",
+  "name": "검술사 위치 신호기",
+  "set": "검술사",
+  "slot": "kit",
+  "rarity": 5,
+  "def": 21,
+  "grade": {
+   "base": 41,
+   "enh": [
+    45,
+    49,
+    53
+   ]
+  },
+  "dmg": {
+   "kind": "artsStr",
+   "base": 41,
+   "enh": [
+    45,
+    49,
+    53
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_phy01_hand_01",
+  "name": "검술사 전술 장갑",
+  "set": "검술사",
+  "slot": "gloves",
+  "rarity": 5,
+  "def": 42,
+  "grade": {
+   "base": 108,
+   "enh": [
+    118,
+    129,
+    139
+   ]
+  },
+  "dmg": {
+   "kind": "all",
+   "base": 0.192,
+   "enh": [
+    0.211,
+    0.23,
+    0.249
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_phy01_hand_02",
+  "name": "검술사 전술 금속 장갑",
+  "set": "검술사",
+  "slot": "gloves",
+  "rarity": 5,
+  "def": 42,
+  "grade": {
+   "base": 108,
+   "enh": [
+    118,
+    129,
+    139
+   ]
+  },
+  "dmg": {
+   "kind": "ult",
+   "base": 0.431,
+   "enh": [
+    0.474,
+    0.517,
+    0.561
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_usp02_edc_01",
+  "name": "식양의 숨결 충전 코어",
+  "set": "식양의 숨결",
+  "slot": "kit",
+  "rarity": 5,
+  "def": 21,
+  "grade": {
+   "base": 53,
+   "enh": [
+    58,
+    63,
+    68
+   ]
+  },
+  "dmg": {
+   "kind": "ultEff",
+   "base": 0.246,
+   "enh": [
+    0.271,
+    0.296,
+    0.32
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_phy01_hand_03",
+  "name": "검술사 전술 금속 장갑 · I",
+  "set": "검술사",
+  "slot": "gloves",
+  "rarity": 5,
+  "def": 42,
+  "grade": {
+   "base": 108,
+   "enh": [
+    118,
+    129,
+    139
+   ]
+  },
+  "dmg": {
+   "kind": "artsStr",
+   "base": 34,
+   "enh": [
+    37,
+    41,
+    44
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_poise01_edc_01",
+  "name": "경량 초자연 분석 반지",
+  "set": "경량 초자연",
+  "slot": "kit",
+  "rarity": 5,
+  "def": 21,
+  "grade": {
+   "base": 53,
+   "enh": [
+    58,
+    63,
+    68
+   ]
+  },
+  "dmg": {
+   "kind": "all",
+   "base": 0.23,
+   "enh": [
+    0.253,
+    0.276,
+    0.299
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_poise01_edc_02",
+  "name": "경량 초자연 안정판",
+  "set": "경량 초자연",
+  "slot": "kit",
+  "rarity": 5,
+  "def": 21,
+  "grade": {
+   "base": 53,
+   "enh": [
+    58,
+    63,
+    68
+   ]
+  },
+  "dmg": {
+   "kind": "artsStr",
+   "base": 41,
+   "enh": [
+    45,
+    49,
+    53
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_poise01_hand_01",
+  "name": "경량 초자연 보호 장갑",
+  "set": "경량 초자연",
+  "slot": "gloves",
+  "rarity": 5,
+  "def": 42,
+  "grade": {
+   "base": 108,
+   "enh": [
+    118,
+    129,
+    139
+   ]
+  },
+  "dmg": {
+   "kind": "artsStr",
+   "base": 34,
+   "enh": [
+    37,
+    41,
+    44
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_poise01_hand_02",
+  "name": "경량 초자연 경량 보호 장갑",
+  "set": "경량 초자연",
+  "slot": "gloves",
+  "rarity": 5,
+  "def": 42,
+  "grade": {
+   "base": 108,
+   "enh": [
+    118,
+    129,
+    139
+   ]
+  },
+  "dmg": {
+   "kind": "all",
+   "base": 0.23,
+   "enh": [
+    0.253,
+    0.276,
+    0.299
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_pulse_cryst01_body_01",
+  "name": "펄스식 교란 방어구",
+  "set": "펄스식",
+  "slot": "armor",
+  "rarity": 5,
+  "def": 56,
+  "grade": {
+   "base": 145,
+   "enh": [
+    158,
+    173,
+    188
+   ]
+  },
+  "dmg": {
+   "kind": "artsStr",
+   "base": 20,
+   "enh": [
+    22,
+    24,
+    26
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_pulse_cryst01_edc_02",
+  "name": "펄스식 교정기",
+  "set": "펄스식",
+  "slot": "kit",
+  "rarity": 5,
+  "def": 21,
+  "grade": {
+   "base": 41,
+   "enh": [
+    45,
+    49,
+    53
+   ]
+  },
+  "dmg": {
+   "kind": "artsStr",
+   "base": 41,
+   "enh": [
+    45,
+    49,
+    53
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_pulse_cryst01_hand_01",
+  "name": "펄스식 장갑",
+  "set": "펄스식",
+  "slot": "gloves",
+  "rarity": 5,
+  "def": 42,
+  "grade": {
+   "base": 108,
+   "enh": [
+    118,
+    129,
+    139
+   ]
+  },
+  "dmg": {
+   "kind": "elem",
+   "base": 0.192,
+   "enh": [
+    0.211,
+    0.23,
+    0.249
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_usp02_edc_02",
+  "name": "식양의 숨결 충전 코어 · I",
+  "set": "식양의 숨결",
+  "slot": "kit",
+  "rarity": 5,
+  "def": 21,
+  "grade": {
+   "base": 53,
+   "enh": [
+    58,
+    63,
+    68
+   ]
+  },
+  "dmg": {
+   "kind": "battle",
+   "base": 0.207,
+   "enh": [
+    0.2277,
+    0.2484,
+    0.2691
+   ]
+  }
+ },
+ {
+  "id": "item_equip_t4_suit_usp02_edc_03",
+  "name": "식양의 숨결 보조 어깨",
+  "set": "식양의 숨결",
+  "slot": "kit",
+  "rarity": 5,
+  "def": 21,
+  "grade": {
+   "base": 53,
+   "enh": [
+    58,
+    63,
+    68
+   ]
+  },
+  "dmg": {
+   "kind": "ultEff",
+   "base": 0.246,
+   "enh": [
+    0.271,
+    0.296,
+    0.32
+   ]
+  }
+ }
+]

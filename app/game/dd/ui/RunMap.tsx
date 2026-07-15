@@ -29,7 +29,7 @@ function PartyBar({ party }: { party: PartyMember[] }) {
             <span className="absolute inset-y-0 left-0 w-1" style={{ background: elementColor[op?.element ?? "physical"], boxShadow: `0 0 8px ${elementColor[op?.element ?? "physical"]}` }} />
             <div className="mb-1 flex items-center gap-1.5 pl-1">
               <span className="truncate font-mono text-xs font-bold text-white">{op?.name ?? m.id}</span>
-              <span className="ml-auto font-mono text-[12px] text-ef-muted">{Math.max(0, m.hp)}/{m.maxHp}</span>
+              <span className="ml-auto font-mono text-[14px] text-ef-muted">{Math.max(0, m.hp)}/{m.maxHp}</span>
             </div>
             <div className="relative ml-1 h-2 overflow-hidden rounded-[2px] bg-black/75" style={{ boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.05), inset 0 1px 3px rgba(0,0,0,0.9)" }}>
               <div className="relative h-full rounded-[2px] transition-all duration-300" style={{ width: `${Math.max(0, ratio) * 100}%`, background: dead ? "#7f1d1d" : ratio < 0.35 ? "#f87171" : "#86efac", boxShadow: `0 0 7px ${(dead ? "#7f1d1d" : ratio < 0.35 ? "#f87171" : "#86efac")}77` }}>
@@ -50,21 +50,21 @@ export default function RunMap({ nodes, frontier, cleared, party, items, onEnter
   return (
     <div className="mx-auto max-w-[1500px] px-4 py-6 sm:px-7">
       <div className="hud-panel dd-cut mb-4 px-4 py-3">
-        <p className="font-mono text-[11px] font-bold uppercase tracking-[0.32em] text-ef-accent/70">Darkest Protocol · 던전 진행</p>
+        <p className="font-mono text-[13px] font-bold uppercase tracking-[0.32em] text-ef-accent/70">Darkest Protocol · 던전 진행</p>
         <h2 className="font-mono text-2xl font-black uppercase tracking-[0.12em] text-white">경로 선택</h2>
-        <p className="mt-1 text-[13px] text-ef-muted">진행 가능한 방(강조)을 선택. 정예·보스는 위험하나 보상이 큽니다. HP는 야영에서만 회복.</p>
+        <p className="mt-1 text-[15px] text-ef-muted">진행 가능한 방(강조)을 선택. 정예·보스는 위험하나 보상이 큽니다. HP는 야영에서만 회복.</p>
       </div>
 
       <div className="mb-3"><PartyBar party={party} /></div>
 
       <div className="mb-5 flex flex-wrap items-center gap-2">
-        <span className="font-mono text-[12px] font-bold uppercase tracking-wider text-ef-muted">소지 아이템</span>
-        {Object.entries(items).length === 0 && <span className="font-mono text-[12px] text-ef-muted">없음</span>}
+        <span className="font-mono text-[14px] font-bold uppercase tracking-wider text-ef-muted">소지 아이템</span>
+        {Object.entries(items).length === 0 && <span className="font-mono text-[14px] text-ef-muted">없음</span>}
         {Object.entries(items).map(([id, n]) => { const it = ITEMS[id]; if (!it) return null; return (
           <span key={id} className="hud-tile dd-cut flex items-center gap-1 px-2 py-0.5">
             <img src={itemImage(id)} alt="" loading="lazy" className="h-5 w-5 shrink-0 rounded-sm object-contain" style={{ background: `${itemColor(it.kind)}18` }} />
-            <span className="font-mono text-[12px] text-ef-ink">{it.name}</span>
-            <span className="font-mono text-[12px] font-bold text-ef-accent">×{n}</span>
+            <span className="font-mono text-[14px] text-ef-ink">{it.name}</span>
+            <span className="font-mono text-[14px] font-bold text-ef-accent">×{n}</span>
           </span>
         ); })}
       </div>
@@ -73,7 +73,7 @@ export default function RunMap({ nodes, frontier, cleared, party, items, onEnter
         <div className="flex min-w-max items-stretch gap-6">
           {depths.map((row, d) => (
             <div key={d} className="flex flex-col justify-center gap-3">
-              <div className="text-center font-mono text-[12px] uppercase tracking-wider text-ef-muted">{d === maxDepth ? "심층" : `구역 ${d + 1}`}</div>
+              <div className="text-center font-mono text-[14px] uppercase tracking-wider text-ef-muted">{d === maxDepth ? "심층" : `구역 ${d + 1}`}</div>
               {row.map((n) => {
                 const meta = NODE_META[n.kind];
                 const Icon = meta.icon;
@@ -92,8 +92,8 @@ export default function RunMap({ nodes, frontier, cleared, party, items, onEnter
                     <Icon className="h-5 w-5 shrink-0" style={{ color: isCleared ? "#555" : meta.tone, filter: isFrontier ? `drop-shadow(0 0 5px ${meta.tone})` : undefined }} />
                     <span className="min-w-0">
                       <span className="block font-mono text-sm font-bold" style={{ color: isCleared ? "#666" : "#fff" }}>{meta.label}</span>
-                      {isCleared && <span className="block font-mono text-[12px] uppercase text-ef-muted">완료</span>}
-                      {isFrontier && <span className="block font-mono text-[12px] font-bold uppercase tracking-wider text-ef-accent">▶ 진입</span>}
+                      {isCleared && <span className="block font-mono text-[14px] uppercase text-ef-muted">완료</span>}
+                      {isFrontier && <span className="block font-mono text-[14px] font-bold uppercase tracking-wider text-ef-accent">▶ 진입</span>}
                     </span>
                   </button>
                 );

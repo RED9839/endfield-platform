@@ -19,7 +19,7 @@ function ForgePips({ lv }: { lv: number }) {
 }
 // 재료 비용(감당 가능 여부 색상)
 function Cost({ parts, permits, ok }: { parts: number; permits: number; ok: boolean }) {
-  return <span className={`font-mono text-[10px] tabular-nums ${ok ? "text-ef-muted" : "text-red-400/90"}`}>{parts}<span className="opacity-55">부품</span> {permits}<span className="opacity-55">권</span></span>;
+  return <span className={`font-mono text-[12px] tabular-nums ${ok ? "text-ef-muted" : "text-red-400/90"}`}>{parts}<span className="opacity-55">부품</span> {permits}<span className="opacity-55">권</span></span>;
 }
 
 export default function CraftPanel({ craft, party = [], onCraft, onForge, onSwap, onClose }: { craft: CraftState; party?: PartyMember[]; onCraft: (id: string) => boolean; onForge: (id: string) => boolean; onSwap?: (opId: string, slot: GearSlot, pieceId: string) => void; onClose: () => void }) {
@@ -36,14 +36,14 @@ export default function CraftPanel({ craft, party = [], onCraft, onForge, onSwap
     const img = pieceImage(p.name); const canC = affordCraft(p); const canF = affordForge(lv);
     return (
       <div className={`hud-tile dd-cut flex items-center gap-2 p-1.5 ${owned ? "!border-ef-accent/45" : ""}`}>
-        {onSwapClick && <button type="button" onClick={onSwapClick} title="장비 교체" className={`dd-cut flex h-7 w-7 shrink-0 items-center justify-center border font-mono text-[13px] font-bold transition ${swapOpen ? "border-ef-accent bg-ef-accent/15 text-ef-accent" : "border-ef-line text-ef-muted hover:border-ef-accent/60 hover:text-ef-accent"}`}>⇄</button>}
+        {onSwapClick && <button type="button" onClick={onSwapClick} title="장비 교체" className={`dd-cut flex h-7 w-7 shrink-0 items-center justify-center border font-mono text-[15px] font-bold transition ${swapOpen ? "border-ef-accent bg-ef-accent/15 text-ef-accent" : "border-ef-line text-ef-muted hover:border-ef-accent/60 hover:text-ef-accent"}`}>⇄</button>}
         <span className="relative flex h-12 w-12 shrink-0 items-center justify-center border border-ef-line/60 bg-black/50" style={owned ? { boxShadow: "inset 0 0 0 1px #ff9a2f44" } : undefined}>
-          {img ? <img src={img} alt="" loading="lazy" className="h-full w-full object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = "hidden"; }} /> : <span className="font-mono text-[10px] text-ef-muted">—</span>}
+          {img ? <img src={img} alt="" loading="lazy" className="h-full w-full object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = "hidden"; }} /> : <span className="font-mono text-[12px] text-ef-muted">—</span>}
           {owned && <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 rounded-sm bg-black/90 px-1 py-px"><ForgePips lv={lv} /></span>}
         </span>
         <div className="min-w-0 flex-1">
-          <div className="truncate font-mono text-[12px] font-bold text-white" title={p.name}>{slotLabel && <span className="text-ef-accent/70">{gearSlotName(p.slot)}</span>} {p.name}</div>
-          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 font-mono text-[11px] text-ef-muted">
+          <div className="truncate font-mono text-[14px] font-bold text-white" title={p.name}>{slotLabel && <span className="text-ef-accent/70">{gearSlotName(p.slot)}</span>} {p.name}</div>
+          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 font-mono text-[13px] text-ef-muted">
             <span>방어 <b className="text-ef-ink/80">{p.def}</b></span>
             <span>능력치 <b className="text-ef-ink/80">{p.grade.base}</b></span>
             {p.dmg && <span className="text-ef-accent-soft">{dmgText(p)}</span>}
@@ -51,16 +51,16 @@ export default function CraftPanel({ craft, party = [], onCraft, onForge, onSwap
         </div>
         {!owned ? (
           <button type="button" disabled={!canC} onClick={() => onCraft(p.id)} className={`dd-cut flex shrink-0 flex-col items-center gap-0.5 border px-2.5 py-1.5 transition disabled:opacity-45 ${canC ? "border-ef-accent/50 text-ef-accent hover:bg-ef-accent/10" : "border-ef-line text-ef-muted"}`}>
-            <span className="flex items-center gap-1 font-mono text-[12px] font-bold uppercase">{canC ? <Hammer className="h-3 w-3" /> : <Lock className="h-3 w-3" />}제작</span>
+            <span className="flex items-center gap-1 font-mono text-[14px] font-bold uppercase">{canC ? <Hammer className="h-3 w-3" /> : <Lock className="h-3 w-3" />}제작</span>
             <Cost parts={cc.parts} permits={cc.permits} ok={canC} />
           </button>
         ) : lv < 3 ? (
           <button type="button" disabled={!canF} onClick={() => onForge(p.id)} className={`dd-cut flex shrink-0 flex-col items-center gap-0.5 border px-2.5 py-1.5 transition disabled:opacity-45 ${canF ? "border-ef-accent/60 text-ef-accent-soft hover:bg-ef-accent/10" : "border-ef-line text-ef-muted"}`}>
-            <span className="font-mono text-[12px] font-bold uppercase">단조 {lv}→{lv + 1}</span>
+            <span className="font-mono text-[14px] font-bold uppercase">단조 {lv}→{lv + 1}</span>
             <Cost parts={fc.parts} permits={fc.permits} ok={canF} />
           </button>
         ) : (
-          <span className="flex shrink-0 flex-col items-center gap-0.5 border border-green-400/30 px-2.5 py-1.5 font-mono text-[12px] font-bold uppercase text-green-300" style={CUT}><Check className="h-3.5 w-3.5" />최대</span>
+          <span className="flex shrink-0 flex-col items-center gap-0.5 border border-green-400/30 px-2.5 py-1.5 font-mono text-[14px] font-bold uppercase text-green-300" style={CUT}><Check className="h-3.5 w-3.5" />최대</span>
         )}
       </div>
     );
@@ -73,20 +73,20 @@ export default function CraftPanel({ craft, party = [], onCraft, onForge, onSwap
         <button type="button" onClick={onClose} className="hud-btn flex h-9 w-9 items-center justify-center text-ef-muted" style={CUT} aria-label="닫기"><ChevronLeft className="h-5 w-5" /></button>
         <Hammer className="h-6 w-6 text-ef-accent" style={{ filter: "drop-shadow(0 0 6px rgba(255,154,47,0.5))" }} />
         <div>
-          <p className="font-mono text-[11px] font-bold uppercase tracking-[0.32em] text-ef-accent/70">Industry · 장비 제조</p>
+          <p className="font-mono text-[13px] font-bold uppercase tracking-[0.32em] text-ef-accent/70">Industry · 장비 제조</p>
           <h2 className="font-mono text-xl font-black uppercase tracking-[0.12em] text-white">공업소</h2>
         </div>
         <div className="ml-auto flex items-center gap-2">
-          <span className="hud-tile flex items-center gap-1.5 px-2.5 py-1.5 font-mono text-sm" style={CUT} title="장비 부품"><Package className="h-4 w-4 text-ef-accent-soft" /><b className="text-white">{craft.mats.parts}</b><span className="text-[11px] text-ef-muted">부품</span></span>
-          <span className="hud-tile flex items-center gap-1.5 px-2.5 py-1.5 font-mono text-sm" style={CUT} title="관리권"><KeyRound className="h-4 w-4 text-yellow-300" /><b className="text-white">{craft.mats.permits}</b><span className="text-[11px] text-ef-muted">관리권</span></span>
+          <span className="hud-tile flex items-center gap-1.5 px-2.5 py-1.5 font-mono text-sm" style={CUT} title="장비 부품"><Package className="h-4 w-4 text-ef-accent-soft" /><b className="text-white">{craft.mats.parts}</b><span className="text-[13px] text-ef-muted">부품</span></span>
+          <span className="hud-tile flex items-center gap-1.5 px-2.5 py-1.5 font-mono text-sm" style={CUT} title="관리권"><KeyRound className="h-4 w-4 text-yellow-300" /><b className="text-white">{craft.mats.permits}</b><span className="text-[13px] text-ef-muted">관리권</span></span>
         </div>
       </div>
 
       {/* 탭: 부대 장비 / 전체 카탈로그 */}
       <div className="mb-3 flex items-center gap-2">
-        {party.length > 0 && <button type="button" onClick={() => setTab("party")} className={`hud-btn dd-cut px-3.5 py-1.5 font-mono text-[13px] font-bold uppercase tracking-wider ${tab === "party" ? "hud-btn-on" : "text-ef-muted"}`}>부대 장비</button>}
-        <button type="button" onClick={() => setTab("catalog")} className={`hud-btn dd-cut px-3.5 py-1.5 font-mono text-[13px] font-bold uppercase tracking-wider ${tab === "catalog" ? "hud-btn-on" : "text-ef-muted"}`}>전체 카탈로그</button>
-        <span className="ml-1 font-mono text-[11px] text-ef-muted">{tab === "party" ? "부대가 실제 착용한 피스 — 제작·단조 우선" : "세트별 대체 피스 제작"}</span>
+        {party.length > 0 && <button type="button" onClick={() => setTab("party")} className={`hud-btn dd-cut px-3.5 py-1.5 font-mono text-[15px] font-bold uppercase tracking-wider ${tab === "party" ? "hud-btn-on" : "text-ef-muted"}`}>부대 장비</button>}
+        <button type="button" onClick={() => setTab("catalog")} className={`hud-btn dd-cut px-3.5 py-1.5 font-mono text-[15px] font-bold uppercase tracking-wider ${tab === "catalog" ? "hud-btn-on" : "text-ef-muted"}`}>전체 카탈로그</button>
+        <span className="ml-1 font-mono text-[13px] text-ef-muted">{tab === "party" ? "부대가 실제 착용한 피스 — 제작·단조 우선" : "세트별 대체 피스 제작"}</span>
       </div>
 
       {/* 부대 장비 */}
@@ -98,8 +98,8 @@ export default function CraftPanel({ craft, party = [], onCraft, onForge, onSwap
               <div key={m.id} className="hud-panel dd-cut p-3">
                 <div className="mb-2 flex items-center gap-2">
                   <img src={avatarUrl(m.id)} alt="" loading="lazy" className="h-9 w-9 shrink-0 border border-ef-line object-cover" style={{ background: "#000" }} />
-                  <span className="font-mono text-[15px] font-bold text-white">{opName(m.id)}</span>
-                  {op && <span className="font-mono text-[11px] uppercase text-ef-muted">{op.element}</span>}
+                  <span className="font-mono text-[17px] font-bold text-white">{opName(m.id)}</span>
+                  {op && <span className="font-mono text-[13px] uppercase text-ef-muted">{op.element}</span>}
                 </div>
                 <div className="flex flex-col gap-1.5">
                   {GEAR_SLOTS.map((slot) => {
@@ -114,7 +114,7 @@ export default function CraftPanel({ craft, party = [], onCraft, onForge, onSwap
                             {slotOptions(slot, op?.element).map((opt) => { const sel = ref === opt.id; return (
                               <button key={opt.id} type="button" onClick={() => { onSwap(m.id, slot, opt.id); setSwap(null); }} className={`dd-cut flex items-center gap-1.5 border p-1 text-left transition ${sel ? "border-ef-accent bg-ef-accent/10" : "border-ef-line hover:border-ef-accent/50"}`}>
                                 <span className="flex h-7 w-7 shrink-0 items-center justify-center border border-ef-line/50 bg-black/40">{pieceImage(opt.name) ? <img src={pieceImage(opt.name)} alt="" className="h-full w-full object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = "hidden"; }} /> : null}</span>
-                                <span className="min-w-0"><span className="block truncate font-mono text-[11px] font-bold text-white">{opt.name}</span><span className="font-mono text-[10px] text-ef-accent-soft">{dmgText(opt)}</span></span>
+                                <span className="min-w-0"><span className="block truncate font-mono text-[13px] font-bold text-white">{opt.name}</span><span className="font-mono text-[12px] text-ef-accent-soft">{dmgText(opt)}</span></span>
                               </button>
                             ); })}
                           </div>
@@ -133,17 +133,17 @@ export default function CraftPanel({ craft, party = [], onCraft, onForge, onSwap
       {tab === "catalog" && (
         <>
           <div className="mb-3 flex flex-wrap gap-1.5">
-            {SETS.map((s) => <button key={s} type="button" onClick={() => setSet(s)} className={`hud-btn dd-cut px-2.5 py-1 font-mono text-[13px] font-bold ${set === s ? "hud-btn-on" : "text-ef-muted"}`}>{s}</button>)}
+            {SETS.map((s) => <button key={s} type="button" onClick={() => setSet(s)} className={`hud-btn dd-cut px-2.5 py-1 font-mono text-[15px] font-bold ${set === s ? "hud-btn-on" : "text-ef-muted"}`}>{s}</button>)}
           </div>
           <div className="grid gap-3 md:grid-cols-3">
             {GEAR_SLOTS.map((slot: GearSlot) => {
               const pieces = GEAR_PIECES_BY_SET_SLOT[set]?.[slot] ?? [];
               return (
                 <div key={slot} className="hud-panel dd-cut p-2.5">
-                  <div className="mb-2 font-mono text-[13px] font-bold uppercase tracking-[0.2em] text-ef-accent/80">{gearSlotName(slot)} <span className="font-normal text-ef-muted">· {pieces.length}</span></div>
+                  <div className="mb-2 font-mono text-[15px] font-bold uppercase tracking-[0.2em] text-ef-accent/80">{gearSlotName(slot)} <span className="font-normal text-ef-muted">· {pieces.length}</span></div>
                   <div className="flex flex-col gap-1.5">
                     {pieces.map((p) => <PieceTile key={p.id} p={p} />)}
-                    {!pieces.length && <div className="py-4 text-center font-mono text-[12px] text-ef-muted">피스 없음</div>}
+                    {!pieces.length && <div className="py-4 text-center font-mono text-[14px] text-ef-muted">피스 없음</div>}
                   </div>
                 </div>
               );

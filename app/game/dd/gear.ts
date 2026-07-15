@@ -140,7 +140,7 @@ export const GEAR_DEFENSE_PER_SLOT = GEAR_DEFENSE.armor; // (하위호환) 참�
 
 // ── 세트별 실측 부옵 (warfarin gear.data, 세트 대표 피스). 각 피스: 방어(주옵) + 능력치(→gearGrade) + 피해 부옵. ──
 // grade = 능력치(힘/민첩/지능/의지) 합(실측), dmg = 피해 부옵(실측%). 단조로 스케일. dmg.kind: ult/battle/link/attack/all(물리)/elem(오퍼속성)/atkPct/hpPct/critRate/critDmg/energy.
-type DmgSub = { kind: "ult" | "battle" | "link" | "attack" | "all" | "elem" | "atkPct" | "hpPct" | "critRate" | "critDmg" | "energy"; v: number };
+type DmgSub = { kind: "ult" | "battle" | "link" | "attack" | "all" | "elem" | "atkPct" | "hpPct" | "critRate" | "critDmg" | "energy" | "artsStr" | "vsBroken" | "ultEff"; v: number };
 export const GEAR_SET_STATS: Record<string, Partial<Record<GearSlot, { grade: number; dmg?: DmgSub }>>> = {
   "개척": { armor: { grade: 145, dmg: { kind: "ult", v: 0.259 } }, gloves: { grade: 108, dmg: { kind: "atkPct", v: 0.23 } }, kit: { grade: 53, dmg: { kind: "elem", v: 0.414 } } },
   "열 작업용": { armor: { grade: 145, dmg: { kind: "atkPct", v: 0.115 } }, gloves: { grade: 108, dmg: { kind: "hpPct", v: 0.172 } }, kit: { grade: 53, dmg: { kind: "hpPct", v: 0.207 } } },
@@ -274,6 +274,9 @@ export function applyGear(u: DDUnit, loadout: Loadout | undefined, gearLevel = 0
       else if (k === "energy") startEnergy += v;
       else if (k === "all") g.kindDmg.all = (g.kindDmg.all ?? 0) + v;
       else if (k === "elem") { if (u.opElement && u.opElement !== "physical") g.elemDmg[u.opElement] = (g.elemDmg[u.opElement] ?? 0) + v; else g.kindDmg.all = (g.kindDmg.all ?? 0) + v; }
+      else if (k === "artsStr") u.artsStr = (u.artsStr ?? 0) + v;   // 오리지늄 아츠 강도(피스 실측, 정수값)
+      else if (k === "vsBroken") g.vsBroken += v;                    // 불균형 목표 피해 보너스
+      else if (k === "ultEff") u.ultEffMul = (u.ultEffMul ?? 1) + v; // 궁극기 충전 효율(배틀/연계 궁충에 배율)
       else g.kindDmg[k] = (g.kindDmg[k] ?? 0) + v; // ult/battle/link/attack
     }
   }

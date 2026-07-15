@@ -68,6 +68,7 @@ export type DDUnit = {
   artsImmune?: number; // 아츠 부착 확률 면역(아크라이트 만물의 지혜 0.5 = 50% 무효)
   artsStr?: number;    // 오리지늄 아츠 강도(열작업/펄스 세트 +30) — 물리/아츠 이상 피해 ×(1+강도/100)
   linkCdMul?: number;  // 연계 쿨타임 배율(청파/개척 세트 0.85) — act()에서 linkCd에 곱
+  ultEffMul?: number;  // 궁극기 충전 효율 배율(장비 부옵) — 배틀/연계 궁충에 곱
   cryoImmune?: boolean; // 냉기 부착 면역(에스텔라 이유 있는 게으름 — 동결 불가)
   gear?: GearBonus; // 장착 세트 효과(2부위 발동, gear.ts applyGear가 세팅). 데미지·불균형 배율에 가산
   gearSets?: string[]; // 활성 세트명(조건부 발동 효과 트리거용 — 연소 후 열기+·연계 후 배틀+ 등)
@@ -517,10 +518,11 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
         if (u.id === "lastrite" && self.id !== "lastrite") continue; // 라스트 라이트: 자기 배틀/연계로만 궁 충전(타 아군 배틀 무효)
         let g = ULT_BATTLE;
         if (gil && (u.cls === "guard" || u.cls === "caster" || u.cls === "supporter")) g *= 1.07;
+        g *= u.ultEffMul ?? 1; // 장비 부옵: 궁극기 충전 효율
         u.ultCharge = Math.min(u.ultCost, u.ultCharge + g);
       }
     } else if (skill.kind === "link") {
-      self.ultCharge = Math.min(self.ultCost, self.ultCharge + ULT_LINK); // 연계 → 시전자 +10
+      self.ultCharge = Math.min(self.ultCost, self.ultCharge + ULT_LINK * (self.ultEffMul ?? 1)); // 연계 → 시전자 +10(궁충 효율 반영)
       s.lastLinkAlly = self.id; // 팀 연계 윈도우(관리자 봉인 게이트)
       let cd = skill.cooldown ?? LINK_CD;
       if (self.id === "zhuangfangyi" && (self.timers.heavenly || 0) > 0) cd = Math.max(1, Math.round(cd / 4)); // 천리의 경지: 연계 쿨 4배(변화의 숨결 연타 → 감전 → 청뢰검 폭증)

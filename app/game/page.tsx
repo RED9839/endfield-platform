@@ -26,12 +26,12 @@ export default function GamePage() {
           <Link href="/" className="hud-btn flex h-10 w-10 shrink-0 items-center justify-center text-ef-muted" style={CUT_SM} aria-label="홈으로"><ChevronLeft className="h-5 w-5" /></Link>
           <span className="h-3 w-3 shrink-0" style={{ background: PRIMARY, boxShadow: `0 0 8px ${PRIMARY}` }} />
           <div className="min-w-0">
-            <p className="font-mono text-[12px] font-bold uppercase tracking-[0.3em] text-ef-muted">Darkest Protocol</p>
+            <p className="font-mono text-[14px] font-bold uppercase tracking-[0.3em] text-ef-muted">Darkest Protocol</p>
             <p className="truncate font-mono text-sm font-black uppercase tracking-[0.2em] text-white">던전 원정</p>
           </div>
           <div className="ml-auto" />
           {run.phase !== "select" && (
-            <button type="button" onClick={run.restart} className="hud-btn px-3 py-1.5 font-mono text-[13px] font-bold uppercase tracking-wider text-ef-muted transition hover:!border-red-400/50 hover:text-red-300" style={CUT_SM}>원정 포기</button>
+            <button type="button" onClick={run.restart} className="hud-btn px-3 py-1.5 font-mono text-[15px] font-bold uppercase tracking-wider text-ef-muted transition hover:!border-red-400/50 hover:text-red-300" style={CUT_SM}>원정 포기</button>
           )}
         </div>
       </header>
@@ -83,7 +83,7 @@ export default function GamePage() {
                         </div>
                       </div>
                     </div>
-                    <span className="w-24 text-right font-mono text-[12px] text-ef-muted">{Math.max(0, m.hp)} → <b className="text-green-300">{healed}</b></span>
+                    <span className="w-24 text-right font-mono text-[14px] text-ef-muted">{Math.max(0, m.hp)} → <b className="text-green-300">{healed}</b></span>
                   </div>
                 );
               })}
