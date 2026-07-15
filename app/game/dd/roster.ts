@@ -1,5 +1,6 @@
 // ===== DD류 물리 4인 + 적 정의 (프로토타입) =====
 // 스킬은 위키 매핑. 사용 요구(requires)가 카드 모델에서 깨지던 "연계 조건"을 DD류에선 자연 흡수.
+import { setApplyAttrs, setAttrBonus } from "./gear";
 import { bumpVuln, vulnFor, setTimer, applyBuff, ELEMENTS, attrResists, ATTR_AVG, attrBonus, type DDClass, type DDSkill, type DDUnit, type Element } from "./combat";
 import { promoMult, skillMult, skillUtilMult, DEFAULT_PROGRESS, type OpProgress } from "./progress";
 
@@ -448,6 +449,24 @@ const OP_ATTACK: Record<string, number> = {
 
 // 오퍼별 실제 능력치(endfield.wiki.gg Lv90 Elite max 실측). 힘→최대HP·민첩→물리저항·지능→아츠저항·의지→회복량.
 export type OpAttrs = { str: number; agi: number; int: number; wil: number };
+// 오퍼별 주요/보조 능력치 — **공략 시트 「주,부옵」 컬럼 실측**(고정값).
+// 능력치 상위 2개로 추론하면 안 된다: 울프가드(시트 힘,민첩 vs 상위2 힘,의지)·아케쿠리·에스텔라·아비웨나 4명이 어긋난다.
+// 원작 공식: 공격력 = 기초 × (1 + 주요×0.005 + 보조×0.002)
+export const OP_MAINSUB: Record<string, [keyof OpAttrs, keyof OpAttrs]> = {
+  laevatain: ["int", "str"], ember: ["str", "wil"], wulfgard: ["str", "agi"], akekuri: ["agi", "int"], camu: ["agi", "int"],
+  yvonne: ["int", "agi"], lastrite: ["str", "wil"], tangtang: ["agi", "str"], snowshine: ["str", "wil"], xaihi: ["wil", "int"],
+  alesh: ["str", "int"], estella: ["wil", "str"], zhuangfangyi: ["wil", "int"], avywenna: ["wil", "agi"], perlica: ["int", "wil"],
+  arclight: ["agi", "int"], antal: ["int", "str"], gilberta: ["wil", "int"], ardelia: ["int", "wil"], fluorite: ["agi", "int"],
+  pogranichnik: ["wil", "agi"], lifeng: ["agi", "str"], endministrator: ["agi", "str"], rossi: ["agi", "int"],
+  chenqianyu: ["agi", "str"], dapan: ["str", "wil"], catcher: ["str", "wil"], mifu: ["str", "wil"],
+};
+// 능력치 → 공격력 보너스(원작 공식). 주/부옵은 OP_MAINSUB 고정.
+export const attrBonusOf = (id: string, a: OpAttrs): number => {
+  const ms = OP_MAINSUB[id];
+  if (!ms) { const s = [a.str, a.agi, a.int, a.wil].sort((x, y) => y - x); return 1 + s[0] * 0.005 + s[1] * 0.002; }
+  return 1 + a[ms[0]] * 0.005 + a[ms[1]] * 0.002;
+};
+
 export const OP_ATTRS: Record<string, OpAttrs> = {
   laevatain: { str: 121, agi: 99, int: 177, wil: 89 }, ember: { str: 176, agi: 96, int: 86, wil: 120 },
   camu: { str: 102, agi: 160, int: 129, wil: 92 }, wulfgard: { str: 161, agi: 95, int: 92, wil: 111 },
@@ -466,26 +485,20 @@ export const OP_ATTRS: Record<string, OpAttrs> = {
 };
 // 속도(턴 순서)는 오퍼레이터 개별 값(OP_BASE.speed, 실 민첩 기반) 사용 — makeAlly 참조.
 
-// 능력치 → 역할 배율. 능력치가 바뀔 때(무기 능력치 버프 등)마다 다시 부른다.
-//   힘   = 체력(OP_HP에 이미 6000+힘×5로 반영) + 기본공격 배율
-//   민첩 = 속도
-//   지능 = 스킬(배틀/연계/궁) 피해
-//   의지 = 유틸(취약·증폭·회복 배율, 받는 회복량) + 궁극기 게이지 속도
-// 배율은 전부 "기준선(ATTR_BASE) 초과분만 +알파" 꼴 — 능력치가 낮아도 페널티가 없고,
-// 한 스탯이 오퍼에 따라 다른 역할을 겸하는 일(주옵 방식의 형평성 문제)이 없다.
+// 능력치 → 파생 스탯. 원작은 능력치가 **공격력 공식 하나로만** 흐른다:
+//   공격력 = 기초 × (1 + 주요×0.005 + 보조×0.002)   ← OP_ATTACK에 오퍼 고유분이 이미 반영, 장비/무기분은 gear/weapons가 가산
+//   HP     = 6000 + 힘×5                            ← OP_HP에 반영
+// 즉 힘/지능/의지에 별도 +알파 배율을 얹을 필요가 없다(중복). 속도만 우리 턴제용 각색.
 export function applyAttrs(u: DDUnit): void {
   const a = u.attrs;
   if (!a) return;
-  // 민첩 → 속도. ATB라 속도 = 행동 빈도 → 폭이 크면 고민첩 오퍼가 사이클을 독식한다.
-  // agi*0.42+12는 무기 능력치 버프(카뮤 「붉게 물든 가호」 민첩 +156)까지 타면 48~113(×2.35)로 벌어져
-  // 카뮤가 캐리(레바테인 54)의 2배 속도 → 행동 밀도 2.7배. 완만하게 잡아 적 속도대(32~78)와 겹치게 한다.
-  u.speed = Math.round(a.agi * 0.20 + 38); // 55~86 (×1.56)
-  u.strMul = attrBonus(a.str);       // 힘 → 일반 공격 피해
-  u.skillAttrMul = attrBonus(a.int); // 지능 → 스킬 피해
-  u.wilMul = attrBonus(a.wil);       // 의지 → 유틸 · 궁극기 게이지
-  u.healRecv = attrBonus(a.wil);
-  u.utilMult = (u.utilBase ?? u.utilMult ?? 1) * u.wilMul; // 스킬 단조 유틸 × 의지 (utilBase 기준 → 재호출해도 중복 곱 없음)
+  u.speed = Math.round(a.agi * 0.20 + 38); // 민첩 → 속도(ATB 순서). 원작엔 없는 턴제 각색.
+  u.strMul = 1; u.skillAttrMul = 1; u.wilMul = 1; u.healRecv = 1; // +알파 폐지 — 능력치는 공격력/HP로만
+  u.utilMult = u.utilBase ?? u.utilMult ?? 1;
 }
+
+setAttrBonus(attrBonusOf); // 장비 능력치 → 공격력 계산에 주/부옵 고정표 사용
+setApplyAttrs(applyAttrs); // gear가 장비 능력치 합산 후 속도를 다시 계산하도록 주입
 
 export function makeAlly(id: string, pos: number, progress: OpProgress = DEFAULT_PROGRESS): DDUnit {
   const b = OP_BASE[id];

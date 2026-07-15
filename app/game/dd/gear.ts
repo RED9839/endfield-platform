@@ -7,6 +7,14 @@ import { ELEMENTS, attrResists } from "./combat";
 import gearPiecesData from "./data/gear-pieces.json";
 import { gearSummaries } from "@/data/gear-summary-data";
 
+// 장비 능력치를 attrs에 합산한 뒤 파생 스탯(민첩→속도)을 다시 계산해야 한다.
+// roster를 직접 import하면 순환(gear→roster→combat→weapons→roster)이라 주입 방식.
+let applyAttrsHook: ((u: DDUnit) => void) | null = null;
+export const setApplyAttrs = (f: (u: DDUnit) => void) => { applyAttrsHook = f; };
+// 주요/보조 능력치는 오퍼별 고정(공략 시트 「주,부옵」). 상위 2개 추론은 4명이 어긋난다 → roster가 주입.
+let attrBonusHook: ((id: string, a: any) => number) | null = null;
+export const setAttrBonus = (f: (id: string, a: any) => number) => { attrBonusHook = f; };
+
 export type GearSlot = "armor" | "gloves" | "kit";
 export type Loadout = Partial<Record<GearSlot, string>>; // 슬롯 → 세트명
 export const GEAR_SLOTS: GearSlot[] = ["armor", "gloves", "kit"];
@@ -158,6 +166,10 @@ export const GEAR_SET_STATS: Record<string, Partial<Record<GearSlot, { grade: nu
   "펄스식": { armor: { grade: 145, dmg: { kind: "hpPct", v: 0.103 } }, gloves: { grade: 108, dmg: { kind: "atkPct", v: 0.192 } }, kit: { grade: 53, dmg: { kind: "hpPct", v: 0.207 } } },
   "재앙 방호": { armor: { grade: 102, dmg: { kind: "ult", v: 0.184 } }, gloves: { grade: 76, dmg: { kind: "hpPct", v: 0.122 } }, kit: { grade: 38, dmg: { kind: "hpPct", v: 0.147 } } },
 };
+// 장비 능력치 → 오퍼 attrs 환산 계수. 우리 OP_ATTACK은 원작 실수치가 아니라 ×0.1507 축소된 값이라
+// 장비 능력치(단조3 기준 432)를 원본 그대로 더하면 주요 능력치가 177→479로 뛰어 공격력이 ×1.8 폭주한다.
+// 부옵(속성 피해·치명 등)은 건드리지 않고 능력치만 축소.
+export const GEAR_ATTR_FACTOR = 0.2;
 const GRADE_FACTOR = 0.13; // 실측 능력치 합 → gearGrade 환산(3부위 ≈ +40 → 저항 ~50%)
 // 원작은 부품(kit) 2슬롯(방어구·장갑·부품×2 = 4슬롯, 세트 3부위 발동). 본 게임은 3슬롯 모델이라
 // 부품 1개가 원작 2개 몫을 하도록 능력치/방어를 2배 환산(부옵은 단일 — 원작 2번째 부품은 통상 다른 부옵).
@@ -165,7 +177,7 @@ export const KIT_SLOTS = 2;
 const slotMul = (slot: GearSlot) => (slot === "kit" ? KIT_SLOTS : 1);
 
 // ── 전 220 피스 레지스트리 (data/gear-pieces.json). loadout이 피스 id를 참조하면 그 피스 실측 스탯, 세트명이면 대표 피스(GEAR_SET_STATS). ──
-export type GearPiece = { id: string; name: string; set: string; slot: GearSlot; rarity: number; def: number; grade: { base: number; enh: number[] }; dmg?: { kind: DmgSub["kind"]; base: number; enh: number[] } };
+export type GearPiece = { id: string; name: string; set: string; slot: GearSlot; rarity: number; def: number; grade: { base: number; enh: number[] }; attrs?: { str?: number; agi?: number; int?: number; wil?: number }; dmg?: { kind: DmgSub["kind"]; base: number; enh: number[] } };
 // Lv50 이하(rarity<5) 장비 전면 제거 — Lv70(rarity 5) 세트 장비만 사용.
 export const GEAR_PIECES = (gearPiecesData as GearPiece[]).filter((p) => p.rarity >= 5);
 export const GEAR_PIECE_BY_ID: Record<string, GearPiece> = Object.fromEntries(GEAR_PIECES.map((p) => [p.id, p]));
@@ -254,24 +266,29 @@ export function recommendedLoadout(opId: string, setName: string, element?: stri
 }
 
 const refSet = (ref: string): string => GEAR_PIECE_BY_ID[ref]?.set ?? ref; // loadout 항목(세트명|피스id) → 소속 세트
-function resolveGear(ref: string, slot: GearSlot, lv: number): { def: number; grade: number; dmg?: DmgSub } | null {
+function resolveGear(ref: string, slot: GearSlot, lv: number): { def: number; grade: number; attrs?: Record<string, number>; dmg?: DmgSub } | null {
   const p = GEAR_PIECE_BY_ID[ref] ?? GEAR_SET_CANON[ref]?.[slot]; // 피스 id 또는 세트명 → 실제 피스(gear-pieces.json 실측값)
   if (!p) return null;
   const grade = lv === 0 ? p.grade.base : p.grade.enh[lv - 1];
-  return { def: p.def, grade, dmg: p.dmg ? { kind: p.dmg.kind as DmgSub["kind"], v: lv === 0 ? p.dmg.base : p.dmg.enh[lv - 1] } : undefined };
+  // 능력치 속성별 내역(힘/민첩/지능/의지). 단조 시 grade가 오르므로 같은 비율로 스케일(합 = grade 유지).
+  let attrs: Record<string, number> | undefined;
+  if (p.attrs) { const k = grade / (p.grade.base || 1); attrs = Object.fromEntries(Object.entries(p.attrs).map(([a, v]) => [a, (v as number) * k])); }
+  return { def: p.def, grade, attrs, dmg: p.dmg ? { kind: p.dmg.kind as DmgSub["kind"], v: lv === 0 ? p.dmg.base : p.dmg.enh[lv - 1] } : undefined };
 }
 
 export function applyGear(u: DDUnit, loadout: Loadout | undefined, gearLevel = 0, levels?: Partial<Record<GearSlot, number>>): number {
   if (!loadout) return 0;
   const g = emptyBonus();
   let atkPct = 0, startEnergy = 0, gradeAdd = 0;
+  const gAttr: Record<string, number> = { str: 0, agi: 0, int: 0, wil: 0 }; // 장비가 주는 능력치 합
   for (const slot of GEAR_SLOTS) if (loadout[slot]) {
     const lv = Math.max(0, Math.min(3, levels?.[slot] ?? gearLevel)); // 부위별 단조(제작) 우선, 없으면 통합 gearLevel
     const r = resolveGear(loadout[slot]!, slot, lv); // 피스 id 또는 세트명 → 실측 스탯(단조 반영)
     const m = slotMul(slot); // 부품은 원작 2슬롯 몫
     if (!r) { u.defense += GEAR_DEFENSE[slot] * m; continue; }
     u.defense += r.def * m; // 주옵: 방어(피스별 실측)
-    gradeAdd += r.grade * GRADE_FACTOR * m; // 실측 능력치 → gearGrade
+    gradeAdd += r.grade * GRADE_FACTOR * m; // 실측 능력치 → gearGrade(저항)
+    if (r.attrs) for (const [a, v] of Object.entries(r.attrs)) gAttr[a] += v * m; // 속성별 내역(힘/민첩/지능/의지)
     if (r.dmg) { const v = r.dmg.v * m, k = r.dmg.kind; // 실측 피해 부옵(부품은 2슬롯 몫)
       if (k === "atkPct") atkPct += v;
       else if (k === "hpPct") { const h = Math.round(u.maxHp * v); u.maxHp += h; u.hp += h; }
@@ -287,6 +304,19 @@ export function applyGear(u: DDUnit, loadout: Loadout | undefined, gearLevel = 0
     }
   }
   if (gradeAdd > 0) { u.gearGrade += Math.round(gradeAdd); u.resist = attrResists(u.gearGrade); } // 장비 능력치 → 저항 재계산(오퍼 능력치는 관여 안 함)
+  // ── 장비 능력치 → 오퍼 주요/보조 능력치에 합산 → 공격력 재계산 ──
+  // 원작 공식(1.1 능력치 보너스): 공격력 = 기초 × (1 + 주요×0.005 + 보조×0.002).
+  // OP_ATTACK엔 오퍼 고유 능력치가 이미 반영돼 있으므로, 장비분을 더한 뒤 보너스 비율만큼 스케일한다
+  // (weapons.ts의 무기 능력치 버프와 같은 방식). 힘 장비를 끼면 힘이 오르고, 그게 주옵이면 공격력이 오른다.
+  if (u.attrs && Object.values(gAttr).some((v) => v > 0)) {
+    const b0 = u.attrs;
+    const bonus = (a: typeof b0) => attrBonusHook ? attrBonusHook(u.id, a) : 1; // 주/부옵 고정표(roster.attrBonusOf)
+    const k = GEAR_ATTR_FACTOR;
+    const next = { str: b0.str + gAttr.str * k, agi: b0.agi + gAttr.agi * k, int: b0.int + gAttr.int * k, wil: b0.wil + gAttr.wil * k };
+    u.attack = Math.round(u.attack * (bonus(next) / bonus(b0)));
+    u.attrs = next;
+    applyAttrsHook?.(u); // 민첩 → 속도 재계산(roster가 주입)
+  }
   const sets = activeSets(loadout);
   if (sets.length) u.gearSets = sets; // 조건부 발동 세트(연소 후 열기+ 등) — combat.ts가 트리거 시 참조
   let shieldPct = 0, healPct = 0;

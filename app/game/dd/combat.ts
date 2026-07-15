@@ -606,7 +606,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
       if (skill.kind === "link" && t.arts.electric > 0) { // 변화의 숨결: 전기 부착 소모 → 강제 감전(이미 감전이면 레벨↑)
         const n = t.arts.electric; t.arts.electric = 0; delete t.timers["arts:electric"];
         const lvUp = has(t, "shock"); add(t, "shock"); gearTrigger(self, "anomaly:electric"); bumpVuln(t, "arts", (lvUp ? 0.16 : 0.12) * self.utilMult);
-        self.ultCharge = Math.min(self.ultCost, self.ultCharge + 10 + 10 * n); s.anomalyConsumed = ANOMALY_WINDOW;
+        self.ultCharge = Math.min(self.ultCost, self.ultCharge + (10 + 10 * n) * (self.ultEffMul ?? 1) * (self.wilMul ?? 1)); s.anomalyConsumed = ANOMALY_WINDOW;
         log.push(`  → 변화의 숨결! 전기 ${n}스택 소모 → 강제 감전${lvUp ? "(레벨↑)" : ""}`);
       }
       if (skill.kind === "battle") { // 뇌정의 부름: 감전 소모 → 청뢰검 생성(최대 9) + 청뢰검 수 비례 뇌격(마지막 ×6) + 궁충
@@ -616,7 +616,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
           if (has(t, "shock")) { rm(t, "shock"); gen = 2; } else if ((self.procCount || 0) < 3) gen = 1;
           if (tw) gen = Math.max(gen, 3); // 변신 중 강제 3자루
           self.procCount = Math.min(9, (self.procCount || 0) + gen);
-          self.ultCharge = Math.min(self.ultCost, self.ultCharge + 6 * self.procCount); // 뇌격당 궁 +6
+          self.ultCharge = Math.min(self.ultCost, self.ultCharge + 6 * self.procCount * (self.ultEffMul ?? 1) * (self.wilMul ?? 1)); // 뇌격당 궁 +6
           self.amp.electric = Math.max(self.amp.electric || 0, 0.18); setTimer(self, "amp:electric", 1); // 천지의 조화
           log.push(`  → 뇌정의 부름! 청뢰검 ${self.procCount}/9 (생성 ${gen})${tw ? " · 변신 광역 강화" : ""}`);
         }
@@ -667,7 +667,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
         t.arts.cryo = 0; t.arts.nature = 0; delete t.timers["arts:cryo"]; delete t.timers["arts:nature"];
         t.frozen = stacks; add(t, "stun"); setTimer(t, "frozen", DUR_FROZEN); gearTrigger(self, "anomaly:cryo"); // 강제 동결(세트 조건 = "동결을 부여한 후")
         raw += self.attack * eb(self) * (0.67 + 0.89 * stacks); // 동결 부여 67% + 스택당 89%
-        self.ultCharge = Math.min(self.ultCost, self.ultCharge + 10 + 30 * stacks); // 궁충(동결 10 + 스택당 30)
+        self.ultCharge = Math.min(self.ultCost, self.ultCharge + (10 + 30 * stacks) * (self.ultEffMul ?? 1) * (self.wilMul ?? 1)); // 궁충(동결 10 + 스택당 30)
         s.anomalyConsumed = ANOMALY_WINDOW;
         log.push(`  → 얼음 폭탄! 냉기/자연 ${stacks}스택 소모 → 강제 동결 + 궁 +${10 + 30 * stacks}`);
       }
@@ -710,7 +710,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
       if (self.procCount >= 4) { // 4스택 배틀 → 강화 폭발 + 강제 연소 + 궁 +100
         raw += self.attack * eb(self) * (tw ? 4.0 : 3.42); // 추가 공격(궁 중 400% / 일반 342%)
         t.dot = Math.round(self.attack * eb(self) * 0.5); setTimer(t, "dot", DUR_DOT); add(t, "combustion"); gearTrigger(self, "anomaly:heat"); // 강제 연소(세트 조건 = "연소를 부여한 후")
-        self.ultCharge = Math.min(self.ultCost, self.ultCharge + 100); // 궁 +100
+        self.ultCharge = Math.min(self.ultCost, self.ultCharge + 100 * (self.ultEffMul ?? 1) * (self.wilMul ?? 1)); // 궁 +100
         self.amp.heat = Math.max(self.amp.heat || 0, 0.2); setTimer(self, "amp:heat", 4); // 불꽃의 심장(열기 저항 무시 근사)
         self.procCount = 0;
         log.push(`  → 녹아내린 불꽃 4스택 소모! 강화 폭발${tw ? "(궁 중 400%)" : ""} + 강제 연소 + 궁 +100`);
@@ -721,7 +721,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
       if (lances + big > 0) {
         raw += self.attack * eb(self) * (lances * 0.75 + big * 1.92); // 일반 75% / 강력 192% × 투창 수
         if (big > 0) raw += applyAttach(t, "electric", self, log); // 강력 썬더랜스 전기 부착
-        self.ultCharge = Math.min(self.ultCost, self.ultCharge + (lances + big) * 4); // 고효율 배송(회수 명중 궁 +4)
+        self.ultCharge = Math.min(self.ultCost, self.ultCharge + (self.ultEffMul ?? 1) * (self.wilMul ?? 1) * (lances + big) * 4); // 고효율 배송(회수 명중 궁 +4)
         log.push(`  → 썬더랜스 ${lances + big}개 회수! 중복 전기 폭딜${big ? " + 전기 부착" : ""}`);
         t.lanceN = 0; t.lanceBig = 0; // 대상 스택 소모
       }
@@ -773,7 +773,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
       const n = Math.min(4, t.arts.cryo);
       t.arts.cryo = 0; t.frozen = n; add(t, "stun"); setTimer(t, "frozen", DUR_FROZEN);
       gaugeUp(s, [10, 20, 30, 40][n - 1]);
-      self.ultCharge = Math.min(self.ultCost, self.ultCharge + 8); // 급속 냉동 보존 기술(자기 동결)
+      self.ultCharge = Math.min(self.ultCost, self.ultCharge + 8 * (self.ultEffMul ?? 1) * (self.wilMul ?? 1)); // 급속 냉동 보존 기술(자기 동결)
       log.push(`  → 강제 동결! 냉기 ${n}스택 소모 + 게이지 + 궁 에너지`);
     }
     if (skill.freezeZone && t.hp > 0) { // 살얼음 추위(스노우샤인): 부착 무관 직접 동결 + 빙설 지대 지속 냉기
@@ -1034,7 +1034,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
   // 레바테인(스트라이커): 열화 연계 궁 에너지(명중 수 비례). 녹아내린 불꽃 빌드는 흡수 루프에서 처리
   if (self.id === "laevatain" && skill.kind === "link") {
     const hits = pickTargets(s, self, skill).length;
-    self.ultCharge = Math.min(self.ultCost, self.ultCharge + (hits >= 3 ? 35 : hits === 2 ? 30 : 25));
+    self.ultCharge = Math.min(self.ultCost, self.ultCharge + (hits >= 3 ? 35 : hits === 2 ? 30 : 25) * (self.ultEffMul ?? 1) * (self.wilMul ?? 1));
     log.push(`  → 열화 궁 충전 (${hits}명)`);
   }
   // 레바테인 황혼: 열화의 마검 변신(15초≈3턴) — 지속 동안 일반공격/배틀 강화(act 배수). 변신 직후 즉시 추가 행동.

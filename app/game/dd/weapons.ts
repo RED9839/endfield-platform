@@ -2,7 +2,7 @@
 // 개별 무기 수치/패시브는 소스 미공개 → 타입은 실데이터, 효과는 위키 타입 역할(양손검=불균형↑·아츠유닛=아츠·권총=아츠반응·한손검=근접치명·장병기=스킬) 기반 모델.
 import type { DDUnit } from "./combat";
 import { setTimer, pushSrc, popSrc } from "./combat";
-import { applyAttrs } from "./roster";
+import { applyAttrs, attrBonusOf, OP_MAINSUB } from "./roster";
 import { weaponSummaries } from "@/data/weapons-summary-data";
 import { OP_WEAPON_SERIES } from "./weapon-series";
 
@@ -200,20 +200,17 @@ export function applyWeapon(u: DDUnit): WeaponType | null {
   if (!t || !w) return t ?? null;
   // 1) 기초공격력(스케일 가산)
   u.attack = Math.round(u.attack + w.atk * W_ATK_SCALE);
-  // 2) 능력치 버프 → attrs (+저항/회복 재계산). "main"=주요 능력치(최고 스탯).
+  // 2) 능력치 버프 → attrs → 공격력 재계산. 주/부옵은 오퍼별 고정(OP_MAINSUB, 공략 시트 「주,부옵」).
+  // (기존엔 상위 2개로 추론 → 울프가드·아케쿠리·에스텔라·아비웨나 4명이 어긋났고, 부옵 버프는 공격력에 반영도 안 됐다)
   if (u.attrs) {
     const b0 = u.attrs;
-    const mainKey = (["str", "agi", "int", "wil"] as const).reduce((a, b) => (b0[b] > b0[a] ? b : a), "str");
+    const mainKey = (OP_MAINSUB[u.id]?.[0] ?? "str") as "str" | "agi" | "int" | "wil";
     const key = (w.buff === "main" ? mainKey : w.buff) as "str" | "agi" | "int" | "wil";
     const added = Math.round(w.buffVal * W_BUFF_SCALE);
     // 주요 능력치 보너스(엔드필드 공식): 공격력 × (1 + 주요×0.005 + 보조×0.002). 주요 능력치 증가분만큼 공격 상승.
-    if (key === mainKey) {
-      const s = [b0.str, b0.agi, b0.int, b0.wil].sort((a, b) => b - a);
-      const oldB = 1 + s[0] * 0.005 + s[1] * 0.002;
-      const newB = 1 + (s[0] + added) * 0.005 + s[1] * 0.002;
-      u.attack = Math.round(u.attack * (newB / oldB));
-    }
-    u.attrs = { ...b0, [key]: b0[key] + added };
+    const next = { ...b0, [key]: b0[key] + added };
+    u.attack = Math.round(u.attack * (attrBonusOf(u.id, next) / attrBonusOf(u.id, b0))); // 주옵/부옵 어느 쪽이 올라도 공식대로 반영
+    u.attrs = next;
     applyAttrs(u); // 능력치 변동 → 속도·기본공격·스킬·유틸/궁충 배율 재계산(멱등)
   }
   // 3) 부가스탯(실값 × 완충)
