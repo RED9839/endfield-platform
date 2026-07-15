@@ -575,7 +575,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
     if (self.id === "zhuangfangyi") { // 장방이: 청뢰검(procCount) — 연계 강제 감전 / 배틀 감전 소모 → 검 생성 + 뇌격
       if (skill.kind === "link" && t.arts.electric > 0) { // 변화의 숨결: 전기 부착 소모 → 강제 감전(이미 감전이면 레벨↑)
         const n = t.arts.electric; t.arts.electric = 0; delete t.timers["arts:electric"];
-        const lvUp = has(t, "shock"); add(t, "shock"); bumpVuln(t, "arts", (lvUp ? 0.16 : 0.12) * self.utilMult);
+        const lvUp = has(t, "shock"); add(t, "shock"); gearTrigger(self, "anomaly:electric"); bumpVuln(t, "arts", (lvUp ? 0.16 : 0.12) * self.utilMult);
         self.ultCharge = Math.min(self.ultCost, self.ultCharge + 10 + 10 * n); s.anomalyConsumed = true;
         log.push(`  → 변화의 숨결! 전기 ${n}스택 소모 → 강제 감전${lvUp ? "(레벨↑)" : ""}`);
       }
@@ -598,7 +598,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
       const stacks = Math.min(4, t.arts.cryo + t.arts.nature);
       if (stacks > 0) {
         t.arts.cryo = 0; t.arts.nature = 0; delete t.timers["arts:cryo"]; delete t.timers["arts:nature"];
-        t.frozen = stacks; add(t, "stun"); setTimer(t, "frozen", DUR_FROZEN); // 강제 동결
+        t.frozen = stacks; add(t, "stun"); setTimer(t, "frozen", DUR_FROZEN); gearTrigger(self, "anomaly:cryo"); // 강제 동결(세트 조건 = "동결을 부여한 후")
         raw += self.attack * eb(self) * (0.67 + 0.89 * stacks); // 동결 부여 67% + 스택당 89%
         self.ultCharge = Math.min(self.ultCost, self.ultCharge + 10 + 30 * stacks); // 궁충(동결 10 + 스택당 30)
         s.anomalyConsumed = true;
@@ -639,7 +639,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
       if (tw) raw += self.attack * eb(self) * 0.85; // 궁 중 강화 배틀 1단계(62→147%)
       if (self.procCount >= 4) { // 4스택 배틀 → 강화 폭발 + 강제 연소 + 궁 +100
         raw += self.attack * eb(self) * (tw ? 4.0 : 3.42); // 추가 공격(궁 중 400% / 일반 342%)
-        t.dot = Math.round(self.attack * eb(self) * 0.5); setTimer(t, "dot", DUR_DOT); add(t, "combustion"); // 강제 연소
+        t.dot = Math.round(self.attack * eb(self) * 0.5); setTimer(t, "dot", DUR_DOT); add(t, "combustion"); gearTrigger(self, "anomaly:heat"); // 강제 연소(세트 조건 = "연소를 부여한 후")
         self.ultCharge = Math.min(self.ultCost, self.ultCharge + 100); // 궁 +100
         self.amp.heat = Math.max(self.amp.heat || 0, 0.2); setTimer(self, "amp:heat", 4); // 불꽃의 심장(열기 저항 무시 근사)
         self.procCount = 0;
@@ -657,7 +657,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
       }
     }
     if (skill.forceBurn && t.hp > 0) { // 울프가드 늑대의 분노: 강제 연소 + 불타는 송곳니
-      t.dot = Math.round(self.attack * eb(self) * 0.36); setTimer(t, "dot", DUR_DOT); add(t, "combustion");
+      t.dot = Math.round(self.attack * eb(self) * 0.36); setTimer(t, "dot", DUR_DOT); add(t, "combustion"); gearTrigger(self, "anomaly:heat"); // 강제 연소 부여 → 세트 발동
       self.amp.heat = Math.max(self.amp.heat || 0, 0.3); setTimer(self, "amp:heat", 2);
       log.push(`  → 강제 연소 + 불타는 송곳니(+30%)`);
     }
@@ -696,7 +696,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
         log.push(`  → 황무지의 방랑자! 팀 전기 피해 +${(amp * 100).toFixed(1)}% (장비등급 ${self.gearGrade})`);
       }
     }
-    if (skill.forceShock && t.hp > 0) { add(t, "shock"); bumpVuln(t, "arts", 0.12 * self.utilMult); log.push(`  → 강제 감전(전기 부착 소모)`); }
+    if (skill.forceShock && t.hp > 0) { add(t, "shock"); gearTrigger(self, "anomaly:electric"); bumpVuln(t, "arts", 0.12 * self.utilMult); log.push(`  → 강제 감전(전기 부착 소모)`); }
     // 알레쉬: 아츠 이상/쇄빙 소모 감지(연계 조건) + 강제 동결 + 진귀한 린수
     if (ELEMENTS.reduce((n, e) => n + t.arts[e], 0) + t.frozen < preReact) s.anomalyConsumed = true;
     if (skill.forceFreeze && t.arts.cryo > 0) {
