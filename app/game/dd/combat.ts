@@ -66,6 +66,7 @@ export type DDUnit = {
   procCount: number; // 제너릭 재능 카운터(아크라이트 황무지의 방랑자 등)
   iceStack?: number; // 이본 「아이스 슈터」 변신 중 평타 누적(치확 +3%/스택, 최대 10)
   isMain?: boolean;  // 파티 메인딜러(편성 첫 오퍼 = 공략 시트 채용파티의 주인). 공유 게이지 우선권.
+  zfyUsedFree?: boolean; // 장방이 천리의 경지: 첫 배틀 무소모를 이미 썼는가
   utilMult: number;  // 스킬 단조 유틸 배율(취약·증폭·회복·게이지·지속) × 의지. M0=1.0
   utilBase?: number; // 의지 곱하기 전 스킬 단조 유틸 배율(재계산 기준값)
   killPriority?: number; // 아군 자동 타겟 처치 우선(적 한정): 3=지원(치유/증폭) 2=원거리 1=전열
@@ -502,7 +503,9 @@ export function pickTargets(s: DDState, self: DDUnit, skill: DDSkill): DDUnit[] 
 export function usable(s: DDState, self: DDUnit, skill: DDSkill): boolean {
   // 위치(fromPos) 제약 제거 — 플레이어가 배치를 보거나 바꿀 수 없어 숨은 페널티만 됨. 모든 슬롯에서 전 스킬 사용 가능.
   if (skill.selfUlt && self.ultCharge < self.ultCost) return false;
-  if (skill.kind === "battle" && self.side === "ally" && s.skillGauge < (skill.gaugeCost ?? GAUGE_COST)) return false; // 스킬 게이지 부족
+  // 장방이 천리의 경지: 원문 "**첫 배틀은 게이지/감전 무소모**" → 게이지 부족이어도 통과
+  const zfyFree = self.id === "zhuangfangyi" && skill.kind === "battle" && (self.timers.heavenly || 0) > 0 && !self.zfyUsedFree;
+  if (skill.kind === "battle" && self.side === "ally" && !zfyFree && s.skillGauge < (skill.gaugeCost ?? GAUGE_COST)) return false; // 스킬 게이지 부족
   if (skill.kind === "link" && self.linkCd > 0) return false; // 연계 쿨타임
   if (skill.requiresStance != null && self.stance < skill.requiresStance) return false; // 미브 스탠스 요구
   const tg = pickTargets(s, self, skill)[0];
@@ -540,7 +543,10 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
   // 자원: 스킬 게이지(파티 공유) 소모 + 궁극기 에너지(개인) 충전 — 위키 정합
   if (self.side === "ally") {
     if (skill.kind === "battle") {
-      s.skillGauge = Math.max(0, s.skillGauge - (skill.gaugeCost ?? GAUGE_COST)); // 배틀 소모(미브 추형/개천 50)
+      if (self.id === "zhuangfangyi" && (self.timers.heavenly || 0) > 0 && !self.zfyUsedFree) {
+        self.zfyUsedFree = true; // 천리의 경지 첫 배틀 = 게이지 무소모(원문)
+        log.push(`  → 천리의 경지! 첫 배틀 게이지 무소모`);
+      } else s.skillGauge = Math.max(0, s.skillGauge - (skill.gaugeCost ?? GAUGE_COST)); // 배틀 소모(미브 추형/개천 50)
       if (skill.gaugeRefund) gaugeUp(s, skill.gaugeRefund); // 미브 단운 50 반환
       // 배틀 → 아군 전체 궁 충전(+6.5). 질베르타 전달자의 노래: 가드/캐스터/서포터 궁충 ×1.07
       const gil = s.units.some((u) => u.id === "gilberta" && u.hp > 0);
@@ -612,6 +618,9 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
         }
         const per = tw ? 0.36 : 0.2; // 스킬랭크1 계수(전역 SKILL_RANK9가 ×2.25로 스킬랭크9=45%/81% 반영)
         raw += self.attack * eb(self) * per * (self.procCount + 5); // 청뢰검 비례 뇌격(마지막 ×6) — 모든 대상(변신 시 광역)
+        // 원문: 천리의 경지 중 "배틀 … **마지막 뇌격 전기 부착**". 이게 없으면 연계 「변화의 숨결」(전기 부착 적 요구)이
+        // 영원히 잠겨 청뢰검 램프가 안 돈다(측정: 연계 0회 · 청뢰검 2.5/9). 레바테인 「황혼」의 부착 누락과 같은 유형.
+        if (tw) raw += applyAttach(t, "electric", self, log);
       }
     }
     // 미브 「후회 없는 주먹」(연계): 원문 표 "획득하는 궁극기 에너지 10".
@@ -1052,6 +1061,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
   // 장방이(스트라이커): 심판의 폭풍 — 천리의 경지 변신(25초≈4턴, 평타/배틀 강화·방해 면역) + 첫 배틀 무소모 청뢰검 3자루. 변신 직후 즉시 추가 행동.
   if (self.id === "zhuangfangyi" && skill.kind === "ult") {
     setTimer(self, "heavenly", 4);
+    self.zfyUsedFree = false; // 변신마다 첫 배틀 무소모 1회
     self.procCount = Math.min(9, Math.max(self.procCount || 0, 3));
     self.atb += 100; // 변신 후 바로 자기 턴(강화 배틀·청뢰검 즉시 폭발)
     log.push(`  → 심판의 폭풍! 천리의 경지 변신 (청뢰검 ${self.procCount}/9) · 즉시 추가 행동`);
