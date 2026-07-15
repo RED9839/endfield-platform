@@ -13,6 +13,12 @@ export function allyChoose(s: DDState, self: DDUnit): DDSkill | null {
   const skills = [...(SKILLS[self.id] ?? []), BASIC];
   const opts = skills.filter((sk) => usable(s, self, sk));
   if (!opts.length) return null;
+  // 이본 「아이스 슈터」 변신 중엔 강화 평타 말뚝딜 — 원작이 "메인 전환 후 7초간 강화 일반공격"인 스킬.
+  // 점수로 두면 배틀(얼음 폭탄 = 111% + 스택당 89%)이 강화 평타(≈133%)를 이겨서 치확 스택이 안 쌓임.
+  if (self.id === "yvonne" && (self.timers.iceshot || 0) > 0) {
+    const basic = opts.find((o) => o.kind === "attack");
+    if (basic) return basic;
+  }
   const score = (sk: DDSkill) => {
     const t = pickTargets(s, self, sk)[0];
     // 점수 단위 = 배율(power). 평타도 실제 배율(0.5)로 재서 스킬과 같은 저울에 올린다.
@@ -20,6 +26,8 @@ export function allyChoose(s: DDState, self: DDUnit): DDSkill | null {
     if (sk.kind === "attack") {
       let v = sk.power * (t?.staggered ? EXECUTE_MULT : 1);      // 처형 = 0.5×6 = 3.0
       if (self.id === "ember") v *= t?.staggered ? 14 : 8.6;      // 엠버 강화 평타(combat.ts 훅 실값)
+      // 변신 중 강화 평타 — 변신기의 핵심 딜 수단인데 AI가 몰라 배틀/연계를 치고 있었음(combat.ts 훅 실값과 동기)
+      if (self.id === "laevatain" && (self.timers.twilight || 0) > 0) v *= 3;    // 황혼: 범위 강화 평타(부착→흡수 사이클)
       if (s.skillGauge < GAUGE_COST) v += 1;                      // 평타 = 게이지 회복 수단
       return v;
     }

@@ -996,14 +996,16 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
   }
   // 이본 「아이스 슈터」: 삐삐 배치 + 메인 전환 — 7초(≈2턴) 강화 평타. 평타마다 치확 +3%(최대 10스택), 만스택 시 치피 +60%.
   if (self.id === "yvonne" && skill.kind === "ult") {
-    setTimer(self, "iceshot", 2);
+    setTimer(self, "iceshot", 3); // 7초 ≈ 평타 2회분. perTurn이 자기 턴 시작에 감쇠하므로 2를 주면 실사용 1턴 → 3
     self.iceStack = 0;
     self.atb += 100; // 변신 후 바로 자기 턴(강화 평타 즉시 활용)
     log.push(`  → 아이스 슈터 변신! 강화 평타(평타마다 치확 +3%, 만스택 시 치피 +60%) · 즉시 추가 행동`);
   }
   // 변신 중 평타마다 치확 스택 누적(최대 10)
   if (self.id === "yvonne" && skill.kind === "attack" && (self.timers.iceshot || 0) > 0) {
-    self.iceStack = Math.min(10, (self.iceStack || 0) + 1);
+    // 원문 "평타마다 치확 +3%(최대 10스택)"의 "평타"는 **단(히트)** 단위 — 이본 일반 공격은 최대 5단이고
+    // 7초면 5단 콤보를 약 2회 돌려 10히트 = 만스택. 턴제에선 평타 1턴 = 5단 콤보 = +5스택.
+    self.iceStack = Math.min(10, (self.iceStack || 0) + 5);
     if (self.iceStack === 10) log.push(`  → 아이스 슈터 만스택! 치피 +60%`);
   }
   // 이본(스트라이커): 꽁꽁이 연계 — 명중 시 궁 에너지 +10(여러 목표여도 1회)
