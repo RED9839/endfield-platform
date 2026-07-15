@@ -1,6 +1,6 @@
 // ===== DD류 물리 4인 + 적 정의 (프로토타입) =====
 // 스킬은 위키 매핑. 사용 요구(requires)가 카드 모델에서 깨지던 "연계 조건"을 DD류에선 자연 흡수.
-import { bumpVuln, vulnFor, setTimer, applyBuff, ELEMENTS, attrResists, ATTR_AVG, type DDClass, type DDSkill, type DDUnit, type Element } from "./combat";
+import { bumpVuln, vulnFor, setTimer, applyBuff, ELEMENTS, attrResists, ATTR_AVG, attrMul, mainAttr, MAIN_ATTR_AVG, type DDClass, type DDSkill, type DDUnit, type Element } from "./combat";
 import { promoMult, skillMult, skillUtilMult, DEFAULT_PROGRESS, type OpProgress } from "./progress";
 
 export const SKILLS: Record<string, DDSkill[]> = {
@@ -461,6 +461,22 @@ export const OP_ATTRS: Record<string, OpAttrs> = {
 };
 // 속도(턴 순서)는 오퍼레이터 개별 값(OP_BASE.speed, 실 민첩 기반) 사용 — makeAlly 참조.
 
+// 능력치 → 역할 배율. 능력치가 바뀔 때(무기 능력치 버프 등)마다 다시 부른다.
+//   힘   = 체력(OP_HP에 이미 6000+힘×5로 반영) + 기본공격 배율
+//   민첩 = 속도
+//   지능 = 스킬 피해 — 단, 주옵이 힘/민첩인 딜러(탕탕·진천우 등)가 죽지 않도록 "주옵(최고 능력치)" 기준으로 환산
+//   의지 = 유틸(취약·증폭·회복 배율, 받는 회복량) + 궁극기 게이지 속도
+export function applyAttrs(u: DDUnit): void {
+  const a = u.attrs;
+  if (!a) return;
+  u.speed = Math.round(a.agi * 0.42 + 12); // 민첩 → 속도(적 속도대와 겹치게 스케일)
+  u.strMul = attrMul(a.str);
+  u.skillAttrMul = attrMul(mainAttr(a), MAIN_ATTR_AVG);
+  u.wilMul = attrMul(a.wil);
+  u.healRecv = attrMul(a.wil);
+  u.utilMult = (u.utilBase ?? u.utilMult ?? 1) * u.wilMul; // 스킬 단조 유틸 × 의지 (utilBase 기준 → 재호출해도 중복 곱 없음)
+}
+
 export function makeAlly(id: string, pos: number, progress: OpProgress = DEFAULT_PROGRESS): DDUnit {
   const b = OP_BASE[id];
   const pm = promoMult(progress.promotion); // 정예화 → 기초 스탯 배율
@@ -468,13 +484,14 @@ export function makeAlly(id: string, pos: number, progress: OpProgress = DEFAULT
   const u: DDUnit = { ...b, side: "ally", pos, hp, maxHp: hp, staggerMax: 0, ...zero() }; // 불균형 없음. HP=6000+힘×5 환산·방어 0
   u.hp = hp; u.maxHp = hp; // zero()가 hp를 덮지 않도록 재확정
   u.attack = Math.round((OP_ATTACK[id] ?? b.attack) * pm * skillMult(progress.skillRank)); // Lv90 기초 × 정예화 × 스킬랭크(랭크9=1.8). 모든 딜이 attack 비례 → 균일 스케일
-  u.utilMult = skillUtilMult(progress.skillRank); // 스킬 단조 → 유틸(취약·증폭·회복·게이지·지속) 배율. 장비 능력치(gearGrade)는 applyGear가 세트 실측 부옵으로 처리
+  u.utilBase = skillUtilMult(progress.skillRank); // 스킬 단조 → 유틸(취약·증폭·회복·게이지·지속) 배율. 장비 능력치(gearGrade)는 applyGear가 세트 실측 부옵으로 처리
+  u.utilMult = u.utilBase; // applyAttrs가 의지 배율을 곱해 확정
   u.opElement = (SKILLS[id] ?? []).find((s) => s.element && s.element !== "physical")?.element ?? "physical"; // 주력 속성(장비 부품 속성 피해)
   u.attrs = OP_ATTRS[id]; // 실제 능력치(힘/민첩/지능/의지)
-  u.speed = u.attrs ? Math.round(u.attrs.agi * 0.42 + 12) : b.speed; // 민첩 기반 속도(적 속도대와 겹치게 스케일)
-  u.healRecv = u.attrs ? +(u.attrs.wil / ATTR_AVG).toFixed(2) : 1; // 의지 → 받는 회복량 배율
+  applyAttrs(u); // 능력치 → 역할 배율(힘=기본공격 / 민첩=속도 / 주옵=스킬 / 의지=유틸·궁충)
+  if (!u.attrs) u.speed = b.speed;
   if (id === "catcher" && u.attrs) u.defense += Math.round(u.attrs.wil * 0.12); // 카치르 강인한 방어선: 의지 10당 방어력 +1.2
-  u.resist = attrResists(u.gearGrade, u.attrs); // 민첩→물리 저항·지능→아츠 저항(총량 gearGrade 유지)
+  u.resist = attrResists(u.gearGrade); // 저항은 장비 능력치만 — 오퍼 능력치는 관여 안 함
   if (b.artsImmune) u.artsImmune = b.artsImmune; // 만물의 지혜(아크라이트): 아츠 부착 확률 면역
   if (b.cryoImmune) u.cryoImmune = b.cryoImmune; // 이유 있는 게으름(에스텔라): 냉기 부착 면역
   return u;

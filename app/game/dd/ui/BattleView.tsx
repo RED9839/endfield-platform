@@ -587,7 +587,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
                 </div>
                 {ally && u.attrs && (
                   <div className="mt-1.5 flex flex-wrap justify-between gap-x-2 gap-y-0.5 font-mono text-[13px]">
-                    {([["힘", u.attrs.str], ["민첩", u.attrs.agi], ["지능", u.attrs.int], ["의지", u.attrs.wil]] as [string, number][]).map(([k, v]) => <span key={k} className="text-ef-muted">{k} <b className="text-ef-ink">{v}</b></span>)}
+                    {([["힘", u.attrs.str, "체력 · 일반 공격 피해"], ["민첩", u.attrs.agi, "속도"], ["지능", u.attrs.int, "스킬 피해"], ["의지", u.attrs.wil, "유틸 · 궁극기 게이지"]] as [string, number, string][]).map(([k, v, t]) => <span key={k} className="text-ef-muted" title={`${k} → ${t}`}>{k} <b className="text-ef-ink">{v}</b></span>)}
                   </div>
                 )}
               </div>

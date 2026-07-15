@@ -58,10 +58,14 @@ export type DDUnit = {
   ironOath: number; // 포그 철의 서약(적에 부여, 물리이상/포그연계가 1씩 소모 → 교란/최후의 승부)
   gaugeRecovered: number; // 포그 생존의 깃발 누적 게이지(80마다 사기 격양)
   gearGrade: number; // 장비 등급(힘/민첩/지능/의지 통합 치환값, 명함 ~60). 스탯 비례 재능이 이걸 참조
-  attrs?: { str: number; agi: number; int: number; wil: number }; // 실제 능력치(endfield.wiki.gg 실측). 힘→HP·민첩→물리저항·지능→아츠저항·의지→회복
+  attrs?: { str: number; agi: number; int: number; wil: number }; // 실제 능력치(endfield.wiki.gg 실측). 힘→체력·기본공격 / 민첩→속도 / 지능(주옵)→스킬 피해 / 의지→유틸·궁충
+  strMul?: number;   // 힘 → 기본공격 피해 배율(ATTR_AVG 기준)
+  skillAttrMul?: number; // 주옵(최고 능력치) → 스킬(배틀/연계/궁) 피해 배율(MAIN_ATTR_AVG 기준)
+  wilMul?: number;   // 의지 → 유틸·궁극기 게이지 배율(ATTR_AVG 기준)
   healRecv?: number; // 의지 → 받는 회복량 배율(1.0 기준). 회복 시 곱연산
   procCount: number; // 제너릭 재능 카운터(아크라이트 황무지의 방랑자 등)
-  utilMult: number;  // 스킬 단조 유틸 배율(취약·증폭·회복·게이지·지속). M0=1.0
+  utilMult: number;  // 스킬 단조 유틸 배율(취약·증폭·회복·게이지·지속) × 의지. M0=1.0
+  utilBase?: number; // 의지 곱하기 전 스킬 단조 유틸 배율(재계산 기준값)
   killPriority?: number; // 아군 자동 타겟 처치 우선(적 한정): 3=지원(치유/증폭) 2=원거리 1=전열
   lanceN?: number;   // 아비웨나 썬더랜스(적에게 누적, 가로채기로 소모) — 일반
   lanceBig?: number; // 아비웨나 강력 썬더랜스(적에게 누적) — 강력(전기 부착)
@@ -216,8 +220,10 @@ function expire(u: DDUnit, key: string): void {
 }
 
 // 방어 경감: 방어력(%감소) × 물리/아츠 저항. 받는 측 스탯 적용.
+// 방어력 경감 상수: dmg × DEF_K/(def+DEF_K). 장비 풀세트(방어 140) → -22%. 저항과 곱해져 이중으로 먹으므로 완만하게 잡음.
+export const DEF_K = 500;
 export function mitigate(u: DDUnit, dmg: number, elem: "physical" | Element): number {
-  let d = dmg * (100 / (u.defense + 100)); // 방어력: 140 → 58.3% 감소
+  let d = dmg * (DEF_K / (u.defense + DEF_K)); // 방어력 경감(DEF_K 클수록 완만)
   d *= 1 - u.resist[elem]; // 속성별 저항(1=100%감소, 음수=약점→피해 증가). 위키 물리/열기/전기/냉기/자연 저항 정합
   return d;
 }
@@ -231,13 +237,18 @@ export function applyDamage(u: DDUnit, dmg: number): number {
 }
 
 // 회복: 체력 회복(최대 초과 X). 카뮤 혈류 소생(자기 회복 시 열기 증폭) 처리.
-// 능력치 기반 저항: 총량(gearGrade)은 유지, 민첩→물리·지능→아츠로 편향(밸런스 보존).
-export const ATTR_AVG = 116;
-export function attrResists(gearGrade: number, attrs?: { agi: number; int: number }): { physical: number; heat: number; electric: number; cryo: number; nature: number } {
-  const rv = 1 - 1 / (0.01 * gearGrade + 1);
-  const phys = attrs ? Math.min(0.9, rv * (attrs.agi / ATTR_AVG)) : rv;
-  const arts = attrs ? Math.min(0.9, rv * (attrs.int / ATTR_AVG)) : rv;
-  return { physical: +phys.toFixed(3), heat: +arts.toFixed(3), electric: +arts.toFixed(3), cryo: +arts.toFixed(3), nature: +arts.toFixed(3) };
+export const ATTR_AVG = 116;      // 능력치 평균(힘/민첩/지능/의지 각각)
+export const MAIN_ATTR_AVG = 162; // 주옵(오퍼별 최고 능력치)의 로스터 평균 — 스킬 배율 정규화 기준
+// 능력치 → 배율. 평균이 ×1.0이 되도록 정규화(능력치가 attack 튜닝값을 왜곡하지 않게).
+export const attrMul = (v: number | undefined, avg = ATTR_AVG) => (v ? +(v / avg).toFixed(3) : 1);
+export const mainAttr = (a?: { str: number; agi: number; int: number; wil: number }) => (a ? Math.max(a.str, a.agi, a.int, a.wil) : undefined);
+
+// 저항: 장비 능력치(gearGrade)만으로 결정. 오퍼 능력치는 관여하지 않는다.
+// 방어력이 이미 피해를 깎으므로(장비 140 → -22%) 저항 기여는 RESIST_K로 눌러 이중 스케일링을 막는다. 장비 풀세트(gearGrade 120) → 약 11%.
+const RESIST_K = 0.001;
+export function attrResists(gearGrade: number): { physical: number; heat: number; electric: number; cryo: number; nature: number } {
+  const rv = +Math.min(0.9, 1 - 1 / (RESIST_K * gearGrade + 1)).toFixed(3);
+  return { physical: rv, heat: rv, electric: rv, cryo: rv, nature: rv };
 }
 
 export function healUnit(u: DDUnit, amount: number, s: DDState, log: string[]): void {
@@ -435,7 +446,9 @@ export function applyAnomaly(skill: DDSkill, target: DDUnit, self: DDUnit, log: 
 
 // 스킬 발동 피해(공격자 측). 연타는 배틀/궁 base에만 적용(강타 payoff는 제외).
 export function baseDamage(skill: DDSkill, self: DDUnit): number {
-  let dmg = self.attack * eb(self) * skill.power;
+  // 능력치 배율: 일반 공격은 힘, 스킬(배틀/연계/궁)은 주옵. 적은 attrs가 없어 ×1.
+  const am = skill.kind === "attack" ? (self.strMul ?? 1) : (self.skillAttrMul ?? 1);
+  let dmg = self.attack * eb(self) * skill.power * am;
   if (self.multiHit > 0) {
     const n = Math.min(4, self.multiHit);
     if (skill.kind === "battle") dmg *= 1 + MH_BATTLE[n - 1];
@@ -519,10 +532,11 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
         let g = ULT_BATTLE;
         if (gil && (u.cls === "guard" || u.cls === "caster" || u.cls === "supporter")) g *= 1.07;
         g *= u.ultEffMul ?? 1; // 장비 부옵: 궁극기 충전 효율
+        g *= u.wilMul ?? 1;    // 의지 → 궁극기 게이지 속도
         u.ultCharge = Math.min(u.ultCost, u.ultCharge + g);
       }
     } else if (skill.kind === "link") {
-      self.ultCharge = Math.min(self.ultCost, self.ultCharge + ULT_LINK * (self.ultEffMul ?? 1)); // 연계 → 시전자 +10(궁충 효율 반영)
+      self.ultCharge = Math.min(self.ultCost, self.ultCharge + ULT_LINK * (self.ultEffMul ?? 1) * (self.wilMul ?? 1)); // 연계 → 시전자 +10(궁충 효율·의지 반영)
       s.lastLinkAlly = self.id; // 팀 연계 윈도우(관리자 봉인 게이트)
       let cd = skill.cooldown ?? LINK_CD;
       if (self.id === "zhuangfangyi" && (self.timers.heavenly || 0) > 0) cd = Math.max(1, Math.round(cd / 4)); // 천리의 경지: 연계 쿨 4배(변화의 숨결 연타 → 감전 → 청뢰검 폭증)

@@ -286,7 +286,7 @@ export function applyGear(u: DDUnit, loadout: Loadout | undefined, gearLevel = 0
       else g.kindDmg[k] = (g.kindDmg[k] ?? 0) + v; // ult/battle/link/attack
     }
   }
-  if (gradeAdd > 0) { u.gearGrade += Math.round(gradeAdd); u.resist = attrResists(u.gearGrade, u.attrs); } // 장비 능력치 → 저항 재계산(민첩→물리·지능→아츠 편향 유지)
+  if (gradeAdd > 0) { u.gearGrade += Math.round(gradeAdd); u.resist = attrResists(u.gearGrade); } // 장비 능력치 → 저항 재계산(오퍼 능력치는 관여 안 함)
   const sets = activeSets(loadout);
   if (sets.length) u.gearSets = sets; // 조건부 발동 세트(연소 후 열기+ 등) — combat.ts가 트리거 시 참조
   let shieldPct = 0, healPct = 0;

@@ -202,8 +202,8 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
             </div>
             {unit.attrs && (
               <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 border-t border-ef-line/40 pt-1.5 font-mono text-[13px]">
-                {([["힘", unit.attrs.str], ["민첩", unit.attrs.agi], ["지능", unit.attrs.int], ["의지", unit.attrs.wil]] as [string, number][]).map(([k, v]) => (
-                  <span key={k} className="text-ef-muted">{k} <b className="text-ef-ink">{v}</b></span>
+                {([["힘", unit.attrs.str, "체력 · 일반 공격 피해"], ["민첩", unit.attrs.agi, "속도"], ["지능", unit.attrs.int, "스킬 피해"], ["의지", unit.attrs.wil, "유틸 · 궁극기 게이지"]] as [string, number, string][]).map(([k, v, t]) => (
+                  <span key={k} className="text-ef-muted" title={`${k} → ${t}`}>{k} <b className="text-ef-ink">{v}</b></span>
                 ))}
               </div>
             )}

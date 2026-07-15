@@ -1,7 +1,8 @@
 // 오퍼레이터 시그니처 무기(엔드필드식) — 실제 무기 타입(위키 헤더 실측) + 6★ 공격력 + 타입 고유효과.
 // 개별 무기 수치/패시브는 소스 미공개 → 타입은 실데이터, 효과는 위키 타입 역할(양손검=불균형↑·아츠유닛=아츠·권총=아츠반응·한손검=근접치명·장병기=스킬) 기반 모델.
 import type { DDUnit } from "./combat";
-import { attrResists, ATTR_AVG, setTimer, pushSrc, popSrc } from "./combat";
+import { setTimer, pushSrc, popSrc } from "./combat";
+import { applyAttrs } from "./roster";
 import { weaponSummaries } from "@/data/weapons-summary-data";
 import { OP_WEAPON_SERIES } from "./weapon-series";
 
@@ -213,8 +214,7 @@ export function applyWeapon(u: DDUnit): WeaponType | null {
       u.attack = Math.round(u.attack * (newB / oldB));
     }
     u.attrs = { ...b0, [key]: b0[key] + added };
-    u.resist = attrResists(u.gearGrade, u.attrs);
-    u.healRecv = +(u.attrs.wil / ATTR_AVG).toFixed(2);
+    applyAttrs(u); // 능력치 변동 → 속도·기본공격·스킬·유틸/궁충 배율 재계산(멱등)
   }
   // 3) 부가스탯(실값 × 완충)
   const v = (w.subVal / 100) * W_SUB_SCALE;
