@@ -44,8 +44,11 @@ export function allyChoose(s: DDState, self: DDUnit): DDSkill | null {
       else if (cur >= 1) v += 2;      // 같은 속성 2+ → 아츠 폭발
     }
     // 상태 소모형 페이오프: 조건이 실제로 서 있을 때만 값이 있다.
-    if (sk.shockBonus && t?.statuses?.includes("shock")) v += 5;
-    if (sk.burnShockConsume && (t?.statuses?.includes("combustion") || t?.statuses?.includes("shock"))) v += 5;
+    // 단, 그 상태를 "요구"하는 다른 스킬이 지금 사용 가능하면 소모를 미룬다 — 셋업을 페이오프가 까먹는 것 방지.
+    // (아크라이트: 배틀 「질풍 섬광」이 감전을 소모하면 연계 「천둥의 울림」이 잠김 → 실제 운용도 연계+궁 위주)
+    const needs = (state: string) => opts.some((o) => o !== sk && o.kind !== "attack" && o.requiresText?.includes(state));
+    if (sk.shockBonus && t?.statuses?.includes("shock") && !needs("감전")) v += 5;
+    if (sk.burnShockConsume && (t?.statuses?.includes("combustion") || t?.statuses?.includes("shock")) && !needs("감전") && !needs("연소")) v += 5;
     if (sk.forceShock && (t?.arts.electric ?? 0) > 0) v += 5;
     if ((sk.forceFreeze || sk.iceBomb) && t && (t.arts.cryo ?? 0) + (sk.iceBomb ? t.arts.nature ?? 0 : 0) > 0) v += 4;
     if (sk.cryoNuke && t) v += (t.arts.cryo ?? 0) >= 2 ? 6 : -2; // 냉기 스택 없이 쓰면 헛방

@@ -90,7 +90,7 @@ export const SKILLS: Record<string, DDSkill[]> = {
     { id: "camu-b", name: "사르는 불꽃", kind: "battle", fromPos: [1, 2, 3], target: "single-front", power: 0.89, element: "heat", attach: "heat", staggerVal: 10,
       apply: (t) => { applyBuff(t, "weaken", 0.05); bumpVuln(t, "heat", 0.05); if (!t.statuses.includes("wing")) t.statuses.push("wing"); setTimer(t, "wing", 8); }, note: "열기 부착 + 허약/열기취약 + 핏빛 날개" },
     // 영혼의 가시(연계 133%, 쿨 20초): 열기 부착 소모/흡수 후. 게이지 16. 죄를 쫓는 자(날개 적 → 회복+연타).
-    { id: "camu-l", name: "영혼의 가시", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 1.33, element: "heat", staggerVal: 10, cooldown: 4, gaugeGain: 16,
+    { id: "camu-l", name: "영혼의 가시", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 1.33, element: "heat", staggerVal: 10, cooldown: 4, gaugeGain: 18,
       requires: (_t, _s, st) => !!st.anomalyConsumed, requiresText: "열기 부착 소모됨", note: "열기 부착 소모 후 발동 · 핏빛 날개 적 명중 시 회복 + 연타 획득" },
     // 선혈의 비(궁 267%, 게이지 130): 광역 열기 + 열기 부착 + 게이지. 추적 교체(근사).
     { id: "camu-u", name: "선혈의 비", kind: "ult", fromPos: [1, 2, 3], target: "row", power: 2.67, element: "heat", staggerVal: 15, attach: "heat", selfUlt: true, gaugeGain: 32, note: "광역 열기 부착 + 게이지" },
@@ -112,7 +112,7 @@ export const SKILLS: Record<string, DDSkill[]> = {
     // 비정규 루어(배틀 200%, 불균형 10): 물리. 냉기 부착 적이면 냉기 소모 + 강제 동결 + 게이지(10/20/30/40).
     { id: "ale-b", name: "비정규 루어", kind: "battle", fromPos: [1, 2, 3], target: "single-front", power: 2.0, element: "physical", staggerVal: 10, forceFreeze: true, note: "냉기 부착 적 → 강제 동결 + 게이지" },
     // 얼음 낚시 기술(연계 133%, 쿨 9초≈2턴): 아츠이상/결정 소모됐을 때. 게이지 10 + 린수 확률(강화 213% + 게이지).
-    { id: "ale-l", name: "얼음 낚시 기술", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 1.33, element: "physical", staggerVal: 10, cooldown: 2, gaugeGain: 10, lure: { power: 2.13, gauge: 10 },
+    { id: "ale-l", name: "얼음 낚시 기술", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 1.33, element: "physical", staggerVal: 10, cooldown: 2, gaugeGain: 12, lure: { power: 2.13, gauge: 10 },
       requires: (_t, _s, st) => !!st.anomalyConsumed, requiresText: "아츠이상/결정 소모됨", note: "게이지 수급 + 린수 확률 강화" },
     // 월척이다!(궁 436%, 게이지 100): 광역 냉기 + 냉기 부착 + 게이지. 처치 시 추가 게이지.
     { id: "ale-u", name: "월척이다!", kind: "ult", fromPos: [1, 2, 3], target: "all", power: 4.36, element: "cryo", staggerVal: 20, attach: "cryo", selfUlt: true, gaugeGain: 20, note: "광역 냉기 부착 + 게이지" },
@@ -121,9 +121,9 @@ export const SKILLS: Record<string, DDSkill[]> = {
   // 재능: 황무지의 방랑자(질풍 3회 발동 시 팀 전기 피해↑ — 근사) · 만물의 지혜(아츠 부착 50% 면역, 엔진 artsImmune).
   arclight: [
     // 질풍 섬광(배틀 45+45%, 불균형 10): 2회 베기. 감전 적이면 감전 소모 추가 전기(180%) + 게이지 30.
-    { id: "arc-b", name: "질풍 섬광", kind: "battle", fromPos: [1, 2, 3], target: "single-front", power: 0.9, element: "physical", staggerVal: 10, shockBonus: { power: 1.8, gauge: 30 }, note: "감전 적이면 추가 전기 + 게이지 수급" },
+    { id: "arc-b", name: "질풍 섬광", kind: "battle", fromPos: [1, 2, 3], target: "single-front", power: 0.9, element: "physical", staggerVal: 10, gaugeGain: 35, shockBonus: { power: 1.8, gauge: 30 }, note: "감전 적이면 추가 전기 + 게이지 수급" },
     // 천둥의 울림(연계 155%, 쿨 3초≈1턴): 감전 적/감전 소모됐을 때. 게이지 8 + 궁 에너지. ← 핵심(초단쿨 수급)
-    { id: "arc-l", name: "천둥의 울림", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 1.55, element: "physical", staggerVal: 5, cooldown: 1, gaugeGain: 8,
+    { id: "arc-l", name: "천둥의 울림", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 1.55, element: "physical", staggerVal: 5, cooldown: 1, gaugeGain: 9,
       requires: (t) => !!t && t.statuses.includes("shock"), requiresText: "감전 적", note: "초단쿨 연계 게이지 수급" },
     // 천둥번개(궁 156+244%=400%, 게이지 90): 돌진 전기 + 전기 부착 → 폭파. 전기 부착 적이면 강제 감전.
     { id: "arc-u", name: "천둥번개", kind: "ult", fromPos: [1, 2, 3], target: "row", power: 4.0, element: "electric", staggerVal: 7, attach: "electric", forceShock: true, selfUlt: true, note: "전기 부착 + 강제 감전" },
@@ -306,7 +306,7 @@ export const SKILLS: Record<string, DDSkill[]> = {
   // 재능: 불꽃의 심장(열기 부착 흡수→녹아내린 불꽃, 4스택 열기 저항 무시) · 부활의 불씨(HP 40%↓ 90% 비호+회복). 주스탯 지능·보조 힘.
   laevatain: [
     // 불타오르는 화염(배틀 초기 62%): 열기 + (불꽃의 심장)열기 부착 흡수 → 녹아내린 불꽃. 4스택 시 강화 폭발(추가 342% + 강제 연소 + 궁 +100). 흡수는 일반공격/배틀/연계 공통(엔진 id훅).
-    { id: "lae-b", name: "불타오르는 화염", kind: "battle", fromPos: [1, 2, 3], target: "single-front", power: 0.62, element: "heat", staggerVal: 10, gaugeCost: 60, note: "열기 + 주변 열기 부착 흡수(녹아내린 불꽃) · 4스택 시 강화 폭발 + 강제 연소 + 궁 +100" },
+    { id: "lae-b", name: "불타오르는 화염", kind: "battle", fromPos: [1, 2, 3], target: "single-front", power: 0.62, element: "heat", staggerVal: 10, gaugeCost: 100, note: "열기 + 주변 열기 부착 흡수(녹아내린 불꽃) · 4스택 시 강화 폭발 + 강제 연소 + 궁 +100" },
     // 열화(연계 240%, 쿨 10초≈2턴): 연소/부식 적. 광역 열기 + 녹아내린 불꽃(명중당) + 궁충(명중 수 비례).
     { id: "lae-l", name: "열화", kind: "link", fromPos: [1, 2, 3], target: "row", power: 2.4, element: "heat", staggerVal: 10, cooldown: 2,
       requires: (t) => !!t && (t.statuses.includes("combustion") || t.statuses.includes("corrosion")), requiresText: "연소/부식 적", note: "광역 열기 + 녹아내린 불꽃 + 궁충" },
