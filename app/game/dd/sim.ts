@@ -62,9 +62,13 @@ export function allyChoose(s: DDState, self: DDUnit): DDSkill | null {
     // (양보 규칙만 넣었더니 펠리카 배틀 23회로 굶어 장방이 연계가 0회가 됐다)
     if (sk.kind === "battle" && !self.isMain && s.skillGauge < GAUGE_COST * 2) {
       const main = living(s, "ally").find((a) => a.isMain);
-      const opensMain = !!main && !!sk.attach && (SKILLS[main.id] ?? []).some((o) =>
-        o.kind !== "attack" && o.requiresText?.includes("부착") && !usable(s, main, o));
-      if (main && !opensMain) v -= 4;
+      // 메인이 이 부착을 먹고 사는가 — 연계 조건(부착/이상/연소·감전·동결·부식)이거나 흡수형 재능(레바테인).
+      // 조건 문구가 "연소/부식 적"처럼 부착이라 안 적혀도 부착이 연료다. 좁게 잡았더니 카뮤가 141회 양보해
+      // 레바테인 연료가 끊겼다(평타 0.50 vs 배틀 0.89+2.5-4 = -0.61).
+      const feedsMain = !!main && !!sk.attach && (main.id === "laevatain" ||
+        (SKILLS[main.id] ?? []).some((o) => o.kind !== "attack" && !usable(s, main, o) &&
+          /부착|이상|연소|감전|동결|부식/.test(o.requiresText ?? "")));
+      if (main && !feedsMain) v -= 4;
     }
     // 셋업 가치: 내가 만드는 상태를 요구하는 스킬이 지금 잠겨 있으면 우선(딜 0이라 점수 0인 셋업 구제).
     if (sk.grants) {
