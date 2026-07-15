@@ -54,6 +54,11 @@ export function allyChoose(s: DDState, self: DDUnit): DDSkill | null {
     // 게이지 수급 가치: 파티 공유 게이지가 마를수록 수급 스킬이 귀하다. 배틀 1회 = 100.
     // 소모는 여기서 감점하지 않는다 — usable()이 이미 게이지 부족을 게이팅하므로 이중 페널티가 된다.
     if (sk.gaugeGain) v += (sk.gaugeGain / 100) * 4 * (s.skillGauge < GAUGE_COST * 1.5 ? 2 : 1);
+    // 딜 사이클: 게이지는 파티 공유 자원이다. 원작은 메인 컨트롤 오퍼가 배틀을 굴리고 나머지는
+    // 연계(무소모)로 붙는데, 우리는 4명이 각자 질러 정작 메인딜러가 굶는다(레바테인 배틀 9회 / 울프가드 141회).
+    // → 메인이 아닌 오퍼는 게이지가 빠듯하면 배틀을 양보. 여유가 있으면(2회분 이상) 평소대로 쓴다.
+    if (sk.kind === "battle" && !self.isMain && s.skillGauge < GAUGE_COST * 2 &&
+        living(s, "ally").some((a) => a.isMain && a.hp > 0)) v -= 4;
     // 셋업 가치: 내가 만드는 상태를 요구하는 스킬이 지금 잠겨 있으면 우선(딜 0이라 점수 0인 셋업 구제).
     if (sk.grants) {
       const mine = SKILLS[self.id] ?? [];
@@ -276,8 +281,10 @@ export function createBattle(party: { id: string; hp?: number; loadout?: Loadout
   // 전열 배치 규칙 적용: 물몸 딜러 앵커 보호(pos2), 탱/뱅가드 전열(pos1). 선택 순서(로드아웃 유지)는 id로 재매핑.
   const order = frontlineOrder(party.map((p) => p.id));
   const ordered = order.map((id) => party.find((p) => p.id === id)!).filter(Boolean) as typeof party;
+  const mainId = party[0]?.id; // 편성 첫 오퍼 = 메인딜러(공략 시트 채용파티는 주인이 첫 번째)
   const allies = ordered.map((p, i) => {
     const u = makeAlly(p.id, i + 1, p.progress); // 정예화·스킬랭크·장비강화(gearGrade) 반영
+    if (p.id === mainId) u.isMain = true;
     if (p.hp != null) u.hp = Math.max(1, Math.min(u.maxHp, p.hp)); // 지속 HP(소모전)
     if (p.ult != null) u.ultCharge = Math.max(0, Math.min(u.ultCost, p.ult)); // 궁 게이지 이월 — 전투마다 0으로 리셋되면 고비용 궁(220~240)은 영원히 못 씀
     // 맨몸 시작 — 공업소에서 제작(owned)한 피스만 장착. 미제작 슬롯은 미적용(기본 스탯).
