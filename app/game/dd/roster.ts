@@ -61,9 +61,9 @@ export const SKILLS: Record<string, DDSkill[]> = {
       apply: (t, self) => { if (t.physBreak > 1) { t.dot = Math.round(self.attack * (1 + (self.atkBuff || 0)) * 0.3); setTimer(t, "dot", 5); bumpVuln(t, "physical", 0.12); bumpVuln(t, "heat", 0.12); } },
       note: "돌진 띄우기 + (이미 방불 적)진주·늑대의 발톱(DoT 30%/턴 + 물리/열기 취약 12%)" },
     // 그림자가 타오르는 순간(연계 67+133%+소모비례 80%/스택, 쿨 15초): 방불+아츠부착 적. 아츠 소모 물리·띄우기 + 치명 버프.
-    { id: "ros-l", name: "그림자가 타오르는 순간", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 2.5, element: "physical", staggerVal: 5, cooldown: 3, anomaly: "launch",
+    // 1단 67% + 2단 133%. 아츠 소모 비례(스택당 +80%)와 치확/치피는 combat.ts 엔진 훅에서 — apply는 raw를 못 건드림.
+    { id: "ros-l", name: "그림자가 타오르는 순간", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 2.0, hits: [0.67, 1.33], element: "physical", staggerVal: 5, cooldown: 3, anomaly: "launch",
       requires: (t) => !!t && t.physBreak > 0 && ELEMENTS.some((e) => t.arts[e] > 0), requiresText: "방불+아츠부착 적",
-      apply: (t, self) => { ELEMENTS.forEach((e) => (t.arts[e] = 0)); self.critRate = 0.3; self.critDmg = 1.0; setTimer(self, "critRate", 3); setTimer(self, "critDmg", 3); }, // 아츠 소모 + 치확+25%/치피+50%(15초)
       note: "아츠 소모 물리·띄우기 + 치명 버프(치확 30%/치피 100%)" },
     // 기습 '날카로운 발톱'(궁 275+111+333=719%, 불균형 25, 게이지 110): 다단 열기 누킹 + 열기 부착.
     { id: "ros-u", name: "기습 '날카로운 발톱'", kind: "ult", fromPos: [1, 2], target: "single-front", power: 7.19, hits: [2.75, 1.11, 3.33], element: "heat", attach: "heat", staggerVal: 25, selfUlt: true, note: "다단 열기 단일 누킹 + 열기 부착" },
@@ -175,7 +175,7 @@ export const SKILLS: Record<string, DDSkill[]> = {
     { id: "cat-l", name: "실시간 억제", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 1.25, hits: [0.25, 1], element: "physical", staggerVal: 10, cooldown: 7,
       requires: (_t, _self, st) => st.units.some((u) => u.side === "ally" && u.hp > 0 && u.hp / u.maxHp <= 0.4), requiresText: "아군 HP 40% 이하", note: "물리 + 자신+아군 보호막(방어력 비례)" },
     // 교과서적인 맹공(궁 89+120+178=387% + 충격파 3×45%=135% → 522%, 게이지 80): 다단 물리 + 허약 20% + 광역 넘어뜨리기.
-    { id: "cat-u", name: "교과서적인 맹공", kind: "ult", fromPos: [1, 2, 3], target: "all", power: 5.22, element: "physical", staggerVal: 20, selfUlt: true, anomaly: "knockdown",
+    { id: "cat-u", name: "교과서적인 맹공", kind: "ult", fromPos: [1, 2, 3], target: "all", power: 3.87, hits: [0.89, 1.2, 1.78], element: "physical", staggerVal: 20, selfUlt: true, anomaly: "knockdown",
       apply: (t) => applyBuff(t, "weaken", 0.2), note: "다단 물리 + 허약 + 광역 넘어뜨리기(전장을 꿰뚫는 통찰 충격파 포함)" },
   ],
   // 아델리아: 자연/아츠 유닛 서포터(★6 배포, 만능). 부식 셋업→소모로 물리+아츠 취약(30초) + 돌리 그림자 회복. 아츠 부착 없어 부착 파티와 무충돌.
@@ -328,7 +328,7 @@ export const SKILLS: Record<string, DDSkill[]> = {
       requires: (t) => !!t && t.frozen > 0, requiresText: "동결 적",
       apply: (t) => { if (t.hp > 0) { t.frozen = Math.max(t.frozen, 1); if (!t.statuses.includes("stun")) t.statuses.push("stun"); setTimer(t, "frozen", 2); } }, note: "광역 냉기 + 몹몰이 + 자폭 강제 동결" },
     // 아이스 슈터(궁 변신 말뚝딜, 게이지 220): 치명타 변신(치확 +30%·치피 +60%) + 동결 소모 추가 267%. 단일 누킹.
-    { id: "yv-u", name: "아이스 슈터", kind: "ult", fromPos: [1, 2], target: "single-front", power: 6.0, element: "cryo", staggerVal: 20, selfUlt: true, note: "치명타 변신 말뚝딜 + 동결 소모 추가타" },
+    { id: "yv-u", name: "아이스 슈터", kind: "ult", fromPos: [1, 2], target: "single-front", power: 1.33, element: "cryo", staggerVal: 20, selfUlt: true, note: "변신(2턴): 강화 평타 · 평타마다 치확 +3%(최대 +30%) · 만스택 시 치피 +60% · 동결 적 추가 냉기" },
   ],
   // 장방이: 전기/아츠 유닛 스트라이커(★6 한정, 무릉 책임자). 청뢰검(감전 소모→검 생성, 최대 9, 수 비례 뇌격·궁충) + 변신 궁(천리의 경지: 평타/배틀 강화·방해 면역·연계 쿨 4배). 6성 최고 다수전·지속딜. 레바테인 상위.
   // 재능: 천지의 조화(배틀 시 전기 증폭, 엔진) · 하늘의 가호(청뢰검 비례 피해 면역 — 근사). 주스탯 의지·보조 지능.

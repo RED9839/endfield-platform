@@ -64,6 +64,7 @@ export type DDUnit = {
   wilMul?: number;   // 의지 → 유틸·궁극기 게이지 배율
   healRecv?: number; // 의지 → 받는 회복량 배율(1.0 기준). 회복 시 곱연산
   procCount: number; // 제너릭 재능 카운터(아크라이트 황무지의 방랑자 등)
+  iceStack?: number; // 이본 「아이스 슈터」 변신 중 평타 누적(치확 +3%/스택, 최대 10)
   utilMult: number;  // 스킬 단조 유틸 배율(취약·증폭·회복·게이지·지속) × 의지. M0=1.0
   utilBase?: number; // 의지 곱하기 전 스킬 단조 유틸 배율(재계산 기준값)
   killPriority?: number; // 아군 자동 타겟 처치 우선(적 한정): 3=지원(치유/증폭) 2=원거리 1=전열
@@ -211,6 +212,7 @@ function expire(u: DDUnit, key: string): void {
   else if (key === "ironOath") u.ironOath = 0;
   else if (key === "dot") { u.dot = 0; rm(u, "combustion"); }
   else if (key === "frozen") { u.frozen = 0; rm(u, "stun"); }
+  else if (key === "iceshot") u.iceStack = 0; // 이본 아이스 슈터 변신 종료 → 치확 스택 소멸
   else if (key === "stun") rm(u, "stun"); // 시간 정지(탕탕 궁) 만료
   else if (key === "weaken") u.weakenMul = 1;
   else if (key === "protection") u.protection = 0;
@@ -554,6 +556,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
   const primaryPre = pickTargets(s, self, skill)[0]?.physBreak ?? 0; // 스탠스 판정용(강타 소모 전 방불)
   const primaryTarget = pickTargets(s, self, skill)[0]; // 광역 스킬의 1회성 효과(청뢰검 생성 등) 기준 대상
   let executed = false; // 일반 공격 처형 여부
+  let aoeTotal = 0, aoeHits = 0; // 범위기 전체 합산(대상별 합만으로는 총 딜을 알 수 없음)
   for (const t of pickTargets(s, self, skill)) {
     const preReact = ELEMENTS.reduce((n, e) => n + t.arts[e], 0) + t.frozen; // 아츠 이상/쇄빙 소모 감지용(알레쉬 연계)
     const yvFrozen = t.frozen > 0, yvCryo = t.arts.cryo > 0; // 이본 빙점 판정(소모 전 상태)
@@ -597,6 +600,20 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
         const per = tw ? 0.36 : 0.2; // 스킬랭크1 계수(전역 SKILL_RANK9가 ×2.25로 스킬랭크9=45%/81% 반영)
         raw += self.attack * eb(self) * per * (self.procCount + 5); // 청뢰검 비례 뇌격(마지막 ×6) — 모든 대상(변신 시 광역)
       }
+    }
+    // 로시 「그림자가 타오르는 순간」: 2타에 아츠 부착 전부 소모 → 소모 스택당 +80% 물리 + 자신 치확/치피(15초≈3턴).
+    // 원문 Lv1 기준: 치확 +15% · 치피 +30% (가산). 예전 구현은 절대값 세팅(0.3/1.0 = M3값)이라 랭크 무관하게 만렙치였음.
+    if (self.id === "rossi" && skill.kind === "link") {
+      const stacks = Math.min(4, ELEMENTS.reduce((n, e) => n + t.arts[e], 0));
+      if (stacks > 0) {
+        ELEMENTS.forEach((e) => { t.arts[e] = 0; delete t.timers["arts:" + e]; });
+        raw += self.attack * eb(self) * 0.8 * stacks; // 소모 스택당 +80%
+        s.anomalyConsumed = true;
+        log.push(`  → 아츠 ${stacks}스택 소모 → 추가 ${Math.round(80 * stacks)}% 물리`);
+      }
+      self.critRate += 0.15; self.critDmg += 0.30;
+      setTimer(self, "critRate", 3); setTimer(self, "critDmg", 3);
+      log.push(`  → 울프팀의 진주! 치확 +15% · 치피 +30% (3턴)`);
     }
     if (skill.iceBomb) { // 이본 얼음 폭탄: 냉기/자연 부착 전부 소모 → 강제 동결 + 스택 비례 냉기 + 궁충
       const stacks = Math.min(4, t.arts.cryo + t.arts.nature);
@@ -726,6 +743,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
     }
     // 레바테인 황혼 변신: 강화 일반공격 ×3(위키 강화 평타 464%/일반 157%≈2.95). 배틀 강화는 흡수 블록에서 처리
     if (self.id === "laevatain" && skill.kind === "attack" && (self.timers.twilight || 0) > 0) raw *= 3;
+    if (self.id === "yvonne" && skill.kind === "attack" && (self.timers.iceshot || 0) > 0) raw *= 2.66; // 아이스 슈터 강화 평타(원문 강일 133% vs 평타 50%)
     // 장방이 천리의 경지 변신: 강화 일반공격 ×2.5(궁 중 평타 강화)
     if (self.id === "zhuangfangyi" && skill.kind === "attack" && (self.timers.heavenly || 0) > 0) raw *= 2.5;
     // 엠버: 평타 주력 딜러 — 실제 돌진 검술 4단 콤보(≈431% 물리, lv9) 반영. 범용 평타 0.5 → ×8.6≈431%.
@@ -733,9 +751,13 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
     if (self.id === "ember" && skill.kind === "attack") raw *= t.staggered ? 14 : 8.6;
     // 글로벌 배율: 치명타 기댓값(시전자) → 증폭(시전자)+취약(대상,위계+부식) → 불균형(+30%) → 현실정지 → 비호
     let cr = self.critRate, cd = self.critDmg;
-    if (self.id === "yvonne") { // 이본: 아이스 슈터 변신(치확 누적 만스택 +30%·치피 +60%) + 빙점(냉기 적 치피 +20%·동결 ×2 +40%)
-      if (skill.kind === "ult") { cr += 0.3; cd += 0.6; }
-      if (yvFrozen) cd += 0.4; else if (yvCryo) cd += 0.2;
+    if (self.id === "yvonne") { // 이본 「아이스 슈터」 변신 — 원문: 7초간 강화 평타, 평타마다 치확 +3%(최대 10스택=+30%), 만스택 시 치피 +60%
+      if ((self.timers.iceshot || 0) > 0) {
+        const st = Math.min(10, self.iceStack || 0);
+        cr += 0.03 * st;                 // 평타 누적 치확(최대 +30%)
+        if (st >= 10) cd += 0.6;         // 만스택 시 치피 +60%
+      }
+      if (yvFrozen) cd += 0.4; else if (yvCryo) cd += 0.2; // 빙점(냉기 적 치피 +20%·동결 +40%)
     }
     let dmg = raw * (1 + cr * cd); // 치명타 기댓값(RNG 대신)
     const vMul = self.id === "lastrite" && skill.kind === "ult" ? 1.5 : 1; // 라스트 라이트 저온 취성(궁 냉기/아츠 취약 1.5배 간주)
@@ -805,7 +827,9 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
       if (self.gear?.onKillAtk) { self.atkBuff = Math.min(0.6, (self.atkBuff || 0) + self.gear.onKillAtk); setTimer(self, "atkBuff", 3); } // 통합형 경갑: 처치 시 공격력+
     }
     onAllyHit(s, self, t, final, log); // 아군 피격 트리거(엠버 강철·레바테인 불씨·디펜더 패링) — 적 공격(enemyAct)에서도 호출
+    if (final > 0) { aoeTotal += final; aoeHits++; }
   }
+  if (aoeHits > 1) log.push(`  ═ 합계 -${aoeTotal.toLocaleString()} (${aoeHits}체)`); // 범위기 총 딜
   // 엠버(디펜더): 전진의 결의(배틀·연계 시 50% 비호) · 전선에서의 지원 치유 · 다시 불타오르는 맹세 팀 보호막
   if (self.id === "ember") {
     if (skill.kind === "battle" || skill.kind === "link") applyBuff(self, "protection", 0.5, undefined, 1); // 전진의 결의(시전 중 비호)
@@ -969,6 +993,18 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
     setTimer(self, "twilight", 3);
     self.atb += 100; // 변신 후 바로 자기 턴(강화 평타/배틀 즉시 활용)
     log.push(`  → 황혼 변신! 일반공격·배틀 스킬 강화 · 즉시 추가 행동`);
+  }
+  // 이본 「아이스 슈터」: 삐삐 배치 + 메인 전환 — 7초(≈2턴) 강화 평타. 평타마다 치확 +3%(최대 10스택), 만스택 시 치피 +60%.
+  if (self.id === "yvonne" && skill.kind === "ult") {
+    setTimer(self, "iceshot", 2);
+    self.iceStack = 0;
+    self.atb += 100; // 변신 후 바로 자기 턴(강화 평타 즉시 활용)
+    log.push(`  → 아이스 슈터 변신! 강화 평타(평타마다 치확 +3%, 만스택 시 치피 +60%) · 즉시 추가 행동`);
+  }
+  // 변신 중 평타마다 치확 스택 누적(최대 10)
+  if (self.id === "yvonne" && skill.kind === "attack" && (self.timers.iceshot || 0) > 0) {
+    self.iceStack = Math.min(10, (self.iceStack || 0) + 1);
+    if (self.iceStack === 10) log.push(`  → 아이스 슈터 만스택! 치피 +60%`);
   }
   // 이본(스트라이커): 꽁꽁이 연계 — 명중 시 궁 에너지 +10(여러 목표여도 1회)
   if (self.id === "yvonne" && skill.kind === "link") {
