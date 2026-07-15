@@ -294,6 +294,7 @@ export const SKILL_RANK9 = 1.8;
 
 // 자원 경제(전투 시스템 wiki): 스킬 게이지(파티 공유) + 궁극기 에너지(개인)
 export const GAUGE_COST = 100;     // 배틀 스킬 1칸 소모
+const ANOMALY_WINDOW = 2;  // 아츠 이상/부착 소모·흡수 윈도우 지속(턴). 1이면 그 라운드 안에서만 = 속도 느린 셋업이 빠른 페이오프를 못 살림
 const GAUGE_REGEN = 45;     // 라운드당 자연 회복(≈12.5초/칸)
 const BASIC_RECOVER = 18;   // 일반 공격 강력한 일격 → 게이지 회복
 const EXEC_RECOVER = 30;    // 처형(불균형 적) → 게이지 추가 회복
@@ -461,7 +462,18 @@ export function baseDamage(skill: DDSkill, self: DDUnit): number {
   return dmg;
 }
 
-export type DDState = { units: DDUnit[]; round: number; log: string[]; lastLinkAlly?: string; skillGauge: number; maxGauge: number; boss?: boolean; anomalyConsumed?: boolean; allyHit?: boolean; moraleAccum?: number; forcedTargetId?: string };
+// ===== 연계 연쇄 =====
+// 원작 사이클은 "메인이 셋업 → 조건 열린 오퍼가 즉시 연계로 끼어듦"의 연쇄다(레바테인 강평 → 아델리아 연계 → …).
+// 우리는 ATB 속도순 독립 턴이라, 셋업이 느리면(레바테인 54 < 카뮤 87) 페이오프가 이미 지나가 창을 못 받아먹었다.
+// → 셋업 직후 조건이 열린 아군이 **자기 턴을 앞당겨** 연계를 쓴다. atb를 정상 소모하므로 행동 수는 그대로(DD 경제 유지).
+// roster/sim을 직접 import하면 순환(combat→weapons→roster→combat)이라 provider 주입.
+export type LinkChain = (s: DDState, self: DDUnit) => { unit: DDUnit; skill: DDSkill } | null;
+let linkChainProvider: LinkChain | null = null;
+export const setLinkChain = (f: LinkChain | null) => { linkChainProvider = f; };
+
+// anomalyConsumed: 아츠 이상/부착 소모·흡수 윈도우(남은 턴). 0/undefined = 닫힘.
+// chaining: 연계 연쇄 재진입 방지(연쇄는 1단까지).
+export type DDState = { units: DDUnit[]; round: number; log: string[]; lastLinkAlly?: string; skillGauge: number; maxGauge: number; boss?: boolean; anomalyConsumed?: number; allyHit?: boolean; moraleAccum?: number; forcedTargetId?: string; chaining?: boolean };
 
 export const living = (s: DDState, side?: "ally" | "enemy") =>
   s.units.filter((u) => u.hp > 0 && (!side || u.side === side));
@@ -568,7 +580,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
     if (skill.burnShockConsume && (has(t, "combustion") || has(t, "shock"))) { // 울프가드: 연소/감전 소모 → 추가타(부착 생략)
       rm(t, "combustion"); rm(t, "shock"); t.dot = 0;
       raw += self.attack * eb(self) * skill.burnShockConsume;
-      s.anomalyConsumed = true; burnConsumed = true;
+      s.anomalyConsumed = ANOMALY_WINDOW; burnConsumed = true;
       gaugeUp(s, 10); // 절제의 원칙(게이지 반환)
       log.push(`  → 연소/감전 소모! 추가 ${skill.burnShockConsume * 100}% 열기 + 게이지`);
     }
@@ -583,7 +595,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
       if (skill.kind === "link" && t.arts.electric > 0) { // 변화의 숨결: 전기 부착 소모 → 강제 감전(이미 감전이면 레벨↑)
         const n = t.arts.electric; t.arts.electric = 0; delete t.timers["arts:electric"];
         const lvUp = has(t, "shock"); add(t, "shock"); gearTrigger(self, "anomaly:electric"); bumpVuln(t, "arts", (lvUp ? 0.16 : 0.12) * self.utilMult);
-        self.ultCharge = Math.min(self.ultCost, self.ultCharge + 10 + 10 * n); s.anomalyConsumed = true;
+        self.ultCharge = Math.min(self.ultCost, self.ultCharge + 10 + 10 * n); s.anomalyConsumed = ANOMALY_WINDOW;
         log.push(`  → 변화의 숨결! 전기 ${n}스택 소모 → 강제 감전${lvUp ? "(레벨↑)" : ""}`);
       }
       if (skill.kind === "battle") { // 뇌정의 부름: 감전 소모 → 청뢰검 생성(최대 9) + 청뢰검 수 비례 뇌격(마지막 ×6) + 궁충
@@ -628,7 +640,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
       if (stacks > 0) {
         ELEMENTS.forEach((e) => { t.arts[e] = 0; delete t.timers["arts:" + e]; });
         raw += self.attack * eb(self) * 0.8 * stacks; // 소모 스택당 +80%
-        s.anomalyConsumed = true;
+        s.anomalyConsumed = ANOMALY_WINDOW;
         log.push(`  → 아츠 ${stacks}스택 소모 → 추가 ${Math.round(80 * stacks)}% 물리`);
       }
       self.critRate += 0.15; self.critDmg += 0.30;
@@ -642,7 +654,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
         t.frozen = stacks; add(t, "stun"); setTimer(t, "frozen", DUR_FROZEN); gearTrigger(self, "anomaly:cryo"); // 강제 동결(세트 조건 = "동결을 부여한 후")
         raw += self.attack * eb(self) * (0.67 + 0.89 * stacks); // 동결 부여 67% + 스택당 89%
         self.ultCharge = Math.min(self.ultCost, self.ultCharge + 10 + 30 * stacks); // 궁충(동결 10 + 스택당 30)
-        s.anomalyConsumed = true;
+        s.anomalyConsumed = ANOMALY_WINDOW;
         log.push(`  → 얼음 폭탄! 냉기/자연 ${stacks}스택 소모 → 강제 동결 + 궁 +${10 + 30 * stacks}`);
       }
     }
@@ -657,7 +669,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
       bumpVuln(t, "cryo", n * 0.04 * self.utilMult, 3); // 저체온증: 소모 스택 ×4% 냉기 취약(15초≈3턴) · 스킬 단조 유틸
       t.arts.cryo = 0; delete t.timers["arts:cryo"];
       add(t, "stun"); setTimer(t, "stun", 1); // 얼음송곳 강제 정지(다음 1턴)
-      s.anomalyConsumed = true;
+      s.anomalyConsumed = ANOMALY_WINDOW;
       // 원문 표: 기초 궁 에너지 40 + 소모 스택당 15 (4스택이면 100). 라스트라이트 궁(240)의 주 수급원.
       const ug = (40 + 15 * n) * (self.ultEffMul ?? 1) * (self.wilMul ?? 1);
       self.ultCharge = Math.min(self.ultCost, self.ultCharge + ug);
@@ -671,7 +683,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
       if (skill.kind === "attack") // 강평/처형만 흡수 — 살아있는 적 전체("주변 적")에서 걷는다
         for (const e of living(s, "enemy")) if (e.arts.heat > 0) { absorb += e.arts.heat; e.arts.heat = 0; delete e.timers["arts:heat"]; }
       const gain = absorb + (skill.kind === "battle" || skill.kind === "link" ? 1 : 0);
-      if (absorb > 0) s.anomalyConsumed = true; // 카뮤 연계 「영혼의 가시」 조건 = "열기 부착 소모/**흡수** 후" — 레바테인 흡수도 창을 연다
+      if (absorb > 0) s.anomalyConsumed = ANOMALY_WINDOW; // 카뮤 연계 「영혼의 가시」 조건 = "열기 부착 소모/**흡수** 후" — 레바테인 흡수도 창을 연다
       if (gain > 0) {
         self.procCount = Math.min(4, (self.procCount || 0) + gain);
         log.push(`  → 녹아내린 불꽃 ${self.procCount}/4 (${skill.kind === "attack" ? `강평 흡수 ${absorb}` : skill.kind === "battle" ? "배틀 명중" : "연계 명중"})`);
@@ -714,7 +726,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
       const src = adm ?? self;
       const coeff = skill.kind === "ult" ? 2.67 : 1.78; // 궁 추가 배율(267%) vs 연계 결정 파괴 배율(178%)
       raw += src.attack * eb(src) * coeff;
-      rm(t, "crystal"); s.anomalyConsumed = true; // 결정 소모(알레쉬 연계 조건)
+      rm(t, "crystal"); s.anomalyConsumed = ANOMALY_WINDOW; // 결정 소모(알레쉬 연계 조건)
       if (adm) { adm.atkBuff = 0.3; setTimer(adm, "atkBuff", DUR_ATKBUFF); } // 본질 붕괴(15초≈3턴)
       log.push(`  → 오리지늄 결정 파괴! (${coeff * 100}%)${adm ? " · 관리자 본질 붕괴(+30%)" : ""}`);
     }
@@ -742,7 +754,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
     }
     if (skill.forceShock && t.hp > 0) { add(t, "shock"); gearTrigger(self, "anomaly:electric"); bumpVuln(t, "arts", 0.12 * self.utilMult); log.push(`  → 강제 감전(전기 부착 소모)`); }
     // 알레쉬: 아츠 이상/쇄빙 소모 감지(연계 조건) + 강제 동결 + 진귀한 린수
-    if (ELEMENTS.reduce((n, e) => n + t.arts[e], 0) + t.frozen < preReact) s.anomalyConsumed = true;
+    if (ELEMENTS.reduce((n, e) => n + t.arts[e], 0) + t.frozen < preReact) s.anomalyConsumed = ANOMALY_WINDOW;
     if (skill.forceFreeze && t.arts.cryo > 0) {
       const n = Math.min(4, t.arts.cryo);
       t.arts.cryo = 0; t.frozen = n; add(t, "stun"); setTimer(t, "frozen", DUR_FROZEN);
@@ -1093,13 +1105,26 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
       log.push(`  → ${set}! ${xiran ? "다른 " : ""}팀 피해 +16% (3턴)`);
     }
   }
+
+  // ── 연계 연쇄 ── 셋업(이 행동)으로 조건이 열린 아군이 자기 턴을 앞당겨 연계로 끼어든다.
+  // 쿨타임이 아니고 조건이 서면 발동(usable이 둘 다 검사). atb -= 100으로 자기 턴을 소진하므로 행동 수는 불변.
+  if (self.side === "ally" && !s.chaining && linkChainProvider) {
+    s.chaining = true;
+    const nx = linkChainProvider(s, self);
+    if (nx) {
+      nx.unit.atb -= 100; // 턴 앞당김(= 나중 차례를 지금 쓴 것)
+      log.push(`  ⇢ 연계 발동! ${nx.unit.name} 「${nx.skill.name}」`);
+      act(s, nx.unit, nx.skill);
+    }
+    s.chaining = false;
+  }
 }
 
 // 라운드 시작: DoT + 불균형 회복
 // 라운드(사이클) 공유 효과 — 스킬 게이지 회복 + 트리거 윈도우 리셋. ATB에서 모두 1회 행동마다 호출.
 export function startRound(s: DDState): void {
   s.round++;
-  s.anomalyConsumed = false; // 아츠 이상/결정 소모 윈도우 리셋(알레쉬 연계)
+  s.anomalyConsumed = Math.max(0, (s.anomalyConsumed ?? 0) - 1); // 아츠 이상/소모·흡수 윈도우 감쇠(즉시 리셋 X — ATB 순서상 셋업이 페이오프보다 늦게 오면 창이 닫혀버림)
   s.allyHit = false; // 피격 트리거 윈도우 리셋(엠버 전선에서의 지원)
   gaugeUp(s, GAUGE_REGEN); // 스킬 게이지 자연 회복(파티 공유)
 }

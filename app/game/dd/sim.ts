@@ -1,5 +1,5 @@
 // DD 전투 시뮬 헬퍼 — AI(아군 자동/적) + 인카운터 + 전투 생성. UI와 테스트가 공유(부작용 없음).
-import { BASIC, DDState, DDUnit, DDSkill, Element, ELEMENTS, applyAttach, applyDamage, healUnit, living, mitigate, usable, pickTargets, vulnFor, onAllyHit, EXECUTE_MULT, GAUGE_COST } from "./combat";
+import { BASIC, DDState, DDUnit, DDSkill, Element, ELEMENTS, applyAttach, applyDamage, healUnit, living, mitigate, usable, pickTargets, vulnFor, onAllyHit, EXECUTE_MULT, GAUGE_COST, setLinkChain } from "./combat";
 import { SKILLS, makeAlly, makeEnemy, ENEMY_DEFS, enemyDefFor, frontlineOrder, enemyArchetype } from "./roster";
 import { applyGear, GEAR_SLOTS, type Loadout, type GearSlot } from "./gear";
 import { applyWeapon } from "./weapons";
@@ -7,6 +7,21 @@ import type { OpProgress } from "./progress";
 import { rewardItemPool } from "./items";
 
 const EL_TAG: Record<Element, string> = { heat: "열기 ", electric: "전기 ", cryo: "냉기 ", nature: "자연 " };
+
+// 연계 연쇄 provider 등록 — combat.ts가 roster(SKILLS)를 직접 import하면 순환이라 주입 방식.
+// 아군이 행동한 직후, 조건이 서고 쿨타임이 아닌 연계를 가진 다른 아군을 찾아 턴을 앞당긴다.
+// 여럿이면 배율 높은 쪽. 자기 자신·이미 행동 순번이 한참 남은 오퍼도 대상 — atb를 소모하므로 총 행동 수는 불변.
+setLinkChain((s, self) => {
+  let best: { unit: DDUnit; skill: DDSkill } | null = null;
+  for (const a of living(s, "ally")) {
+    if (a === self) continue;
+    for (const sk of SKILLS[a.id] ?? []) {
+      if (sk.kind !== "link" || !usable(s, a, sk)) continue;
+      if (!best || sk.power > best.skill.power) best = { unit: a, skill: sk };
+    }
+  }
+  return best;
+});
 
 // 아군 AI: 사용 가능 스킬 중 점수 최대. usage gate가 셋업→페이오프를 자동 정렬.
 export function allyChoose(s: DDState, self: DDUnit): DDSkill | null {
