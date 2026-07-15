@@ -57,8 +57,15 @@ export function allyChoose(s: DDState, self: DDUnit): DDSkill | null {
     // 딜 사이클: 게이지는 파티 공유 자원이다. 원작은 메인 컨트롤 오퍼가 배틀을 굴리고 나머지는
     // 연계(무소모)로 붙는데, 우리는 4명이 각자 질러 정작 메인딜러가 굶는다(레바테인 배틀 9회 / 울프가드 141회).
     // → 메인이 아닌 오퍼는 게이지가 빠듯하면 배틀을 양보. 여유가 있으면(2회분 이상) 평소대로 쓴다.
-    if (sk.kind === "battle" && !self.isMain && s.skillGauge < GAUGE_COST * 2 &&
-        living(s, "ally").some((a) => a.isMain && a.hp > 0)) v -= 4;
+    // 단, **메인의 스킬 조건을 열어주는 셋업은 양보하지 않는다** — 원작 사이클이
+    // 「펠리카 배틀(전기 부착) → 장방이 강평 → 장방이 연계」처럼 부착원이 먼저이기 때문.
+    // (양보 규칙만 넣었더니 펠리카 배틀 23회로 굶어 장방이 연계가 0회가 됐다)
+    if (sk.kind === "battle" && !self.isMain && s.skillGauge < GAUGE_COST * 2) {
+      const main = living(s, "ally").find((a) => a.isMain);
+      const opensMain = !!main && !!sk.attach && (SKILLS[main.id] ?? []).some((o) =>
+        o.kind !== "attack" && o.requiresText?.includes("부착") && !usable(s, main, o));
+      if (main && !opensMain) v -= 4;
+    }
     // 셋업 가치: 내가 만드는 상태를 요구하는 스킬이 지금 잠겨 있으면 우선(딜 0이라 점수 0인 셋업 구제).
     if (sk.grants) {
       const mine = SKILLS[self.id] ?? [];
@@ -111,8 +118,10 @@ export function allyChoose(s: DDState, self: DDUnit): DDSkill | null {
     // 레바테인 「불타오르는 화염」: 4스택에서 터뜨려야 광역 폭발 + 강제 연소 + 궁 +100(비용 300 → 3회면 만충).
     // 원문상 스택은 "강력한 일격/처형 명중 후 주변 열기 부착 흡수"로 쌓이므로, 4스택 전엔 배틀을 아끼고 평타로 흡수한다.
     if (sk.id === "lae-b") v += (self.procCount ?? 0) >= 4 ? 8 : -4;
-    // 장방이 청뢰검: power 필드가 엔진훅 실가치(검 생성+뇌격)를 과소표현 → usable이면 평타보다 우선.
-    if (sk.id === "zfy-b") v += 6;
+    // 장방이 「뇌정의 부름」: 감전을 소모하면 청뢰검 +2, 없으면 3자루까지만 +1 — **3자루 이상 & 감전 없으면 생성 0**.
+    // 그런데 무조건 +6이라 아무것도 안 만드는 배틀을 난사하며 게이지를 태우고, 정작 부착원(펠리카 배틀 19회)을 굶겼다.
+    // 원작 사이클도 「펠리카 배틀(전기 부착) → 장방이 강평 → 장방이 연계」로 부착이 먼저다.
+    if (sk.id === "zfy-b") v += (t?.statuses?.includes("shock") || (self.procCount ?? 0) < 3) ? 6 : -4;
     const stacks = t ? t.physBreak : 0;
     if (sk.kind === "link") v += 2;
     if (sk.crystal && t && !t.statuses?.includes("crystal") && stacks >= 2) v += 6;
