@@ -17,7 +17,7 @@ export type DDUnit = {
   pos: number; // 1=전열 … 4=후열
   hp: number;
   maxHp: number;
-  speed: number; // 행동 게이지(ATB) 충전 속도(민첩)
+  speed: number; // 행동 게이지(ATB) 충전 속도(무기 무게 — weapon-type.ts WEAPON_SPEED)
   atb: number;   // 행동 게이지 0~100. 속도만큼 차고 100이면 행동, 초과분 이월.
   attack: number;
   opElement?: "physical" | Element; // 오퍼 주력 속성(장비 부품 속성 피해 보너스용)
@@ -58,7 +58,7 @@ export type DDUnit = {
   ironOath: number; // 포그 철의 서약(적에 부여, 물리이상/포그연계가 1씩 소모 → 교란/최후의 승부)
   gaugeRecovered: number; // 포그 생존의 깃발 누적 게이지(80마다 사기 격양)
   gearGrade: number; // 장비 등급(힘/민첩/지능/의지 통합 치환값, 명함 ~60). 스탯 비례 재능이 이걸 참조
-  attrs?: { str: number; agi: number; int: number; wil: number }; // 실제 능력치(endfield.wiki.gg 실측). 힘→체력·기본공격 / 민첩→속도 / 지능(주옵)→스킬 피해 / 의지→유틸·궁충
+  attrs?: { str: number; agi: number; int: number; wil: number }; // 실제 능력치(endfield.wiki.gg 실측). 원작 공식대로 주/부옵이면 공격력으로만 흐른다(4종 대등) + 힘→체력. 속도는 무기 타입.
   strMul?: number;   // 힘 → 일반 공격 피해 배율
   skillAttrMul?: number; // 지능 → 스킬(배틀/연계/궁) 피해 배율
   wilMul?: number;   // 의지 → 유틸·궁극기 게이지 배율

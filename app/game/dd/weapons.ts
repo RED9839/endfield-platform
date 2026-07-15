@@ -5,25 +5,18 @@ import { setTimer, pushSrc, popSrc } from "./combat";
 import { applyAttrs, attrBonusOf, OP_MAINSUB } from "./roster";
 import { weaponSummaries } from "@/data/weapons-summary-data";
 import { OP_WEAPON_SERIES } from "./weapon-series";
+import type { WeaponType } from "./weapon-type";
+import { OP_WEAPON, WEAPON_KO } from "./weapon-type";
 
-export type WeaponType = "sword" | "greatsword" | "polearm" | "handcannon" | "artsunit";
-export const WEAPON_KO: Record<WeaponType, string> = { sword: "한손검", greatsword: "양손검", polearm: "장병기", handcannon: "권총", artsunit: "아츠 유닛" };
-export const WEAPON_ICON: Record<WeaponType, string> = { sword: "🗡", greatsword: "⚔", polearm: "🔱", handcannon: "🔫", artsunit: "🔮" };
+export type { WeaponType } from "./weapon-type";
+export { WEAPON_KO, WEAPON_ICON, OP_WEAPON, WEAPON_SPEED, speedOf } from "./weapon-type";
+
 export const WEAPON_EFFECT_KO: Record<WeaponType, string> = {
-  sword: "치명 확률 +8%",
-  greatsword: "불균형 누적 +25%",
-  polearm: "배틀 스킬 피해 +15%",
-  handcannon: "전 피해 +10%",
-  artsunit: "원소 피해 +12%",
-};
-
-// 오퍼별 실제 무기 타입(operator-wikis 헤더 실측)
-export const OP_WEAPON: Record<string, WeaponType> = {
-  akekuri: "sword", alesh: "sword", arclight: "sword", chenqianyu: "sword", endministrator: "sword", laevatain: "sword", pogranichnik: "sword", rossi: "sword",
-  catcher: "greatsword", dapan: "greatsword", ember: "greatsword", lastrite: "greatsword", mifu: "greatsword", snowshine: "greatsword",
-  avywenna: "polearm", camu: "polearm", estella: "polearm", lifeng: "polearm",
-  fluorite: "handcannon", tangtang: "handcannon", wulfgard: "handcannon", yvonne: "handcannon",
-  antal: "artsunit", ardelia: "artsunit", gilberta: "artsunit", perlica: "artsunit", xaihi: "artsunit", zhuangfangyi: "artsunit",
+  sword: "속도 72 · 치명 확률 +8%",
+  greatsword: "속도 48 · 불균형 누적 +25%",
+  polearm: "속도 58 · 배틀 스킬 피해 +15%",
+  handcannon: "속도 70 · 전 피해 +10%",
+  artsunit: "속도 62 · 원소 피해 +12%",
 };
 
 // 오퍼별 실제 전무(전용무기) — 커뮤니티 빌드 시트 기준(각 오퍼 첫 추천무기 = 전무, 딜/서폿 분리는 2개).
