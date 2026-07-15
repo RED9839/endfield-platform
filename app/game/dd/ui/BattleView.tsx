@@ -113,7 +113,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
   if (!stateRef.current) {
     const base = ENCOUNTERS.find((e) => e.key === encounterKey) ?? ENCOUNTERS[0];
     const enc = faction ? { ...base, make: () => regionEncounter(faction, nodeKind, depth, maxDepth) } : base; // 세력 리전 편성(깊이별 티어)
-    stateRef.current = createBattle(party, enc, owned); // 지속 HP + 장비 세트 효과 + 제작 단조 반영
+    stateRef.current = createBattle(party, enc, owned, nodeKind === "boss"); // 지속 HP + 장비 세트 효과 + 제작 단조 반영
   }
   const cycleActsRef = useRef(0); // ATB: 사이클(모두 1회) 내 행동 수
   const cycleSizeRef = useRef(1); // 사이클 크기(생존 유닛 수)
@@ -339,7 +339,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
       {winner && (
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3 dd-frame px-4 py-3" style={{ ...CUT_SM, borderColor: winner === "ally" ? "#ff9a2f66" : "#b3312a66" }}>
           <span className="text-2xl" style={{ fontFamily: "var(--dd-display)", letterSpacing: "0.16em", color: winner === "ally" ? "#e8c56a" : "#c23b32", textShadow: "0 2px 10px rgba(0,0,0,0.9)" }}>{winner === "ally" ? (nodeKind === "boss" ? "던전 클리어" : "교전 승리") : "부대 전멸"}</span>
-          <button type="button" onClick={() => onEnd(winner, allies.map((a) => ({ id: a.id, hp: a.hp })))} className="dd-torch border border-ef-line px-4 py-2 font-mono text-sm font-bold uppercase tracking-wider transition hover:border-ef-accent/50" style={{ ...CUT_SM, background: PRIMARY, color: "#0a0a0a" }}>계속 →</button>
+          <button type="button" onClick={() => onEnd(winner, allies.map((a) => ({ id: a.id, hp: a.hp, ult: a.ultCharge })))} className="dd-torch border border-ef-line px-4 py-2 font-mono text-sm font-bold uppercase tracking-wider transition hover:border-ef-accent/50" style={{ ...CUT_SM, background: PRIMARY, color: "#0a0a0a" }}>계속 →</button>
         </div>
       )}
 

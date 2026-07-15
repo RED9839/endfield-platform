@@ -446,7 +446,7 @@ export function applyAnomaly(skill: DDSkill, target: DDUnit, self: DDUnit, log: 
 
 // 스킬 발동 피해(공격자 측). 연타는 배틀/궁 base에만 적용(강타 payoff는 제외).
 export function baseDamage(skill: DDSkill, self: DDUnit): number {
-  // 능력치 배율: 일반 공격은 힘, 스킬(배틀/연계/궁)은 주옵. 적은 attrs가 없어 ×1.
+  // 능력치 배율: 일반 공격은 힘, 스킬(배틀/연계/궁)은 지능. 적은 attrs가 없어 ×1.
   const am = skill.kind === "attack" ? (self.strMul ?? 1) : (self.skillAttrMul ?? 1);
   let dmg = self.attack * eb(self) * skill.power * am;
   if (self.multiHit > 0) {
@@ -457,7 +457,7 @@ export function baseDamage(skill: DDSkill, self: DDUnit): number {
   return dmg;
 }
 
-export type DDState = { units: DDUnit[]; round: number; log: string[]; lastLinkAlly?: string; skillGauge: number; maxGauge: number; anomalyConsumed?: boolean; allyHit?: boolean; moraleAccum?: number; forcedTargetId?: string };
+export type DDState = { units: DDUnit[]; round: number; log: string[]; lastLinkAlly?: string; skillGauge: number; maxGauge: number; boss?: boolean; anomalyConsumed?: boolean; allyHit?: boolean; moraleAccum?: number; forcedTargetId?: string };
 
 export const living = (s: DDState, side?: "ally" | "enemy") =>
   s.units.filter((u) => u.hp > 0 && (!side || u.side === side));
@@ -619,7 +619,9 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
     }
     // 레바테인 불꽃의 심장: 일반공격(강일)/배틀/연계 명중 시 주변 열기 부착 흡수 → 녹아내린 불꽃. 배틀이 4스택이면 강화 폭발
     if (self.id === "laevatain" && (skill.kind === "attack" || skill.kind === "battle" || skill.kind === "link")) {
-      const absorb = t.arts.heat; if (absorb > 0) { t.arts.heat = 0; delete t.timers["arts:heat"]; } // 열기 부착 흡수
+      // 원문: "레바테인이 **주변 적의** 열기 부착을 흡수합니다" → 맞은 대상만이 아니라 살아있는 적 전체에서 걷는다.
+      let absorb = 0;
+      for (const e of living(s, "enemy")) if (e.arts.heat > 0) { absorb += e.arts.heat; e.arts.heat = 0; delete e.timers["arts:heat"]; }
       const gain = absorb + (skill.kind === "battle" || skill.kind === "link" ? 1 : 0); // 흡수 N + 배틀/연계 자체 명중 1
       if (gain > 0) self.procCount = Math.min(4, (self.procCount || 0) + gain);
       const tw = (self.timers.twilight || 0) > 0; // 황혼 변신 중
@@ -753,6 +755,15 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
     }
     const final = applyDamage(t, dmg); // 보호막(보호) 흡수 → 체력
     log.push(`  ${t.name} -${final} (HP ${t.hp}/${t.maxHp})`);
+    // 레바테인 「불꽃의 심장」 원문: "주변의 적이 처치될 때, 열기 부착도 함께 흡수됩니다."
+    if (t.side === "enemy" && t.hp <= 0 && t.arts.heat > 0) {
+      const lae = s.units.find((u) => u.id === "laevatain" && u.side === "ally" && u.hp > 0);
+      if (lae) {
+        lae.procCount = Math.min(4, (lae.procCount || 0) + t.arts.heat);
+        log.push(`  → 녹아내린 불꽃 ${lae.procCount}/4 (처치 흡수 ${t.arts.heat})`);
+        t.arts.heat = 0; delete t.timers["arts:heat"];
+      }
+    }
     if (self.id === "rossi" && final > 0 && skill.kind !== "attack" && self.hp < self.maxHp) healUnit(self, Math.round(self.maxHp * 0.025), s, log); // 로시 끓어오르는 피: 스킬 치명 시 자기 회복(딜탱, 근사)
     // 펠리카 「순환 프로토콜」: 스킬 명중 시 양옆(인접) 적으로 전기 튕김(50% 전이)
     if (self.id === "perlica" && skill.kind !== "attack" && final > 0) {

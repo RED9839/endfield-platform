@@ -1,5 +1,5 @@
 // DD 전투 시뮬 헬퍼 — AI(아군 자동/적) + 인카운터 + 전투 생성. UI와 테스트가 공유(부작용 없음).
-import { BASIC, DDState, DDUnit, DDSkill, Element, applyAttach, applyDamage, healUnit, living, mitigate, usable, pickTargets, vulnFor, onAllyHit } from "./combat";
+import { BASIC, DDState, DDUnit, DDSkill, Element, ELEMENTS, applyAttach, applyDamage, healUnit, living, mitigate, usable, pickTargets, vulnFor, onAllyHit } from "./combat";
 import { SKILLS, makeAlly, makeEnemy, ENEMY_DEFS, enemyDefFor, frontlineOrder, enemyArchetype } from "./roster";
 import { applyGear, GEAR_SLOTS, type Loadout, type GearSlot } from "./gear";
 import { applyWeapon } from "./weapons";
@@ -22,7 +22,33 @@ export function allyChoose(s: DDState, self: DDUnit): DDSkill | null {
       return v;
     }
     let v = sk.power;
-    if (sk.selfUlt) v += 10;
+    if (sk.selfUlt) {
+      v += 10;
+      // 보스 전엔 궁을 아낀다 — 게이지가 런 내내 이월되므로 보스 진입 만충이 목표.
+      // 단, 아군이 위기이거나 이 궁으로 확실히 처치되면 지금 쓴다(아껴서 지면 의미 없음).
+      if (!s.boss) {
+        const danger = living(s, "ally").some((a) => a.hp / a.maxHp < 0.35);
+        const lethal = !!t && t.hp < self.attack * sk.power * 1.2;
+        if (!danger && !lethal) v -= 18; // 보류 → 배틀/연계/평타에 밀림
+      }
+    }
+    // ── 버프/디버프 상태 인지 ──
+    // 이 스킬이 이미 걸어둔 효과가 아직 살아있으면 재적용은 낭비(effectSrc.via = 건 스킬 이름).
+    const dup = (u: DDUnit | undefined) => !!u && Object.entries(u.effectSrc ?? {}).some(([k, src]) => src?.via === sk.name && (u.timers?.[k] ?? 0) > 0);
+    if (dup(t) || dup(self)) v -= 3;
+    // 아츠 부착: 다른 속성이 이미 붙어 있으면 아츠 이상(연소/감전/동결/부식) 성립 → 최우선.
+    if (sk.attach && t) {
+      const cur = t.arts[sk.attach] ?? 0;
+      if (ELEMENTS.some((e) => e !== sk.attach && (t.arts[e] ?? 0) > 0)) v += 8; // 이상 발동
+      else if (cur >= 4) v -= 3;      // 만스택 → 더 붙여도 낭비
+      else if (cur >= 1) v += 2;      // 같은 속성 2+ → 아츠 폭발
+    }
+    // 상태 소모형 페이오프: 조건이 실제로 서 있을 때만 값이 있다.
+    if (sk.shockBonus && t?.statuses?.includes("shock")) v += 5;
+    if (sk.burnShockConsume && (t?.statuses?.includes("combustion") || t?.statuses?.includes("shock"))) v += 5;
+    if (sk.forceShock && (t?.arts.electric ?? 0) > 0) v += 5;
+    if ((sk.forceFreeze || sk.iceBomb) && t && (t.arts.cryo ?? 0) + (sk.iceBomb ? t.arts.nature ?? 0 : 0) > 0) v += 4;
+    if (sk.cryoNuke && t) v += (t.arts.cryo ?? 0) >= 2 ? 6 : -2; // 냉기 스택 없이 쓰면 헛방
     // 빌더 배틀(레바테인 녹아내린 불꽃·장방이 청뢰검): power 필드가 엔진훅 실가치(스택+자가충전)를 과소표현 → usable이면 깡평타보다 우선. 게이지 소진 시 usable 게이트가 평타로 자동 전환하므로 국소적.
     if (sk.id === "lae-b" || sk.id === "zfy-b") v += 6;
     const stacks = t ? t.physBreak : 0;
@@ -188,7 +214,7 @@ export function enemyDrop(kind: NodeKind, depth: number, faction: string): { par
 }
 
 // 아군(선택 순서=포지션, 지속 HP·장비 로드아웃) + 인카운터로 전투 상태 생성. 게이지 200/300(+장비 시작 게이지).
-export function createBattle(party: { id: string; hp?: number; loadout?: Loadout; progress?: OpProgress }[], enc: Encounter, owned?: Record<string, number>): DDState {
+export function createBattle(party: { id: string; hp?: number; loadout?: Loadout; progress?: OpProgress; ult?: number }[], enc: Encounter, owned?: Record<string, number>, boss?: boolean): DDState {
   let bonusGauge = 0;
   // 전열 배치 규칙 적용: 물몸 딜러 앵커 보호(pos2), 탱/뱅가드 전열(pos1). 선택 순서(로드아웃 유지)는 id로 재매핑.
   const order = frontlineOrder(party.map((p) => p.id));
@@ -196,6 +222,7 @@ export function createBattle(party: { id: string; hp?: number; loadout?: Loadout
   const allies = ordered.map((p, i) => {
     const u = makeAlly(p.id, i + 1, p.progress); // 정예화·스킬랭크·장비강화(gearGrade) 반영
     if (p.hp != null) u.hp = Math.max(1, Math.min(u.maxHp, p.hp)); // 지속 HP(소모전)
+    if (p.ult != null) u.ultCharge = Math.max(0, Math.min(u.ultCost, p.ult)); // 궁 게이지 이월 — 전투마다 0으로 리셋되면 고비용 궁(220~240)은 영원히 못 씀
     // 맨몸 시작 — 공업소에서 제작(owned)한 피스만 장착. 미제작 슬롯은 미적용(기본 스탯).
     let equipped: Loadout | undefined; let levels: Partial<Record<GearSlot, number>> | undefined;
     if (p.loadout && owned) for (const slot of GEAR_SLOTS) { const ref = p.loadout[slot]; if (ref && owned[ref] != null) { (equipped ??= {})[slot] = ref; (levels ??= {})[slot] = owned[ref]; } }
@@ -204,5 +231,5 @@ export function createBattle(party: { id: string; hp?: number; loadout?: Loadout
     return u;
   });
   const enemies = enc.make();
-  return { units: [...allies, ...enemies], round: 0, log: [], skillGauge: Math.min(300, 200 + bonusGauge), maxGauge: 300 };
+  return { units: [...allies, ...enemies], round: 0, log: [], skillGauge: Math.min(300, 200 + bonusGauge), maxGauge: 300, boss };
 }

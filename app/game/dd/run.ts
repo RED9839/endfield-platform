@@ -15,9 +15,9 @@ const pickRand = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)
 export type NodeKind = "battle" | "elite" | "rest" | "boss";
 export type RunNode = { id: string; depth: number; lane: number; kind: NodeKind; next: string[] };
 export type RunPhase = "select" | "map" | "battle" | "rest" | "craft" | "victory" | "defeat";
-export type PartyPick = { id: string; loadout?: Loadout; progress?: OpProgress };
-export type PartyMember = { id: string; hp: number; maxHp: number; loadout?: Loadout; progress?: OpProgress };
-export type BattleResult = { id: string; hp: number };
+export type PartyPick = { id: string; loadout?: Loadout; progress?: OpProgress; ult?: number };
+export type PartyMember = { id: string; hp: number; maxHp: number; loadout?: Loadout; progress?: OpProgress; ult?: number };
+export type BattleResult = { id: string; hp: number; ult?: number }; // ult: 궁 게이지 이월(HP처럼 런 내내 유지 — 보스 전 만충이 목표)
 
 export const REST_HEAL = 0.4; // 야영 회복 비율(최대 HP)
 
@@ -106,7 +106,7 @@ export function useDDRun() {
   const finishBattle = useCallback((result: "ally" | "enemy", survivors: BattleResult[]) => {
     if (!activeNode) return;
     if (result === "ally") {
-      setParty((cur) => cur.map((m) => { const s = survivors.find((x) => x.id === m.id); return { ...m, hp: s ? s.hp : 0 }; }));
+      setParty((cur) => cur.map((m) => { const s = survivors.find((x) => x.id === m.id); return { ...m, hp: s ? s.hp : 0, ult: s?.ult ?? m.ult }; })); // HP·궁 게이지 이월
       const drop = enemyDrop(activeNode.kind, activeNode.depth, faction); // 세력·티어·깊이별 드랍테이블
       setCraft((c) => ({ ...c, mats: { parts: c.mats.parts + drop.parts, permits: c.mats.permits + drop.permits } })); // 제작 재료
       addItem(pickRand(drop.items)); // 소모품
