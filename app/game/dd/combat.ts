@@ -601,6 +601,12 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
         raw += self.attack * eb(self) * per * (self.procCount + 5); // 청뢰검 비례 뇌격(마지막 ×6) — 모든 대상(변신 시 광역)
       }
     }
+    // 미브 「후회 없는 주먹」(연계): 원문 표 "획득하는 궁극기 에너지 10".
+    if (self.id === "mifu" && skill.kind === "link") {
+      const ug = 10 * (self.ultEffMul ?? 1) * (self.wilMul ?? 1);
+      self.ultCharge = Math.min(self.ultCost, self.ultCharge + ug);
+      log.push(`  → 후회 없는 주먹 궁 +${Math.round(ug)}`);
+    }
     // 라스트라이트 「세쉬카의 비전」(배틀): 원문 표 "획득하는 궁극기 에너지 16". 궁 「마지막 인사」가
     // "자신의 배틀/연계로만 궁 에너지 획득" 제약이라 이 두 경로가 유일한 수급원(비용 240).
     if (self.id === "lastrite" && skill.kind === "battle") {
