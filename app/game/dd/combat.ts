@@ -105,7 +105,8 @@ export type DDSkill = {
   fromPos: number[]; // 사용 가능 위치(전열/후열 제약)
   target: TargetMode;
   targetRanks?: number[]; // 명중 가능한 적 랭크(생략 시 전체)
-  power: number; // 공격력 배율(스킬 발동 피해)
+  power: number; // 공격력 배율(스킬 발동 피해). 다단히트면 hits 합과 일치.
+  hits?: number[]; // 다단히트 단별 배율(소스 레벨표). 표시 전용 — 총 피해는 power로 계산하고 로그에서 이 비율로 쪼갠다.
   element?: "physical" | Element; // 피해 속성(생략 시 물리)
   staggerVal?: number; // 불균형치(생략 시 배틀/연계 10, 궁 25)
   attach?: Element; // 아츠 부착(→ 폭발/이상 트리거)
@@ -768,6 +769,16 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
       }
     }
     const final = applyDamage(t, dmg); // 보호막(보호) 흡수 → 체력
+    // 다단히트: 단별 개별 피해를 먼저 찍고 마지막에 합산. 총합은 final 그대로(반올림 오차는 막타가 흡수).
+    if (skill.hits && skill.hits.length > 1 && final > 0) {
+      const hs = skill.hits, tot = hs.reduce((a, b) => a + b, 0);
+      let acc = 0;
+      hs.forEach((h, i) => {
+        const d = i === hs.length - 1 ? final - acc : Math.round((final * h) / tot);
+        acc += d;
+        log.push(`    ${i === hs.length - 1 && hs.length > 2 && hs[i] > hs[0] ? "막타" : `${i + 1}단`} -${d.toLocaleString()}`);
+      });
+    }
     log.push(`  ${t.name} -${final} (HP ${t.hp}/${t.maxHp})`);
     // 레바테인 「불꽃의 심장」 원문: "주변의 적이 처치될 때, 열기 부착도 함께 흡수됩니다."
     if (t.side === "enemy" && t.hp <= 0 && t.arts.heat > 0) {
