@@ -113,6 +113,7 @@ export type DDSkill = {
   selfPhysBonus?: number; // 띄우기/넘어뜨리기마다 추가 물리(공격력×배수) — 여풍 복마
   requires?: (target: DDUnit | undefined, self: DDUnit, state: DDState) => boolean; // 사용 요구(usage gate)
   requiresText?: string;
+  grants?: string; // 이 스킬이 만드는 상태(다른 스킬의 requiresText와 매칭) — AI 셋업 우선순위용
   cooldown?: number; // 연계 쿨타임(턴, 생략 시 기본 3)
   gaugeCost?: number; // 스킬 게이지 소모(생략 시 100). 미브 추형/개천=50
   gaugeRefund?: number; // 게이지 반환(미브 단운=50)
@@ -289,11 +290,11 @@ const CORR_SHRED = [0.12, 0.16, 0.2, 0.24]; // 부식 저항 감소
 export const SKILL_RANK9 = 1.8;
 
 // 자원 경제(전투 시스템 wiki): 스킬 게이지(파티 공유) + 궁극기 에너지(개인)
-const GAUGE_COST = 100;     // 배틀 스킬 1칸 소모
+export const GAUGE_COST = 100;     // 배틀 스킬 1칸 소모
 const GAUGE_REGEN = 45;     // 라운드당 자연 회복(≈12.5초/칸)
 const BASIC_RECOVER = 18;   // 일반 공격 강력한 일격 → 게이지 회복
 const EXEC_RECOVER = 30;    // 처형(불균형 적) → 게이지 추가 회복
-const EXECUTE_MULT = 6;     // 처형 피해 배율(불균형 적 일반 공격)
+export const EXECUTE_MULT = 6;     // 처형 피해 배율(불균형 적 일반 공격)
 const ULT_BATTLE = 6.5;     // 배틀 사용 시 아군 전체 궁 충전
 const ULT_LINK = 10;        // 연계 사용 시 시전자 궁 충전
 const MORALE_STEP = 80;     // 포그 「생존의 깃발」: 팀 게이지 이만큼 회복마다 사기 격양

@@ -1,5 +1,5 @@
 // DD 전투 시뮬 헬퍼 — AI(아군 자동/적) + 인카운터 + 전투 생성. UI와 테스트가 공유(부작용 없음).
-import { BASIC, DDState, DDUnit, DDSkill, Element, ELEMENTS, applyAttach, applyDamage, healUnit, living, mitigate, usable, pickTargets, vulnFor, onAllyHit } from "./combat";
+import { BASIC, DDState, DDUnit, DDSkill, Element, ELEMENTS, applyAttach, applyDamage, healUnit, living, mitigate, usable, pickTargets, vulnFor, onAllyHit, EXECUTE_MULT, GAUGE_COST } from "./combat";
 import { SKILLS, makeAlly, makeEnemy, ENEMY_DEFS, enemyDefFor, frontlineOrder, enemyArchetype } from "./roster";
 import { applyGear, GEAR_SLOTS, type Loadout, type GearSlot } from "./gear";
 import { applyWeapon } from "./weapons";
@@ -15,13 +15,28 @@ export function allyChoose(s: DDState, self: DDUnit): DDSkill | null {
   if (!opts.length) return null;
   const score = (sk: DDSkill) => {
     const t = pickTargets(s, self, sk)[0];
+    // 점수 단위 = 배율(power). 평타도 실제 배율(0.5)로 재서 스킬과 같은 저울에 올린다.
+    // (기존엔 평타 base 1 + 처형 +12라 처형이 모든 스킬을 압살 → 아케쿠리 연계 0회 등)
     if (sk.kind === "attack") {
-      let v = self.id === "ember" ? 2.6 : 1; // 엠버: 평타 주력 딜러 → 강화 평타 우선(진군 방불 셋업은 knockdown 보너스로 여전히 우선)
-      if (t && t.staggered) v += 12; // 처형
-      if (s.skillGauge < 100) v += 3; // 게이지 회복
+      let v = sk.power * (t?.staggered ? EXECUTE_MULT : 1);      // 처형 = 0.5×6 = 3.0
+      if (self.id === "ember") v *= t?.staggered ? 14 : 8.6;      // 엠버 강화 평타(combat.ts 훅 실값)
+      if (s.skillGauge < GAUGE_COST) v += 1;                      // 평타 = 게이지 회복 수단
       return v;
     }
     let v = sk.power;
+    // 게이지 수급 가치: 파티 공유 게이지가 마를수록 수급 스킬이 귀하다. 배틀 1회 = 100.
+    // 소모는 여기서 감점하지 않는다 — usable()이 이미 게이지 부족을 게이팅하므로 이중 페널티가 된다.
+    if (sk.gaugeGain) v += (sk.gaugeGain / 100) * 4 * (s.skillGauge < GAUGE_COST * 1.5 ? 2 : 1);
+    // 셋업 가치: 내가 만드는 상태를 요구하는 스킬이 지금 잠겨 있으면 우선(딜 0이라 점수 0인 셋업 구제).
+    if (sk.grants) {
+      const mine = SKILLS[self.id] ?? [];
+      if (mine.some((o) => o.requiresText?.includes(sk.grants!) && !usable(s, self, o))) v += 5;
+    }
+    // 스탠스 셋업(미브 단운→추형→개천): 더 높은 스탠스를 요구하는 스킬이 있으면 올린다.
+    if (sk.setStanceTo != null && sk.setStanceTo > (self.stance ?? 0)) {
+      const mine = SKILLS[self.id] ?? [];
+      if (mine.some((o) => (o.requiresStance ?? 0) > (self.stance ?? 0) && (o.requiresStance ?? 0) <= sk.setStanceTo!)) v += 4;
+    }
     if (sk.selfUlt) {
       v += 10;
       // 보스 전엔 궁을 아낀다 — 게이지가 런 내내 이월되므로 보스 진입 만충이 목표.

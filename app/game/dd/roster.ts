@@ -195,7 +195,7 @@ export const SKILLS: Record<string, DDSkill[]> = {
   // 재능: 가동 프로세스(연계가 냉기/동결 적 명중 시 냉기 취약) · 프리징 프로토콜(궁이 팀 냉기부착/동결 정화 — 휴면). 주스탯 의지·보조 지능.
   xaihi: [
     // 디도스(배틀, 게이지 100): 지원 결정체 — 메인 치유(144+의지×0.34). 오버힐 시 아츠 증폭 9%(25초). 연계 활성(엔진 id훅).
-    { id: "xai-b", name: "디도스", kind: "battle", fromPos: [1, 2, 3], target: "self", power: 0, staggerVal: 0, note: "치유 + 오버힐 시 아츠 증폭 + 연계 활성" },
+    { id: "xai-b", name: "디도스", kind: "battle", fromPos: [1, 2, 3], target: "self", power: 0, staggerVal: 0, grants: "디도스", note: "치유 + 오버힐 시 아츠 증폭 + 연계 활성" },
     // 스트레스 테스트(연계 200%, 쿨 8초≈2턴): 디도스 활성 시. 냉기 + 냉기 부착 + 가동 프로세스(냉기/동결 적 → 냉기 취약 10%).
     { id: "xai-l", name: "스트레스 테스트", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 2.0, element: "cryo", attach: "cryo", staggerVal: 10, cooldown: 2,
       requires: (_t, self) => (self.timers.didos || 0) > 0, requiresText: "디도스 활성",
