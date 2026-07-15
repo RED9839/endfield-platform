@@ -65,7 +65,11 @@ export function allyChoose(s: DDState, self: DDUnit): DDSkill | null {
       // 메인이 이 부착을 먹고 사는가 — 연계 조건(부착/이상/연소·감전·동결·부식)이거나 흡수형 재능(레바테인).
       // 조건 문구가 "연소/부식 적"처럼 부착이라 안 적혀도 부착이 연료다. 좁게 잡았더니 카뮤가 141회 양보해
       // 레바테인 연료가 끊겼다(평타 0.50 vs 배틀 0.89+2.5-4 = -0.61).
-      const feedsMain = !!main && !!sk.attach && (main.id === "laevatain" ||
+      // 단, 메인이 **이미 셋업이 찼으면** 연료가 더 필요 없다 → 이때는 양보해서 페이오프를 터뜨리게 한다.
+      // (레바테인은 4스택 40턴 중 19턴만 배틀 가능 — 카뮤 81·울프 72가 예외로 게이지를 다 먹어서였다)
+      const mainReady = !!main && ((main.id === "laevatain" && (main.procCount ?? 0) >= 4) ||
+        (SKILLS[main.id] ?? []).some((o) => o.kind !== "attack" && o.kind !== "ult" && usable(s, main, o)));
+      const feedsMain = !!main && !!sk.attach && !mainReady && (main.id === "laevatain" ||
         (SKILLS[main.id] ?? []).some((o) => o.kind !== "attack" && !usable(s, main, o) &&
           /부착|이상|연소|감전|동결|부식/.test(o.requiresText ?? "")));
       if (main && !feedsMain) v -= 4;

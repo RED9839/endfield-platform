@@ -519,10 +519,14 @@ export function onAllyHit(s: DDState, self: DDUnit, t: DDUnit, final: number, lo
   s.allyHit = true; // 엠버 전선에서의 지원 피격 윈도우
   // 강철에는 강철로(엠버): 피격 시 공격력 +9%, 최대 3스택(=+27%), 2턴
   if (t.id === "ember") { t.atkBuff = Math.min(0.27, (t.atkBuff || 0) + 0.09); setTimer(t, "atkBuff", 2); }
-  // 부활의 불씨(레바테인): HP 40% 이하로 떨어지면 90% 비호 + 회복(12턴 쿨 1회)
+  // 부활의 불씨(레바테인) 원문(3정): "HP 40% 이하 시 **90% 비호 + 매초 최대 HP 5% 회복, 8초**. **120초** 1회."
+  // 환산(1턴=5초): 비호 8초 ≈ 2턴 · 회복 5%×8초 = 최대 HP 40%를 2턴에 나눠 = 턴당 20% · 쿨 120초 ≈ 24턴.
+  // (기존엔 1회 10% 회복 + 쿨 12턴 — 회복이 1/4인데 쿨은 2배 잦았다)
   if (t.id === "laevatain" && t.hp / t.maxHp <= 0.4 && (t.timers.embersCd || 0) <= 0) {
-    applyBuff(t, "protection", 0.9, undefined, 2); healUnit(t, Math.round(t.maxHp * 0.1), s, log); setTimer(t, "embersCd", 12);
-    log.push(`  → 부활의 불씨! 90% 비호 + 회복`);
+    applyBuff(t, "protection", 0.9, undefined, 2);
+    t.regen = Math.round(t.maxHp * 0.2); t.regenTurns = 2; // 턴당 20% × 2턴 = 40%
+    setTimer(t, "embersCd", 24);
+    log.push(`  → 부활의 불씨! 90% 비호(2턴) + 재생 ${t.regen}/턴 ×2`);
   }
   // 패링(스노우샤인·카치르): 방패 태세 중 아군 피격 시 반격(공격자=self).
   if (self.side === "enemy") {
