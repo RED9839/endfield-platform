@@ -1,6 +1,6 @@
 // ===== DD류 물리 4인 + 적 정의 (프로토타입) =====
 // 스킬은 위키 매핑. 사용 요구(requires)가 카드 모델에서 깨지던 "연계 조건"을 DD류에선 자연 흡수.
-import { bumpVuln, vulnFor, setTimer, applyBuff, ELEMENTS, attrResists, ATTR_AVG, attrMul, mainAttr, MAIN_ATTR_AVG, type DDClass, type DDSkill, type DDUnit, type Element } from "./combat";
+import { bumpVuln, vulnFor, setTimer, applyBuff, ELEMENTS, attrResists, ATTR_AVG, attrBonus, type DDClass, type DDSkill, type DDUnit, type Element } from "./combat";
 import { promoMult, skillMult, skillUtilMult, DEFAULT_PROGRESS, type OpProgress } from "./progress";
 
 export const SKILLS: Record<string, DDSkill[]> = {
@@ -464,16 +464,18 @@ export const OP_ATTRS: Record<string, OpAttrs> = {
 // 능력치 → 역할 배율. 능력치가 바뀔 때(무기 능력치 버프 등)마다 다시 부른다.
 //   힘   = 체력(OP_HP에 이미 6000+힘×5로 반영) + 기본공격 배율
 //   민첩 = 속도
-//   지능 = 스킬 피해 — 단, 주옵이 힘/민첩인 딜러(탕탕·진천우 등)가 죽지 않도록 "주옵(최고 능력치)" 기준으로 환산
+//   지능 = 스킬(배틀/연계/궁) 피해
 //   의지 = 유틸(취약·증폭·회복 배율, 받는 회복량) + 궁극기 게이지 속도
+// 배율은 전부 "기준선(ATTR_BASE) 초과분만 +알파" 꼴 — 능력치가 낮아도 페널티가 없고,
+// 한 스탯이 오퍼에 따라 다른 역할을 겸하는 일(주옵 방식의 형평성 문제)이 없다.
 export function applyAttrs(u: DDUnit): void {
   const a = u.attrs;
   if (!a) return;
   u.speed = Math.round(a.agi * 0.42 + 12); // 민첩 → 속도(적 속도대와 겹치게 스케일)
-  u.strMul = attrMul(a.str);
-  u.skillAttrMul = attrMul(mainAttr(a), MAIN_ATTR_AVG);
-  u.wilMul = attrMul(a.wil);
-  u.healRecv = attrMul(a.wil);
+  u.strMul = attrBonus(a.str);       // 힘 → 일반 공격 피해
+  u.skillAttrMul = attrBonus(a.int); // 지능 → 스킬 피해
+  u.wilMul = attrBonus(a.wil);       // 의지 → 유틸 · 궁극기 게이지
+  u.healRecv = attrBonus(a.wil);
   u.utilMult = (u.utilBase ?? u.utilMult ?? 1) * u.wilMul; // 스킬 단조 유틸 × 의지 (utilBase 기준 → 재호출해도 중복 곱 없음)
 }
 

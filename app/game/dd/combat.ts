@@ -59,9 +59,9 @@ export type DDUnit = {
   gaugeRecovered: number; // 포그 생존의 깃발 누적 게이지(80마다 사기 격양)
   gearGrade: number; // 장비 등급(힘/민첩/지능/의지 통합 치환값, 명함 ~60). 스탯 비례 재능이 이걸 참조
   attrs?: { str: number; agi: number; int: number; wil: number }; // 실제 능력치(endfield.wiki.gg 실측). 힘→체력·기본공격 / 민첩→속도 / 지능(주옵)→스킬 피해 / 의지→유틸·궁충
-  strMul?: number;   // 힘 → 기본공격 피해 배율(ATTR_AVG 기준)
-  skillAttrMul?: number; // 주옵(최고 능력치) → 스킬(배틀/연계/궁) 피해 배율(MAIN_ATTR_AVG 기준)
-  wilMul?: number;   // 의지 → 유틸·궁극기 게이지 배율(ATTR_AVG 기준)
+  strMul?: number;   // 힘 → 일반 공격 피해 배율
+  skillAttrMul?: number; // 지능 → 스킬(배틀/연계/궁) 피해 배율
+  wilMul?: number;   // 의지 → 유틸·궁극기 게이지 배율
   healRecv?: number; // 의지 → 받는 회복량 배율(1.0 기준). 회복 시 곱연산
   procCount: number; // 제너릭 재능 카운터(아크라이트 황무지의 방랑자 등)
   utilMult: number;  // 스킬 단조 유틸 배율(취약·증폭·회복·게이지·지속) × 의지. M0=1.0
@@ -237,11 +237,11 @@ export function applyDamage(u: DDUnit, dmg: number): number {
 }
 
 // 회복: 체력 회복(최대 초과 X). 카뮤 혈류 소생(자기 회복 시 열기 증폭) 처리.
-export const ATTR_AVG = 116;      // 능력치 평균(힘/민첩/지능/의지 각각)
-export const MAIN_ATTR_AVG = 162; // 주옵(오퍼별 최고 능력치)의 로스터 평균 — 스킬 배율 정규화 기준
-// 능력치 → 배율. 평균이 ×1.0이 되도록 정규화(능력치가 attack 튜닝값을 왜곡하지 않게).
-export const attrMul = (v: number | undefined, avg = ATTR_AVG) => (v ? +(v / avg).toFixed(3) : 1);
-export const mainAttr = (a?: { str: number; agi: number; int: number; wil: number }) => (a ? Math.max(a.str, a.agi, a.int, a.wil) : undefined);
+export const ATTR_AVG = 116;     // 능력치 평균(힘/민첩/지능/의지 각각)
+export const ATTR_BASE = 82;     // 로스터 최저 능력치. 이 선이 ×1.0 — 능력치가 낮다고 페널티를 주지 않는다.
+export const ATTR_ALPHA = 0.004; // 기준선 초과 1당 +0.4%
+// 능력치 → "+알파" 배율. 기준선(82) 초과분만 보너스 → 항상 ×1.0 이상, 오퍼별로 같은 스탯이 같은 역할만 한다.
+export const attrBonus = (v?: number) => (v ? +(1 + Math.max(0, v - ATTR_BASE) * ATTR_ALPHA).toFixed(3) : 1);
 
 // 저항: 장비 능력치(gearGrade)만으로 결정. 오퍼 능력치는 관여하지 않는다.
 // 방어력이 이미 피해를 깎으므로(장비 140 → -22%) 저항 기여는 RESIST_K로 눌러 이중 스케일링을 막는다. 장비 풀세트(gearGrade 120) → 약 11%.
