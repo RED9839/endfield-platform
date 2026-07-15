@@ -370,7 +370,7 @@ const OP_BASE: Record<string, Base> = {
   lastrite: { id: "lastrite", name: "라스트 라이트", cls: "striker", hp: 2689, attack: 110, speed: 48, ultCost: 240 }, // 냉기 스트라이커★6 한정(첫 스트라이커). 냉기 부착 소모 단일 누킹·자기 충전 궁(240). 주스탯 힘·보조 의지
   avywenna: { id: "avywenna", name: "아비웨나", cls: "striker", hp: 2689, attack: 110, speed: 62, ultCost: 100 }, // 전기 스트라이커★5. 썬더랜스(투창 설치→회수 중복타) 폭딜·부착 미소모. 주스탯 의지·보조 민첩
   dapan: { id: "dapan", name: "판", cls: "striker", hp: 2689, attack: 110, speed: 55, ultCost: 90 }, // 물리 스트라이커★5. 방불 4스택 강타 단발 누커·띄우기/넘어뜨리기 빌더. 주스탯 힘·보조 의지
-  laevatain: { id: "laevatain", name: "레바테인", cls: "striker", hp: 2689, attack: 110, speed: 64, ultCost: 130 }, // 열기 스트라이커★6 한정. 열기 부착 흡수→녹아내린 불꽃→강화 배틀·버프형 궁·부활의 불씨. 원본 궁300이나 엔진 공유게이지 기아로 변신 미도달 → 실전 S티어 반영 위해 160(자가충전 4스택=+100 감안). 주스탯 지능·보조 힘
+  laevatain: { id: "laevatain", name: "레바테인", cls: "striker", hp: 2689, attack: 110, speed: 64, ultCost: 300 }, // 열기 스트라이커★6 한정. 열기 부착 흡수→녹아내린 불꽃→강화 배틀·버프형 궁·부활의 불씨. 원본 궁300이나 엔진 공유게이지 기아로 변신 미도달 → 실전 S티어 반영 위해 160(자가충전 4스택=+100 감안). 주스탯 지능·보조 힘
   yvonne: { id: "yvonne", name: "이본", cls: "striker", hp: 2689, attack: 110, speed: 66, ultCost: 220 }, // 냉기 스트라이커★6 한정. 강제 동결(냉기/자연 소모)+치명타 변신 말뚝딜 궁(220)+빙점. 주스탯 지능·보조 민첩
   zhuangfangyi: { id: "zhuangfangyi", name: "장방이", cls: "striker", hp: 2689, attack: 110, speed: 62, ultCost: 240 }, // 전기 스트라이커★6 한정. 청뢰검(감전 소모→검, 최대9)+변신 궁(천리의 경지)+지속딜. 주스탯 의지·보조 지능
 };

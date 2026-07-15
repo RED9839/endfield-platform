@@ -67,8 +67,11 @@ export function allyChoose(s: DDState, self: DDUnit): DDSkill | null {
     if (sk.forceShock && (t?.arts.electric ?? 0) > 0) v += 5;
     if ((sk.forceFreeze || sk.iceBomb) && t && (t.arts.cryo ?? 0) + (sk.iceBomb ? t.arts.nature ?? 0 : 0) > 0) v += 4;
     if (sk.cryoNuke && t) v += (t.arts.cryo ?? 0) >= 2 ? 6 : -2; // 냉기 스택 없이 쓰면 헛방
-    // 빌더 배틀(레바테인 녹아내린 불꽃·장방이 청뢰검): power 필드가 엔진훅 실가치(스택+자가충전)를 과소표현 → usable이면 깡평타보다 우선. 게이지 소진 시 usable 게이트가 평타로 자동 전환하므로 국소적.
-    if (sk.id === "lae-b" || sk.id === "zfy-b") v += 6;
+    // 레바테인 「불타오르는 화염」: 4스택에서 터뜨려야 광역 폭발 + 강제 연소 + 궁 +100(비용 300 → 3회면 만충).
+    // 원문상 스택은 "강력한 일격/처형 명중 후 주변 열기 부착 흡수"로 쌓이므로, 4스택 전엔 배틀을 아끼고 평타로 흡수한다.
+    if (sk.id === "lae-b") v += (self.procCount ?? 0) >= 4 ? 8 : -4;
+    // 장방이 청뢰검: power 필드가 엔진훅 실가치(검 생성+뇌격)를 과소표현 → usable이면 평타보다 우선.
+    if (sk.id === "zfy-b") v += 6;
     const stacks = t ? t.physBreak : 0;
     if (sk.kind === "link") v += 2;
     if (sk.crystal && t && !t.statuses?.includes("crystal") && stacks >= 2) v += 6;

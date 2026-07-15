@@ -619,23 +619,31 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
       s.anomalyConsumed = true;
       log.push(`  → 겨울 포식자! 냉기 ${n}스택 소모 → 스택 누킹 + 냉기 취약 ${n * 4}% + 강제 정지`);
     }
-    // 레바테인 불꽃의 심장: 일반공격(강일)/배틀/연계 명중 시 주변 열기 부착 흡수 → 녹아내린 불꽃. 배틀이 4스택이면 강화 폭발
+    // 레바테인 「불꽃의 심장」 — 원문: "강력한 일격이나 처형이 명중한 후, 레바테인이 **주변 적의** 열기 부착을 흡수.
+    // 열기 부착 1스택 흡수마다 녹아내린 불꽃 1스택(최대 4)". 흡수는 **본인의 강평/처형(일반 공격)**에서만 일어난다.
+    // 배틀/연계는 원문상 "명중 시 녹아내린 불꽃 1스택"으로 별도 가산.
     if (self.id === "laevatain" && (skill.kind === "attack" || skill.kind === "battle" || skill.kind === "link")) {
-      // 원문: "레바테인이 **주변 적의** 열기 부착을 흡수합니다" → 맞은 대상만이 아니라 살아있는 적 전체에서 걷는다.
       let absorb = 0;
-      for (const e of living(s, "enemy")) if (e.arts.heat > 0) { absorb += e.arts.heat; e.arts.heat = 0; delete e.timers["arts:heat"]; }
-      const gain = absorb + (skill.kind === "battle" || skill.kind === "link" ? 1 : 0); // 흡수 N + 배틀/연계 자체 명중 1
-      if (gain > 0) self.procCount = Math.min(4, (self.procCount || 0) + gain);
+      if (skill.kind === "attack") // 강평/처형만 흡수 — 살아있는 적 전체("주변 적")에서 걷는다
+        for (const e of living(s, "enemy")) if (e.arts.heat > 0) { absorb += e.arts.heat; e.arts.heat = 0; delete e.timers["arts:heat"]; }
+      const gain = absorb + (skill.kind === "battle" || skill.kind === "link" ? 1 : 0);
+      if (gain > 0) {
+        self.procCount = Math.min(4, (self.procCount || 0) + gain);
+        log.push(`  → 녹아내린 불꽃 ${self.procCount}/4 (${skill.kind === "attack" ? `강평 흡수 ${absorb}` : skill.kind === "battle" ? "배틀 명중" : "연계 명중"})`);
+      }
+    }
+    // 4스택 배틀 폭발 — 레바테인 본인 배틀에서만
+    if (self.id === "laevatain" && skill.kind === "battle") {
       const tw = (self.timers.twilight || 0) > 0; // 황혼 변신 중
-      if (skill.kind === "battle" && tw) raw += self.attack * eb(self) * 0.85; // 궁 중 강화 배틀 1단계(62→147%)
-      if (skill.kind === "battle" && self.procCount >= 4) { // 4스택 배틀 → 강화 폭발 + 강제 연소 + 궁 +100
+      if (tw) raw += self.attack * eb(self) * 0.85; // 궁 중 강화 배틀 1단계(62→147%)
+      if (self.procCount >= 4) { // 4스택 배틀 → 강화 폭발 + 강제 연소 + 궁 +100
         raw += self.attack * eb(self) * (tw ? 4.0 : 3.42); // 추가 공격(궁 중 400% / 일반 342%)
         t.dot = Math.round(self.attack * eb(self) * 0.5); setTimer(t, "dot", DUR_DOT); add(t, "combustion"); // 강제 연소
         self.ultCharge = Math.min(self.ultCost, self.ultCharge + 100); // 궁 +100
         self.amp.heat = Math.max(self.amp.heat || 0, 0.2); setTimer(self, "amp:heat", 4); // 불꽃의 심장(열기 저항 무시 근사)
         self.procCount = 0;
         log.push(`  → 녹아내린 불꽃 4스택 소모! 강화 폭발${tw ? "(궁 중 400%)" : ""} + 강제 연소 + 궁 +100`);
-      } else if (gain > 0) log.push(`  → 녹아내린 불꽃 ${self.procCount}/4 (${skill.kind === "attack" ? "일반공격" : skill.kind === "battle" ? "배틀" : "연계"} 흡수 ${absorb})`);
+      }
     }
     if (skill.lanceRecover) { // 아비웨나 가로채기: 대상에게 누적된 썬더랜스(t.lanceN 일반 / t.lanceBig 강력) 전부 회수 → 스택 비례 중복 전기타
       const lances = t.lanceN || 0, big = t.lanceBig || 0;
