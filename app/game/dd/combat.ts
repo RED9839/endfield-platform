@@ -331,7 +331,7 @@ const DUR_FROZEN = 2;  // 동결 6~9초
 const DUR_BUFF = 3;    // 증폭/허약/비호/보호막/속도 일반 버프
 const LINK_CD = 3;     // 연계 기본 쿨타임 15~16초
 // 일반 공격(모든 오퍼 공통): 게이지 무소모, 강력한 일격으로 게이지 회복, 불균형 적엔 처형.
-export const BASIC: DDSkill = { id: "basic", name: "일반 공격", kind: "attack", fromPos: [1, 2, 3, 4], target: "single-front", power: 0.5, element: "physical", staggerVal: 6 };
+export const BASIC: DDSkill = { id: "basic", name: "일반 공격", kind: "attack", fromPos: [1, 2, 3, 4], target: "single-front", power: 0.5, element: "physical", staggerVal: 6, gaugeGain: 12 };
 
 // 동결 적에게 방불/물리 이상 발동 시 쇄빙(동결 소모 → 대량 물리). 공격자 측 추가 피해 반환.
 function tryShatter(target: DDUnit, self: DDUnit, log: string[]): number {

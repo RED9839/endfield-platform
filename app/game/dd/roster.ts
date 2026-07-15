@@ -476,7 +476,10 @@ export const OP_ATTRS: Record<string, OpAttrs> = {
 export function applyAttrs(u: DDUnit): void {
   const a = u.attrs;
   if (!a) return;
-  u.speed = Math.round(a.agi * 0.42 + 12); // 민첩 → 속도(적 속도대와 겹치게 스케일)
+  // 민첩 → 속도. ATB라 속도 = 행동 빈도 → 폭이 크면 고민첩 오퍼가 사이클을 독식한다.
+  // agi*0.42+12는 무기 능력치 버프(카뮤 「붉게 물든 가호」 민첩 +156)까지 타면 48~113(×2.35)로 벌어져
+  // 카뮤가 캐리(레바테인 54)의 2배 속도 → 행동 밀도 2.7배. 완만하게 잡아 적 속도대(32~78)와 겹치게 한다.
+  u.speed = Math.round(a.agi * 0.20 + 38); // 55~86 (×1.56)
   u.strMul = attrBonus(a.str);       // 힘 → 일반 공격 피해
   u.skillAttrMul = attrBonus(a.int); // 지능 → 스킬 피해
   u.wilMul = attrBonus(a.wil);       // 의지 → 유틸 · 궁극기 게이지

@@ -46,7 +46,8 @@ export function allyChoose(s: DDState, self: DDUnit): DDSkill | null {
       if (self.id === "ember") v *= t?.staggered ? 14 : 8.6;      // 엠버 강화 평타(combat.ts 훅 실값)
       // 변신 중 강화 평타 — 변신기의 핵심 딜 수단인데 AI가 몰라 배틀/연계를 치고 있었음(combat.ts 훅 실값과 동기)
       if (self.id === "laevatain" && (self.timers.twilight || 0) > 0) v *= 3;    // 황혼: 범위 강화 평타(부착→흡수 사이클)
-      if (s.skillGauge < GAUGE_COST) v += 1;                      // 평타 = 게이지 회복 수단
+      // 평타에 게이지 가산점을 주면 안 된다 — 배틀 점수가 power뿐(카뮤 0.89)이라 평타(0.5+가산)에 지고
+      // 부착 셋업이 굶는다. 게이지 부족은 usable()이 이미 배틀을 막으므로 평타는 자동으로 선택된다.
       return v;
     }
     let v = sk.power;
@@ -77,12 +78,18 @@ export function allyChoose(s: DDState, self: DDUnit): DDSkill | null {
     // 이 스킬이 이미 걸어둔 효과가 아직 살아있으면 재적용은 낭비(effectSrc.via = 건 스킬 이름).
     const dup = (u: DDUnit | undefined) => !!u && Object.entries(u.effectSrc ?? {}).some(([k, src]) => src?.via === sk.name && (u.timers?.[k] ?? 0) > 0);
     if (dup(t) || dup(self)) v -= 3;
-    // 아츠 부착: 다른 속성이 이미 붙어 있으면 아츠 이상(연소/감전/동결/부식) 성립 → 최우선.
+    // 아츠 부착: 부착은 딜이 아니라 **사이클 연료**다(레바테인 흡수·아군 연계 조건·아츠 이상·세트 발동).
+    // power만 보면 카뮤 배틀(0.89)이 처형 평타(0.5×6=3.0)에 져서 부착 셋업이 통째로 굶었다.
     if (sk.attach && t) {
       const cur = t.arts[sk.attach] ?? 0;
-      if (ELEMENTS.some((e) => e !== sk.attach && (t.arts[e] ?? 0) > 0)) v += 8; // 이상 발동
+      if (ELEMENTS.some((e) => e !== sk.attach && (t.arts[e] ?? 0) > 0)) v += 8; // 아츠 이상 성립 → 최우선
       else if (cur >= 4) v -= 3;      // 만스택 → 더 붙여도 낭비
-      else if (cur >= 1) v += 2;      // 같은 속성 2+ → 아츠 폭발
+      else {
+        v += 2.5;                     // 기본 셋업 가치
+        // 이 부착이 아군 연계 조건을 열어주면(연쇄) 추가 가치 — 셋업→페이오프 짝 맞추기
+        if (living(s, "ally").some((a) => a !== self && (a.linkCd ?? 0) <= 0 &&
+            (SKILLS[a.id] ?? []).some((o) => o.kind === "link" && /아츠 ?부착|열기 ?부착/.test(o.requiresText ?? "")))) v += 3;
+      }
     }
     // 상태 소모형 페이오프: 조건이 실제로 서 있을 때만 값이 있다.
     // 단, 그 상태를 "요구"하는 다른 스킬이 지금 사용 가능하면 소모를 미룬다 — 셋업을 페이오프가 까먹는 것 방지.
