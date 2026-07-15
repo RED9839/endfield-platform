@@ -63,7 +63,10 @@ export function allyChoose(s: DDState, self: DDUnit): DDSkill | null {
     // (아크라이트: 배틀 「질풍 섬광」이 감전을 소모하면 연계 「천둥의 울림」이 잠김 → 실제 운용도 연계+궁 위주)
     const needs = (state: string) => opts.some((o) => o !== sk && o.kind !== "attack" && o.requiresText?.includes(state));
     if (sk.shockBonus && t?.statuses?.includes("shock") && !needs("감전")) v += 5;
-    if (sk.burnShockConsume && (t?.statuses?.includes("combustion") || t?.statuses?.includes("shock")) && !needs("감전") && !needs("연소")) v += 5;
+    // 울프가드 「탄흔의 열기」: 연소/감전 상태면 "열기 부착 대신" 그 상태를 소모하고 추가타.
+    // 실제 운용은 울프가드 딜이 미미해 부착용으로만 쓰고, 부착/연소된 적에겐 쓰지 않아 레바테인이 열기를 흡수하게 둔다.
+    // → 소모 분기(부착 생략)는 회피한다. 부착이 팀 사이클(레바테인 녹아내린 불꽃)의 연료.
+    if (sk.burnShockConsume && (t?.statuses?.includes("combustion") || t?.statuses?.includes("shock"))) v -= 5;
     if (sk.forceShock && (t?.arts.electric ?? 0) > 0) v += 5;
     if ((sk.forceFreeze || sk.iceBomb) && t && (t.arts.cryo ?? 0) + (sk.iceBomb ? t.arts.nature ?? 0 : 0) > 0) v += 4;
     if (sk.cryoNuke && t) v += (t.arts.cryo ?? 0) >= 2 ? 6 : -2; // 냉기 스택 없이 쓰면 헛방
