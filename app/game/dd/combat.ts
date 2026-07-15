@@ -572,6 +572,9 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
       raw += applyAttach(t, skill.attach, self, log);
       if (self.id === "wulfgard" && has(t, "combustion")) { self.amp.heat = Math.max(self.amp.heat || 0, 0.3); setTimer(self, "amp:heat", 2); log.push(`  → 불타는 송곳니! 열기 피해 +30%`); }
     }
+    // 레바테인 「황혼」 변신 중 평타는 원문상 "3단 평타 열기 부착" — 붙인 열기를 본인 흡수(불꽃의 심장)가
+    // 곧바로 걷어가 녹아내린 불꽃이 빠르게 차고 강화 배틀을 연발하는 게 변신 사이클의 핵심.
+    if (self.id === "laevatain" && skill.kind === "attack" && (self.timers.twilight || 0) > 0) raw += applyAttach(t, "heat", self, log);
     if (self.id === "zhuangfangyi") { // 장방이: 청뢰검(procCount) — 연계 강제 감전 / 배틀 감전 소모 → 검 생성 + 뇌격
       if (skill.kind === "link" && t.arts.electric > 0) { // 변화의 숨결: 전기 부착 소모 → 강제 감전(이미 감전이면 레벨↑)
         const n = t.arts.electric; t.arts.electric = 0; delete t.timers["arts:electric"];
