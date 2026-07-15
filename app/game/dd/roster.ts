@@ -88,12 +88,17 @@ export const SKILLS: Record<string, DDSkill[]> = {
   camu: [
     // 사르는 불꽃(배틀 89%, 불균형 10): 열기 + 열기 부착. 핏빛 날개 배회 → 허약 5% + 열기취약 5% + 날개 마킹.
     { id: "camu-b", name: "사르는 불꽃", kind: "battle", fromPos: [1, 2, 3], target: "single-front", power: 0.89, element: "heat", attach: "heat", staggerVal: 10,
+      requires: (_t, self) => !((self.timers.chase || 0) > 0), requiresText: "추적 상태가 아닐 때", // 궁 후 15초는 배틀이 추적으로 "교체"됨
       apply: (t) => { applyBuff(t, "weaken", 0.05); bumpVuln(t, "heat", 0.05); if (!t.statuses.includes("wing")) t.statuses.push("wing"); setTimer(t, "wing", 8); }, note: "열기 부착 + 허약/열기취약 + 핏빛 날개" },
     // 영혼의 가시(연계 133%, 쿨 20초): 열기 부착 소모/흡수 후. 게이지 16. 죄를 쫓는 자(날개 적 → 회복+연타).
     { id: "camu-l", name: "영혼의 가시", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 1.33, element: "heat", staggerVal: 10, cooldown: 4, gaugeGain: 18,
       requires: (_t, _s, st) => !!st.anomalyConsumed, requiresText: "열기 부착 소모됨", note: "열기 부착 소모 후 발동 · 핏빛 날개 적 명중 시 회복 + 연타 획득" },
-    // 선혈의 비(궁 267%, 게이지 130): 광역 열기 + 열기 부착 + 게이지. 추적 교체(근사).
-    { id: "camu-u", name: "선혈의 비", kind: "ult", fromPos: [1, 2, 3], target: "row", power: 2.67, element: "heat", staggerVal: 15, attach: "heat", selfUlt: true, gaugeGain: 32, note: "광역 열기 부착 + 게이지" },
+    // 추적(연계 취급 222%, 게이지 무소모): 궁 「선혈의 비」 후 15초(≈3턴) 동안 배틀이 이걸로 교체. 게이지 32 회복 → 뱅가드 수급 엔진.
+    { id: "camu-chase", name: "추적", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 2.22, element: "heat", staggerVal: 20, cooldown: 0, gaugeGain: 32,
+      requires: (_t, self) => (self.timers.chase || 0) > 0, requiresText: "추적 상태(궁 후 3턴)", note: "궁 후 배틀 교체 · 게이지 무소모 + 32 회복" },
+    // 선혈의 비(궁 267%, 게이지 130): 광역 열기 + 열기 부착 + 게이지. 사용 후 추적 상태 15초(≈3턴).
+    { id: "camu-u", name: "선혈의 비", kind: "ult", fromPos: [1, 2, 3], target: "row", power: 2.67, element: "heat", staggerVal: 15, attach: "heat", selfUlt: true, gaugeGain: 32,
+      apply: (_t, self) => { setTimer(self, "chase", 3); }, note: "광역 열기 부착 + 게이지 · 이후 3턴 배틀→추적 교체" },
   ],
   // 아케쿠리: 열기/한손검 뱅가드(★4, 탈4성 범용). 속성 무관 게이지 수급 — 불균형 조건 연계 + 무딜 궁(게이지 대량 회복) + 연타.
   // 재능: 승리의 함성(연계 게이지 +지능→장비등급) · 몰입의 시간(궁 지속 중 연타). 열기 부착도 보유.
@@ -104,7 +109,7 @@ export const SKILLS: Record<string, DDSkill[]> = {
     { id: "ake-l", name: "섬광 돌진", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 1.6, element: "physical", staggerVal: 10, cooldown: 2, gaugeGain: 15,
       requires: (t) => !!t && t.staggered, requiresText: "불균형 적", note: "게이지 대량 수급(승리의 함성)" },
     // 소대, 집합!(궁, 게이지 120): 무딜. 게이지 대량 회복(58) + 연타 획득(몰입의 시간).
-    { id: "ake-u", name: "소대, 집합!", kind: "ult", fromPos: [1, 2, 3], target: "self", power: 0, staggerVal: 0, selfUlt: true, gaugeGain: 58, grantsMultiHit: 1, note: "게이지 대량 회복 + 연타(몰입의 시간, 소모 후 부여)" },
+    { id: "ake-u", name: "소대, 집합!", kind: "ult", fromPos: [1, 2, 3], target: "self", power: 0, staggerVal: 0, selfUlt: true, gaugeGain: 74, grantsMultiHit: 1, note: "게이지 대량 회복 + 연타(몰입의 시간, 소모 후 부여)" },
   ],
   // 알레쉬: 냉기/한손검 뱅가드(★5). 강제 동결(냉기 단독 동결!) + 게이지 수급 + 아츠이상/결정 소모 연계 + 린수 확률.
   // → 에스텔라 쇄빙 파티 핵심(동결 공급). 재능: 급속 냉동(동결 시 궁충) · 낚시의 달인(린수 확률, 지능→장비등급).

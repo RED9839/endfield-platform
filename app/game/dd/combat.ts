@@ -529,7 +529,8 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
       const gil = s.units.some((u) => u.id === "gilberta" && u.hp > 0);
       for (const u of living(s, "ally")) {
         if (u.id === "lastrite" && self.id !== "lastrite") continue; // 라스트 라이트: 자기 배틀/연계로만 궁 충전(타 아군 배틀 무효)
-        let g = ULT_BATTLE;
+        // 나무위키: 배틀 시 (소모 게이지/100) × 6.5. 미브 추형/개천(게이지 50)은 절반만 충전된다.
+        let g = ULT_BATTLE * ((skill.gaugeCost ?? GAUGE_COST) / GAUGE_COST);
         if (gil && (u.cls === "guard" || u.cls === "caster" || u.cls === "supporter")) g *= 1.07;
         g *= u.ultEffMul ?? 1; // 장비 부옵: 궁극기 충전 효율
         g *= u.wilMul ?? 1;    // 의지 → 궁극기 게이지 속도
