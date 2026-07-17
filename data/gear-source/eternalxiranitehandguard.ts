@@ -1,0 +1,59 @@
+import type { GearDetail } from "../gear-types";
+
+// 출처: warfarin.wiki(/kr/gear) 1.4 신규 옵션. 능력치/재료 = turbo-stream .data. setEffects = 세트 공통.
+export const eternalxiranitehandguard: GearDetail = {
+  "slug": "eternalxiranitehandguard",
+  "name": "식양의 숨결 장갑",
+  "enName": "Eternal Xiranite Hand Guard",
+  "category": "gloves",
+  "level": 70,
+  "quality": 5,
+  "setName": "식양의 숨결",
+  "image": "/gear/eternalxiranitehandguard.webp",
+  "summary": "이 장비는 홍산 선검국에서 설계하고, 통합 공업 시스템을 사용해 제작한 것으로, 사용자의 작전 능력을 올릴 수 있습니다.",
+  "description": "어느 '광기에 찬' 천사가 남긴 유작.\n착용하세요, 어서 착용하세요... 에너지가 피부를 타고 흐르고, 살과 피 속으로 스며드는 감각을 느껴 보세요.",
+  "baseStat": {
+    "label": "방어력",
+    "value": "+42"
+  },
+  "ability1": {
+    "label": "의지",
+    "values": {
+      "base": "+65",
+      "level1": "+71",
+      "level2": "+78",
+      "level3": "+84"
+    }
+  },
+  "ability2": {
+    "label": "민첩",
+    "values": {
+      "base": "+43",
+      "level1": "+47",
+      "level2": "+51",
+      "level3": "+55"
+    }
+  },
+  "attribute": {
+    "label": "궁극기 충전 효율",
+    "values": {
+      "base": "+20.5%",
+      "level1": "+22.6%",
+      "level2": "+24.6%",
+      "level3": "+26.7%"
+    }
+  },
+  "abilityTypes": [
+    "will",
+    "agility"
+  ],
+  "attributeTypes": [
+    "ultimateEfficiency"
+  ],
+  "setEffects": [
+    {
+      "pieces": 3,
+      "description": "장착자의 생명력 +1000. 장착자가 증폭, 비호, 취약, 허약을 부여한 후, 다른 팀원이 주는 피해 +16%, 15초 동안 지속. 해당 효과는 중첩되지 않습니다."
+    }
+  ]
+};

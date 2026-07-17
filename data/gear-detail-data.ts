@@ -1,5 +1,12 @@
 import type { GearDetail } from "./gear-types";
 
+import { hotworkinsulationplate } from "./gear-source/hotworkinsulationplate";
+import { hotworkprotectivegloves } from "./gear-source/hotworkprotectivegloves";
+import { eternalxiranitelightarmor } from "./gear-source/eternalxiranitelightarmor";
+import { eternalxiranitelightarmort1 } from "./gear-source/eternalxiranitelightarmort1";
+import { eternalxiranitereinforcedplate } from "./gear-source/eternalxiranitereinforcedplate";
+import { eternalxiranitebracer } from "./gear-source/eternalxiranitebracer";
+import { eternalxiranitehandguard } from "./gear-source/eternalxiranitehandguard";
 import { frontiersarmor } from "./gear-source/frontiersarmor";
 import { frontiersarmort1 } from "./gear-source/frontiersarmort1";
 import { frontiersarmort2 } from "./gear-source/frontiersarmort2";
@@ -222,6 +229,13 @@ import { grizzlededgepushknife } from "./gear-source/grizzlededgepushknife";
 import { grizzlededgepushknifet1 } from "./gear-source/grizzlededgepushknifet1";
 
 export const gearDetails: GearDetail[] = [
+  hotworkinsulationplate,
+  hotworkprotectivegloves,
+  eternalxiranitelightarmor,
+  eternalxiranitelightarmort1,
+  eternalxiranitereinforcedplate,
+  eternalxiranitebracer,
+  eternalxiranitehandguard,
   frontiersarmor,
   frontiersarmort1,
   frontiersarmort2,

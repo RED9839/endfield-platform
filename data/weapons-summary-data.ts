@@ -656,5 +656,41 @@ export const weaponSummaries: WeaponSummary[] = [
     "weaponType": "artsunit",
     "image": "/weapons/flickersinthemist.webp",
     "series": "효율 · 중첩된 빛"
+  },
+  {
+    "slug": "type42solemnphalanx",
+    "name": "42식 · 척결",
+    "enName": "Type 42: Solemn Phalanx",
+    "rarity": 6,
+    "weaponType": "artsunit",
+    "image": "/weapons/type42solemnphalanx.webp",
+    "series": "방출 · 철벽 돌파"
+  },
+  {
+    "slug": "junctionpoint",
+    "name": "공명점",
+    "enName": "Junction Point",
+    "rarity": 6,
+    "weaponType": "artsunit",
+    "image": "/weapons/junctionpoint.webp",
+    "series": "효율 · 순환"
+  },
+  {
+    "slug": "farsight",
+    "name": "조망",
+    "enName": "Farsight",
+    "rarity": 6,
+    "weaponType": "sword",
+    "image": "/weapons/farsight.webp",
+    "series": "강공 · 내일의 희망"
+  },
+  {
+    "slug": "goldenage",
+    "name": "전성기",
+    "enName": "Golden Age",
+    "rarity": 6,
+    "weaponType": "handcannon",
+    "image": "/weapons/goldenage.webp",
+    "series": "추격 · 위대한 영웅"
   }
 ];

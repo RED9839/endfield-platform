@@ -291,5 +291,15 @@ export const operatorSummaries: OperatorSummary[] = [
     "class": "guard",
     "weapon": "greatsword",
     "avatar": "/operators/mifu/avatar.webp"
+  },
+  {
+    "slug": "arcane",
+    "name": "결",
+    "enName": "Arcane",
+    "rarity": 6,
+    "element": "nature",
+    "class": "caster",
+    "weapon": "artsunit",
+    "avatar": "/operators/arcane/avatar.webp"
   }
 ];

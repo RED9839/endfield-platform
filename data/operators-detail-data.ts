@@ -1,3 +1,4 @@
+import { arcaneOperatorDetailData } from "./operators-source/arcane";
 import { rossiOperatorDetailData } from "./operators-source/rossi";
 import { tangtangOperatorDetailData } from "./operators-source/tangtang";
 import { lifengOperatorDetailData } from "./operators-source/lifeng";
@@ -93,6 +94,7 @@ export const operatorDetails: OperatorDetail[] = [
   buildOperatorDetailFromSource(zhuangfangyiDetailData),
   buildOperatorDetailFromSource(mifuOperatorDetailData),
   buildOperatorDetailFromSource(camuOperatorDetailData),
+  buildOperatorDetailFromSource(arcaneOperatorDetailData),
 ];
 
 const operatorDetailBySlug = new Map(
