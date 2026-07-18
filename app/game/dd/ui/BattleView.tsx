@@ -297,7 +297,11 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
   const allies = s.units.filter((u) => u.side === "ally");
   const enemies = s.units.filter((u) => u.side === "enemy");
   const KIND_ORDER: Record<DDSkill["kind"], number> = { attack: 0, battle: 1, link: 2, ult: 3 };
-  const skills = current ? [...(SKILLS[current.id] ?? []), BASIC].sort((a, b) => KIND_ORDER[a.kind] - KIND_ORDER[b.kind]) : []; // 4종 전부(불가 스킬 포함)
+  // 카뮤 「추적」은 궁 후 배틀 슬롯을 교체(원작) — 추적 상태면 사르는 불꽃 대신 추적만 노출(배틀 1칸 유지)
+  const camuChasing = current?.id === "camu" && (current.timers?.chase ?? 0) > 0;
+  const skills = current ? [...(SKILLS[current.id] ?? []), BASIC]
+    .filter((sk) => current.id !== "camu" || (sk.id === "camu-b" ? !camuChasing : sk.id === "camu-chase" ? camuChasing : true))
+    .sort((a, b) => KIND_ORDER[a.kind] - KIND_ORDER[b.kind]) : []; // 4종(불가 포함), 카뮤 배틀은 상태별 1칸 교체
   const upcoming = winner ? [] : turnOrder(s, 6); // ATB 예측 순서(비파괴)
 
   return (
