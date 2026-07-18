@@ -14,6 +14,19 @@ export type HomeFeaturedOperator = {
 
 const homeOperatorMetas: HomeFeaturedOperator[] = [
   {
+    slug: "arcane",
+    name: "결",
+    enName: "Arcane",
+    href: "/operators/arcane",
+    heroImage: "/operators/arcane/full.webp",
+    avatar: "/operators/arcane/avatar.webp",
+    fullImage: "/operators/arcane/full.webp",
+    rarity: 6,
+    element: "nature",
+    class: "caster",
+    aliases: ["Arcane", "arcane", "결", "이지연", "Li Zhiyan"],
+  },
+  {
     slug: "camu",
     name: "카뮤",
     enName: "Camu",
