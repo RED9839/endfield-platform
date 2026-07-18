@@ -461,8 +461,9 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
               const open = detailId === sk.id;
               const reason = current ? skillReason(s, current, sk) : null;
               const off = !!reason;
+              const ready = !off && (sk.kind === "battle" || sk.kind === "link"); // 배틀·연계 조건 열림 → 테두리 발광
               return (
-              <button key={sk.id} type="button" onClick={() => { if (!off) chooseSkill(sk); }} className={`hud-tile dd-cut group relative flex w-[272px] items-start gap-2 px-2.5 py-2 pr-8 text-left ${off ? "cursor-not-allowed opacity-55 hover:!border-ef-line/40" : open ? "!border-ef-accent" : ""}`}>
+              <button key={sk.id} type="button" onClick={() => { if (!off) chooseSkill(sk); }} className={`hud-tile dd-cut group relative flex w-[272px] items-start gap-2 px-2.5 py-2 pr-8 text-left ${off ? "cursor-not-allowed opacity-55 hover:!border-ef-line/40" : open ? "!border-ef-accent" : ready ? "dd-skill-ready" : ""}`}>
                 <img src={skillIcon(current!.id, sk.kind)} alt="" loading="lazy" className={`mt-0.5 h-9 w-9 shrink-0 border border-ef-line/60 bg-black/40 object-contain p-0.5 ${off ? "opacity-40 grayscale" : ""}`} onError={(ev) => { (ev.currentTarget as HTMLImageElement).style.visibility = "hidden"; }} />
                 <span className="min-w-0 flex-1">
                   <span className="flex items-center gap-1.5"><span className="border px-1 py-px font-mono text-[13px] font-bold uppercase" style={{ borderColor: `${PRIMARY}66`, color: off ? "#7a6a4a" : PRIMARY }}>{kindLabel[sk.kind]}</span><span className={`truncate font-mono text-sm font-bold ${off ? "text-ef-muted" : "text-white"}`}>{sk.name}</span></span>
