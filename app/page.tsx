@@ -166,9 +166,9 @@ export default function HomePage() {
     weaponSummaries.find((weapon) => weapon.name === "42식 · 척결") ??
     weaponSummaries[0];
   const featuredGear =
-    gearSummaries.find((gear) => gear.setName === "고검의 잔향") ??
+    gearSummaries.find((gear) => gear.setName === "식양의 숨결") ??
     gearSummaries[0];
-  const featuredGearSet = "고검의 잔향";
+  const featuredGearSet = "식양의 숨결";
 
   return (
     <SessionProvider>
@@ -315,7 +315,7 @@ export default function HomePage() {
             <DataCard
               eyebrow="GEAR DATABASE"
               title={featuredGearSet}
-              description="고검의 잔향 세트 장비와 옵션 조합을 한 번에 확인하세요."
+              description="식양의 숨결 세트 장비와 옵션 조합을 한 번에 확인하세요."
               image={featuredGear?.image ?? "/icons/placeholder.webp"}
               href={`/gear?set=${encodeURIComponent(featuredGearSet)}`}
             />
