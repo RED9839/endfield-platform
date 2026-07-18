@@ -9,7 +9,7 @@ import { OPERATORS, avatarUrl } from "../roster";
 import type { PartyMember } from "../run";
 
 const CUT = { clipPath: "polygon(0 0, calc(100% - 7px) 0, 100% 7px, 100% 100%, 7px 100%, 0 calc(100% - 7px))" };
-const DMG_KO: Record<string, string> = { ult: "궁극 피해", battle: "배틀 피해", link: "연계 피해", attack: "일반 피해", all: "물리 피해", elem: "원소 피해", atkPct: "공격력", hpPct: "생명력", critRate: "치명 확률", critDmg: "치명 피해", energy: "궁충 효율" };
+const DMG_KO: Record<string, string> = { ult: "궁극 피해", battle: "배틀 피해", link: "연계 피해", attack: "일반 피해", all: "물리 피해", elem: "원소 피해", atkPct: "공격력", hpPct: "생명력", critRate: "치명 확률", critDmg: "치명 피해", energy: "궁충 효율", ultEff: "궁충 효율", artsStr: "아츠 강도", vsBroken: "불균형 피해" };
 const dmgText = (p: GearPiece) => { if (!p.dmg) return ""; const pct = ["hpPct"].includes(p.dmg.kind) || p.dmg.base < 1; return `${DMG_KO[p.dmg.kind] ?? p.dmg.kind} +${pct ? Math.round(p.dmg.base * 100) + "%" : Math.round(p.dmg.base)}`; };
 const SETS = ["개척", "열 작업용", "M. I. 경찰용", "본 크러셔", "식양의 흐름", "고검의 잔향", "검술사", "생체 보조", "식양의 숨결", "조류의 물결", "청파", "응룡 50식", "펄스식", "재앙 방호"];
 
@@ -19,7 +19,7 @@ function ForgePips({ lv }: { lv: number }) {
 }
 // 재료 비용(감당 가능 여부 색상)
 function Cost({ parts, permits, ok }: { parts: number; permits: number; ok: boolean }) {
-  return <span className={`font-mono text-[12px] tabular-nums ${ok ? "text-ef-muted" : "text-red-400/90"}`}>{parts}<span className="opacity-55">부품</span> {permits}<span className="opacity-55">권</span></span>;
+  return <span className={`font-mono text-[12px] tabular-nums ${ok ? "text-ef-muted" : "text-red-400/90"}`} title="제작 비용 — 부품 · 관리권">{parts}<span className="opacity-55">부품</span> {permits}<span className="opacity-55">관리권</span></span>;
 }
 
 export default function CraftPanel({ craft, party = [], onCraft, onForge, onSwap, onClose }: { craft: CraftState; party?: PartyMember[]; onCraft: (id: string) => boolean; onForge: (id: string) => boolean; onSwap?: (opId: string, slot: GearSlot, pieceId: string) => void; onClose: () => void }) {
@@ -36,7 +36,7 @@ export default function CraftPanel({ craft, party = [], onCraft, onForge, onSwap
     const img = pieceImage(p.name); const canC = affordCraft(p); const canF = affordForge(lv);
     return (
       <div className={`hud-tile dd-cut flex items-center gap-2 p-1.5 ${owned ? "!border-ef-accent/45" : ""}`}>
-        {onSwapClick && <button type="button" onClick={onSwapClick} title="장비 교체" className={`dd-cut flex h-7 w-7 shrink-0 items-center justify-center border font-mono text-[15px] font-bold transition ${swapOpen ? "border-ef-accent bg-ef-accent/15 text-ef-accent" : "border-ef-line text-ef-muted hover:border-ef-accent/60 hover:text-ef-accent"}`}>⇄</button>}
+        {onSwapClick && <button type="button" onClick={onSwapClick} title="장착한 장비를 다른 피스로 교체" className={`dd-cut flex h-7 w-7 shrink-0 items-center justify-center border font-mono text-[15px] font-bold transition ${swapOpen ? "border-ef-accent bg-ef-accent/15 text-ef-accent" : "border-ef-line text-ef-muted hover:border-ef-accent/60 hover:text-ef-accent"}`}>⇄</button>}
         <span className="relative flex h-12 w-12 shrink-0 items-center justify-center border border-ef-line/60 bg-black/50" style={owned ? { boxShadow: "inset 0 0 0 1px #ff9a2f44" } : undefined}>
           {img ? <img src={img} alt="" loading="lazy" className="h-full w-full object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = "hidden"; }} /> : <span className="font-mono text-[12px] text-ef-muted">—</span>}
           {owned && <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 rounded-sm bg-black/90 px-1 py-px"><ForgePips lv={lv} /></span>}
@@ -75,6 +75,7 @@ export default function CraftPanel({ craft, party = [], onCraft, onForge, onSwap
         <div>
           <p className="font-mono text-[13px] font-bold uppercase tracking-[0.32em] text-ef-accent/70">Industry · 장비 제조</p>
           <h2 className="font-mono text-xl font-black uppercase tracking-[0.12em] text-white">공업소</h2>
+          <p className="mt-0.5 font-mono text-[13px] text-ef-muted">장비를 제작·단조하면 능력치·피해가 올라 전투가 수월해집니다 (부품·관리권 소모)</p>
         </div>
         <div className="ml-auto flex items-center gap-2">
           <span className="hud-tile flex items-center gap-1.5 px-2.5 py-1.5 font-mono text-sm" style={CUT} title="장비 부품 — 제작·단조 재료"><Package className="h-4 w-4 text-ef-accent-soft" /><b className="text-white">{craft.mats.parts}</b><span className="text-[13px] text-ef-muted">부품</span></span>
