@@ -2,7 +2,7 @@
 
 import { useEffect, useReducer, useRef, useState } from "react";
 
-import { act, canAct, isOver, startRound, perTurn, nextActor, turnOrder, usable, BASIC, GAUGE_REGEN, GAUGE_COST, type DDClass, type DDSkill, type DDState, type DDUnit, type Element } from "../combat";
+import { act, canAct, isOver, startRound, perTurn, nextActor, turnOrder, usable, BASIC, GAUGE_REGEN, GAUGE_COST, findLinkChain, type DDClass, type DDSkill, type DDState, type DDUnit, type Element } from "../combat";
 import { OPERATORS, SKILLS, OP_BASIC, enemyDefFor, avatarUrl, fullUrl, skillIcon, enemyImage, enemyArchetype } from "../roster";
 import { ENCOUNTERS, allyChoose, createBattle, enemyAct, regionEncounter } from "../sim";
 import { activeSets, setEffectText, loadoutPieces } from "../gear";
@@ -174,6 +174,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
     const base = ENCOUNTERS.find((e) => e.key === encounterKey) ?? ENCOUNTERS[0];
     const enc = faction ? { ...base, make: () => regionEncounter(faction, nodeKind, depth, maxDepth) } : base; // 세력 리전 편성(깊이별 티어)
     stateRef.current = createBattle(party, enc, owned, nodeKind === "boss"); // 지속 HP + 장비 세트 효과 + 제작 단조 반영
+    stateRef.current.manualLink = true; // 기본 수동 — 연계는 플레이어가 콤보 아이콘으로 발동(자동 모드 시 false)
   }
   const cycleActsRef = useRef(0); // ATB: 사이클(모두 1회) 내 행동 수
   const cycleSizeRef = useRef(1); // 사이클 크기(생존 유닛 수)
@@ -189,6 +190,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
   const [fx, setFx] = useState<Fx>(NO_FX);
   const [roundBanner, setRoundBanner] = useState<{ n: number; tick: number } | null>(null);
   const [aiming, setAiming] = useState<DDSkill | null>(null); // 대상 선택 중인 단일 스킬
+  const [linkCombo, setLinkCombo] = useState<{ unitId: string; skill: DDSkill } | null>(null); // 연계 콤보 프롬프트(스킬 발동 → 조건 열린 연계 아이콘)
   const [inspectId, setInspectId] = useState<string | null>(null); // 스탯 조회 유닛
   const [inspectTab, setInspectTab] = useState<"skill" | "gear" | "talent">("skill"); // 오퍼 상세 하단 탭
   const [detailId, setDetailId] = useState<string | null>(null); // 스킬 상세 펼침
@@ -247,9 +249,10 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
       afterAction();
       timerRef.current = setTimeout(step, 480 / speedRef.current); return;
     }
-    // 예약된 연계(ATB 우선으로 끼어든 오퍼) — 자기 차례에 자동 발동(수동/자동 무관)
+    // 예약된 연계(ATB 우선으로 끼어든 오퍼) — 자기 차례에 자동 발동(수동/자동 무관). ATB 복원으로 정규 턴 유지(원래 턴 + 연계 턴)
     if (u.side === "ally" && u.pendingLink) {
       const sk = u.pendingLink; u.pendingLink = undefined;
+      if (u.pendingLinkAtb != null) { u.atb = u.pendingLinkAtb; u.pendingLinkAtb = undefined; }
       doAction(u, () => { if (usable(s, u, sk)) act(s, u, sk); else s.log.push(`${u.name} 연계 조건 해제`); }, sk.name);
       afterAction();
       timerRef.current = setTimeout(step, delay()); return;
@@ -293,9 +296,25 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
     s.forcedTargetId = targetId; // 플레이어 지정 대상(단일 스킬)
     doAction(actor, () => act(s, actor, sk), sk.name);
     s.forcedTargetId = undefined;
-    setCurrent(null); setAiming(null); afterAction();
+    setCurrent(null); setAiming(null);
+    // 연계 콤보 — 이 행동으로 조건이 열린 아군 연계가 있으면 아이콘을 띄우고 플레이어 발동 대기(step 보류)
+    const nx = findLinkChain(s, actor);
+    if (nx) { setLinkCombo({ unitId: nx.unit.id, skill: nx.skill }); bump(); return; }
+    afterAction();
     timerRef.current = setTimeout(step, delay());
   }
+  // 연계 콤보 발동 — 아이콘 클릭 시. 발동 후 또 조건이 열리면 체인으로 다음 콤보 아이콘.
+  function fireLink() {
+    const s = stateRef.current!; const lc = linkCombo; if (!lc) return;
+    setLinkCombo(null);
+    const u = s.units.find((x) => x.id === lc.unitId);
+    if (u && u.hp > 0 && usable(s, u, lc.skill)) doAction(u, () => act(s, u, lc.skill), lc.skill.name);
+    const nx = u ? findLinkChain(s, u) : null;
+    if (nx) { setLinkCombo({ unitId: nx.unit.id, skill: nx.skill }); bump(); return; }
+    afterAction();
+    timerRef.current = setTimeout(step, delay());
+  }
+  function skipLink() { setLinkCombo(null); afterAction(); timerRef.current = setTimeout(step, delay()); }
   function playerUseItem(id: string) {
     const s = stateRef.current!; if (!current || !items[id] || !canUseItem(s, id)) return;
     const before = new Map(s.units.map((u) => [u.id, u.hp]));
@@ -304,7 +323,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
     for (const u of s.units) { const d = u.hp - (before.get(u.id) ?? u.hp); if (d !== 0) floaters.push({ id: u.id, amt: d, crit: false, tone: "#8fd36a" }); }
     fxTick.current += 1; setFx({ tick: fxTick.current, activeId: current.id, actingSide: "ally", floaters, cast: { id: current.id, text: ITEMS[id]?.name ?? "아이템" } }); bump();
   }
-  function toggleAuto() { const n = !autoRef.current; autoRef.current = n; setAuto(n); if (n && current) { setCurrent(null); timerRef.current = setTimeout(step, 200); } }
+  function toggleAuto() { const n = !autoRef.current; autoRef.current = n; if (stateRef.current) stateRef.current.manualLink = !n; setAuto(n); if (n && linkCombo) { setLinkCombo(null); afterAction(); } if (n && (current || linkCombo)) { setCurrent(null); timerRef.current = setTimeout(step, 200); } } // 자동 시 연계도 자동 발동(manualLink=false)
   function cycleSpeed() { const n = speedRef.current >= 3 ? 1 : speedRef.current + 1; speedRef.current = n; setSpeed(n); }
   function setSpeedTo(n: number) { speedRef.current = n; setSpeed(n); }
 
@@ -521,6 +540,21 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
         </div>
       </div>
 
+      {/* 연계 콤보 — 스킬 발동으로 조건이 열린 연계를 아이콘으로 띄우고 플레이어가 발동/패스 */}
+      {!winner && linkCombo && (() => {
+        const op = OPERATORS.find((o) => o.id === linkCombo.unitId);
+        return (
+          <div className="hud-panel dd-cut mt-3 flex items-center gap-3 p-3" style={{ borderColor: "rgba(103,232,249,0.55)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.05), 0 0 30px -8px rgba(103,232,249,0.5)" }}>
+            <img src={skillIcon(linkCombo.unitId, "link")} alt="" className="dd-skill-ready h-14 w-14 shrink-0 border border-[#67e8f9]/60 bg-black/40 object-contain p-1" onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = "hidden"; }} />
+            <div className="min-w-0 flex-1">
+              <div className="font-mono text-[13px] font-bold uppercase tracking-wider text-[#67e8f9]">⚡ 연계 발동 가능</div>
+              <div className="truncate font-mono text-lg font-bold text-white">{op?.name ?? linkCombo.unitId} 「{linkCombo.skill.name}」</div>
+            </div>
+            <button type="button" onClick={fireLink} className="dd-cut shrink-0 px-5 py-2.5 font-mono text-sm font-black uppercase tracking-wider transition hover:brightness-110" style={{ background: "linear-gradient(180deg,#7de3f0,#3bb8d0)", color: "#04121a", boxShadow: "0 0 20px -4px rgba(103,232,249,0.6)" }}>연계 발동 →</button>
+            <button type="button" onClick={skipLink} className="shrink-0 border border-ef-line px-3 py-2.5 font-mono text-sm font-bold uppercase tracking-wider text-ef-muted transition hover:border-ef-accent/50 hover:text-white">패스</button>
+          </div>
+        );
+      })()}
       {/* 수동 조작 — 스킬 선택 */}
       {!winner && current && !auto && (
         <div className="hud-panel dd-cut mt-3 p-3" style={{ borderColor: "rgba(255,154,47,0.4)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.05), 0 -8px 30px -20px rgba(255,154,47,0.4)" }}>

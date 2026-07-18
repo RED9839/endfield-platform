@@ -13,28 +13,23 @@ const EL_TAG: Record<Element, string> = { heat: "열기 ", electric: "전기 ", 
 // 우리는 ATB 속도순 독립 턴이라 셋업이 느리면 페이오프가 창을 못 받아먹음 → 셋업 직후 턴을 앞당겨 쓰게 한다.
 // allyChoose를 그대로 재사용 → 보스 전 궁 보류·셋업 가치·상태 인지 등 기존 판단이 전부 유지된다.
 // 끼어든 오퍼는 atb -= 100(자기 턴 소진)이라 총 행동 수는 불변.
-setLinkChain((s, self) => {
+setLinkChain((s, _self) => {
+  // 조건(requires)·쿨(linkCd)이 충족된 연계를 **직접 탐색**한다(allyChoose 점수에 밀리지 않게).
+  // self 포함 — 자기 셋업으로 자기 연계가 열리는 경우(장방이 등)도 잡고, 연계→연계 체인이 확실히 이어진다.
+  // 이미 발동한 연계는 쿨(linkCd)이 usable을 막으므로 무한 루프가 없다.
   let best: { unit: DDUnit; skill: DDSkill } | null = null;
   for (const a of living(s, "ally")) {
-    // 장방이 「변화의 숨결」은 원작이 "**자신이** 감전 적 강평 → 자기 연계 턴 끌어당김"인 self-chain이다.
-    // allyChoose는 배틀(zfy-b +6)에 밀려 연계를 안 골라(창 열려도 0회) 여기서 직접 발동한다.
-    const selfChain = a === self && a.id === "zhuangfangyi";
-    if (a === self && !selfChain) continue;
-    const pick = selfChain
-      ? (SKILLS[a.id] ?? []).find((o) => o.kind === "link" && usable(s, a, o))
-      : allyChoose(s, a);
-    // 연계만 끼어든다. 궁도 원작은 즉발이지만, 연쇄 대상에 넣어도 궁 비중이 3%에서 안 움직였다
-    // — 병목이 "턴을 못 잡아서"가 아니라 "충전을 못 해서"라 기회를 줘도 쓸 게 없음. 부작용(순서 흔들림)만 남아 제외.
-    if (!pick || pick.kind !== "link") continue;
-    if (!best || pick.power > best.skill.power) best = { unit: a, skill: pick };
+    const link = (SKILLS[a.id] ?? []).find((o) => o.kind === "link" && usable(s, a, o));
+    if (!link) continue;
+    if (!best || link.power > best.skill.power) best = { unit: a, skill: link };
   }
   return best;
 });
 
 // 아군 AI: 사용 가능 스킬 중 점수 최대. usage gate가 셋업→페이오프를 자동 정렬.
 export function allyChoose(s: DDState, self: DDUnit): DDSkill | null {
-  // 예약된 연계(ATB 우선으로 끼어든 오퍼) — 자기 차례에 그 연계를 발동
-  if (self.pendingLink) { const sk = self.pendingLink; self.pendingLink = undefined; return usable(s, self, sk) ? sk : null; }
+  // 예약된 연계(ATB 우선으로 끼어든 오퍼) — 자기 차례에 그 연계를 발동. ATB는 원래대로 복원해 정규 턴을 뺏지 않는다(원래 턴 + 연계 턴).
+  if (self.pendingLink) { const sk = self.pendingLink; self.pendingLink = undefined; if (self.pendingLinkAtb != null) { self.atb = self.pendingLinkAtb; self.pendingLinkAtb = undefined; } return usable(s, self, sk) ? sk : null; }
   const skills = [...(SKILLS[self.id] ?? []), BASIC];
   const opts = skills.filter((sk) => usable(s, self, sk));
   if (!opts.length) return null;

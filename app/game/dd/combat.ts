@@ -66,6 +66,7 @@ export type DDUnit = {
   healRecv?: number; // 의지 → 받는 회복량 배율(1.0 기준). 회복 시 곱연산
   procCount: number; // 제너릭 재능 카운터(아크라이트 황무지의 방랑자 등)
   pendingLink?: DDSkill; // 예약된 연계 — 조건이 열리면 ATB 우선으로 끼어든 뒤 자기 차례에 이 연계를 발동
+  pendingLinkAtb?: number; // 연계 예약 직전 ATB — 연계 발동 후 복원해 정규 턴을 뺏지 않음(원래 턴 + 연계 턴)
   iceStack?: number; // 이본 「아이스 슈터」 변신 중 평타 누적(치확 +3%/스택, 최대 10)
   isMain?: boolean;  // 파티 메인딜러(편성 첫 오퍼 = 공략 시트 채용파티의 주인). 공유 게이지 우선권.
   zfyUsedFree?: boolean; // 장방이 천리의 경지: 첫 배틀 무소모를 이미 썼는가
@@ -490,7 +491,9 @@ export const setLinkChain = (f: LinkChain | null) => { linkChainProvider = f; };
 
 // anomalyConsumed: 아츠 이상/부착 소모·흡수 윈도우(남은 턴). 0/undefined = 닫힘.
 // chaining: 연계 연쇄 재진입 방지(연쇄는 1단까지).
-export type DDState = { units: DDUnit[]; round: number; log: string[]; lastLinkAlly?: string; skillGauge: number; maxGauge: number; boss?: boolean; anomalyConsumed?: number; allyHit?: boolean; moraleAccum?: number; forcedTargetId?: string; chaining?: boolean; linkEvents?: Record<string, number> };
+export type DDState = { units: DDUnit[]; round: number; log: string[]; lastLinkAlly?: string; skillGauge: number; maxGauge: number; boss?: boolean; anomalyConsumed?: number; allyHit?: boolean; moraleAccum?: number; forcedTargetId?: string; chaining?: boolean; linkEvents?: Record<string, number>; manualLink?: boolean };
+// 연계 탐색 — 이 행동으로 조건이 열린 아군의 연계(유닛·스킬). 수동 콤보 UI가 이걸 호출해 아이콘을 띄운다.
+export function findLinkChain(s: DDState, self: DDUnit): { unit: DDUnit; skill: DDSkill } | null { return linkChainProvider ? linkChainProvider(s, self) : null; }
 
 // 연계 "이벤트 윈도우": 원작 연계 상당수가 "메인이 ~한 **후**"(이벤트)인데 상태("~인 적")로 구현돼 있었다.
 // 상태는 아군이 먼저 소모하면 사라지지만 이벤트는 명중 순간 창을 열어 소모돼도 유지된다. key당 남은 턴.
@@ -1153,10 +1156,11 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
   // ── 연계 예약 ── 이 행동으로 조건이 열린 아군의 연계가 **쿨이 아니고 조건이 서면**, 그 오퍼가 ATB에서
   // 다음 차례로 끼어들어(추가 턴) 자기 차례에 연계를 발동한다. 즉시 발동이 아니라 턴 순서에 등장 → 자기 턴에 발동.
   // usable이 쿨(linkCd)·조건(requires)을 둘 다 검사. 실제 발동은 nextActor→pendingLink 처리(step/allyChoose).
-  if (self.side === "ally" && !s.chaining && linkChainProvider) {
+  if (self.side === "ally" && !s.manualLink && !s.chaining && linkChainProvider) {
     s.chaining = true;
     const nx = linkChainProvider(s, self);
     if (nx && !nx.unit.pendingLink) {
+      nx.unit.pendingLinkAtb = nx.unit.atb; // 원래 ATB 저장 → 연계 후 복원(정규 턴 유지 = 원래 턴 + 연계 턴)
       nx.unit.pendingLink = nx.skill;
       nx.unit.atb = Math.max(0, ...living(s).map((u) => u.atb)) + 10; // ATB 최우선으로 끌어올려 다음 차례에 등장
       log.push(`  ⇢ ${nx.unit.name} 연계 대기 — 다음 차례에 「${nx.skill.name}」`);
