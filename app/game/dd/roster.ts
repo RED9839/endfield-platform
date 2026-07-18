@@ -578,7 +578,7 @@ const TIER_STATS: Record<EnemyTier, { hp: number; attack: number; speed: number;
 const ENEMY_ATK_COMP = 2.8;
 // 아군 스킬9(×1.8) + 풀 장비 + GEAR_ATTR 0.3(단조 반영)으로 파티 딜 상승 → 적 체력 상향으로 도전성 부여.
 // 2.65→2.9: GEAR_ATTR를 0.2→0.3으로 올려 단조를 살린 만큼의 딜 폭주를 적 HP로 상쇄(풀장비 승률 92→88%).
-const ENEMY_HP_COMP = 2.9;
+const ENEMY_HP_COMP = 3.3;
 
 // 적 컨셉(역할) → 속도 아키타입 + 우선 타겟. 턴 순서·조준을 컨셉에 맞춰 전략성 부여.
 //  front=전열(낮은 pos, 탱/뱅가드) / wounded=저체력%(부상 딜러 마무리) / threat=최고위협(강화된 딜러 직격)
