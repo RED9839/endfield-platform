@@ -5,7 +5,7 @@ import { useState } from "react";
 import { OPERATORS, SKILLS, OP_BASIC, avatarUrl, fullUrl, skillIcon, makeAlly, type OpMeta } from "../roster";
 import { OP_TALENTS } from "../operator-talents";
 import { activeSets, setEffectText, recommendedSet, recommendedLoadout, loadoutPieces, pieceImage, gearSlotName, bestFreePiece, slotOptions, GEAR_SET_CANON, SET_NAMES, KIT_SLOTS, type Loadout, type GearSlot } from "../gear";
-import { DEFAULT_PROGRESS, SKILL_MAX, skillLabel, clampProgress, type OpProgress } from "../progress";
+import { DEFAULT_PROGRESS, type OpProgress } from "../progress";
 import { weaponOf, weaponName, weaponEffectText, weaponImage, weaponSeriesName, weaponSeriesText, OP_WEAPON_STATS, WEAPON_KO, WEAPON_ICON } from "../weapons";
 import { PRESET_PARTIES, ARCHETYPE_LABEL } from "../parties";
 import type { PartyPick } from "../run";
@@ -24,7 +24,6 @@ const KIND_ORDER: Record<DDSkill["kind"], number> = { attack: 0, battle: 1, link
 const recSet = (op: OpMeta): string => recommendedSet(op.id, op.cls, op.element);
 const DMG_KO: Record<string, string> = { ult: "궁극", battle: "배틀", link: "연계", attack: "일반", all: "전체", elem: "속성", atkPct: "공격력", hpPct: "생명력", critRate: "치명확", critDmg: "치명피", energy: "게이지", ultEff: "궁충효율", artsStr: "아츠강도", vsBroken: "불균형피해" };
 const pieceDmg = (p: { dmg?: { kind: string; base: number } }, mul = 1) => { if (!p.dmg) return ""; const v = p.dmg.base * mul; const pct = p.dmg.kind === "hpPct" || p.dmg.base < 1; return `${DMG_KO[p.dmg.kind] ?? p.dmg.kind} +${pct ? Math.round(v * 100) + "%" : Math.round(v)}`; };
-const AXES = [{ key: "skillRank" as const, name: "스킬 강화", max: SKILL_MAX, fmt: (v: number) => skillLabel(v), tone: "#67e8f9" }];
 
 export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]) => void }) {
   const [selected, setSelected] = useState<string[]>([]);
@@ -62,9 +61,6 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
       return [...cur, id];
     });
   };
-  const bumpProg = (id: string, key: keyof OpProgress, delta: number) =>
-    setProgress((P) => ({ ...P, [id]: clampProgress({ ...(P[id] ?? DEFAULT_PROGRESS), [key]: (P[id] ?? DEFAULT_PROGRESS)[key] + delta }) }));
-
   const start = () => onStart(selected.map((id) => ({ id, loadout: opLoadout(id), progress: opProg(id) })));
 
   const loadPreset = (p: (typeof PRESET_PARTIES)[number]) => {
@@ -238,25 +234,8 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
             </div>
           )}
 
-          {/* 스킬 강화 + 추천 세트 */}
-          <div className="mb-3 flex flex-wrap gap-2">
-            {AXES.map((ax) => {
-              const v = pr[ax.key];
-              return (
-                <div key={ax.key} className="hud-tile dd-cut min-w-[140px] flex-1 px-2.5 py-2">
-                  <div className="font-mono text-[13px] uppercase tracking-wider text-ef-muted">{ax.name}</div>
-                  <div className="mt-1 flex items-center justify-between gap-1">
-                    <button type="button" onClick={() => bumpProg(focusId, ax.key, -1)} disabled={v <= 0} className="flex h-6 w-6 items-center justify-center border border-ef-line font-mono text-base leading-none text-ef-muted transition enabled:hover:border-ef-accent/50 enabled:hover:text-white disabled:opacity-25">−</button>
-                    <span className="font-mono text-[18px] font-black" style={{ color: ax.tone }}>{ax.fmt(v)}</span>
-                    <button type="button" onClick={() => bumpProg(focusId, ax.key, 1)} disabled={v >= ax.max} className="flex h-6 w-6 items-center justify-center border border-ef-line font-mono text-base leading-none text-ef-muted transition enabled:hover:border-ef-accent/50 enabled:hover:text-white disabled:opacity-25">+</button>
-                  </div>
-                  <div className="mt-1.5 flex gap-0.5">{Array.from({ length: ax.max }, (_, k) => <span key={k} className="h-1 flex-1 rounded-full" style={{ background: k < v ? ax.tone : "#2a2a2a", boxShadow: k < v ? `0 0 5px ${ax.tone}88` : "none" }} />)}</div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* 목표 장비 — 맨몸 시작 → 공업소에서 이 빌드를 목표로 제작. [장비 변경] 모달에서 세트·부위 교체. */}
+          {/* 목표 장비 — 맨몸 시작 → 공업소에서 이 빌드를 목표로 제작. [장비 변경] 모달에서 세트·부위 교체.
+              (스킬 강화는 편성이 아니라 런 중 공업소에서 재화로 단조 — 성장축 통일) */}
           <div className="hud-tile dd-cut mb-3 px-2.5 py-2.5">
             <div className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-0.5">
               <span className="font-mono text-[13px] uppercase tracking-wider text-ef-muted">목표 장비</span>

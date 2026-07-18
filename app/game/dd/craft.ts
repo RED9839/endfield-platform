@@ -14,6 +14,9 @@ export const cloneCraft = (c: CraftState): CraftState => ({ mats: { ...c.mats },
 export const craftCost = (p: GearPiece): CraftMats => { const r = p.rarity || 4; return { parts: 4 + r * 2, permits: r >= 5 ? 2 : 1 }; };
 // 단조 비용(현재 레벨 → +1). +0→+1→+2→+3.
 export const forgeCost = (lv: number): CraftMats => [{ parts: 5, permits: 1 }, { parts: 9, permits: 1 }, { parts: 15, permits: 2 }][lv] ?? { parts: Infinity, permits: Infinity };
+// 스킬 단조 비용(현재 랭크 → +1). 9Lv(M0)→M1→M2→M3. 스킬은 오퍼 딜 전반을 올려 장비 단조보다 비싸다.
+export const skillForgeCost = (rank: number): CraftMats => [{ parts: 14, permits: 2 }, { parts: 22, permits: 3 }, { parts: 34, permits: 4 }][rank] ?? { parts: Infinity, permits: Infinity };
+export const canAfford = (m: CraftMats, c: CraftMats) => m.parts >= c.parts && m.permits >= c.permits;
 
 const afford = (m: CraftMats, c: CraftMats) => m.parts >= c.parts && m.permits >= c.permits;
 const spend = (m: CraftMats, c: CraftMats) => { m.parts -= c.parts; m.permits -= c.permits; };

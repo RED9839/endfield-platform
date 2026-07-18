@@ -45,7 +45,7 @@ export default function GamePage() {
         </>
       )}
 
-      {run.phase === "craft" && <CraftPanel craft={run.craft} party={run.party} onCraft={run.craftPiece} onForge={run.forgePiece} onSwap={run.swapGear} onClose={run.closeCraft} />}
+      {run.phase === "craft" && <CraftPanel craft={run.craft} party={run.party} onCraft={run.craftPiece} onForge={run.forgePiece} onSwap={run.swapGear} onForgeSkill={run.forgeSkill} onClose={run.closeCraft} />}
 
       {run.phase === "battle" && run.activeNode && (
         <BattleView

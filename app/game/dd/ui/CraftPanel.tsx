@@ -4,7 +4,8 @@ import { useState } from "react";
 import { ChevronLeft, Hammer, Check, Lock, Package, KeyRound } from "lucide-react";
 
 import { GEAR_PIECES_BY_SET_SLOT, GEAR_PIECE_BY_ID, GEAR_SLOTS, gearSlotName, pieceImage, slotOptions, type GearPiece, type GearSlot } from "../gear";
-import { craftCost, forgeCost, pieceLevel, isOwned, type CraftState } from "../craft";
+import { craftCost, forgeCost, skillForgeCost, canAfford, pieceLevel, isOwned, type CraftState } from "../craft";
+import { SKILL_MAX, skillLabel } from "../progress";
 import { OPERATORS, avatarUrl } from "../roster";
 import type { PartyMember } from "../run";
 
@@ -22,7 +23,7 @@ function Cost({ parts, permits, ok }: { parts: number; permits: number; ok: bool
   return <span className={`font-mono text-[12px] tabular-nums ${ok ? "text-ef-muted" : "text-red-400/90"}`} title="제작 비용 — 부품 · 관리권">{parts}<span className="opacity-55">부품</span> {permits}<span className="opacity-55">관리권</span></span>;
 }
 
-export default function CraftPanel({ craft, party = [], onCraft, onForge, onSwap, onClose }: { craft: CraftState; party?: PartyMember[]; onCraft: (id: string) => boolean; onForge: (id: string) => boolean; onSwap?: (opId: string, slot: GearSlot, pieceId: string) => void; onClose: () => void }) {
+export default function CraftPanel({ craft, party = [], onCraft, onForge, onSwap, onForgeSkill, onClose }: { craft: CraftState; party?: PartyMember[]; onCraft: (id: string) => boolean; onForge: (id: string) => boolean; onSwap?: (opId: string, slot: GearSlot, pieceId: string) => void; onForgeSkill?: (opId: string) => boolean; onClose: () => void }) {
   const [set, setSet] = useState(SETS[0]);
   const [tab, setTab] = useState<"party" | "catalog">(party.length > 0 ? "party" : "catalog");
   const [swap, setSwap] = useState<{ opId: string; slot: GearSlot } | null>(null); // 교체 피커 열림 슬롯
@@ -124,6 +125,24 @@ export default function CraftPanel({ craft, party = [], onCraft, onForge, onSwap
                     );
                   })}
                 </div>
+                {/* 스킬 단조 — 재화(부품·관리권)로 skillRank 업그레이드. 다음 전투부터 스킬 딜 반영 */}
+                {onForgeSkill && (() => {
+                  const rank = m.progress?.skillRank ?? 0;
+                  const maxed = rank >= SKILL_MAX;
+                  const cost = skillForgeCost(rank);
+                  const ok = canAfford(craft.mats, cost);
+                  return (
+                    <div className="mt-2 flex items-center gap-2 border-t border-ef-line/40 pt-2">
+                      <span className="font-mono text-[13px] text-ef-muted">스킬 강화</span>
+                      <span className="font-mono text-sm font-bold" style={{ color: rank > 0 ? "#67e8f9" : "#e6e6e8" }}>{skillLabel(rank)}</span>
+                      {maxed ? <span className="ml-auto font-mono text-[13px] text-ef-accent-soft">최대 강화</span> : <>
+                        <span className="font-mono text-[13px] text-ef-muted">→ {skillLabel(rank + 1)}</span>
+                        <button type="button" disabled={!ok} onClick={() => onForgeSkill(m.id)} title="스킬 랭크를 올려 딜을 강화 (다음 전투부터 반영)" className={`dd-cut ml-auto flex items-center gap-1.5 px-2.5 py-1 font-mono text-[13px] font-bold ${ok ? "border border-ef-accent/60 text-ef-accent hover:bg-ef-accent/10" : "border border-ef-line/40 text-ef-muted opacity-50 cursor-not-allowed"}`}>
+                          <Hammer className="h-3 w-3" />단조 <Cost parts={cost.parts} permits={cost.permits} ok={ok} /></button>
+                      </>}
+                    </div>
+                  );
+                })()}
               </div>
             );
           })}

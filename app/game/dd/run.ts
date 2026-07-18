@@ -5,8 +5,8 @@ import { useCallback, useMemo, useState } from "react";
 import { makeAlly } from "./roster";
 import { type Loadout } from "./gear";
 import { rewardItemPool } from "./items";
-import type { OpProgress } from "./progress";
-import { initialCraft, craftPiece as doCraft, forgePiece as doForge, cloneCraft, type CraftState } from "./craft";
+import { SKILL_MAX, DEFAULT_PROGRESS, type OpProgress } from "./progress";
+import { initialCraft, craftPiece as doCraft, forgePiece as doForge, cloneCraft, skillForgeCost, canAfford, type CraftState } from "./craft";
 import { FACTIONS, enemyDrop } from "./sim";
 
 const MAX_DEPTH = 6; // LAYOUT 최종 깊이(보스)
@@ -71,6 +71,16 @@ export function useDDRun() {
   const forgePiece = useCallback((pieceId: string) => { let ok = false; setCraft((c) => { const n = cloneCraft(c); ok = doForge(n, pieceId); return ok ? n : c; }); return ok; }, []);
   // 장비 슬롯 교체(런 중) — 파티원 로드아웃의 해당 슬롯을 다른 피스로. 다음 전투 createBattle에 반영.
   const swapGear = useCallback((opId: string, slot: keyof Loadout, pieceId: string) => setParty((ps) => ps.map((p) => p.id === opId ? { ...p, loadout: { ...p.loadout, [slot]: pieceId } } : p)), []);
+  // 스킬 단조(런 중) — 재화(부품·관리권) 소모 → 파티원 skillRank +1. 다음 전투 createBattle → makeAlly(progress)에 반영.
+  const forgeSkill = useCallback((opId: string) => {
+    const m = party.find((p) => p.id === opId);
+    const rank = m?.progress?.skillRank ?? 0;
+    if (!m || rank >= SKILL_MAX || !canAfford(craft.mats, skillForgeCost(rank))) return false;
+    const cost = skillForgeCost(rank);
+    setCraft((c) => ({ ...c, mats: { parts: c.mats.parts - cost.parts, permits: c.mats.permits - cost.permits } }));
+    setParty((ps) => ps.map((p) => p.id === opId ? { ...p, progress: { ...(p.progress ?? DEFAULT_PROGRESS), skillRank: rank + 1 } } : p));
+    return true;
+  }, [party, craft]);
 
   const nodeMap = useMemo(() => Object.fromEntries(nodes.map((n) => [n.id, n])), [nodes]);
   const activeNode = activeId ? nodeMap[activeId] : null;
@@ -128,5 +138,5 @@ export function useDDRun() {
   const openCraft = useCallback(() => setPhase("craft"), []);
   const closeCraft = useCallback(() => setPhase("map"), []);
 
-  return { phase, party, nodes, frontier, cleared, activeNode, depthReached, faction, maxDepth: MAX_DEPTH, items, useItem, addItem, craft, craftPiece, forgePiece, swapGear, openCraft, closeCraft, startRun, enterNode, finishBattle, rest, restart };
+  return { phase, party, nodes, frontier, cleared, activeNode, depthReached, faction, maxDepth: MAX_DEPTH, items, useItem, addItem, craft, craftPiece, forgePiece, swapGear, forgeSkill, openCraft, closeCraft, startRun, enterNode, finishBattle, rest, restart };
 }
