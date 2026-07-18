@@ -79,8 +79,8 @@ function Bar({ value, max, color, h = "h-2" }: { value: number; max: number; col
     </div>
   );
 }
-function Chip({ children, tone = "#a1a1aa", title }: { children: React.ReactNode; tone?: string; title?: string }) {
-  return <span title={title} className={`inline-flex items-center border px-1.5 py-0.5 font-mono text-[14px] font-bold leading-none tracking-wide ${title ? "cursor-help" : ""}`} style={{ borderColor: `${tone}99`, color: tone, background: `${tone}22` }}>{children}</span>;
+function Chip({ children, tone = "#a1a1aa", title, icon }: { children: React.ReactNode; tone?: string; title?: string; icon?: string }) {
+  return <span title={title} className={`inline-flex items-center gap-0.5 border px-1.5 py-0.5 font-mono text-[14px] font-bold leading-none tracking-wide ${title ? "cursor-help" : ""}`} style={{ borderColor: `${tone}99`, color: tone, background: `${tone}22` }}>{icon && <img src={icon} alt="" className="-ml-0.5 h-4 w-4 shrink-0 object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />}{children}</span>;
 }
 // 상태효과 설명 — 신규 플레이어가 칩을 봤을 때 무슨 효과인지 알 수 있게(툴팁)
 const CHIP_DESC: Record<string, string> = {
@@ -112,10 +112,10 @@ const CHIP_DESC: Record<string, string> = {
 // 오퍼 고유 스택형 버프(재능·변신 카운터) — 표시 안 되던 procCount/iceStack/stance 등을 칩으로
 const STANCE_KO = ["단운", "추형", "개천"];
 const OP_STACK: Record<string, (u: DDUnit) => StatusChip | null> = {
-  laevatain: (u) => u.procCount > 0 ? { k: "lae", label: `🔥 녹아내린 불꽃 ${u.procCount}/4`, tone: "#fb923c", dir: 1 } : null,
-  zhuangfangyi: (u) => u.procCount > 0 ? { k: "zfy", label: `⚡ 청뢰검 ${u.procCount}/9`, tone: "#FBCB38", dir: 1 } : null,
-  yvonne: (u) => (u.iceStack ?? 0) > 0 ? { k: "yv", label: `❄ 치확 ${u.iceStack}/10`, tone: "#67e8f9", dir: 1 } : null,
-  mifu: (u) => (u.stance ?? 0) > 0 ? { k: "mifu", label: `자세 ${STANCE_KO[u.stance] ?? u.stance}`, tone: "#a3e635", dir: 1 } : null,
+  laevatain: (u) => u.procCount > 0 ? { k: "lae", icon: talentIcon("laevatain"), label: `녹아내린 불꽃 ${u.procCount}/4`, tone: "#fb923c", dir: 1 } : null,
+  zhuangfangyi: (u) => u.procCount > 0 ? { k: "zfy", icon: talentIcon("zhuangfangyi"), label: `청뢰검 ${u.procCount}/9`, tone: "#FBCB38", dir: 1 } : null,
+  yvonne: (u) => (u.iceStack ?? 0) > 0 ? { k: "yv", icon: talentIcon("yvonne"), label: `아이스 슈터 ${u.iceStack}/10`, tone: "#67e8f9", dir: 1 } : null,
+  mifu: (u) => (u.stance ?? 0) > 0 ? { k: "mifu", icon: talentIcon("mifu"), label: `자세 ${STANCE_KO[u.stance] ?? u.stance}`, tone: "#a3e635", dir: 1 } : null,
 };
 const chipTitle = (c: StatusChip): string => [
   CHIP_DESC[c.k],
@@ -124,7 +124,8 @@ const chipTitle = (c: StatusChip): string => [
 ].filter(Boolean).join("  ·  ");
 // 상태 칩. dir: +1=버프(▲), -1=디버프(▼), 0=중립(부착 등). turns=잔여 지속 턴. src=출처(누가·무엇으로).
 type EffSrc = { by: string; via: string; kind: "skill" | "weapon" | "gear" | "item" };
-type StatusChip = { k: string; label: string; tone: string; dir: number; turns?: number; src?: EffSrc };
+type StatusChip = { k: string; label: string; tone: string; dir: number; turns?: number; src?: EffSrc; icon?: string };
+const talentIcon = (id: string) => OP_TALENTS[id]?.[0]?.icon; // 오퍼 스택 재능 아이콘(첫 재능)
 function unitChips(u: DDUnit): StatusChip[] {
   const T = u.timers || {};
   const S = (u.effectSrc || {}) as Record<string, EffSrc>;
@@ -264,6 +265,13 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
   }
 
   useEffect(() => { const s = stateRef.current!; cycleSizeRef.current = Math.max(1, s.units.filter((u) => u.hp > 0).length); timerRef.current = setTimeout(step, 420); return () => { if (timerRef.current) clearTimeout(timerRef.current); }; /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
+  // 승리/패배 확정 → 배너 연출 후 자동 종료(교전 승리는 전리품 화면으로, 보스/패배는 결과 화면으로)
+  useEffect(() => {
+    if (!winner) return;
+    const t = setTimeout(() => { const su = (stateRef.current?.units ?? []).filter((u) => u.side === "ally").map((a) => ({ id: a.id, hp: a.hp, ult: a.ultCharge })); onEnd(winner, su); }, 1500);
+    return () => clearTimeout(t);
+    /* eslint-disable-next-line react-hooks/exhaustive-deps */
+  }, [winner]);
 
   // 단일 대상 스킬? (자기/전체/열 대상 제외)
   const isSingleTarget = (sk: DDSkill) => sk.target !== "self" && sk.target !== "all" && sk.target !== "row";
@@ -308,7 +316,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
     <div className="dd-battle relative mx-auto max-w-[1640px] px-3 py-4 sm:px-5">
       {/* 행동 순서 — 속도 기반 턴 오더(이름·연결선·아군/적 색·현재 강조) */}
       {!winner && upcoming.length > 0 && (
-        <div className="absolute left-1 top-[60px] z-30 sm:left-2">
+        <div className="absolute left-1 top-[118px] z-30 sm:left-2">
           <div className="mb-1.5 flex items-center gap-1 font-mono text-[14px] font-bold uppercase tracking-[0.22em] text-ef-accent/80">⏱ 속도 순서</div>
           <div className="relative flex flex-col gap-1">
             {/* 흐름 연결선 */}
@@ -337,20 +345,23 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
           </div>
         </div>
       )}
-      {/* 상단 HUD — 스킬 게이지(좌) · 라운드 인디케이터(중앙) · 컨트롤(우) */}
-      <div className="hud-panel dd-cut mb-3 flex items-center gap-3 px-3 py-2 sm:gap-5 sm:px-4">
-        <div className="ml-8 min-w-[150px] flex-1 sm:ml-12">
-          <div className="mb-1 flex justify-between font-mono text-[13px] uppercase tracking-wider text-ef-muted"><span>스킬 게이지 · 공유</span><span className="font-bold text-ef-ink">{Math.round(s.skillGauge)}/{s.maxGauge}</span></div>
-          <Bar value={s.skillGauge} max={s.maxGauge} color={PRIMARY} h="h-2.5" />
+      {/* 상단 헤더 — 밖(메뉴) 화면과 통일: Darkest Protocol · 부제 / 큰 제목 + 라운드, 그 아래 게이지, 우측 컨트롤 */}
+      <div className="hud-panel dd-cut mb-3 px-4 py-2.5">
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5">
+          <div className="min-w-0">
+            <p className="font-mono text-[13px] font-bold uppercase tracking-[0.32em] text-ef-accent/70">Darkest Protocol · 던전 교전</p>
+            <h2 className="font-mono text-xl font-black uppercase leading-tight tracking-[0.1em]" style={{ color: nodeKind === "boss" ? "#f0776e" : "#f4e9d2" }}>{nodeTitle[nodeKind]}<span className="ml-2 text-ef-accent">R{s.round}</span></h2>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <button type="button" onClick={() => setShowLog((v) => !v)} className={`hud-btn dd-cut px-3 py-1.5 font-mono text-[15px] font-bold uppercase tracking-wider ${showLog ? "hud-btn-on" : "text-ef-muted"}`} title="데미지·전투 기록">기록 {showLog ? "▴" : "▾"}</button>
+            {!winner && <button type="button" onClick={cycleSpeed} className="hud-btn dd-cut px-3 py-1.5 font-mono text-[15px] font-bold uppercase tracking-wider text-ef-muted" title="재생 속도">{speed}배속</button>}
+            {!winner && <button type="button" onClick={toggleAuto} className={`hud-btn dd-cut px-3.5 py-1.5 font-mono text-[15px] font-bold uppercase tracking-wider ${auto ? "hud-btn-on" : "text-ef-muted"}`}>{auto ? "자동 ON" : "수동"}</button>}
+          </div>
         </div>
-        <div className="flex shrink-0 flex-col items-center px-1">
-          <span className="font-mono text-[12px] font-bold uppercase tracking-[0.32em]" style={{ color: nodeKind === "boss" ? "#f0776e" : "#ff9a2f" }}>{nodeTitle[nodeKind]}</span>
-          <span className="font-mono text-2xl font-black uppercase leading-none tracking-wide" style={{ color: nodeKind === "boss" ? "#f0776e" : "#f4e9d2", textShadow: `0 2px 12px ${nodeKind === "boss" ? "rgba(180,49,42,0.6)" : "rgba(0,0,0,0.7)"}` }}>R{s.round}</span>
-        </div>
-        <div className="flex min-w-[150px] flex-1 items-center justify-end gap-2">
-          <button type="button" onClick={() => setShowLog((v) => !v)} className={`hud-btn dd-cut px-3 py-1.5 font-mono text-[15px] font-bold uppercase tracking-wider ${showLog ? "hud-btn-on" : "text-ef-muted"}`} title="데미지·전투 기록">기록 {showLog ? "▴" : "▾"}</button>
-          {!winner && <button type="button" onClick={cycleSpeed} className="hud-btn dd-cut px-3 py-1.5 font-mono text-[15px] font-bold uppercase tracking-wider text-ef-muted" title="재생 속도">{speed}배속</button>}
-          {!winner && <button type="button" onClick={toggleAuto} className={`hud-btn dd-cut px-3.5 py-1.5 font-mono text-[15px] font-bold uppercase tracking-wider ${auto ? "hud-btn-on" : "text-ef-muted"}`}>{auto ? "자동 ON" : "수동"}</button>}
+        <div className="mt-2 flex items-center gap-2.5">
+          <span className="shrink-0 font-mono text-[13px] uppercase tracking-wider text-ef-muted">스킬 게이지 · 공유</span>
+          <div className="min-w-[120px] flex-1"><Bar value={s.skillGauge} max={s.maxGauge} color={PRIMARY} h="h-2.5" /></div>
+          <span className="shrink-0 font-mono text-[13px] font-bold text-ef-ink">{Math.round(s.skillGauge)}/{s.maxGauge}</span>
         </div>
       </div>
 
@@ -403,7 +414,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
       {winner && (
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3 dd-frame px-4 py-3" style={{ ...CUT_SM, borderColor: winner === "ally" ? "#ff9a2f66" : "#b3312a66" }}>
           <span className="text-2xl" style={{ fontFamily: "var(--dd-display)", letterSpacing: "0.16em", color: winner === "ally" ? "#e8c56a" : "#c23b32", textShadow: "0 2px 10px rgba(0,0,0,0.9)" }}>{winner === "ally" ? (nodeKind === "boss" ? "던전 클리어" : "교전 승리") : "부대 전멸"}</span>
-          <button type="button" onClick={() => onEnd(winner, allies.map((a) => ({ id: a.id, hp: a.hp, ult: a.ultCharge })))} className="dd-torch border border-ef-line px-4 py-2 font-mono text-sm font-bold uppercase tracking-wider transition hover:border-ef-accent/50" style={{ ...CUT_SM, background: PRIMARY, color: "#0a0a0a" }}>계속 →</button>
+          <span className="font-mono text-[14px] text-ef-muted">{winner === "ally" ? "전리품 정산 중…" : "잠시 후…"}</span>
         </div>
       )}
 
@@ -439,7 +450,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
                   {!dead && <div className="mt-1 flex flex-wrap justify-center gap-1">
                     {e.staggered && <Chip tone="#facc15">⚡ 불균형</Chip>}
                     {weak.map(([eln, v]) => <Chip key={eln} tone={elementColor[eln]}>{elementName[eln]}약점{Math.round(-v * 100)}</Chip>)}
-                    {unitChips(e).map((c) => <Chip key={c.k} tone={c.tone} title={chipTitle(c)}>{c.label}</Chip>)}
+                    {unitChips(e).map((c) => <Chip key={c.k} tone={c.tone} title={chipTitle(c)} icon={c.icon}>{c.label}</Chip>)}
                   </div>}
                 </div>
               </div>
@@ -493,7 +504,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
                   {/* 보호막 · 상태(세트 제외) */}
                   {(a.shield > 0 || unitChips(a).length > 0) && <div className="mt-1.5 flex flex-wrap gap-1">
                     {a.shield > 0 && <Chip tone="#38bdf8">🛡 {a.shield}</Chip>}
-                    {unitChips(a).map((c) => <Chip key={c.k} tone={c.tone} title={chipTitle(c)}>{c.label}</Chip>)}
+                    {unitChips(a).map((c) => <Chip key={c.k} tone={c.tone} title={chipTitle(c)} icon={c.icon}>{c.label}</Chip>)}
                   </div>}
                 </div>
               </div>
@@ -677,7 +688,9 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
                 return (
                   <Sec title="고유 스택">
                     <div className="flex items-start gap-2.5">
-                      <span className="text-2xl leading-none" style={{ filter: `drop-shadow(0 0 6px ${si.tone}88)` }}>{si.icon}</span>
+                      {talentIcon(u.id)
+                        ? <img src={talentIcon(u.id)} alt="" className="h-9 w-9 shrink-0 rounded border border-ef-line/50 object-contain" style={{ filter: `drop-shadow(0 0 6px ${si.tone}88)` }} onError={hide} />
+                        : <span className="text-2xl leading-none" style={{ filter: `drop-shadow(0 0 6px ${si.tone}88)` }}>{si.icon}</span>}
                       <div className="min-w-0 flex-1">
                         <div className="flex items-baseline justify-between gap-2">
                           <span className="font-mono text-[16px] font-bold" style={{ color: si.tone }}>{si.name}</span>

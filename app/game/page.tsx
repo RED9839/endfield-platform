@@ -65,6 +65,30 @@ export default function GamePage() {
         />
       )}
 
+      {/* 교전 승리 전리품 — 각 전투 후 획득 표시 → 계속 시 다음 구역 */}
+      {run.phase === "spoils" && run.lastLoot && (() => {
+        const L = run.lastLoot;
+        const item = ITEMS[L.item];
+        return (
+          <div className="mx-auto max-w-[520px] px-4 py-14 text-center sm:px-7">
+            <div className="hud-panel dd-cut p-8" style={{ borderColor: "#ff9a2f44", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04), 0 0 50px -20px rgba(255,154,47,0.5)" }}>
+              <div className="mb-1 font-mono text-[13px] font-bold uppercase tracking-[0.28em] text-ef-accent/70">{L.kind === "elite" ? "정예 격파" : "교전 승리"}</div>
+              <div className="mb-6 text-2xl font-bold" style={{ fontFamily: "var(--dd-display)", letterSpacing: "0.1em", color: "#ffbe6b", textShadow: "0 0 20px rgba(255,190,107,0.4)" }}>전리품 획득</div>
+              <div className="mb-6 flex flex-wrap justify-center gap-2">
+                {([["💎", "부품", `+${L.parts}`], ["🔑", "관리권", `+${L.permits}`], ["🎁", item?.name ?? "아이템", "×1"]] as [string, string, string][]).map(([ic, lb, v]) => (
+                  <div key={lb} className="min-w-[112px] border border-ef-line/50 bg-[#120c07] px-3 py-2.5">
+                    <div className="text-xl leading-none">{ic}</div>
+                    <div className="mt-1 font-mono text-[12px] uppercase tracking-wider text-ef-muted">{lb}</div>
+                    <div className="font-mono text-[16px] font-bold text-ef-ink">{v}</div>
+                  </div>
+                ))}
+              </div>
+              <button type="button" onClick={run.continueSpoils} className="dd-cut px-6 py-2.5 font-mono text-sm font-black uppercase tracking-[0.12em] transition hover:brightness-110" style={{ background: `linear-gradient(180deg,#ffb257,${PRIMARY})`, color: "#0a0a0a", boxShadow: "0 0 22px -4px rgba(255,154,47,0.6)" }}>계속 →</button>
+            </div>
+          </div>
+        );
+      })()}
+
       {run.phase === "rest" && (
         <div className="mx-auto max-w-[720px] px-4 py-10 sm:px-7">
           <div className="hud-panel dd-cut p-6">

@@ -14,7 +14,7 @@ const pickRand = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)
 
 export type NodeKind = "battle" | "elite" | "rest" | "boss";
 export type RunNode = { id: string; depth: number; lane: number; kind: NodeKind; next: string[] };
-export type RunPhase = "select" | "map" | "battle" | "rest" | "craft" | "victory" | "defeat";
+export type RunPhase = "select" | "map" | "battle" | "rest" | "craft" | "spoils" | "victory" | "defeat";
 export type PartyPick = { id: string; loadout?: Loadout; progress?: OpProgress; ult?: number };
 export type PartyMember = { id: string; hp: number; maxHp: number; loadout?: Loadout; progress?: OpProgress; ult?: number };
 export type BattleResult = { id: string; hp: number; ult?: number }; // ult: 궁 게이지 이월(HP처럼 런 내내 유지 — 보스 전 만충이 목표)
@@ -64,6 +64,7 @@ export function useDDRun() {
   const [craft, setCraft] = useState<CraftState>(initialCraft); // 제작: 재료(장비 부품·관리권) + 보유 피스
   const [faction, setFaction] = useState<string>(FACTIONS[0]); // 이번 런 세력 리전
   const [loot, setLoot] = useState<{ parts: number; permits: number; items: Record<string, number>; kills: number }>({ parts: 0, permits: 0, items: {}, kills: 0 }); // 이번 원정 누적 전리품(승리 화면 표시)
+  const [lastLoot, setLastLoot] = useState<{ parts: number; permits: number; item: string; kind: NodeKind } | null>(null); // 방금 교전 획득(전리품 화면 표시)
 
   const useItem = useCallback((id: string) => setItems((m) => { const n = (m[id] ?? 0) - 1; const c = { ...m }; if (n <= 0) delete c[id]; else c[id] = n; return c; }), []);
   const addItem = useCallback((id: string) => setItems((m) => ({ ...m, [id]: (m[id] ?? 0) + 1 })), []);
@@ -124,13 +125,17 @@ export function useDDRun() {
       setCraft((c) => ({ ...c, mats: { parts: c.mats.parts + drop.parts, permits: c.mats.permits + drop.permits } })); // 제작 재료
       addItem(dropItem); // 소모품
       setLoot((l) => ({ parts: l.parts + drop.parts, permits: l.permits + drop.permits, items: { ...l.items, [dropItem]: (l.items[dropItem] ?? 0) + 1 }, kills: l.kills + 1 })); // 누적 전리품
+      setLastLoot({ parts: drop.parts, permits: drop.permits, item: dropItem, kind: activeNode.kind }); // 이번 교전 획득
       if (activeNode.kind === "boss") { setPhase("victory"); setActiveId(null); }
-      else advanceFrom(activeNode);
+      else setPhase("spoils"); // 교전 승리 → 전리품 화면(계속 시 advanceFrom)
     } else {
       setPhase("defeat");
       setActiveId(null);
     }
   }, [activeNode, advanceFrom, addItem, faction]);
+
+  // 전리품 화면 "계속" → 다음 구역으로(교전 승리 후 advanceFrom 지연분)
+  const continueSpoils = useCallback(() => { if (activeNode) advanceFrom(activeNode); }, [activeNode, advanceFrom]);
 
   const rest = useCallback(() => {
     if (!activeNode) return;
@@ -142,5 +147,5 @@ export function useDDRun() {
   const openCraft = useCallback(() => setPhase("craft"), []);
   const closeCraft = useCallback(() => setPhase("map"), []);
 
-  return { phase, party, nodes, frontier, cleared, activeNode, depthReached, faction, maxDepth: MAX_DEPTH, items, useItem, addItem, craft, craftPiece, forgePiece, swapGear, forgeSkill, loot, openCraft, closeCraft, startRun, enterNode, finishBattle, rest, restart };
+  return { phase, party, nodes, frontier, cleared, activeNode, depthReached, faction, maxDepth: MAX_DEPTH, items, useItem, addItem, craft, craftPiece, forgePiece, swapGear, forgeSkill, loot, lastLoot, continueSpoils, openCraft, closeCraft, startRun, enterNode, finishBattle, rest, restart };
 }
