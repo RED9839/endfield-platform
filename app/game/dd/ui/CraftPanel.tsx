@@ -77,8 +77,8 @@ export default function CraftPanel({ craft, party = [], onCraft, onForge, onSwap
           <h2 className="font-mono text-xl font-black uppercase tracking-[0.12em] text-white">공업소</h2>
         </div>
         <div className="ml-auto flex items-center gap-2">
-          <span className="hud-tile flex items-center gap-1.5 px-2.5 py-1.5 font-mono text-sm" style={CUT} title="장비 부품"><Package className="h-4 w-4 text-ef-accent-soft" /><b className="text-white">{craft.mats.parts}</b><span className="text-[13px] text-ef-muted">부품</span></span>
-          <span className="hud-tile flex items-center gap-1.5 px-2.5 py-1.5 font-mono text-sm" style={CUT} title="관리권"><KeyRound className="h-4 w-4 text-yellow-300" /><b className="text-white">{craft.mats.permits}</b><span className="text-[13px] text-ef-muted">관리권</span></span>
+          <span className="hud-tile flex items-center gap-1.5 px-2.5 py-1.5 font-mono text-sm" style={CUT} title="장비 부품 — 제작·단조 재료"><Package className="h-4 w-4 text-ef-accent-soft" /><b className="text-white">{craft.mats.parts}</b><span className="text-[13px] text-ef-muted">부품</span></span>
+          <span className="hud-tile flex items-center gap-1.5 px-2.5 py-1.5 font-mono text-sm" style={CUT} title="관리권 — 제작·단조 재료"><KeyRound className="h-4 w-4 text-yellow-300" /><b className="text-white">{craft.mats.permits}</b><span className="text-[13px] text-ef-muted">관리권</span></span>
         </div>
       </div>
 

@@ -61,9 +61,37 @@ function Bar({ value, max, color, h = "h-2" }: { value: number; max: number; col
     </div>
   );
 }
-function Chip({ children, tone = "#a1a1aa" }: { children: React.ReactNode; tone?: string }) {
-  return <span className="inline-flex items-center border px-1.5 py-0.5 font-mono text-[14px] font-bold leading-none tracking-wide" style={{ borderColor: `${tone}99`, color: tone, background: `${tone}22` }}>{children}</span>;
+function Chip({ children, tone = "#a1a1aa", title }: { children: React.ReactNode; tone?: string; title?: string }) {
+  return <span title={title} className={`inline-flex items-center border px-1.5 py-0.5 font-mono text-[14px] font-bold leading-none tracking-wide ${title ? "cursor-help" : ""}`} style={{ borderColor: `${tone}99`, color: tone, background: `${tone}22` }}>{children}</span>;
 }
+// 상태효과 설명 — 신규 플레이어가 칩을 봤을 때 무슨 효과인지 알 수 있게(툴팁)
+const CHIP_DESC: Record<string, string> = {
+  pb: "방어 불능 — 물리 취약. 강타로 갑옷 파괴 가능",
+  fz: "동결 — 행동 불가(냉기 아츠 이상)",
+  heat: "열기 부착 — 다른 속성 부착과 겹치면 아츠 이상 반응(스택 소모)",
+  electric: "전기 부착 — 다른 속성 부착과 겹치면 아츠 이상 반응(스택 소모)",
+  cryo: "냉기 부착 — 다른 속성 부착과 겹치면 아츠 이상 반응(스택 소모)",
+  nature: "자연 부착 — 다른 속성 부착과 겹치면 아츠 이상 반응(스택 소모)",
+  shock: "감전 — 아츠 취약 증가(전기 아츠 이상)",
+  combustion: "연소 — 매 턴 지속 피해(열기 아츠 이상)",
+  corrosion: "부식 — 전 속성 저항 감소(자연 아츠 이상)",
+  crystal: "결정 — 파괴 시 추가타",
+  "armor-break": "갑옷 파괴 — 방어력 감소",
+  stun: "기절 — 행동 불가",
+  wing: "핏빛 날개 — 연계 대상 표식",
+  dot: "지속 피해 — 매 턴 HP 감소",
+  atk: "공격력 증가 버프",
+  wk: "허약 — 주는 피해 감소",
+  amp: "증폭 — 주는 피해 증가",
+  vuln: "취약 — 받는 피해 증가",
+  prot: "비호 — 받는 피해 감소",
+  mh: "연타 — 추가 타격",
+};
+const chipTitle = (c: StatusChip): string => [
+  CHIP_DESC[c.k],
+  c.src && `${SRC_KIND_KO[c.src.kind] ?? ""} ${c.src.by}「${c.src.via}」`,
+  c.turns ? `${c.turns}턴 남음` : null,
+].filter(Boolean).join("  ·  ");
 // 상태 칩. dir: +1=버프(▲), -1=디버프(▼), 0=중립(부착 등). turns=잔여 지속 턴. src=출처(누가·무엇으로).
 type EffSrc = { by: string; via: string; kind: "skill" | "weapon" | "gear" | "item" };
 type StatusChip = { k: string; label: string; tone: string; dir: number; turns?: number; src?: EffSrc };
@@ -245,7 +273,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
       {/* 행동 순서 — 속도 기반 턴 오더(이름·연결선·아군/적 색·현재 강조) */}
       {!winner && upcoming.length > 0 && (
         <div className="absolute left-1 top-[60px] z-30 sm:left-2">
-          <div className="mb-1.5 flex items-center gap-1 font-mono text-[12px] font-bold uppercase tracking-[0.22em] text-ef-accent/80">⏱ 속도 순서</div>
+          <div className="mb-1.5 flex items-center gap-1 font-mono text-[14px] font-bold uppercase tracking-[0.22em] text-ef-accent/80">⏱ 속도 순서</div>
           <div className="relative flex flex-col gap-1">
             {/* 흐름 연결선 */}
             <span className="pointer-events-none absolute bottom-4 left-[17px] top-4 w-0.5 bg-gradient-to-b from-ef-accent/60 via-ef-line to-transparent" />
@@ -258,15 +286,15 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
               const r = Math.max(0, Math.min(1, u.hp / u.maxHp));
               return (
                 <div key={`${u.id}-${i}`} className="relative flex items-center gap-2" style={{ opacity: now ? 1 : Math.max(0.5, 1 - i * 0.11) }}>
-                  <span className={`relative z-10 shrink-0 overflow-hidden border-2 transition-all ${now ? "h-11 w-11" : "h-8 w-8"}`} style={{ borderColor: now ? "#ffbe6b" : tone, background: ally ? `center/cover url(${avatarUrl(u.id)})` : `radial-gradient(circle at 50% 35%, ${tone}66, #2a1210 75%)`, boxShadow: now ? `0 0 12px ${tone}, 0 0 0 2px #ffbe6b` : `0 0 0 1px ${tone}55` }}>
+                  <span className={`relative z-10 shrink-0 overflow-hidden border-2 transition-all ${now ? "h-12 w-12" : "h-10 w-10"}`} style={{ borderColor: now ? "#ffbe6b" : tone, background: ally ? `center/cover url(${avatarUrl(u.id)})` : `radial-gradient(circle at 50% 35%, ${tone}66, #2a1210 75%)`, boxShadow: now ? `0 0 12px ${tone}, 0 0 0 2px #ffbe6b` : `0 0 0 1px ${tone}55` }}>
                     {!ally && <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-red-200/90">✦</span>}
                     <span className="absolute inset-x-0 bottom-0 h-1" style={{ background: `linear-gradient(90deg, ${r < 0.35 ? "#e0655c" : ally ? "#8fb84a" : "#e0655c"} ${r * 100}%, rgba(0,0,0,0.85) ${r * 100}%)` }} />
                   </span>
-                  <span className={`dd-cut flex items-center gap-1 border px-1.5 py-0.5 font-mono leading-none ${now ? "text-[14px] font-black" : "text-[13px] font-bold"}`} style={{ borderColor: now ? "#ffbe6b99" : `${tone}44`, background: now ? "linear-gradient(90deg, rgba(255,190,107,0.2), rgba(13,9,6,0.6))" : "rgba(13,9,6,0.8)", color: now ? "#ffdf9e" : ally ? "#e6e6e8" : "#f0a8a0" }}>
+                  <span className={`dd-cut flex items-center gap-1 border px-2 py-1 font-mono leading-none ${now ? "text-[16px] font-black" : "text-sm font-bold"}`} style={{ borderColor: now ? "#ffbe6b99" : `${tone}44`, background: now ? "linear-gradient(90deg, rgba(255,190,107,0.2), rgba(13,9,6,0.6))" : "rgba(13,9,6,0.8)", color: now ? "#ffdf9e" : ally ? "#e6e6e8" : "#f0a8a0" }}>
                     {now ? <span className="text-ef-accent">▶ 지금</span> : nm}
-                    {!now && <span className="text-[11px] text-ef-muted">{ally ? "" : "·적"}</span>}
+                    {!now && <span className="text-[12px] text-ef-muted">{ally ? "" : "·적"}</span>}
                   </span>
-                  {now && <span className="font-mono text-[13px] font-bold text-white/90">{nm}</span>}
+                  {now && <span className="font-mono text-sm font-bold text-white/90">{nm}</span>}
                 </div>
               );
             })}
@@ -375,7 +403,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
                   {!dead && <div className="mt-1 flex flex-wrap justify-center gap-1">
                     {e.staggered && <Chip tone="#facc15">⚡ 불균형</Chip>}
                     {weak.map(([eln, v]) => <Chip key={eln} tone={elementColor[eln]}>{elementName[eln]}약점{Math.round(-v * 100)}</Chip>)}
-                    {unitChips(e).map((c) => <Chip key={c.k} tone={c.tone}>{c.label}</Chip>)}
+                    {unitChips(e).map((c) => <Chip key={c.k} tone={c.tone} title={chipTitle(c)}>{c.label}</Chip>)}
                   </div>}
                 </div>
               </div>
@@ -429,7 +457,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
                   {/* 보호막 · 상태(세트 제외) */}
                   {(a.shield > 0 || unitChips(a).length > 0) && <div className="mt-1.5 flex flex-wrap gap-1">
                     {a.shield > 0 && <Chip tone="#38bdf8">🛡 {a.shield}</Chip>}
-                    {unitChips(a).map((c) => <Chip key={c.k} tone={c.tone}>{c.label}</Chip>)}
+                    {unitChips(a).map((c) => <Chip key={c.k} tone={c.tone} title={chipTitle(c)}>{c.label}</Chip>)}
                   </div>}
                 </div>
               </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { Swords, Skull, Tent, Crown } from "lucide-react";
+import { Swords, Skull, Tent, Crown, ChevronRight } from "lucide-react";
 
 import { OPERATORS } from "../roster";
 import { ITEMS, itemColor, itemImage } from "../items";
@@ -52,7 +52,7 @@ export default function RunMap({ nodes, frontier, cleared, party, items, onEnter
       <div className="hud-panel dd-cut mb-4 px-4 py-3">
         <p className="font-mono text-[13px] font-bold uppercase tracking-[0.32em] text-ef-accent/70">Darkest Protocol · 던전 진행</p>
         <h2 className="font-mono text-2xl font-black uppercase tracking-[0.12em] text-white">경로 선택</h2>
-        <p className="mt-1 text-[15px] text-ef-muted">진행 가능한 방(강조)을 선택. 정예·보스는 위험하나 보상이 큽니다. HP는 야영에서만 회복.</p>
+        <p className="mt-1 text-[15px] text-ef-muted">각 구역에서 방 하나(강조 표시)를 선택하면 다음 구역이 열립니다. 정예·보스는 위험하나 보상이 큽니다. HP는 야영에서만 회복.</p>
       </div>
 
       <div className="mb-3"><PartyBar party={party} /></div>
@@ -70,9 +70,11 @@ export default function RunMap({ nodes, frontier, cleared, party, items, onEnter
       </div>
 
       <div className="hud-panel dd-cut overflow-x-auto p-4">
-        <div className="flex min-w-max items-stretch gap-6">
+        <div className="flex min-w-max items-stretch gap-3">
           {depths.map((row, d) => (
-            <div key={d} className="flex flex-col justify-center gap-3">
+            <div key={d} className="flex items-stretch gap-3">
+              {d > 0 && <div className="flex items-center" aria-hidden><ChevronRight className="h-7 w-7 text-ef-accent/35" /></div>}
+              <div className="flex flex-col justify-center gap-3">
               <div className="text-center font-mono text-[14px] uppercase tracking-wider text-ef-muted">{d === maxDepth ? "심층" : `구역 ${d + 1}`}</div>
               {row.map((n) => {
                 const meta = NODE_META[n.kind];
@@ -98,6 +100,7 @@ export default function RunMap({ nodes, frontier, cleared, party, items, onEnter
                   </button>
                 );
               })}
+              </div>
             </div>
           ))}
         </div>
