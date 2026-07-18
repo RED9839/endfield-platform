@@ -21,11 +21,11 @@ export const GEAR_SLOTS: GearSlot[] = ["armor", "gloves", "kit"];
 const SLOT_KO: Record<GearSlot, string> = { armor: "방어구", gloves: "장갑", kit: "부품" };
 export const gearSlotName = (s: GearSlot) => SLOT_KO[s];
 
-// 세트 효과 타입(카드게임 SetEffect 포팅 — DD 스킬 kind/원소에 정합)
+// 세트 효과 타입(카드게임 SetEffect 포팅 — DD 스킬 kind/아츠에 정합)
 export type SetEffect =
   | { type: "dmgVs"; cond: "broken" | "vulnerable" | "arts"; pct: number } // 불균형/취약/아츠부착 적 추가 피해
   | { type: "kindDmg"; kind: "attack" | "battle" | "link" | "ult" | "all"; pct: number } // 스킬 종류별 피해
-  | { type: "elementDmg"; element: Element | "all"; pct: number } // 원소 피해
+  | { type: "elementDmg"; element: Element | "all"; pct: number } // 아츠 피해
   | { type: "critRate"; v: number }
   | { type: "critDmg"; v: number }
   | { type: "startShield"; v: number } // 전투 시작 보호막(장착 오퍼, maxHp 비례 %)
@@ -352,7 +352,7 @@ export function applyGear(u: DDUnit, loadout: Loadout | undefined, gearLevel = 0
   return startEnergy;
 }
 
-// 전투 시 gear 배율(데미지 계산에서 호출): 스킬 종류·원소·조건부(불균형/취약/아츠) 합산.
+// 전투 시 gear 배율(데미지 계산에서 호출): 스킬 종류·아츠·조건부(불균형/취약/아츠) 합산.
 export function gearDamageBonus(g: GearBonus, kind: "attack" | "battle" | "link" | "ult", elem: "physical" | Element, target: DDUnit): number {
   let b = (g.kindDmg[kind] ?? 0) + (g.kindDmg.all ?? 0);
   if (elem !== "physical") b += (g.elemDmg[elem] ?? 0);

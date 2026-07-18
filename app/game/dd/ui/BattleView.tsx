@@ -31,11 +31,29 @@ const statusLabel: Record<string, string> = { stun: "기절", combustion: "연�
 const nodeTitle: Record<NodeKind, string> = { battle: "교전", elite: "정예 교전", boss: "보스 교전", rest: "야영" };
 const behaviorLabel: Record<string, string> = { melee: "근접 돌격", snipe: "원거리 저격", heavy: "중장 강타", aoe: "광역 자폭", heal: "치유 지원", buff: "강화 지원" };
 const targetDesc: Record<string, string> = { front: "전열 강타 — 최전열(탱커) 우선", wounded: "부상자 저격 — 체력% 낮은 대상 마무리", threat: "고위협 직격 — 공격력 높은 딜러 조준" };
+// 적 행동 유형별 위협 설명 + 처치 우선도(높을수록 먼저 제거) — 적 상세 패턴 보강용
+const behaviorDesc: Record<string, string> = {
+  melee: "빠르게 접근해 전열을 직접 타격하는 근접형.",
+  snipe: "후방에서 부상자를 노리는 고화력·저체력 저격형.",
+  heavy: "느리지만 단단하고 강력한 중장형(HP·불균형 높음).",
+  aoe: "자폭형 광역 피해 — 방치하면 파티 전체를 타격.",
+  heal: "아군을 회복시키는 지원형 — 방치 시 전투 장기화.",
+  buff: "아군을 강화하는 지원형 — 방치 시 적 화력 상승.",
+};
+const behaviorPriority: Record<string, number> = { heal: 3, buff: 3, snipe: 2, aoe: 2, heavy: 1, melee: 1 };
+const behaviorIcon: Record<string, string> = { melee: "⚔", snipe: "🎯", heavy: "🛡", aoe: "💥", heal: "✚", buff: "▲" };
+// 오퍼 고유 스택 게이지 정보(상세 상단 강조용) — 값·최대·이름·아이콘
+const OP_STACK_INFO: Record<string, { get: (u: DDUnit) => number; max: number; name: string; icon: string; tone: string; fmt?: (v: number) => string; desc: string }> = {
+  laevatain: { get: (u) => u.procCount ?? 0, max: 4, name: "녹아내린 불꽃", icon: "🔥", tone: "#fb923c", desc: "열기 흡수로 축적 · 4스택 배틀 → 강화 폭발" },
+  zhuangfangyi: { get: (u) => u.procCount ?? 0, max: 9, name: "청뢰검", icon: "⚡", tone: "#FBCB38", desc: "감전 소모로 생성 · 뇌격 딜·궁충이 검 수에 비례" },
+  yvonne: { get: (u) => u.iceStack ?? 0, max: 10, name: "아이스 슈터", icon: "❄", tone: "#67e8f9", desc: "변신 강화 평타마다 치명 확률 +3%(최대 10)" },
+  mifu: { get: (u) => u.stance ?? 0, max: 2, name: "청파 삼형 자세", icon: "🌀", tone: "#a3e635", fmt: (v) => STANCE_KO[v] ?? String(v), desc: "단운 → 추형 → 개천 (스킬로 전환)" },
+};
 const tierLabel: Record<string, string> = { normal: "일반", common: "일반", enhanced: "강화", advanced: "정예", elite: "정예", boss: "보스" };
-const DMG_KO: Record<string, string> = { ult: "궁극", battle: "배틀", link: "연계", attack: "일반", all: "전체", elem: "속성", atkPct: "공격력", hpPct: "생명력", critRate: "치명확", critDmg: "치명피", energy: "게이지", ultEff: "궁충효율", artsStr: "아츠강도", vsBroken: "불균형피해" };
+const DMG_KO: Record<string, string> = { ult: "궁극", battle: "배틀", link: "연계", attack: "일반", all: "전체", elem: "아츠", atkPct: "공격력", hpPct: "생명력", critRate: "치명확", critDmg: "치명피", energy: "게이지", ultEff: "궁충효율", artsStr: "아츠강도", vsBroken: "불균형피해" };
 const pieceDmgText = (d?: { kind: string; base: number }) => { if (!d) return ""; const pct = d.kind === "hpPct" || d.base < 1; return `${DMG_KO[d.kind] ?? d.kind} +${pct ? Math.round(d.base * 100) + "%" : Math.round(d.base)}`; };
 
-// 유닛 원소색(플로팅 데미지·이펙트용)
+// 유닛 아츠 속성색(플로팅 데미지·이펙트용)
 function unitElement(u: DDUnit): "physical" | Element {
   if (u.side === "ally") return OPERATORS.find((o) => o.id === u.id)?.element ?? "physical";
   return enemyDefFor(u.id)?.element ?? "physical";
@@ -86,6 +104,18 @@ const CHIP_DESC: Record<string, string> = {
   vuln: "취약 — 받는 피해 증가",
   prot: "비호 — 받는 피해 감소",
   mh: "연타 — 추가 타격",
+  lae: "녹아내린 불꽃 — 열기 흡수 스택(최대 4). 4스택 배틀 → 강화 폭발",
+  zfy: "청뢰검 — 감전 소모로 생성(최대 9). 뇌격 딜·궁충이 검 수에 비례",
+  yv: "아이스 슈터 — 변신 강화 평타 치명 확률 누적(최대 10)",
+  mifu: "청파 삼형 자세 — 단운→추형→개천(스킬로 전환)",
+};
+// 오퍼 고유 스택형 버프(재능·변신 카운터) — 표시 안 되던 procCount/iceStack/stance 등을 칩으로
+const STANCE_KO = ["단운", "추형", "개천"];
+const OP_STACK: Record<string, (u: DDUnit) => StatusChip | null> = {
+  laevatain: (u) => u.procCount > 0 ? { k: "lae", label: `🔥 녹아내린 불꽃 ${u.procCount}/4`, tone: "#fb923c", dir: 1 } : null,
+  zhuangfangyi: (u) => u.procCount > 0 ? { k: "zfy", label: `⚡ 청뢰검 ${u.procCount}/9`, tone: "#FBCB38", dir: 1 } : null,
+  yvonne: (u) => (u.iceStack ?? 0) > 0 ? { k: "yv", label: `❄ 치확 ${u.iceStack}/10`, tone: "#67e8f9", dir: 1 } : null,
+  mifu: (u) => (u.stance ?? 0) > 0 ? { k: "mifu", label: `자세 ${STANCE_KO[u.stance] ?? u.stance}`, tone: "#a3e635", dir: 1 } : null,
 };
 const chipTitle = (c: StatusChip): string => [
   CHIP_DESC[c.k],
@@ -113,6 +143,7 @@ function unitChips(u: DDUnit): StatusChip[] {
   if (vuln > 0) { const mk = maxKey("vuln:"); c.push({ k: "vuln", label: `▼ 취약 ${Math.round(vuln * 100)}%`, tone: "#f87171", dir: -1, turns: T[mk] || undefined, src: S[mk] }); }
   if (u.protection > 0) c.push({ k: "prot", label: `▲ 비호 ${Math.round(u.protection * 100)}%`, tone: "#38bdf8", dir: 1, turns: T.protection, src: S.protection });
   if (u.multiHit > 0) c.push({ k: "mh", label: `▲ 연타 ${u.multiHit}`, tone: "#fb923c", dir: 1 });
+  const opc = OP_STACK[u.id]?.(u); if (opc) c.push(opc); // 오퍼 고유 스택(녹아내린 불꽃·청뢰검·아이스 슈터·자세)
   return c;
 }
 const SRC_KIND_KO: Record<string, string> = { skill: "스킬", weapon: "무기", gear: "장비", item: "아이템" };
@@ -158,6 +189,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
   const [roundBanner, setRoundBanner] = useState<{ n: number; tick: number } | null>(null);
   const [aiming, setAiming] = useState<DDSkill | null>(null); // 대상 선택 중인 단일 스킬
   const [inspectId, setInspectId] = useState<string | null>(null); // 스탯 조회 유닛
+  const [inspectTab, setInspectTab] = useState<"skill" | "gear" | "talent">("skill"); // 오퍼 상세 하단 탭
   const [detailId, setDetailId] = useState<string | null>(null); // 스킬 상세 펼침
   const [showLog, setShowLog] = useState(false);
   const [tab, setTab] = useState<"dmg" | "log">("dmg"); // 하단 패널: 데미지 기록 / 전투 기록
@@ -430,7 +462,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
               <div key={a.id} className={`group relative flex w-[176px] flex-col items-center ${shakeCls(hit, fx.tick)} ${actCls(isAct, fx.tick)}`}>
                 <FxLayer id={a.id} fx={fx} />
                 {/* 전신 아트 */}
-                <div onClick={() => setInspectId(a.id)} className="relative flex h-52 w-full cursor-pointer items-end justify-center">
+                <div onClick={() => { setInspectId(a.id); setInspectTab("skill"); }} className="relative flex h-52 w-full cursor-pointer items-end justify-center">
                   <span className="pointer-events-none absolute bottom-1 h-3 w-28 rounded-[50%]" style={{ background: "radial-gradient(50% 50% at 50% 50%, rgba(0,0,0,0.6), transparent)" }} />
                   {isCur && !dead && <span className="pointer-events-none absolute bottom-0 h-7 w-32 rounded-[50%]" style={{ background: `radial-gradient(50% 50% at 50% 50%, ${elementColor[el]}88, transparent 70%)` }} />}
                   <img src={fullUrl(a.id)} alt="" loading="lazy" className={`relative max-h-full w-auto object-contain transition group-hover:brightness-110 ${dead ? "opacity-35 grayscale" : ""}`} style={{ filter: dead ? undefined : isCur ? "drop-shadow(0 6px 16px rgba(255,190,107,0.55))" : "drop-shadow(0 8px 16px rgba(0,0,0,0.6))" }} onError={(ev) => { (ev.currentTarget as HTMLImageElement).src = avatarUrl(a.id); }} />
@@ -585,10 +617,12 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
         );
         return (
           <div onClick={close} className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4">
-            <div onClick={(e) => e.stopPropagation()} className="max-h-[86vh] w-full max-w-[540px] overflow-y-auto border border-ef-accent/50 bg-[#0d0906]" style={CUT_SM}>
-              {/* 헤더 */}
-              <div className="flex items-center gap-3 border-b border-ef-line p-3.5">
-                <div className="h-14 w-14 shrink-0 border border-ef-line" style={{ background: ally ? `center top/cover url(${avatarUrl(u.id)}), #0d0906` : `center/contain no-repeat url(${enemyImage(u.id)}), radial-gradient(circle at 50% 35%, ${el === "physical" ? "#5a2a22" : elementColor[el] + "40"}, #140a08 70%)` }} />
+            <div onClick={(e) => e.stopPropagation()} className="max-h-[86vh] w-full max-w-[540px] overflow-y-auto bg-[#0d0906]" style={{ ...CUT_SM, border: `1px solid ${elementColor[el]}77` }}>
+              {/* 상단 속성색 액센트 바 */}
+              <div className="h-1 w-full" style={{ background: elementColor[el], boxShadow: `0 0 12px ${elementColor[el]}` }} />
+              {/* 헤더 — 속성색 그라디언트 배경 */}
+              <div className="flex items-center gap-3 border-b border-ef-line p-3.5" style={{ background: `linear-gradient(100deg, ${elementColor[el]}1f, transparent 60%)` }}>
+                <div className="h-14 w-14 shrink-0 border-2" style={{ borderColor: `${elementColor[el]}88`, background: ally ? `center top/cover url(${avatarUrl(u.id)}), #0d0906` : `center/contain no-repeat url(${enemyImage(u.id)}), radial-gradient(circle at 50% 35%, ${el === "physical" ? "#5a2a22" : elementColor[el] + "40"}, #140a08 70%)` }} />
                 <div className="min-w-0 flex-1">
                   <div className="font-mono text-lg font-bold text-white">{u.name}</div>
                   <div className="mt-0.5 flex flex-wrap items-center gap-x-1.5 font-mono text-[15px] text-ef-muted">
@@ -633,9 +667,31 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
                   ); })}
                 </div>
               </div>
-              {/* 상태 효과(버프/디버프) — 방향 분류 + 잔여 턴 + 출처(누가·무엇으로) */}
+              {/* 오퍼 고유 스택 — 상단 강조(게이지/도트). 정체성이라 0이어도 항상 표시 */}
+              {ally && OP_STACK_INFO[u.id] && (() => {
+                const si = OP_STACK_INFO[u.id]; const v = si.get(u);
+                return (
+                  <Sec title="고유 스택">
+                    <div className="flex items-start gap-2.5">
+                      <span className="text-2xl leading-none" style={{ filter: `drop-shadow(0 0 6px ${si.tone}88)` }}>{si.icon}</span>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-baseline justify-between gap-2">
+                          <span className="font-mono text-[16px] font-bold" style={{ color: si.tone }}>{si.name}</span>
+                          <span className="font-mono text-[16px] font-black text-ef-ink">{si.fmt ? si.fmt(v) : <>{v}<span className="text-[13px] font-normal text-ef-muted"> / {si.max}</span></>}</span>
+                        </div>
+                        {si.fmt
+                          ? <div className="mt-1.5 flex gap-1">{STANCE_KO.map((s, k) => <span key={k} className="flex-1 rounded-sm border py-0.5 text-center font-mono text-[13px] font-bold" style={{ borderColor: k === v ? `${si.tone}99` : "#2a2a2a", background: k === v ? `${si.tone}22` : "transparent", color: k <= v ? si.tone : "#5a5a5a" }}>{s}</span>)}</div>
+                          : <div className="mt-1.5 flex gap-0.5">{Array.from({ length: si.max }, (_, k) => <span key={k} className="h-2 flex-1 rounded-full transition-all" style={{ background: k < v ? si.tone : "#26262a", boxShadow: k < v ? `0 0 6px ${si.tone}88` : "none" }} />)}</div>}
+                        <div className="mt-1.5 font-mono text-[13px] leading-relaxed text-ef-muted">{si.desc}</div>
+                      </div>
+                    </div>
+                  </Sec>
+                );
+              })()}
+              {/* 상태 효과(버프/디버프) — 방향 분류 + 잔여 턴 + 출처(누가·무엇으로). 고유 스택은 위에서 강조하므로 제외 */}
               {(() => {
-                const all = [...(u.shield > 0 ? [{ k: "shield", label: `🛡 보호막 ${u.shield}`, tone: "#38bdf8", dir: 1, turns: u.timers?.shield, src: (u.effectSrc as Record<string, EffSrc>)?.shield } as StatusChip] : []), ...unitChips(u)];
+                const STACK_KS = ["lae", "zfy", "yv", "mifu"];
+                const all = [...(u.shield > 0 ? [{ k: "shield", label: `🛡 보호막 ${u.shield}`, tone: "#38bdf8", dir: 1, turns: u.timers?.shield, src: (u.effectSrc as Record<string, EffSrc>)?.shield } as StatusChip] : []), ...unitChips(u).filter((c) => !STACK_KS.includes(c.k))];
                 const chipRow = (c: StatusChip) => (
                   <div key={c.k} className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
                     <Chip tone={c.tone}>{c.label}{c.turns ? <span className="ml-1 opacity-75">· {c.turns}턴</span> : null}</Chip>
@@ -660,6 +716,13 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
                 );
               })()}
               {ally && <>
+                {/* 하단 탭 — 스킬 / 장비·무기 / 재능(스크롤 감소) */}
+                <div className="flex gap-1 border-t border-ef-line px-3 pt-3">
+                  {(([["skill", "스킬"], ["gear", "장비·무기"], ...(talents.length ? [["talent", "재능"]] : [])]) as [typeof inspectTab, string][]).map(([k, label]) => (
+                    <button key={k} type="button" onClick={() => setInspectTab(k)} className={`dd-cut px-3 py-1 font-mono text-[14px] font-bold uppercase tracking-wider transition ${inspectTab === k ? "border border-ef-accent/50 bg-ef-accent/15 text-ef-accent" : "border border-ef-line/50 text-ef-muted hover:text-white"}`}>{label}</button>
+                  ))}
+                </div>
+                {inspectTab === "gear" && <>
                 {wId && <Sec title="무기">
                   <div className="flex items-start gap-2.5">
                     {weaponImage(u.id) && <img src={weaponImage(u.id)} alt="" className="h-9 w-9 shrink-0 object-contain" onError={hide} />}
@@ -694,20 +757,37 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
                     {sets.length ? sets.map((n) => <div key={n} className="mb-1.5 last:mb-0"><span className="font-mono text-[16px] font-bold text-[#e8c56a]">◆ {n} <span className="text-[14px] font-normal text-ef-muted">2부위</span></span><div className="mt-0.5 font-mono text-[15px] leading-relaxed text-ef-muted">{setEffectText(n)}</div></div>) : <div className="font-mono text-[15px] text-ef-muted">활성 세트 없음 — 공업소에서 같은 세트 2부위 제작 필요</div>}
                   </div>
                 </Sec>
-                <Sec title="스킬">
+                </>}
+                {inspectTab === "skill" && <Sec title="스킬">
                   {[...uskills].sort((a, b) => KIND_ORDER[a.kind] - KIND_ORDER[b.kind]).map((sk) => <div key={sk.id} className="mb-2.5 flex items-start gap-2.5 last:mb-0">
                     <img src={skillIcon(u.id, sk.kind)} alt="" className="h-9 w-9 shrink-0 border border-ef-line object-cover" onError={hide} />
                     <div className="min-w-0"><div className="flex flex-wrap items-baseline gap-x-1.5"><span className="font-mono text-[16px] font-bold text-white">{sk.name}</span><span className="font-mono text-[13px] uppercase text-ef-accent/70">{kindLabel[sk.kind]}</span>{sk.power > 0 && <span className="font-mono text-[13px]" style={{ color: elementColor[sk.element as Element | "physical"] ?? "#e8c56a" }}>배율 {Math.round(sk.power * 100)}% · {targetLabel[sk.target as DDSkill["target"]]} · ~{Math.round(u.attack * (1 + (u.atkBuff || 0)) * (u.weakenMul ?? 1) * sk.power).toLocaleString()}</span>}</div>{sk.note && <div className="mt-0.5 font-mono text-[15px] leading-relaxed text-ef-muted">{sk.note}</div>}</div>
                   </div>)}
-                </Sec>
-                {talents.length > 0 && <Sec title="재능">
+                </Sec>}
+                {inspectTab === "talent" && talents.length > 0 && <Sec title="재능">
                   {talents.map((t, i) => <div key={i} className="mb-2.5 flex items-start gap-2.5 last:mb-0">
                     {t.icon && <img src={t.icon} alt="" className="h-9 w-9 shrink-0 border border-ef-line object-cover" onError={hide} />}
                     <div className="min-w-0"><div className="font-mono text-[16px] font-bold text-white">{t.name}</div><div className="mt-0.5 font-mono text-[15px] leading-relaxed text-ef-muted">{t.desc}</div></div>
                   </div>)}
                 </Sec>}
               </>}
-              {ed && <Sec title="행동 유형"><div className="font-mono text-[15px] text-ef-muted">{behaviorLabel[ed.behavior] ?? ed.behavior}</div><div className="mt-1 font-mono text-[14px] text-ef-accent-soft">🎯 {targetDesc[enemyArchetype(ed.role, ed.behavior).tgt]}</div></Sec>}
+              {ed && (() => {
+                const pr = behaviorPriority[ed.behavior] ?? 1;
+                const weakEls = RES_ELEMS.filter((e) => (u.resist[e] ?? 0) <= 0.001);
+                return (
+                  <Sec title="행동 · 위협">
+                    <div className="flex items-center gap-2 font-mono">
+                      <span className="text-xl leading-none">{behaviorIcon[ed.behavior] ?? "⚔"}</span>
+                      <span className="text-[16px] font-bold text-white">{behaviorLabel[ed.behavior] ?? ed.behavior}</span>
+                      {pr >= 3 ? <span className="ml-auto border border-red-500/60 bg-red-500/15 px-1.5 py-0.5 font-mono text-[12px] font-bold text-red-300">⚠ 우선 처치</span>
+                        : pr === 2 ? <span className="ml-auto border border-amber-500/50 bg-amber-500/10 px-1.5 py-0.5 font-mono text-[12px] font-bold text-amber-300">주의</span> : null}
+                    </div>
+                    <div className="mt-1.5 font-mono text-[14px] leading-relaxed text-ef-muted">{behaviorDesc[ed.behavior] ?? ""}</div>
+                    <div className="mt-1.5 font-mono text-[14px] text-ef-accent-soft">🎯 {targetDesc[enemyArchetype(ed.role, ed.behavior).tgt]}</div>
+                    {weakEls.length > 0 && <div className="mt-1.5 font-mono text-[14px]"><span className="text-ef-muted">공략: </span><span className="font-bold text-green-300">{weakEls.map((e) => elementName[e]).join("·")} 약점</span><span className="text-ef-muted"> — 해당 속성으로 큰 피해</span></div>}
+                  </Sec>
+                );
+              })()}
             </div>
           </div>
         );

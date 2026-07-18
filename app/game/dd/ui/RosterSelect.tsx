@@ -22,7 +22,7 @@ const tgtType = (t?: string) => (t === "self" ? "자신" : t === "all" || t === 
 const KIND_ORDER: Record<DDSkill["kind"], number> = { attack: 0, battle: 1, link: 2, ult: 3 };
 
 const recSet = (op: OpMeta): string => recommendedSet(op.id, op.cls, op.element);
-const DMG_KO: Record<string, string> = { ult: "궁극", battle: "배틀", link: "연계", attack: "일반", all: "전체", elem: "속성", atkPct: "공격력", hpPct: "생명력", critRate: "치명확", critDmg: "치명피", energy: "게이지", ultEff: "궁충효율", artsStr: "아츠강도", vsBroken: "불균형피해" };
+const DMG_KO: Record<string, string> = { ult: "궁극", battle: "배틀", link: "연계", attack: "일반", all: "전체", elem: "아츠", atkPct: "공격력", hpPct: "생명력", critRate: "치명확", critDmg: "치명피", energy: "게이지", ultEff: "궁충효율", artsStr: "아츠강도", vsBroken: "불균형피해" };
 const pieceDmg = (p: { dmg?: { kind: string; base: number } }, mul = 1) => { if (!p.dmg) return ""; const v = p.dmg.base * mul; const pct = p.dmg.kind === "hpPct" || p.dmg.base < 1; return `${DMG_KO[p.dmg.kind] ?? p.dmg.kind} +${pct ? Math.round(v * 100) + "%" : Math.round(v)}`; };
 
 export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]) => void }) {

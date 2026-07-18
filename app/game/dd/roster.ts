@@ -94,8 +94,9 @@ export const SKILLS: Record<string, DDSkill[]> = {
     // 영혼의 가시(연계 133%, 쿨 20초): 열기 부착 소모/흡수 후. 게이지 16. 죄를 쫓는 자(날개 적 → 회복+연타).
     { id: "camu-l", name: "영혼의 가시", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 1.33, element: "heat", staggerVal: 10, cooldown: 4, gaugeGain: 18,
       requires: (_t, _s, st) => !!st.anomalyConsumed, requiresText: "열기 부착 소모됨", note: "열기 부착 소모 후 발동 · 핏빛 날개 적 명중 시 회복 + 연타 획득" },
-    // 추적(연계 취급 222%, 게이지 무소모): 궁 「선혈의 비」 후 15초(≈3턴) 동안 배틀이 이걸로 교체. 게이지 32 회복 → 뱅가드 수급 엔진.
-    { id: "camu-chase", name: "추적", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 2.22, element: "heat", staggerVal: 20, cooldown: 0, gaugeGain: 32,
+    // 추적(궁 후 배틀 슬롯 교체, 게이지 무소모): 궁 「선혈의 비」 후 15초(≈3턴) 배틀이 이걸로 교체(연계 아님 — 원작 "다음 배틀=추적").
+    // kind:"battle" + gaugeCost:0 → 배틀 슬롯에서 camu-b와 교체 표시(상호배타), 무소모. gaugeGain 32로 뱅가드 수급.
+    { id: "camu-chase", name: "추적", kind: "battle", gaugeCost: 0, fromPos: [1, 2, 3], target: "single-front", power: 2.22, element: "heat", staggerVal: 20, gaugeGain: 32,
       requires: (_t, self) => (self.timers.chase || 0) > 0, requiresText: "추적 상태(궁 후 3턴)", note: "궁 후 배틀 교체 · 게이지 무소모 + 32 회복" },
     // 선혈의 비(궁 267%, 게이지 130): 광역 열기 + 열기 부착 + 게이지. 사용 후 추적 상태 15초(≈3턴).
     { id: "camu-u", name: "선혈의 비", kind: "ult", fromPos: [1, 2, 3], target: "row", power: 2.67, element: "heat", staggerVal: 15, attach: "heat", selfUlt: true, gaugeGain: 32,
@@ -379,7 +380,7 @@ const OP_BASE: Record<string, Base> = {
 // 매 유닛 신선한 상태 객체(중첩 객체 공유 참조 방지). defense/resist 기본 0 → 밸런스 무변.
 const zero = () => ({ physBreak: 0, stagger: 0, staggered: false, staggerTimer: 0, statuses: [] as DDUnit["statuses"], dot: 0, multiHit: 0, ultCharge: 0, atkBuff: 0, critRate: 0.05, critDmg: 0.5, arts: { heat: 0, electric: 0, cryo: 0, nature: 0 }, frozen: 0, amp: {}, vuln: {}, weakenMul: 1, protection: 0, shield: 0, speedMod: 0, timers: {}, effectSrc: {}, linkCd: 0, defense: 0, resist: { physical: 0, heat: 0, electric: 0, cryo: 0, nature: 0 }, stance: 0, ironOath: 0, gaugeRecovered: 0, gearGrade: 60, procCount: 0, utilMult: 1, atb: 0 });
 
-// 오퍼레이터 선택 UI용 메타(속성은 스킬의 비물리 원소에서 추론, 없으면 물리)
+// 오퍼레이터 선택 UI용 메타(속성은 스킬의 비물리 아츠 속성에서 추론, 없으면 물리)
 export type OpMeta = { id: string; name: string; cls: DDClass; element: "physical" | Element };
 export const OPERATORS: OpMeta[] = Object.values(OP_BASE).map((b) => {
   const el = (SKILLS[b.id] ?? []).find((s) => s.element && s.element !== "physical")?.element ?? "physical";

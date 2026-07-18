@@ -16,7 +16,7 @@ export const WEAPON_EFFECT_KO: Record<WeaponType, string> = {
   greatsword: "불균형 누적 +25%",
   polearm: "배틀 스킬 피해 +15%",
   handcannon: "전 피해 +10%",
-  artsunit: "원소 피해 +12%",
+  artsunit: "아츠 피해 +12%",
 };
 
 // 오퍼별 실제 전무(전용무기) — 커뮤니티 빌드 시트 기준(각 오퍼 첫 추천무기 = 전무, 딜/서폿 분리는 2개).
@@ -236,7 +236,7 @@ const OP_ELEM: Record<string, "physical" | "heat" | "electric" | "cryo" | "natur
   chenqianyu: "physical", lifeng: "physical", endministrator: "physical", mifu: "physical", pogranichnik: "physical", catcher: "physical", dapan: "physical",
 };
 
-const SUB_KO: Record<string, string> = { atk: "공격력", crit: "치명 확률", hp: "최대 생명력", heal: "치유 효율", energy: "궁충 효율", arts: "아츠 피해", elem: "원소 피해", phys: "물리 피해", skill: "스킬 피해", vsbroken: "방불 적 피해", other: "특수" };
+const SUB_KO: Record<string, string> = { atk: "공격력", crit: "치명 확률", hp: "최대 생명력", heal: "치유 효율", energy: "궁충 효율", arts: "아츠 피해", elem: "아츠 피해", phys: "물리 피해", skill: "스킬 피해", vsbroken: "방불 적 피해", other: "특수" };
 export const weaponEffectText = (id: string): string => { const w = OP_WEAPON_STATS[id]; if (!w) return ""; return `${SUB_KO[w.sub] ?? w.sub} +${w.subVal}${w.subFlat ? "" : "%"}`; };
 
 // 무기 시리즈 이름 — 실제 무기 소스(어둠·울부짖는 불길 등). OP_WEAPON_SERIES(weapon-series.ts).

@@ -86,7 +86,7 @@ export type DDUnit = {
 // 장비 세트 전투 배율(gear.ts에서 계산해 유닛에 부착). 즉시 효과(치명·보호막·회복·게이지)는 applyGear가 스탯에 직접 반영.
 export type GearBonus = {
   kindDmg: Partial<Record<DDSkill["kind"] | "all", number>>; // 스킬 종류별 피해 %
-  elemDmg: Partial<Record<Element | "all", number>>;         // 원소 피해 %
+  elemDmg: Partial<Record<Element | "all", number>>;         // 아츠 피해 %
   vsBroken: number; // 불균형 적 추가 피해 %
   vsVuln: number;   // 취약 적 추가 피해 %
   vsArts: number;   // 아츠 부착 적 추가 피해 %
@@ -837,7 +837,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
     let dmg = raw * (1 + cr * cd); // 치명타 기댓값(RNG 대신)
     const vMul = self.id === "lastrite" && skill.kind === "ult" ? 1.5 : 1; // 라스트 라이트 저온 취성(궁 냉기/아츠 취약 1.5배 간주)
     dmg *= (1 + ampFor(self, elem)) * (1 + vulnFor(t, elem) * vMul); // 공식 1.5·1.8: 증폭·취약은 별개 곱연산 인자
-    if (self.gear) { // 장비 세트 배율: 스킬 종류·원소 + 조건부(불균형/취약/아츠 부착 적)
+    if (self.gear) { // 장비 세트 배율: 스킬 종류·아츠 + 조건부(불균형/취약/아츠 부착 적)
       const g = self.gear;
       let gb = (g.kindDmg[skill.kind] || 0) + (g.kindDmg.all || 0);
       if (elem !== "physical") gb += g.elemDmg[elem] || 0;
