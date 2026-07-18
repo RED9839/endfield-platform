@@ -1,7 +1,7 @@
 // ===== DD류 물리 4인 + 적 정의 (프로토타입) =====
 // 스킬은 위키 매핑. 사용 요구(requires)가 카드 모델에서 깨지던 "연계 조건"을 DD류에선 자연 흡수.
 import { setApplyAttrs, setAttrBonus } from "./gear";
-import { bumpVuln, vulnFor, setTimer, applyBuff, ELEMENTS, attrResists, ATTR_AVG, attrBonus, type DDClass, type DDSkill, type DDUnit, type Element } from "./combat";
+import { bumpVuln, vulnFor, setTimer, applyBuff, ELEMENTS, attrResists, ATTR_AVG, attrBonus, hasLinkEvent, type DDClass, type DDSkill, type DDUnit, type Element } from "./combat";
 import { promoMult, skillMult, skillUtilMult, DEFAULT_PROGRESS, type OpProgress } from "./progress";
 
 export const SKILLS: Record<string, DDSkill[]> = {
@@ -338,7 +338,7 @@ export const SKILLS: Record<string, DDSkill[]> = {
     { id: "zfy-b", name: "뇌정의 부름", kind: "battle", fromPos: [1, 2, 3], target: "single-front", power: 0, element: "electric", staggerVal: 15, note: "감전 소모 → 청뢰검 생성 + 뇌격(청뢰검 비례) + 궁충" },
     // 변화의 숨결(연계 160%, 쿨 18초≈4턴): 전기 부착 적 강일 후. 전기 + 전기 부착 소모 → 강제 감전(레벨↑) + 궁충.
     { id: "zfy-l", name: "변화의 숨결", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 1.6, element: "electric", staggerVal: 10, cooldown: 4,
-      requires: (t) => !!t && t.arts.electric > 0, requiresText: "전기 부착 적", note: "전기 + 전기 부착 소모 강제 감전 + 궁충" },
+      requires: (_t, _self, s) => hasLinkEvent(s, "zhuangfangyi"), requiresText: "감전 적 강타 후", note: "전기 + 전기 부착 소모 강제 감전 + 궁충" },
     // 심판의 폭풍(궁 변신, 게이지 240): 천리의 경지 — 평타/배틀 강화 + 방해 면역 + 첫 배틀 3검. 25초 지속딜.
     { id: "zfy-u", name: "심판의 폭풍", kind: "ult", fromPos: [1, 2, 3], target: "all", power: 2.0, hits: [0.67, 1.33], element: "electric", staggerVal: 20, selfUlt: true, note: "천리의 경지 변신: 평타/배틀 강화 + 첫 배틀 3검" },
   ],

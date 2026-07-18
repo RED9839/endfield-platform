@@ -16,8 +16,13 @@ const EL_TAG: Record<Element, string> = { heat: "열기 ", electric: "전기 ", 
 setLinkChain((s, self) => {
   let best: { unit: DDUnit; skill: DDSkill } | null = null;
   for (const a of living(s, "ally")) {
-    if (a === self) continue;
-    const pick = allyChoose(s, a);
+    // 장방이 「변화의 숨결」은 원작이 "**자신이** 감전 적 강평 → 자기 연계 턴 끌어당김"인 self-chain이다.
+    // allyChoose는 배틀(zfy-b +6)에 밀려 연계를 안 골라(창 열려도 0회) 여기서 직접 발동한다.
+    const selfChain = a === self && a.id === "zhuangfangyi";
+    if (a === self && !selfChain) continue;
+    const pick = selfChain
+      ? (SKILLS[a.id] ?? []).find((o) => o.kind === "link" && usable(s, a, o))
+      : allyChoose(s, a);
     // 연계만 끼어든다. 궁도 원작은 즉발이지만, 연쇄 대상에 넣어도 궁 비중이 3%에서 안 움직였다
     // — 병목이 "턴을 못 잡아서"가 아니라 "충전을 못 해서"라 기회를 줘도 쓸 게 없음. 부작용(순서 흔들림)만 남아 제외.
     if (!pick || pick.kind !== "link") continue;

@@ -489,7 +489,12 @@ export const setLinkChain = (f: LinkChain | null) => { linkChainProvider = f; };
 
 // anomalyConsumed: 아츠 이상/부착 소모·흡수 윈도우(남은 턴). 0/undefined = 닫힘.
 // chaining: 연계 연쇄 재진입 방지(연쇄는 1단까지).
-export type DDState = { units: DDUnit[]; round: number; log: string[]; lastLinkAlly?: string; skillGauge: number; maxGauge: number; boss?: boolean; anomalyConsumed?: number; allyHit?: boolean; moraleAccum?: number; forcedTargetId?: string; chaining?: boolean };
+export type DDState = { units: DDUnit[]; round: number; log: string[]; lastLinkAlly?: string; skillGauge: number; maxGauge: number; boss?: boolean; anomalyConsumed?: number; allyHit?: boolean; moraleAccum?: number; forcedTargetId?: string; chaining?: boolean; linkEvents?: Record<string, number> };
+
+// 연계 "이벤트 윈도우": 원작 연계 상당수가 "메인이 ~한 **후**"(이벤트)인데 상태("~인 적")로 구현돼 있었다.
+// 상태는 아군이 먼저 소모하면 사라지지만 이벤트는 명중 순간 창을 열어 소모돼도 유지된다. key당 남은 턴.
+export function markLinkEvent(s: DDState, key: string, turns = ANOMALY_WINDOW): void { (s.linkEvents ??= {})[key] = turns; }
+export const hasLinkEvent = (s: DDState, key: string): boolean => (s.linkEvents?.[key] ?? 0) > 0;
 
 export const living = (s: DDState, side?: "ally" | "enemy") =>
   s.units.filter((u) => u.hp > 0 && (!side || u.side === side));
@@ -634,6 +639,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
           self.procCount = Math.min(9, (self.procCount || 0) + gen);
           self.ultCharge = Math.min(self.ultCost, self.ultCharge + 6 * self.procCount * (self.ultEffMul ?? 1) * (self.wilMul ?? 1)); // 뇌격당 궁 +6
           self.amp.electric = Math.max(self.amp.electric || 0, 0.18); setTimer(self, "amp:electric", 1); // 천지의 조화
+          if (tw) markLinkEvent(s, "zhuangfangyi"); // 변신 배틀 = 마지막 뇌격 전기 부착 행위 → 「변화의 숨결」 연계창 개방(자체수급 사이클)
           log.push(`  → 뇌정의 부름! 청뢰검 ${self.procCount}/9 (생성 ${gen})${tw ? " · 변신 광역 강화" : ""}`);
         }
         const per = tw ? 0.36 : 0.2; // 스킬랭크1 계수(전역 SKILL_RANK9가 ×2.25로 스킬랭크9=45%/81% 반영)
@@ -810,7 +816,11 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
     if (self.id === "laevatain" && skill.kind === "attack" && (self.timers.twilight || 0) > 0) raw *= 3;
     if (self.id === "yvonne" && skill.kind === "attack" && (self.timers.iceshot || 0) > 0) raw *= 2.66; // 아이스 슈터 강화 평타(원문 강일 133% vs 평타 50%)
     // 장방이 천리의 경지 변신: 강화 일반공격 ×2.5(궁 중 평타 강화)
-    if (self.id === "zhuangfangyi" && skill.kind === "attack" && (self.timers.heavenly || 0) > 0) raw *= 2.5;
+    if (self.id === "zhuangfangyi" && skill.kind === "attack" && (self.timers.heavenly || 0) > 0) { raw *= 2.5; markLinkEvent(s, "zhuangfangyi"); } // 변신 강화 평타 = 전기 부착 행위 → 연계창(자체수급)
+    // 「변화의 숨결」 연계 조건 = "**감전 상태** 적에게 강평을 한 **후**"(이벤트). 강평 명중 순간 창을 연다.
+    // 부착으로 두면 아군이 부착을 감전으로 반응소모해 창이 안 열렸다(창 1회). 감전(shock)은 반응의 **결과**라
+    // 아군이 부착을 소모해도 살아남으므로 오히려 아군 감전이 창을 여는 연료가 된다.
+    if (self.id === "zhuangfangyi" && skill.kind === "attack" && has(t, "shock")) markLinkEvent(s, "zhuangfangyi");
     // 엠버: 평타 주력 딜러 — 실제 돌진 검술 4단 콤보(≈431% 물리, lv9) 반영. 범용 평타 0.5 → ×8.6≈431%.
     // 불균형 적엔 처형 공격(실 720%) → 추가 배수. 진군(방불 셋업)→경량 초자연 물리 증폭→평타 페이오프.
     if (self.id === "ember" && skill.kind === "attack") raw *= t.staggered ? 14 : 8.6;
@@ -1145,7 +1155,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
     s.chaining = true;
     const nx = linkChainProvider(s, self);
     if (nx) {
-      nx.unit.atb -= 100; // 턴 앞당김(= 나중 차례를 지금 쓴 것)
+      // 연계 = 보너스 행동(턴 미소진). 원작 엔드필드 연계는 조건 만족 시 자동 발동하는 무료 추가타 — 자기 차례를 뺏지 않는다.
       log.push(`  ⇢ ${nx.skill.kind === "ult" ? "궁극기" : "연계"} 발동! ${nx.unit.name} 「${nx.skill.name}」`);
       act(s, nx.unit, nx.skill);
     }
@@ -1159,6 +1169,7 @@ export function startRound(s: DDState): void {
   s.round++;
   s.anomalyConsumed = Math.max(0, (s.anomalyConsumed ?? 0) - 1); // 아츠 이상/소모·흡수 윈도우 감쇠(즉시 리셋 X — ATB 순서상 셋업이 페이오프보다 늦게 오면 창이 닫혀버림)
   s.allyHit = false; // 피격 트리거 윈도우 리셋(엠버 전선에서의 지원)
+  if (s.linkEvents) for (const k of Object.keys(s.linkEvents)) if (--s.linkEvents[k] <= 0) delete s.linkEvents[k]; // 연계 이벤트 윈도우 감쇠
   gaugeUp(s, GAUGE_REGEN); // 스킬 게이지 자연 회복(파티 공유)
 }
 // 유닛 자기 턴 시작 효과 — 지속피해·재생·불균형 회복·타이머 감쇠·연계 쿨. ATB에서 행동 직전 호출.
