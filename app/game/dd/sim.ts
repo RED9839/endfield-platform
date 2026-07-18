@@ -33,6 +33,8 @@ setLinkChain((s, self) => {
 
 // 아군 AI: 사용 가능 스킬 중 점수 최대. usage gate가 셋업→페이오프를 자동 정렬.
 export function allyChoose(s: DDState, self: DDUnit): DDSkill | null {
+  // 예약된 연계(ATB 우선으로 끼어든 오퍼) — 자기 차례에 그 연계를 발동
+  if (self.pendingLink) { const sk = self.pendingLink; self.pendingLink = undefined; return usable(s, self, sk) ? sk : null; }
   const skills = [...(SKILLS[self.id] ?? []), BASIC];
   const opts = skills.filter((sk) => usable(s, self, sk));
   if (!opts.length) return null;

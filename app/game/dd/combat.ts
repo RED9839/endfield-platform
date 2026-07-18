@@ -65,6 +65,7 @@ export type DDUnit = {
   wilMul?: number;   // 의지 → 유틸·궁극기 게이지 배율
   healRecv?: number; // 의지 → 받는 회복량 배율(1.0 기준). 회복 시 곱연산
   procCount: number; // 제너릭 재능 카운터(아크라이트 황무지의 방랑자 등)
+  pendingLink?: DDSkill; // 예약된 연계 — 조건이 열리면 ATB 우선으로 끼어든 뒤 자기 차례에 이 연계를 발동
   iceStack?: number; // 이본 「아이스 슈터」 변신 중 평타 누적(치확 +3%/스택, 최대 10)
   isMain?: boolean;  // 파티 메인딜러(편성 첫 오퍼 = 공략 시트 채용파티의 주인). 공유 게이지 우선권.
   zfyUsedFree?: boolean; // 장방이 천리의 경지: 첫 배틀 무소모를 이미 썼는가
@@ -304,7 +305,7 @@ export const SKILL_RANK9 = 1.8;
 // 자원 경제(전투 시스템 wiki): 스킬 게이지(파티 공유) + 궁극기 에너지(개인)
 export const GAUGE_COST = 100;     // 배틀 스킬 1칸 소모
 const ANOMALY_WINDOW = 2;  // 아츠 이상/부착 소모·흡수 윈도우 지속(턴). 1이면 그 라운드 안에서만 = 속도 느린 셋업이 빠른 페이오프를 못 살림
-const GAUGE_REGEN = 45;     // 라운드당 자연 회복(≈12.5초/칸)
+export const GAUGE_REGEN = 45;     // 라운드당 자연 회복(≈12.5초/칸)
 const BASIC_RECOVER = 18;   // 일반 공격 강력한 일격 → 게이지 회복
 const EXEC_RECOVER = 30;    // 처형(불균형 적) → 게이지 추가 회복
 export const EXECUTE_MULT = 6;     // 처형 피해 배율(불균형 적 일반 공격)
@@ -1149,15 +1150,16 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
     }
   }
 
-  // ── 연계 연쇄 ── 셋업(이 행동)으로 조건이 열린 아군이 자기 턴을 앞당겨 연계로 끼어든다.
-  // 쿨타임이 아니고 조건이 서면 발동(usable이 둘 다 검사). atb -= 100으로 자기 턴을 소진하므로 행동 수는 불변.
+  // ── 연계 예약 ── 이 행동으로 조건이 열린 아군의 연계가 **쿨이 아니고 조건이 서면**, 그 오퍼가 ATB에서
+  // 다음 차례로 끼어들어(추가 턴) 자기 차례에 연계를 발동한다. 즉시 발동이 아니라 턴 순서에 등장 → 자기 턴에 발동.
+  // usable이 쿨(linkCd)·조건(requires)을 둘 다 검사. 실제 발동은 nextActor→pendingLink 처리(step/allyChoose).
   if (self.side === "ally" && !s.chaining && linkChainProvider) {
     s.chaining = true;
     const nx = linkChainProvider(s, self);
-    if (nx) {
-      // 연계 = 보너스 행동(턴 미소진). 원작 엔드필드 연계는 조건 만족 시 자동 발동하는 무료 추가타 — 자기 차례를 뺏지 않는다.
-      log.push(`  ⇢ ${nx.skill.kind === "ult" ? "궁극기" : "연계"} 발동! ${nx.unit.name} 「${nx.skill.name}」`);
-      act(s, nx.unit, nx.skill);
+    if (nx && !nx.unit.pendingLink) {
+      nx.unit.pendingLink = nx.skill;
+      nx.unit.atb = Math.max(0, ...living(s).map((u) => u.atb)) + 10; // ATB 최우선으로 끌어올려 다음 차례에 등장
+      log.push(`  ⇢ ${nx.unit.name} 연계 대기 — 다음 차례에 「${nx.skill.name}」`);
     }
     s.chaining = false;
   }

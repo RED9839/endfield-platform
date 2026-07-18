@@ -2,7 +2,7 @@
 
 import { useEffect, useReducer, useRef, useState } from "react";
 
-import { act, canAct, isOver, startRound, perTurn, nextActor, turnOrder, usable, BASIC, type DDClass, type DDSkill, type DDState, type DDUnit, type Element } from "../combat";
+import { act, canAct, isOver, startRound, perTurn, nextActor, turnOrder, usable, BASIC, GAUGE_REGEN, GAUGE_COST, type DDClass, type DDSkill, type DDState, type DDUnit, type Element } from "../combat";
 import { OPERATORS, SKILLS, OP_BASIC, enemyDefFor, avatarUrl, fullUrl, skillIcon, enemyImage, enemyArchetype } from "../roster";
 import { ENCOUNTERS, allyChoose, createBattle, enemyAct, regionEncounter } from "../sim";
 import { activeSets, setEffectText, loadoutPieces } from "../gear";
@@ -247,6 +247,13 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
       afterAction();
       timerRef.current = setTimeout(step, 480 / speedRef.current); return;
     }
+    // 예약된 연계(ATB 우선으로 끼어든 오퍼) — 자기 차례에 자동 발동(수동/자동 무관)
+    if (u.side === "ally" && u.pendingLink) {
+      const sk = u.pendingLink; u.pendingLink = undefined;
+      doAction(u, () => { if (usable(s, u, sk)) act(s, u, sk); else s.log.push(`${u.name} 연계 조건 해제`); }, sk.name);
+      afterAction();
+      timerRef.current = setTimeout(step, delay()); return;
+    }
     if (u.side === "enemy") {
       doAction(u, () => enemyAct(s, u), null);
       const line = stateRef.current!.log.slice(-6).reverse().find((l) => l.startsWith(`${u.name}`) && l.includes("→"));
@@ -360,7 +367,8 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
         </div>
         <div className="mt-2 flex items-center gap-2.5">
           <span className="shrink-0 font-mono text-[13px] uppercase tracking-wider text-ef-muted">스킬 게이지 · 공유</span>
-          <div className="min-w-[120px] flex-1"><Bar value={s.skillGauge} max={s.maxGauge} color={PRIMARY} h="h-2.5" /></div>
+          <span className="shrink-0 font-mono text-[12px] tracking-wide"><span className="text-ef-accent-soft" title="라운드마다 자동 회복">+{GAUGE_REGEN}/R</span> <span className="text-ef-muted">·</span> <span className="text-green-300/80" title="일반 공격(평타) 시 회복">평타 +{BASIC.gaugeGain}</span> <span className="text-ef-muted">·</span> <span className="text-red-300/80" title="배틀 스킬 사용 시 소모">배틀 −{GAUGE_COST}</span></span>
+          <div className="min-w-[100px] flex-1"><Bar value={s.skillGauge} max={s.maxGauge} color={PRIMARY} h="h-2.5" /></div>
           <span className="shrink-0 font-mono text-[13px] font-bold text-ef-ink">{Math.round(s.skillGauge)}/{s.maxGauge}</span>
         </div>
       </div>
