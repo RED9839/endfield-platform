@@ -4,6 +4,8 @@ import Link from "next/link";
 import { ChevronLeft, Tent } from "lucide-react";
 
 import { OPERATORS } from "./dd/roster";
+import { ITEMS } from "./dd/items";
+import { skillLabel } from "./dd/progress";
 import { encounterForNode, useDDRun, REST_HEAL } from "./dd/run";
 import BattleView from "./dd/ui/BattleView";
 import RosterSelect from "./dd/ui/RosterSelect";
@@ -98,6 +100,33 @@ export default function GamePage() {
           <div className="hud-panel dd-cut p-10" style={{ borderColor: run.phase === "victory" ? "#ff9a2f66" : "#b3312a66", boxShadow: `inset 0 1px 0 rgba(255,255,255,0.04), 0 0 60px -20px ${run.phase === "victory" ? "rgba(255,154,47,0.6)" : "rgba(179,49,42,0.6)"}` }}>
             <div className="mb-2 text-4xl font-bold" style={{ fontFamily: "var(--dd-display)", letterSpacing: "0.14em", color: run.phase === "victory" ? "#ffbe6b" : "#e5484d", textShadow: `0 0 24px ${run.phase === "victory" ? "rgba(255,190,107,0.5)" : "rgba(229,72,77,0.5)"}` }}>{run.phase === "victory" ? "원정 성공" : "원정 실패"}</div>
             <p className="mb-6 text-base text-ef-muted">{run.phase === "victory" ? "던전 심층의 공포를 몰아냈다. 부대가 어둠을 뚫고 귀환한다." : "부대가 던전의 어둠 속으로 사라졌다."}</p>
+            {/* 전리품 — 이번 원정 누적 획득(승리 시) */}
+            {run.phase === "victory" && (() => {
+              const L = run.loot;
+              const crafted = Object.keys(run.craft.owned).length;
+              const enhanced = run.party.filter((m) => (m.progress?.skillRank ?? 0) > 0);
+              const opName = (opid: string) => OPERATORS.find((o) => o.id === opid)?.name ?? opid;
+              const lootItems = Object.entries(L.items).filter(([, n]) => n > 0);
+              return (
+                <div className="dd-cut mx-auto mb-6 max-w-[440px] border border-ef-accent/25 bg-black/40 p-4 text-left">
+                  <div className="mb-2.5 font-mono text-[13px] font-bold uppercase tracking-[0.24em] text-ef-accent/70">◆ 전리품</div>
+                  <div className="mb-3 grid grid-cols-3 gap-2">
+                    {([["⚔", "처치", L.kills], ["💎", "부품", `+${L.parts}`], ["🔑", "관리권", `+${L.permits}`]] as [string, string, string | number][]).map(([ic, lb, v]) => (
+                      <div key={lb} className="border border-ef-line/50 bg-[#120c07] px-2 py-2 text-center">
+                        <div className="text-lg leading-none">{ic}</div>
+                        <div className="mt-1 font-mono text-[12px] uppercase tracking-wider text-ef-muted">{lb}</div>
+                        <div className="font-mono text-[17px] font-bold text-ef-ink">{v}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="space-y-1 font-mono text-[14px]">
+                    {crafted > 0 && <div className="text-ef-muted">🛠 제작 장비 <b className="text-ef-ink">{crafted}</b>개</div>}
+                    {enhanced.length > 0 && <div className="text-ef-muted">⬆ 스킬 강화 <span className="text-ef-accent-soft">{enhanced.map((m) => `${opName(m.id)} ${skillLabel(m.progress!.skillRank)}`).join(" · ")}</span></div>}
+                    {lootItems.length > 0 && <div className="text-ef-muted">🎁 획득 아이템 <span className="text-ef-ink">{lootItems.map(([itid, n]) => `${ITEMS[itid]?.name ?? itid}×${n}`).join(" · ")}</span></div>}
+                  </div>
+                </div>
+              );
+            })()}
             <button type="button" onClick={run.restart} className="dd-cut px-6 py-2.5 font-mono text-sm font-black uppercase tracking-[0.12em] transition hover:brightness-110" style={{ background: `linear-gradient(180deg,#ffb257,${PRIMARY})`, color: "#0a0a0a", boxShadow: "0 0 22px -4px rgba(255,154,47,0.6)" }}>새 원정 →</button>
           </div>
         </div>

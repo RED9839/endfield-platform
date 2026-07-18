@@ -63,6 +63,7 @@ export function useDDRun() {
   const [items, setItems] = useState<Record<string, number>>({}); // 소지 소모품(id → 개수)
   const [craft, setCraft] = useState<CraftState>(initialCraft); // 제작: 재료(장비 부품·관리권) + 보유 피스
   const [faction, setFaction] = useState<string>(FACTIONS[0]); // 이번 런 세력 리전
+  const [loot, setLoot] = useState<{ parts: number; permits: number; items: Record<string, number>; kills: number }>({ parts: 0, permits: 0, items: {}, kills: 0 }); // 이번 원정 누적 전리품(승리 화면 표시)
 
   const useItem = useCallback((id: string) => setItems((m) => { const n = (m[id] ?? 0) - 1; const c = { ...m }; if (n <= 0) delete c[id]; else c[id] = n; return c; }), []);
   const addItem = useCallback((id: string) => setItems((m) => ({ ...m, [id]: (m[id] ?? 0) + 1 })), []);
@@ -96,6 +97,7 @@ export function useDDRun() {
     setActiveId(null);
     setItems({ "heal-cap-1": 2, "can-1": 1, "recov-1": 1 }); // 시작 키트
     setCraft({ mats: { parts: 100, permits: 16 }, owned: {} }); // 맨몸 시작 — 공업소에서 목표 빌드 직접 제작
+    setLoot({ parts: 0, permits: 0, items: {}, kills: 0 }); // 전리품 초기화
     setFaction(pickRand(FACTIONS)); // 이번 런 세력 리전 무작위
     setPhase("map");
   }, []);
@@ -118,8 +120,10 @@ export function useDDRun() {
     if (result === "ally") {
       setParty((cur) => cur.map((m) => { const s = survivors.find((x) => x.id === m.id); return { ...m, hp: s ? s.hp : 0, ult: s?.ult ?? m.ult }; })); // HP·궁 게이지 이월
       const drop = enemyDrop(activeNode.kind, activeNode.depth, faction); // 세력·티어·깊이별 드랍테이블
+      const dropItem = pickRand(drop.items);
       setCraft((c) => ({ ...c, mats: { parts: c.mats.parts + drop.parts, permits: c.mats.permits + drop.permits } })); // 제작 재료
-      addItem(pickRand(drop.items)); // 소모품
+      addItem(dropItem); // 소모품
+      setLoot((l) => ({ parts: l.parts + drop.parts, permits: l.permits + drop.permits, items: { ...l.items, [dropItem]: (l.items[dropItem] ?? 0) + 1 }, kills: l.kills + 1 })); // 누적 전리품
       if (activeNode.kind === "boss") { setPhase("victory"); setActiveId(null); }
       else advanceFrom(activeNode);
     } else {
@@ -134,9 +138,9 @@ export function useDDRun() {
     advanceFrom(activeNode);
   }, [activeNode, advanceFrom]);
 
-  const restart = useCallback(() => { setPhase("select"); setParty([]); setNodes([]); setFrontier([]); setCleared([]); setActiveId(null); setItems({}); setCraft(initialCraft()); }, []);
+  const restart = useCallback(() => { setPhase("select"); setParty([]); setNodes([]); setFrontier([]); setCleared([]); setActiveId(null); setItems({}); setCraft(initialCraft()); setLoot({ parts: 0, permits: 0, items: {}, kills: 0 }); }, []);
   const openCraft = useCallback(() => setPhase("craft"), []);
   const closeCraft = useCallback(() => setPhase("map"), []);
 
-  return { phase, party, nodes, frontier, cleared, activeNode, depthReached, faction, maxDepth: MAX_DEPTH, items, useItem, addItem, craft, craftPiece, forgePiece, swapGear, forgeSkill, openCraft, closeCraft, startRun, enterNode, finishBattle, rest, restart };
+  return { phase, party, nodes, frontier, cleared, activeNode, depthReached, faction, maxDepth: MAX_DEPTH, items, useItem, addItem, craft, craftPiece, forgePiece, swapGear, forgeSkill, loot, openCraft, closeCraft, startRun, enterNode, finishBattle, rest, restart };
 }
