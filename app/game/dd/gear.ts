@@ -167,9 +167,10 @@ export const GEAR_SET_STATS: Record<string, Partial<Record<GearSlot, { grade: nu
   "재앙 방호": { armor: { grade: 102, dmg: { kind: "ult", v: 0.184 } }, gloves: { grade: 76, dmg: { kind: "hpPct", v: 0.122 } }, kit: { grade: 38, dmg: { kind: "hpPct", v: 0.147 } } },
 };
 // 장비 능력치 → 오퍼 attrs 환산 계수. 우리 OP_ATTACK은 원작 실수치가 아니라 ×0.1507 축소된 값이라
-// 장비 능력치(단조3 기준 432)를 원본 그대로 더하면 주요 능력치가 177→479로 뛰어 공격력이 ×1.8 폭주한다.
+// 장비 능력치 → 공격력 반영 비율. 원본 그대로면 공격력 ×1.8 폭주라 축소하되, 0.2로는 단조가 딜에 +2%뿐
+// (무의미)이라 0.3으로 올려 단조를 살렸다(딜 +3.4%). 그만큼의 폭주는 적 HP 상향(ENEMY_HP_COMP)으로 상쇄.
 // 부옵(속성 피해·치명 등)은 건드리지 않고 능력치만 축소.
-export const GEAR_ATTR_FACTOR = 0.2;
+export const GEAR_ATTR_FACTOR = 0.3;
 const GRADE_FACTOR = 0.13; // 실측 능력치 합 → gearGrade 환산(3부위 ≈ +40 → 저항 ~50%)
 // 원작은 부품(kit) 2슬롯(방어구·장갑·부품×2 = 4슬롯, 세트 3부위 발동). 본 게임은 3슬롯 모델이라
 // 부품 1개가 원작 2개 몫을 하도록 능력치/방어를 2배 환산(부옵은 단일 — 원작 2번째 부품은 통상 다른 부옵).

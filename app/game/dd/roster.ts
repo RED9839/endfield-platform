@@ -494,7 +494,7 @@ export function applyAttrs(u: DDUnit): void {
   if (!a) return;
   // 속도는 오퍼레이터 **고유 민첩**(OP_ATTRS, 장비·무기 제외)에서 온다. 장비 민첩은 공격력에만 흐르므로
   // 이중 수혜가 없다 — 빠른 오퍼는 타고난 특성이고 빌드로 못 바꾼다. 민첩 86~179 → 속도 55~74.
-  u.speed = Math.round((OP_ATTRS[u.id]?.agi ?? 100) * 0.15 + 48);
+  u.speed = Math.round((OP_ATTRS[u.id]?.agi ?? 100) * 0.20 + 48);
   u.strMul = 1; u.skillAttrMul = 1; u.wilMul = 1; u.healRecv = 1; // +알파 폐지 — 능력치는 공격력/HP로만
   u.utilMult = u.utilBase ?? u.utilMult ?? 1;
 }
@@ -571,13 +571,14 @@ const TIER_STATS: Record<EnemyTier, { hp: number; attack: number; speed: number;
   advanced: { hp: 2100, attack: 168, speed: 55, staggerMax: 96,  defense: 45 },
   alpha:    { hp: 2600, attack: 208, speed: 52, staggerMax: 116, defense: 55 },
   elite:    { hp: 3600, attack: 242, speed: 50, staggerMax: 146, defense: 72 },
-  boss:     { hp: 10400, attack: 336, speed: 60, staggerMax: 236, defense: 90 },
+  boss:     { hp: 10400, attack: 250, speed: 60, staggerMax: 236, defense: 90 },
 };
 
 // 아군 저항(≈37.5%) 도입에 따른 적 공격 보정: 아군 실피해 유지(1/(1−저항)≈1.5). 원본 손맛(큰 raw→저항 경감).
 const ENEMY_ATK_COMP = 2.8;
-// 아군 스킬9(×1.8) + 풀 장비(오퍼별 실측 피스)로 파티 딜 상승 → 적 체력 ×2.5로 도전성 부여(보스전 클리어율 분산).
-const ENEMY_HP_COMP = 2.65;
+// 아군 스킬9(×1.8) + 풀 장비 + GEAR_ATTR 0.3(단조 반영)으로 파티 딜 상승 → 적 체력 상향으로 도전성 부여.
+// 2.65→2.9: GEAR_ATTR를 0.2→0.3으로 올려 단조를 살린 만큼의 딜 폭주를 적 HP로 상쇄(풀장비 승률 92→88%).
+const ENEMY_HP_COMP = 2.9;
 
 // 적 컨셉(역할) → 속도 아키타입 + 우선 타겟. 턴 순서·조준을 컨셉에 맞춰 전략성 부여.
 //  front=전열(낮은 pos, 탱/뱅가드) / wounded=저체력%(부상 딜러 마무리) / threat=최고위협(강화된 딜러 직격)
