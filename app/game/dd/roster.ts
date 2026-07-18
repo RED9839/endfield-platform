@@ -1,7 +1,6 @@
 // ===== DD류 물리 4인 + 적 정의 (프로토타입) =====
 // 스킬은 위키 매핑. 사용 요구(requires)가 카드 모델에서 깨지던 "연계 조건"을 DD류에선 자연 흡수.
 import { setApplyAttrs, setAttrBonus } from "./gear";
-import { speedOf } from "./weapon-type";
 import { bumpVuln, vulnFor, setTimer, applyBuff, ELEMENTS, attrResists, ATTR_AVG, attrBonus, type DDClass, type DDSkill, type DDUnit, type Element } from "./combat";
 import { promoMult, skillMult, skillUtilMult, DEFAULT_PROGRESS, type OpProgress } from "./progress";
 
@@ -493,9 +492,9 @@ export const OP_ATTRS: Record<string, OpAttrs> = {
 export function applyAttrs(u: DDUnit): void {
   const a = u.attrs;
   if (!a) return;
-  // 속도는 무기 무게에서 온다. 민첩에 붙이면 민첩만 이중 수혜(공격력+행동 횟수)라
-  // 장비 민첩이 다른 능력치보다 항상 강해진다 — 원작엔 속도가 없어 참조할 정답도 없다.
-  u.speed = speedOf(u.id);
+  // 속도는 오퍼레이터 **고유 민첩**(OP_ATTRS, 장비·무기 제외)에서 온다. 장비 민첩은 공격력에만 흐르므로
+  // 이중 수혜가 없다 — 빠른 오퍼는 타고난 특성이고 빌드로 못 바꾼다. 민첩 86~179 → 속도 55~74.
+  u.speed = Math.round((OP_ATTRS[u.id]?.agi ?? 100) * 0.15 + 48);
   u.strMul = 1; u.skillAttrMul = 1; u.wilMul = 1; u.healRecv = 1; // +알파 폐지 — 능력치는 공격력/HP로만
   u.utilMult = u.utilBase ?? u.utilMult ?? 1;
 }

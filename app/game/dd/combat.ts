@@ -17,7 +17,7 @@ export type DDUnit = {
   pos: number; // 1=전열 … 4=후열
   hp: number;
   maxHp: number;
-  speed: number; // 행동 게이지(ATB) 충전 속도(무기 무게 — weapon-type.ts WEAPON_SPEED)
+  speed: number; // 행동 게이지(ATB) 충전 속도(오퍼 고유 민첩 — roster.ts applyAttrs)
   atb: number;   // 행동 게이지 0~100. 속도만큼 차고 100이면 행동, 초과분 이월.
   attack: number;
   opElement?: "physical" | Element; // 오퍼 주력 속성(장비 부품 속성 피해 보너스용)

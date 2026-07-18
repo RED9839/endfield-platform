@@ -9,14 +9,14 @@ import type { WeaponType } from "./weapon-type";
 import { OP_WEAPON, WEAPON_KO } from "./weapon-type";
 
 export type { WeaponType } from "./weapon-type";
-export { WEAPON_KO, WEAPON_ICON, OP_WEAPON, WEAPON_SPEED, speedOf } from "./weapon-type";
+export { WEAPON_KO, WEAPON_ICON, OP_WEAPON } from "./weapon-type";
 
 export const WEAPON_EFFECT_KO: Record<WeaponType, string> = {
-  sword: "속도 72 · 치명 확률 +8%",
-  greatsword: "속도 48 · 불균형 누적 +25%",
-  polearm: "속도 58 · 배틀 스킬 피해 +15%",
-  handcannon: "속도 70 · 전 피해 +10%",
-  artsunit: "속도 62 · 원소 피해 +12%",
+  sword: "치명 확률 +8%",
+  greatsword: "불균형 누적 +25%",
+  polearm: "배틀 스킬 피해 +15%",
+  handcannon: "전 피해 +10%",
+  artsunit: "원소 피해 +12%",
 };
 
 // 오퍼별 실제 전무(전용무기) — 커뮤니티 빌드 시트 기준(각 오퍼 첫 추천무기 = 전무, 딜/서폿 분리는 2개).
