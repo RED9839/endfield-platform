@@ -13,12 +13,12 @@ const MAX_DEPTH = 3; // 층당 구역 4개(0~3), 3=층 보스
 // 6층 타워 — 각 층 = 보스 세력 리전. 층 보스를 깨면 다음 층으로.
 export type Floor = { faction: string; boss: string; name: string };
 export const FLOORS: Floor[] = [
-  { faction: "아겔로스", boss: "triaggelos", name: "형성의 둥지" },
-  { faction: "아겔로스", boss: "marble-aggelo", name: "각성한 마블" },
-  { faction: "랜드브레이커", boss: "rhodagn-the-bonekrushing-fist", name: "본 크러셔 캠프" },
-  { faction: "랜드브레이커", boss: "nefarith-conqueror", name: "정복자의 왕좌" },
-  { faction: "청파채", boss: "ruan-yi", name: "청파채 거점" },
-  { faction: "그림자에 물든", boss: "alleikhreos", name: "초자연의 균열" },
+  { faction: "랜드브레이커", boss: "rhodagn-the-bonekrushing-fist", name: "본 크러셔 캠프" },   // 1층 로댄
+  { faction: "아겔로스", boss: "triaggelos", name: "형성의 둥지" },                            // 2층 트리아겔로스
+  { faction: "아겔로스", boss: "marble-aggelo", name: "각성한 마블" },                         // 3층 마블 아겔로미레
+  { faction: "청파채", boss: "ruan-yi", name: "청파채 거점" },                                // 4층 원일
+  { faction: "랜드브레이커", boss: "nefarith-conqueror", name: "정복자의 왕좌" },              // 5층 정복자 네파리스
+  { faction: "그림자에 물든", boss: "alleikhreos", name: "초자연의 균열" },                    // 6층 알레이크레오스
 ];
 const LOOT_DECAY = 0.94; // 층당 재화 획득 -6%
 const pickRand = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
