@@ -17,6 +17,7 @@ const elementColor: Record<"physical" | Element, string> = { physical: "#d4d4d8"
 const elementName: Record<"physical" | Element, string> = { physical: "물리", heat: "열기", electric: "전기", cryo: "냉기", nature: "자연" };
 const classLabel: Record<DDClass, string> = { guard: "가드", caster: "캐스터", striker: "스트라이커", vanguard: "뱅가드", defender: "디펜더", supporter: "서포터" };
 const kindLabel: Record<DDSkill["kind"], string> = { attack: "기본공격", battle: "배틀스킬", link: "연계스킬", ult: "궁극기" };
+const kindTone: Record<DDSkill["kind"], string> = { attack: "#a1a1aa", battle: "#ff9a2f", link: "#67e8f9", ult: "#facc15" };
 const targetLabel: Record<DDSkill["target"], string> = { "single-front": "단일", "single-lowhp": "단일", row: "범위", all: "범위", self: "자신" };
 // 스킬 사용 불가 사유(usable()과 동일 순서). null=사용 가능.
 function skillReason(s: DDState, u: DDUnit, sk: DDSkill): string | null {
@@ -604,12 +605,14 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
               <button key={sk.id} type="button" onClick={() => { if (!off) chooseSkill(sk); }} className={`hud-tile dd-cut group relative flex w-[272px] items-start gap-2 px-2.5 py-2 pr-8 text-left ${off ? "cursor-not-allowed opacity-55 hover:!border-ef-line/40" : open ? "!border-ef-accent" : ready ? "dd-skill-ready" : ""}`}>
                 <img src={skillIcon(current!.id, sk.kind)} alt="" loading="lazy" className={`mt-0.5 h-9 w-9 shrink-0 border border-ef-line/60 bg-black/40 object-contain p-0.5 ${off ? "opacity-40 grayscale" : ""}`} onError={(ev) => { (ev.currentTarget as HTMLImageElement).style.visibility = "hidden"; }} />
                 <span className="min-w-0 flex-1">
-                  <span className="flex items-center gap-1.5"><span className="border px-1 py-px font-mono text-[13px] font-bold uppercase" style={{ borderColor: `${PRIMARY}66`, color: off ? "#7a6a4a" : PRIMARY }}>{kindLabel[sk.kind]}</span><span className={`truncate font-mono text-sm font-bold ${off ? "text-ef-muted" : "text-white"}`}>{sk.name}</span></span>
+                  <span className="flex items-center gap-1.5"><span className="border px-1 py-px font-mono text-[13px] font-bold uppercase" style={{ borderColor: off ? "#7a6a4a66" : `${kindTone[sk.kind]}66`, color: off ? "#7a6a4a" : kindTone[sk.kind] }}>{kindLabel[sk.kind]}</span><span className={`truncate font-mono text-sm font-bold ${off ? "text-ef-muted" : "text-white"}`}>{sk.name}</span></span>
                   <span className="mt-1 flex min-w-0 items-center gap-2">
                     {off ? <span className="min-w-0 cursor-help truncate font-mono text-[14px] font-bold text-red-400/90" title={reasonHelp(reason)}>🔒 {reason}</span>
                       : dmg > 0 ? <span className="shrink-0 font-mono text-[17px] font-bold tabular-nums" style={{ color: elementColor[el] }}>{dmg.toLocaleString()}<span className="ml-0.5 text-[13px] font-normal text-ef-muted">피해</span></span>
                       : <span className="shrink-0 font-mono text-[14px] text-ef-muted">{sk.target === "self" ? "버프/유틸" : "유틸"}</span>}
-                    {!off && sk.gaugeGain ? <span className="shrink-0 font-mono text-[13px] font-bold text-green-300/80" title="스킬 게이지 회복">＋{sk.gaugeGain}<span className="ml-0.5 text-[11px] font-normal text-ef-muted">게이지</span></span> : null}
+                    {!off && (sk.kind === "battle"
+                      ? <span className="shrink-0 font-mono text-[13px] font-bold text-orange-300/80" title="스킬 게이지 소모">−{sk.gaugeCost ?? 100}<span className="ml-0.5 text-[11px] font-normal text-ef-muted">게이지</span></span>
+                      : sk.gaugeGain ? <span className="shrink-0 font-mono text-[13px] font-bold text-green-300/80" title="스킬 게이지 회복">＋{sk.gaugeGain}<span className="ml-0.5 text-[11px] font-normal text-ef-muted">게이지</span></span> : null)}
                     <span className="ml-auto shrink-0 whitespace-nowrap font-mono text-[13px] text-ef-muted">{targetLabel[sk.target]}</span>
                   </span>
                 </span>
