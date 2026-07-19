@@ -94,7 +94,7 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
         <div className="min-w-0">
           <p className="font-mono text-[13px] font-bold uppercase tracking-[0.34em] text-ef-accent/70">Darkest Protocol · 원정 편성</p>
           <h2 className="font-mono text-xl font-black uppercase tracking-[0.12em] text-white">부대 편성</h2>
-          <p className="mt-0.5 font-mono text-[13px] text-ef-muted">{selected.length === 0 ? "오퍼레이터를 골라 원정대를 편성하세요 (최대 4명)" : selected.length < 4 ? `${selected.length}명 편성됨 · 최대 4명까지 · 준비되면 「원정 출발」` : "편성 완료! 「원정 출발」로 던전에 진입하세요"}</p>
+          <p className="mt-0.5 font-mono text-[13px] text-ef-muted">{selected.length === 0 ? "오퍼레이터를 골라 원정대를 편성합니다 (최대 4명)" : selected.length < 4 ? `${selected.length}명 편성됨 · 최대 4명까지 · 준비되면 「원정 출발」` : "편성 완료 · 「원정 출발」로 던전에 진입합니다"}</p>
         </div>
         <div className="flex items-center gap-1.5">
           {Array.from({ length: 4 }, (_, i) => {

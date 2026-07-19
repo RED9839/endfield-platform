@@ -30,9 +30,9 @@ function skillReason(s: DDState, u: DDUnit, sk: DDSkill): string | null {
 // 뉴비용: 스킬 잠금 사유를 쉬운 말로 부연(툴팁)
 const REASON_HELP: Record<string, string> = {
   "궁 게이지 부족": "궁극기 게이지가 아직 안 찼습니다. 공격하거나 피격되면 충전돼요.",
-  "스킬 게이지 부족": "파티가 함께 쓰는 공유 게이지가 모자랍니다. 매 라운드 자동 회복되니 다음 턴을 노리세요.",
+  "스킬 게이지 부족": "파티가 함께 쓰는 공유 게이지가 모자랍니다. 매 라운드 자동 회복되니 다음 턴을 노립니다.",
   "자세 전환 필요": "먼저 자세(스탠스)를 전환해야 쓸 수 있습니다.",
-  "조건 미충족": "발동 조건이 아직 열리지 않았습니다. 적을 불균형 상태로 만들거나 아츠 이상을 걸어 보세요.",
+  "조건 미충족": "발동 조건이 아직 열리지 않았습니다. 적을 불균형 상태로 만들거나 아츠 이상을 걸면 열립니다.",
 };
 const reasonHelp = (reason: string | null): string => (reason ? REASON_HELP[reason] ?? (reason.startsWith("쿨타임") ? "연계 스킬을 다시 쓰려면 재사용 대기(쿨타임)가 끝나야 합니다." : `발동 조건: ${reason}`) : "");
 const statusLabel: Record<string, string> = { stun: "기절", combustion: "연소", corrosion: "부식", crystal: "결정", "armor-break": "갑옷파괴", shock: "감전", wing: "날개" };
