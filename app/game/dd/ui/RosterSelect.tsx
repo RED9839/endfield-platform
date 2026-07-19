@@ -18,6 +18,7 @@ const elementName: Record<"physical" | Element, string> = { physical: "물리", 
 const classLabel: Record<DDClass, string> = { guard: "가드", caster: "캐스터", striker: "스트라이커", vanguard: "뱅가드", defender: "디펜더", supporter: "서포터" };
 const classOrder: DDClass[] = ["striker", "guard", "vanguard", "caster", "defender", "supporter"];
 const kindLabel: Record<DDSkill["kind"], string> = { attack: "기본", battle: "배틀", link: "연계", ult: "궁극" };
+const kindTone: Record<DDSkill["kind"], string> = { attack: "#a1a1aa", battle: "#ff9a2f", link: "#67e8f9", ult: "#facc15" };
 const tgtType = (t?: string) => (t === "self" ? "자신" : t === "all" || t === "row" ? "범위" : "단일");
 const KIND_ORDER: Record<DDSkill["kind"], number> = { attack: 0, battle: 1, link: 2, ult: 3 };
 
@@ -78,8 +79,8 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
   const active = activeSets(lo);
   const pr = opProg(focusId);
   const skills = [
-    ...(OP_BASIC[focusId] ? [{ id: `${focusId}-basic`, name: OP_BASIC[focusId].name, kind: "attack" as const, note: OP_BASIC[focusId].note, power: 0.5, target: "single-front" }] : []),
-    ...(SKILLS[focusId] ?? []).map((s) => ({ id: s.id, name: s.name, kind: s.kind, note: s.note, power: s.power, target: s.target })),
+    ...(OP_BASIC[focusId] ? [{ id: `${focusId}-basic`, name: OP_BASIC[focusId].name, kind: "attack" as const, note: OP_BASIC[focusId].note, power: 0.5, target: "single-front", element: "physical" as Element, staggerVal: 6, gaugeCost: undefined as number | undefined, gaugeGain: 12 as number | undefined, requiresText: undefined as string | undefined }] : []),
+    ...(SKILLS[focusId] ?? []).map((s) => ({ id: s.id, name: s.name, kind: s.kind, note: s.note, power: s.power, target: s.target as string, element: (s.element ?? "physical") as Element, staggerVal: s.staggerVal, gaugeCost: s.gaugeCost, gaugeGain: s.gaugeGain, requiresText: s.requiresText })),
   ].sort((a, b) => KIND_ORDER[a.kind] - KIND_ORDER[b.kind]);
   const talents = OP_TALENTS[focusId] ?? [];
   const unit = makeAlly(focusId, 1, pr); // 기초 전투 스탯(정예화·스킬강화 반영)
@@ -210,12 +211,31 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
           <div className="mb-2.5">
             <div className="mb-1.5 font-mono text-[14px] font-bold uppercase tracking-[0.2em] text-ef-accent/70">스킬</div>
             <div className="space-y-1.5">
-              {skills.map((sk) => (
-                <div key={sk.id} className="flex items-start gap-2">
-                  <img src={skillIcon(focusId, sk.kind)} alt="" className="h-8 w-8 shrink-0 border border-ef-line/60 bg-black/40 object-cover" onError={(e) => ((e.currentTarget as HTMLImageElement).style.visibility = "hidden")} />
-                  <div className="min-w-0"><div className="flex flex-wrap items-baseline gap-x-1.5"><span className="font-mono text-[15px] font-bold text-white">{sk.name}</span><span className="font-mono text-[12px] uppercase text-ef-accent/70">{kindLabel[sk.kind]}</span>{sk.power > 0 && <span className="font-mono text-[12px] text-emerald-300/70">배율 {Math.round(sk.power * 100)}% · {tgtType(sk.target)}</span>}</div>{sk.note && <div className="text-[14px] leading-snug text-ef-muted">{sk.note}</div>}</div>
+              {skills.map((sk) => {
+                const el = sk.element ?? "physical";
+                const stg = sk.staggerVal ?? (sk.kind === "ult" ? 25 : sk.kind === "attack" ? 0 : 10); // 불균형치 기본값
+                const tone = kindTone[sk.kind];
+                return (
+                <div key={sk.id} className="flex items-start gap-2 border border-ef-line/40 bg-black/20 px-2 py-1.5">
+                  <img src={skillIcon(focusId, sk.kind)} alt="" className="mt-0.5 h-9 w-9 shrink-0 border border-ef-line/60 bg-black/40 object-cover" onError={(e) => ((e.currentTarget as HTMLImageElement).style.visibility = "hidden")} />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <span className="shrink-0 border px-1 py-px font-mono text-[10px] font-bold uppercase tracking-wide" style={{ color: tone, borderColor: `${tone}66` }}>{kindLabel[sk.kind]}</span>
+                      <span className="truncate font-mono text-[15px] font-bold text-white">{sk.name}</span>
+                    </div>
+                    <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 font-mono text-[12px]">
+                      {sk.power > 0 && <span className="font-bold" style={{ color: elementColor[el] }}>{Math.round(sk.power * 100)}%</span>}
+                      <span className="text-ef-muted">{elementName[el]} · {tgtType(sk.target)}</span>
+                      {sk.kind === "battle" && <span className="text-orange-300/80">게이지 −{sk.gaugeCost ?? 100}</span>}
+                      {sk.gaugeGain ? <span className="text-emerald-300/80">게이지 +{sk.gaugeGain}</span> : null}
+                      {stg > 0 && <span className="text-yellow-300/75">불균형 +{stg}</span>}
+                    </div>
+                    {sk.requiresText && <div className="mt-0.5 font-mono text-[12px] text-red-300/75">🔒 발동 조건: {sk.requiresText}</div>}
+                    {sk.note && <div className="mt-0.5 text-[13px] leading-snug text-ef-muted">{sk.note}</div>}
+                  </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
