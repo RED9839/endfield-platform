@@ -286,22 +286,36 @@ const TIER_RANK = ["common", "normal", "enhanced", "advanced", "alpha", "elite"]
 const TIERS_NORMAL = ["common", "normal", "enhanced", "advanced"];
 const TIERS_ELITE = ["advanced", "alpha", "elite"];
 const tierAt = (kind: string, depth: number, maxDepth: number) => { const arr = kind === "elite" ? TIERS_ELITE : TIERS_NORMAL; const prog = maxDepth > 0 ? depth / maxDepth : 0; return arr[Math.min(arr.length - 1, Math.floor(prog * arr.length))]; };
+const shuffle = <T,>(arr: T[]): T[] => { const a = [...arr]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 // 세력에서 목표 티어(없으면 최근접) 적 1마리 id
-function enemyOfTier(faction: string, tier: string): string {
-  const pool = FACTION_POOL[faction];
-  const exact = pool.byTier[tier];
-  if (exact && exact.length) return pick(exact);
+function enemyOfTier(faction: string, tier: string): string { return pickSquad(faction, tier, 1)[0]; }
+// 목표 티어 주변에서 '서로 다른' 적 n종 편성(다양성 우선, 후보 부족분만 중복 허용)
+function pickSquad(faction: string, tier: string, n: number, exclude: Set<string> = new Set()): string[] {
+  const pool = FACTION_POOL[faction] ?? FACTION_POOL[FACTIONS[0]];
   const want = TIER_RANK.indexOf(tier);
-  const avail = Object.keys(pool.byTier).sort((a, b) => Math.abs(TIER_RANK.indexOf(a) - want) - Math.abs(TIER_RANK.indexOf(b) - want));
-  const ids: string[] = pool.byTier[avail[0]] ?? Object.values(pool.byTier).flatMap((x) => x ?? []);
-  return ids.length ? pick(ids) : "rockhowler";
+  const cands = Object.entries(pool.byTier)
+    .flatMap(([t, ids]) => (ids ?? []).map((id) => ({ id, d: Math.abs(TIER_RANK.indexOf(t) - want) })))
+    .filter((c) => !exclude.has(c.id));
+  if (!cands.length) return Array.from({ length: n }, () => "rockhowler");
+  const near = shuffle(cands.filter((c) => c.d <= 1)).map((c) => c.id); // 목표±1 티어 셔플
+  const far = cands.filter((c) => c.d > 1).sort((a, b) => a.d - b.d).map((c) => c.id); // 더 먼 티어는 근접도순
+  const ranked = [...near, ...far];
+  const out: string[] = []; const seen = new Set<string>();
+  for (const id of ranked) { if (out.length >= n) break; if (!seen.has(id)) { out.push(id); seen.add(id); } } // 서로 다른 종 우선
+  while (out.length < n) out.push(pick(ranked)); // 후보 부족 시에만 중복
+  return out;
 }
-// 리전 교전 생성: 세력 + 노드종류 + 깊이 → 편성
+// 리전 교전 생성: 세력 + 노드종류 + 깊이 → 편성(여러 종 혼합)
 export function regionEncounter(faction: string, kind: NodeKind, depth: number, maxDepth: number): DDUnit[] {
   const pool = FACTION_POOL[faction] ?? FACTION_POOL[FACTIONS[0]];
-  if (kind === "boss") { const bid = pool.boss.length ? pick(pool.boss) : "craghowler"; return [makeEnemy(D[bid], 1), makeEnemy(D[enemyOfTier(faction, "enhanced")], 2)]; }
-  const tier = tierAt(kind, depth, maxDepth); const n = kind === "elite" ? 3 : 2 + (self => self)(depth % 2); // 정예 3 / 일반 2~3
-  return Array.from({ length: Math.min(3, n) }, (_, i) => makeEnemy(D[enemyOfTier(faction, tier)], i + 1));
+  if (kind === "boss") {
+    const bid = pool.boss.length ? pick(pool.boss) : "craghowler";
+    const guards = pickSquad(faction, depth >= 6 ? "advanced" : "enhanced", depth >= 6 ? 2 : 1, new Set([bid])); // 보스 + 서로 다른 호위
+    return [makeEnemy(D[bid], 1), ...guards.map((id, i) => makeEnemy(D[id], i + 2))];
+  }
+  const tier = tierAt(kind, depth, maxDepth);
+  const n = kind === "elite" ? 3 : depth % 3 === 0 ? 3 : 2; // 정예 3 / 일반 2~3(세 번째 노드마다 3)
+  return pickSquad(faction, tier, n).map((id, i) => makeEnemy(D[id], i + 1)); // 서로 다른 종 우선 혼합
 }
 type NodeKind = "battle" | "elite" | "boss" | "rest";
 const NODE_TO_KIND: Record<NodeKind, "normal" | "elite" | "boss"> = { battle: "normal", elite: "elite", boss: "boss", rest: "normal" };
