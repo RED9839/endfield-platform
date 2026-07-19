@@ -13,13 +13,21 @@ const FACTION_META: Record<string, { tone: string; region: string; icon: string 
   "수화자": { tone: "#67e8f9", region: "무릉", icon: "💧" },
   "랜드브레이커": { tone: "#fb923c", region: "본 크러셔 캠프", icon: "🔥" },
   "청파채": { tone: "#fbbf24", region: "창적 거점", icon: "⚔️" },
+  "그림자에 물든": { tone: "#a78bfa", region: "초자연의 균열", icon: "🌀" },
 };
 
-export default function RunHud({ faction, depth, maxDepth, craft, onCraft, canCraft }: { faction: string; depth: number; maxDepth: number; craft: CraftState; onCraft?: () => void; canCraft?: boolean }) {
+export default function RunHud({ faction, depth, maxDepth, floor, totalFloors, floorName, craft, onCraft, canCraft }: { faction: string; depth: number; maxDepth: number; floor?: number; totalFloors?: number; floorName?: string; craft: CraftState; onCraft?: () => void; canCraft?: boolean }) {
   const fm = FACTION_META[faction] ?? { tone: "#a1a1aa", region: faction, icon: "◆" };
   const owned = Object.keys(craft.owned).length;
   return (
     <div className="mb-4 flex flex-wrap items-center gap-2">
+      {/* 층(타워 진행) */}
+      {floor != null && totalFloors != null && (
+        <div className="hud-tile flex items-center gap-2 px-3 py-1.5" style={{ ...CUT, borderColor: fm.tone + "88", boxShadow: `0 0 16px -5px ${fm.tone}` }}>
+          <span className="font-mono text-lg font-black leading-none" style={{ color: fm.tone }}>{floor + 1}<span className="text-[13px] font-normal text-ef-muted">/{totalFloors}층</span></span>
+          {floorName && <span className="font-mono text-sm font-bold text-white">{floorName}</span>}
+        </div>
+      )}
       {/* 세력 리전 */}
       <div className="hud-tile flex items-center gap-2 px-3 py-1.5" style={{ ...CUT, borderColor: fm.tone + "66", boxShadow: `inset 0 1px 0 rgba(255,255,255,0.05), 0 0 14px -6px ${fm.tone}` }}>
         <span className="text-base leading-none">{fm.icon}</span>

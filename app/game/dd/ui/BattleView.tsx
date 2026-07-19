@@ -176,11 +176,11 @@ function FxLayer({ id, fx }: { id: string; fx: Fx }) {
 const shakeCls = (hit: boolean, tick: number) => (hit ? (tick % 2 ? "dd-shake-a" : "dd-shake-b") : "");
 const actCls = (active: boolean, tick: number) => (active ? (tick % 2 ? "dd-act-a" : "dd-act-b") : "");
 
-export default function BattleView({ party, encounterKey, nodeKind, faction, depth = 0, maxDepth = 6, owned, items, onUseItem, onEnd }: { party: PartyMember[]; encounterKey: string; nodeKind: NodeKind; faction?: string; depth?: number; maxDepth?: number; owned?: Record<string, number>; items: Record<string, number>; onUseItem: (id: string) => void; onEnd: (result: "ally" | "enemy", survivors: BattleResult[]) => void }) {
+export default function BattleView({ party, encounterKey, nodeKind, faction, bossId, depth = 0, maxDepth = 6, owned, items, onUseItem, onEnd }: { party: PartyMember[]; encounterKey: string; nodeKind: NodeKind; faction?: string; bossId?: string; depth?: number; maxDepth?: number; owned?: Record<string, number>; items: Record<string, number>; onUseItem: (id: string) => void; onEnd: (result: "ally" | "enemy", survivors: BattleResult[]) => void }) {
   const stateRef = useRef<DDState | null>(null);
   if (!stateRef.current) {
     const base = ENCOUNTERS.find((e) => e.key === encounterKey) ?? ENCOUNTERS[0];
-    const enc = faction ? { ...base, make: () => regionEncounter(faction, nodeKind, depth, maxDepth) } : base; // 세력 리전 편성(깊이별 티어)
+    const enc = faction ? { ...base, make: () => regionEncounter(faction, nodeKind, depth, maxDepth, bossId) } : base; // 세력 리전 편성(깊이별 티어 + 층 보스 고정)
     stateRef.current = createBattle(party, enc, owned, nodeKind === "boss"); // 지속 HP + 장비 세트 효과 + 제작 단조 반영
     stateRef.current.manualLink = true; // 기본 수동 — 연계는 플레이어가 콤보 아이콘으로 발동(자동 모드 시 false)
   }

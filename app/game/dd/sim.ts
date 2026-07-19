@@ -315,13 +315,13 @@ function pickSquad(faction: string, tier: string, n: number, exclude: Set<string
 let recentEnemies: string[] = [];
 export function resetEncounterHistory(): void { recentEnemies = []; }
 // 리전 교전 생성: 세력 + 노드종류 + 깊이 → 편성(여러 종 혼합 + 최근 등장 회피)
-export function regionEncounter(faction: string, kind: NodeKind, depth: number, maxDepth: number): DDUnit[] {
+export function regionEncounter(faction: string, kind: NodeKind, depth: number, maxDepth: number, bossId?: string): DDUnit[] {
   if (depth === 0) recentEnemies = []; // 원정 시작 시 히스토리 초기화(백업)
   const pool = FACTION_POOL[faction] ?? FACTION_POOL[FACTIONS[0]];
   const recent = new Set(recentEnemies);
   let ids: string[];
   if (kind === "boss") {
-    const bid = pool.boss.length ? pick(pool.boss) : "craghowler";
+    const bid = (bossId && D[bossId]) ? bossId : pool.boss.length ? pick(pool.boss) : "craghowler"; // 층 지정 보스 우선
     const guards = pickSquad(faction, depth >= 6 ? "advanced" : "enhanced", depth >= 6 ? 2 : 1, new Set([bid, ...recentEnemies])); // 보스 + 서로 다른 호위(최근 회피)
     ids = [bid, ...guards];
   } else {

@@ -751,4 +751,14 @@ export const ENEMY_DEFS: Record<string, EnemyDef> = {
   "hedron-delta": { id: "hedron-delta", name: "수정아겔로스 · δ", faction: "아겔로스", role: "snipe", tier: "common", element: "cryo", behavior: "snipe", resist: {"cryo":0.2,"electric":0.2} },
   "tidewalker-delta": { id: "tidewalker-delta", name: "조류아겔로스 · δ", faction: "아겔로스", role: "melee", tier: "elite", element: "cryo", behavior: "melee", resist: {"cryo":0.2,"electric":0.2} },
   "blazemist-originium-slug": { id: "blazemist-originium-slug", name: "용암원석충", faction: "야외 생물", role: "aoe", tier: "normal", element: "heat", behavior: "aoe", resist: {"physical":0.2,"nature":0.2,"heat":0.2} },
+  // 그림자에 물든(파운데이션·알레이크레오스 세력) — warfarin enemies 1.4. 저항 = 실측/100(전기 저항↑)
+  "shadowtusk":     { id: "shadowtusk",     name: "그림자에 물든 터스크비스트", faction: "그림자에 물든", role: "침식 야수", tier: "enhanced", element: "physical", behavior: "melee", resist: { physical: 0.2, electric: 0.35 } },
+  "shadowquill":    { id: "shadowquill",    name: "그림자에 물든 프릭비스트",   faction: "그림자에 물든", role: "침식 야수", tier: "enhanced", element: "electric", behavior: "melee", attach: "electric", resist: { physical: 0.2, electric: 0.35 } },
+  "shadowraker":    { id: "shadowraker",    name: "그림자에 물든 레이커비스트", faction: "그림자에 물든", role: "침식 야수", tier: "advanced", element: "electric", behavior: "melee", attach: "electric", resist: { physical: 0.2, electric: 0.35 } },
+  "shadowthunder":  { id: "shadowthunder",  name: "그림자에 물든 진뢰",         faction: "그림자에 물든", role: "침식 소환수", tier: "advanced", element: "electric", behavior: "heavy", attach: "electric", resist: { physical: 0.2, electric: 0.35 } },
+  "shadowyingvan":  { id: "shadowyingvan",  name: "그림자에 물든 응룡 대원 · 선봉", faction: "그림자에 물든", role: "침식 근접병", tier: "normal", element: "physical", behavior: "melee", resist: { physical: 0.2 } },
+  "shadowyingelite":{ id: "shadowyingelite",name: "그림자에 물든 응룡 대원 · 정예", faction: "그림자에 물든", role: "침식 정예병", tier: "advanced", element: "physical", behavior: "melee", resist: { physical: 0.2, electric: 0.35 } },
+  "shadowyingbrk":  { id: "shadowyingbrk",  name: "그림자에 물든 응룡 대원 · 돌파", faction: "그림자에 물든", role: "침식 돌파병", tier: "enhanced", element: "physical", behavior: "melee", resist: { physical: 0.2 } },
+  "shadowyingcap":  { id: "shadowyingcap",  name: "그림자에 물든 응룡 대장",     faction: "그림자에 물든", role: "침식 지휘관", tier: "alpha", element: "electric", behavior: "heavy", attach: "electric", resist: { physical: 0.2, electric: 0.35 } },
+  "alleikhreos":    { id: "alleikhreos",    name: "알레이크레오스, 천부장",       faction: "그림자에 물든", role: "천부장(최종보스)", tier: "boss", element: "physical", behavior: "heavy", resist: { physical: 0.2, heat: 0.2, electric: 0.2, cryo: 0.2, nature: 0.2 } },
 };

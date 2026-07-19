@@ -42,7 +42,7 @@ export default function GamePage() {
 
       {run.phase === "map" && (
         <>
-          <div className="mx-auto max-w-[1500px] px-4 pt-4 sm:px-7"><RunHud faction={run.faction} depth={run.depthReached} maxDepth={run.maxDepth} craft={run.craft} onCraft={run.openCraft} canCraft /></div>
+          <div className="mx-auto max-w-[1500px] px-4 pt-4 sm:px-7"><RunHud faction={run.faction} depth={run.depthReached} maxDepth={run.maxDepth} floor={run.floor} totalFloors={run.totalFloors} floorName={run.floorName} craft={run.craft} onCraft={run.openCraft} canCraft /></div>
           <RunMap nodes={run.nodes} frontier={run.frontier} cleared={run.cleared} party={run.party} items={run.items} onEnter={run.enterNode} />
         </>
       )}
@@ -56,6 +56,7 @@ export default function GamePage() {
           encounterKey={encounterForNode(run.activeNode.kind)}
           nodeKind={run.activeNode.kind}
           faction={run.faction}
+          bossId={run.floorBoss}
           depth={run.activeNode.depth}
           maxDepth={run.maxDepth}
           owned={run.craft.owned}
