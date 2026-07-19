@@ -9,7 +9,7 @@ import { SKILL_MAX, DEFAULT_PROGRESS, type OpProgress } from "./progress";
 import { initialCraft, craftPiece as doCraft, forgePiece as doForge, cloneCraft, skillForgeCost, canAfford, type CraftState } from "./craft";
 import { FACTIONS, enemyDrop } from "./sim";
 
-const MAX_DEPTH = 6; // LAYOUT 최종 깊이(보스)
+const MAX_DEPTH = 10; // LAYOUT 최종 깊이(보스) — 구역 11개(0~10)
 const pickRand = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
 
 export type NodeKind = "battle" | "elite" | "rest" | "boss";
@@ -26,13 +26,17 @@ export const encounterForNode = (k: NodeKind) => ENCOUNTER_OF[k];
 
 // 던전 맵 레이아웃(깊이별 노드 수 + 종류 풀). 각 노드는 다음 깊이 전체와 연결(항상 도달 가능).
 const LAYOUT: { count: number; pool: NodeKind[] }[] = [
-  { count: 1, pool: ["battle"] },
-  { count: 3, pool: ["battle", "rest", "battle"] },
-  { count: 3, pool: ["battle", "elite", "battle"] },
-  { count: 2, pool: ["rest", "battle"] },
-  { count: 3, pool: ["elite", "battle", "elite"] },
-  { count: 2, pool: ["rest", "battle"] },
-  { count: 1, pool: ["boss"] },
+  { count: 1, pool: ["battle"] },                    // 구역 1 — 도입
+  { count: 3, pool: ["battle", "rest", "battle"] },  // 구역 2
+  { count: 3, pool: ["battle", "elite", "battle"] }, // 구역 3 — 첫 정예 선택지
+  { count: 2, pool: ["rest", "battle"] },            // 구역 4 — 회복
+  { count: 3, pool: ["battle", "elite", "battle"] }, // 구역 5
+  { count: 3, pool: ["elite", "battle", "elite"] },  // 구역 6 — 정예 밀집
+  { count: 2, pool: ["rest", "battle"] },            // 구역 7 — 회복
+  { count: 3, pool: ["battle", "elite", "battle"] }, // 구역 8
+  { count: 3, pool: ["elite", "battle", "elite"] },  // 구역 9 — 정예 밀집
+  { count: 2, pool: ["rest", "battle"] },            // 구역 10 — 보스 직전 회복
+  { count: 1, pool: ["boss"] },                      // 구역 11 — 심층 보스
 ];
 
 function genMap(): RunNode[] {
