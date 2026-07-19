@@ -20,7 +20,7 @@ export const FLOORS: Floor[] = [
   { faction: "랜드브레이커", boss: "nefarith-conqueror", name: "정복자의 왕좌" },              // 5층 정복자 네파리스
   { faction: "그림자에 물든", boss: "alleikhreos", name: "초자연의 균열" },                    // 6층 알레이크레오스
 ];
-const LOOT_DECAY = 0.94; // 층당 재화 획득 -6%
+export const LOOT_DECAY = 0.94; // 층당 재화 획득 -6%
 const pickRand = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
 
 export type NodeKind = "battle" | "elite" | "rest" | "boss";

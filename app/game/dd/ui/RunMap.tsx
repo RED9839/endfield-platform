@@ -1,15 +1,18 @@
 "use client";
 
+import { useState } from "react";
 import { Swords, Skull, Tent, Crown, ChevronRight } from "lucide-react";
 
 import { OPERATORS } from "../roster";
 import { ITEMS, itemColor, itemImage } from "../items";
-import type { NodeKind, PartyMember, RunNode } from "../run";
+import { enemyDrop } from "../sim";
+import { LOOT_DECAY, REST_HEAL, type NodeKind, type PartyMember, type RunNode } from "../run";
 import type { Element } from "../combat";
 
 const CUT_SM = { clipPath: "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))" };
 const elementColor: Record<"physical" | Element, string> = { physical: "#d4d4d8", heat: "#fb923c", electric: "#FBCB38", cryo: "#67e8f9", nature: "#86efac" };
 
+const ITEM_KIND_KO: Record<string, string> = { heal: "즉시 회복", "heal-shield": "회복+보호막", regen: "재생", ult: "궁 충전", revive: "부활", buff: "강화" };
 const NODE_META: Record<NodeKind, { label: string; icon: typeof Swords; tone: string }> = {
   battle: { label: "교전", icon: Swords, tone: "#d4d4d8" },
   elite: { label: "정예", icon: Skull, tone: "#fca5a5" },
@@ -43,7 +46,15 @@ function PartyBar({ party }: { party: PartyMember[] }) {
   );
 }
 
-export default function RunMap({ nodes, frontier, cleared, party, items, onEnter }: { nodes: RunNode[]; frontier: string[]; cleared: string[]; party: PartyMember[]; items: Record<string, number>; onEnter: (n: RunNode) => void }) {
+export default function RunMap({ nodes, frontier, cleared, party, items, faction, floor = 0, onEnter }: { nodes: RunNode[]; frontier: string[]; cleared: string[]; party: PartyMember[]; items: Record<string, number>; faction?: string; floor?: number; onEnter: (n: RunNode) => void }) {
+  const [itemDetail, setItemDetail] = useState<string | null>(null);
+  // 노드 예상 보상(교전·정예·보스: 재화 × 층 배율 / 야영: HP 회복)
+  const nodeReward = (n: RunNode) => {
+    if (n.kind === "rest") return null;
+    const d = enemyDrop(n.kind, n.depth, faction ?? "");
+    const m = Math.pow(LOOT_DECAY, floor);
+    return { parts: Math.round(d.parts * m), permits: Math.round(d.permits * m) };
+  };
   const maxDepth = Math.max(...nodes.map((n) => n.depth));
   const depths = Array.from({ length: maxDepth + 1 }, (_, d) => nodes.filter((n) => n.depth === d).sort((a, b) => a.lane - b.lane));
 
@@ -60,13 +71,23 @@ export default function RunMap({ nodes, frontier, cleared, party, items, onEnter
       <div className="mb-5 flex flex-wrap items-center gap-2">
         <span className="font-mono text-[14px] font-bold uppercase tracking-wider text-ef-muted">소지 아이템</span>
         {Object.entries(items).length === 0 && <span className="font-mono text-[14px] text-ef-muted">없음</span>}
-        {Object.entries(items).map(([id, n]) => { const it = ITEMS[id]; if (!it) return null; return (
-          <span key={id} className="hud-tile dd-cut flex items-center gap-1 px-2 py-0.5">
+        {Object.entries(items).map(([id, n]) => { const it = ITEMS[id]; if (!it) return null; const on = itemDetail === id; return (
+          <button key={id} type="button" onClick={() => setItemDetail(on ? null : id)} title="눌러서 효과 보기" className={`hud-tile dd-cut flex items-center gap-1 px-2 py-0.5 transition ${on ? "!border-ef-accent bg-ef-accent/10" : "hover:!border-ef-accent/50"}`}>
             <img src={itemImage(id)} alt="" loading="lazy" className="h-5 w-5 shrink-0 rounded-sm object-contain" style={{ background: `${itemColor(it.kind)}18` }} />
             <span className="font-mono text-[14px] text-ef-ink">{it.name}</span>
             <span className="font-mono text-[14px] font-bold text-ef-accent">×{n}</span>
-          </span>
+          </button>
         ); })}
+        {/* 선택 아이템 효과 상세 */}
+        {itemDetail && ITEMS[itemDetail] && (() => { const it = ITEMS[itemDetail]; return (
+          <div className="flex w-full items-start gap-2 border border-ef-accent/40 bg-black/40 px-3 py-2" style={CUT_SM}>
+            <img src={itemImage(itemDetail)} alt="" loading="lazy" className="h-8 w-8 shrink-0 rounded-sm object-contain" style={{ background: `${itemColor(it.kind)}22` }} />
+            <div className="min-w-0">
+              <div className="flex items-center gap-2"><span className="font-mono text-sm font-bold text-white">{it.name}</span><span className="border px-1 font-mono text-[11px]" style={{ color: itemColor(it.kind), borderColor: itemColor(it.kind) + "66" }}>{ITEM_KIND_KO[it.kind] ?? it.kind}</span><span className="font-mono text-[11px] text-ef-muted">{"★".repeat(Math.min(3, Math.ceil(it.rarity / 2)))}</span></div>
+              <p className="mt-0.5 font-mono text-[13px] leading-snug text-ef-muted">{it.desc}</p>
+            </div>
+          </div>
+        ); })()}
       </div>
 
       <div className="hud-panel dd-cut overflow-x-auto p-4">
@@ -94,8 +115,12 @@ export default function RunMap({ nodes, frontier, cleared, party, items, onEnter
                     <Icon className="h-5 w-5 shrink-0" style={{ color: isCleared ? "#555" : meta.tone, filter: isFrontier ? `drop-shadow(0 0 5px ${meta.tone})` : undefined }} />
                     <span className="min-w-0">
                       <span className="block font-mono text-sm font-bold" style={{ color: isCleared ? "#666" : "#fff" }}>{meta.label}</span>
-                      {isCleared && <span className="block font-mono text-[14px] uppercase text-ef-muted">완료</span>}
-                      {isFrontier && <span className="block font-mono text-[14px] font-bold uppercase tracking-wider text-ef-accent">▶ 진입</span>}
+                      {isCleared ? <span className="block font-mono text-[14px] uppercase text-ef-muted">완료</span> : (() => {
+                        const rw = nodeReward(n);
+                        if (n.kind === "rest") return <span className="block font-mono text-[12px] font-bold text-green-300/85">✚ HP +{Math.round(REST_HEAL * 100)}%</span>;
+                        return <span className="block whitespace-nowrap font-mono text-[12px] text-amber-300/75" title="예상 보상 — 부품 · 관리권"><span className="text-ef-muted">◈</span>{rw?.parts} <span className="text-ef-muted">🔑</span>{rw?.permits}</span>;
+                      })()}
+                      {isFrontier && <span className="block font-mono text-[13px] font-bold uppercase tracking-wider text-ef-accent">▶ 진입</span>}
                     </span>
                   </button>
                 );
