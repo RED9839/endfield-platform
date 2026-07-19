@@ -23,6 +23,8 @@ export const gearSetOrder: GearSetName[] = [
   "침식 차단",
   "통합 중량형 모델",
   "통합 경량형 모델",
+  "통합 실전 훈련",
+  "절망",
   "세트 없음",
 ];
 

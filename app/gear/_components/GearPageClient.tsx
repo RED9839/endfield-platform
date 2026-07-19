@@ -94,10 +94,11 @@ const setTypeOptions: GearSetName[] = [
   "개척", "응룡 50식", "본 크러셔", "조류의 물결", "청파", "M. I. 경찰용",
   "고검의 잔향", "식양의 흐름", "열 작업용", "생체 보조", "검술사", "경량 초자연",
   "펄스식", "식양의 숨결", "순행 전달자", "아부레이의 메아리", "중장갑 전달자",
-  "재앙 방호", "침식 방호", "침식 차단", "통합 중량형 모델", "통합 경량형 모델", "세트 없음",
+  "재앙 방호", "침식 방호", "침식 차단", "통합 중량형 모델", "통합 경량형 모델",
+  "통합 실전 훈련", "절망", "세트 없음",
 ];
 
-const levelOptions: GearLevel[] = [70, 50, 36, 28, 20, 10];
+const levelOptions: GearLevel[] = [70, 60, 50, 36, 28, 20, 10];
 
 // 220여 개 카드를 한 번에 렌더하지 않고 점진적으로 노출해 DOM/레이아웃 비용을 낮춘다.
 const GEAR_PAGE_SIZE = 60;
@@ -328,10 +329,9 @@ export default function GearPageClient({ gears }: { gears: GearListItem[] }) {
             .toLowerCase(),
         }))
         .sort((left, right) => {
+          // 레벨 → 등급 → 세트 → 부위 → 이름 (같은 레벨끼리 묶여 60/70이 섞이지 않음)
+          if (right.gear.level !== left.gear.level) return right.gear.level - left.gear.level;
           if (right.gear.quality !== left.gear.quality) return right.gear.quality - left.gear.quality;
-          const lc = categoryOrderMap[left.gear.category] ?? 999;
-          const rc = categoryOrderMap[right.gear.category] ?? 999;
-          if (lc !== rc) return lc - rc;
           const ls = setTypeOptions.indexOf(left.gear.setName);
           const rs = setTypeOptions.indexOf(right.gear.setName);
           if (ls !== rs) {
@@ -339,7 +339,9 @@ export default function GearPageClient({ gears }: { gears: GearListItem[] }) {
             if (rs === -1) return -1;
             return ls - rs;
           }
-          if (right.gear.level !== left.gear.level) return right.gear.level - left.gear.level;
+          const lc = categoryOrderMap[left.gear.category] ?? 999;
+          const rc = categoryOrderMap[right.gear.category] ?? 999;
+          if (lc !== rc) return lc - rc;
           return left.gear.name.localeCompare(right.gear.name, "ko");
         }),
     [gears],
