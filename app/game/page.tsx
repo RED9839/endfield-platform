@@ -42,7 +42,7 @@ export default function GamePage() {
 
       {run.phase === "map" && (
         <>
-          <div className="mx-auto max-w-[1500px] px-4 pt-4 sm:px-7"><RunHud faction={run.faction} depth={run.depthReached} maxDepth={run.maxDepth} floor={run.floor} totalFloors={run.totalFloors} floorName={run.floorName} craft={run.craft} onCraft={run.openCraft} canCraft /></div>
+          <div className="mx-auto max-w-[1500px] px-4 pt-4 sm:px-7"><RunHud faction={run.faction} depth={run.depthReached} maxDepth={run.maxDepth} floor={run.floor} totalFloors={run.totalFloors} floorName={run.floorName} craft={run.craft} onCraft={run.openCraft} canCraft hasCraftable={run.hasCraftable} /></div>
           <RunMap nodes={run.nodes} frontier={run.frontier} cleared={run.cleared} party={run.party} items={run.items} faction={run.faction} floor={run.floor} totalFloors={run.totalFloors} onEnter={run.enterNode} />
         </>
       )}

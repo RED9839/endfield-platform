@@ -16,7 +16,7 @@ const FACTION_META: Record<string, { tone: string; region: string; icon: string 
   "그림자에 물든": { tone: "#a78bfa", region: "초자연의 균열", icon: "🌀" },
 };
 
-export default function RunHud({ faction, depth, maxDepth, floor, totalFloors, floorName, craft, onCraft, canCraft }: { faction: string; depth: number; maxDepth: number; floor?: number; totalFloors?: number; floorName?: string; craft: CraftState; onCraft?: () => void; canCraft?: boolean }) {
+export default function RunHud({ faction, depth, maxDepth, floor, totalFloors, floorName, craft, onCraft, canCraft, hasCraftable }: { faction: string; depth: number; maxDepth: number; floor?: number; totalFloors?: number; floorName?: string; craft: CraftState; onCraft?: () => void; canCraft?: boolean; hasCraftable?: boolean }) {
   const fm = FACTION_META[faction] ?? { tone: "#a1a1aa", region: faction, icon: "◆" };
   const owned = Object.keys(craft.owned).length;
   return (
@@ -50,8 +50,9 @@ export default function RunHud({ faction, depth, maxDepth, floor, totalFloors, f
           <KeyRound className="h-3.5 w-3.5 text-yellow-300" /><span className="font-mono text-sm font-bold text-white">{craft.mats.permits}</span><span className="font-mono text-[14px] text-ef-muted">관리권</span>
         </div>
         {onCraft && (
-          <button type="button" onClick={onCraft} disabled={!canCraft} className={`hud-btn flex items-center gap-1.5 px-3 py-1.5 font-mono text-sm font-bold uppercase tracking-wider transition disabled:opacity-40 ${canCraft ? "hud-btn-on" : "text-ef-accent"}`} style={CUT}>
-            <Hammer className="h-4 w-4" />제작 {owned > 0 && <span className="text-[14px] opacity-70">·{owned}</span>}
+          <button type="button" onClick={onCraft} disabled={!canCraft} title={hasCraftable ? "제작 가능한 장비가 있습니다 — 공업소에서 강해질 수 있습니다" : undefined} className={`hud-btn relative flex items-center gap-1.5 px-3 py-1.5 font-mono text-sm font-bold uppercase tracking-wider transition disabled:opacity-40 ${hasCraftable ? "!border-ef-accent bg-ef-accent/15 text-ef-accent shadow-[0_0_14px_-2px_rgba(255,154,47,0.5)]" : canCraft ? "hud-btn-on" : "text-ef-accent"}`} style={CUT}>
+            {hasCraftable && <span className="absolute -right-1 -top-1 flex h-3 w-3"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-ef-accent opacity-75" /><span className="relative inline-flex h-3 w-3 rounded-full bg-ef-accent" /></span>}
+            <Hammer className="h-4 w-4" />제작 {hasCraftable ? <span className="text-[13px]">가능!</span> : owned > 0 && <span className="text-[14px] opacity-70">·{owned}</span>}
           </button>
         )}
       </div>

@@ -3,10 +3,10 @@
 import { useCallback, useMemo, useState } from "react";
 
 import { makeAlly } from "./roster";
-import { type Loadout } from "./gear";
+import { GEAR_SLOTS, GEAR_PIECE_BY_ID, type Loadout } from "./gear";
 import { rewardItemPool } from "./items";
 import { SKILL_MAX, DEFAULT_PROGRESS, type OpProgress } from "./progress";
-import { initialCraft, craftPiece as doCraft, forgePiece as doForge, cloneCraft, skillForgeCost, canAfford, type CraftState } from "./craft";
+import { initialCraft, craftPiece as doCraft, forgePiece as doForge, cloneCraft, craftCost, skillForgeCost, canAfford, type CraftState } from "./craft";
 import { FACTIONS, enemyDrop, resetEncounterHistory } from "./sim";
 
 const MAX_DEPTH = 6; // 층당 구역 7개(0~6), 6=층 보스
@@ -99,6 +99,12 @@ export function useDDRun() {
   const nodeMap = useMemo(() => Object.fromEntries(nodes.map((n) => [n.id, n])), [nodes]);
   const activeNode = activeId ? nodeMap[activeId] : null;
 
+  // 파티 목표 장비 중 아직 안 만들었고 재화로 만들 수 있는 피스가 있는가(공업소 진입 유도용)
+  const hasCraftable = useMemo(() => party.some((m) => m.loadout && GEAR_SLOTS.some((slot) => {
+    const ref = m.loadout![slot]; const p = ref ? GEAR_PIECE_BY_ID[ref] : undefined;
+    return p && craft.owned[ref!] == null && canAfford(craft.mats, craftCost(p));
+  })), [party, craft]);
+
   const startRun = useCallback((picks: PartyPick[]) => {
     resetEncounterHistory(); // 새 원정 — 적 등장 이력 초기화
     const p = picks.map((pick) => { const u = makeAlly(pick.id, 1, pick.progress); return { id: pick.id, hp: u.maxHp, maxHp: u.maxHp, loadout: pick.loadout, progress: pick.progress }; });
@@ -182,5 +188,5 @@ export function useDDRun() {
   const openCraft = useCallback(() => setPhase("craft"), []);
   const closeCraft = useCallback(() => setPhase("map"), []);
 
-  return { phase, party, nodes, frontier, cleared, activeNode, depthReached, faction, maxDepth: MAX_DEPTH, floor, floorName: FLOORS[floor].name, floorBoss: FLOORS[floor].boss, totalFloors: FLOORS.length, items, useItem, addItem, craft, craftPiece, forgePiece, swapGear, forgeSkill, loot, lastLoot, continueSpoils, openCraft, closeCraft, startRun, enterNode, finishBattle, rest, restart };
+  return { phase, party, nodes, frontier, cleared, activeNode, depthReached, faction, maxDepth: MAX_DEPTH, floor, floorName: FLOORS[floor].name, floorBoss: FLOORS[floor].boss, totalFloors: FLOORS.length, hasCraftable, items, useItem, addItem, craft, craftPiece, forgePiece, swapGear, forgeSkill, loot, lastLoot, continueSpoils, openCraft, closeCraft, startRun, enterNode, finishBattle, rest, restart };
 }
