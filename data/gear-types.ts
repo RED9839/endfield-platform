@@ -1,6 +1,6 @@
 export type GearCategory = "armor" | "gloves" | "kit";
 
-export type GearLevel = 70 | 50 | 36 | 28 | 20 | 10;
+export type GearLevel = 70 | 60 | 50 | 36 | 28 | 20 | 10;
 
 export type GearQuality = 1 | 2 | 3 | 4 | 5;
 
@@ -27,6 +27,8 @@ export type GearSetName =
   | "침식 차단"
   | "통합 중량형 모델"
   | "통합 경량형 모델"
+  | "통합 실전 훈련"
+  | "절망"
   | "세트 없음";
 
 export type GearAbilityKey =

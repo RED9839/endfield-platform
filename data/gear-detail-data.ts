@@ -7,6 +7,22 @@ import { eternalxiranitelightarmort1 } from "./gear-source/eternalxiranitelighta
 import { eternalxiranitereinforcedplate } from "./gear-source/eternalxiranitereinforcedplate";
 import { eternalxiranitebracer } from "./gear-source/eternalxiranitebracer";
 import { eternalxiranitehandguard } from "./gear-source/eternalxiranitehandguard";
+import { aicfieldworkflashlight } from "./gear-source/aicfieldworkflashlight";
+import { rifttrekkerarmorslab } from "./gear-source/rifttrekkerarmorslab";
+import { aicfieldworkarmor } from "./gear-source/aicfieldworkarmor";
+import { aicfieldworkember } from "./gear-source/aicfieldworkember";
+import { rifttrekkergloves } from "./gear-source/rifttrekkergloves";
+import { lynxgauntletst1 } from "./gear-source/lynxgauntletst1";
+import { aicfieldworkvest } from "./gear-source/aicfieldworkvest";
+import { aicfieldworkwraps } from "./gear-source/aicfieldworkwraps";
+import { aicfieldworkplate } from "./gear-source/aicfieldworkplate";
+import { aicfieldworkmachete } from "./gear-source/aicfieldworkmachete";
+import { aicfieldworkgloves } from "./gear-source/aicfieldworkgloves";
+import { aicfieldworkhands } from "./gear-source/aicfieldworkhands";
+import { rifttrekkerheavyarmor } from "./gear-source/rifttrekkerheavyarmor";
+import { rifttrekkerlightarmor } from "./gear-source/rifttrekkerlightarmor";
+import { rifttrekkerhands } from "./gear-source/rifttrekkerhands";
+import { lynxcuirasst1 } from "./gear-source/lynxcuirasst1";
 import { frontiersarmor } from "./gear-source/frontiersarmor";
 import { frontiersarmort1 } from "./gear-source/frontiersarmort1";
 import { frontiersarmort2 } from "./gear-source/frontiersarmort2";
@@ -229,6 +245,22 @@ import { grizzlededgepushknife } from "./gear-source/grizzlededgepushknife";
 import { grizzlededgepushknifet1 } from "./gear-source/grizzlededgepushknifet1";
 
 export const gearDetails: GearDetail[] = [
+  aicfieldworkflashlight,
+  rifttrekkerarmorslab,
+  aicfieldworkarmor,
+  aicfieldworkember,
+  rifttrekkergloves,
+  lynxgauntletst1,
+  aicfieldworkvest,
+  aicfieldworkwraps,
+  aicfieldworkplate,
+  aicfieldworkmachete,
+  aicfieldworkgloves,
+  aicfieldworkhands,
+  rifttrekkerheavyarmor,
+  rifttrekkerlightarmor,
+  rifttrekkerhands,
+  lynxcuirasst1,
   hotworkinsulationplate,
   hotworkprotectivegloves,
   eternalxiranitelightarmor,
