@@ -7,7 +7,7 @@ import { type Loadout } from "./gear";
 import { rewardItemPool } from "./items";
 import { SKILL_MAX, DEFAULT_PROGRESS, type OpProgress } from "./progress";
 import { initialCraft, craftPiece as doCraft, forgePiece as doForge, cloneCraft, skillForgeCost, canAfford, type CraftState } from "./craft";
-import { FACTIONS, enemyDrop } from "./sim";
+import { FACTIONS, enemyDrop, resetEncounterHistory } from "./sim";
 
 const MAX_DEPTH = 10; // LAYOUT 최종 깊이(보스) — 구역 11개(0~10)
 const pickRand = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
@@ -92,6 +92,7 @@ export function useDDRun() {
   const activeNode = activeId ? nodeMap[activeId] : null;
 
   const startRun = useCallback((picks: PartyPick[]) => {
+    resetEncounterHistory(); // 새 원정 — 적 등장 이력 초기화
     const p = picks.map((pick) => { const u = makeAlly(pick.id, 1, pick.progress); return { id: pick.id, hp: u.maxHp, maxHp: u.maxHp, loadout: pick.loadout, progress: pick.progress }; });
     const map = genMap();
     setParty(p);

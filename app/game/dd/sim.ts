@@ -289,13 +289,19 @@ const tierAt = (kind: string, depth: number, maxDepth: number) => { const arr = 
 const shuffle = <T,>(arr: T[]): T[] => { const a = [...arr]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 // 세력에서 목표 티어(없으면 최근접) 적 1마리 id
 function enemyOfTier(faction: string, tier: string): string { return pickSquad(faction, tier, 1)[0]; }
+// 풀이 작은 세력을 근연 세력 적으로 보강(수화자=수(水)계 아겔로스 → 일반 아겔로스류 혼입)
+const KIN_FACTION: Record<string, string> = { "수화자": "아겔로스" };
 // 목표 티어 주변에서 '서로 다른' 적 n종 편성(다양성 우선, 후보 부족분만 중복 허용)
 function pickSquad(faction: string, tier: string, n: number, exclude: Set<string> = new Set()): string[] {
   const pool = FACTION_POOL[faction] ?? FACTION_POOL[FACTIONS[0]];
   const want = TIER_RANK.indexOf(tier);
-  const cands = Object.entries(pool.byTier)
-    .flatMap(([t, ids]) => (ids ?? []).map((id) => ({ id, d: Math.abs(TIER_RANK.indexOf(t) - want) })))
-    .filter((c) => !exclude.has(c.id));
+  const byTier: Record<string, string[]> = {};
+  for (const [t, ids] of Object.entries(pool.byTier)) byTier[t] = [...(ids ?? [])];
+  const kin = KIN_FACTION[faction]; // 근연 세력 풀 병합(풀 부족 보강)
+  if (kin && FACTION_POOL[kin]) for (const [t, ids] of Object.entries(FACTION_POOL[kin].byTier)) byTier[t] = [...(byTier[t] ?? []), ...(ids ?? [])];
+  const all = Object.entries(byTier).flatMap(([t, ids]) => ids.map((id) => ({ id, d: Math.abs(TIER_RANK.indexOf(t) - want) })));
+  let cands = all.filter((c) => !exclude.has(c.id));
+  if (!cands.length) cands = all; // 회피(exclude)로 후보가 바닥나면 완화 — 작은 세력 풀 순환용
   if (!cands.length) return Array.from({ length: n }, () => "rockhowler");
   const near = shuffle(cands.filter((c) => c.d <= 1)).map((c) => c.id); // 목표±1 티어 셔플
   const far = cands.filter((c) => c.d > 1).sort((a, b) => a.d - b.d).map((c) => c.id); // 더 먼 티어는 근접도순
@@ -305,17 +311,27 @@ function pickSquad(faction: string, tier: string, n: number, exclude: Set<string
   while (out.length < n) out.push(pick(ranked)); // 후보 부족 시에만 중복
   return out;
 }
-// 리전 교전 생성: 세력 + 노드종류 + 깊이 → 편성(여러 종 혼합)
+// 던전 내 최근 등장 적(같은 적 연속 반복 억제) — 새 원정마다 리셋
+let recentEnemies: string[] = [];
+export function resetEncounterHistory(): void { recentEnemies = []; }
+// 리전 교전 생성: 세력 + 노드종류 + 깊이 → 편성(여러 종 혼합 + 최근 등장 회피)
 export function regionEncounter(faction: string, kind: NodeKind, depth: number, maxDepth: number): DDUnit[] {
+  if (depth === 0) recentEnemies = []; // 원정 시작 시 히스토리 초기화(백업)
   const pool = FACTION_POOL[faction] ?? FACTION_POOL[FACTIONS[0]];
+  const recent = new Set(recentEnemies);
+  let ids: string[];
   if (kind === "boss") {
     const bid = pool.boss.length ? pick(pool.boss) : "craghowler";
-    const guards = pickSquad(faction, depth >= 6 ? "advanced" : "enhanced", depth >= 6 ? 2 : 1, new Set([bid])); // 보스 + 서로 다른 호위
-    return [makeEnemy(D[bid], 1), ...guards.map((id, i) => makeEnemy(D[id], i + 2))];
+    const guards = pickSquad(faction, depth >= 6 ? "advanced" : "enhanced", depth >= 6 ? 2 : 1, new Set([bid, ...recentEnemies])); // 보스 + 서로 다른 호위(최근 회피)
+    ids = [bid, ...guards];
+  } else {
+    const tier = tierAt(kind, depth, maxDepth);
+    const n = kind === "elite" ? 3 : depth >= 4 ? 3 : 2; // 정예 3 / 일반: 초반 2마리 → 중반(depth 4+) 3마리
+    ids = pickSquad(faction, tier, n, recent); // 서로 다른 종 + 최근 등장 회피
   }
-  const tier = tierAt(kind, depth, maxDepth);
-  const n = kind === "elite" ? 3 : depth >= 4 ? 3 : 2; // 정예 3 / 일반: 초반 2마리 → 중반(depth 4+) 3마리로 성장 압박
-  return pickSquad(faction, tier, n).map((id, i) => makeEnemy(D[id], i + 1)); // 서로 다른 종 우선 혼합
+  recentEnemies.push(...ids);
+  recentEnemies = recentEnemies.slice(-8); // 최근 8마리를 회피 대상으로 유지
+  return ids.map((id, i) => makeEnemy(D[id], i + 1));
 }
 type NodeKind = "battle" | "elite" | "boss" | "rest";
 const NODE_TO_KIND: Record<NodeKind, "normal" | "elite" | "boss"> = { battle: "normal", elite: "elite", boss: "boss", rest: "normal" };
