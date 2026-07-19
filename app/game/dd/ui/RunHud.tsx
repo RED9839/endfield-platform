@@ -36,9 +36,9 @@ export default function RunHud({ faction, depth, maxDepth, floor, totalFloors, f
           <span className="font-mono text-sm font-bold" style={{ color: fm.tone }}>{faction} <span className="text-[14px] font-normal text-ef-muted">· {fm.region}</span></span>
         </span>
       </div>
-      {/* 심층 진행도 */}
-      <div className="hud-tile flex items-center gap-1.5 px-3 py-1.5" style={CUT}>
-        <span className="font-mono text-[13px] uppercase tracking-[0.24em] text-ef-muted">심층</span>
+      {/* 이 층의 구역 진행도 */}
+      <div className="hud-tile flex items-center gap-1.5 px-3 py-1.5" style={CUT} title="이 층의 구역 진행 — 마지막은 층 보스">
+        <span className="font-mono text-[13px] uppercase tracking-[0.24em] text-ef-muted">구역 <b className="text-ef-ink">{Math.min(depth + 1, maxDepth + 1)}</b>/{maxDepth + 1}</span>
         <div className="flex gap-0.5">{Array.from({ length: maxDepth + 1 }, (_, i) => <span key={i} className="h-2.5 w-2.5" style={{ background: i <= depth ? fm.tone : "#26262a", clipPath: "polygon(50% 0,100% 50%,50% 100%,0 50%)", boxShadow: i <= depth ? `0 0 6px ${fm.tone}88` : "none" }} />)}</div>
       </div>
       {/* 재료 */}
