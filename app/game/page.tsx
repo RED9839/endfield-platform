@@ -57,6 +57,7 @@ export default function GamePage() {
           nodeKind={run.activeNode.kind}
           faction={run.faction}
           bossId={run.floorBoss}
+          floor={run.floor}
           depth={run.activeNode.depth}
           maxDepth={run.maxDepth}
           owned={run.craft.owned}

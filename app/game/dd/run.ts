@@ -9,7 +9,7 @@ import { SKILL_MAX, DEFAULT_PROGRESS, type OpProgress } from "./progress";
 import { initialCraft, craftPiece as doCraft, forgePiece as doForge, cloneCraft, skillForgeCost, canAfford, type CraftState } from "./craft";
 import { FACTIONS, enemyDrop, resetEncounterHistory } from "./sim";
 
-const MAX_DEPTH = 3; // 층당 구역 4개(0~3), 3=층 보스
+const MAX_DEPTH = 6; // 층당 구역 7개(0~6), 6=층 보스
 // 6층 타워 — 각 층 = 보스 세력 리전. 층 보스를 깨면 다음 층으로.
 export type Floor = { faction: string; boss: string; name: string };
 export const FLOORS: Floor[] = [
@@ -40,7 +40,10 @@ const LAYOUT: { count: number; pool: NodeKind[] }[] = [
   { count: 1, pool: ["battle"] },                    // 구역 1 — 도입
   { count: 3, pool: ["battle", "elite", "battle"] }, // 구역 2 — 정예 선택지
   { count: 2, pool: ["rest", "battle"] },            // 구역 3 — 회복
-  { count: 1, pool: ["boss"] },                      // 구역 4 — 층 보스
+  { count: 3, pool: ["battle", "elite", "battle"] }, // 구역 4 — 정예 선택지
+  { count: 3, pool: ["elite", "battle", "elite"] },  // 구역 5 — 정예 밀집
+  { count: 2, pool: ["rest", "battle"] },            // 구역 6 — 보스 직전 회복
+  { count: 1, pool: ["boss"] },                      // 구역 7 — 층 보스
 ];
 
 function genMap(): RunNode[] {

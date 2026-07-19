@@ -315,7 +315,9 @@ function pickSquad(faction: string, tier: string, n: number, exclude: Set<string
 let recentEnemies: string[] = [];
 export function resetEncounterHistory(): void { recentEnemies = []; }
 // 리전 교전 생성: 세력 + 노드종류 + 깊이 → 편성(여러 종 혼합 + 최근 등장 회피)
-export function regionEncounter(faction: string, kind: NodeKind, depth: number, maxDepth: number, bossId?: string): DDUnit[] {
+// 층 스탯 배율 — 층이 오를수록 적 HP·공격력↑(타워 등반). 1층 ×1.0 → 6층 ×1.6(층당 +12%)
+export const floorScale = (floor: number) => 1 + Math.max(0, floor) * 0.04;
+export function regionEncounter(faction: string, kind: NodeKind, depth: number, maxDepth: number, bossId?: string, floor = 0): DDUnit[] {
   if (depth === 0) recentEnemies = []; // 원정 시작 시 히스토리 초기화(백업)
   const pool = FACTION_POOL[faction] ?? FACTION_POOL[FACTIONS[0]];
   const recent = new Set(recentEnemies);
@@ -331,7 +333,8 @@ export function regionEncounter(faction: string, kind: NodeKind, depth: number, 
   }
   recentEnemies.push(...ids);
   recentEnemies = recentEnemies.slice(-8); // 최근 8마리를 회피 대상으로 유지
-  return ids.map((id, i) => makeEnemy(D[id], i + 1));
+  const mul = floorScale(floor);
+  return ids.map((id, i) => { const u = makeEnemy(D[id], i + 1); if (mul !== 1) { u.maxHp = Math.round(u.maxHp * mul); u.hp = u.maxHp; u.attack = Math.round(u.attack * mul); } return u; });
 }
 type NodeKind = "battle" | "elite" | "boss" | "rest";
 const NODE_TO_KIND: Record<NodeKind, "normal" | "elite" | "boss"> = { battle: "normal", elite: "elite", boss: "boss", rest: "normal" };
