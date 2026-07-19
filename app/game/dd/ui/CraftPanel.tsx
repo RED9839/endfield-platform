@@ -36,22 +36,22 @@ export default function CraftPanel({ craft, party = [], onCraft, onForge, onSwap
     const owned = isOwned(craft, p.id); const lv = pieceLevel(craft, p.id); const cc = craftCost(p); const fc = forgeCost(lv);
     const img = pieceImage(p.name); const canC = affordCraft(p); const canF = affordForge(lv);
     return (
-      <div className={`hud-tile dd-cut flex items-center gap-2 p-1.5 ${owned ? "!border-ef-accent/45" : ""}`}>
+      <div className={`hud-tile dd-cut flex items-center gap-2.5 p-2 ${owned ? "!border-ef-accent/45" : ""}`}>
         {onSwapClick && <button type="button" onClick={onSwapClick} title="장착한 장비를 다른 피스로 교체" className={`dd-cut flex h-7 w-7 shrink-0 items-center justify-center border font-mono text-[15px] font-bold transition ${swapOpen ? "border-ef-accent bg-ef-accent/15 text-ef-accent" : "border-ef-line text-ef-muted hover:border-ef-accent/60 hover:text-ef-accent"}`}>⇄</button>}
         <span className="relative flex h-12 w-12 shrink-0 items-center justify-center border border-ef-line/60 bg-black/50" style={owned ? { boxShadow: "inset 0 0 0 1px #ff9a2f44" } : undefined}>
           {img ? <img src={img} alt="" loading="lazy" className="h-full w-full object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = "hidden"; }} /> : <span className="font-mono text-[12px] text-ef-muted">—</span>}
           {owned && <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 rounded-sm bg-black/90 px-1 py-px"><ForgePips lv={lv} /></span>}
         </span>
         <div className="min-w-0 flex-1">
-          <div className="truncate font-mono text-[14px] font-bold text-white" title={p.name}>{slotLabel && <span className="text-ef-accent/70">{gearSlotName(p.slot)}</span>} {p.name}</div>
+          <div className="flex items-center gap-1.5 truncate font-mono text-[14px] font-bold text-white" title={p.name}>{slotLabel && <span className="shrink-0 border border-ef-line/60 px-1 py-px text-[11px] font-normal uppercase tracking-wide text-ef-muted">{gearSlotName(p.slot)}</span>}<span className="truncate">{p.name}</span></div>
           <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 font-mono text-[13px] text-ef-muted">
             <span>방어 <b className="text-ef-ink/80">{p.def}</b></span>
             <span>능력치 <b className="text-ef-ink/80">{p.grade.base}</b></span>
-            {p.dmg && <span className="text-ef-accent-soft">{dmgText(p)}</span>}
+            {p.dmg && <span className="text-emerald-300/75">{dmgText(p)}</span>}
           </div>
         </div>
         {!owned ? (
-          <button type="button" disabled={!canC} onClick={() => onCraft(p.id)} className={`dd-cut flex shrink-0 flex-col items-center gap-0.5 border px-2.5 py-1.5 transition disabled:opacity-45 ${canC ? "border-ef-accent/50 text-ef-accent hover:bg-ef-accent/10" : "border-ef-line text-ef-muted"}`}>
+          <button type="button" disabled={!canC} onClick={() => onCraft(p.id)} className={`dd-cut flex shrink-0 flex-col items-center gap-0.5 border px-3 py-1.5 transition disabled:opacity-45 ${canC ? "border-ef-accent bg-ef-accent/15 text-ef-accent shadow-[0_0_10px_rgba(255,154,47,0.18)] hover:bg-ef-accent/28" : "border-ef-line text-ef-muted"}`}>
             <span className="flex items-center gap-1 font-mono text-[14px] font-bold uppercase">{canC ? <Hammer className="h-3 w-3" /> : <Lock className="h-3 w-3" />}제작</span>
             <Cost parts={cc.parts} permits={cc.permits} ok={canC} />
           </button>
@@ -116,7 +116,7 @@ export default function CraftPanel({ craft, party = [], onCraft, onForge, onSwap
                             {slotOptions(slot, op?.element).map((opt) => { const sel = ref === opt.id; return (
                               <button key={opt.id} type="button" onClick={() => { onSwap(m.id, slot, opt.id); setSwap(null); }} className={`dd-cut flex items-center gap-1.5 border p-1 text-left transition ${sel ? "border-ef-accent bg-ef-accent/10" : "border-ef-line hover:border-ef-accent/50"}`}>
                                 <span className="flex h-7 w-7 shrink-0 items-center justify-center border border-ef-line/50 bg-black/40">{pieceImage(opt.name) ? <img src={pieceImage(opt.name)} alt="" className="h-full w-full object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = "hidden"; }} /> : null}</span>
-                                <span className="min-w-0"><span className="block truncate font-mono text-[13px] font-bold text-white">{opt.name}</span><span className="font-mono text-[12px] text-ef-accent-soft">{dmgText(opt)}</span></span>
+                                <span className="min-w-0"><span className="block truncate font-mono text-[13px] font-bold text-white">{opt.name}</span><span className="font-mono text-[12px] text-emerald-300/70">{dmgText(opt)}</span></span>
                               </button>
                             ); })}
                           </div>

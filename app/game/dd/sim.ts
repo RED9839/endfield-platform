@@ -314,7 +314,7 @@ export function regionEncounter(faction: string, kind: NodeKind, depth: number, 
     return [makeEnemy(D[bid], 1), ...guards.map((id, i) => makeEnemy(D[id], i + 2))];
   }
   const tier = tierAt(kind, depth, maxDepth);
-  const n = kind === "elite" ? 3 : depth % 3 === 0 ? 3 : 2; // 정예 3 / 일반 2~3(세 번째 노드마다 3)
+  const n = kind === "elite" ? 3 : depth >= 4 ? 3 : 2; // 정예 3 / 일반: 초반 2마리 → 중반(depth 4+) 3마리로 성장 압박
   return pickSquad(faction, tier, n).map((id, i) => makeEnemy(D[id], i + 1)); // 서로 다른 종 우선 혼합
 }
 type NodeKind = "battle" | "elite" | "boss" | "rest";
