@@ -1,5 +1,5 @@
 // DD 전투 시뮬 헬퍼 — AI(아군 자동/적) + 인카운터 + 전투 생성. UI와 테스트가 공유(부작용 없음).
-import { BASIC, DDState, DDUnit, DDSkill, Element, ELEMENTS, applyAttach, applyDamage, healUnit, living, mitigate, usable, pickTargets, vulnFor, onAllyHit, EXECUTE_MULT, GAUGE_COST, setLinkChain } from "./combat";
+import { BASIC, DDState, DDUnit, DDSkill, Element, ELEMENTS, applyAttach, applyDamage, healUnit, living, mitigate, usable, pickTargets, vulnFor, onAllyHit, EXECUTE_MULT, GAUGE_COST, setLinkChain, bumpVuln, setTimer } from "./combat";
 import { SKILLS, makeAlly, makeEnemy, ENEMY_DEFS, enemyDefFor, frontlineOrder, enemyArchetype } from "./roster";
 import { applyGear, GEAR_SLOTS, type Loadout, type GearSlot } from "./gear";
 import { applyWeapon } from "./weapons";
@@ -175,11 +175,21 @@ export function enemyAct(s: DDState, self: DDUnit): void {
   const byWounded = [...foes].sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp || a.pos - b.pos);
   const byThreat = [...foes].sort((a, b) => b.attack * (1 + (b.atkBuff || 0)) - a.attack * (1 + (a.atkBuff || 0)) || a.pos - b.pos);
   const pick = () => (tgt === "wounded" ? byWounded[0] : tgt === "threat" ? byThreat[0] : byFront[0]);
+  // 소환(삼미아겔로스 돌기둥 등): 같은 세력 약한 적을 전장에 추가(최대 5마리, 확률)
+  if (self.summon && living(s, "enemy").length < 5 && Math.random() < 0.35) {
+    const bt = FACTION_POOL[def?.faction ?? ""]?.byTier;
+    const ids = bt?.common ?? bt?.normal ?? [];
+    if (ids.length) { const mid = ids[Math.floor(Math.random() * ids.length)]; const m = makeEnemy(D[mid], living(s, "enemy").length + 1); s.units.push(m); s.log.push(`${self.name}[적] 소환! ${m.name} 등장`); return; }
+  }
   let targets: DDUnit[];
   if (behavior === "aoe") { const wide = (self.procCount = (self.procCount || 0) + 1) % 2 === 1; targets = wide ? foes : [pick()]; } // 광역: 전체 나눔공격(격턴)/평시 단일
   else targets = [pick()];
-  const powerMul = behavior === "heavy" ? 1.55 : 1; // aoe는 makeEnemy에서 공격력 이미 하향
+  // 끌어당김(결정아겔로스): 후열 고위협 딜러를 강제로 끌어내 직격 + 물리 취약(노출)
+  if (self.pull) { const back = byThreat[0]; targets = [back]; bumpVuln(back, "physical", 0.2); setTimer(back, "vuln:physical", 1); s.log.push(`${self.name}[적] 끌어당김! ${back.name} 강제 노출(취약)`); }
+  const rageOn = !!def?.rage && self.hp / self.maxHp < 0.5 && !self.staggered; // 분노: HP 50%↓, 불균형이면 해제
+  const powerMul = (behavior === "heavy" ? 1.55 : 1) * (rageOn ? 1.4 : 1); // aoe는 makeEnemy에서 공격력 이미 하향
   const atkMul = 1 + (self.atkBuff || 0);
+  if (rageOn && !self.timers.raged) { self.timers.raged = 999; s.log.push(`${self.name}[적] 분노 상태! 공격력 상승 (HP 50%↓)`); }
 
   for (const t of targets) {
     if (t.hp <= 0) continue;
@@ -202,11 +212,22 @@ export function enemyAct(s: DDState, self: DDUnit): void {
     if (t.hp <= 0) { s.log.push(`  ✗ ${t.name} 전투불능!`); continue; }
     // 아츠 부착(침식체 냉기·염술사 열기): 아군에 부착 → 연소/동결 등 이상 유발
     if (def?.attach) { const ex = applyAttach(t, def.attach, self, s.log); if (ex > 0) applyDamage(t, mitigate(t, ex, def.attach)); }
-    // 잡기/속박: 확률로 시간 정지 1턴(다음 라운드 시작 시 해제). 슈퍼아머(카치르·스노우샤인 디펜더)는 저항.
-    if (def?.bind && Math.random() < 0.5) {
+    // 잡기/속박(bind·단운수 갈고리·형상아겔로스): 확률로 시간 정지 1턴(다음 라운드 시작 시 해제). 슈퍼아머(카치르·스노우샤인 디펜더)는 저항.
+    if ((def?.bind || def?.stun) && Math.random() < 0.5) {
       if (t.id === "catcher" || t.id === "snowshine") s.log.push(`  → ${t.name} 슈퍼아머! 잡기 저항`);
-      else { t.timers.stun = 1; if (!t.statuses.includes("stun")) t.statuses.push("stun"); s.log.push(`  → ${t.name} 잡기! 시간 정지(1턴)`); }
+      else { t.timers.stun = 1; if (!t.statuses.includes("stun")) t.statuses.push("stun"); s.log.push(`  → ${t.name} 속박! 시간 정지(1턴)`); }
     }
+    // 감속(모방아겔로스 회오리·겁운객 연막): 명중 시 ATB 속도 저하(2턴)
+    if (def?.slow && t.hp > 0 && (t.speedMod || 0) > -8) {
+      t.speedMod = (t.speedMod || 0) - 8; setTimer(t, "speedMod", 2); s.log.push(`  → ${t.name} 감속! (행동 속도 저하)`);
+    }
+    // 냉기 능력(조류아겔로스): 명중 시 동결(2턴 행동 불가) — 원작 "명중 시 오퍼레이터를 동결"
+    if (def?.freeze && t.hp > 0 && Math.random() < 0.5) {
+      t.frozen = Math.max(t.frozen || 0, 2); t.timers.frozen = 2; if (!t.statuses.includes("stun")) t.statuses.push("stun");
+      s.log.push(`  → ${t.name} 동결! (냉기 능력)`);
+    }
+    // 지속+폭발(본 크러셔 사수): 명중 시 화살비 지속 피해 부여(몇 초 뒤 폭발 → 지속 피해로 근사)
+    if (self.dotBurst && t.hp > 0) { t.dot = Math.max(t.dot || 0, Math.round(self.attack * 0.35)); setTimer(t, "dot", 2); s.log.push(`  → ${t.name} 화살비 — 지속 피해`); }
   }
 }
 

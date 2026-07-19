@@ -67,6 +67,21 @@ export type DDUnit = {
   procCount: number; // 제너릭 재능 카운터(아크라이트 황무지의 방랑자 등)
   pendingLink?: DDSkill; // 예약된 연계 — 조건이 열리면 ATB 우선으로 끼어든 뒤 자기 차례에 이 연계를 발동
   pendingLinkAtb?: number; // 연계 예약 직전 ATB — 연계 발동 후 복원해 정규 턴을 뺏지 않음(원래 턴 + 연계 턴)
+  selfDestruct?: number; // 적 자폭(화염원석충): 사망 시 광역 아군 피해(배율) + 취약 부착
+  shell?: number;        // 적 방어 형태(0~1 피해 감소): 은신/웅크림. 강타·갑옷파괴·불균형으로 해제
+  shellBroken?: boolean; // 방어 형태 해제됨(약점 노출)
+  revive?: boolean;      // 부활(잔영): 사망 시 1회 재생(HP 50%) + 이후 강화
+  revived?: boolean;     // 부활 사용됨
+  pull?: boolean;        // 끌어당김(결정아겔로스): 후열 딜러를 강제 타격 + 취약
+  summon?: boolean;      // 소환(삼미아겔로스 돌기둥 등): 전투 중 부하 추가
+  dotBurst?: boolean;    // 지속+폭발(본 크러셔 사수): 명중 시 지속 피해 부여 후 폭발
+  unstoppable?: boolean; // 끊기 저항(본 크러셔 파괴자): 불균형 지속 단축(공세 계속)
+  teleport?: boolean;    // 순간이동(본 크러셔 염술사)/회피(침투자): 근접 공격 회피 확률
+  stun?: boolean;        // 속박·기절(단운수·형상아겔로스): 명중 아군 확률 행동 불가
+  slow?: boolean;        // 감속(모방아겔로스·겁운객): 명중 아군 ATB 속도 저하
+  heal?: boolean;        // 치유(겁운객): 자기 턴에 아군[적] 최저 체력 회복
+  buff?: boolean;        // 동료 강화(굴절아겔로스): 자기 턴에 다른 적 공격력 강화
+  attachEl?: Element;    // 적 공격의 아츠 부착 속성(수정아겔로스 냉기 등): 명중 아군에 부착
   iceStack?: number; // 이본 「아이스 슈터」 변신 중 평타 누적(치확 +3%/스택, 최대 10)
   isMain?: boolean;  // 파티 메인딜러(편성 첫 오퍼 = 공략 시트 채용파티의 주인). 공유 게이지 우선권.
   zfyUsedFree?: boolean; // 장방이 천리의 경지: 첫 배틀 무소모를 이미 썼는가
@@ -238,6 +253,7 @@ export const DEF_K = 500;
 export function mitigate(u: DDUnit, dmg: number, elem: "physical" | Element): number {
   let d = dmg * (DEF_K / (u.defense + DEF_K)); // 방어력 경감(DEF_K 클수록 완만)
   d *= 1 - u.resist[elem]; // 속성별 저항(1=100%감소, 음수=약점→피해 증가). 위키 물리/열기/전기/냉기/자연 저항 정합
+  if (u.shell && !u.shellBroken && !u.staggered) d *= 1 - u.shell; // 방어 형태(은신·웅크림): 피해 감소. 불균형(강타·갑옷파괴 누적)이면 해제 → 약점 노출(원작 "팔 파괴 시 해제")
   return d;
 }
 
@@ -604,6 +620,9 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
   let executed = false; // 일반 공격 처형 여부
   let aoeTotal = 0, aoeHits = 0; // 범위기 전체 합산(대상별 합만으로는 총 딜을 알 수 없음)
   for (const t of pickTargets(s, self, skill)) {
+    if (t.teleport && !t.staggered && skill.kind !== "ult" && Math.random() < 0.3) { // 순간이동: 불균형이 아니면 일반 피격을 낮은 확률로 회피(궁극기 제외)
+      log.push(`  → ${t.name} 순간이동! ${self.name}의 공격을 회피`); continue;
+    }
     const preReact = ELEMENTS.reduce((n, e) => n + t.arts[e], 0) + t.frozen; // 아츠 이상/쇄빙 소모 감지용(알레쉬 연계)
     const yvFrozen = t.frozen > 0, yvCryo = t.arts.cryo > 0; // 이본 빙점 판정(소모 전 상태)
     let raw = baseDamage(skill, self); // 시전자 측 원 피해(공격력×증가×허약×배율)
@@ -863,7 +882,11 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
     // 불균형치 적립 → 임계 도달 시 불균형 상태(검술사 세트 등 stagger 배율 반영)
     if (t.staggerMax > 0) {
       t.stagger += stg * (1 + (self.gear?.staggerMul || 0));
-      if (!t.staggered && t.stagger >= t.staggerMax) {
+      if (!t.staggered && t.stagger >= t.staggerMax && t.unstoppable) {
+        // 끊기 저항: 불균형 임계 도달해도 불균형 없이 공세 지속(치우 다미르 등)
+        t.stagger = Math.round(t.staggerMax * 0.5);
+        log.push(`  → ${t.name} 끊기 저항! 공세를 멈추지 않는다`);
+      } else if (!t.staggered && t.stagger >= t.staggerMax) {
         t.staggered = true; t.staggerTimer = 1; t.stagger = t.staggerMax;
         log.push(`  ⚡ ${t.name} 불균형 상태! 행동 불가 + 받는 피해 +30%`);
         if (self.gear?.breakEnergy) self.ultCharge = Math.min(self.ultCost, self.ultCharge + 10); // 재앙 방호: 불균형 돌파 시 궁 충전
@@ -901,9 +924,20 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
       }
     }
     if (t.hp === 0) {
+      // 부활(잔영): 사망 시 1회 재생(HP 50%) + 공격 강화 — 원작 "부활 후 공격 범위↑·자폭"을 강화로 근사
+      if (t.side === "enemy" && t.revive && !t.revived) {
+        t.revived = true; t.hp = Math.round(t.maxHp * 0.5); t.atkBuff = (t.atkBuff || 0) + 0.25; setTimer(t, "atkBuff", 99);
+        log.push(`  ↻ ${t.name} 부활! HP 50% 재생 + 공격 강화`);
+      } else {
       log.push(`  ✗ ${t.name} 격파!`);
       if (self.gear?.onKillHeal) healUnit(self, Math.round(self.maxHp * self.gear.onKillHeal), s, log); // 통합형 중갑: 처치 시 회복
       if (self.gear?.onKillAtk) { self.atkBuff = Math.min(0.6, (self.atkBuff || 0) + self.gear.onKillAtk); setTimer(self, "atkBuff", 3); } // 통합형 경갑: 처치 시 공격력+
+      // 자폭(화염원석충): 사망 시 광역 아군 피해 + 열기 취약(원작 "자폭 → 불안정 화합물 → 재피격 시 폭발"을 취약으로 근사)
+      if (t.side === "enemy" && t.selfDestruct) {
+        const boom = t.attack * t.selfDestruct;
+        for (const a of living(s, "ally")) { const d = applyDamage(a, mitigate(a, boom, "heat")); bumpVuln(a, "heat", 0.15); setTimer(a, "vuln:heat", 2); log.push(`  💥 ${t.name} 자폭! ${a.name} -${d} + 열기 취약`); }
+      }
+      }
     }
     onAllyHit(s, self, t, final, log); // 아군 피격 트리거(엠버 강철·레바테인 불씨·디펜더 패링) — 적 공격(enemyAct)에서도 호출
     if (final > 0) { aoeTotal += final; aoeHits++; }

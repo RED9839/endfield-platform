@@ -2,7 +2,7 @@
 
 import { useEffect, useReducer, useRef, useState } from "react";
 
-import { act, canAct, isOver, startRound, perTurn, nextActor, turnOrder, usable, BASIC, GAUGE_REGEN, GAUGE_COST, findLinkChain, type DDClass, type DDSkill, type DDState, type DDUnit, type Element } from "../combat";
+import { act, canAct, isOver, startRound, perTurn, nextActor, turnOrder, usable, BASIC, GAUGE_REGEN, findLinkChain, type DDClass, type DDSkill, type DDState, type DDUnit, type Element } from "../combat";
 import { OPERATORS, SKILLS, OP_BASIC, enemyDefFor, avatarUrl, fullUrl, skillIcon, enemyImage, enemyArchetype } from "../roster";
 import { ENCOUNTERS, allyChoose, createBattle, enemyAct, regionEncounter } from "../sim";
 import { activeSets, setEffectText, loadoutPieces } from "../gear";
@@ -385,9 +385,8 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
           </div>
         </div>
         <div className="mt-2 flex items-center gap-2.5">
-          <span className="shrink-0 font-mono text-[13px] uppercase tracking-wider text-ef-muted">스킬 게이지 · 공유</span>
-          <span className="shrink-0 font-mono text-[12px] tracking-wide"><span className="text-ef-accent-soft" title="라운드마다 자동 회복">+{GAUGE_REGEN}/R</span> <span className="text-ef-muted">·</span> <span className="text-green-300/80" title="일반 공격(평타) 시 회복">평타 +{BASIC.gaugeGain}</span> <span className="text-ef-muted">·</span> <span className="text-red-300/80" title="배틀 스킬 사용 시 소모">배틀 −{GAUGE_COST}</span></span>
-          <div className="min-w-[100px] flex-1"><Bar value={s.skillGauge} max={s.maxGauge} color={PRIMARY} h="h-2.5" /></div>
+          <span className="shrink-0 font-mono text-[13px] uppercase tracking-wider text-ef-muted">스킬 게이지 · 공유 <span className="text-ef-accent-soft" title="라운드마다 자동 회복">+{GAUGE_REGEN}/R</span></span>
+          <div className="min-w-[120px] flex-1"><Bar value={s.skillGauge} max={s.maxGauge} color={PRIMARY} h="h-2.5" /></div>
           <span className="shrink-0 font-mono text-[13px] font-bold text-ef-ink">{Math.round(s.skillGauge)}/{s.maxGauge}</span>
         </div>
       </div>
@@ -588,6 +587,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
                     {off ? <span className="min-w-0 truncate font-mono text-[14px] font-bold text-red-400/90" title={reason ?? ""}>🔒 {reason}</span>
                       : dmg > 0 ? <span className="shrink-0 font-mono text-[17px] font-bold tabular-nums" style={{ color: elementColor[el] }}>{dmg.toLocaleString()}<span className="ml-0.5 text-[13px] font-normal text-ef-muted">피해</span></span>
                       : <span className="shrink-0 font-mono text-[14px] text-ef-muted">{sk.target === "self" ? "버프/유틸" : "유틸"}</span>}
+                    {!off && sk.gaugeGain ? <span className="shrink-0 font-mono text-[13px] font-bold text-green-300/80" title="스킬 게이지 회복">＋{sk.gaugeGain}<span className="ml-0.5 text-[11px] font-normal text-ef-muted">게이지</span></span> : null}
                     <span className="ml-auto shrink-0 whitespace-nowrap font-mono text-[13px] text-ef-muted">{targetLabel[sk.target]}</span>
                   </span>
                 </span>
@@ -711,15 +711,15 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
                   </div>
                 )}
               </div>
-              {/* 속성 저항 — 0%=약점(풀 피해) 초록 강조, 고저항 붉게 */}
+              {/* 속성별 받는 피해 배율(warfarin식) — 100%=정상, <100%=저항(붉게), >100%=약점(초록) */}
               <div className="border-b border-ef-line px-3 py-2.5">
-                <div className="mb-1.5 flex items-center gap-1.5 font-mono text-[14px] font-bold uppercase tracking-wider text-ef-accent/70">속성 저항{!ally && <span className="font-normal normal-case tracking-normal text-ef-muted">· 초록=약점</span>}</div>
+                <div className="mb-1.5 flex flex-wrap items-center gap-x-1.5 font-mono text-[14px] font-bold uppercase tracking-wider text-ef-accent/70">받는 피해<span className="font-normal normal-case tracking-normal text-ef-muted">· 100%=정상 · 낮을수록 저항 · 높을수록 약점</span></div>
                 <div className="grid grid-cols-5 gap-1">
-                  {RES_ELEMS.map((e) => { const r = u.resist[e] ?? 0; const weak = r <= 0.001; const strong = r >= 0.5; return (
-                    <div key={e} className="flex flex-col items-center gap-0.5 border py-1" style={{ borderColor: weak ? "#7cc04a66" : strong ? "#f8717155" : "#ffffff12", background: weak ? "#7cc04a15" : "transparent" }}>
+                  {RES_ELEMS.map((e) => { const r = u.resist[e] ?? 0; const mul = Math.round((1 - r) * 100); const weak = mul > 100; const resist = mul < 100; return (
+                    <div key={e} className="flex flex-col items-center gap-0.5 border py-1" style={{ borderColor: weak ? "#7cc04a66" : resist ? "#f8717155" : "#ffffff12", background: weak ? "#7cc04a15" : "transparent" }}>
                       <span className="h-2 w-2" style={{ background: elementColor[e], boxShadow: `0 0 5px ${elementColor[e]}` }} />
                       <span className="font-mono text-[12px] text-ef-muted">{elementName[e]}</span>
-                      <span className="font-mono text-[13px] font-bold" style={{ color: weak ? "#8fd36a" : strong ? "#f87171" : "#c8c8cc" }}>{weak ? "약점" : `${Math.round(r * 100)}%`}</span>
+                      <span className="font-mono text-[13px] font-bold" style={{ color: weak ? "#8fd36a" : resist ? "#f87171" : "#c8c8cc" }}>{mul}%{weak ? " ▲" : ""}</span>
                     </div>
                   ); })}
                 </div>
@@ -830,9 +830,15 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
                   </div>)}
                 </Sec>}
               </>}
+              {ed?.traits && ed.traits.length > 0 && <Sec title="특징">
+                <div className="space-y-1.5">
+                  {ed.traits.map((t, i) => <div key={i} className="flex gap-1.5 font-mono text-[14px] leading-relaxed text-ef-muted"><span className="shrink-0 text-ef-accent-soft">◆</span><span>{t}</span></div>)}
+                </div>
+              </Sec>}
               {ed && (() => {
                 const pr = behaviorPriority[ed.behavior] ?? 1;
-                const weakEls = RES_ELEMS.filter((e) => (u.resist[e] ?? 0) <= 0.001);
+                const weakEls = RES_ELEMS.filter((e) => (u.resist[e] ?? 0) < 0); // 진짜 약점(받는 피해 >100%)
+                const resistEls = RES_ELEMS.filter((e) => (u.resist[e] ?? 0) > 0); // 저항(받는 피해 <100%)
                 return (
                   <Sec title="행동 · 위협">
                     <div className="flex items-center gap-2 font-mono">
@@ -843,7 +849,11 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, dep
                     </div>
                     <div className="mt-1.5 font-mono text-[14px] leading-relaxed text-ef-muted">{behaviorDesc[ed.behavior] ?? ""}</div>
                     <div className="mt-1.5 font-mono text-[14px] text-ef-accent-soft">🎯 {targetDesc[enemyArchetype(ed.role, ed.behavior).tgt]}</div>
-                    {weakEls.length > 0 && <div className="mt-1.5 font-mono text-[14px]"><span className="text-ef-muted">공략: </span><span className="font-bold text-green-300">{weakEls.map((e) => elementName[e]).join("·")} 약점</span><span className="text-ef-muted"> — 해당 속성으로 큰 피해</span></div>}
+                    {weakEls.length > 0
+                      ? <div className="mt-1.5 font-mono text-[14px]"><span className="text-ef-muted">공략: </span><span className="font-bold text-green-300">{weakEls.map((e) => elementName[e]).join("·")} 약점</span><span className="text-ef-muted"> — 해당 속성으로 큰 피해</span></div>
+                      : resistEls.length > 0
+                        ? <div className="mt-1.5 font-mono text-[14px]"><span className="text-ef-muted">공략: </span><span className="font-bold text-red-300/90">{resistEls.map((e) => elementName[e]).join("·")} 저항</span><span className="text-ef-muted"> — 다른 속성으로 공격</span></div>
+                        : <div className="mt-1.5 font-mono text-[14px] text-ef-muted">속성 저항 없음 — 모든 속성 정상 피해</div>}
                   </Sec>
                 );
               })()}

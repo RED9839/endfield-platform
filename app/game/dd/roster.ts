@@ -3,6 +3,7 @@
 import { setApplyAttrs, setAttrBonus } from "./gear";
 import { bumpVuln, vulnFor, setTimer, applyBuff, ELEMENTS, attrResists, ATTR_AVG, attrBonus, hasLinkEvent, type DDClass, type DDSkill, type DDUnit, type Element } from "./combat";
 import { promoMult, skillMult, skillUtilMult, DEFAULT_PROGRESS, type OpProgress } from "./progress";
+import { ENEMY_TRAITS } from "./enemy-traits";
 
 export const SKILLS: Record<string, DDSkill[]> = {
   // 진천우: 최고 방불 누적 + 고계수 단일 누커(보스 삭제기). 빠른 선딜(차지 캔슬)·평타 속도.
@@ -562,6 +563,22 @@ export type EnemyDef = {
   attach?: Element;      // 명중 시 아군에 아츠 부착(수화자 냉기·본크러셔 열기 등)
   bind?: boolean;        // 잡기/속박: 명중 시 확률로 아군 시간 정지 1턴(형상아겔로스·처형자·겁운객)
   resist?: Partial<Record<"physical" | Element, number>>; // 위키 저항표(속성별, 음수=약점). 미지정 속성=0
+  // ── 고유 특징(traits) 메커니즘 — warfarin 실측 특징을 DD 근사 ──
+  traits?: string[];     // 특징 설명(적 상세 UI 표시)
+  freeze?: boolean;      // 명중 시 아군 동결(조류아겔로스 — 냉기 능력)
+  selfDestruct?: number; // 사망 시 광역 자폭(배율) + 취약 부착(화염원석충)
+  shell?: number;        // 방어 형태(0~1 피해 감소): 은신/웅크림 방어. 강타·갑옷파괴·불균형으로 해제 → 취약(산성원석충·무장 맹글러·삼미아겔로스)
+  rage?: boolean;        // 분노: HP 50% 미만 시 공격력↑, 불균형 진입 시 해제(프릭비스트·레이커비스트·거대 록하울러)
+  revive?: boolean;      // 부활: 사망 후 1회 재생(잔영)
+  pull?: boolean;        // 끌어당김: 후열 딜러를 강제 타격 + 취약(결정아겔로스)
+  summon?: boolean;      // 소환: 전투 중 부하 추가(삼미아겔로스 돌기둥·록하울러 무리 등)
+  dotBurst?: boolean;    // 지속+폭발: 명중 시 지속 피해 후 폭발(본 크러셔 사수)
+  unstoppable?: boolean; // 끊기 저항: 불균형 지속 단축(본 크러셔 파괴자)
+  teleport?: boolean;    // 순간이동/회피: 근접 공격 회피(본 크러셔 염술사·침투자)
+  stun?: boolean;        // 속박·기절: 명중 아군 확률 행동 불가(단운수·형상아겔로스·처형자)
+  slow?: boolean;        // 감속: 명중 아군 ATB 속도 저하(모방아겔로스·겁운객)
+  heal?: boolean;        // 치유: 자기 턴에 아군[적] 최저 체력 회복(겁운객)
+  buff?: boolean;        // 동료 강화: 자기 턴에 다른 적 공격력 강화(굴절아겔로스)
 };
 
 // 티어 기준 스탯(DD 스케일: 아군 hp≈2689·공격≈100 대역에 맞춤)
@@ -626,11 +643,30 @@ export function makeEnemy(def: EnemyDef, pos: number): DDUnit {
   u.killPriority = def.behavior === "heal" || def.behavior === "buff" ? 3 : def.behavior === "snipe" || def.behavior === "aoe" ? 2 : 1;
   u.defense = defense;
   u.resist = { physical: 0, heat: 0, electric: 0, cryo: 0, nature: 0, ...def.resist };
+  const tr = ENEMY_TRAITS[def.name]; // 고유 특징 메커니즘을 유닛에 반영
+  if (tr?.selfDestruct) u.selfDestruct = tr.selfDestruct;
+  if (tr?.shell) u.shell = tr.shell;
+  if (tr?.revive) u.revive = true;
+  if (tr?.pull) u.pull = true;
+  if (tr?.summon) u.summon = true;
+  if (tr?.dotBurst) u.dotBurst = true;
+  if (tr?.unstoppable) u.unstoppable = true;
+  if (tr?.teleport) u.teleport = true;
+  if (tr?.stun) u.stun = true;
+  if (tr?.slow) u.slow = true;
+  if (tr?.heal) u.heal = true;
+  if (tr?.buff) u.buff = true;
+  if (tr?.attach) u.attachEl = tr.attach;
   return u;
 }
 
 // 인스턴스 id(`key#pos`)에서 정의 조회
-export const enemyDefFor = (unitId: string): EnemyDef | undefined => ENEMY_DEFS[unitId.split("#")[0]];
+export const enemyDefFor = (unitId: string): EnemyDef | undefined => {
+  const base = ENEMY_DEFS[unitId.split("#")[0]];
+  if (!base) return base;
+  const tr = ENEMY_TRAITS[base.name]; // 고유 특징(traits + 메커니즘) 병합
+  return tr ? { ...base, ...tr } : base;
+};
 
 // 저항값은 warfarin.wiki 데이터마인(damageTakenScalar) 정합: DD resist = 1 − scalar. S=1.0/A=0.8/B=0.5/C=0.2/D=0 저항.
 export const ENEMY_DEFS: Record<string, EnemyDef> = {
@@ -670,4 +706,49 @@ export const ENEMY_DEFS: Record<string, EnemyDef> = {
   nefarith:         { id: "nefarith",         name: "'본 크러셔' 네파리스", faction: "랜드브레이커", role: "두목", tier: "boss", element: "electric", behavior: "aoe", attach: "electric" }, // 저항 0
   "ruan-yi":        { id: "ruan-yi",          name: "원일",             faction: "청파채", role: "채주(탕탕 오빠)", tier: "boss", element: "heat", behavior: "heavy", resist: { heat: 0.2, cryo: 0.2 } },
   tidalklast:       { id: "tidalklast",       name: "파조의 상",         faction: "수화자", role: "중간보스", tier: "boss", element: "cryo", behavior: "aoe", attach: "cryo", resist: { electric: 0.2, cryo: 0.2 } },
+  // ── 미등록 44종(warfarin 대조 추가) — 변형은 원본 상속, 신규는 description 속성 + id 접미사 behavior ──
+  "tunneling-nidwyrm": { id: "tunneling-nidwyrm", name: "터널링 니드웜", faction: "야외 생물", role: "melee", tier: "enhanced", element: "nature", behavior: "melee", resist: {"heat":0.3} },
+  "heavy-ram": { id: "heavy-ram", name: "쌍뿔아겔로스", faction: "아겔로스", role: "heavy", tier: "advanced", element: "physical", behavior: "heavy", resist: {"physical":0.2,"nature":0.2,"heat":0.2} },
+  "bonekrusher-ambusher": { id: "bonekrusher-ambusher", name: "본 크러셔 저격수", faction: "랜드브레이커", role: "melee", tier: "normal", element: "physical", behavior: "melee" },
+  "bonekrusher-arsonist": { id: "bonekrusher-arsonist", name: "본 크러셔 집행자", faction: "랜드브레이커", role: "aoe", tier: "enhanced", element: "heat", behavior: "aoe", resist: {"nature":0.5} },
+  "bonekrusher-infiltrator": { id: "bonekrusher-infiltrator", name: "본 크러셔 침투자", faction: "랜드브레이커", role: "melee", tier: "normal", element: "physical", behavior: "melee" },
+  "bonekrusher-ripptusk": { id: "bonekrusher-ripptusk", name: "본 크러셔 립터스크", faction: "랜드브레이커", role: "melee", tier: "normal", element: "physical", behavior: "melee" },
+  "rhodagn-the-bonekrushing-fist": { id: "rhodagn-the-bonekrushing-fist", name: "'본 크러셔의 주먹' 로댄", faction: "랜드브레이커", role: "melee", tier: "boss", element: "heat", behavior: "melee" },
+  "road-plunderer": { id: "road-plunderer", name: "막류재", faction: "청파채", role: "melee", tier: "normal", element: "physical", behavior: "melee" },
+  "eny": { id: "eny", name: "야생의 터스크비스트", faction: "야외 생물", role: "melee", tier: "normal", element: "physical", behavior: "melee" },
+  "hazefyre-tuskbeast": { id: "hazefyre-tuskbeast", name: "안갯불에 물든 터스크비스트", faction: "안갯불", role: "melee", tier: "normal", element: "heat", behavior: "melee", resist: {"physical":0.2,"nature":0.2,"cryo":0.2,"electric":0.2,"heat":0.2} },
+  "hazefyre-claw": { id: "hazefyre-claw", name: "안갯불에 물든 랜드브레이커", faction: "랜드브레이커", role: "buff", tier: "normal", element: "heat", behavior: "buff", resist: {"physical":0.2,"nature":0.2,"cryo":0.2,"electric":0.2,"heat":0.2} },
+  "marble-appendage": { id: "marble-appendage", name: "마블 부속체", faction: "아겔로스", role: "melee", tier: "boss", element: "physical", behavior: "melee" },
+  "ram-alpha": { id: "ram-alpha", name: "큰뿔아겔로스 · α", faction: "아겔로스", role: "heavy", tier: "common", element: "physical", behavior: "heavy" },
+  "sting-alpha": { id: "sting-alpha", name: "일미아겔로스 · α", faction: "아겔로스", role: "snipe", tier: "common", element: "physical", behavior: "snipe" },
+  "elite-raider": { id: "elite-raider", name: "약탈자 · 정예", faction: "랜드브레이커", role: "melee", tier: "normal", element: "heat", behavior: "melee" },
+  "elite-ambusher": { id: "elite-ambusher", name: "저격수 · 정예", faction: "랜드브레이커", role: "melee", tier: "normal", element: "heat", behavior: "melee" },
+  "elite-ripptusk": { id: "elite-ripptusk", name: "립터스크 · 정예", faction: "랜드브레이커", role: "melee", tier: "normal", element: "heat", behavior: "melee" },
+  "elite-executioner": { id: "elite-executioner", name: "처형자 · 정예", faction: "랜드브레이커", role: "heavy", tier: "elite", element: "heat", behavior: "heavy" },
+  "heavy-ram-alpha": { id: "heavy-ram-alpha", name: "쌍뿔아겔로스 · α", faction: "아겔로스", role: "heavy", tier: "advanced", element: "physical", behavior: "heavy", resist: {"physical":0.2,"nature":0.2,"heat":0.2} },
+  "heavy-sting-alpha": { id: "heavy-sting-alpha", name: "삼미아겔로스 · α", faction: "아겔로스", role: "snipe", tier: "advanced", element: "physical", behavior: "snipe", resist: {"physical":0.2,"nature":0.2,"heat":0.2} },
+  "axe-armorbeast": { id: "axe-armorbeast", name: "엑스 아머비스트", faction: "야외 생물", role: "melee", tier: "elite", element: "physical", behavior: "melee" },
+  "indigenous-pincerbeast": { id: "indigenous-pincerbeast", name: "원시 핀서비스트", faction: "야외 생물", role: "melee", tier: "normal", element: "physical", behavior: "melee" },
+  "bonekrusher-vanguard": { id: "bonekrusher-vanguard", name: "본 크러셔 돌격수", faction: "랜드브레이커", role: "heavy", tier: "normal", element: "physical", behavior: "heavy", resist: {"physical":0.2} },
+  "falsewings": { id: "falsewings", name: "모방아겔로스", faction: "아겔로스", role: "snipe", tier: "common", element: "physical", behavior: "snipe" },
+  "walking-chrysopolis": { id: "walking-chrysopolis", name: "결정아겔로스", faction: "아겔로스", role: "heavy", tier: "alpha", element: "physical", behavior: "heavy", resist: {"physical":0.2,"nature":0.2,"electric":0.2,"heat":0.2} },
+  "nefarith-conqueror": { id: "nefarith-conqueror", name: "'정복자' 네파리스", faction: "랜드브레이커", role: "melee", tier: "boss", element: "physical", behavior: "melee" },
+  "enyx": { id: "enyx", name: "엘 아이그니스", faction: "야외 생물", role: "aoe", tier: "normal", element: "physical", behavior: "aoe" },
+  "skydrummer": { id: "skydrummer", name: "천고", faction: "야외 생물", role: "heavy", tier: "elite", element: "physical", behavior: "heavy" },
+  "grove-archer": { id: "grove-archer", name: "천림전", faction: "청파채", role: "melee", tier: "normal", element: "physical", behavior: "melee" },
+  "nimbus-razor": { id: "nimbus-razor", name: "할운옹", faction: "청파채", role: "melee", tier: "enhanced", element: "physical", behavior: "melee", resist: {"physical":0.4,"electric":0.2,"heat":0.2} },
+  "quillbeastx": { id: "quillbeastx", name: "프릭비스트", faction: "야외 생물", role: "melee", tier: "enhanced", element: "electric", behavior: "melee", resist: {"nature":0.2,"cryo":0.2} },
+  "waterlamp": { id: "waterlamp", name: "수등충", faction: "야외 생물", role: "snipe", tier: "normal", element: "nature", behavior: "snipe", resist: {"cryo":0.2,"heat":0.2} },
+  "aethillu": { id: "aethillu", name: "잔영", faction: "아다시르", role: "melee", tier: "normal", element: "physical", behavior: "melee", resist: {"physical":0.2,"nature":0.2,"cryo":0.2,"electric":0.2,"heat":0.2} },
+  "hazefyre-axe-armorbeast": { id: "hazefyre-axe-armorbeast", name: "안갯불에 물든 엑스 아머비스트", faction: "야외 생물", role: "melee", tier: "elite", element: "heat", behavior: "melee" },
+  "brutal-pincerbeast": { id: "brutal-pincerbeast", name: "브루탈 핀서비스트", faction: "야외 생물", role: "melee", tier: "normal", element: "physical", behavior: "melee" },
+  "acid-originium-slug-alpha": { id: "acid-originium-slug-alpha", name: "산성원석충 · α", faction: "야외 생물", role: "snipe", tier: "normal", element: "nature", behavior: "snipe" },
+  "falsewings-alpha": { id: "falsewings-alpha", name: "모방아겔로스 · α", faction: "아겔로스", role: "snipe", tier: "common", element: "physical", behavior: "snipe" },
+  "glaring-rakerbeast": { id: "glaring-rakerbeast", name: "분노의 레이커비스트", faction: "야외 생물", role: "melee", tier: "elite", element: "heat", behavior: "melee", resist: {"electric":0.2,"heat":0.2} },
+  "sweeping-wind": { id: "sweeping-wind", name: "과당풍", faction: "청파채", role: "melee", tier: "normal", element: "physical", behavior: "melee" },
+  "breaking-gust": { id: "breaking-gust", name: "단운수", faction: "청파채", role: "melee", tier: "elite", element: "physical", behavior: "melee", resist: {"physical":0.6,"electric":0.2,"heat":0.2} },
+  "mudflow-delta": { id: "mudflow-delta", name: "탁류아겔로스 · δ", faction: "아겔로스", role: "snipe", tier: "common", element: "cryo", behavior: "snipe", resist: {"cryo":0.2,"electric":0.2} },
+  "hedron-delta": { id: "hedron-delta", name: "수정아겔로스 · δ", faction: "아겔로스", role: "snipe", tier: "common", element: "cryo", behavior: "snipe", resist: {"cryo":0.2,"electric":0.2} },
+  "tidewalker-delta": { id: "tidewalker-delta", name: "조류아겔로스 · δ", faction: "아겔로스", role: "melee", tier: "elite", element: "cryo", behavior: "melee", resist: {"cryo":0.2,"electric":0.2} },
+  "blazemist-originium-slug": { id: "blazemist-originium-slug", name: "용암원석충", faction: "야외 생물", role: "aoe", tier: "normal", element: "heat", behavior: "aoe", resist: {"physical":0.2,"nature":0.2,"heat":0.2} },
 };
