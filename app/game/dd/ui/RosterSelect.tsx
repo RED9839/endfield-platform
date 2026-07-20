@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import { OPERATORS, SKILLS, OP_BASIC, avatarUrl, fullUrl, skillIcon, makeAlly, type OpMeta } from "../roster";
 import { OP_TALENTS } from "../operator-talents";
-import { activeSets, setEffectText, recommendedSet, recommendedLoadout, loadoutPieces, pieceImage, gearSlotName, bestFreePiece, slotOptions, GEAR_SET_CANON, SET_NAMES, KIT_SLOTS, type Loadout, type GearSlot } from "../gear";
+import { activeSets, setEffectText, recommendedSet, recommendedLoadout, loadoutPieces, pieceImage, gearSlotName, bestFreePiece, slotOptions, GEAR_SET_CANON, SET_NAMES, pieceSlotOf, LOADOUT_SLOTS, type LoadoutSlot, type Loadout, type GearSlot } from "../gear";
 import { DEFAULT_PROGRESS, type OpProgress } from "../progress";
 import { weaponOf, weaponName, weaponEffectText, weaponImage, weaponSeriesName, weaponSeriesText, OP_WEAPON_STATS, WEAPON_KO, WEAPON_ICON } from "../weapons";
 import { PRESET_PARTIES, ARCHETYPE_LABEL } from "../parties";
@@ -31,8 +31,8 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
   const [setChoice, setSetChoice] = useState<Record<string, string>>({});
   const [progress, setProgress] = useState<Record<string, OpProgress>>({});
   const [focusId, setFocusId] = useState<string>(OPERATORS[0].id);
-  const [pieceChoice, setPieceChoice] = useState<Record<string, Partial<Record<GearSlot, string>>>>({}); // 부위별 직접 교체(오퍼→슬롯→피스id)
-  const [gearTab, setGearTab] = useState<"set" | GearSlot | null>(null); // 장비 변경 모달 탭(null=닫힘)
+  const [pieceChoice, setPieceChoice] = useState<Record<string, Partial<Record<LoadoutSlot, string>>>>({}); // 부위별 직접 교체(오퍼→슬롯→피스id)
+  const [gearTab, setGearTab] = useState<"set" | LoadoutSlot | null>(null); // 장비 변경 모달 탭(null=닫힘)
   const opRecSet = (id: string) => { const op = OPERATORS.find((o) => o.id === id); return op ? recSet(op) : "검술사"; };
   const opSet = (id: string) => setChoice[id] ?? opRecSet(id);
   const opProg = (id: string) => progress[id] ?? DEFAULT_PROGRESS;
@@ -47,7 +47,8 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
       base = {
         armor: GEAR_SET_CANON[set]?.armor?.id ?? set,
         gloves: GEAR_SET_CANON[set]?.gloves?.id ?? set,
-        kit: free?.id ?? GEAR_SET_CANON[set]?.kit?.id ?? set,
+        kit1: GEAR_SET_CANON[set]?.kit?.id ?? set,
+        kit2: free?.id ?? GEAR_SET_CANON[set]?.kit?.id ?? set, // 3피스로 세트 유지 + 마지막 칸은 효율 우선
       };
     } else base = recommendedLoadout(id, set, element);
     const pc = pieceChoice[id]; // 부위별 직접 교체 override
@@ -303,7 +304,7 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
             </div>
             {/* 탭: 세트 / 방어구 / 장갑 / 부품 */}
             <div className="flex gap-1 border-b border-ef-line px-3 py-2">
-              {(["set", "armor", "gloves", "kit"] as const).map((tab) => (
+              {(["set", "armor", "gloves", "kit1", "kit2"] as const).map((tab) => (
                 <button key={tab} type="button" onClick={() => setGearTab(tab)} className={`dd-cut flex-1 border px-2 py-1.5 font-mono text-[14px] font-bold uppercase tracking-wider transition ${gearTab === tab ? "border-ef-accent bg-ef-accent/15 text-ef-accent" : "border-ef-line text-ef-muted hover:border-ef-accent/50 hover:text-ef-ink"}`}>
                   {tab === "set" ? "세트" : gearSlotName(tab)}
                 </button>
@@ -324,14 +325,14 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
                 <>
                   <div className="mb-2 font-mono text-[13px] text-ef-muted">{gearSlotName(gearTab)} 후보 · <span className="text-ef-muted">{op.element} 효율순</span></div>
                   <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
-                    {slotOptions(gearTab, op.element).map((opt) => { const sel = lo[gearTab as GearSlot] === opt.id; return (
-                      <button key={opt.id} type="button" onClick={() => { const slot = gearTab as GearSlot; setPieceChoice((c) => ({ ...c, [focusId]: { ...c[focusId], [slot]: opt.id } })); }} className={`dd-cut flex items-center gap-2 border p-2 text-left transition ${sel ? "border-ef-accent bg-ef-accent/10" : "border-ef-line hover:border-ef-accent/50"}`}>
+                    {slotOptions(pieceSlotOf(gearTab), op.element).map((opt) => { const sel = lo[gearTab as LoadoutSlot] === opt.id; return (
+                      <button key={opt.id} type="button" onClick={() => { const slot = gearTab as LoadoutSlot; setPieceChoice((c) => ({ ...c, [focusId]: { ...c[focusId], [slot]: opt.id } })); }} className={`dd-cut flex items-center gap-2 border p-2 text-left transition ${sel ? "border-ef-accent bg-ef-accent/10" : "border-ef-line hover:border-ef-accent/50"}`}>
                         <span className="flex h-11 w-11 shrink-0 items-center justify-center border border-ef-line/50 bg-black/40">{pieceImage(opt.name) ? <img src={pieceImage(opt.name)} alt="" className="h-full w-full object-contain" onError={(e) => ((e.currentTarget as HTMLImageElement).style.visibility = "hidden")} /> : null}</span>
-                        <span className="min-w-0 flex-1"><span className="block truncate font-mono text-[15px] font-bold text-white">{opt.name}{sel && <span className="ml-1 text-[11px] text-ef-accent">● 착용</span>}</span><span className="font-mono text-[13px] text-ef-ink/70">능력치 +{opt.grade.base * (gearTab === "kit" ? KIT_SLOTS : 1)} · 방어 +{opt.def * (gearTab === "kit" ? KIT_SLOTS : 1)} · {pieceDmg(opt, gearTab === "kit" ? KIT_SLOTS : 1)}</span><span className="block font-mono text-[12px] text-ef-muted">{opt.set !== "?" ? opt.set + " 세트" : "자유 슬롯"}</span></span>
+                        <span className="min-w-0 flex-1"><span className="block truncate font-mono text-[15px] font-bold text-white">{opt.name}{sel && <span className="ml-1 text-[11px] text-ef-accent">● 착용</span>}</span><span className="font-mono text-[13px] text-ef-ink/70">능력치 +{opt.grade.base * (1)} · 방어 +{opt.def * (1)} · {pieceDmg(opt, 1)}</span><span className="block font-mono text-[12px] text-ef-muted">{opt.set !== "?" ? opt.set + " 세트" : "자유 슬롯"}</span></span>
                       </button>
                     ); })}
                   </div>
-                  {!!pieceChoice[focusId]?.[gearTab as GearSlot] && <button type="button" onClick={() => { const slot = gearTab as GearSlot; setPieceChoice((c) => { const n = { ...c }; const st = { ...n[focusId] }; delete st[slot]; if (Object.keys(st).length) n[focusId] = st; else delete n[focusId]; return n; }); }} className="mt-2 w-full border border-ef-line py-1.5 font-mono text-[13px] font-bold uppercase text-ef-muted transition hover:border-ef-accent/50 hover:text-ef-ink">↺ 추천 부위로 복원</button>}
+                  {!!pieceChoice[focusId]?.[gearTab as LoadoutSlot] && <button type="button" onClick={() => { const slot = gearTab as LoadoutSlot; setPieceChoice((c) => { const n = { ...c }; const st = { ...n[focusId] }; delete st[slot]; if (Object.keys(st).length) n[focusId] = st; else delete n[focusId]; return n; }); }} className="mt-2 w-full border border-ef-line py-1.5 font-mono text-[13px] font-bold uppercase text-ef-muted transition hover:border-ef-accent/50 hover:text-ef-ink">↺ 추천 부위로 복원</button>}
                 </>
               )}
             </div>

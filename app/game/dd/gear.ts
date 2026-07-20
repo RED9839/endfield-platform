@@ -15,11 +15,19 @@ export const setApplyAttrs = (f: (u: DDUnit) => void) => { applyAttrsHook = f; }
 let attrBonusHook: ((id: string, a: any) => number) | null = null;
 export const setAttrBonus = (f: (id: string, a: any) => number) => { attrBonusHook = f; };
 
-export type GearSlot = "armor" | "gloves" | "kit";
-export type Loadout = Partial<Record<GearSlot, string>>; // 슬롯 → 세트명
+// 원작 장착칸은 방어구·장갑·부품 I·부품 II 4칸이고 세트 효과는 3피스에서 발동한다.
+// 피스 분류(장비 데이터 category)는 3종 그대로 두고 로드아웃만 4슬롯으로 분리 —
+// 부품 두 칸에 서로 다른 피스를 낄 수 있다(공략 시트 「부품 I / 부품 II」 열과 1:1).
+export type GearSlot = "armor" | "gloves" | "kit";                                // 피스 분류
+export type LoadoutSlot = "armor" | "gloves" | "kit1" | "kit2";                    // 장착칸
+export type Loadout = Partial<Record<LoadoutSlot, string>>;
 export const GEAR_SLOTS: GearSlot[] = ["armor", "gloves", "kit"];
+export const LOADOUT_SLOTS: LoadoutSlot[] = ["armor", "gloves", "kit1", "kit2"];
+export const pieceSlotOf = (s: LoadoutSlot): GearSlot => (s === "kit1" || s === "kit2" ? "kit" : s);
+export const SET_PIECES = 3; // 세트 효과 발동 부위 수(원작 3피스)
 const SLOT_KO: Record<GearSlot, string> = { armor: "방어구", gloves: "장갑", kit: "부품" };
-export const gearSlotName = (s: GearSlot) => SLOT_KO[s];
+const LOADOUT_KO: Record<LoadoutSlot, string> = { armor: "방어구", gloves: "장갑", kit1: "부품 I", kit2: "부품 II" };
+export const gearSlotName = (s: GearSlot | LoadoutSlot) => (LOADOUT_KO as Record<string, string>)[s] ?? (SLOT_KO as Record<string, string>)[s];
 
 // 세트 효과 타입(카드게임 SetEffect 포팅 — DD 스킬 kind/아츠에 정합)
 export type SetEffect =
@@ -46,7 +54,7 @@ export type SetEffect =
 
 // 밸런스: 2부위 = 강력한 조건부 1개(15~25%) 또는 중간 2개. 카드게임 밸런스 계승.
 export const GEAR_SETS: Record<string, SetEffect[]> = {
-  // ── 세트 2부위 — 상시 옵션 + 턴제 조건부 발동(combat.ts gearTrigger). 지속·쿨은 전부 턴 단위. ──
+  // ── 세트 3피스 — 상시 옵션 + 턴제 조건부 발동(combat.ts gearTrigger). 지속·쿨은 전부 턴 단위. ──
   "고검의 잔향": [{ type: "atkPct", pct: 0.08 }, { type: "trigger", desc: "강타·갑옷파괴 시 물리 피해 +6%/스택(최대 +24%, 2턴)" }],
   "식양의 흐름": [{ type: "atkPct", pct: 0.10 }, { type: "trigger", desc: "감전·부식 소모 시 전기·자연 피해 +15%/스택(최대 3스택, 5턴)" }],
   "청파": [{ type: "linkCd", pct: 0.15 }, { type: "trigger", desc: "연계 후 모든 스킬 피해 +20%(최대 2스택, 3턴)" }],
@@ -114,7 +122,7 @@ export function recommendedSet(id: string, cls: string, element: string): string
 
 export const getSetEffects = (setName: string): SetEffect[] => GEAR_SETS[setName] ?? [];
 export const hasSetEffect = (setName: string) => Boolean(GEAR_SETS[setName]);
-export const setEffectText = (setName: string) => hasSetEffect(setName) ? `2부위: ${GEAR_SETS[setName].map(effectText).join(" · ")}` : "세트 효과 없음";
+export const setEffectText = (setName: string) => hasSetEffect(setName) ? `${SET_PIECES}부위: ${GEAR_SETS[setName].map(effectText).join(" · ")}` : "세트 효과 없음";
 export const SET_NAMES = Object.keys(GEAR_SETS);
 
 // 피스명 → 실제 장비 이미지(gear-summary-data). 변형 마커(· I/II) 제거 후 매칭.
@@ -123,20 +131,20 @@ for (const g of gearSummaries) GEAR_IMG_BY_NAME[g.name] = g.image;
 export const pieceImage = (name: string): string => GEAR_IMG_BY_NAME[name] ?? GEAR_IMG_BY_NAME[name.replace(/\s*·\s*(I{1,3}|IV|V)$/, "").trim()] ?? "";
 
 // 로드아웃 → 슬롯별 착용 피스(방어구/장갑/부품). ref가 피스 id면 그 피스, 세트명이면 세트 대표 피스.
-export function loadoutPieces(loadout: Loadout | undefined): { slot: GearSlot; slotName: string; name: string; set: string; image: string; grade: number; def: number; dmg?: { kind: string; base: number }; slots: number }[] {
-  return GEAR_SLOTS.map((slot) => {
+export function loadoutPieces(loadout: Loadout | undefined): { slot: LoadoutSlot; slotName: string; name: string; set: string; image: string; grade: number; def: number; dmg?: { kind: string; base: number }; slots: number }[] {
+  return LOADOUT_SLOTS.map((slot) => {
     const ref = loadout?.[slot];
-    const p = ref ? (GEAR_PIECE_BY_ID[ref] ?? GEAR_SET_CANON[ref]?.[slot]) : undefined;
-    const m = slotMul(slot); // 부품은 원작 2슬롯 몫 → 표시도 실효치로
-    return { slot, slotName: SLOT_KO[slot], name: p?.name ?? "없음", set: p?.set ?? "", image: p ? pieceImage(p.name) : "", grade: (p?.grade.base ?? 0) * m, def: (p?.def ?? 0) * m, dmg: p?.dmg ? { kind: p.dmg.kind, base: +(p.dmg.base * m).toFixed(4) } : undefined, slots: m };
+    const p = ref ? (GEAR_PIECE_BY_ID[ref] ?? GEAR_SET_CANON[ref]?.[pieceSlotOf(slot)]) : undefined;
+    const m = 1; // 부품이 실제 2칸이 되었으므로 배수 없음
+    return { slot, slotName: gearSlotName(slot), name: p?.name ?? "없음", set: p?.set ?? "", image: p ? pieceImage(p.name) : "", grade: (p?.grade.base ?? 0) * m, def: (p?.def ?? 0) * m, dmg: p?.dmg ? { kind: p.dmg.kind, base: +(p.dmg.base * m).toFixed(4) } : undefined, slots: m };
   });
 }
 
-// 같은 세트 2부위 이상 장착 시 발동
+// 같은 세트 3피스 이상 장착 시 발동(원작 3개 세트 효과)
 export function activeSets(loadout: Loadout): string[] {
   const counts: Record<string, number> = {};
-  for (const slot of GEAR_SLOTS) { const s = loadout[slot]; if (s) { const set = refSet(s); counts[set] = (counts[set] ?? 0) + 1; } } // 피스 id는 소속 세트로 집계
-  return Object.entries(counts).filter(([name, n]) => n >= 2 && hasSetEffect(name)).map(([name]) => name);
+  for (const slot of LOADOUT_SLOTS) { const s = loadout[slot]; if (s) { const set = refSet(s); counts[set] = (counts[set] ?? 0) + 1; } } // 피스 id는 소속 세트로 집계
+  return Object.entries(counts).filter(([name, n]) => n >= SET_PIECES && hasSetEffect(name)).map(([name]) => name);
 }
 
 function emptyBonus(): GearBonus {
@@ -175,8 +183,6 @@ export const GEAR_ATTR_FACTOR = 0.3;
 const GRADE_FACTOR = 0.13; // 실측 능력치 합 → gearGrade 환산(3부위 ≈ +40 → 저항 ~50%)
 // 원작은 부품(kit) 2슬롯(방어구·장갑·부품×2 = 4슬롯, 세트 3부위 발동). 본 게임은 3슬롯 모델이라
 // 부품 1개가 원작 2개 몫을 하도록 능력치/방어를 2배 환산(부옵은 단일 — 원작 2번째 부품은 통상 다른 부옵).
-export const KIT_SLOTS = 2;
-const slotMul = (slot: GearSlot) => (slot === "kit" ? KIT_SLOTS : 1);
 
 // ── 전 220 피스 레지스트리 (data/gear-pieces.json). loadout이 피스 id를 참조하면 그 피스 실측 스탯, 세트명이면 대표 피스(GEAR_SET_STATS). ──
 export type GearPiece = { id: string; name: string; set: string; slot: GearSlot; rarity: number; def: number; grade: { base: number; enh: number[] }; attrs?: { str?: number; agi?: number; int?: number; wil?: number }; dmg?: { kind: DmgSub["kind"]; base: number; enh: number[] } };
@@ -191,35 +197,35 @@ for (const p of GEAR_PIECES) { if (/[·•]/.test(p.name)) continue; const s = (
 
 // 오퍼별 장착 피스 — 공략 시트(구글) 1순위 빌드 3슬롯 전부 지정(방어구/장갑/부품).
 export const OP_GEAR: Record<string, Loadout> = {
-  arcane: { armor: "item_equip_t4_eternalxiranitelightarmor", gloves: "item_equip_t4_aicfieldworkwraps", kit: "item_equip_t4_eternalxiranitereinforcedplate" },
-  laevatain: { armor: "item_equip_t4_suit_fire_natr01_body_02", gloves: "item_equip_t4_suit_fire_natr01_hand_02", kit: "item_equip_t4_suit_fire_natr01_edc_02" },
-  ember: { armor: "item_equip_t4_suit_poise01_body_01", gloves: "item_equip_t4_suit_phy01_hand_01", kit: "item_equip_t4_suit_poise01_edc_01" },
-  wulfgard: { armor: "item_equip_t4_suit_heal01_body_01", gloves: "item_equip_t4_suit_usp02_hand_01", kit: "item_equip_t4_suit_usp02_edc_03" },
-  akekuri: { armor: "item_equip_t4_parts_wuling01_body_02", gloves: "item_equip_t4_rifttrekkergloves", kit: "item_equip_t4_parts_wuling01_edc_03" },
-  camu: { armor: "item_equip_t4_suit_atb01_body_05", gloves: "item_equip_t4_suit_atb01_hand_02", kit: "item_equip_t4_suit_atb01_edc_04" },
-  yvonne: { armor: "item_equip_t4_suit_criti01_body_02", gloves: "item_equip_t4_suit_criti01_hand_02", kit: "item_equip_t4_suit_criti01_edc_03" },
-  lastrite: { armor: "item_equip_t4_suit_phy01_body_01", gloves: "item_equip_t4_suit_burst01_hand_01", kit: "item_equip_t4_suit_burst01_edc_01" },
-  tangtang: { armor: "item_equip_t4_suit_combo_cd01_body_01", gloves: "item_equip_t4_suit_criti01_hand_01", kit: "item_equip_t4_suit_combo_cd01_edc_01" },
-  snowshine: { armor: "item_equip_t4_suit_heal01_body_01", gloves: "item_equip_t4_suit_usp02_hand_01", kit: "item_equip_t4_suit_usp02_edc_01" },
-  xaihi: { armor: "item_equip_t4_eternalxiranitelightarmort1", gloves: "item_equip_t4_suit_usp02_hand_02", kit: "item_equip_t4_eternalxiranitereinforcedplate" },
-  alesh: { armor: "item_equip_t4_suit_atb01_body_05", gloves: "item_equip_t4_rifttrekkergloves", kit: "item_equip_t4_suit_atb01_edc_04" },
-  estella: { armor: "item_equip_t4_suit_attri01_body_04", gloves: "item_equip_t4_suit_usp02_hand_02", kit: "item_equip_t4_suit_usp02_edc_03" },
-  zhuangfangyi: { armor: "item_equip_t4_suit_expend_spell01_body_02", gloves: "item_equip_t4_suit_expend_spell01_hand_02", kit: "item_equip_t4_suit_expend_spell01_edc_02" },
-  avywenna: { armor: "item_equip_t4_suit_attri01_body_04", gloves: "item_equip_t4_suit_attri01_hand_03", kit: "item_equip_t4_suit_attri01_edc_03" },
-  perlica: { armor: "item_equip_t4_suit_pulse_cryst01_body_01", gloves: "item_equip_t4_suit_pulse_cryst01_hand_01", kit: "item_equip_t4_suit_pulse_cryst01_edc_02" },
-  arclight: { armor: "item_equip_t4_suit_atb01_body_05", gloves: "item_equip_t4_suit_atb01_hand_03", kit: "item_equip_t4_parts_wuling01_edc_03" },
-  antal: { armor: "item_equip_t4_suit_burst01_body_01", gloves: "item_equip_t4_suit_usp02_hand_01", kit: "item_equip_t4_suit_usp02_edc_01" },
-  gilberta: { armor: "item_equip_t4_suit_usp02_body_01", gloves: "item_equip_t4_rifttrekkergloves", kit: "item_equip_t4_suit_usp02_edc_03" },
-  ardelia: { armor: "item_equip_t4_suit_usp02_body_01", gloves: "item_equip_t4_rifttrekkergloves", kit: "item_equip_t4_suit_usp02_edc_03" },
-  fluorite: { armor: "item_equip_t4_suit_attri01_body_01", gloves: "item_equip_t4_suit_usp02_hand_01", kit: "item_equip_t4_suit_usp02_edc_01" },
-  pogranichnik: { armor: "item_equip_t4_suit_attri01_body_04", gloves: "item_equip_t4_suit_atk02_hand_02", kit: "item_equip_t4_suit_atk02_edc_04" },
-  lifeng: { armor: "item_equip_t4_suit_atk02_body_02", gloves: "item_equip_t4_suit_usp02_hand_01", kit: "item_equip_t4_suit_usp02_edc_01" },
-  endministrator: { armor: "item_equip_t4_suit_crush_fracture_body_02", gloves: "item_equip_t4_suit_crush_fracture_hand_02", kit: "item_equip_t4_suit_crush_fracture_edc_02" },
-  rossi: { armor: "item_equip_t4_suit_criti01_body_06", gloves: "item_equip_t4_parts_wuling01_hand_01", kit: "item_equip_t4_suit_criti01_edc_06" },
-  chenqianyu: { armor: "item_equip_t4_suit_atk02_body_02", gloves: "item_equip_t4_parts_wuling01_hand_01", kit: "item_equip_t4_suit_atk02_edc_02" },
-  dapan: { armor: "item_equip_t4_suit_phy01_body_01", gloves: "item_equip_t4_suit_fire_natr01_hand_01", kit: "item_equip_t4_suit_phy01_edc_01" },
-  catcher: { armor: "item_equip_t4_suit_attri01_body_04", gloves: "item_equip_t4_suit_usp02_hand_02", kit: "item_equip_t4_suit_usp02_edc_01" },
-  mifu: { armor: "item_equip_t4_suit_crush_fracture_body_01", gloves: "item_equip_t4_suit_crush_fracture_hand_01", kit: "item_equip_t4_suit_crush_fracture_edc_01" },
+  laevatain: { armor: "item_equip_t4_suit_fire_natr01_body_02", gloves: "item_equip_t4_suit_fire_natr01_hand_02", kit1: "item_equip_t4_suit_fire_natr01_edc_02", kit2: "item_equip_t4_suit_heal01_edc_03" },
+  ember: { armor: "item_equip_t4_suit_poise01_body_01", gloves: "item_equip_t4_suit_phy01_hand_01", kit1: "item_equip_t4_suit_poise01_edc_01", kit2: "item_equip_t4_suit_poise01_edc_01" },
+  wulfgard: { armor: "item_equip_t4_suit_heal01_body_01", gloves: "item_equip_t4_suit_usp02_hand_01", kit1: "item_equip_t4_suit_usp02_edc_03", kit2: "item_equip_t4_suit_usp02_edc_03" },
+  akekuri: { armor: "item_equip_t4_parts_wuling01_body_02", gloves: "item_equip_t4_rifttrekkergloves", kit1: "item_equip_t4_parts_wuling01_edc_03", kit2: "item_equip_t4_parts_wuling01_edc_03" },
+  camu: { armor: "item_equip_t4_suit_atb01_body_05", gloves: "item_equip_t4_suit_atb01_hand_02", kit1: "item_equip_t4_suit_atb01_edc_04", kit2: "item_equip_t4_parts_wuling01_edc_03" },
+  yvonne: { armor: "item_equip_t4_suit_criti01_body_02", gloves: "item_equip_t4_suit_criti01_hand_02", kit1: "item_equip_t4_suit_criti01_edc_03", kit2: "item_equip_t4_suit_criti01_edc_03" },
+  lastrite: { armor: "item_equip_t4_suit_phy01_body_01", gloves: "item_equip_t4_suit_burst01_hand_01", kit1: "item_equip_t4_suit_burst01_edc_01", kit2: "item_equip_t4_suit_burst01_edc_01" },
+  tangtang: { armor: "item_equip_t4_suit_combo_cd01_body_01", gloves: "item_equip_t4_suit_criti01_hand_01", kit1: "item_equip_t4_suit_combo_cd01_edc_01", kit2: "item_equip_t4_suit_combo_cd01_edc_01" },
+  snowshine: { armor: "item_equip_t4_suit_heal01_body_01", gloves: "item_equip_t4_suit_usp02_hand_01", kit1: "item_equip_t4_suit_usp02_edc_01", kit2: "item_equip_t4_suit_usp02_edc_01" },
+  xaihi: { armor: "item_equip_t4_eternalxiranitelightarmort1", gloves: "item_equip_t4_suit_usp02_hand_02", kit1: "item_equip_t4_eternalxiranitereinforcedplate", kit2: "item_equip_t4_suit_atb01_edc_04" },
+  alesh: { armor: "item_equip_t4_suit_atb01_body_05", gloves: "item_equip_t4_rifttrekkergloves", kit1: "item_equip_t4_suit_atb01_edc_04", kit2: "item_equip_t4_suit_atb01_edc_04" },
+  estella: { armor: "item_equip_t4_suit_attri01_body_04", gloves: "item_equip_t4_suit_usp02_hand_02", kit1: "item_equip_t4_suit_usp02_edc_03", kit2: "item_equip_t4_suit_usp02_edc_03" },
+  zhuangfangyi: { armor: "item_equip_t4_suit_expend_spell01_body_02", gloves: "item_equip_t4_suit_expend_spell01_hand_02", kit1: "item_equip_t4_suit_expend_spell01_edc_02", kit2: "item_equip_t4_suit_usp02_edc_03" },
+  avywenna: { armor: "item_equip_t4_suit_attri01_body_04", gloves: "item_equip_t4_suit_attri01_hand_03", kit1: "item_equip_t4_suit_attri01_edc_03", kit2: "item_equip_t4_suit_heal01_edc_03" },
+  perlica: { armor: "item_equip_t4_suit_pulse_cryst01_body_01", gloves: "item_equip_t4_suit_pulse_cryst01_hand_01", kit1: "item_equip_t4_suit_pulse_cryst01_edc_02", kit2: "item_equip_t4_suit_heal01_edc_03" },
+  arclight: { armor: "item_equip_t4_suit_atb01_body_05", gloves: "item_equip_t4_suit_atb01_hand_03", kit1: "item_equip_t4_parts_wuling01_edc_03", kit2: "item_equip_t4_suit_atb01_edc_06" },
+  antal: { armor: "item_equip_t4_suit_burst01_body_01", gloves: "item_equip_t4_suit_usp02_hand_01", kit1: "item_equip_t4_suit_usp02_edc_01", kit2: "item_equip_t4_suit_usp02_edc_01" },
+  gilberta: { armor: "item_equip_t4_suit_usp02_body_01", gloves: "item_equip_t4_rifttrekkergloves", kit1: "item_equip_t4_suit_usp02_edc_03", kit2: "item_equip_t4_suit_usp02_edc_03" },
+  ardelia: { armor: "item_equip_t4_suit_usp02_body_01", gloves: "item_equip_t4_rifttrekkergloves", kit1: "item_equip_t4_suit_usp02_edc_03", kit2: "item_equip_t4_suit_usp02_edc_03" },
+  fluorite: { armor: "item_equip_t4_suit_attri01_body_01", gloves: "item_equip_t4_suit_usp02_hand_01", kit1: "item_equip_t4_suit_usp02_edc_01", kit2: "item_equip_t4_suit_usp02_edc_01" },
+  arcane: { armor: "item_equip_t4_eternalxiranitelightarmor", gloves: "item_equip_t4_aicfieldworkwraps", kit1: "item_equip_t4_eternalxiranitereinforcedplate", kit2: "item_equip_t4_suit_usp02_edc_03" },
+  pogranichnik: { armor: "item_equip_t4_suit_attri01_body_04", gloves: "item_equip_t4_suit_atk02_hand_02", kit1: "item_equip_t4_suit_atk02_edc_04", kit2: "item_equip_t4_suit_atk02_edc_04" },
+  lifeng: { armor: "item_equip_t4_suit_atk02_body_02", gloves: "item_equip_t4_suit_usp02_hand_01", kit1: "item_equip_t4_suit_usp02_edc_01", kit2: "item_equip_t4_suit_usp02_edc_01" },
+  endministrator: { armor: "item_equip_t4_suit_crush_fracture_body_02", gloves: "item_equip_t4_suit_crush_fracture_hand_02", kit1: "item_equip_t4_suit_crush_fracture_edc_02", kit2: "item_equip_t4_suit_phy01_edc_03" },
+  rossi: { armor: "item_equip_t4_suit_criti01_body_06", gloves: "item_equip_t4_parts_wuling01_hand_01", kit1: "item_equip_t4_suit_criti01_edc_06", kit2: "item_equip_t4_suit_criti01_edc_06" },
+  chenqianyu: { armor: "item_equip_t4_suit_atk02_body_02", gloves: "item_equip_t4_parts_wuling01_hand_01", kit1: "item_equip_t4_suit_atk02_edc_02", kit2: "item_equip_t4_suit_atk02_edc_02" },
+  dapan: { armor: "item_equip_t4_suit_phy01_body_01", gloves: "item_equip_t4_suit_fire_natr01_hand_01", kit1: "item_equip_t4_suit_phy01_edc_01", kit2: "item_equip_t4_suit_phy01_edc_01" },
+  catcher: { armor: "item_equip_t4_suit_attri01_body_04", gloves: "item_equip_t4_suit_usp02_hand_02", kit1: "item_equip_t4_suit_usp02_edc_01", kit2: "item_equip_t4_suit_usp02_edc_01" },
+  mifu: { armor: "item_equip_t4_suit_crush_fracture_body_01", gloves: "item_equip_t4_suit_crush_fracture_hand_01", kit1: "item_equip_t4_suit_crush_fracture_edc_01", kit2: "item_equip_t4_suit_phy01_edc_01" },
 };
 // 자유 슬롯(세트 2부위 초과분)에 낄 개별 효율 최고 피스.
 // 세트 발동은 2부위면 충분 → 남는 1슬롯은 세트 무관 최고 딜 피스가 정배.
@@ -249,20 +255,21 @@ export function slotOptions(slot: GearSlot, element?: string, n = 16): GearPiece
 }
 
 // 오퍼 실제 로드아웃: OP_GEAR 피스 + 누락 슬롯은 세트 대표 피스 id로 폴백(세트명 아님 → 모든 슬롯이 개별 단조·제작 가능).
-// element를 주면 「3부위 전부 같은 세트」일 때 kit(최저 grade)을 개별 효율 최고 피스로 교체(2부위 세트 유지 = 정배).
+// element를 주면 「4칸 전부 같은 세트」일 때 부품 II를 개별 효율 최고 피스로 교체 — 나머지 3피스로 세트는 그대로 발동.
 export function recommendedLoadout(opId: string, setName: string, element?: string): Loadout {
   const og = OP_GEAR[opId] ?? {};
-  const fallback = (slot: GearSlot): string => GEAR_SET_CANON[setName]?.[slot]?.id ?? setName;
-  const lo: Loadout = { armor: og.armor ?? fallback("armor"), gloves: og.gloves ?? fallback("gloves"), kit: og.kit ?? fallback("kit") };
-  // 세트 최적화: 시트가 kit을 지정하지 않은 오퍼만 자유 슬롯화(시트 지정 빌드는 그대로 존중).
-  if (element && !og.kit) {
-    const sets = GEAR_SLOTS.map((s) => refSet(lo[s]!));
-    if (sets[0] === sets[1] && sets[1] === sets[2]) {
+  const fallback = (slot: LoadoutSlot): string => GEAR_SET_CANON[setName]?.[pieceSlotOf(slot)]?.id ?? setName;
+  const lo: Loadout = {
+    armor: og.armor ?? fallback("armor"), gloves: og.gloves ?? fallback("gloves"),
+    kit1: og.kit1 ?? fallback("kit1"), kit2: og.kit2 ?? og.kit1 ?? fallback("kit2"),
+  };
+  // 세트 최적화: 시트가 부품 II를 지정하지 않은 오퍼만 자유 슬롯화(시트 지정 빌드는 그대로 존중).
+  if (element && !og.kit2) {
+    const sets = LOADOUT_SLOTS.map((s) => refSet(lo[s]!));
+    if (sets.every((x) => x === sets[0])) { // 4칸 동일 세트 → 1칸 빼도 3피스라 세트 유지
       const bp = bestFreePiece("kit", element);
-      const cur = GEAR_PIECE_BY_ID[lo.kit!] ?? GEAR_SET_CANON[lo.kit!]?.kit; // 현재 kit(시트 지정) 피스
-      const curVal = cur?.dmg?.base ?? 0;
-      // 시트 kit과 다른 세트 & 실제로 더 높은 딜 substat일 때만 교체(동일 값이면 시트 유지).
-      if (bp && refSet(bp.id) !== sets[0] && (bp.dmg?.base ?? 0) > curVal) lo.kit = bp.id;
+      const cur = GEAR_PIECE_BY_ID[lo.kit2!] ?? GEAR_SET_CANON[lo.kit2!]?.kit;
+      if (bp && refSet(bp.id) !== sets[0] && (bp.dmg?.base ?? 0) > (cur?.dmg?.base ?? 0)) lo.kit2 = bp.id;
     }
   }
   return lo;
@@ -279,20 +286,20 @@ function resolveGear(ref: string, slot: GearSlot, lv: number): { def: number; gr
   return { def: p.def, grade, attrs, dmg: p.dmg ? { kind: p.dmg.kind as DmgSub["kind"], v: lv === 0 ? p.dmg.base : p.dmg.enh[lv - 1] } : undefined };
 }
 
-export function applyGear(u: DDUnit, loadout: Loadout | undefined, gearLevel = 0, levels?: Partial<Record<GearSlot, number>>): number {
+export function applyGear(u: DDUnit, loadout: Loadout | undefined, gearLevel = 0, levels?: Partial<Record<LoadoutSlot, number>>): number {
   if (!loadout) return 0;
   const g = emptyBonus();
   let atkPct = 0, startEnergy = 0, gradeAdd = 0;
   const gAttr: Record<string, number> = { str: 0, agi: 0, int: 0, wil: 0 }; // 장비가 주는 능력치 합
-  for (const slot of GEAR_SLOTS) if (loadout[slot]) {
+  for (const slot of LOADOUT_SLOTS) if (loadout[slot]) {
     const lv = Math.max(0, Math.min(3, levels?.[slot] ?? gearLevel)); // 부위별 단조(제작) 우선, 없으면 통합 gearLevel
-    const r = resolveGear(loadout[slot]!, slot, lv); // 피스 id 또는 세트명 → 실측 스탯(단조 반영)
-    const m = slotMul(slot); // 부품은 원작 2슬롯 몫
-    if (!r) { u.defense += GEAR_DEFENSE[slot] * m; continue; }
+    const r = resolveGear(loadout[slot]!, pieceSlotOf(slot), lv); // 피스 id 또는 세트명 → 실측 스탯(단조 반영)
+    const m = 1; // 부품 2칸이 각각 계산되므로 배수 없음
+    if (!r) { u.defense += GEAR_DEFENSE[pieceSlotOf(slot)] * m; continue; }
     u.defense += r.def * m; // 주옵: 방어(피스별 실측)
     gradeAdd += r.grade * GRADE_FACTOR * m; // 실측 능력치 → gearGrade(저항)
     if (r.attrs) for (const [a, v] of Object.entries(r.attrs)) gAttr[a] += v * m; // 속성별 내역(힘/민첩/지능/의지)
-    if (r.dmg) { const v = r.dmg.v * m, k = r.dmg.kind; // 실측 피해 부옵(부품은 2슬롯 몫)
+    if (r.dmg) { const v = r.dmg.v * m, k = r.dmg.kind; // 실측 피해 부옵
       if (k === "atkPct") atkPct += v;
       else if (k === "hpPct") { const h = Math.round(u.maxHp * v); u.maxHp += h; u.hp += h; }
       else if (k === "critRate") u.critRate += v;

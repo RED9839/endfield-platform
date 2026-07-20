@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ChevronLeft, Hammer, Check, Lock } from "lucide-react";
 
-import { GEAR_PIECES_BY_SET_SLOT, GEAR_PIECE_BY_ID, GEAR_SLOTS, gearSlotName, pieceImage, slotOptions, type GearPiece, type GearSlot } from "../gear";
+import { GEAR_PIECES_BY_SET_SLOT, GEAR_PIECE_BY_ID, GEAR_SLOTS, LOADOUT_SLOTS, gearSlotName, pieceImage, pieceSlotOf, slotOptions, type GearPiece, type GearSlot, type LoadoutSlot } from "../gear";
 import { craftCost, forgeCost, skillForgeCost, canAfford, pieceLevel, isOwned, type CraftState } from "../craft";
 import { SKILL_MAX, skillLabel } from "../progress";
 import { OPERATORS, avatarUrl } from "../roster";
@@ -24,10 +24,10 @@ function Cost({ parts, permits, ok }: { parts: number; permits: number; ok: bool
   return <span className={`font-mono text-[12px] tabular-nums ${ok ? "text-ef-muted" : "text-red-400/90"}`} title="제작 비용 — 부품 · 관리권">{parts}<span className="opacity-55">부품</span> {permits}<span className="opacity-55">관리권</span></span>;
 }
 
-export default function CraftPanel({ craft, party = [], onCraft, onForge, onSwap, onForgeSkill, onClose }: { craft: CraftState; party?: PartyMember[]; onCraft: (id: string) => boolean; onForge: (id: string) => boolean; onSwap?: (opId: string, slot: GearSlot, pieceId: string) => void; onForgeSkill?: (opId: string) => boolean; onClose: () => void }) {
+export default function CraftPanel({ craft, party = [], onCraft, onForge, onSwap, onForgeSkill, onClose }: { craft: CraftState; party?: PartyMember[]; onCraft: (id: string) => boolean; onForge: (id: string) => boolean; onSwap?: (opId: string, slot: LoadoutSlot, pieceId: string) => void; onForgeSkill?: (opId: string) => boolean; onClose: () => void }) {
   const [set, setSet] = useState(SETS[0]);
   const [tab, setTab] = useState<"party" | "catalog">(party.length > 0 ? "party" : "catalog");
-  const [swap, setSwap] = useState<{ opId: string; slot: GearSlot } | null>(null); // 교체 피커 열림 슬롯
+  const [swap, setSwap] = useState<{ opId: string; slot: LoadoutSlot } | null>(null); // 교체 피커 열림 슬롯
   const affordCraft = (p: GearPiece) => { const c = craftCost(p); return craft.mats.parts >= c.parts && craft.mats.permits >= c.permits; };
   const affordForge = (lv: number) => { const c = forgeCost(lv); return craft.mats.parts >= c.parts && craft.mats.permits >= c.permits; };
   const opName = (id: string) => OPERATORS.find((o) => o.id === id)?.name ?? id;
@@ -108,7 +108,7 @@ export default function CraftPanel({ craft, party = [], onCraft, onForge, onSwap
                   {op && <span className="font-mono text-[13px] uppercase text-ef-muted">{op.element}</span>}
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  {GEAR_SLOTS.map((slot) => {
+                  {LOADOUT_SLOTS.map((slot) => {
                     const ref = m.loadout?.[slot]; const p = ref ? GEAR_PIECE_BY_ID[ref] : undefined;
                     const open = swap?.opId === m.id && swap.slot === slot;
                     return (
@@ -182,7 +182,7 @@ export default function CraftPanel({ craft, party = [], onCraft, onForge, onSwap
               <div className="overflow-y-auto p-3">
                 <div className="mb-2 font-mono text-[13px] text-ef-muted">{gearSlotName(swap.slot)} 후보 · <span>{op?.element} 효율순</span></div>
                 <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
-                  {slotOptions(swap.slot, op?.element).map((opt) => { const sel = ref === opt.id; return (
+                  {slotOptions(pieceSlotOf(swap.slot), op?.element).map((opt) => { const sel = ref === opt.id; return (
                     <button key={opt.id} type="button" onClick={() => { onSwap(swap.opId, swap.slot, opt.id); close(); }} className={`dd-cut flex items-center gap-2 border p-2 text-left transition ${sel ? "border-ef-accent bg-ef-accent/10" : "border-ef-line hover:border-ef-accent/50"}`}>
                       <span className="flex h-11 w-11 shrink-0 items-center justify-center border border-ef-line/50 bg-black/40">{pieceImage(opt.name) ? <img src={pieceImage(opt.name)} alt="" className="h-full w-full object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = "hidden"; }} /> : null}</span>
                       <span className="min-w-0 flex-1">

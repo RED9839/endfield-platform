@@ -3,7 +3,7 @@
 import { useCallback, useMemo, useState } from "react";
 
 import { makeAlly } from "./roster";
-import { GEAR_SLOTS, GEAR_PIECE_BY_ID, type Loadout } from "./gear";
+import { GEAR_SLOTS, LOADOUT_SLOTS, GEAR_PIECE_BY_ID, type Loadout } from "./gear";
 import { rewardItemPool } from "./items";
 import { SKILL_MAX, DEFAULT_PROGRESS, type OpProgress } from "./progress";
 import { initialCraft, craftPiece as doCraft, forgePiece as doForge, cloneCraft, craftCost, skillForgeCost, canAfford, type CraftState } from "./craft";
@@ -100,7 +100,7 @@ export function useDDRun() {
   const activeNode = activeId ? nodeMap[activeId] : null;
 
   // 파티 목표 장비 중 아직 안 만들었고 재화로 만들 수 있는 피스가 있는가(공업소 진입 유도용)
-  const hasCraftable = useMemo(() => party.some((m) => m.loadout && GEAR_SLOTS.some((slot) => {
+  const hasCraftable = useMemo(() => party.some((m) => m.loadout && LOADOUT_SLOTS.some((slot) => {
     const ref = m.loadout![slot]; const p = ref ? GEAR_PIECE_BY_ID[ref] : undefined;
     return p && craft.owned[ref!] == null && canAfford(craft.mats, craftCost(p));
   })), [party, craft]);

@@ -1,7 +1,7 @@
 // DD 전투 시뮬 헬퍼 — AI(아군 자동/적) + 인카운터 + 전투 생성. UI와 테스트가 공유(부작용 없음).
 import { BASIC, DDState, DDUnit, DDSkill, Element, ELEMENTS, applyAttach, applyDamage, healUnit, living, mitigate, usable, pickTargets, vulnFor, onAllyHit, EXECUTE_MULT, GAUGE_COST, setLinkChain, bumpVuln, setTimer } from "./combat";
 import { SKILLS, makeAlly, makeEnemy, ENEMY_DEFS, enemyDefFor, frontlineOrder, enemyArchetype } from "./roster";
-import { applyGear, GEAR_SLOTS, type Loadout, type GearSlot } from "./gear";
+import { applyGear, GEAR_SLOTS, LOADOUT_SLOTS, type Loadout, type GearSlot, type LoadoutSlot } from "./gear";
 import { applyWeapon } from "./weapons";
 import type { OpProgress } from "./progress";
 import { rewardItemPool } from "./items";
@@ -380,8 +380,8 @@ export function createBattle(party: { id: string; hp?: number; loadout?: Loadout
     if (p.hp != null) u.hp = Math.max(1, Math.min(u.maxHp, p.hp)); // 지속 HP(소모전)
     if (p.ult != null) u.ultCharge = Math.max(0, Math.min(u.ultCost, p.ult)); // 궁 게이지 이월 — 전투마다 0으로 리셋되면 고비용 궁(220~240)은 영원히 못 씀
     // 맨몸 시작 — 공업소에서 제작(owned)한 피스만 장착. 미제작 슬롯은 미적용(기본 스탯).
-    let equipped: Loadout | undefined; let levels: Partial<Record<GearSlot, number>> | undefined;
-    if (p.loadout && owned) for (const slot of GEAR_SLOTS) { const ref = p.loadout[slot]; if (ref && owned[ref] != null) { (equipped ??= {})[slot] = ref; (levels ??= {})[slot] = owned[ref]; } }
+    let equipped: Loadout | undefined; let levels: Partial<Record<LoadoutSlot, number>> | undefined;
+    if (p.loadout && owned) for (const slot of LOADOUT_SLOTS) { const ref = p.loadout[slot]; if (ref && owned[ref] != null) { (equipped ??= {})[slot] = ref; (levels ??= {})[slot] = owned[ref]; } }
     bonusGauge += applyGear(u, equipped, 0, levels); // 제작된 피스만: 세트 효과 + 부위 단조 스케일
     applyWeapon(u); // 시그니처 무기: 공격력 +10% + 타입 고유효과
     return u;
