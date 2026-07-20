@@ -68,13 +68,15 @@ export const PRESET_PARTIES: PresetParty[] = [
   {
     id: "zhuangfangyi",
     name: "장방이 조합",
-    members: ["zhuangfangyi", "ardelia", "perlica", "arclight"],
+    members: ["zhuangfangyi", "arcane", "perlica", "arclight"],
     element: "electric",
     archetype: "arts",
-    desc: "장방이 전기 딜 — 아델리아 부식·취약 · 펠리카 감전 셋업 · 아크라이트 게이지",
+    desc: "장방이 전기 딜 — 결 자연 부착 공급 · 펠리카 감전 셋업 · 아크라이트 게이지",
     note: "1,4돌",
     alternates: [
-      { role: "2번 서포터", ids: ["ardelia", "alesh", "antal", "avywenna"], note: "아델리아 / 알레쉬 / 안탈 / 아비웨나" },
+      // 2번은 '아츠 부착을 꾸준히 까는 역할'이 핵심. 감전이 소모할 부착이 없으면 파티 전체가 평타로 전락한다.
+      // 시뮬 검증: 결 25168 / 아비웨나 5032 / 알레쉬 5014 / 아델리아 3907 / 안탈 3657 (팀DPS)
+      { role: "2번 서포터", ids: ["arcane", "avywenna", "alesh", "ardelia"], note: "결 / 아비웨나 / 알레쉬 / 아델리아" },
       { role: "4번 뱅가드", ids: ["arclight", "akekuri"], note: "아크라이트 / 아케쿠리" },
     ],
   },
