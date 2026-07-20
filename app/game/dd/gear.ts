@@ -107,7 +107,7 @@ export const OP_RECOMMENDED_SET: Record<string, string> = {
   arclight: "개척", antal: "식양의 숨결", gilberta: "식양의 숨결", ardelia: "식양의 숨결", fluorite: "식양의 숨결",
   pogranichnik: "응룡 50식", lifeng: "식양의 숨결", endministrator: "고검의 잔향", rossi: "M. I. 경찰용",
   chenqianyu: "응룡 50식", dapan: "검술사", catcher: "식양의 숨결", mifu: "고검의 잔향",
-  arcane: "식양의 숨결",
+  arcane: "열 작업용",
 };
 // 오퍼 추천 세트(시트 우선, 없으면 직군·속성 폴백)
 export function recommendedSet(id: string, cls: string, element: string): string {
@@ -217,7 +217,11 @@ export const OP_GEAR: Record<string, Loadout> = {
   gilberta: { armor: "item_equip_t4_suit_usp02_body_01", gloves: "item_equip_t4_rifttrekkergloves", kit1: "item_equip_t4_suit_usp02_edc_03", kit2: "item_equip_t4_suit_usp02_edc_03" },
   ardelia: { armor: "item_equip_t4_suit_usp02_body_01", gloves: "item_equip_t4_rifttrekkergloves", kit1: "item_equip_t4_suit_usp02_edc_03", kit2: "item_equip_t4_suit_usp02_edc_03" },
   fluorite: { armor: "item_equip_t4_suit_attri01_body_01", gloves: "item_equip_t4_suit_usp02_hand_01", kit1: "item_equip_t4_suit_usp02_edc_01", kit2: "item_equip_t4_suit_usp02_edc_01" },
-  arcane: { armor: "item_equip_t4_eternalxiranitelightarmor", gloves: "item_equip_t4_aicfieldworkwraps", kit1: "item_equip_t4_eternalxiranitereinforcedplate", kit2: "item_equip_t4_suit_usp02_edc_03" },
+  // 결은 빌드가 두 벌이다(위키 4.2). 우리 게임은 전무 42식·척결(지능 +156) 고정이라 패널상 항상
+  // 진결·지혜(딜)이므로 **딜러 빌드(열 작업용)**를 목표 장비로 쓴다.
+  //   열 작업용 3피스 세트효과 "적에게 부식을 부여한 후 자연 피해 +50%" ↔ 결 지혜 궁의 강제 부식과 정확히 맞물린다.
+  //   (서포터 빌드 식양의 숨결은 진결·의지 전용 — 폼을 의지로 돌릴 때 장비 변경에서 고르면 된다)
+  arcane: { armor: "item_equip_t4_suit_fire_natr01_body_02", gloves: "item_equip_t4_hotworkprotectivegloves", kit1: "item_equip_t4_hotworkinsulationplate", kit2: "item_equip_t4_suit_heal01_edc_03" },
   pogranichnik: { armor: "item_equip_t4_suit_attri01_body_04", gloves: "item_equip_t4_suit_atk02_hand_02", kit1: "item_equip_t4_suit_atk02_edc_04", kit2: "item_equip_t4_suit_atk02_edc_04" },
   lifeng: { armor: "item_equip_t4_suit_atk02_body_02", gloves: "item_equip_t4_suit_usp02_hand_01", kit1: "item_equip_t4_suit_usp02_edc_01", kit2: "item_equip_t4_suit_usp02_edc_01" },
   endministrator: { armor: "item_equip_t4_suit_crush_fracture_body_02", gloves: "item_equip_t4_suit_crush_fracture_hand_02", kit1: "item_equip_t4_suit_crush_fracture_edc_02", kit2: "item_equip_t4_suit_phy01_edc_03" },
