@@ -61,6 +61,11 @@ function battlePayoff(s: DDState, u: DDUnit, sk: DDSkill): string | null {
   // 취약/불균형/방불 페이오프
   if (sk.vsWeak && any((e) => e.staggered || (e.vuln.physical || 0) > 0)) return "◆ 약점 가격";
   if (sk.stanceFromCrush && any((e) => (e.physBreak ?? 0) >= 3)) return "◆ 자세 전환";
+  // 오퍼 고유 조건부(선언 필드 없이 apply/커스텀 로직으로 처리되는 페이오프 — warfarin 대조)
+  if (u.id === "rossi" && any((e) => (e.physBreak ?? 0) >= 1)) return "◆ 진주 추격";        // 방불 적 → 늑대 진주 열기 추격
+  if (u.id === "pogranichnik" && any((e) => (e.physBreak ?? 0) > 0)) return "◆ 방불 소모";  // 갑옷 파괴로 방불 소모 → 게이지 회복
+  if (u.id === "ardelia" && any((e) => e.statuses.includes("corrosion" as never))) return "◆ 부식 소모"; // 부식 소모 → 물리/아츠 취약
+  if (u.id === "zhuangfangyi" && any((e) => e.statuses.includes("shock" as never))) return "⚡ 감전 소모"; // 감전 소모 → 피해 배율↑ + 청뢰검
   // 라에바테인 녹아내린 불꽃 4스택 → 강화 배틀
   if (u.id === "laevatain" && (u.procCount ?? 0) >= 4) return "🔥 강화 폭발";
   return null;

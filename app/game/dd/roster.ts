@@ -284,7 +284,7 @@ export const SKILLS: Record<string, DDSkill[]> = {
     { id: "lr-l", name: "겨울 포식자", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 1.42, hits: [0.71, 0.71], element: "cryo", staggerVal: 15, cooldown: 2, cryoNuke: 1.07,
       requires: (t) => !!t && t.arts.cryo >= 3, requiresText: "냉기 부착 3스택+", note: "냉기 소모 누킹 + 저체온증 냉기 취약 + 강제 정지" },
     // 마지막 인사(궁 178+178+356=712%, 게이지 240): 단일 3연 베기 누킹(시전 중 피해 면역) + 저온 취성(냉기/아츠 취약 1.5배).
-    { id: "lr-u", name: "마지막 인사", kind: "ult", fromPos: [1, 2], target: "single-front", power: 7.12, hits: [3.56, 3.56], element: "cryo", staggerVal: 20, selfUlt: true, note: "단일 누킹 + 저온 취성(취약 1.5배)" },
+    { id: "lr-u", name: "마지막 인사", kind: "ult", fromPos: [1, 2], target: "single-front", power: 7.12, hits: [1.78, 1.78, 3.56], element: "cryo", staggerVal: 20, selfUlt: true, note: "단일 3연 베기 누킹 + 저온 취성(취약 1.5배)" },
   ],
   // 아비웨나: 전기/장병기 스트라이커(★5). 썬더랜스(투창)를 연계/궁으로 필드에 설치(30초) → 배틀로 전부 회수하며 수 비례 중복 폭딜. 전기 부착/감전 미소모(연계 조건일 뿐). 전기팟 핵심.
   // 재능: 고효율 배송(투창 설치/회수 명중 시 궁 +4, 엔진) · 완곡한 수단(궁 명중 시 전기 취약, 엔진). 평타는 물리. 주스탯 의지·보조 민첩.
