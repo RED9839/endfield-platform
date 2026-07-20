@@ -113,18 +113,7 @@ export default function CraftPanel({ craft, party = [], onCraft, onForge, onSwap
                     const open = swap?.opId === m.id && swap.slot === slot;
                     return (
                       <div key={slot}>
-                        {p ? <PieceTile p={p} slotLabel onSwapClick={onSwap ? () => setSwap(open ? null : { opId: m.id, slot }) : undefined} swapOpen={open} /> : null}
-                        {/* 교체 피커 */}
-                        {open && onSwap && (
-                          <div className="mt-1 grid max-h-48 grid-cols-2 gap-1 overflow-y-auto border border-ef-accent/30 bg-black/40 p-1.5" style={CUT}>
-                            {slotOptions(slot, op?.element).map((opt) => { const sel = ref === opt.id; return (
-                              <button key={opt.id} type="button" onClick={() => { onSwap(m.id, slot, opt.id); setSwap(null); }} className={`dd-cut flex items-center gap-1.5 border p-1 text-left transition ${sel ? "border-ef-accent bg-ef-accent/10" : "border-ef-line hover:border-ef-accent/50"}`}>
-                                <span className="flex h-7 w-7 shrink-0 items-center justify-center border border-ef-line/50 bg-black/40">{pieceImage(opt.name) ? <img src={pieceImage(opt.name)} alt="" className="h-full w-full object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = "hidden"; }} /> : null}</span>
-                                <span className="min-w-0"><span className="block truncate font-mono text-[13px] font-bold text-white">{opt.name}</span><span className="font-mono text-[12px] text-emerald-300/70">{dmgText(opt)}</span></span>
-                              </button>
-                            ); })}
-                          </div>
-                        )}
+                        {p ? <PieceTile p={p} slotLabel onSwapClick={onSwap ? () => setSwap({ opId: m.id, slot }) : undefined} swapOpen={open} /> : null}
                       </div>
                     );
                   })}
@@ -175,6 +164,40 @@ export default function CraftPanel({ craft, party = [], onCraft, onForge, onSwap
           </div>
         </>
       )}
+
+      {/* 장비 교체 모달 — 편성 화면(RosterSelect)의 '장비 변경'과 동일한 선택 방식으로 통일.
+          인라인 피커는 좁은 슬롯 안에서 2열로 눌려 후보를 알아보기 어려웠다. */}
+      {swap && onSwap && (() => {
+        const m = party.find((x) => x.id === swap.opId);
+        const op = m ? OPERATORS.find((o) => o.id === m.id) : undefined;
+        const ref = m?.loadout?.[swap.slot];
+        const close = () => setSwap(null);
+        return (
+          <div onClick={close} className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4">
+            <div onClick={(e) => e.stopPropagation()} className="flex max-h-[88vh] w-full max-w-[640px] flex-col border border-ef-accent/50 bg-[#0d0906]" style={CUT}>
+              <div className="flex items-center gap-2 border-b border-ef-line p-3.5">
+                <span className="font-mono text-lg font-bold text-white">장비 교체 <span className="text-sm text-ef-muted">— {opName(swap.opId)} · {gearSlotName(swap.slot)}</span></span>
+                <button type="button" onClick={close} className="ml-auto shrink-0 border border-ef-line px-2 py-1 font-mono text-sm text-ef-muted transition hover:border-ef-accent/60 hover:text-white">✕</button>
+              </div>
+              <div className="overflow-y-auto p-3">
+                <div className="mb-2 font-mono text-[13px] text-ef-muted">{gearSlotName(swap.slot)} 후보 · <span>{op?.element} 효율순</span></div>
+                <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+                  {slotOptions(swap.slot, op?.element).map((opt) => { const sel = ref === opt.id; return (
+                    <button key={opt.id} type="button" onClick={() => { onSwap(swap.opId, swap.slot, opt.id); close(); }} className={`dd-cut flex items-center gap-2 border p-2 text-left transition ${sel ? "border-ef-accent bg-ef-accent/10" : "border-ef-line hover:border-ef-accent/50"}`}>
+                      <span className="flex h-11 w-11 shrink-0 items-center justify-center border border-ef-line/50 bg-black/40">{pieceImage(opt.name) ? <img src={pieceImage(opt.name)} alt="" className="h-full w-full object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = "hidden"; }} /> : null}</span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate font-mono text-[15px] font-bold text-white" title={opt.name}>{opt.name}{sel && <span className="ml-1 text-[11px] text-ef-accent">● 착용</span>}</span>
+                        <span className="font-mono text-[13px] text-ef-ink/70">능력치 +{opt.grade.base} · 방어 +{opt.def}{opt.dmg ? ` · ${dmgText(opt)}` : ""}</span>
+                        <span className="block font-mono text-[12px] text-ef-muted">{opt.set !== "?" ? opt.set + " 세트" : "자유 슬롯"} · {isOwned(craft, opt.id) ? <span className="text-emerald-300/80">제작됨</span> : <span className="text-amber-300/70">미제작</span>}</span>
+                      </span>
+                    </button>
+                  ); })}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
