@@ -93,13 +93,13 @@ export function effectText(e: SetEffect): string {
 // 시트(공략 빌드) 기준 오퍼별 추천 세트 — recSet 기본값·프리셋 로드아웃의 단일 소스.
 // 공략 시트(구글) 1순위 빌드 기준 — 오퍼별 추천 세트(2부위 세트명).
 export const OP_RECOMMENDED_SET: Record<string, string> = {
-  laevatain: "열 작업용", ember: "경량 초자연", wulfgard: "청파", akekuri: "개척", camu: "개척",
+  laevatain: "열 작업용", ember: "경량 초자연", wulfgard: "식양의 숨결", akekuri: "개척", camu: "개척",
   yvonne: "M. I. 경찰용", lastrite: "조류의 물결", tangtang: "청파", snowshine: "식양의 숨결", xaihi: "식양의 숨결",
   alesh: "개척", estella: "식양의 숨결", zhuangfangyi: "식양의 흐름", avywenna: "본 크러셔", perlica: "펄스식",
   arclight: "개척", antal: "식양의 숨결", gilberta: "식양의 숨결", ardelia: "식양의 숨결", fluorite: "식양의 숨결",
   pogranichnik: "응룡 50식", lifeng: "식양의 숨결", endministrator: "고검의 잔향", rossi: "M. I. 경찰용",
   chenqianyu: "응룡 50식", dapan: "검술사", catcher: "식양의 숨결", mifu: "고검의 잔향",
-  // 결: 공략 시트에 빌드 행이 아직 비어 있다(신규 오퍼). 임의 지정하지 않고 아래 속성 폴백(자연 → 식양의 흐름)을 쓴다.
+  arcane: "식양의 숨결",
 };
 // 오퍼 추천 세트(시트 우선, 없으면 직군·속성 폴백)
 export function recommendedSet(id: string, cls: string, element: string): string {
