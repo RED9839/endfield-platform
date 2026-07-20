@@ -17,6 +17,7 @@ const STATUS_ICON: Record<string, string> = {
   "armor-break": physicalCombatIconPaths.armorBreak,
 };
 import { OP_TALENTS } from "../operator-talents";
+import { DMG_SHORT as DMG_KO, SKILL_KIND_LABEL as kindLabel } from "../labels";
 import { ITEMS, useItem as applyItem, canUseItem, itemColor, itemImage } from "../items";
 import type { BattleResult, NodeKind, PartyMember } from "../run";
 
@@ -25,7 +26,6 @@ const CUT_SM = { clipPath: "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%
 const elementColor: Record<"physical" | Element, string> = { physical: "#d4d4d8", heat: "#fb923c", electric: "#FBCB38", cryo: "#67e8f9", nature: "#86efac" };
 const elementName: Record<"physical" | Element, string> = { physical: "물리", heat: "열기", electric: "전기", cryo: "냉기", nature: "자연" };
 const classLabel: Record<DDClass, string> = { guard: "가드", caster: "캐스터", striker: "스트라이커", vanguard: "뱅가드", defender: "디펜더", supporter: "서포터" };
-const kindLabel: Record<DDSkill["kind"], string> = { attack: "기본공격", battle: "배틀스킬", link: "연계스킬", ult: "궁극기" };
 const kindTone: Record<DDSkill["kind"], string> = { attack: "#a1a1aa", battle: "#ff9a2f", link: "#67e8f9", ult: "#facc15" };
 const targetLabel: Record<DDSkill["target"], string> = { "single-front": "단일", "single-lowhp": "단일", row: "범위", all: "범위", self: "자신" };
 // 스킬 사용 불가 사유(usable()과 동일 순서). null=사용 가능.
@@ -63,7 +63,7 @@ function battlePayoff(s: DDState, u: DDUnit, sk: DDSkill): string | null {
   if (sk.stanceFromCrush && any((e) => (e.physBreak ?? 0) >= 3)) return "◆ 자세 전환";
   // 오퍼 고유 조건부(선언 필드 없이 apply/커스텀 로직으로 처리되는 페이오프 — warfarin 대조)
   if (u.id === "rossi" && any((e) => (e.physBreak ?? 0) >= 1)) return "◆ 진주 추격";        // 방불 적 → 늑대 진주 열기 추격
-  if (u.id === "pogranichnik" && any((e) => (e.physBreak ?? 0) > 0)) return "◆ 방불 소모";  // 갑옷 파괴로 방불 소모 → 게이지 회복
+  if (u.id === "pogranichnik" && any((e) => (e.physBreak ?? 0) > 0)) return "◆ 방어 불능 소모";  // 갑옷 파괴로 방불 소모 → 게이지 회복
   if (u.id === "ardelia" && any((e) => e.statuses.includes("corrosion" as never))) return "◆ 부식 소모"; // 부식 소모 → 물리/아츠 취약
   if (u.id === "zhuangfangyi" && any((e) => e.statuses.includes("shock" as never))) return "⚡ 감전 소모"; // 감전 소모 → 피해 배율↑ + 청뢰검
   // 라에바테인 녹아내린 불꽃 4스택 → 강화 배틀
@@ -93,7 +93,6 @@ const OP_STACK_INFO: Record<string, { get: (u: DDUnit) => number; max: number; n
   mifu: { get: (u) => u.stance ?? 0, max: 2, name: "청파 삼형 자세", icon: "🌀", tone: "#a3e635", fmt: (v) => STANCE_KO[v] ?? String(v), desc: "단운 → 추형 → 개천 (스킬로 전환)" },
 };
 const tierLabel: Record<string, string> = { normal: "일반", common: "일반", enhanced: "강화", advanced: "정예", elite: "정예", boss: "보스" };
-const DMG_KO: Record<string, string> = { ult: "궁극", battle: "배틀", link: "연계", attack: "일반", all: "전체", elem: "아츠", atkPct: "공격력", hpPct: "생명력", critRate: "치명확", critDmg: "치명피", energy: "게이지", ultEff: "궁충효율", artsStr: "아츠강도", vsBroken: "불균형피해" };
 const pieceDmgText = (d?: { kind: string; base: number }) => { if (!d) return ""; const pct = d.kind === "hpPct" || d.base < 1; return `${DMG_KO[d.kind] ?? d.kind} +${pct ? Math.round(d.base * 100) + "%" : Math.round(d.base)}`; };
 
 // 유닛 아츠 속성색(플로팅 데미지·이펙트용)
@@ -174,7 +173,7 @@ function unitChips(u: DDUnit): StatusChip[] {
   const S = (u.effectSrc || {}) as Record<string, EffSrc>;
   const maxKey = (pre: string) => { let m = 0, mk = ""; for (const k in T) if (k.startsWith(pre) && T[k] > m) { m = T[k]; mk = k; } return mk; };
   const c: StatusChip[] = [];
-  if (u.physBreak > 0) c.push({ k: "pb", label: `방불 ${u.physBreak}`, tone: "#fca5a5", dir: -1, turns: T.physBreak, src: S.physBreak, icon: physicalCombatIconPaths.defenseBreak });
+  if (u.physBreak > 0) c.push({ k: "pb", label: `방어 불능 ${u.physBreak}`, tone: "#fca5a5", dir: -1, turns: T.physBreak, src: S.physBreak, icon: physicalCombatIconPaths.defenseBreak });
   if (u.frozen > 0) c.push({ k: "fz", label: `동결 ${u.frozen}`, tone: "#67e8f9", dir: -1, turns: T.frozen, src: S.frozen, icon: artsReactionIconPaths.frozen });
   for (const st of u.statuses) c.push({ k: st, label: `${statusLabel[st] ?? st}`, tone: "#fbbf24", dir: -1, turns: T[st], src: S[st], icon: STATUS_ICON[st] });
   (["heat", "electric", "cryo", "nature"] as Element[]).forEach((e) => { if (u.arts[e] > 0) c.push({ k: e, label: `${elementName[e]}부착 ${u.arts[e]}`, tone: elementColor[e], dir: 0, turns: T["arts:" + e], src: S["arts:" + e], icon: artsAttachmentIconPaths[e] }); });

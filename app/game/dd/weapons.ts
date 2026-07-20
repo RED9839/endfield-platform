@@ -238,7 +238,9 @@ const OP_ELEM: Record<string, "physical" | "heat" | "electric" | "cryo" | "natur
   chenqianyu: "physical", lifeng: "physical", endministrator: "physical", mifu: "physical", pogranichnik: "physical", catcher: "physical", dapan: "physical",
 };
 
-const SUB_KO: Record<string, string> = { atk: "공격력", crit: "치명 확률", hp: "최대 생명력", heal: "치유 효율", energy: "궁충 효율", arts: "아츠 피해", elem: "아츠 피해", phys: "물리 피해", skill: "스킬 피해", vsbroken: "방불 적 피해", other: "특수" };
+// 무기 부가스탯 표기 — labels.ts(DMG_LABEL)와 같은 낱말을 쓴다.
+//  energy = 전투 시작 궁 에너지(궁충 효율은 ultEff로 별개) / vsbroken = 불균형(방어 불능 아님) 적 피해
+const SUB_KO: Record<string, string> = { atk: "공격력", crit: "치명 확률", hp: "생명력", heal: "치유 효율", energy: "궁 에너지", ultEff: "궁충 효율", arts: "아츠 피해", elem: "아츠 피해", phys: "물리 피해", skill: "모든 스킬 피해", vsbroken: "불균형 피해", other: "특수" };
 export const weaponEffectText = (id: string): string => { const w = OP_WEAPON_STATS[id]; if (!w) return ""; return `${SUB_KO[w.sub] ?? w.sub} +${w.subVal}${w.subFlat ? "" : "%"}`; };
 
 // 무기 시리즈 이름 — 실제 무기 소스(어둠·울부짖는 불길 등). OP_WEAPON_SERIES(weapon-series.ts).

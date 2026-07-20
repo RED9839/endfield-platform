@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 
 import { OPERATORS, SKILLS, OP_BASIC, avatarUrl, fullUrl, skillIcon, makeAlly, type OpMeta } from "../roster";
 import { OP_TALENTS } from "../operator-talents";
+import { DMG_SHORT as DMG_KO, SKILL_KIND_SHORT as kindLabel } from "../labels";
 import { activeSets, setEffectText, recommendedSet, recommendedLoadout, loadoutPieces, pieceImage, gearSlotName, bestFreePiece, slotOptions, GEAR_SET_CANON, SET_NAMES, pieceSlotOf, LOADOUT_SLOTS, type LoadoutSlot, type Loadout, type GearSlot , applyGear} from "../gear";
 import { DEFAULT_PROGRESS, type OpProgress } from "../progress";
 import { applyWeapon, weaponOf, weaponName, weaponEffectText, weaponImage, weaponSeriesName, weaponSeriesText, OP_WEAPON_STATS, WEAPON_KO, WEAPON_ICON } from "../weapons";
@@ -17,13 +18,11 @@ const elementColor: Record<"physical" | Element, string> = { physical: "#d4d4d8"
 const elementName: Record<"physical" | Element, string> = { physical: "물리", heat: "열기", electric: "전기", cryo: "냉기", nature: "자연" };
 const classLabel: Record<DDClass, string> = { guard: "가드", caster: "캐스터", striker: "스트라이커", vanguard: "뱅가드", defender: "디펜더", supporter: "서포터" };
 const classOrder: DDClass[] = ["striker", "guard", "vanguard", "caster", "defender", "supporter"];
-const kindLabel: Record<DDSkill["kind"], string> = { attack: "기본", battle: "배틀", link: "연계", ult: "궁극" };
 const kindTone: Record<DDSkill["kind"], string> = { attack: "#a1a1aa", battle: "#ff9a2f", link: "#67e8f9", ult: "#facc15" };
 const tgtType = (t?: string) => (t === "self" ? "자신" : t === "all" || t === "row" ? "범위" : "단일");
 const KIND_ORDER: Record<DDSkill["kind"], number> = { attack: 0, battle: 1, link: 2, ult: 3 };
 
 const recSet = (op: OpMeta): string => recommendedSet(op.id, op.cls, op.element);
-const DMG_KO: Record<string, string> = { ult: "궁극", battle: "배틀", link: "연계", attack: "일반", all: "전체", elem: "아츠", atkPct: "공격력", hpPct: "생명력", critRate: "치명확", critDmg: "치명피", energy: "게이지", ultEff: "궁충효율", artsStr: "아츠강도", vsBroken: "불균형피해" };
 const pieceDmg = (p: { dmg?: { kind: string; base: number } }, mul = 1) => { if (!p.dmg) return ""; const v = p.dmg.base * mul; const pct = p.dmg.kind === "hpPct" || p.dmg.base < 1; return `${DMG_KO[p.dmg.kind] ?? p.dmg.kind} +${pct ? Math.round(v * 100) + "%" : Math.round(v)}`; };
 
 export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]) => void }) {

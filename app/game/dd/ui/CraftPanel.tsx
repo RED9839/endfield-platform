@@ -9,10 +9,10 @@ import { SKILL_MAX, skillLabel } from "../progress";
 import { OPERATORS, avatarUrl } from "../roster";
 import type { PartyMember } from "../run";
 import { RESOURCE_ICON } from "../items";
+import { DMG_LABEL } from "../labels";
 
 const CUT = { clipPath: "polygon(0 0, calc(100% - 7px) 0, 100% 7px, 100% 100%, 7px 100%, 0 calc(100% - 7px))" };
-const DMG_KO: Record<string, string> = { ult: "궁극 피해", battle: "배틀 피해", link: "연계 피해", attack: "일반 피해", all: "물리 피해", elem: "아츠 피해", atkPct: "공격력", hpPct: "생명력", critRate: "치명 확률", critDmg: "치명 피해", energy: "궁충 효율", ultEff: "궁충 효율", artsStr: "아츠 강도", vsBroken: "불균형 피해" };
-const dmgText = (p: GearPiece) => { if (!p.dmg) return ""; const pct = ["hpPct"].includes(p.dmg.kind) || p.dmg.base < 1; return `${DMG_KO[p.dmg.kind] ?? p.dmg.kind} +${pct ? Math.round(p.dmg.base * 100) + "%" : Math.round(p.dmg.base)}`; };
+const dmgText = (p: GearPiece) => { if (!p.dmg) return ""; const pct = ["hpPct"].includes(p.dmg.kind) || p.dmg.base < 1; return `${DMG_LABEL[p.dmg.kind] ?? p.dmg.kind} +${pct ? Math.round(p.dmg.base * 100) + "%" : Math.round(p.dmg.base)}`; };
 const SETS = ["개척", "열 작업용", "M. I. 경찰용", "본 크러셔", "식양의 흐름", "고검의 잔향", "검술사", "생체 보조", "식양의 숨결", "조류의 물결", "청파", "응룡 50식", "펄스식", "재앙 방호"];
 
 // 단조 레벨(0~3) 핍

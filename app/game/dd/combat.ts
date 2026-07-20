@@ -451,10 +451,10 @@ export function applyAnomaly(skill: DDSkill, target: DDUnit, self: DDUnit, log: 
     const label = a === "launch" ? "띄우기" : "넘어뜨리기";
     if (wasBreak) { // 방불 상태 → 120% 물리 + 불균형 10
       target.stagger += 10;
-      log.push(`  → ${label} 발동: +120% 물리 · 불균형 +10 (방불 ${target.physBreak})${bok ? " · 복마" : ""}`);
+      log.push(`  → ${label} 발동: +120% 물리 · 불균형 +10 (방어 불능 ${target.physBreak})${bok ? " · 복마" : ""}`);
       return shatter + bok + self.attack * buff * 1.2;
     }
-    log.push(`  → ${label}: 방어 불능 부여 (방불 ${target.physBreak})${bok ? " · 복마(+물리)" : ""}`);
+    log.push(`  → ${label}: 방어 불능 부여 (방어 불능 ${target.physBreak})${bok ? " · 복마(+물리)" : ""}`);
     return shatter + bok;
   }
   if (a === "crush") {
@@ -580,7 +580,7 @@ export function onAllyHit(s: DDState, self: DDUnit, t: DDUnit, final: number, lo
     const snow = s.units.find((u) => u.id === "snowshine" && u.hp > 0 && (u.timers.guard || 0) > 0);
     if (snow) { log.push(`  → 스노우샤인 반격(패링)!`); applyAttach(self, "cryo", snow, log); snow.ultCharge = Math.min(snow.ultCost, snow.ultCharge + 10); }
     const cat = s.units.find((u) => u.id === "catcher" && u.hp > 0 && (u.timers.guard || 0) > 0);
-    if (cat) { self.physBreak = Math.min(MAX_BREAK, self.physBreak + 1); setTimer(self, "physBreak", DUR_BREAK); log.push(`  → 카치르 반격(패링)! 방어 불능 1스택 (방불 ${self.physBreak})`); }
+    if (cat) { self.physBreak = Math.min(MAX_BREAK, self.physBreak + 1); setTimer(self, "physBreak", DUR_BREAK); log.push(`  → 카치르 반격(패링)! 방어 불능 1스택 (방어 불능 ${self.physBreak})`); }
   }
 }
 
@@ -1138,7 +1138,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
   if (self.id === "dapan" && skill.kind === "link" && primaryPre >= 1) {
     const consumed = Math.min(4, primaryPre);
     self.amp.physical = Math.min(0.24, (self.amp.physical || 0) + 0.06 * consumed); setTimer(self, "amp:physical", 2);
-    log.push(`  → 전분 풀기! 물리 피해 +${Math.round(self.amp.physical * 100)}% (방불 ${consumed} 소모)`);
+    log.push(`  → 전분 풀기! 물리 피해 +${Math.round(self.amp.physical * 100)}% (방어 불능 ${consumed} 소모)`);
   }
   // 레바테인(스트라이커): 열화 연계 궁 에너지(명중 수 비례). 녹아내린 불꽃 빌드는 흡수 루프에서 처리
   if (self.id === "laevatain" && skill.kind === "link") {
