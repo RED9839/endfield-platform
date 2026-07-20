@@ -378,7 +378,13 @@ export const SKILLS: Record<string, DDSkill[]> = {
       element: "nature", staggerVal: 20, selfUlt: true,
       apply: (t, self) => {
         if (arcaneForm(self) === "wisdom") { if (!t.statuses.includes("corrosion")) t.statuses.push("corrosion"); bumpVuln(t, "all", 0.15, 3); }
-        else { for (const e of ELEMENTS) if (t.arts[e] > 0) { t.arts[e] = Math.min(4, t.arts[e] + 1); setTimer(t, "arts:" + e, 4); } } // 부착 재부여
+        else {
+          for (const e of ELEMENTS) if (t.arts[e] > 0) { t.arts[e] = Math.min(4, t.arts[e] + 1); setTimer(t, "arts:" + e, 4); } // 부착 재부여
+          // 재능 2단계(의지): 궁이 피해를 줄 때 [의지×0.02%] 자연·냉기 취약(최대 12.8%), 2턴.
+          const w = (self.panelAttrs ?? self.attrs)?.wil ?? 0;
+          const tv = Math.min(0.128, w * 0.0002);
+          bumpVuln(t, "nature", tv, 2); bumpVuln(t, "cryo", tv, 2);
+        }
       },
       note: "3단 광역 누킹 · 지혜=강제 부식 / 의지=아츠 부착 재부여" },
   ],

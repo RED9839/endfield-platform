@@ -215,10 +215,13 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
                 <div className="mt-1.5 border-t border-ef-line/40 pt-1.5">
                   <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 font-mono text-[13px]">
                     <span className="font-bold" style={{ color: wis ? "#ff9a2f" : "#67e8f9" }}>{wis ? "진결 · 지혜" : "진결 · 의지"}</span>
-                    <span className="text-ef-muted">{wis ? "딜 폼 — 배틀 222% · 궁 880%" : "서폿 폼 — 배틀 133% · 궁 400% · 취약↑ · 부착 부여"}</span>
+                    <span className="text-ef-muted">{wis ? "딜 폼 — 배틀 222% · 궁 880% · 강제 부식" : "서폿 폼 — 배틀 133% · 궁 400% · 자연/냉기 취약↑ · 아츠 부착 부여"}</span>
                   </div>
                   <div className="mt-0.5 font-mono text-[12px] text-ef-muted">
                     패널 지능 {Math.round(p.int)} {wis ? "≥" : "<"} 의지 {Math.round(p.wil)} (차이 {gap}) — 장비·무기 능력치로 폼이 결정됩니다
+                  </div>
+                  <div className="mt-0.5 font-mono text-[12px]" style={{ color: "#86efac" }}>
+                    {wis ? "결 본인 딜이 최대 — 범용 조합" : "자기 딜을 팀 딜로 환원 — 자연·냉기 딜러와 함께 쓸 때 이득"}
                   </div>
                 </div>
               );

@@ -1,5 +1,5 @@
 // DD 전투 시뮬 헬퍼 — AI(아군 자동/적) + 인카운터 + 전투 생성. UI와 테스트가 공유(부작용 없음).
-import { BASIC, DDState, DDUnit, DDSkill, Element, ELEMENTS, applyAttach, applyDamage, healUnit, living, mitigate, usable, pickTargets, vulnFor, onAllyHit, EXECUTE_MULT, GAUGE_COST, setLinkChain, bumpVuln, setTimer } from "./combat";
+import { BASIC, DDState, DDUnit, DDSkill, Element, ELEMENTS, applyAttach, applyDamage, healUnit, living, mitigate, usable, pickTargets, vulnFor, onAllyHit, EXECUTE_MULT, GAUGE_COST, setLinkChain, bumpVuln, setTimer, arcaneForm } from "./combat";
 import { SKILLS, makeAlly, makeEnemy, ENEMY_DEFS, enemyDefFor, frontlineOrder, enemyArchetype } from "./roster";
 import { applyGear, GEAR_SLOTS, LOADOUT_SLOTS, type Loadout, type GearSlot, type LoadoutSlot } from "./gear";
 import { applyWeapon } from "./weapons";
