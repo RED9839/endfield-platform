@@ -107,7 +107,23 @@ function castFromLog(line?: string): string | null {
   return i >= 0 ? line.slice(i + 1).trim() : null;
 }
 
-type Floater = { id: string; amt: number; crit: boolean; tone: string };
+type Floater = { id: string; amt: number; crit: boolean; tone: string; step?: string; total?: number };
+
+// 엔진 로그에서 다단히트 "단 구성"을 뽑는다. combat.ts가 찍는 형식:
+//     "    1단 -467" / "    막타 -2,074" → "    ═ 3단 합계 -2,766" → "  적이름 -2766 (HP a/b)"
+// 대상은 이름으로 찾지 않는다 — 같은 이름의 적이 둘 이상일 수 있어(록하울러 ×2) 엉뚱한 유닛에 숫자가 뜬다.
+// 광역이어도 단 구성(비율)은 모든 대상이 같으므로, 첫 묶음의 라벨·비율만 쓰고 실제 수치는
+// 각 대상의 HP 감소분을 그 비율로 쪼개 만든다.
+function parseHitPattern(lines: string[]): { label: string; w: number }[] | null {
+  const buf: { label: string; w: number }[] = [];
+  for (const l of lines) {
+    const st = l.match(/^\s{4}(\d+단|막타)\s+-([\d,]+)$/);
+    if (st) { buf.push({ label: st[1], w: Number(st[2].replace(/,/g, "")) }); continue; }
+    if (buf.length > 1) return buf; // 합계 줄을 만나면 첫 묶음 확정
+    buf.length = 0;
+  }
+  return buf.length > 1 ? buf : null;
+}
 type Fx = { tick: number; activeId: string | null; actingSide: "ally" | "enemy" | null; floaters: Floater[]; cast: { id: string; text: string } | null };
 const NO_FX: Fx = { tick: 0, activeId: null, actingSide: null, floaters: [], cast: null };
 
@@ -208,6 +224,8 @@ function FxLayer({ id, fx }: { id: string; fx: Fx }) {
       {mine.map((f, i) => (
         <span key={`fn-${fx.tick}-${i}`} className="dd-float font-mono font-black" style={{ top: `${-2 - i * 16}px`, color: f.amt > 0 ? "#8fd36a" : f.crit ? "#ffd24a" : "#ff6b5a", fontSize: f.crit ? "1.55rem" : "1.05rem" }}>
           {f.amt > 0 ? `+${f.amt}` : f.amt}{f.crit ? "!" : ""}
+          {f.step && <em className="ml-1 align-middle text-[10px] font-bold not-italic opacity-70">{f.step}</em>}
+          {f.total != null && <em className="ml-1 align-middle text-[11px] font-black not-italic text-white/90">누적 {f.total.toLocaleString()}</em>}
         </span>
       ))}
       {fx.cast && fx.cast.id === id && <span key={`ct-${fx.tick}`} className="dd-cast border border-ef-accent/50 bg-black/85 px-2 py-0.5 font-mono text-[14px] font-bold text-ef-accent-soft" style={{ boxShadow: "0 2px 10px rgba(0,0,0,0.7)" }}>{fx.cast.text}</span>}
@@ -232,6 +250,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
   const autoRef = useRef(false); // 기본 수동(전투 스킬 직접 선택). 자동은 토글.
   const speedRef = useRef(1);
   const fxTick = useRef(0);
+  const hitTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]); // 다단히트 순차 연출 타이머
   const [auto, setAuto] = useState(false);
   const [speed, setSpeed] = useState(1);
   const [current, setCurrent] = useState<DDUnit | null>(null);
@@ -263,6 +282,36 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
     if (actor.side === "ally") { let dealt = 0; for (const u of s.units) if (u.side === "enemy") { const d = (before.get(u.id) ?? u.hp) - u.hp; if (d > 0) dealt += d; } if (dealt > 0) dmgRef.current[actor.id] = (dmgRef.current[actor.id] ?? 0) + dealt; }
     fxTick.current += 1;
     setRoundBanner(null);
+    // 다단히트는 총합 하나로 뭉쳐 뜨면 몇 대 맞았는지 안 보인다 → 단별로 순차 발사 + 누적 합계 표시.
+    const pat = parseHitPattern(newLines);
+    const damaged = floaters.filter((f) => f.amt < 0); // 피해를 입은 대상만 단별로 쪼갠다(회복은 그대로)
+    if (pat && damaged.length) {
+      const wSum = pat.reduce((a, b) => a + b.w, 0);
+      const others = floaters.filter((f) => f.amt >= 0);
+      const gap = Math.min(140, Math.max(60, delay() / (pat.length + 1))); // 액션 딜레이 안에서 전 타를 소화
+      hitTimersRef.current.forEach(clearTimeout); hitTimersRef.current = [];
+      const baseTick = fxTick.current;
+      for (let i = 0; i < pat.length; i++) {
+        const shot = () => {
+          const acc: Floater[] = [...others];
+          for (const f of damaged) {
+            const tot = -f.amt;
+            // 각 대상의 실제 피해를 단 비율로 분배. 마지막 단이 반올림 오차를 흡수해 합이 정확히 맞는다.
+            const upto = pat.slice(0, i + 1);
+            const cum = i === pat.length - 1 ? tot : Math.round((tot * upto.reduce((a, b) => a + b.w, 0)) / wSum);
+            const prev = i === 0 ? 0 : Math.round((tot * pat.slice(0, i).reduce((a, b) => a + b.w, 0)) / wSum);
+            const cur = pat[i];
+            acc.push({ id: f.id, amt: -(cum - prev), crit: crit || cur.label === "막타", tone: f.tone,
+              step: `${cur.label}${i < pat.length - 1 ? "" : ` · ${pat.length}단`}`, total: i > 0 ? cum : undefined });
+          }
+          setFx({ tick: baseTick + i, activeId: actor.id, actingSide: actor.side, floaters: acc, cast: i === 0 && cast ? { id: actor.id, text: cast } : null });
+          bump();
+        };
+        if (i === 0) shot(); else hitTimersRef.current.push(setTimeout(shot, gap * i));
+      }
+      fxTick.current = baseTick + pat.length;
+      return;
+    }
     setFx({ tick: fxTick.current, activeId: actor.id, actingSide: actor.side, floaters, cast: cast ? { id: actor.id, text: cast } : null });
     bump();
   }
@@ -323,7 +372,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
     setCurrent(u); fxTick.current += 1; setFx({ tick: fxTick.current, activeId: u.id, actingSide: "ally", floaters: [], cast: null }); bump();
   }
 
-  useEffect(() => { const s = stateRef.current!; cycleSizeRef.current = Math.max(1, s.units.filter((u) => u.hp > 0).length); timerRef.current = setTimeout(step, 420); return () => { if (timerRef.current) clearTimeout(timerRef.current); }; /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
+  useEffect(() => { const s = stateRef.current!; cycleSizeRef.current = Math.max(1, s.units.filter((u) => u.hp > 0).length); timerRef.current = setTimeout(step, 420); return () => { if (timerRef.current) clearTimeout(timerRef.current); hitTimersRef.current.forEach(clearTimeout); }; /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
   // 승리/패배 확정 → 배너 연출 후 자동 종료(교전 승리는 전리품 화면으로, 보스/패배는 결과 화면으로)
   useEffect(() => {
     if (!winner) return;
