@@ -449,7 +449,10 @@ export function applyAttach(target: DDUnit, el: Element, self: DDUnit, log: stri
 export function applyAnomaly(skill: DDSkill, target: DDUnit, self: DDUnit, log: string[]): number {
   const a = skill.anomaly;
   if (!a) return 0;
-  const buff = eb(self) * (1 + (self.artsStr || 0) / 100); // 오리지늄 아츠 강도(물리 이상)
+  const buff = eb(self) * (1 + (self.artsStr || 0) / 100); // 오리지늄 아츠 강도: 피해 +1%/포인트
+  // 위키 3.1.2 각주[10]: 아츠 강도는 "부가 효과(불균형치 포함)"도 0.5%/포인트 올린다.
+  const sub = 1 + (self.artsStr || 0) * 0.005;
+  const stg = (v: number) => Math.round(v * sub);
   const shatter = tryShatter(target, self, log); // 방불/물리 이상이 동결 적 → 쇄빙
   if (a === "launch" || a === "knockdown") {
     const bok = skill.selfPhysBonus ? self.attack * buff * skill.selfPhysBonus : 0; // 여풍 복마: 넘어뜨리기마다 +공격력×배수
@@ -467,9 +470,9 @@ export function applyAnomaly(skill: DDSkill, target: DDUnit, self: DDUnit, log: 
     }
     if (self.side === "ally") weaponTrigger(self, "physBreak"); // 효율(리펑): 방어 불능 부여 후 전 피해+
     const label = a === "launch" ? "띄우기" : "넘어뜨리기";
-    if (wasBreak) { // 방불 상태 → 120% 물리 + 불균형 10
-      target.stagger += 10;
-      log.push(`  → ${label} 발동: +120% 물리 · 불균형 +10 (방어 불능 ${target.physBreak})${bok ? " · 복마" : ""}`);
+    if (wasBreak) { // 방불 상태 → 120% 물리 + 불균형 10(아츠 강도로 증가)
+      target.stagger += stg(10);
+      log.push(`  → ${label} 발동: +120% 물리 · 불균형 +${stg(10)} (방어 불능 ${target.physBreak})${bok ? " · 복마" : ""}`);
       return shatter + bok + self.attack * buff * 1.2;
     }
     log.push(`  → ${label}: 방어 불능 부여 (방어 불능 ${target.physBreak})${bok ? " · 복마(+물리)" : ""}`);
