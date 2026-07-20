@@ -90,7 +90,15 @@ export function allyChoose(s: DDState, self: DDUnit): DDSkill | null {
       v += 10;
       // 보스 전엔 궁을 아낀다 — 게이지가 런 내내 이월되므로 보스 진입 만충이 목표.
       // 단, 아군이 위기이거나 이 궁으로 확실히 처치되면 지금 쓴다(아껴서 지면 의미 없음).
-      if (!s.boss) {
+      // 유틸형 궁(변신·팀버프)은 아껴봐야 의미가 없다 — 값어치가 직접 피해가 아니라 지속 효과라서
+      // power만 보면 항상 배틀/평타에 밀려 영영 안 나간다(장방이 심판의 폭풍 2.0이 30R 내내 0회였다).
+      // 판정: 자기 배틀/연계보다 배율이 낮으면 딜링 궁이 아니다 → 보류 대상에서 제외하고 열리는 대로 쓴다.
+      const bestNonUlt = Math.max(0, ...(SKILLS[self.id] ?? []).filter((o) => o.kind === "battle" || o.kind === "link").map((o) => o.power));
+      const utilityUlt = sk.power <= bestNonUlt;
+      if (utilityUlt) v += 8; // 변신 유지율이 곧 딜 — 쿨마다 돌린다
+      // 게이지가 이미 만충이면 아낄 이유가 없다 — 이 시점부턴 충전분이 전부 버려진다.
+      // (이 조건이 없어 29명 중 19명이 만충인 채 30R 내내 궁을 한 번도 안 쐈다)
+      else if (!s.boss && self.ultCharge < self.ultCost) {
         const danger = living(s, "ally").some((a) => a.hp / a.maxHp < 0.35);
         const lethal = !!t && t.hp < self.attack * sk.power * 1.2;
         if (!danger && !lethal) v -= 18; // 보류 → 배틀/연계/평타에 밀림
