@@ -148,7 +148,7 @@ export function activeSets(loadout: Loadout): string[] {
 }
 
 function emptyBonus(): GearBonus {
-  return { kindDmg: {}, elemDmg: {}, vsBroken: 0, vsVuln: 0, vsArts: 0, staggerMul: 0, breakEnergy: false, selfHpHighPhys: 0, selfHpHighArts: 0, selfHpLowReduce: 0, onKillHeal: 0, onKillAtk: 0 };
+  return { kindDmg: {}, elemDmg: {}, vsBroken: 0, vsDefBreak: 0, vsVuln: 0, vsArts: 0, staggerMul: 0, breakEnergy: false, selfHpHighPhys: 0, selfHpHighArts: 0, selfHpLowReduce: 0, onKillHeal: 0, onKillAtk: 0 };
 }
 
 // 로드아웃 → 활성 세트 효과를 유닛에 적용(전투 배율은 unit.gear에, 즉시 효과는 스탯에 반영). 시작 게이지 총량 반환.
@@ -374,6 +374,7 @@ export function gearDamageBonus(g: GearBonus, kind: "attack" | "battle" | "link"
   if (elem !== "physical") b += (g.elemDmg[elem] ?? 0);
   b += g.elemDmg.all ?? 0;
   if (target.staggered) b += g.vsBroken;
+  if (target.physBreak > 0) b += g.vsDefBreak;
   if ((target.vuln.all ?? 0) > 0 || (target.vuln.physical ?? 0) > 0 || ELEMENTS.some((e) => (target.vuln[e] ?? 0) > 0)) b += g.vsVuln;
   if (ELEMENTS.some((e) => target.arts[e] > 0)) b += g.vsArts;
   return b;

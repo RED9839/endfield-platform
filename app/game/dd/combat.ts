@@ -111,7 +111,8 @@ export type DDUnit = {
 export type GearBonus = {
   kindDmg: Partial<Record<DDSkill["kind"] | "all", number>>; // 스킬 종류별 피해 %
   elemDmg: Partial<Record<Element | "all", number>>;         // 아츠 피해 %
-  vsBroken: number; // 불균형 적 추가 피해 %
+  vsBroken: number;   // 불균형(staggered) 적 추가 피해 % — 게이지가 차 행동 불가가 된 상태
+  vsDefBreak: number; // 방어 불능(physBreak) 적 추가 피해 % — 물리 이상 표식. 불균형과 별개 기제다
   vsVuln: number;   // 취약 적 추가 피해 %
   vsArts: number;   // 아츠 부착 적 추가 피해 %
   staggerMul: number;    // 불균형 누적 증가 %
@@ -891,6 +892,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
       if (elem !== "physical") gb += g.elemDmg[elem] || 0;
       gb += g.elemDmg.all || 0;
       if (t.staggered) gb += g.vsBroken;
+      if (t.physBreak > 0) gb += g.vsDefBreak; // 방어 불능 표식이 붙은 적(여풍 전무 「강철의 여운」)
       if ((t.vuln.all || 0) > 0 || (t.vuln.physical || 0) > 0 || ELEMENTS.some((e) => (t.vuln[e] || 0) > 0)) gb += g.vsVuln;
       if (ELEMENTS.some((e) => t.arts[e] > 0)) gb += g.vsArts;
       if (self.hp / self.maxHp > 0.5) gb += elem === "physical" ? g.selfHpHighPhys : g.selfHpHighArts; // 전달자: 고체력 시 물리/아츠 피해+

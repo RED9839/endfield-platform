@@ -367,7 +367,7 @@ export function applyWeapon(u: DDUnit): WeaponType | null {
           u.attrs = next; applyAttrs(u);
         } break;
         case "ultEff": u.ultEffMul = +((u.ultEffMul ?? 1) * (1 + p.v)).toFixed(3); break;
-        case "vsDefBreak": g.vsBroken += p.v; break;               // 방불 = 우리 엔진의 불균형 취급
+        case "vsDefBreak": g.vsDefBreak += p.v; break;             // 방어 불능 적 피해(불균형과 별개)
         case "vsFreeze": g.elemDmg.cryo = (g.elemDmg.cryo ?? 0) + p.v; // 냉기 부착·동결 적 한정 → 냉기 피해로 근사
           break;
         case "artsInt": u.artsStr = (u.artsStr ?? 0) + p.v; break;
