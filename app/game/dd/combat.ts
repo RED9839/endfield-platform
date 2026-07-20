@@ -394,7 +394,8 @@ export function applyAttach(target: DDUnit, el: Element, self: DDUnit, log: stri
   if (target.artsImmune && Math.random() < target.artsImmune) { log.push(`  → ${target.name} 아츠 부착 면역(만물의 지혜)`); return 0; }
   // 이유 있는 게으름(에스텔라): 냉기 부착 면역 — 동결/냉기 아츠 무효
   if (el === "cryo" && target.cryoImmune) { log.push(`  → ${target.name} 냉기 면역(이유 있는 게으름)`); return 0; }
-  const buff = eb(self) * (1 + (self.artsStr || 0) / 100); // 오리지늄 아츠 강도(아츠 이상)
+  const buff = eb(self) * (1 + (self.artsStr || 0) / 100); // 아츠 강도: 피해 +1%/포인트
+  const sub = 1 + (self.artsStr || 0) * 0.005; // 아츠 강도: 부가 효과(취약·저항 감소 등) +0.5%/포인트
   const others = ELEMENTS.filter((e) => e !== el && target.arts[e] > 0);
   if (others.length > 0) {
     // 아츠 이상: 모든 부착 소모, 나중 부착(el) 종류로 결정. 이상 레벨 = 소모 스택 수.
@@ -412,7 +413,7 @@ export function applyAttach(target: DDUnit, el: Element, self: DDUnit, log: stri
       return self.attack * buff * ANOM[level - 1];
     }
     if (el === "electric") { // 감전
-      bumpVuln(target, "arts", ELEC_VULN[level - 1] * self.utilMult); // 스킬 단조 유틸
+      bumpVuln(target, "arts", ELEC_VULN[level - 1] * self.utilMult * sub); // 스킬 단조 유틸 · 아츠 강도 부가효과
       add(target, "shock"); // 감전 상태(아크라이트 질풍/천둥 트리거)
       log.push(`  → 감전! ${ANOM[level - 1] * 100}% 전기 + 아츠취약 ${ELEC_VULN[level - 1] * 100}%`);
       return self.attack * buff * ANOM[level - 1];
@@ -423,7 +424,7 @@ export function applyAttach(target: DDUnit, el: Element, self: DDUnit, log: stri
       return self.attack * buff * 1.3;
     }
     // nature: 부식 — 모든 속성 저항 감소(물리 포함) = vuln.all 누적(상한 0.24) + 부식 상태(아델리아 소모 마커)
-    target.vuln.all = Math.min(0.24, (target.vuln.all || 0) + CORR_SHRED[level - 1]);
+    target.vuln.all = Math.min(0.24 * sub, (target.vuln.all || 0) + CORR_SHRED[level - 1] * sub); // 아츠 강도 부가효과
     setTimer(target, "vuln:all", DUR_VULN);
     add(target, "corrosion");
     log.push(`  → 부식! ${ANOM[level - 1] * 100}% 자연 + 전 속성 저항 감소`);
@@ -450,9 +451,8 @@ export function applyAnomaly(skill: DDSkill, target: DDUnit, self: DDUnit, log: 
   const a = skill.anomaly;
   if (!a) return 0;
   const buff = eb(self) * (1 + (self.artsStr || 0) / 100); // 오리지늄 아츠 강도: 피해 +1%/포인트
-  // 위키 3.1.2 각주[10]: 아츠 강도는 "부가 효과(불균형치 포함)"도 0.5%/포인트 올린다.
+  // 위키 3.1.2: 아츠 강도는 "부가 효과"도 0.5%/포인트 올린다 — 물리 이상의 부가 효과는 갑옷 파괴의 물리 취약.
   const sub = 1 + (self.artsStr || 0) * 0.005;
-  const stg = (v: number) => Math.round(v * sub);
   const shatter = tryShatter(target, self, log); // 방불/물리 이상이 동결 적 → 쇄빙
   if (a === "launch" || a === "knockdown") {
     const bok = skill.selfPhysBonus ? self.attack * buff * skill.selfPhysBonus : 0; // 여풍 복마: 넘어뜨리기마다 +공격력×배수
@@ -470,9 +470,9 @@ export function applyAnomaly(skill: DDSkill, target: DDUnit, self: DDUnit, log: 
     }
     if (self.side === "ally") weaponTrigger(self, "physBreak"); // 효율(리펑): 방어 불능 부여 후 전 피해+
     const label = a === "launch" ? "띄우기" : "넘어뜨리기";
-    if (wasBreak) { // 방불 상태 → 120% 물리 + 불균형 10(아츠 강도로 증가)
-      target.stagger += stg(10);
-      log.push(`  → ${label} 발동: +120% 물리 · 불균형 +${stg(10)} (방어 불능 ${target.physBreak})${bok ? " · 복마" : ""}`);
+    if (wasBreak) { // 방불 상태 → 120% 물리 + 불균형 10
+      target.stagger += 10;
+      log.push(`  → ${label} 발동: +120% 물리 · 불균형 +10 (방어 불능 ${target.physBreak})${bok ? " · 복마" : ""}`);
       return shatter + bok + self.attack * buff * 1.2;
     }
     log.push(`  → ${label}: 방어 불능 부여 (방어 불능 ${target.physBreak})${bok ? " · 복마(+물리)" : ""}`);
@@ -498,7 +498,7 @@ export function applyAnomaly(skill: DDSkill, target: DDUnit, self: DDUnit, log: 
       const n = Math.min(4, target.physBreak);
       target.physBreak = 0;
       gearTrigger(self, "crush", target); // 고검의 잔향: 갑옷파괴 후 물리+
-      bumpVuln(target, "physical", ARMOR_VULN[n - 1] * self.utilMult); // 스킬 단조 유틸
+      bumpVuln(target, "physical", ARMOR_VULN[n - 1] * self.utilMult * sub); // 스킬 단조 유틸 · 아츠 강도 부가효과
       add(target, "armor-break");
       log.push(`  → 갑옷 파괴! ${n}스택 소모 → ${ARMOR[n - 1] * 100}% 물리 + 물리취약 ${ARMOR_VULN[n - 1] * 100}%`);
       return shatter + self.attack * buff * ARMOR[n - 1];
