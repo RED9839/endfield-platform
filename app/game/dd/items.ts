@@ -64,6 +64,13 @@ export const ITEM_LIST = Object.values(ITEMS);
 export const getItem = (id: string) => ITEMS[id];
 export const itemImage = (id: string) => { const it = ITEMS[id]; return it ? `/items/${encodeURIComponent(it.name)}.webp` : ""; };
 
+// 런 재화 아이콘 — 원작 아이템 아트(public/items)를 그대로 쓴다.
+// 화면마다 Package/◈/💎로 제각각이라 뉴비가 노드의 '◈24'를 부품으로 인지하지 못했다 → 전 화면 통일.
+export const RESOURCE_ICON = {
+  parts: `/items/${encodeURIComponent("식양 장비 부품")}.webp`,   // 부품
+  permits: `/items/${encodeURIComponent("무릉 관리권")}.webp`,    // 관리권
+} as const;
+
 // 조건부 게이트 제거 — 소비 아이템은 자기 턴에 조건 없이 상시 사용(자유 행동).
 // 부활만 전투 불능 대상이 있어야 의미가 있어 그때만 활성(빈 부활 낭비 방지).
 export function canUseItem(s: DDState, id: string): boolean {

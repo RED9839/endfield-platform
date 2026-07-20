@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronLeft, Hammer, Check, Lock, Package, KeyRound } from "lucide-react";
+import { ChevronLeft, Hammer, Check, Lock } from "lucide-react";
 
 import { GEAR_PIECES_BY_SET_SLOT, GEAR_PIECE_BY_ID, GEAR_SLOTS, gearSlotName, pieceImage, slotOptions, type GearPiece, type GearSlot } from "../gear";
 import { craftCost, forgeCost, skillForgeCost, canAfford, pieceLevel, isOwned, type CraftState } from "../craft";
 import { SKILL_MAX, skillLabel } from "../progress";
 import { OPERATORS, avatarUrl } from "../roster";
 import type { PartyMember } from "../run";
+import { RESOURCE_ICON } from "../items";
 
 const CUT = { clipPath: "polygon(0 0, calc(100% - 7px) 0, 100% 7px, 100% 100%, 7px 100%, 0 calc(100% - 7px))" };
 const DMG_KO: Record<string, string> = { ult: "궁극 피해", battle: "배틀 피해", link: "연계 피해", attack: "일반 피해", all: "물리 피해", elem: "아츠 피해", atkPct: "공격력", hpPct: "생명력", critRate: "치명 확률", critDmg: "치명 피해", energy: "궁충 효율", ultEff: "궁충 효율", artsStr: "아츠 강도", vsBroken: "불균형 피해" };
@@ -71,7 +72,8 @@ export default function CraftPanel({ craft, party = [], onCraft, onForge, onSwap
     <div className="mx-auto max-w-[1400px] px-4 py-5 sm:px-6">
       {/* 헤더 */}
       <div className="hud-panel dd-cut mb-3 flex items-center gap-3 px-3 py-2.5">
-        <button type="button" onClick={onClose} className="hud-btn flex h-9 w-9 items-center justify-center text-ef-muted" style={CUT} aria-label="닫기"><ChevronLeft className="h-5 w-5" /></button>
+        {/* 뉴비가 '원정 포기'밖에 못 찾던 문제 — 나가는 길에 라벨을 붙인다 */}
+        <button type="button" onClick={onClose} className="hud-btn flex h-9 shrink-0 items-center gap-1 whitespace-nowrap px-2.5 font-mono text-[13px] font-bold text-ef-muted hover:text-white" style={CUT} aria-label="던전으로 돌아가기"><ChevronLeft className="h-5 w-5" />던전으로</button>
         <Hammer className="h-6 w-6 text-ef-accent" style={{ filter: "drop-shadow(0 0 6px rgba(255,154,47,0.5))" }} />
         <div>
           <p className="font-mono text-[13px] font-bold uppercase tracking-[0.32em] text-ef-accent/70">Industry · 장비 제조</p>
@@ -79,8 +81,10 @@ export default function CraftPanel({ craft, party = [], onCraft, onForge, onSwap
           <p className="mt-0.5 font-mono text-[13px] text-ef-muted">장비를 제작·단조하면 능력치·피해가 올라 전투가 수월해집니다 (부품·관리권 소모)</p>
         </div>
         <div className="ml-auto flex items-center gap-2">
-          <span className="hud-tile flex items-center gap-1.5 px-2.5 py-1.5 font-mono text-sm" style={CUT} title="장비 부품 — 제작·단조 재료"><Package className="h-4 w-4 text-ef-accent-soft" /><b className="text-white">{craft.mats.parts}</b><span className="text-[13px] text-ef-muted">부품</span></span>
-          <span className="hud-tile flex items-center gap-1.5 px-2.5 py-1.5 font-mono text-sm" style={CUT} title="관리권 — 제작·단조 재료"><KeyRound className="h-4 w-4 text-yellow-300" /><b className="text-white">{craft.mats.permits}</b><span className="text-[13px] text-ef-muted">관리권</span></span>
+          <span className="hud-tile flex items-center gap-1.5 px-2.5 py-1.5 font-mono text-sm" style={CUT} title="장비 부품 — 제작·단조 재료"><img src={RESOURCE_ICON.parts} alt="" className="h-4.5 w-4.5 shrink-0 object-contain" /><b className="text-white">{craft.mats.parts}</b><span className="text-[13px] text-ef-muted">부품</span></span>
+          <span className="hud-tile flex items-center gap-1.5 px-2.5 py-1.5 font-mono text-sm" style={CUT} title="관리권 — 제작·단조 재료"><img src={RESOURCE_ICON.permits} alt="" className="h-4.5 w-4.5 shrink-0 object-contain" /><b className="text-white">{craft.mats.permits}</b><span className="text-[13px] text-ef-muted">관리권</span></span>
+          {/* 제작을 마치고 돌아가는 주 동선 — 강조해서 '원정 포기'와 헷갈리지 않게 */}
+          <button type="button" onClick={onClose} className="dd-cut flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap border border-ef-accent/70 bg-ef-accent/15 px-3 font-mono text-sm font-bold text-ef-accent hover:bg-ef-accent/25">제작 완료 · 던전으로 ▶</button>
         </div>
       </div>
 

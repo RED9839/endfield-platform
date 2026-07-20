@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ChevronLeft, Tent, Hammer } from "lucide-react";
 
 import { OPERATORS } from "./dd/roster";
-import { ITEMS } from "./dd/items";
+import { ITEMS, RESOURCE_ICON, itemImage } from "./dd/items";
 import { skillLabel } from "./dd/progress";
 import { encounterForNode, useDDRun, REST_HEAL, type RunNode } from "./dd/run";
 import BattleView from "./dd/ui/BattleView";
@@ -93,9 +93,9 @@ export default function GamePage() {
               <div className="mb-1 font-mono text-[13px] font-bold uppercase tracking-[0.28em] text-ef-accent/70">{L.kind === "elite" ? "정예 격파" : "교전 승리"}</div>
               <div className="mb-6 text-2xl font-bold" style={{ fontFamily: "var(--dd-display)", letterSpacing: "0.1em", color: "#ffbe6b", textShadow: "0 0 20px rgba(255,190,107,0.4)" }}>전리품 획득</div>
               <div className="mb-6 flex flex-wrap justify-center gap-2">
-                {([["💎", "부품", `+${L.parts}`], ["🔑", "관리권", `+${L.permits}`], ["🎁", item?.name ?? "아이템", "×1"]] as [string, string, string][]).map(([ic, lb, v]) => (
+                {([[RESOURCE_ICON.parts, "부품", `+${L.parts}`], [RESOURCE_ICON.permits, "관리권", `+${L.permits}`], [item ? itemImage(item.id) : "🎁", item?.name ?? "아이템", "×1"]] as [string, string, string][]).map(([ic, lb, v]) => (
                   <div key={lb} className="min-w-[112px] border border-ef-line/50 bg-[#120c07] px-3 py-2.5">
-                    <div className="text-xl leading-none">{ic}</div>
+                    {ic.startsWith("/") ? <img src={ic} alt="" className="mx-auto h-7 w-7 object-contain" /> : <div className="text-xl leading-none">{ic}</div>}
                     <div className="mt-1 font-mono text-[12px] uppercase tracking-wider text-ef-muted">{lb}</div>
                     <div className="font-mono text-[16px] font-bold text-ef-ink">{v}</div>
                   </div>
@@ -153,9 +153,9 @@ export default function GamePage() {
                 <div className="dd-cut mx-auto mb-6 max-w-[440px] border border-ef-accent/25 bg-black/40 p-4 text-left">
                   <div className="mb-2.5 font-mono text-[13px] font-bold uppercase tracking-[0.24em] text-ef-accent/70">◆ 전리품</div>
                   <div className="mb-3 grid grid-cols-3 gap-2">
-                    {([["⚔", "처치", L.kills], ["💎", "부품", `+${L.parts}`], ["🔑", "관리권", `+${L.permits}`]] as [string, string, string | number][]).map(([ic, lb, v]) => (
+                    {([["⚔", "처치", L.kills], [RESOURCE_ICON.parts, "부품", `+${L.parts}`], [RESOURCE_ICON.permits, "관리권", `+${L.permits}`]] as [string, string, string | number][]).map(([ic, lb, v]) => (
                       <div key={lb} className="border border-ef-line/50 bg-[#120c07] px-2 py-2 text-center">
-                        <div className="text-lg leading-none">{ic}</div>
+                        {ic.startsWith("/") ? <img src={ic} alt="" className="mx-auto h-6 w-6 object-contain" /> : <div className="text-lg leading-none">{ic}</div>}
                         <div className="mt-1 font-mono text-[12px] uppercase tracking-wider text-ef-muted">{lb}</div>
                         <div className="font-mono text-[17px] font-bold text-ef-ink">{v}</div>
                       </div>

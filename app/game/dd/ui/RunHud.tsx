@@ -1,8 +1,9 @@
 "use client";
 
-import { Hammer, Package, KeyRound } from "lucide-react";
+import { Hammer } from "lucide-react";
 
 import type { CraftState } from "../craft";
+import { RESOURCE_ICON } from "../items";
 
 const CUT = { clipPath: "polygon(0 0, calc(100% - 7px) 0, 100% 7px, 100% 100%, 7px 100%, 0 calc(100% - 7px))" };
 
@@ -44,10 +45,10 @@ export default function RunHud({ faction, depth, maxDepth, floor, totalFloors, f
       {/* 재료 */}
       <div className="ml-auto flex items-center gap-2">
         <div className="hud-tile flex items-center gap-1.5 px-2.5 py-1.5" style={CUT} title="장비 부품 — 제작·단조 재료">
-          <Package className="h-3.5 w-3.5 text-ef-accent-soft" /><span className="font-mono text-sm font-bold text-white">{craft.mats.parts}</span><span className="font-mono text-[14px] text-ef-muted">부품</span>
+          <img src={RESOURCE_ICON.parts} alt="" className="h-4 w-4 shrink-0 object-contain" /><span className="font-mono text-sm font-bold text-white">{craft.mats.parts}</span><span className="font-mono text-[14px] text-ef-muted">부품</span>
         </div>
         <div className="hud-tile flex items-center gap-1.5 px-2.5 py-1.5" style={CUT} title="관리권 — 제작·단조 재료">
-          <KeyRound className="h-3.5 w-3.5 text-yellow-300" /><span className="font-mono text-sm font-bold text-white">{craft.mats.permits}</span><span className="font-mono text-[14px] text-ef-muted">관리권</span>
+          <img src={RESOURCE_ICON.permits} alt="" className="h-4 w-4 shrink-0 object-contain" /><span className="font-mono text-sm font-bold text-white">{craft.mats.permits}</span><span className="font-mono text-[14px] text-ef-muted">관리권</span>
         </div>
         {onCraft && (
           <button type="button" onClick={onCraft} disabled={!canCraft} title={hasCraftable ? "제작 가능한 장비가 있습니다 — 공업소에서 강해질 수 있습니다" : undefined} className={`hud-btn relative flex items-center gap-1.5 px-3 py-1.5 font-mono text-sm font-bold uppercase tracking-wider transition disabled:opacity-40 ${hasCraftable ? "!border-ef-accent bg-ef-accent/15 text-ef-accent shadow-[0_0_14px_-2px_rgba(255,154,47,0.5)]" : canCraft ? "hud-btn-on" : "text-ef-accent"}`} style={CUT}>

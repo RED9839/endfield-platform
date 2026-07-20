@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Swords, Skull, Tent, Crown, ChevronRight } from "lucide-react";
 
 import { OPERATORS } from "../roster";
-import { ITEMS, itemColor, itemImage } from "../items";
+import { ITEMS, itemColor, itemImage, RESOURCE_ICON } from "../items";
 import { enemyDrop } from "../sim";
 import { LOOT_DECAY, REST_HEAL, type NodeKind, type PartyMember, type RunNode } from "../run";
 import type { Element } from "../combat";
@@ -118,7 +118,7 @@ export default function RunMap({ nodes, frontier, cleared, party, items, faction
                       {isCleared ? <span className="block font-mono text-[14px] uppercase text-ef-muted">완료</span> : (() => {
                         const rw = nodeReward(n);
                         if (n.kind === "rest") return <span className="block font-mono text-[12px] font-bold text-green-300/85">✚ HP +{Math.round(REST_HEAL * 100)}%</span>;
-                        return <span className="block whitespace-nowrap font-mono text-[12px] text-amber-300/75" title="예상 보상 — 부품 · 관리권"><span className="text-ef-muted">◈</span>{rw?.parts} <span className="text-ef-muted">🔑</span>{rw?.permits}</span>;
+                        return <span className="block whitespace-nowrap font-mono text-[12px] text-amber-300/75" title="예상 보상 — 부품 · 관리권"><img src={RESOURCE_ICON.parts} alt="" className="mr-0.5 inline-block h-3.5 w-3.5 align-[-2px] object-contain" />{rw?.parts} <img src={RESOURCE_ICON.permits} alt="" className="ml-1 mr-0.5 inline-block h-3.5 w-3.5 align-[-2px] object-contain" />{rw?.permits}</span>;
                       })()}
                       {isFrontier && <span className="block font-mono text-[13px] font-bold uppercase tracking-wider text-ef-accent">▶ 진입</span>}
                     </span>

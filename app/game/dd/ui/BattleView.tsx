@@ -39,7 +39,7 @@ function skillReason(s: DDState, u: DDUnit, sk: DDSkill): string | null {
 }
 // 뉴비용: 스킬 잠금 사유를 쉬운 말로 부연(툴팁)
 const REASON_HELP: Record<string, string> = {
-  "궁 게이지 부족": "궁극기 게이지가 아직 안 찼습니다. 공격하거나 피격되면 충전돼요.",
+  "궁 게이지 부족": "궁극기 게이지가 아직 안 찼습니다. 공격하거나 피격되면 충전됩니다.",
   "스킬 게이지 부족": "파티가 함께 쓰는 공유 게이지가 모자랍니다. 매 라운드 자동 회복되니 다음 턴을 노립니다.",
   "자세 전환 필요": "먼저 자세(스탠스)를 전환해야 쓸 수 있습니다.",
   "조건 미충족": "발동 조건이 아직 열리지 않았습니다. 적을 불균형 상태로 만들거나 아츠 이상을 걸면 열립니다.",
@@ -502,7 +502,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
             const isAct = fx.activeId === e.id;
             const weak = ed?.resist ? (Object.entries(ed.resist) as [Element | "physical", number][]).filter(([, v]) => v < 0) : [];
             return (
-              <div key={e.id} className={`group relative flex w-[150px] flex-col items-center ${shakeCls(hit, fx.tick)} ${actCls(isAct, fx.tick)}`}>
+              <div key={e.id} className={`group relative flex w-[190px] flex-col items-center ${shakeCls(hit, fx.tick)} ${actCls(isAct, fx.tick)}`}>
                 <FxLayer id={e.id} fx={fx} />
                 {/* hover 팝오버 — 뉴비가 클릭 없이 적의 저항·특징 파악(마우스 오버) */}
                 {!dead && (ed?.traits?.length || (ed?.resist && Object.values(ed.resist).some((v) => v !== 0))) && (
@@ -528,8 +528,8 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
                 </div>
                 {/* 정보 */}
                 <div className="w-full">
-                  <div className="flex items-center justify-between gap-1"><span className="flex min-w-0 items-center gap-1"><span className="h-1.5 w-1.5 shrink-0" style={{ background: elementColor[el] }} /><span className="truncate font-mono text-[15px] font-bold text-white" style={{ textShadow: "0 1px 3px #000" }}>{e.name}</span></span><span className="font-mono text-[13px] tabular-nums text-ef-muted"><span className="font-bold text-white/90">{Math.max(0, e.hp)}</span>/{e.maxHp}</span></div>
-                  <div className="flex items-center gap-1"><span className="text-[9px] leading-none text-[#e0655c]/70">HP</span><div className="flex-1"><Bar value={e.hp} max={e.maxHp} color="#e0655c" /></div></div>
+                  <div className="flex min-w-0 items-center gap-1"><span className="h-1.5 w-1.5 shrink-0" style={{ background: elementColor[el] }} /><span className="truncate font-mono text-[14px] font-bold tracking-tight text-white" style={{ textShadow: "0 1px 3px #000" }} title={e.name}>{e.name}</span></div>
+                  <div className="flex items-center gap-1"><span className="text-[9px] leading-none text-[#e0655c]/70">HP</span><div className="flex-1"><Bar value={e.hp} max={e.maxHp} color="#e0655c" /></div><span className="shrink-0 font-mono text-[11px] tabular-nums text-ef-muted"><span className="font-bold text-white/90">{Math.max(0, e.hp)}</span>/{e.maxHp}</span></div>
                   {e.staggerMax > 0 && !dead && <div className="mt-0.5 flex items-center gap-1"><span className="text-[9px] leading-none text-[#a16207]/80" title="불균형: 가득 차면 행동 불가 + 받는 피해 증가">불균형</span><div className="relative flex-1"><Bar value={e.staggered ? e.staggerMax : e.stagger} max={e.staggerMax} color={e.staggered ? "#facc15" : "#a16207"} h="h-1" />{e.poiseKnot && !e.poiseBroken && <span className="pointer-events-none absolute top-[-1px] h-[calc(100%+2px)] w-px bg-white/70" style={{ left: "50%" }} title="불균형 지점 — 넘으면 잠시 중단" />}</div></div>}
                   {!dead && <div className="mt-0.5"><Bar value={e.atb} max={100} color="#67e8f9" h="h-1" /></div>}
                   {!dead && <div className="mt-1 flex flex-wrap justify-center gap-1">
@@ -560,7 +560,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
             const sets = activeSets(party.find((p) => p.id === a.id)?.loadout ?? {});
             const ready = a.ultCharge >= a.ultCost;
             return (
-              <div key={a.id} className={`group relative flex w-[176px] flex-col items-center ${shakeCls(hit, fx.tick)} ${actCls(isAct, fx.tick)}`}>
+              <div key={a.id} className={`group relative flex w-[208px] flex-col items-center ${shakeCls(hit, fx.tick)} ${actCls(isAct, fx.tick)}`}>
                 <FxLayer id={a.id} fx={fx} />
                 {/* 전신 아트 */}
                 <div onClick={() => { setInspectId(a.id); setInspectTab("skill"); }} className="relative flex h-52 w-full cursor-pointer items-end justify-center">
@@ -576,8 +576,8 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
                   {/* 이름 + HP 수치(바 없음 — 체력·속도는 순서 레일에서 확인) */}
                   <div className="flex items-center gap-1.5">
                     <span className="h-2.5 w-2.5 shrink-0" style={{ background: elementColor[el], boxShadow: `0 0 5px ${elementColor[el]}`, clipPath: "polygon(50% 0,100% 50%,50% 100%,0 50%)" }} />
-                    <span className="truncate font-mono text-[15px] font-bold text-white">{a.name}</span>
-                    <span className="ml-auto shrink-0 font-mono text-[13px] font-bold tabular-nums" style={{ color: lowHp ? "#f0776e" : "#cfe8b0" }}>{Math.max(0, a.hp)}<span className="text-ef-muted">/{a.maxHp}</span></span>
+                    <span className="truncate font-mono text-[14px] font-bold tracking-tight text-white" title={a.name}>{a.name}</span>
+                    <span className="ml-auto shrink-0 font-mono text-[12px] font-bold tabular-nums" style={{ color: lowHp ? "#f0776e" : "#cfe8b0" }}>{Math.max(0, a.hp)}<span className="text-[11px] text-ef-muted">/{a.maxHp}</span></span>
                   </div>
                   {/* 궁 바(유지) */}
                   <div className="mt-1.5 flex items-center gap-1.5">

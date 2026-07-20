@@ -48,6 +48,7 @@ const navigationItems = [
   { label: "성장 시뮬레이터", href: "/simulator" },
   { label: "파밍 계산기", href: "/farming" },
   { label: "유저 세팅", href: "/settings" },
+  { label: "던전 원정", href: "/game" },
 ];
 
 const quickAccessItems: {
@@ -91,6 +92,12 @@ const quickAccessItems: {
     description: "검증된 빌드와 파티",
     href: "/settings",
     icon: Settings2,
+  },
+  {
+    label: "던전 원정",
+    description: "오퍼레이터로 즐기는 턴제 로그라이크",
+    href: "/game",
+    icon: Swords,
   },
 ];
 
