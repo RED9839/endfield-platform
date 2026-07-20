@@ -29,4 +29,5 @@ export const OP_TALENTS: Record<string, Talent[]> = {
   laevatain: [{"name":"불꽃의 심장","icon":"/operators/laevatain/talents/talent1.webp","desc":"강력한 일격·처형 후 주변 열기 부착 흡수 → 녹아내린 불꽃 (최대 4스택). 4스택 시 적 열기 저항 20 무시 (4턴)"},{"name":"부활의 불씨","icon":"/operators/laevatain/talents/talent2.webp","desc":"HP 40% 미만 시 90% 비호 + 매턴 최대 HP 5% 회복 (2턴, 24턴마다 1회)"}],
   yvonne: [{"name":"하이테크 버스트","icon":"/operators/yvonne/talents/talent1.webp","desc":"얼음 폭탄이 동결 부여 후 다음 평타가 강력한 일격 (피해 +50%)"},{"name":"빙점","icon":"/operators/yvonne/talents/talent2.webp","desc":"냉기 부착 적 치명타 피해 +20% · 동결 적엔 2배 피해"}],
   zhuangfangyi: [{"name":"천지의 조화","icon":"/operators/zhuangfangyi/talents/talent1.webp","desc":"뇌정의 부름 시 전기 증폭 18% (1턴), 뇌격 명중당 +2%. 재사용 시 초기화"},{"name":"하늘의 가호","icon":"/operators/zhuangfangyi/talents/talent2.webp","desc":"9% 확률 피해 면역 (청뢰검당 +1%). 발동 시 최대 HP 18% 회복 (20턴마다 1회)"}],
+  arcane: [{"name":"전략 수립","icon":"/operators/arcane/talents/talent1.webp","desc":"지능≥의지면 진결·지혜(딜 폼) — 결은 지능 176>의지 121이라 상시 지혜. 궁 지속 중 아츠 증폭 24%"},{"name":"무장 강화","icon":"/operators/arcane/talents/talent2.webp","desc":"부여하는 부식 지속 +5초, 감소 최대 저항 1.05배"}],
 };

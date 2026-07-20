@@ -344,6 +344,22 @@ export const SKILLS: Record<string, DDSkill[]> = {
     // 심판의 폭풍(궁 변신, 게이지 240): 천리의 경지 — 평타/배틀 강화 + 방해 면역 + 첫 배틀 3검. 25초 지속딜.
     { id: "zfy-u", name: "심판의 폭풍", kind: "ult", fromPos: [1, 2, 3], target: "all", power: 2.0, hits: [0.67, 1.33], element: "electric", staggerVal: 20, selfUlt: true, note: "천리의 경지 변신: 평타/배틀 강화 + 첫 배틀 3검" },
   ],
+  // 결: 자연 캐스터★6. 재능 「전략 수립」이 지능≥의지면 진결·지혜(딜), 의지>지능이면 진결·의지(서폿)로 스킬을 통째로 바꾼다.
+  // 결의 고유 능력치는 지능 176 > 의지 121 → 상시 **진결·지혜** 폼. 배율·효과 전부 지혜 기준으로 등록한다.
+  // (진결·의지 배율은 배틀 300%/궁 깨달음 360%로 딜이 절반 이하 — 우리 게임엔 능력치 재배분 수단이 없어 폼 전환이 불가능하다.)
+  arcane: [
+    // 결정 파쇄 그리드(배틀 지혜 500%, 불균형 10): 광역 자연 + 자연 부착. 지혜 폼은 피해 증가가 배율에 이미 반영.
+    { id: "arc-b", name: "결정 파쇄 그리드", kind: "battle", fromPos: [1, 2, 3], target: "row", power: 2.22, element: "nature", attach: "nature", staggerVal: 10, note: "광역 자연 부착 · 진결 · 지혜(피해 증가)" },
+    // 응룡 4식(연계 기초 80+폭발 120=200%, 쿨 18초≈4턴): 자연/아츠 부착 적에 발동. 자연·냉기 취약 4% + 구속(감속).
+    { id: "arc-l", name: "응룡 4식", kind: "link", fromPos: [1, 2, 3], target: "row", power: 0.89, hits: [0.36, 0.53], element: "nature", staggerVal: 10, cooldown: 4, gaugeGain: 10,
+      requires: (t) => !!t && (t.arts.nature > 0 || ELEMENTS.some((e) => t.arts[e] >= 2)), requiresText: "자연 부착/2스택 아츠 부착 적",
+      apply: (t) => { bumpVuln(t, "nature", 0.04, 4); bumpVuln(t, "cryo", 0.04, 4); t.speedMod = (t.speedMod || 0) - 20; setTimer(t, "speedMod", 4); },
+      note: "전술 분신 구속 — 자연·냉기 취약 4% + 감속(구속)" },
+    // 어스름 파훼(궁 진 180 + 집중 360 + 깨달음 1440 = 1980%, 게이지 100): 광역 누킹 3단. 지혜 폼은 강제 부식(전 피해 취약).
+    { id: "arc-u", name: "어스름 파훼", kind: "ult", fromPos: [1, 2, 3], target: "all", power: 8.8, hits: [0.8, 1.6, 6.4], element: "nature", staggerVal: 20, selfUlt: true,
+      apply: (t) => { if (!t.statuses.includes("corrosion")) t.statuses.push("corrosion"); bumpVuln(t, "all", 0.15, 3); },
+      note: "3단 광역 누킹 + 진결 · 지혜 강제 부식(전 피해 취약)" },
+  ],
 };
 
 type Base = { id: string; name: string; cls: DDClass; hp: number; attack: number; speed: number; ultCost: number; rampAtk?: number; artsImmune?: number; cryoImmune?: boolean };
@@ -375,7 +391,8 @@ const OP_BASE: Record<string, Base> = {
   dapan: { id: "dapan", name: "판", cls: "striker", hp: 2689, attack: 110, speed: 55, ultCost: 90 }, // 물리 스트라이커★5. 방어 불능 4스택 강타 단발 누커·띄우기/넘어뜨리기 빌더. 주스탯 힘·보조 의지
   laevatain: { id: "laevatain", name: "레바테인", cls: "striker", hp: 2689, attack: 110, speed: 64, ultCost: 300 }, // 열기 스트라이커★6 한정. 열기 부착 흡수→녹아내린 불꽃→강화 배틀·버프형 궁·부활의 불씨. 원본 궁300이나 엔진 공유게이지 기아로 변신 미도달 → 실전 S티어 반영 위해 160(자가충전 4스택=+100 감안). 주스탯 지능·보조 힘
   yvonne: { id: "yvonne", name: "이본", cls: "striker", hp: 2689, attack: 110, speed: 66, ultCost: 220 }, // 냉기 스트라이커★6 한정. 강제 동결(냉기/자연 소모)+치명타 변신 말뚝딜 궁(220)+빙점. 주스탯 지능·보조 민첩
-  zhuangfangyi: { id: "zhuangfangyi", name: "장방이", cls: "striker", hp: 2689, attack: 110, speed: 62, ultCost: 240 }, // 전기 스트라이커★6 한정. 청뢰검(감전 소모→검, 최대9)+변신 궁(천리의 경지)+지속딜. 주스탯 의지·보조 지능
+  zhuangfangyi: { id: "zhuangfangyi", name: "장방이", cls: "striker", hp: 2689, attack: 110, speed: 62, ultCost: 240 },
+  arcane: { id: "arcane", name: "결", cls: "caster", hp: 2689, attack: 110, speed: 67, ultCost: 100 }, // 자연 캐스터★6 한정. 듀얼폼(지능≥의지=진결·지혜 딜폼 고정) 광역 부착·부식 누킹. 주스탯 지능·보조 의지 // 전기 스트라이커★6 한정. 청뢰검(감전 소모→검, 최대9)+변신 궁(천리의 경지)+지속딜. 주스탯 의지·보조 지능
 };
 
 // 매 유닛 신선한 상태 객체(중첩 객체 공유 참조 방지). defense/resist 기본 0 → 밸런스 무변.
@@ -404,6 +421,7 @@ export const OP_BASIC: Record<string, { name: string; note: string }> = {
   lastrite: { name: "혹한의 춤", note: "냉기 단타" }, avywenna: { name: "썬더랜스 · 신속 공격", note: "물리 단타" },
   dapan: { name: "돌려가며 썰기!", note: "물리 단타" }, laevatain: { name: "재", note: "열기 단타" },
   yvonne: { name: "점프 트리거", note: "냉기 단타" }, zhuangfangyi: { name: "전격술", note: "전기 단타" },
+  arcane: { name: "중화력 요격", note: "자연 5단" },
 };
 
 // 오퍼 얼굴 아이콘 경로 — 관리자만 avatar1.webp, 나머지는 avatar.webp
@@ -439,6 +457,7 @@ const OP_HP: Record<string, number> = {
   ardelia: 2665, xaihi: 2616, antal: 2703, gilberta: 2616,
   perlica: 2621, wulfgard: 2774, fluorite: 2616, tangtang: 2690,
   lastrite: 2759, avywenna: 2655, dapan: 2803, laevatain: 2685, yvonne: 2601, zhuangfangyi: 2636,
+  arcane: 2625,
 };
 const OP_ATTACK: Record<string, number> = {
   chenqianyu: 106, lifeng: 102, endministrator: 107, estella: 106, rossi: 118, mifu: 114,
@@ -447,6 +466,7 @@ const OP_ATTACK: Record<string, number> = {
   ardelia: 109, xaihi: 100, antal: 107, gilberta: 120,
   perlica: 106, wulfgard: 103, fluorite: 108, tangtang: 118,
   lastrite: 114, avywenna: 105, dapan: 108, laevatain: 117, yvonne: 118, zhuangfangyi: 122,
+  arcane: 114,
 };
 
 // 오퍼별 실제 능력치(endfield.wiki.gg Lv90 Elite max 실측). 힘→최대HP·민첩→물리저항·지능→아츠저항·의지→회복량.
@@ -461,6 +481,7 @@ export const OP_MAINSUB: Record<string, [keyof OpAttrs, keyof OpAttrs]> = {
   arclight: ["agi", "int"], antal: ["int", "str"], gilberta: ["wil", "int"], ardelia: ["int", "wil"], fluorite: ["agi", "int"],
   pogranichnik: ["wil", "agi"], lifeng: ["agi", "str"], endministrator: ["agi", "str"], rossi: ["agi", "int"],
   chenqianyu: ["agi", "str"], dapan: ["str", "wil"], catcher: ["str", "wil"], mifu: ["str", "wil"],
+  arcane: ["int", "wil"],
 };
 // 능력치 → 공격력 보너스(원작 공식). 주/부옵은 OP_MAINSUB 고정.
 export const attrBonusOf = (id: string, a: OpAttrs): number => {
@@ -484,6 +505,7 @@ export const OP_ATTRS: Record<string, OpAttrs> = {
   fluorite: { str: 90, agi: 168, int: 114, wil: 91 }, dapan: { str: 175, agi: 96, int: 94, wil: 102 },
   pogranichnik: { str: 101, agi: 110, int: 97, wil: 173 }, alesh: { str: 158, agi: 95, int: 125, wil: 89 },
   arclight: { str: 107, agi: 145, int: 123, wil: 100 }, akekuri: { str: 110, agi: 140, int: 106, wil: 108 },
+  arcane: { str: 91, agi: 93, int: 176, wil: 121 }, // 지능 176 > 의지 121 → 진결·지혜(딜) 폼 고정
 };
 // 속도(턴 순서)는 오퍼레이터 개별 값(OP_BASE.speed, 실 민첩 기반) 사용 — makeAlly 참조.
 

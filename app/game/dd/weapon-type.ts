@@ -12,5 +12,5 @@ export const OP_WEAPON: Record<string, WeaponType> = {
   catcher: "greatsword", dapan: "greatsword", ember: "greatsword", lastrite: "greatsword", mifu: "greatsword", snowshine: "greatsword",
   avywenna: "polearm", camu: "polearm", estella: "polearm", lifeng: "polearm",
   fluorite: "handcannon", tangtang: "handcannon", wulfgard: "handcannon", yvonne: "handcannon",
-  antal: "artsunit", ardelia: "artsunit", gilberta: "artsunit", perlica: "artsunit", xaihi: "artsunit", zhuangfangyi: "artsunit",
+  antal: "artsunit", ardelia: "artsunit", arcane: "artsunit", gilberta: "artsunit", perlica: "artsunit", xaihi: "artsunit", zhuangfangyi: "artsunit",
 };

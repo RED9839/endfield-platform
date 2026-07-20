@@ -99,6 +99,7 @@ export const OP_RECOMMENDED_SET: Record<string, string> = {
   arclight: "개척", antal: "식양의 숨결", gilberta: "식양의 숨결", ardelia: "식양의 숨결", fluorite: "식양의 숨결",
   pogranichnik: "응룡 50식", lifeng: "식양의 숨결", endministrator: "고검의 잔향", rossi: "M. I. 경찰용",
   chenqianyu: "응룡 50식", dapan: "검술사", catcher: "식양의 숨결", mifu: "고검의 잔향",
+  // 결: 공략 시트에 빌드 행이 아직 비어 있다(신규 오퍼). 임의 지정하지 않고 아래 속성 폴백(자연 → 식양의 흐름)을 쓴다.
 };
 // 오퍼 추천 세트(시트 우선, 없으면 직군·속성 폴백)
 export function recommendedSet(id: string, cls: string, element: string): string {

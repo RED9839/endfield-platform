@@ -57,6 +57,8 @@ export const jeonmuOf = (id: string): Jeonmu[] => OP_JEONMU[id] ?? [];
 // 전무 실측 스탯(data/weapons-source 랭크9 + 최대 기초공격력). buff=능력치버프, sub=부가스탯.
 export type WeaponStats = { atk: number; buff: string; buffVal: number; sub: string; subVal: number; subFlat?: boolean; uniq: string };
 export const OP_WEAPON_STATS: Record<string, WeaponStats> = {
+  // 42식 · 척결(아츠 유닛★6) — 결 전무. 기초 505 / 능력치 지능 +156(rank9) / 부가 궁극기 충전 효율 +46.4%.
+  arcane: { atk: 505, buff: "int", buffVal: 156, sub: "ultEff", subVal: 46.4, uniq: "방출 · 42식 · 척결" },
   laevatain: { atk: 510, buff: "int", buffVal: 156, sub: "atk", subVal: 39, uniq: "어둠 · 울부짖는 불길" },
   ember: { atk: 500, buff: "main", buffVal: 132, sub: "atk", subVal: 39, uniq: "억제 · 다층 절단" },
   wulfgard: { atk: 490, buff: "main", buffVal: 132, sub: "arts", subVal: 43.3, uniq: "고통 · 가차 없는 숙청" },
@@ -331,6 +333,7 @@ export function applyWeapon(u: DDUnit): WeaponType | null {
   else if (g && w.sub === "phys") g.kindDmg.all = (g.kindDmg.all ?? 0) + v;
   else if (w.sub === "heal") u.healRecv = +((u.healRecv ?? 1) * (1 + v)).toFixed(2);
   else if (w.sub === "energy") u.ultCharge = Math.min(u.ultCost, u.ultCharge + u.ultCost * v);
+  else if (w.sub === "ultEff") u.ultEffMul = +((u.ultEffMul ?? 1) * (1 + v)).toFixed(3); // 궁극기 충전 효율(42식 · 척결)
   // 4) 시리즈 스킬 — 상시 패시브(원문 rank4 최종값, 은닉 스케일 없음). 조건부는 weaponTrigger에서.
   const fx = OP_WEAPON_EFFECTS[u.id];
   if (fx && g) {
