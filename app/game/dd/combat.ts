@@ -915,10 +915,13 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
     if (self.id === "yvonne" && skill.kind === "attack" && (self.timers.iceshot || 0) > 0) raw *= 2.66; // 아이스 슈터 강화 평타(원문 강일 133% vs 평타 50%)
     // 장방이 천리의 경지 변신: 강화 일반공격 ×2.5(궁 중 평타 강화)
     if (self.id === "zhuangfangyi" && skill.kind === "attack" && (self.timers.heavenly || 0) > 0) { raw *= 2.5; markLinkEvent(s, "zhuangfangyi"); } // 변신 강화 평타 = 전기 부착 행위 → 연계창(자체수급)
-    // 「변화의 숨결」 연계 조건 = "**감전 상태** 적에게 강평을 한 **후**"(이벤트). 강평 명중 순간 창을 연다.
-    // 부착으로 두면 아군이 부착을 감전으로 반응소모해 창이 안 열렸다(창 1회). 감전(shock)은 반응의 **결과**라
-    // 아군이 부착을 소모해도 살아남으므로 오히려 아군 감전이 창을 여는 연료가 된다.
-    if (self.id === "zhuangfangyi" && skill.kind === "attack" && has(t, "shock")) markLinkEvent(s, "zhuangfangyi");
+    // 「변화의 숨결」 연계 조건(원문) = "메인이 **전기 부착** 적에게 강력한 일격/처형 후".
+    //  · 메인 = 조작 중인 오퍼 → 턴제인 우리 모델에선 "평타를 친 아군 누구나"가 대응된다.
+    //    (장방이 자신으로 한정하면 펠리카가 부착을 깔아주는 정석 사이클이 통째로 잠긴다)
+    //  · 부착과 감전을 모두 인정한다. 부착만 보면 아군이 아츠 이상으로 소모해버려 창이 거의 안 열리고,
+    //    감전만 보면 "전기 부착 적을 강타"라는 원문 조건 자체가 빠진다. 감전은 그 부착의 반응 결과다.
+    if (self.side === "ally" && skill.kind === "attack" && (t.arts.electric > 0 || has(t, "shock")) &&
+        s.units.some((u) => u.id === "zhuangfangyi" && u.side === "ally" && u.hp > 0)) markLinkEvent(s, "zhuangfangyi");
     // 엠버: 평타 주력 딜러 — 실제 돌진 검술 4단 콤보(≈431% 물리, lv9) 반영. 범용 평타 0.5 → ×8.6≈431%.
     // 불균형 적엔 처형 공격(실 720%) → 추가 배수. 진군(방불 셋업)→경량 초자연 물리 증폭→평타 페이오프.
     if (self.id === "ember" && skill.kind === "attack") raw *= t.staggered ? 14 : 8.6;
