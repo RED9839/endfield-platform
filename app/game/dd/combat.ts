@@ -658,6 +658,16 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
     // 레바테인 「황혼」 변신 중 평타는 원문상 "3단 평타 열기 부착" — 붙인 열기를 본인 흡수(불꽃의 심장)가
     // 곧바로 걷어가 녹아내린 불꽃이 빠르게 차고 강화 배틀을 연발하는 게 변신 사이클의 핵심.
     if (self.id === "laevatain" && skill.kind === "attack" && (self.timers.twilight || 0) > 0) raw += applyAttach(t, "heat", self, log, { allies: living(s, "ally"), viaBattle: false }); // 변신 평타 — 배틀 아님
+    // 결 진결·지혜 핵심 콤보(원문): 배틀 스킬이 「구속」 상태(연계 응룡 4식) 적에게 명중하면
+    //   구속을 조기 종료 + 폭발 피해(120%) + 추가 피해(500%) + 자연·냉기 취약 재부여 + 스킬 게이지 30 반환.
+    // 지혜 폼이 연계→배틀로 이어붙여 딜과 게이지를 동시에 버는 사이클이라 이게 빠지면 딜폼이 성립하지 않는다.
+    if (self.id === "arcane" && skill.kind === "battle" && arcaneForm(self) === "wisdom" && (t.timers.bound || 0) > 0) {
+      delete t.timers.bound;
+      raw += self.attack * eb(self) * (0.53 + 2.22); // 폭발 120% + 추가 500%(÷225 환산)
+      bumpVuln(t, "nature", 0.04, 2); bumpVuln(t, "cryo", 0.04, 2); // 2초간 재부여
+      gaugeUp(s, 30); // 스킬 게이지 반환 30
+      log.push(`  → 구속 조기 종료! 폭발 + 추가타 · 게이지 +30`);
+    }
     if (self.id === "zhuangfangyi") { // 장방이: 청뢰검(procCount) — 연계 강제 감전 / 배틀 감전 소모 → 검 생성 + 뇌격
       if (skill.kind === "link" && t.arts.electric > 0) { // 변화의 숨결: 전기 부착 소모 → 강제 감전(이미 감전이면 레벨↑)
         const n = t.arts.electric; t.arts.electric = 0; delete t.timers["arts:electric"];

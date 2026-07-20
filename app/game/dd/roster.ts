@@ -352,10 +352,16 @@ export const SKILLS: Record<string, DDSkill[]> = {
     { id: "arcn-b", name: "결정 파쇄 그리드", kind: "battle", fromPos: [1, 2, 3], target: "row", power: 2.22,
       powerOf: (self) => (arcaneForm(self) === "wisdom" ? 2.22 : 1.33),
       element: "nature", attach: "nature", staggerVal: 10,
-      apply: (t, self) => { if (arcaneForm(self) === "will") { t.speedMod = (t.speedMod || 0) - 15; setTimer(t, "speedMod", 2); } }, // 끌어당김 = 광역 몰이(감속으로 표현)
+      // 의지 폼: 원문 "모든 스킬들이 적들을 한곳에 모으거나 이미 부착된 아츠 부착에 추가 아츠 부착".
+      // 배틀도 끌어당김 + 기존 부착 속성을 한 스택 올린다 → 팀 속성을 가리지 않는 상시 부착 지원.
+      apply: (t, self) => {
+        if (arcaneForm(self) !== "will") return;
+        t.speedMod = (t.speedMod || 0) - 15; setTimer(t, "speedMod", 2); // 끌어당김(광역 몰이)
+        for (const e of ELEMENTS) if (e !== "nature" && t.arts[e] > 0) { t.arts[e] = Math.min(4, t.arts[e] + 1); setTimer(t, "arts:" + e, 4); }
+      },
       note: "광역 자연 부착 · 지혜=피해↑ / 의지=끌어당김" },
     // 응룡 4식(연계 200%, 쿨 4턴): 지혜=자연/2스택 부착 조건 · 의지=아츠 부착이면 발동(조건 완화) + 취약이 의지 비례로 커짐.
-    { id: "arcn-l", name: "응룡 4식", kind: "link", fromPos: [1, 2, 3], target: "row", power: 0.89, hits: [0.36, 0.53], element: "nature", staggerVal: 10, cooldown: 4, gaugeGain: 10,
+    { id: "arcn-l", name: "응룡 4식", kind: "link", fromPos: [1, 2, 3], target: "row", power: 0.89, hits: [0.36, 0.53], element: "nature", staggerVal: 10, cooldown: 2, gaugeGain: 10,
       requires: (t, self) => !!t && (arcaneForm(self) === "wisdom"
         ? (t.arts.nature > 0 || ELEMENTS.some((e) => t.arts[e] >= 2))   // 지혜: 자연 부착 또는 2스택 아츠 부착
         : ELEMENTS.some((e) => t.arts[e] > 0)),                          // 의지: 아츠 부착만 있으면 발동
@@ -366,18 +372,31 @@ export const SKILLS: Record<string, DDSkill[]> = {
         const v = arcaneForm(self) === "wisdom" ? 0.04 : 0.04 + Math.min(0.08, (wil / 640) * 0.08);
         bumpVuln(t, "nature", v, arcaneForm(self) === "wisdom" ? 4 : 6);
         bumpVuln(t, "cryo", v, arcaneForm(self) === "wisdom" ? 4 : 6);
-        // 의지 폼은 전술 분신이 아츠 부착까지 부여한다(팀 아츠 반응 연료) — 원문 "아츠 부착과 자연 취약, 냉기 취약을 부여하고"
-        if (arcaneForm(self) === "will") { t.arts.nature = Math.min(4, t.arts.nature + 1); setTimer(t, "arts:nature", 4); }
-        t.speedMod = (t.speedMod || 0) - 20; setTimer(t, "speedMod", 4); // 구속
+        // 의지 폼은 전술 분신이 아츠 부착까지 부여한다. 원작 정체성이 "이미 부착된 아츠 부착에 추가 부착 —
+        // 속성을 가리지 않는 전천후 아츠 부착 지원"이므로, 자연 고정이 아니라 **이미 붙어 있는 속성**을 올린다.
+        // (장방이=전기, 레바테인=열기, 이본/라스트=냉기 파티에 그대로 얹히는 게 의지 폼의 존재 이유)
+        if (arcaneForm(self) === "will") {
+          const on = ELEMENTS.filter((e) => t.arts[e] > 0);
+          for (const e of (on.length ? on : ["nature" as const])) { t.arts[e] = Math.min(4, t.arts[e] + 1); setTimer(t, "arts:" + e, 4); }
+        }
+        t.speedMod = (t.speedMod || 0) - 20; setTimer(t, "speedMod", 4); // 구속: 모든 행동이 느려진다
+        setTimer(t, "bound", 3); // 구속 상태 — 지혜 폼 배틀이 여기 명중하면 조기 종료 + 폭발/추가타(combat.ts)
       },
-      note: "전술 분신 구속 — 자연·냉기 취약 + 감속(의지 폼은 취약↑·지속↑)" },
+      note: "전술 분신 구속(쿨 12초≈2턴) — 취약 + 감속. 지혜 폼은 배틀로 조기 폭발" },
     // 어스름 파훼(궁): 지혜 진180+집중360+깨달음1440=1980% / 의지 진180+집중360+깨달음360=900%.
     // 지혜=강제 부식(전 피해 취약) / 의지=아츠 부착 재부여(팀 반응 재점화).
     { id: "arcn-u", name: "어스름 파훼", kind: "ult", fromPos: [1, 2, 3], target: "all", power: 8.8, hits: [0.8, 1.6, 6.4],
       powerOf: (self) => (arcaneForm(self) === "wisdom" ? 8.8 : 4.0),
       element: "nature", staggerVal: 20, selfUlt: true,
       apply: (t, self) => {
-        if (arcaneForm(self) === "wisdom") { if (!t.statuses.includes("corrosion")) t.statuses.push("corrosion"); bumpVuln(t, "all", 0.15, 3); }
+        if (arcaneForm(self) === "wisdom") {
+          // 강제 부식 15초 + 재능 「무장 강화」(부식 지속·저항 감소 강화)
+          if (!t.statuses.includes("corrosion")) t.statuses.push("corrosion");
+          bumpVuln(t, "all", 0.15, 3);
+          // 재능 「전략 수립」 2단계(지혜): 궁 지속 중 자신이 아츠 증폭 24%
+          for (const e of ELEMENTS) self.amp[e] = Math.max(self.amp[e] || 0, 0.24);
+          setTimer(self, "amp:nature", 4);
+        }
         else {
           for (const e of ELEMENTS) if (t.arts[e] > 0) { t.arts[e] = Math.min(4, t.arts[e] + 1); setTimer(t, "arts:" + e, 4); } // 부착 재부여
           // 재능 2단계(의지): 궁이 피해를 줄 때 [의지×0.02%] 자연·냉기 취약(최대 12.8%), 2턴.
