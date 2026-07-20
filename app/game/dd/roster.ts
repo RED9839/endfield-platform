@@ -1,6 +1,6 @@
 // ===== DD류 물리 4인 + 적 정의 (프로토타입) =====
 // 스킬은 위키 매핑. 사용 요구(requires)가 카드 모델에서 깨지던 "연계 조건"을 DD류에선 자연 흡수.
-import { setApplyAttrs, setAttrBonus } from "./gear";
+import { setApplyAttrs, setAttrBonus, setMainSub } from "./gear";
 import { bumpVuln, vulnFor, setTimer, applyBuff, ELEMENTS, attrResists, ATTR_AVG, attrBonus, hasLinkEvent, type DDClass, type DDSkill, type DDUnit, type Element, arcaneForm } from "./combat";
 import { promoMult, skillMult, skillUtilMult, DEFAULT_PROGRESS, type OpProgress } from "./progress";
 import { ENEMY_TRAITS } from "./enemy-traits";
@@ -567,6 +567,7 @@ export function applyAttrs(u: DDUnit): void {
 }
 
 setAttrBonus(attrBonusOf); // 장비 능력치 → 공격력 계산에 주/부옵 고정표 사용
+setMainSub((id) => OP_MAINSUB[id]); // "주요/보조 능력치 +N%" 부가옵이 붙을 능력치
 setApplyAttrs(applyAttrs); // gear가 장비 능력치 합산 후 속도를 다시 계산하도록 주입
 
 export function makeAlly(id: string, pos: number, progress: OpProgress = DEFAULT_PROGRESS): DDUnit {

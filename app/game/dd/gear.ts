@@ -14,6 +14,9 @@ export const setApplyAttrs = (f: (u: DDUnit) => void) => { applyAttrsHook = f; }
 // 주요/보조 능력치는 오퍼별 고정(공략 시트 「주,부옵」). 상위 2개 추론은 4명이 어긋난다 → roster가 주입.
 let attrBonusHook: ((id: string, a: any) => number) | null = null;
 export const setAttrBonus = (f: (id: string, a: any) => number) => { attrBonusHook = f; };
+// 오퍼별 주/부옵 키(roster.OP_MAINSUB) — "주요/보조 능력치 +N%" 부가옵이 어느 능력치에 붙는지 알아야 한다.
+let mainSubHook: ((id: string) => [string, string] | undefined) | null = null;
+export const setMainSub = (f: (id: string) => [string, string] | undefined) => { mainSubHook = f; };
 
 // 원작 장착칸은 방어구·장갑·부품 I·부품 II 4칸이고 세트 효과는 3피스에서 발동한다.
 // 피스 분류(장비 데이터 category)는 3종 그대로 두고 로드아웃만 4슬롯으로 분리 —
@@ -158,7 +161,7 @@ export const GEAR_DEFENSE_PER_SLOT = GEAR_DEFENSE.armor; // (하위호환) 참�
 
 // ── 세트별 실측 부옵 (warfarin gear.data, 세트 대표 피스). 각 피스: 방어(주옵) + 능력치(→gearGrade) + 피해 부옵. ──
 // grade = 능력치(힘/민첩/지능/의지) 합(실측), dmg = 피해 부옵(실측%). 단조로 스케일. dmg.kind: ult/battle/link/attack/all(물리)/elem(오퍼속성)/atkPct/hpPct/critRate/critDmg/energy.
-type DmgSub = { kind: "ult" | "battle" | "link" | "attack" | "all" | "elem" | "atkPct" | "hpPct" | "critRate" | "critDmg" | "energy" | "artsStr" | "vsBroken" | "ultEff"; v: number };
+type DmgSub = { kind: "ult" | "battle" | "link" | "attack" | "all" | "elem" | "atkPct" | "hpPct" | "critRate" | "critDmg" | "energy" | "artsStr" | "vsBroken" | "ultEff" | "mainPct" | "subPct"; v: number };
 export const GEAR_SET_STATS: Record<string, Partial<Record<GearSlot, { grade: number; dmg?: DmgSub }>>> = {
   "개척": { armor: { grade: 145, dmg: { kind: "ult", v: 0.259 } }, gloves: { grade: 108, dmg: { kind: "atkPct", v: 0.23 } }, kit: { grade: 53, dmg: { kind: "elem", v: 0.414 } } },
   "열 작업용": { armor: { grade: 145, dmg: { kind: "atkPct", v: 0.115 } }, gloves: { grade: 108, dmg: { kind: "hpPct", v: 0.172 } }, kit: { grade: 53, dmg: { kind: "hpPct", v: 0.207 } } },
@@ -293,7 +296,7 @@ function resolveGear(ref: string, slot: GearSlot, lv: number): { def: number; gr
 export function applyGear(u: DDUnit, loadout: Loadout | undefined, gearLevel = 0, levels?: Partial<Record<LoadoutSlot, number>>): number {
   if (!loadout) return 0;
   const g = emptyBonus();
-  let atkPct = 0, startEnergy = 0, gradeAdd = 0;
+  let atkPct = 0, startEnergy = 0, gradeAdd = 0, mainPct = 0, subPct = 0;
   const gAttr: Record<string, number> = { str: 0, agi: 0, int: 0, wil: 0 }; // 장비가 주는 능력치 합
   for (const slot of LOADOUT_SLOTS) if (loadout[slot]) {
     const lv = Math.max(0, Math.min(3, levels?.[slot] ?? gearLevel)); // 부위별 단조(제작) 우선, 없으면 통합 gearLevel
@@ -313,6 +316,8 @@ export function applyGear(u: DDUnit, loadout: Loadout | undefined, gearLevel = 0
       else if (k === "elem") { if (u.opElement && u.opElement !== "physical") g.elemDmg[u.opElement] = (g.elemDmg[u.opElement] ?? 0) + v; else g.kindDmg.all = (g.kindDmg.all ?? 0) + v; }
       else if (k === "artsStr") u.artsStr = (u.artsStr ?? 0) + v;   // 오리지늄 아츠 강도(피스 실측, 정수값)
       else if (k === "vsBroken") g.vsBroken += v;                    // 불균형 목표 피해 보너스
+      else if (k === "mainPct") mainPct += v;                         // 주요 능력치 +N%
+      else if (k === "subPct") subPct += v;                           // 보조 능력치 +N%
       else if (k === "ultEff") u.ultEffMul = (u.ultEffMul ?? 1) + v; // 궁극기 충전 효율(배틀/연계 궁충에 배율)
       else g.kindDmg[k] = (g.kindDmg[k] ?? 0) + v; // ult/battle/link/attack
     }
@@ -322,7 +327,7 @@ export function applyGear(u: DDUnit, loadout: Loadout | undefined, gearLevel = 0
   // 원작 공식(1.1 능력치 보너스): 공격력 = 기초 × (1 + 주요×0.005 + 보조×0.002).
   // OP_ATTACK엔 오퍼 고유 능력치가 이미 반영돼 있으므로, 장비분을 더한 뒤 보너스 비율만큼 스케일한다
   // (weapons.ts의 무기 능력치 버프와 같은 방식). 힘 장비를 끼면 힘이 오르고, 그게 주옵이면 공격력이 오른다.
-  if (u.attrs && Object.values(gAttr).some((v) => v > 0)) {
+  if (u.attrs && (Object.values(gAttr).some((v) => v > 0) || mainPct > 0 || subPct > 0)) {
     const b0 = u.attrs;
     const bonus = (a: typeof b0) => attrBonusHook ? attrBonusHook(u.id, a) : 1; // 주/부옵 고정표(roster.attrBonusOf)
     const k = GEAR_ATTR_FACTOR;
@@ -330,6 +335,15 @@ export function applyGear(u: DDUnit, loadout: Loadout | undefined, gearLevel = 0
     // 패널 표기값은 축소 없이 원본 합산(진결 폼 판정용)
     const pb = u.panelAttrs ?? b0;
     u.panelAttrs = { str: pb.str + gAttr.str, agi: pb.agi + gAttr.agi, int: pb.int + gAttr.int, wil: pb.wil + gAttr.wil };
+    // "주요/보조 능력치 +N%"는 그 오퍼의 주/부옵 능력치를 배수로 올린다(합산 아님).
+    if (mainPct > 0 || subPct > 0) {
+      const ms = mainSubHook?.(u.id);
+      if (ms) {
+        const [mk, sk] = ms as ["str" | "agi" | "int" | "wil", "str" | "agi" | "int" | "wil"];
+        next[mk] *= 1 + mainPct * GEAR_ATTR_FACTOR; next[sk] *= 1 + subPct * GEAR_ATTR_FACTOR; // 피해 계산치는 축소 스케일
+        u.panelAttrs[mk] *= 1 + mainPct; u.panelAttrs[sk] *= 1 + subPct;                       // 패널 표기값은 원본
+      }
+    }
     u.attack = Math.round(u.attack * (bonus(next) / bonus(b0)));
     u.attrs = next;
     applyAttrsHook?.(u); // 민첩 → 속도 재계산(roster가 주입)

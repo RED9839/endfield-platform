@@ -7,14 +7,14 @@ export const DMG_LABEL: Record<string, string> = {
   ult: "궁극 피해", battle: "배틀 피해", link: "연계 피해", attack: "일반 피해",
   all: "모든 스킬 피해", elem: "아츠 피해",
   atkPct: "공격력", hpPct: "생명력", critRate: "치명 확률", critDmg: "치명 피해",
-  energy: "궁 에너지", ultEff: "궁충 효율", artsStr: "아츠 강도", vsBroken: "불균형 피해",
+  energy: "궁 에너지", ultEff: "궁충 효율", artsStr: "아츠 강도", vsBroken: "불균형 피해", vsDefBreak: "방어 불능 피해", mainPct: "주요 능력치", subPct: "보조 능력치",
 };
 // 좁은 칸(전투 칩·스킬 카드)용 축약 — 뜻은 같고 길이만 짧다.
 export const DMG_SHORT: Record<string, string> = {
   ult: "궁극", battle: "배틀", link: "연계", attack: "일반",
   all: "전 스킬", elem: "아츠",
   atkPct: "공격력", hpPct: "생명력", critRate: "치명확", critDmg: "치명피",
-  energy: "궁에너지", ultEff: "궁충효율", artsStr: "아츠강도", vsBroken: "불균형피해",
+  energy: "궁에너지", ultEff: "궁충효율", artsStr: "아츠강도", vsBroken: "불균형피해", vsDefBreak: "방불피해", mainPct: "주요능력치", subPct: "보조능력치",
 };
 export const dmgLabel = (k: string, short = false) => (short ? DMG_SHORT[k] : DMG_LABEL[k]) ?? k;
 
