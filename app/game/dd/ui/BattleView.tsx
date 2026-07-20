@@ -45,6 +45,26 @@ const REASON_HELP: Record<string, string> = {
   "조건 미충족": "발동 조건이 아직 열리지 않았습니다. 적을 불균형 상태로 만들거나 아츠 이상을 걸면 열립니다.",
 };
 const reasonHelp = (reason: string | null): string => (reason ? REASON_HELP[reason] ?? (reason.startsWith("쿨타임") ? "연계 스킬을 다시 쓰려면 재사용 대기(쿨타임)가 끝나야 합니다." : `발동 조건: ${reason}`) : "");
+// 배틀 스킬 강조 — '게이지가 찼다'가 아니라 '조건부 효과가 지금 터진다'일 때만 발광.
+// 반환: 발동 사유 라벨(있으면 발광), null이면 평범(발광 안 함).
+function battlePayoff(s: DDState, u: DDUnit, sk: DDSkill): string | null {
+  const foes = s.units.filter((e) => e.side === "enemy" && e.hp > 0);
+  if (!foes.length) return null;
+  const any = (p: (e: DDUnit) => boolean) => foes.some(p);
+  // 부착/이상 소모 페이오프
+  if ((sk.forceFreeze || sk.cryoNuke) && any((e) => e.arts.cryo > 0)) return "❄ 냉기 소모";
+  if (sk.iceBomb && any((e) => e.arts.cryo > 0 || e.arts.nature > 0)) return "❄ 부착 폭발";
+  if (sk.forceShock && any((e) => e.arts.electric > 0)) return "⚡ 전기 소모";
+  if (sk.shockBonus && any((e) => e.statuses.includes("shock" as never))) return "⚡ 감전 추격";
+  if (sk.burnShockConsume && any((e) => e.statuses.includes("combustion" as never) || e.statuses.includes("shock" as never))) return "🔥 이상 소모";
+  if (sk.lanceRecover && any((e) => (e.lanceN || 0) + (e.lanceBig || 0) > 0)) return "🗲 창 회수";
+  // 취약/불균형/방불 페이오프
+  if (sk.vsWeak && any((e) => e.staggered || (e.vuln.physical || 0) > 0)) return "◆ 약점 가격";
+  if (sk.stanceFromCrush && any((e) => (e.physBreak ?? 0) >= 3)) return "◆ 자세 전환";
+  // 라에바테인 녹아내린 불꽃 4스택 → 강화 배틀
+  if (u.id === "laevatain" && (u.procCount ?? 0) >= 4) return "🔥 강화 폭발";
+  return null;
+}
 const statusLabel: Record<string, string> = { stun: "기절", combustion: "연소", corrosion: "부식", crystal: "결정", "armor-break": "갑옷파괴", shock: "감전", wing: "날개" };
 const nodeTitle: Record<NodeKind, string> = { battle: "교전", elite: "정예 교전", boss: "보스 교전", rest: "야영" };
 const behaviorLabel: Record<string, string> = { melee: "근접 돌격", snipe: "원거리 저격", heavy: "중장 강타", aoe: "광역 자폭", heal: "치유 지원", buff: "강화 지원" };
@@ -612,12 +632,14 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
               const open = detailId === sk.id;
               const reason = current ? skillReason(s, current, sk) : null;
               const off = !!reason;
-              const ready = !off && (sk.kind === "battle" || sk.kind === "link"); // 배틀·연계 조건 열림 → 테두리 발광
+              // 발광: 연계는 조건 게이트가 열리면(=usable) 그 자체가 조건 충족. 배틀은 게이지가 아니라 조건부 효과가 지금 터질 때만.
+              const payoff = !off && current && sk.kind === "battle" ? battlePayoff(s, current, sk) : null;
+              const ready = !off && (sk.kind === "link" || !!payoff); // 연계 조건 열림 · 배틀 조건부 효과 충족 → 발광
               return (
               <button key={sk.id} type="button" onClick={() => { if (!off) chooseSkill(sk); }} className={`hud-tile dd-cut group relative flex w-[272px] items-start gap-2 px-2.5 py-2 pr-8 text-left ${off ? "cursor-not-allowed opacity-55 hover:!border-ef-line/40" : open ? "!border-ef-accent" : ready ? "dd-skill-ready" : ""}`}>
                 <img src={skillIcon(current!.id, sk.kind)} alt="" loading="lazy" className={`mt-0.5 h-9 w-9 shrink-0 border border-ef-line/60 bg-black/40 object-contain p-0.5 ${off ? "opacity-40 grayscale" : ""}`} onError={(ev) => { (ev.currentTarget as HTMLImageElement).style.visibility = "hidden"; }} />
                 <span className="min-w-0 flex-1">
-                  <span className="flex items-center gap-1.5"><span className="border px-1 py-px font-mono text-[13px] font-bold uppercase" style={{ borderColor: off ? "#7a6a4a66" : `${kindTone[sk.kind]}66`, color: off ? "#7a6a4a" : kindTone[sk.kind] }}>{kindLabel[sk.kind]}</span><span className={`truncate font-mono text-sm font-bold ${off ? "text-ef-muted" : "text-white"}`}>{sk.name}</span></span>
+                  <span className="flex items-center gap-1.5"><span className="border px-1 py-px font-mono text-[13px] font-bold uppercase" style={{ borderColor: off ? "#7a6a4a66" : `${kindTone[sk.kind]}66`, color: off ? "#7a6a4a" : kindTone[sk.kind] }}>{kindLabel[sk.kind]}</span><span className={`truncate font-mono text-sm font-bold ${off ? "text-ef-muted" : "text-white"}`}>{sk.name}</span>{payoff && <span className="ml-auto shrink-0 animate-pulse border border-ef-accent/70 bg-ef-accent/15 px-1 py-px font-mono text-[12px] font-bold text-ef-accent" title="조건부 효과 발동 조건 충족 — 지금 쓰면 추가 효과">{payoff}</span>}</span>
                   <span className="mt-1 flex min-w-0 items-center gap-2">
                     {off ? <span className="min-w-0 cursor-help truncate font-mono text-[14px] font-bold text-red-400/90" title={reasonHelp(reason)}>🔒 {reason}</span>
                       : dmg > 0 ? <span className="shrink-0 font-mono text-[17px] font-bold tabular-nums" style={{ color: elementColor[el] }}>{dmg.toLocaleString()}<span className="ml-0.5 text-[13px] font-normal text-ef-muted">피해</span></span>
