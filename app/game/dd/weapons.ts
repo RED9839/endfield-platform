@@ -1,7 +1,7 @@
 // 오퍼레이터 시그니처 무기(전무) — 전부 실데이터. 타입/기초공격력/능력치·부가 스탯은 위키·무기 소스 실측이고,
 // 시리즈 스킬은 data/weapons-source 원문(rank4)을 그대로 등록한다. 무기 타입은 속도도 결정한다(weapon-type.ts).
 import type { DDUnit, DmgKey, Element } from "./combat";
-import { setTimer, pushSrc, popSrc, bumpVuln } from "./combat";
+import { setTimer, pushSrc, popSrc, bumpVuln, bumpRecv } from "./combat";
 import { applyAttrs, attrBonusOf, OP_MAINSUB } from "./roster";
 import { weaponSummaries } from "@/data/weapons-summary-data";
 import { OP_WEAPON_SERIES } from "./weapon-series";
@@ -411,8 +411,8 @@ export function weaponTrigger(self: DDUnit, event: string, allies?: DDUnit[], ct
         case "artsInt": // 오리지늄 아츠 강도(미브) — 부착/이상 위력. 만료 시 상시값으로 복귀
           u.artsStrBase ??= u.artsStr ?? 0;
           u.artsStr = u.artsStrBase + v; setTimer(u, "artsStrW", t.dur); break;
-        case "recvArts": bumpVuln(u, "arts", v, t.dur); break;   // 목표가 받는 아츠 피해
-        case "recvElem": bumpVuln(u, el, v, t.dur); break;       // 목표가 받는 해당 속성 피해
+        case "recvArts": bumpRecv(u, "arts", v, t.dur); break;   // 목표가 받는 아츠 피해
+        case "recvElem": bumpRecv(u, el, v, t.dur); break;       // 목표가 받는 해당 속성 피해
         default: { // arts / elem / all — 증폭. amp는 physical도 정식 키(tierSum이 집계)라 접지 않는다.
           const key: DmgKey = t.k === "arts" ? "arts" : t.k === "all" ? "all" : el;
           u.amp[key] = Math.min((u.amp[key] || 0) + v, cap); setTimer(u, "amp:" + key, t.dur);

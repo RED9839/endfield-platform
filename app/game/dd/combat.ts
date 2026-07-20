@@ -45,7 +45,9 @@ export type DDUnit = {
   frozen: number; // 동결 잔여 스택(쇄빙 대기) 0=미동결
   // 버프/디버프 (위계: all ⊃ physical|arts ⊃ 속성)
   amp: Partial<Record<DmgKey, number>>; // 증폭(입히는 피해↑), 중첩 가능(합연산)
-  vuln: Partial<Record<DmgKey, number>>; // 취약(받는 피해↑), 중첩 가능(합연산) — 부식=vuln.all
+  vuln: Partial<Record<DmgKey, number>>; // 취약 효과(원문 1.8) — 텍스트에 '취약'이 명시된 것만
+  resShred: number;       // 부식 저항 감소(원문 1.12) — 저항 '포인트'를 깎는다. 취약과 달리 저항 버킷. 상한 0.24=24포인트
+  recv: Partial<Record<DmgKey, number>>; // 받는 대미지 증가(원문 1.9) — 감전/갑옷파괴/자이히 재능 등 '취약'이 아닌 받는 피해↑
   weakenMul: number; // 허약(공격력↓, 곱연산). 1=영향없음
   protection: number; // 비호(받는 피해↓), 중첩 불가(최고값). 0.3=-30%
   shield: number; // 보호막(보호): 피해 흡수
@@ -217,6 +219,7 @@ function tierSum(map: Partial<Record<DmgKey, number>> | undefined, elem: "physic
 }
 export const ampFor = (u: DDUnit, elem: "physical" | Element) => tierSum(u.amp, elem);
 export const vulnFor = (u: DDUnit, elem: "physical" | Element) => tierSum(u.vuln, elem);
+export const recvFor = (u: DDUnit, elem: "physical" | Element) => tierSum(u.recv, elem);
 
 // 효과 타이머 세팅(재적용 시 리셋). 라운드 시작 시 감쇠 → 0이면 expire.
 // 효과 출처(누가·무엇으로). kind: 스킬/무기 시리즈/장비 세트/아이템.
@@ -229,6 +232,12 @@ export const setTimer = (u: DDUnit, key: string, turns: number) => { u.timers[ke
 export function bumpVuln(u: DDUnit, key: DmgKey, val: number, turns = DUR_VULN) {
   u.vuln[key] = Math.max(u.vuln[key] || 0, val);
   setTimer(u, "vuln:" + key, turns);
+}
+// 받는 대미지 증가(원문 1.9). 취약과 '별개 곱연산 인자'라 버킷을 나눈다.
+// 키 내부는 max 누적 — 매턴 재부여되는 감전/갑옷파괴가 무한 증식하는 것을 막기 위한 의도적 편차.
+export function bumpRecv(u: DDUnit, key: DmgKey, val: number, turns = DUR_VULN) {
+  u.recv[key] = Math.max(u.recv[key] || 0, val);
+  setTimer(u, "recv:" + key, turns);
 }
 // 일반 버프 적용(증폭·허약·비호·보호막·속도). 서포터/디펜더가 사용.
 export function applyBuff(u: DDUnit, kind: "amp" | "weaken" | "protection" | "shield" | "speedMod", a: number, b?: number, turns = DUR_BUFF) {
@@ -257,16 +266,20 @@ function expire(u: DDUnit, key: string): void {
   else if (key === "shield") u.shield = 0;
   else if (key === "speedMod") u.speedMod = 0;
   else if (key.startsWith("arts:")) u.arts[key.slice(5) as Element] = 0;
+  else if (key === "resShred") { u.resShred = 0; rm(u, "corrosion"); }
   else if (key.startsWith("vuln:")) { delete u.vuln[key.slice(5) as DmgKey]; if (key === "vuln:all") rm(u, "corrosion"); }
+  else if (key.startsWith("recv:")) delete u.recv[key.slice(5) as DmgKey];
   else if (key.startsWith("amp:")) delete u.amp[key.slice(4) as DmgKey];
 }
 
 // 방어 경감: 방어력(%감소) × 물리/아츠 저항. 받는 측 스탯 적용.
-// 방어력 경감 상수: dmg × DEF_K/(def+DEF_K). 장비 풀세트(방어 140) → -22%. 저항과 곱해져 이중으로 먹으므로 완만하게 잡음.
-export const DEF_K = 500;
+// 원문 1.10 방어 수치 = 100/(방어력+100). 데이터마인 확인: 모든 적 방어력 = 100(attrType 3) → 적은 일률 0.5배.
+// 아군 방어력은 장비에서만 나오며 같은 식을 쓴다(원문 예시 100/240 = 방어 140 검증).
+export const DEF_K = 100;
 export function mitigate(u: DDUnit, dmg: number, elem: "physical" | Element): number {
   let d = dmg * (DEF_K / (u.defense + DEF_K)); // 방어력 경감(DEF_K 클수록 완만)
-  d *= 1 - u.resist[elem]; // 속성별 저항(1=100%감소, 음수=약점→피해 증가). 위키 물리/열기/전기/냉기/자연 저항 정합
+  // 원문 1.12: 저항 수치 = 1 - (저항 - 저항감소)/100. 부식은 취약이 아니라 저항 포인트를 깎는다 → 저항 높은 적일수록 효과가 크다.
+  d *= 1 - (u.resist[elem] - (u.resShred || 0));
   if (u.gear?.dmgReduce) d *= 1 - u.gear.dmgReduce; // 장비 부가옵 "모든 피해 감소"
   if (u.shell && !u.shellBroken && !u.staggered) d *= 1 - u.shell; // 방어 형태(은신·웅크림): 피해 감소. 불균형(강타·갑옷파괴 누적)이면 해제 → 약점 노출(원작 "팔 파괴 시 해제")
   return d;
@@ -385,6 +398,12 @@ export const BASIC: DDSkill = { id: "basic", name: "일반 공격", kind: "attac
 const artsDmg = (u: DDUnit) => 1 + (u.artsStr || 0) / 100;
 const artsSub = (u: DDUnit) => { const x = u.artsStr || 0; return 1 + (2 * x) / (x + 300); };
 const artsStag = (u: DDUnit) => 1 + (u.artsStr || 0) / 200;
+// 원문 2.3 레벨 계수: 아츠 이상·아츠 폭발 = 1+(Lv-1)/196 · 물리 이상 = 1+(Lv-1)/392.
+// 본 시뮬은 아군 Lv90 고정(진행도는 정예화/단조로만 표현) → 상수. 일반 스킬 피해엔 적용되지 않는다.
+const OP_LEVEL = 90;
+const LV_ARTS = 1 + (OP_LEVEL - 1) / 196; // 1.454
+const LV_PHYS = 1 + (OP_LEVEL - 1) / 392; // 1.227
+const lvCoef = (u: DDUnit, arts: boolean) => (u.side === "ally" ? (arts ? LV_ARTS : LV_PHYS) : 1);
 
 // 동결 적에게 방불/물리 이상 발동 시 쇄빙(동결 소모 → 대량 물리). 공격자 측 추가 피해 반환.
 function tryShatter(target: DDUnit, self: DDUnit, log: string[]): number {
@@ -393,7 +412,7 @@ function tryShatter(target: DDUnit, self: DDUnit, log: string[]): number {
   target.frozen = 0; rm(target, "stun");
   log.push(`  → 쇄빙! 동결 ${n}스택 소모 → ${SHATTER[n - 1] * 100}% 물리`);
   // 쇄빙은 위키상 아츠 이상에 포함된다(피해 유형만 물리) → 오리지늄 아츠 강도 1당 피해 +1%.
-  return self.attack * eb(self) * artsDmg(self) * SHATTER[n - 1];
+  return self.attack * eb(self) * artsDmg(self) * lvCoef(self, true) * SHATTER[n - 1];
 }
 
 // 아츠 부착 → 폭발(같은 속성 2+) / 이상(다른 속성 → 전부 소모). 공격자 측 추가 피해 반환.
@@ -403,7 +422,7 @@ export function applyAttach(target: DDUnit, el: Element, self: DDUnit, log: stri
   if (target.artsImmune && Math.random() < target.artsImmune) { log.push(`  → ${target.name} 아츠 부착 면역(만물의 지혜)`); return 0; }
   // 이유 있는 게으름(에스텔라): 냉기 부착 면역 — 동결/냉기 아츠 무효
   if (el === "cryo" && target.cryoImmune) { log.push(`  → ${target.name} 냉기 면역(이유 있는 게으름)`); return 0; }
-  const buff = eb(self) * artsDmg(self); // 아츠 강도: 피해 +1%/포인트
+  const buff = eb(self) * artsDmg(self) * lvCoef(self, true); // 아츠 강도 +1%/pt · 레벨 계수(아츠)
   const sub = artsSub(self); // 부가 효과: 2x/(x+300) 체감
   const others = ELEMENTS.filter((e) => e !== el && target.arts[e] > 0);
   if (others.length > 0) {
@@ -422,7 +441,7 @@ export function applyAttach(target: DDUnit, el: Element, self: DDUnit, log: stri
       return self.attack * buff * ANOM[level - 1];
     }
     if (el === "electric") { // 감전
-      bumpVuln(target, "arts", ELEC_VULN[level - 1] * self.utilMult * sub); // 스킬 단조 유틸 · 아츠 강도 부가효과
+      bumpRecv(target, "arts", ELEC_VULN[level - 1] * self.utilMult * sub); // 원문 1.9 받는 아츠 피해 증가(취약 아님)
       add(target, "shock"); // 감전 상태(아크라이트 질풍/천둥 트리거)
       log.push(`  → 감전! ${ANOM[level - 1] * 100}% 전기 + 아츠취약 ${ELEC_VULN[level - 1] * 100}%`);
       return self.attack * buff * ANOM[level - 1];
@@ -432,9 +451,9 @@ export function applyAttach(target: DDUnit, el: Element, self: DDUnit, log: stri
       log.push(`  → 동결! 130% 냉기 + 빙결(쇄빙 대기, ${level}스택)`);
       return self.attack * buff * 1.3;
     }
-    // nature: 부식 — 모든 속성 저항 감소(물리 포함) = vuln.all 누적(상한 0.24) + 부식 상태(아델리아 소모 마커)
-    target.vuln.all = Math.min(0.24 * sub, (target.vuln.all || 0) + CORR_SHRED[level - 1] * sub); // 아츠 강도 부가효과
-    setTimer(target, "vuln:all", DUR_VULN);
+    // nature: 부식 — 모든 속성 저항 '포인트' 감소(물리 포함, 상한 24포인트) + 부식 상태(아델리아 소모 마커)
+    target.resShred = Math.min(0.24 * sub, (target.resShred || 0) + CORR_SHRED[level - 1] * sub); // 아츠 강도 부가효과
+    setTimer(target, "resShred", DUR_VULN);
     add(target, "corrosion");
     log.push(`  → 부식! ${ANOM[level - 1] * 100}% 자연 + 전 속성 저항 감소`);
     return self.attack * buff * ANOM[level - 1];
@@ -459,7 +478,7 @@ export function applyAttach(target: DDUnit, el: Element, self: DDUnit, log: stri
 export function applyAnomaly(skill: DDSkill, target: DDUnit, self: DDUnit, log: string[]): number {
   const a = skill.anomaly;
   if (!a) return 0;
-  const buff = eb(self) * artsDmg(self); // 오리지늄 아츠 강도: 피해 +1%/포인트
+  const buff = eb(self) * artsDmg(self) * lvCoef(self, false); // 아츠 강도 +1%/pt · 레벨 계수(물리)
   const sub = artsSub(self); // 부가 효과: 2x/(x+300) 체감
   const shatter = tryShatter(target, self, log); // 방불/물리 이상이 동결 적 → 쇄빙
   if (a === "launch" || a === "knockdown") {
@@ -507,7 +526,7 @@ export function applyAnomaly(skill: DDSkill, target: DDUnit, self: DDUnit, log: 
       const n = Math.min(4, target.physBreak);
       target.physBreak = 0;
       gearTrigger(self, "crush", target); // 고검의 잔향: 갑옷파괴 후 물리+
-      bumpVuln(target, "physical", ARMOR_VULN[n - 1] * self.utilMult * sub); // 스킬 단조 유틸 · 아츠 강도 부가효과
+      bumpRecv(target, "physical", ARMOR_VULN[n - 1] * self.utilMult * sub); // 원문 1.9 받는 물리 피해 증가(취약 아님)
       add(target, "armor-break");
       log.push(`  → 갑옷 파괴! ${n}스택 소모 → ${ARMOR[n - 1] * 100}% 물리 + 물리취약 ${ARMOR_VULN[n - 1] * 100}%`);
       return shatter + self.attack * buff * ARMOR[n - 1];
@@ -701,7 +720,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
     if (self.id === "zhuangfangyi") { // 장방이: 청뢰검(procCount) — 연계 강제 감전 / 배틀 감전 소모 → 검 생성 + 뇌격
       if (skill.kind === "link" && t.arts.electric > 0) { // 변화의 숨결: 전기 부착 소모 → 강제 감전(이미 감전이면 레벨↑)
         const n = t.arts.electric; t.arts.electric = 0; delete t.timers["arts:electric"];
-        const lvUp = has(t, "shock"); add(t, "shock"); gearTrigger(self, "anomaly:electric"); bumpVuln(t, "arts", (lvUp ? 0.16 : 0.12) * self.utilMult);
+        const lvUp = has(t, "shock"); add(t, "shock"); gearTrigger(self, "anomaly:electric"); bumpRecv(t, "arts", (lvUp ? 0.16 : 0.12) * self.utilMult);
         // 전용 소모 경로도 아츠 이상 소모다 — 무기 트리거를 applyAttach 경로와 동일하게 쏜다.
         weaponTrigger(self, "anomaly:electric", living(s, "ally"), { target: t, stacks: n, viaBattle: false });
         self.ultCharge = Math.min(self.ultCost, self.ultCharge + (10 + 10 * n) * (self.ultEffMul ?? 1) * (self.wilMul ?? 1)); s.anomalyConsumed = ANOMALY_WINDOW;
@@ -808,7 +827,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
       if (tw) raw += self.attack * eb(self) * 0.85; // 궁 중 강화 배틀 1단계(62→147%)
       if (self.procCount >= 4) { // 4스택 배틀 → 강화 폭발 + 강제 연소 + 궁 +100
         raw += self.attack * eb(self) * (tw ? 4.0 : 3.42); // 추가 공격(궁 중 400% / 일반 342%)
-        t.dot = Math.round(self.attack * eb(self) * artsDmg(self) * 0.5); setTimer(t, "dot", DUR_DOT); add(t, "combustion"); gearTrigger(self, "anomaly:heat"); // 강제 연소(세트 조건 = "연소를 부여한 후")
+        t.dot = Math.round(self.attack * eb(self) * artsDmg(self) * lvCoef(self, true) * 0.5); setTimer(t, "dot", DUR_DOT); add(t, "combustion"); gearTrigger(self, "anomaly:heat"); // 강제 연소(세트 조건 = "연소를 부여한 후")
         self.ultCharge = Math.min(self.ultCost, self.ultCharge + 100 * (self.ultEffMul ?? 1) * (self.wilMul ?? 1)); // 궁 +100
         self.amp.heat = Math.max(self.amp.heat || 0, 0.2); setTimer(self, "amp:heat", 4); // 불꽃의 심장(열기 저항 무시 근사)
         self.procCount = 0;
@@ -826,7 +845,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
       }
     }
     if (skill.forceBurn && t.hp > 0) { // 울프가드 늑대의 분노: 강제 연소 + 불타는 송곳니
-      t.dot = Math.round(self.attack * eb(self) * artsDmg(self) * 0.36); setTimer(t, "dot", DUR_DOT); add(t, "combustion"); gearTrigger(self, "anomaly:heat"); // 강제 연소 부여 → 세트 발동
+      t.dot = Math.round(self.attack * eb(self) * artsDmg(self) * lvCoef(self, true) * 0.36); setTimer(t, "dot", DUR_DOT); add(t, "combustion"); gearTrigger(self, "anomaly:heat"); // 강제 연소 부여 → 세트 발동
       self.amp.heat = Math.max(self.amp.heat || 0, 0.3); setTimer(self, "amp:heat", 2);
       log.push(`  → 강제 연소 + 불타는 송곳니(+30%)`);
     }
@@ -914,15 +933,17 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
     }
     let dmg = raw * (1 + cr * cd); // 치명타 기댓값(RNG 대신)
     const vMul = self.id === "lastrite" && skill.kind === "ult" ? 1.5 : 1; // 라스트 라이트 저온 취성(궁 냉기/아츠 취약 1.5배 간주)
-    dmg *= (1 + ampFor(self, elem)) * (1 + vulnFor(t, elem) * vMul); // 공식 1.5·1.8: 증폭·취약은 별개 곱연산 인자
+    // 원문 1.5·1.8·1.9: 증폭 · 취약 · 받는 대미지 증가는 서로 별개의 곱연산 인자다(합치면 안 됨).
+    dmg *= (1 + ampFor(self, elem)) * (1 + vulnFor(t, elem) * vMul) * (1 + recvFor(t, elem) * vMul);
     if (self.gear) { // 장비 세트 배율: 스킬 종류·아츠 + 조건부(불균형/취약/아츠 부착 적)
       const g = self.gear;
-      let gb = (g.kindDmg[skill.kind] || 0) + (g.kindDmg.all || 0);
+      // 원문 1.3: 일반 공격은 '스킬'이 아니다 — 모든 스킬 피해(all)는 배틀/연계/궁에만 붙는다.
+      let gb = (g.kindDmg[skill.kind] || 0) + (skill.kind === "attack" ? 0 : g.kindDmg.all || 0);
       if (elem !== "physical") gb += g.elemDmg[elem] || 0;
       gb += g.elemDmg.all || 0;
       if (t.staggered) gb += g.vsBroken;
       if (t.physBreak > 0) gb += g.vsDefBreak; // 방어 불능 표식이 붙은 적(여풍 전무 「강철의 여운」)
-      if ((t.vuln.all || 0) > 0 || (t.vuln.physical || 0) > 0 || ELEMENTS.some((e) => (t.vuln[e] || 0) > 0)) gb += g.vsVuln;
+      if ((t.vuln.all || 0) > 0 || (t.resShred || 0) > 0 || (t.vuln.physical || 0) > 0 || ELEMENTS.some((e) => (t.vuln[e] || 0) > 0)) gb += g.vsVuln;
       if (ELEMENTS.some((e) => t.arts[e] > 0)) gb += g.vsArts;
       if (self.hp / self.maxHp > 0.5) gb += elem === "physical" ? g.selfHpHighPhys : g.selfHpHighArts; // 전달자: 고체력 시 물리/아츠 피해+
       dmg *= 1 + gb;

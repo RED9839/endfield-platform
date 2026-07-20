@@ -1,7 +1,7 @@
 // ===== DD류 물리 4인 + 적 정의 (프로토타입) =====
 // 스킬은 위키 매핑. 사용 요구(requires)가 카드 모델에서 깨지던 "연계 조건"을 DD류에선 자연 흡수.
 import { setApplyAttrs, setAttrBonus, setMainSub } from "./gear";
-import { bumpVuln, vulnFor, setTimer, applyBuff, ELEMENTS, attrResists, ATTR_AVG, attrBonus, hasLinkEvent, type DDClass, type DDSkill, type DDUnit, type Element, arcaneForm } from "./combat";
+import { bumpVuln, bumpRecv, vulnFor, setTimer, applyBuff, ELEMENTS, attrResists, ATTR_AVG, attrBonus, hasLinkEvent, type DDClass, type DDSkill, type DDUnit, type Element, arcaneForm } from "./combat";
 import { promoMult, skillMult, skillUtilMult, DEFAULT_PROGRESS, type OpProgress } from "./progress";
 import { ENEMY_TRAITS } from "./enemy-traits";
 
@@ -186,11 +186,11 @@ export const SKILLS: Record<string, DDSkill[]> = {
   ardelia: [
     // 질주하는 돌리(배틀 142%): 자연 돌진. 부식 적이면 소모 → 물리+아츠 취약 12%(30초≈6턴). 친구의 그림자(명중 시 회복).
     { id: "ard-b", name: "질주하는 돌리", kind: "battle", fromPos: [1, 2, 3], target: "single-front", power: 1.42, element: "nature", staggerVal: 10,
-      apply: (t) => { if (t.statuses.includes("corrosion")) { t.statuses = t.statuses.filter((x) => x !== "corrosion"); delete t.vuln.all; bumpVuln(t, "physical", 0.12, 6); bumpVuln(t, "arts", 0.12, 6); } }, note: "자연 + 부식 소모 → 물리/아츠 취약 + 회복(친구의 그림자)" },
+      apply: (t) => { if (t.statuses.includes("corrosion")) { t.statuses = t.statuses.filter((x) => x !== "corrosion"); t.resShred = 0; bumpVuln(t, "physical", 0.12, 6); bumpVuln(t, "arts", 0.12, 6); } }, note: "자연 + 부식 소모 → 물리/아츠 취약 + 회복(친구의 그림자)" },
     // 화산 분화(연계 45+111%=156%, 쿨 18초≈4턴): 방어 불능·아츠부착 없는 적에 강일 후. 자연 + 주변 강제 부식 7초(취약 셋업).
     { id: "ard-l", name: "화산 분화", kind: "link", fromPos: [1, 2, 3], target: "all", power: 1.56, hits: [0.45, 1.11], element: "nature", staggerVal: 10, cooldown: 4,
       requires: (t) => !!t && t.physBreak === 0 && ELEMENTS.every((e) => t.arts[e] === 0), requiresText: "방어 불능·아츠부착 없는 적",
-      apply: (t) => { bumpVuln(t, "all", 0.12, 3); if (!t.statuses.includes("corrosion")) t.statuses.push("corrosion"); }, note: "자연 부착 + 강제 부식(전 속성 저항↓)" },
+      apply: (t) => { t.resShred = Math.min(0.24, (t.resShred || 0) + 0.12); setTimer(t, "resShred", 3); if (!t.statuses.includes("corrosion")) t.statuses.push("corrosion"); }, note: "자연 부착 + 강제 부식(전 속성 저항↓)" },
     // 복슬복슬 파티(궁 73%×3≈219%, 게이지 90): 광역 다단 자연 + 확률 회복(친구의 그림자).
     { id: "ard-u", name: "복슬복슬 파티", kind: "ult", fromPos: [1, 2, 3], target: "all", power: 2.19, hits: [0.73, 0.73, 0.73], element: "nature", staggerVal: 2, selfUlt: true, note: "광역 다단 자연 + 회복" },
   ],
@@ -202,7 +202,7 @@ export const SKILLS: Record<string, DDSkill[]> = {
     // 스트레스 테스트(연계 200%, 쿨 8초≈2턴): 디도스 활성 시. 냉기 + 냉기 부착 + 가동 프로세스(냉기/동결 적 → 냉기 취약 10%).
     { id: "xai-l", name: "스트레스 테스트", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 2.0, element: "cryo", attach: "cryo", staggerVal: 10, cooldown: 2,
       requires: (_t, self) => (self.timers.didos || 0) > 0, requiresText: "디도스 활성",
-      apply: (t) => { if (t.arts.cryo > 0 || t.frozen > 0) bumpVuln(t, "cryo", 0.1, 1); }, note: "냉기 부착 + 가동 프로세스(냉기 취약)" },
+      apply: (t) => { if (t.arts.cryo > 0 || t.frozen > 0) bumpRecv(t, "cryo", 0.1, 1); }, note: "냉기 부착 + 가동 프로세스(냉기 취약)" },
     // 스택 오버플로(궁, 게이지 80): 팀 전체 냉기 증폭 + 자연 증폭(12초, 지능→장비등급 비례, 상한 30%).
     { id: "xai-u", name: "스택 오버플로", kind: "ult", fromPos: [1, 2, 3], target: "self", power: 0, staggerVal: 0, selfUlt: true, note: "팀 냉기/자연 증폭" },
   ],
@@ -388,7 +388,7 @@ export const SKILLS: Record<string, DDSkill[]> = {
         if (arcaneForm(self) === "wisdom") {
           // 강제 부식 15초 + 재능 「무장 강화」(부식 지속·저항 감소 강화)
           if (!t.statuses.includes("corrosion")) t.statuses.push("corrosion");
-          bumpVuln(t, "all", 0.15, 3);
+          t.resShred = Math.min(0.24, (t.resShred || 0) + 0.15); setTimer(t, "resShred", 3); // 부식 = 저항 포인트 감소
           // 재능 「전략 수립」 2단계(지혜): 궁 지속 중 자신이 아츠 증폭 24%
           for (const e of ELEMENTS) self.amp[e] = Math.max(self.amp[e] || 0, 0.24);
           setTimer(self, "amp:nature", 4);
@@ -439,7 +439,7 @@ const OP_BASE: Record<string, Base> = {
 };
 
 // 매 유닛 신선한 상태 객체(중첩 객체 공유 참조 방지). defense/resist 기본 0 → 밸런스 무변.
-const zero = () => ({ physBreak: 0, stagger: 0, staggered: false, staggerTimer: 0, statuses: [] as DDUnit["statuses"], dot: 0, multiHit: 0, ultCharge: 0, atkBuff: 0, critRate: 0.05, critDmg: 0.5, arts: { heat: 0, electric: 0, cryo: 0, nature: 0 }, frozen: 0, amp: {}, vuln: {}, weakenMul: 1, protection: 0, shield: 0, speedMod: 0, timers: {}, effectSrc: {}, linkCd: 0, defense: 0, resist: { physical: 0, heat: 0, electric: 0, cryo: 0, nature: 0 }, stance: 0, ironOath: 0, gaugeRecovered: 0, gearGrade: 60, procCount: 0, utilMult: 1, atb: 0 });
+const zero = () => ({ physBreak: 0, stagger: 0, staggered: false, staggerTimer: 0, statuses: [] as DDUnit["statuses"], dot: 0, multiHit: 0, ultCharge: 0, atkBuff: 0, critRate: 0.05, critDmg: 0.5, arts: { heat: 0, electric: 0, cryo: 0, nature: 0 }, frozen: 0, amp: {}, vuln: {}, recv: {}, resShred: 0, weakenMul: 1, protection: 0, shield: 0, speedMod: 0, timers: {}, effectSrc: {}, linkCd: 0, defense: 0, resist: { physical: 0, heat: 0, electric: 0, cryo: 0, nature: 0 }, stance: 0, ironOath: 0, gaugeRecovered: 0, gearGrade: 60, procCount: 0, utilMult: 1, atb: 0 });
 
 // 오퍼레이터 선택 UI용 메타(속성은 스킬의 비물리 아츠 속성에서 추론, 없으면 물리)
 export type OpMeta = { id: string; name: string; cls: DDClass; element: "physical" | Element };
@@ -650,13 +650,13 @@ export type EnemyDef = {
 
 // 티어 기준 스탯(DD 스케일: 아군 hp≈2689·공격≈100 대역에 맞춤)
 const TIER_STATS: Record<EnemyTier, { hp: number; attack: number; speed: number; staggerMax: number; defense: number }> = {
-  common:   { hp: 820,  attack: 105, speed: 62, staggerMax: 40,  defense: 10 },
-  normal:   { hp: 1050, attack: 120, speed: 60, staggerMax: 46,  defense: 15 },
-  enhanced: { hp: 1500, attack: 145, speed: 58, staggerMax: 66,  defense: 30 },
-  advanced: { hp: 2100, attack: 168, speed: 55, staggerMax: 96,  defense: 45 },
-  alpha:    { hp: 2600, attack: 208, speed: 52, staggerMax: 116, defense: 55 },
-  elite:    { hp: 3600, attack: 242, speed: 50, staggerMax: 146, defense: 72 },
-  boss:     { hp: 10400, attack: 250, speed: 60, staggerMax: 236, defense: 90 },
+  common:   { hp: 418,  attack: 105, speed: 62, staggerMax: 40,  defense: 100 },
+  normal:   { hp: 541, attack: 120, speed: 60, staggerMax: 46,  defense: 100 },
+  enhanced: { hp: 795, attack: 145, speed: 58, staggerMax: 66,  defense: 100 },
+  advanced: { hp: 1144, attack: 168, speed: 55, staggerMax: 96,  defense: 100 },
+  alpha:    { hp: 1443, attack: 208, speed: 52, staggerMax: 116, defense: 100 },
+  elite:    { hp: 2059, attack: 242, speed: 50, staggerMax: 146, defense: 100 },
+  boss:     { hp: 6136, attack: 250, speed: 60, staggerMax: 236, defense: 100 },
 };
 
 // 아군 저항(≈37.5%) 도입에 따른 적 공격 보정: 아군 실피해 유지(1/(1−저항)≈1.5). 원본 손맛(큰 raw→저항 경감).

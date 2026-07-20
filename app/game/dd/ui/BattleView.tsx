@@ -184,6 +184,11 @@ function unitChips(u: DDUnit): StatusChip[] {
   if (amp > 0) { const mk = maxKey("amp:"); c.push({ k: "amp", label: `증폭 ${Math.round(amp * 100)}%`, tone: "#86efac", dir: 1, turns: T[mk] || undefined, src: S[mk], icon: combatEffectIconPaths.amplify }); }
   const vuln = (Object.values(u.vuln) as number[]).reduce((a, b) => a + b, 0);
   if (vuln > 0) { const mk = maxKey("vuln:"); c.push({ k: "vuln", label: `취약 ${Math.round(vuln * 100)}%`, tone: "#f87171", dir: -1, turns: T[mk] || undefined, src: S[mk], icon: combatEffectIconPaths.vulnerable }); }
+  // 받는 피해 증가(감전·갑옷 파괴 등)는 취약과 별개 곱연산 인자 — 칸도 따로 띄운다.
+  const recv = (Object.values(u.recv) as number[]).reduce((a, b) => a + b, 0);
+  if (recv > 0) { const mk = maxKey("recv:"); c.push({ k: "recv", label: `받는 피해 +${Math.round(recv * 100)}%`, tone: "#fb7185", dir: -1, turns: T[mk] || undefined, src: S[mk], icon: combatEffectIconPaths.vulnerable }); }
+  // 부식 저항 감소는 취약/받는피해증가와 또 다른 인자(저항 버킷) — 포인트 단위로 표기한다.
+  if ((u.resShred || 0) > 0) { c.push({ k: "res", label: `저항 -${Math.round(u.resShred * 100)}`, tone: "#a3e635", dir: -1, turns: T.resShred, src: S.resShred }); }
   if (u.protection > 0) c.push({ k: "prot", label: `비호 ${Math.round(u.protection * 100)}%`, tone: "#38bdf8", dir: 1, turns: T.protection, src: S.protection, icon: combatEffectIconPaths.guard });
   if (u.multiHit > 0) c.push({ k: "mh", label: `연타 ${u.multiHit}`, tone: "#fb923c", dir: 1, icon: combatEffectIconPaths.combo });
   if ((u.speedMod ?? 0) !== 0) c.push({ k: "spd", label: `${u.speedMod > 0 ? "가속" : "감속"} ${Math.abs(u.speedMod)}`, tone: u.speedMod > 0 ? "#86efac" : "#c084fc", dir: u.speedMod > 0 ? 1 : -1, turns: T.speedMod, src: S.speedMod, icon: u.speedMod > 0 ? combatEffectIconPaths.haste : combatEffectIconPaths.slow });
