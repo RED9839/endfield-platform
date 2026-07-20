@@ -46,6 +46,9 @@ export type SetEffect =
   | { type: "stagger"; pct: number }   // 불균형 누적 증가
   | { type: "selfHpDmg"; dmgType: "physical" | "arts"; pct: number } // 자신 HP 50%↑ 시 물리/아츠 피해(전달자·침식 차단)
   | { type: "selfHpReduce"; pct: number } // 자신 HP 50%↓ 시 받는 피해 감소(중장갑 전달자)
+  | { type: "healEff"; pct: number }      // 치유 효율 +N%(생체 보조)
+  | { type: "healGuard"; pct: number }    // 치유한 대상이 받는 피해 -N%(생체 보조)
+  | { type: "anomalyHit"; pct: number }   // 물리 이상 부여 후 공격력 N% 추가 물리(검술사)
   | { type: "onKill"; effect: "heal" | "atk"; pct: number }         // 적 처치 시 회복/공격력(통합형)
   | { type: "atkPct"; pct: number }                                 // 공격력 % 보너스(공식 1.1: 공격력×(1+공격력%))
   | { type: "hp"; v: number }                                       // 생명력 능력치(식양의 숨결 +1000 등 실측)
@@ -70,8 +73,8 @@ export const GEAR_SETS: Record<string, SetEffect[]> = {
   "펄스식": [{ type: "artsStr", v: 30 }, { type: "trigger", desc: "감전 후 전기 피해 +50%(2턴)" }, { type: "trigger", desc: "동결 후 냉기 피해 +50%(2턴)" }],
   "본 크러셔": [{ type: "atkPct", pct: 0.15 }, { type: "trigger", desc: "연계 후 다음 배틀 피해 +30%(2턴)" }],
   "경량 초자연": [{ type: "atkPct", pct: 0.08 }, { type: "trigger", desc: "방어 불능 부여 후 물리 피해 +16%/스택(최대 +48%, 2턴)" }],
-  "생체 보조": [{ type: "startHeal", v: 0.20 }, { type: "startShield", v: 0.10 }], // 지원/방어: 시작 회복 + 보호막
-  "검술사": [{ type: "stagger", pct: 0.20 }, { type: "dmgVs", cond: "broken", pct: 0.18 }], // 불균형 특화
+  "생체 보조": [{ type: "healEff", pct: 0.20 }, { type: "healGuard", pct: 0.15 }], // 원문: 치유 효율 +20% · 치유 후 대상 받는 피해 -15%
+  "검술사": [{ type: "stagger", pct: 0.20 }, { type: "anomalyHit", pct: 2.5 }], // 원문: 불균형 효율 +20% · 물리 이상 부여 후 공격력 250% 추가 물리(쿨 3턴)
   // ── Lv50 이하 세트(재앙 방호·아부레이·침식·전달자·통합형)는 전면 제거 — Lv70 세트만 운용 ──
 };
 
@@ -86,6 +89,9 @@ export function effectText(e: SetEffect): string {
     case "critDmg": return `치명타 피해 +${Math.round(e.v * 100)}%`;
     case "startShield": return `전투 시작 보호막 +${Math.round(e.v * 100)}%`;
     case "startHeal": return `전투 시작 회복 +${Math.round(e.v * 100)}%`;
+    case "healEff": return `치유 효율 +${Math.round(e.pct * 100)}%`;
+    case "healGuard": return `치유한 대상 받는 피해 -${Math.round(e.pct * 100)}%(2턴)`;
+    case "anomalyHit": return `물리 이상 부여 후 공격력 ${Math.round(e.pct * 100)}% 추가 물리(쿨 3턴)`;
     case "startEnergy": return `전투 시작 게이지 +${e.v}`;
     case "artsStr": return `오리지늄 아츠 강도 +${e.v}`;
     case "linkCd": return `연계 쿨타임 -1턴`; // 원작 -15%의 턴제 환산(쿨 2턴 이상 -1턴)
@@ -151,7 +157,7 @@ export function activeSets(loadout: Loadout): string[] {
 }
 
 function emptyBonus(): GearBonus {
-  return { kindDmg: {}, elemDmg: {}, vsBroken: 0, vsDefBreak: 0, vsVuln: 0, vsArts: 0, staggerMul: 0, breakEnergy: false, selfHpHighPhys: 0, selfHpHighArts: 0, selfHpLowReduce: 0, onKillHeal: 0, onKillAtk: 0 };
+  return { kindDmg: {}, elemDmg: {}, vsBroken: 0, vsDefBreak: 0, healGuard: 0, anomalyHit: 0, vsVuln: 0, vsArts: 0, staggerMul: 0, breakEnergy: false, selfHpHighPhys: 0, selfHpHighArts: 0, selfHpLowReduce: 0, onKillHeal: 0, onKillAtk: 0 };
 }
 
 // 로드아웃 → 활성 세트 효과를 유닛에 적용(전투 배율은 unit.gear에, 즉시 효과는 스탯에 반영). 시작 게이지 총량 반환.
@@ -367,6 +373,9 @@ export function applyGear(u: DDUnit, loadout: Loadout | undefined, gearLevel = 0
       case "selfHpReduce": g.selfHpLowReduce += e.pct; break;
       case "onKill": if (e.effect === "heal") g.onKillHeal += e.pct; else g.onKillAtk += e.pct; break;
       case "startShield": shieldPct += e.v; break;
+      case "healEff": u.healRecv = +(((u.healRecv ?? 1) * (1 + e.pct)).toFixed(3)); break; // 자신이 받는 회복량
+      case "healGuard": g.healGuard = Math.max(g.healGuard ?? 0, e.pct); break;
+      case "anomalyHit": g.anomalyHit = Math.max(g.anomalyHit ?? 0, e.pct); break;
       case "startHeal": healPct += e.v; break;
       case "startEnergy": startEnergy += e.v; break;
       case "artsStr": u.artsStr = (u.artsStr || 0) + e.v; break;               // 오리지늄 아츠 강도 → 이상 피해 강화

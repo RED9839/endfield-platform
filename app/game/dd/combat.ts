@@ -113,6 +113,8 @@ export type GearBonus = {
   elemDmg: Partial<Record<Element | "all", number>>;         // 아츠 피해 %
   vsBroken: number;   // 불균형(staggered) 적 추가 피해 % — 게이지가 차 행동 불가가 된 상태
   vsDefBreak: number; // 방어 불능(physBreak) 적 추가 피해 % — 물리 이상 표식. 불균형과 별개 기제다
+  healGuard: number;  // 생체 보조: 치유한 대상이 받는 피해 감소 %
+  anomalyHit: number; // 검술사: 물리 이상 부여 후 공격력 N배 추가 물리
   vsVuln: number;   // 취약 적 추가 피해 %
   vsArts: number;   // 아츠 부착 적 추가 피해 %
   staggerMul: number;    // 불균형 누적 증가 %
@@ -184,8 +186,10 @@ const eb = (u: DDUnit) => (1 + (u.atkBuff || 0)) * (u.weakenMul ?? 1);
 
 // 장비 세트 조건부 발동(원작 그대로·살짝 너프): 이벤트 시 시전자에 amp 버프. 기존 amp 시스템(ampFor)으로 반영.
 // 이벤트: anomaly:<el>(아츠 이상 발동) · attach2(아츠 2부착 폭발) · crush(강타/갑옷파괴) · physBreak(띄우기/넘어뜨리기) · link/battle(스킬 사용)
-export function gearTrigger(self: DDUnit, event: string): void {
+export function gearTrigger(self: DDUnit, event: string, target?: DDUnit): void {
   const gs = self.gearSets; if (!gs || !gs.length) return;
+  // 고검의 잔향 원문: 목표가 물리 취약·불균형·오리지늄 결정 상태면 버프가 1.5배.
+  const boon = target && ((target.vuln.physical || 0) > 0 || target.staggered || target.statuses.includes("crystal" as never)) ? 1.5 : 1;
   // amp(세트명, 키, 스택당%, 지속턴, 최대누적) — 출처를 장비 세트로 기록. namu 3.1 원문 실측값.
   const amp = (set: string, key: DmgKey, v: number, dur: number, cap = v) => { self.amp[key] = Math.min(cap, (self.amp[key] || 0) + v); const prev = pushSrc({ by: self.name, via: set, kind: "gear" }); setTimer(self, "amp:" + key, dur); popSrc(prev); };
   if (event === "anomaly:heat" && gs.includes("열 작업용")) amp("열 작업용", "heat", 0.5, 2);       // 연소 후 열기 +50%
@@ -194,7 +198,7 @@ export function gearTrigger(self: DDUnit, event: string): void {
   if (event === "anomaly:cryo" && gs.includes("펄스식")) amp("펄스식", "cryo", 0.5, 2);           // 동결 후 냉기 +50%
   if ((event === "anomaly:electric" || event === "anomaly:nature") && gs.includes("식양의 흐름")) amp("식양의 흐름", event.slice(8) as DmgKey, 0.15, 5, 0.45); // 소모 시 +15%(최대 3스택)
   if (event === "attach2" && gs.includes("조류의 물결")) amp("조류의 물결", "arts", 0.35, 2);          // 2부착 후 아츠 +35%
-  if (event === "crush" && gs.includes("고검의 잔향")) amp("고검의 잔향", "physical", 0.24, 2, 0.24);   // 강타·갑옷파괴 시 물리 +6%×스택(최대 24%)
+  if (event === "crush" && gs.includes("고검의 잔향")) amp("고검의 잔향", "physical", 0.24 * boon, 2, 0.24 * boon); // 강타·갑옷파괴 시 물리 +6%×스택(최대 24%, 조건부 1.5배)
   if (event === "physBreak" && gs.includes("경량 초자연")) amp("경량 초자연", "physical", 0.16, 2, 0.48); // 방어불능 +8%×4 + 4스택 추가 +16%
   if (event === "link" && gs.includes("본 크러셔")) amp("본 크러셔", "all", 0.30, 2);                // 연계 후 다음 배틀 +30%
   if (event === "link" && gs.includes("청파")) amp("청파", "all", 0.20, 2, 0.40);               // 연계 후 모든 스킬 +20%(최대 2스택)
@@ -296,6 +300,9 @@ export function healUnit(u: DDUnit, amount: number, s: DDState, log: string[], b
   u.hp = Math.min(u.maxHp, u.hp + Math.round(amount * (u.healRecv ?? 1))); // 의지 → 받는 회복량
   log.push(`  → ${u.name} 회복 +${u.hp - before}`);
   if (by?.side === "ally") weaponTrigger(by, "heal", living(s, "ally")); // 의료(자이히): 치유 후 팀 공격력+
+  // 생체 보조 3피스: 치유한 대상이 받는 모든 피해 감소(원문 -15%, 과치유 시 -30%)
+  const hg = by?.gear?.healGuard ?? 0;
+  if (hg > 0 && by?.side === "ally") { const over = before + Math.round(amount * (u.healRecv ?? 1)) > u.maxHp; applyBuff(u, "protection", over ? hg * 2 : hg, undefined, 2); }
   if (u.id === "camu") { // 혈류 소생: 자기 회복 시 열기 피해 +4%(최대 5스택=0.20), 팀 25%(0.01)
     u.amp.heat = Math.min(0.2, (u.amp.heat || 0) + 0.04); setTimer(u, "amp:heat", 8);
     for (const a of living(s, "ally")) if (a.id !== "camu") { a.amp.heat = Math.min(0.05, (a.amp.heat || 0) + 0.01); setTimer(a, "amp:heat", 8); }
@@ -448,6 +455,14 @@ export function applyAnomaly(skill: DDSkill, target: DDUnit, self: DDUnit, log: 
     target.physBreak = Math.min(MAX_BREAK, target.physBreak + 1);
     setTimer(target, "physBreak", DUR_BREAK);
     gearTrigger(self, "physBreak"); // 경량 초자연: 방어 불능 부여 후 물리+
+    // 검술사 3피스(원문): 물리 이상 부여 후 공격력 250%만큼 추가 물리 [10 불균형치]. 15초당 1회 → 3턴 쿨.
+    const ah = self.gear?.anomalyHit ?? 0;
+    if (ah > 0 && (self.timers.swordsmanCd || 0) <= 0 && target.hp > 0) {
+      setTimer(self, "swordsmanCd", 3);
+      const extra = mitigate(target, self.attack * (1 + (self.atkBuff || 0)) * ah, "physical");
+      applyDamage(target, extra); target.stagger = Math.min(target.staggerMax, (target.stagger || 0) + 10);
+      log.push(`  → 검술사 세트! 추가 물리 -${Math.round(extra).toLocaleString()} · 불균형 +10`);
+    }
     if (self.side === "ally") weaponTrigger(self, "physBreak"); // 효율(리펑): 방어 불능 부여 후 전 피해+
     const label = a === "launch" ? "띄우기" : "넘어뜨리기";
     if (wasBreak) { // 방불 상태 → 120% 물리 + 불균형 10
@@ -462,7 +477,7 @@ export function applyAnomaly(skill: DDSkill, target: DDUnit, self: DDUnit, log: 
     if (target.physBreak > 0) {
       const n = Math.min(4, target.physBreak);
       target.physBreak = 0;
-      gearTrigger(self, "crush"); // 고검의 잔향: 강타 후 물리+
+      gearTrigger(self, "crush", target); // 고검의 잔향: 강타 후 물리+
       if (self.side === "ally") weaponTrigger(self, "crush"); // 고통(관리자)·기예(미후): 강타 후 전 피해+
       const cAmp = skill.crushAmp ?? 1; // 판 조미료 뿌리기: 추가 강타 피해 +10%
       log.push(`  → 강타! 방어 불능 ${n}스택 소모 → ${Math.round(CRUSH[n - 1] * cAmp * 100)}% 물리`);
@@ -477,7 +492,7 @@ export function applyAnomaly(skill: DDSkill, target: DDUnit, self: DDUnit, log: 
     if (target.physBreak > 0) {
       const n = Math.min(4, target.physBreak);
       target.physBreak = 0;
-      gearTrigger(self, "crush"); // 고검의 잔향: 갑옷파괴 후 물리+
+      gearTrigger(self, "crush", target); // 고검의 잔향: 갑옷파괴 후 물리+
       bumpVuln(target, "physical", ARMOR_VULN[n - 1] * self.utilMult); // 스킬 단조 유틸
       add(target, "armor-break");
       log.push(`  → 갑옷 파괴! ${n}스택 소모 → ${ARMOR[n - 1] * 100}% 물리 + 물리취약 ${ARMOR_VULN[n - 1] * 100}%`);
