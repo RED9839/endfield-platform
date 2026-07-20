@@ -299,14 +299,15 @@ function enemyOfTier(faction: string, tier: string): string { return pickSquad(f
 // 풀이 작은 세력을 근연 세력 적으로 보강(수화자=수(水)계 아겔로스 → 일반 아겔로스류 혼입)
 const KIN_FACTION: Record<string, string> = { "수화자": "아겔로스" };
 // 목표 티어 주변에서 '서로 다른' 적 n종 편성(다양성 우선, 후보 부족분만 중복 허용)
-function pickSquad(faction: string, tier: string, n: number, exclude: Set<string> = new Set()): string[] {
+function pickSquad(faction: string, tier: string, n: number, exclude: Set<string> = new Set(), hard: Set<string> = new Set()): string[] {
   const pool = FACTION_POOL[faction] ?? FACTION_POOL[FACTIONS[0]];
   const want = TIER_RANK.indexOf(tier);
   const byTier: Record<string, string[]> = {};
   for (const [t, ids] of Object.entries(pool.byTier)) byTier[t] = [...(ids ?? [])];
   const kin = KIN_FACTION[faction]; // 근연 세력 풀 병합(풀 부족 보강)
   if (kin && FACTION_POOL[kin]) for (const [t, ids] of Object.entries(FACTION_POOL[kin].byTier)) byTier[t] = [...(byTier[t] ?? []), ...(ids ?? [])];
-  const all = Object.entries(byTier).flatMap(([t, ids]) => ids.map((id) => ({ id, d: Math.abs(TIER_RANK.indexOf(t) - want) })));
+  // hard=절대 제외(같은 편성에 이미 들어간 개체). exclude(최근 등장)와 달리 후보가 바닥나도 완화하지 않는다.
+  const all = Object.entries(byTier).flatMap(([t, ids]) => ids.map((id) => ({ id, d: Math.abs(TIER_RANK.indexOf(t) - want) }))).filter((c) => !hard.has(c.id));
   let cands = all.filter((c) => !exclude.has(c.id));
   if (!cands.length) cands = all; // 회피(exclude)로 후보가 바닥나면 완화 — 작은 세력 풀 순환용
   if (!cands.length) return Array.from({ length: n }, () => "rockhowler");
@@ -315,7 +316,9 @@ function pickSquad(faction: string, tier: string, n: number, exclude: Set<string
   const ranked = [...near, ...far];
   const out: string[] = []; const seen = new Set<string>();
   for (const id of ranked) { if (out.length >= n) break; if (!seen.has(id)) { out.push(id); seen.add(id); } } // 서로 다른 종 우선
-  while (out.length < n) out.push(pick(ranked)); // 후보 부족 시에만 중복
+  // 부족분은 회피(exclude)를 풀고 전체 풀의 '아직 안 쓴 종'으로 먼저 채운다 — 같은 적이 2~3중복 편성되는 것 방지
+  if (out.length < n) for (const id of shuffle(all.map((c) => c.id))) { if (out.length >= n) break; if (!seen.has(id)) { out.push(id); seen.add(id); } }
+  while (out.length < n) out.push(pick(ranked)); // 세력 풀 자체가 작을 때만 최후 수단으로 중복
   return out;
 }
 // 던전 내 최근 등장 적(같은 적 연속 반복 억제) — 새 원정마다 리셋
@@ -333,10 +336,19 @@ export function regionEncounter(faction: string, kind: NodeKind, depth: number, 
     const bid = (bossId && D[bossId]) ? bossId : pool.boss.length ? pick(pool.boss) : "craghowler"; // 층 지정 보스 우선
     const guards = pickSquad(faction, depth >= 6 ? "advanced" : "enhanced", depth >= 6 ? 2 : 1, new Set([bid, ...recentEnemies])); // 보스 + 서로 다른 호위(최근 회피)
     ids = [bid, ...guards];
+  } else if (kind === "elite") {
+    // 정예 조우: 정예 개체 1마리 + 하위 등급 잡몹 다수(호위). 원작 정예 조우 구성 — 우두머리 하나에 부하가 붙는다.
+    const tgt = tierAt(kind, depth, maxDepth);
+    let lead = pickSquad(faction, tgt, 1, recent); // 정예 우두머리
+    // 최근 등장 회피 때문에 등급이 크게 떨어지면 회피를 풀고 다시 뽑는다 — 정예 조우엔 정예가 나와야 한다.
+    if (TIER_RANK.indexOf(D[lead[0]]?.tier ?? "") < TIER_RANK.indexOf(tgt) - 1) lead = pickSquad(faction, tgt, 1);
+    const leadTier = D[lead[0]]?.tier ?? "advanced"; // 실제로 뽑힌 티어 기준(풀에 목표 티어가 없을 수 있음)
+    const low = TIER_RANK[Math.max(0, TIER_RANK.indexOf(leadTier) - 2)]; // 우두머리보다 두 단계 아래 = 하위 등급
+    const adds = pickSquad(faction, low, depth >= 4 ? 3 : 2, recent, new Set(lead)); // 하위 호위 2~3(우두머리 중복 금지)
+    ids = [...lead, ...adds];
   } else {
     const tier = tierAt(kind, depth, maxDepth);
-    const n = kind === "elite" ? 3 : depth >= 4 ? 3 : 2; // 정예 3 / 일반: 초반 2마리 → 중반(depth 4+) 3마리
-    ids = pickSquad(faction, tier, n, recent); // 서로 다른 종 + 최근 등장 회피
+    ids = pickSquad(faction, tier, depth >= 4 ? 3 : 2, recent); // 일반: 초반 2마리 → 중반(depth 4+) 3마리
   }
   recentEnemies.push(...ids);
   recentEnemies = recentEnemies.slice(-8); // 최근 8마리를 회피 대상으로 유지
