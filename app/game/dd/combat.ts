@@ -384,7 +384,8 @@ function tryShatter(target: DDUnit, self: DDUnit, log: string[]): number {
   const n = Math.min(4, target.frozen);
   target.frozen = 0; rm(target, "stun");
   log.push(`  → 쇄빙! 동결 ${n}스택 소모 → ${SHATTER[n - 1] * 100}% 물리`);
-  return self.attack * eb(self) * SHATTER[n - 1];
+  // 쇄빙은 위키상 아츠 이상에 포함된다(피해 유형만 물리) → 오리지늄 아츠 강도 1당 피해 +1%.
+  return self.attack * eb(self) * (1 + (self.artsStr || 0) / 100) * SHATTER[n - 1];
 }
 
 // 아츠 부착 → 폭발(같은 속성 2+) / 이상(다른 속성 → 전부 소모). 공격자 측 추가 피해 반환.
@@ -799,7 +800,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
       if (tw) raw += self.attack * eb(self) * 0.85; // 궁 중 강화 배틀 1단계(62→147%)
       if (self.procCount >= 4) { // 4스택 배틀 → 강화 폭발 + 강제 연소 + 궁 +100
         raw += self.attack * eb(self) * (tw ? 4.0 : 3.42); // 추가 공격(궁 중 400% / 일반 342%)
-        t.dot = Math.round(self.attack * eb(self) * 0.5); setTimer(t, "dot", DUR_DOT); add(t, "combustion"); gearTrigger(self, "anomaly:heat"); // 강제 연소(세트 조건 = "연소를 부여한 후")
+        t.dot = Math.round(self.attack * eb(self) * (1 + (self.artsStr || 0) / 100) * 0.5); setTimer(t, "dot", DUR_DOT); add(t, "combustion"); gearTrigger(self, "anomaly:heat"); // 강제 연소(세트 조건 = "연소를 부여한 후")
         self.ultCharge = Math.min(self.ultCost, self.ultCharge + 100 * (self.ultEffMul ?? 1) * (self.wilMul ?? 1)); // 궁 +100
         self.amp.heat = Math.max(self.amp.heat || 0, 0.2); setTimer(self, "amp:heat", 4); // 불꽃의 심장(열기 저항 무시 근사)
         self.procCount = 0;
@@ -817,7 +818,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
       }
     }
     if (skill.forceBurn && t.hp > 0) { // 울프가드 늑대의 분노: 강제 연소 + 불타는 송곳니
-      t.dot = Math.round(self.attack * eb(self) * 0.36); setTimer(t, "dot", DUR_DOT); add(t, "combustion"); gearTrigger(self, "anomaly:heat"); // 강제 연소 부여 → 세트 발동
+      t.dot = Math.round(self.attack * eb(self) * (1 + (self.artsStr || 0) / 100) * 0.36); setTimer(t, "dot", DUR_DOT); add(t, "combustion"); gearTrigger(self, "anomaly:heat"); // 강제 연소 부여 → 세트 발동
       self.amp.heat = Math.max(self.amp.heat || 0, 0.3); setTimer(self, "amp:heat", 2);
       log.push(`  → 강제 연소 + 불타는 송곳니(+30%)`);
     }
