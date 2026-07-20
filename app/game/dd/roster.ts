@@ -36,7 +36,7 @@ export const SKILLS: Record<string, DDSkill[]> = {
     // 구성 시퀀스(배틀 156%, 불균형 10): 강타. 방어 불능 스택 소모 대량 물리(아츠 강도=공격력 비례, 연타 미적용).
     { id: "adm-b", name: "구성 시퀀스", kind: "battle", fromPos: [1, 2, 3, 4], target: "row", power: 1.56, element: "physical", staggerVal: 10, anomaly: "crush", note: "강타: 방어 불능 소모 대량 물리(주력기)" },
     // 봉인 시퀀스(연계 45%, 불균형 10, 결정 파괴 178%): 아군 연계가 피해를 줄 때만 사용. 결정 부착·봉인. 자체 방어 불능 부여 없음.
-    { id: "adm-l", name: "봉인 시퀀스", kind: "link", fromPos: [1, 2, 3, 4], target: "single-front", power: 0.45, element: "physical", staggerVal: 10, crystal: true,
+    { id: "adm-l", name: "봉인 시퀀스", kind: "link", fromPos: [1, 2, 3, 4], target: "single-front", power: 0.45, element: "physical", staggerVal: 10, crystal: true, cooldown: 3,
       requires: (_t, self, s) => !!s.lastLinkAlly && s.lastLinkAlly !== self.id, requiresText: "아군 연계 후",
       note: "오리지늄 결정 부착·봉인" },
     // 폭격 시퀀스(궁 356% + 결정 파괴 267%, 불균형 25): 광역 대량 물리 + 결정 파괴 추가 물리(엔진).
@@ -579,6 +579,7 @@ export type EnemyDef = {
   slow?: boolean;        // 감속: 명중 아군 ATB 속도 저하(모방아겔로스·겁운객)
   heal?: boolean;        // 치유: 자기 턴에 아군[적] 최저 체력 회복(겁운객)
   buff?: boolean;        // 동료 강화: 자기 턴에 다른 적 공격력 강화(굴절아겔로스)
+  charge?: boolean;      // 차징: 한 턴 강공 예고 → 다음 턴 강타(끊으면 캔슬)
 };
 
 // 티어 기준 스탯(DD 스케일: 아군 hp≈2689·공격≈100 대역에 맞춤)
@@ -656,6 +657,8 @@ export function makeEnemy(def: EnemyDef, pos: number): DDUnit {
   if (tr?.slow) u.slow = true;
   if (tr?.heal) u.heal = true;
   if (tr?.buff) u.buff = true;
+  if (tr?.charge) u.charge = true;
+  if (def.tier === "alpha" || def.tier === "elite" || def.tier === "boss") u.poiseKnot = true; // 정예·보스: 불균형 지점(게이지 중간 돌파 시 1회 중단)
   if (tr?.attach) u.attachEl = tr.attach;
   return u;
 }

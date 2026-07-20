@@ -168,6 +168,13 @@ export function enemyAct(s: DDState, self: DDUnit): void {
     if (tgt) { tgt.atkBuff = 0.4; tgt.timers.atkBuff = 3; s.log.push(`${self.name}[적] → ${tgt.name} 강화(공격력 +40%)`); return; }
   }
 
+  // 차징(프릭·레이커비스트 등): 예고 턴이면 강공, 아니면 확률로 '다음 턴 강공'을 예고하고 이번 턴은 넘긴다.
+  // 예고 중 불균형시키면 combat에서 캔슬(강공 무산 + 추가 불균형) — 원작의 "차지 끊기".
+  let chargeAttack = false;
+  if (self.charge) {
+    if ((self.charging ?? 0) > 0) { self.charging = 0; chargeAttack = true; s.log.push(`${self.name}[적] 차징 공격! 강력한 일격`); }
+    else if (!self.staggered && Math.random() < 0.45) { self.charging = 1; s.log.push(`${self.name}[적] ⚡ 차징 시작! 다음 턴 강력 공격 — 불균형시키면 차단`); return; }
+  }
   // 타겟팅: 컨셉(역할) 아키타입별 우선 대상 — 대형의 다른 부위를 위협해 배치·보호 전략 유도
   //  front=전열(탱커 벽) / wounded=저체력%(부상 딜러 마무리) / threat=최고위협(강화된 딜러 직격)
   const tgt = enemyArchetype(def?.role ?? "", behavior).tgt;
@@ -187,7 +194,7 @@ export function enemyAct(s: DDState, self: DDUnit): void {
   // 끌어당김(결정아겔로스): 후열 고위협 딜러를 강제로 끌어내 직격 + 물리 취약(노출)
   if (self.pull) { const back = byThreat[0]; targets = [back]; bumpVuln(back, "physical", 0.2); setTimer(back, "vuln:physical", 1); s.log.push(`${self.name}[적] 끌어당김! ${back.name} 강제 노출(취약)`); }
   const rageOn = !!def?.rage && self.hp / self.maxHp < 0.5 && !self.staggered; // 분노: HP 50%↓, 불균형이면 해제
-  const powerMul = (behavior === "heavy" ? 1.55 : 1) * (rageOn ? 1.4 : 1); // aoe는 makeEnemy에서 공격력 이미 하향
+  const powerMul = (behavior === "heavy" ? 1.55 : 1) * (rageOn ? 1.4 : 1) * (chargeAttack ? 1.8 : 1); // 차징 강공 ×1.8. aoe는 makeEnemy에서 공격력 이미 하향
   const atkMul = 1 + (self.atkBuff || 0);
   if (rageOn && !self.timers.raged) { self.timers.raged = 999; s.log.push(`${self.name}[적] 분노 상태! 공격력 상승 (HP 50%↓)`); }
 

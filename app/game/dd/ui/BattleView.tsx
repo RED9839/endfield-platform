@@ -7,6 +7,15 @@ import { OPERATORS, SKILLS, OP_BASIC, enemyDefFor, avatarUrl, fullUrl, skillIcon
 import { ENCOUNTERS, allyChoose, createBattle, enemyAct, regionEncounter } from "../sim";
 import { activeSets, setEffectText, loadoutPieces } from "../gear";
 import { weaponOf, weaponEffectText, weaponImage, weaponSeriesName, weaponSeriesDesc, WEAPON_KO, WEAPON_ICON } from "../weapons";
+import { artsAttachmentIconPaths, artsReactionIconPaths, physicalCombatIconPaths, combatEffectIconPaths } from "@/data/combat-icon-paths";
+
+// 상태효과 아이콘(데이터 실측): 이상(연소/감전/부식)·물리이상은 combat-icon-paths 에셋 연결
+const STATUS_ICON: Record<string, string> = {
+  combustion: artsReactionIconPaths.burning,
+  shock: artsReactionIconPaths.electrified,
+  corrosion: artsReactionIconPaths.corroded,
+  "armor-break": physicalCombatIconPaths.armorBreak,
+};
 import { OP_TALENTS } from "../operator-talents";
 import { ITEMS, useItem as applyItem, canUseItem, itemColor, itemImage } from "../items";
 import type { BattleResult, NodeKind, PartyMember } from "../run";
@@ -140,19 +149,21 @@ function unitChips(u: DDUnit): StatusChip[] {
   const S = (u.effectSrc || {}) as Record<string, EffSrc>;
   const maxKey = (pre: string) => { let m = 0, mk = ""; for (const k in T) if (k.startsWith(pre) && T[k] > m) { m = T[k]; mk = k; } return mk; };
   const c: StatusChip[] = [];
-  if (u.physBreak > 0) c.push({ k: "pb", label: `▼ 방불 ${u.physBreak}`, tone: "#fca5a5", dir: -1, turns: T.physBreak, src: S.physBreak });
-  if (u.frozen > 0) c.push({ k: "fz", label: `❄ 동결 ${u.frozen}`, tone: "#67e8f9", dir: -1, turns: T.frozen, src: S.frozen });
-  for (const st of u.statuses) c.push({ k: st, label: `▼ ${statusLabel[st] ?? st}`, tone: "#fbbf24", dir: -1, turns: T[st], src: S[st] });
-  (["heat", "electric", "cryo", "nature"] as Element[]).forEach((e) => { if (u.arts[e] > 0) c.push({ k: e, label: `${elementName[e]}부착 ${u.arts[e]}`, tone: elementColor[e], dir: 0, turns: T["arts:" + e], src: S["arts:" + e] }); });
+  if (u.physBreak > 0) c.push({ k: "pb", label: `방불 ${u.physBreak}`, tone: "#fca5a5", dir: -1, turns: T.physBreak, src: S.physBreak, icon: physicalCombatIconPaths.defenseBreak });
+  if (u.frozen > 0) c.push({ k: "fz", label: `동결 ${u.frozen}`, tone: "#67e8f9", dir: -1, turns: T.frozen, src: S.frozen, icon: artsReactionIconPaths.frozen });
+  for (const st of u.statuses) c.push({ k: st, label: `${statusLabel[st] ?? st}`, tone: "#fbbf24", dir: -1, turns: T[st], src: S[st], icon: STATUS_ICON[st] });
+  (["heat", "electric", "cryo", "nature"] as Element[]).forEach((e) => { if (u.arts[e] > 0) c.push({ k: e, label: `${elementName[e]}부착 ${u.arts[e]}`, tone: elementColor[e], dir: 0, turns: T["arts:" + e], src: S["arts:" + e], icon: artsAttachmentIconPaths[e] }); });
   if (u.dot > 0) c.push({ k: "dot", label: `🔥 지속 ${u.dot}`, tone: "#fb923c", dir: -1, turns: T.dot, src: S.dot });
   if ((u.atkBuff ?? 0) > 0) c.push({ k: "atk", label: `▲ 공격 +${Math.round(u.atkBuff * 100)}%`, tone: "#ffd24a", dir: 1, turns: T.atkBuff, src: S.atkBuff });
-  if (u.weakenMul < 1) c.push({ k: "wk", label: `▼ 허약 ${Math.round((1 - u.weakenMul) * 100)}%`, tone: "#c084fc", dir: -1, turns: T.weaken, src: S.weaken });
+  if (u.weakenMul < 1) c.push({ k: "wk", label: `허약 ${Math.round((1 - u.weakenMul) * 100)}%`, tone: "#c084fc", dir: -1, turns: T.weaken, src: S.weaken, icon: combatEffectIconPaths.weaken });
   const amp = (Object.values(u.amp) as number[]).reduce((a, b) => a + b, 0);
-  if (amp > 0) { const mk = maxKey("amp:"); c.push({ k: "amp", label: `▲ 증폭 ${Math.round(amp * 100)}%`, tone: "#86efac", dir: 1, turns: T[mk] || undefined, src: S[mk] }); }
+  if (amp > 0) { const mk = maxKey("amp:"); c.push({ k: "amp", label: `증폭 ${Math.round(amp * 100)}%`, tone: "#86efac", dir: 1, turns: T[mk] || undefined, src: S[mk], icon: combatEffectIconPaths.amplify }); }
   const vuln = (Object.values(u.vuln) as number[]).reduce((a, b) => a + b, 0);
-  if (vuln > 0) { const mk = maxKey("vuln:"); c.push({ k: "vuln", label: `▼ 취약 ${Math.round(vuln * 100)}%`, tone: "#f87171", dir: -1, turns: T[mk] || undefined, src: S[mk] }); }
-  if (u.protection > 0) c.push({ k: "prot", label: `▲ 비호 ${Math.round(u.protection * 100)}%`, tone: "#38bdf8", dir: 1, turns: T.protection, src: S.protection });
-  if (u.multiHit > 0) c.push({ k: "mh", label: `▲ 연타 ${u.multiHit}`, tone: "#fb923c", dir: 1 });
+  if (vuln > 0) { const mk = maxKey("vuln:"); c.push({ k: "vuln", label: `취약 ${Math.round(vuln * 100)}%`, tone: "#f87171", dir: -1, turns: T[mk] || undefined, src: S[mk], icon: combatEffectIconPaths.vulnerable }); }
+  if (u.protection > 0) c.push({ k: "prot", label: `비호 ${Math.round(u.protection * 100)}%`, tone: "#38bdf8", dir: 1, turns: T.protection, src: S.protection, icon: combatEffectIconPaths.guard });
+  if (u.multiHit > 0) c.push({ k: "mh", label: `연타 ${u.multiHit}`, tone: "#fb923c", dir: 1, icon: combatEffectIconPaths.combo });
+  if ((u.speedMod ?? 0) !== 0) c.push({ k: "spd", label: `${u.speedMod > 0 ? "가속" : "감속"} ${Math.abs(u.speedMod)}`, tone: u.speedMod > 0 ? "#86efac" : "#c084fc", dir: u.speedMod > 0 ? 1 : -1, turns: T.speedMod, src: S.speedMod, icon: u.speedMod > 0 ? combatEffectIconPaths.haste : combatEffectIconPaths.slow });
+  if ((u.regen ?? 0) > 0) c.push({ k: "regen", label: `♺ 재생 ${u.regen}/턴`, tone: "#58d3a0", dir: 1, turns: T.regen });
   const opc = OP_STACK[u.id]?.(u); if (opc) c.push(opc); // 오퍼 고유 스택(녹아내린 불꽃·청뢰검·아이스 슈터·자세)
   return c;
 }
@@ -494,10 +505,11 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
                 <div className="w-full">
                   <div className="flex items-center justify-between gap-1"><span className="flex min-w-0 items-center gap-1"><span className="h-1.5 w-1.5 shrink-0" style={{ background: elementColor[el] }} /><span className="truncate font-mono text-[15px] font-bold text-white" style={{ textShadow: "0 1px 3px #000" }}>{e.name}</span></span><span className="font-mono text-[13px] tabular-nums text-ef-muted"><span className="font-bold text-white/90">{Math.max(0, e.hp)}</span>/{e.maxHp}</span></div>
                   <div className="flex items-center gap-1"><span className="text-[9px] leading-none text-[#e0655c]/70">HP</span><div className="flex-1"><Bar value={e.hp} max={e.maxHp} color="#e0655c" /></div></div>
-                  {e.staggerMax > 0 && !dead && <div className="mt-0.5 flex items-center gap-1"><span className="text-[9px] leading-none text-[#a16207]/80" title="불균형: 가득 차면 행동 불가 + 받는 피해 증가">불균형</span><div className="flex-1"><Bar value={e.staggered ? e.staggerMax : e.stagger} max={e.staggerMax} color={e.staggered ? "#facc15" : "#a16207"} h="h-1" /></div></div>}
+                  {e.staggerMax > 0 && !dead && <div className="mt-0.5 flex items-center gap-1"><span className="text-[9px] leading-none text-[#a16207]/80" title="불균형: 가득 차면 행동 불가 + 받는 피해 증가">불균형</span><div className="relative flex-1"><Bar value={e.staggered ? e.staggerMax : e.stagger} max={e.staggerMax} color={e.staggered ? "#facc15" : "#a16207"} h="h-1" />{e.poiseKnot && !e.poiseBroken && <span className="pointer-events-none absolute top-[-1px] h-[calc(100%+2px)] w-px bg-white/70" style={{ left: "50%" }} title="불균형 지점 — 넘으면 잠시 중단" />}</div></div>}
                   {!dead && <div className="mt-0.5"><Bar value={e.atb} max={100} color="#67e8f9" h="h-1" /></div>}
                   {!dead && <div className="mt-1 flex flex-wrap justify-center gap-1">
                     {e.staggered && <Chip tone="#facc15">⚡ 불균형</Chip>}
+                    {(e.charging ?? 0) > 0 && <Chip tone="#f0776e">⚡ 차징! 강공 예고</Chip>}
                     {weak.map(([eln, v]) => <Chip key={eln} tone={elementColor[eln]}>{elementName[eln]}약점{Math.round(-v * 100)}</Chip>)}
                     {unitChips(e).map((c) => <Chip key={c.k} tone={c.tone} title={chipTitle(c)} icon={c.icon}>{c.label}</Chip>)}
                   </div>}
@@ -778,7 +790,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
                 const all = [...(u.shield > 0 ? [{ k: "shield", label: `🛡 보호막 ${u.shield}`, tone: "#38bdf8", dir: 1, turns: u.timers?.shield, src: (u.effectSrc as Record<string, EffSrc>)?.shield } as StatusChip] : []), ...unitChips(u).filter((c) => !STACK_KS.includes(c.k))];
                 const chipRow = (c: StatusChip) => (
                   <div key={c.k} className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                    <Chip tone={c.tone}>{c.label}{c.turns ? <span className="ml-1 opacity-75">· {c.turns}턴</span> : null}</Chip>
+                    <Chip tone={c.tone} icon={c.icon}>{c.label}{c.turns ? <span className="ml-1 opacity-75">· {c.turns}턴</span> : null}</Chip>
                     {c.src && <span className="font-mono text-[13px] text-ef-muted">← {c.src.by} · <span className="text-ef-ink/70">{c.src.via}</span> <span className="opacity-60">({SRC_KIND_KO[c.src.kind] ?? c.src.kind})</span></span>}
                   </div>
                 );

@@ -44,6 +44,19 @@ export const artsReactionIconPaths: Record<ArtsReactionIconKey, string> = {
   natureBurst: "/icons/reactions/nature-burst.webp",
 };
 
+// 전투 효과 버프/디버프 아이콘 — warfarin TermIcon(icon_term_ba_*) 원본.
+export const combatEffectIconPaths = {
+  amplify: "/icons/effects/amplify.webp",     // 증폭
+  vulnerable: "/icons/effects/vulnerable.webp", // 취약
+  guard: "/icons/effects/guard.webp",         // 비호
+  weaken: "/icons/effects/weaken.webp",       // 허약
+  haste: "/icons/effects/haste.webp",         // 가속
+  slow: "/icons/effects/slow.webp",           // 감속
+  combo: "/icons/effects/combo.webp",         // 연타
+} as const;
+
+export type CombatEffectIconKey = keyof typeof combatEffectIconPaths;
+
 export const artsBurstIconPaths = {
   heat: "/icons/reactions/heat-burst.webp",
   cryo: "/icons/reactions/cryo-burst.webp",

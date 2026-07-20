@@ -81,6 +81,10 @@ export type DDUnit = {
   slow?: boolean;        // 감속(모방아겔로스·겁운객): 명중 아군 ATB 속도 저하
   heal?: boolean;        // 치유(겁운객): 자기 턴에 아군[적] 최저 체력 회복
   buff?: boolean;        // 동료 강화(굴절아겔로스): 자기 턴에 다른 적 공격력 강화
+  charge?: boolean;      // 차징(프릭·레이커비스트 등): 한 턴 강공 예고 → 다음 턴 강타. 예고 중 불균형시키면 캔슬+추가 불균형
+  charging?: number;     // 차징 상태(런타임): >0이면 강공 예고 중(남은 턴)
+  poiseKnot?: boolean;   // 불균형 지점(정예/보스): 불균형 게이지 중간을 넘으면 1회 짧은 중단
+  poiseBroken?: boolean; // 불균형 지점 이미 돌파함(1회만)
   attachEl?: Element;    // 적 공격의 아츠 부착 속성(수정아겔로스 냉기 등): 명중 아군에 부착
   iceStack?: number; // 이본 「아이스 슈터」 변신 중 평타 누적(치확 +3%/스택, 최대 10)
   isMain?: boolean;  // 파티 메인딜러(편성 첫 오퍼 = 공략 시트 채용파티의 주인). 공유 게이지 우선권.
@@ -834,6 +838,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
     if (self.id === "camu" && skill.kind === "link" && has(t, "wing")) {
       healUnit(self, 60 + self.gearGrade * 0.3, s, log);
       self.multiHit = Math.min(4, self.multiHit + 1);
+      log.push(`  → ${self.name} 연타 획득 (${self.multiHit}스택)`);
     }
     // 레바테인 황혼 변신: 강화 일반공격 ×3(위키 강화 평타 464%/일반 157%≈2.95). 배틀 강화는 흡수 블록에서 처리
     if (self.id === "laevatain" && skill.kind === "attack" && (self.timers.twilight || 0) > 0) raw *= 3;
@@ -879,9 +884,21 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
     dmg *= 1 - (t.protection || 0); // 비호
     if (t.gear?.selfHpLowReduce && t.hp / t.maxHp < 0.5) dmg *= 1 - t.gear.selfHpLowReduce; // 중장갑 전달자: 저체력 시 받는 피해 감소
     dmg = mitigate(t, dmg, elem); // 방어력 + 물리/아츠 저항
+    // 차지 끊기(원작 2.2.2·2.2.1): 배틀·연계·궁으로 차징 중인 적을 때리면 강공 중단 + 대량 불균형치("패턴 끊기"가 최대 누적원). 일반 공격은 불가.
+    if ((t.charging ?? 0) > 0 && skill.kind !== "attack") {
+      t.charging = 0;
+      t.stagger = Math.min(t.staggerMax, (t.stagger || 0) + Math.round(t.staggerMax * 0.6) + (self.id === "chenqianyu" ? 10 : 0)); // 진천우 「흐름 끊기」: 차지 끊기에 +10
+      log.push(`  ✂ ${t.name} 차징 차단! 대량 불균형 (강력 공격 무산)`);
+    }
     // 불균형치 적립 → 임계 도달 시 불균형 상태(검술사 세트 등 stagger 배율 반영)
     if (t.staggerMax > 0) {
       t.stagger += stg * (1 + (self.gear?.staggerMul || 0));
+      // 불균형 지점(정예/보스): 게이지 절반을 넘으면 1회 짧은 중단 + 불균형치 회복(다시 쌓아야 완전 불균형)
+      if (t.poiseKnot && !t.poiseBroken && !t.staggered && t.stagger >= t.staggerMax * 0.5) {
+        t.poiseBroken = true; t.timers.stun = 1; if (!t.statuses.includes("stun")) t.statuses.push("stun");
+        t.stagger = 0; // 1턴 중단 후 불균형치 회복
+        log.push(`  ◈ ${t.name} 불균형 지점 돌파! 행동 잠시 중단 (불균형치 회복)`);
+      }
       if (!t.staggered && t.stagger >= t.staggerMax && t.unstoppable) {
         // 끊기 저항: 불균형 임계 도달해도 불균형 없이 공세 지속(치우 다미르 등)
         t.stagger = Math.round(t.staggerMax * 0.5);
@@ -893,7 +910,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
       }
     }
     const final = applyDamage(t, dmg); // 보호막(보호) 흡수 → 체력
-    // 다단히트: 단별 개별 피해를 먼저 찍고 마지막에 합산. 총합은 final 그대로(반올림 오차는 막타가 흡수).
+    // 다단히트: 단별 개별 피해를 먼저 찍고 마지막에 종합 합계. 총합은 final 그대로(반올림 오차는 막타가 흡수).
     if (skill.hits && skill.hits.length > 1 && final > 0) {
       const hs = skill.hits, tot = hs.reduce((a, b) => a + b, 0);
       let acc = 0;
@@ -902,6 +919,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
         acc += d;
         log.push(`    ${i === hs.length - 1 && hs.length > 2 && hs[i] > hs[0] ? "막타" : `${i + 1}단`} -${d.toLocaleString()}`);
       });
+      log.push(`    ═ ${hs.length}단 합계 -${final.toLocaleString()}`); // 다단 종합 데미지
     }
     log.push(`  ${t.name} -${final} (HP ${t.hp}/${t.maxHp})`);
     // 레바테인 「불꽃의 심장」 원문: "주변의 적이 처치될 때, 열기 부착도 함께 흡수됩니다."
@@ -956,6 +974,13 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
       for (const a of living(s, "ally")) applyBuff(a, "shield", sh, undefined, 2);
       log.push(`  → 팀 보호막 +${sh} (최대 생명력 18%)`);
     }
+  }
+  // 미브 「분노」: 연계 후 최대 HP 30% 보호막(2턴) — 12턴 쿨. 원작 "연계 후 보호막 + 방해 저항"
+  if (self.id === "mifu" && skill.kind === "link" && (self.timers.mifuRage ?? 0) <= 0) {
+    const sh = Math.round(self.maxHp * 0.3);
+    applyBuff(self, "shield", sh, undefined, 2);
+    self.timers.mifuRage = 12;
+    log.push(`  → 미브 분노! 보호막 +${sh} (최대 HP 30%, 2턴)`);
   }
   // 스노우샤인(디펜더): 포화성 방어(비호+반격 태세) · 극지 구조(저체력 치유, 의지→장비등급)
   if (self.id === "snowshine") {
@@ -1170,7 +1195,11 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
     const amped = ampFor(self, "physical") > 0 || ELEMENTS.some((e) => ampFor(self, e) > 0);
     if (antal && amped && (self.timers.antalHeal || 0) <= 0) { healUnit(self, 108 + antal.gearGrade * 0.9, s, log); setTimer(self, "antalHeal", 6); }
   }
-  if (self.multiHit > 0 && (skill.kind === "battle" || skill.kind === "ult")) self.multiHit = 0; // 연타 소모
+  if (self.multiHit > 0 && (skill.kind === "battle" || skill.kind === "ult")) { // 연타 소모 → 배틀/궁 피해 강화(가시화)
+    const n = Math.min(4, self.multiHit);
+    s.log.push(`  ⚡ ${self.name} 연타 소모! ${skill.kind === "ult" ? "궁극기" : "배틀"} 피해 +${Math.round((skill.kind === "ult" ? MH_ULT : MH_BATTLE)[n - 1] * 100)}% (${n}스택)`);
+    self.multiHit = 0;
+  }
   if (skill.grantsMultiHit) self.multiHit = Math.min(4, self.multiHit + skill.grantsMultiHit); // 몰입의 시간(소모 후 부여)
   if (self.side === "ally" && (skill.kind === "link" || skill.kind === "battle")) gearTrigger(self, skill.kind); // 본크러셔·청파(연계)·응룡(배틀) 발동 버프
   if (self.side === "ally") weaponTrigger(self, skill.kind, living(s, "ally")); // 무기 시리즈 조건부 트리거(궁후평타·명중스택·팀버프 등)
