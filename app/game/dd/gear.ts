@@ -323,6 +323,9 @@ export function applyGear(u: DDUnit, loadout: Loadout | undefined, gearLevel = 0
     const bonus = (a: typeof b0) => attrBonusHook ? attrBonusHook(u.id, a) : 1; // 주/부옵 고정표(roster.attrBonusOf)
     const k = GEAR_ATTR_FACTOR;
     const next = { str: b0.str + gAttr.str * k, agi: b0.agi + gAttr.agi * k, int: b0.int + gAttr.int * k, wil: b0.wil + gAttr.wil * k };
+    // 패널 표기값은 축소 없이 원본 합산(진결 폼 판정용)
+    const pb = u.panelAttrs ?? b0;
+    u.panelAttrs = { str: pb.str + gAttr.str, agi: pb.agi + gAttr.agi, int: pb.int + gAttr.int, wil: pb.wil + gAttr.wil };
     u.attack = Math.round(u.attack * (bonus(next) / bonus(b0)));
     u.attrs = next;
     applyAttrsHook?.(u); // 민첩 → 속도 재계산(roster가 주입)

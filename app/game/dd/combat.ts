@@ -59,6 +59,9 @@ export type DDUnit = {
   gaugeRecovered: number; // 포그 생존의 깃발 누적 게이지(80마다 사기 격양)
   gearGrade: number; // 장비 등급(힘/민첩/지능/의지 통합 치환값, 명함 ~60). 스탯 비례 재능이 이걸 참조
   attrs?: { str: number; agi: number; int: number; wil: number }; // 실제 능력치(endfield.wiki.gg 실측). 원작 공식대로 주/부옵이면 공격력으로만 흐른다(4종 대등) + 힘→체력. 속도는 무기 타입.
+  // 패널 능력치(원작 표기값) — 장비/무기 능력치를 밸런스 축소 없이 그대로 합산.
+  // 결의 진결 폼 판정처럼 "원작 화면에 뜨는 수치"가 기준인 곳에만 쓴다(피해 계산은 attrs 사용).
+  panelAttrs?: { str: number; agi: number; int: number; wil: number };
   strMul?: number;   // 일반 공격 피해 배율(레바테인 「어둠 · 울부짖는 불길」 궁 후 +120% 등). 평시 1
   battleAmp?: number; // 배틀 스킬 한정 증폭(장방이 「억제 · 떠도는 번개」). 0.32=+32%
   skillAttrMul?: number; // 지능 → 스킬(배틀/연계/궁) 피해 배율
@@ -138,6 +141,7 @@ export type DDSkill = {
   attach?: Element; // 아츠 부착(→ 폭발/이상 트리거)
   anomaly?: "launch" | "knockdown" | "crush" | "armor-break"; // 물리 이상
   selfPhysBonus?: number; // 띄우기/넘어뜨리기마다 추가 물리(공격력×배수) — 여풍 복마
+  powerOf?: (self: DDUnit) => number; // 시전자 상태로 배율이 갈리는 스킬(결 진결 폼) — 없으면 power 사용
   requires?: (target: DDUnit | undefined, self: DDUnit, state: DDState) => boolean; // 사용 요구(usage gate)
   requiresText?: string;
   grants?: string; // 이 스킬이 만드는 상태(다른 스킬의 requiresText와 매칭) — AI 셋업 우선순위용
@@ -491,7 +495,7 @@ export function baseDamage(skill: DDSkill, self: DDUnit): number {
   // 평타 배율(무기 「궁 후 평타 +120%」 등) vs 스킬 배율. 적은 attrs/무기가 없어 ×1.
   const am = skill.kind === "attack" ? (self.strMul ?? 1) : (self.skillAttrMul ?? 1);
   const bm = skill.kind === "battle" ? 1 + (self.battleAmp ?? 0) : 1; // 무기: 배틀 한정 증폭(장방이)
-  let dmg = self.attack * eb(self) * skill.power * am * bm;
+  let dmg = self.attack * eb(self) * (skill.powerOf?.(self) ?? skill.power) * am * bm;
   if (self.multiHit > 0) {
     const n = Math.min(4, self.multiHit);
     if (skill.kind === "battle") dmg *= 1 + MH_BATTLE[n - 1];
@@ -580,6 +584,12 @@ export function onAllyHit(s: DDState, self: DDUnit, t: DDUnit, final: number, lo
   }
 }
 
+// 결 「전략 수립」: 패널 지능 ≥ 의지면 진결·지혜(딜), 의지 > 지능이면 진결·의지(서폿).
+// 원작이 "레벨·재능·잠재·장비·무기가 주는 패널 능력치"로 판정하므로 밸런스 축소 전 panelAttrs를 쓴다.
+export const arcaneForm = (u: DDUnit): "wisdom" | "will" => {
+  const a = u.panelAttrs ?? u.attrs;
+  return !a || a.int >= a.wil ? "wisdom" : "will";
+};
 export const canAct = (u: DDUnit) => u.hp > 0 && !(u.side === "enemy" && (u.staggered || (u.timers.stun || 0) > 0 || u.frozen > 0)); // 불균형/시간 정지/동결 적은 행동 불가
 
 // 한 유닛의 행동 실행

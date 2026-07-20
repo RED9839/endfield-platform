@@ -319,6 +319,7 @@ export function applyWeapon(u: DDUnit): WeaponType | null {
     const added = Math.round(w.buffVal * W_BUFF_SCALE);
     // 주요 능력치 보너스(엔드필드 공식): 공격력 × (1 + 주요×0.005 + 보조×0.002). 주요 능력치 증가분만큼 공격 상승.
     const next = { ...b0, [key]: b0[key] + added };
+    const pb = u.panelAttrs ?? b0; u.panelAttrs = { ...pb, [key]: pb[key] + w.buffVal }; // 패널 표기값(축소 전)
     u.attack = Math.round(u.attack * (attrBonusOf(u.id, next) / attrBonusOf(u.id, b0))); // 주옵/부옵 어느 쪽이 올라도 공식대로 반영
     u.attrs = next;
     applyAttrs(u); // 능력치 변동 → 속도·기본공격·스킬·유틸/궁충 배율 재계산(멱등)

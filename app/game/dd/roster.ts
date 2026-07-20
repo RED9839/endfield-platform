@@ -1,7 +1,7 @@
 // ===== DD류 물리 4인 + 적 정의 (프로토타입) =====
 // 스킬은 위키 매핑. 사용 요구(requires)가 카드 모델에서 깨지던 "연계 조건"을 DD류에선 자연 흡수.
 import { setApplyAttrs, setAttrBonus } from "./gear";
-import { bumpVuln, vulnFor, setTimer, applyBuff, ELEMENTS, attrResists, ATTR_AVG, attrBonus, hasLinkEvent, type DDClass, type DDSkill, type DDUnit, type Element } from "./combat";
+import { bumpVuln, vulnFor, setTimer, applyBuff, ELEMENTS, attrResists, ATTR_AVG, attrBonus, hasLinkEvent, type DDClass, type DDSkill, type DDUnit, type Element, arcaneForm } from "./combat";
 import { promoMult, skillMult, skillUtilMult, DEFAULT_PROGRESS, type OpProgress } from "./progress";
 import { ENEMY_TRAITS } from "./enemy-traits";
 
@@ -348,17 +348,39 @@ export const SKILLS: Record<string, DDSkill[]> = {
   // 결의 고유 능력치는 지능 176 > 의지 121 → 상시 **진결·지혜** 폼. 배율·효과 전부 지혜 기준으로 등록한다.
   // (진결·의지 배율은 배틀 300%/궁 깨달음 360%로 딜이 절반 이하 — 우리 게임엔 능력치 재배분 수단이 없어 폼 전환이 불가능하다.)
   arcane: [
-    // 결정 파쇄 그리드(배틀 지혜 500%, 불균형 10): 광역 자연 + 자연 부착. 지혜 폼은 피해 증가가 배율에 이미 반영.
-    { id: "arc-b", name: "결정 파쇄 그리드", kind: "battle", fromPos: [1, 2, 3], target: "row", power: 2.22, element: "nature", attach: "nature", staggerVal: 10, note: "광역 자연 부착 · 진결 · 지혜(피해 증가)" },
-    // 응룡 4식(연계 기초 80+폭발 120=200%, 쿨 18초≈4턴): 자연/아츠 부착 적에 발동. 자연·냉기 취약 4% + 구속(감속).
-    { id: "arc-l", name: "응룡 4식", kind: "link", fromPos: [1, 2, 3], target: "row", power: 0.89, hits: [0.36, 0.53], element: "nature", staggerVal: 10, cooldown: 4, gaugeGain: 10,
-      requires: (t) => !!t && (t.arts.nature > 0 || ELEMENTS.some((e) => t.arts[e] >= 2)), requiresText: "자연 부착/2스택 아츠 부착 적",
-      apply: (t) => { bumpVuln(t, "nature", 0.04, 4); bumpVuln(t, "cryo", 0.04, 4); t.speedMod = (t.speedMod || 0) - 20; setTimer(t, "speedMod", 4); },
-      note: "전술 분신 구속 — 자연·냉기 취약 4% + 감속(구속)" },
-    // 어스름 파훼(궁 진 180 + 집중 360 + 깨달음 1440 = 1980%, 게이지 100): 광역 누킹 3단. 지혜 폼은 강제 부식(전 피해 취약).
-    { id: "arc-u", name: "어스름 파훼", kind: "ult", fromPos: [1, 2, 3], target: "all", power: 8.8, hits: [0.8, 1.6, 6.4], element: "nature", staggerVal: 20, selfUlt: true,
-      apply: (t) => { if (!t.statuses.includes("corrosion")) t.statuses.push("corrosion"); bumpVuln(t, "all", 0.15, 3); },
-      note: "3단 광역 누킹 + 진결 · 지혜 강제 부식(전 피해 취약)" },
+    // 결정 파쇄 그리드(배틀): 지혜 500% / 의지 300%. 의지 폼은 딜 대신 끌어당김(광역 몰이).
+    { id: "arcn-b", name: "결정 파쇄 그리드", kind: "battle", fromPos: [1, 2, 3], target: "row", power: 2.22,
+      powerOf: (self) => (arcaneForm(self) === "wisdom" ? 2.22 : 1.33),
+      element: "nature", attach: "nature", staggerVal: 10,
+      apply: (t, self) => { if (arcaneForm(self) === "will") { t.speedMod = (t.speedMod || 0) - 15; setTimer(t, "speedMod", 2); } }, // 끌어당김 = 광역 몰이(감속으로 표현)
+      note: "광역 자연 부착 · 지혜=피해↑ / 의지=끌어당김" },
+    // 응룡 4식(연계 200%, 쿨 4턴): 지혜=자연/2스택 부착 조건 · 의지=아츠 부착이면 발동(조건 완화) + 취약이 의지 비례로 커짐.
+    { id: "arcn-l", name: "응룡 4식", kind: "link", fromPos: [1, 2, 3], target: "row", power: 0.89, hits: [0.36, 0.53], element: "nature", staggerVal: 10, cooldown: 4, gaugeGain: 10,
+      requires: (t, self) => !!t && (arcaneForm(self) === "wisdom"
+        ? (t.arts.nature > 0 || ELEMENTS.some((e) => t.arts[e] >= 2))   // 지혜: 자연 부착 또는 2스택 아츠 부착
+        : ELEMENTS.some((e) => t.arts[e] > 0)),                          // 의지: 아츠 부착만 있으면 발동
+      requiresText: "아츠 부착 적(지혜=자연/2스택)",
+      apply: (t, self) => {
+        // 의지 폼은 의지 수치에 비례해 취약이 커진다(원작: 기초 4% + 의지 640까지 최대 +8%).
+        const wil = (self.panelAttrs ?? self.attrs)?.wil ?? 0;
+        const v = arcaneForm(self) === "wisdom" ? 0.04 : 0.04 + Math.min(0.08, (wil / 640) * 0.08);
+        bumpVuln(t, "nature", v, arcaneForm(self) === "wisdom" ? 4 : 6);
+        bumpVuln(t, "cryo", v, arcaneForm(self) === "wisdom" ? 4 : 6);
+        // 의지 폼은 전술 분신이 아츠 부착까지 부여한다(팀 아츠 반응 연료) — 원문 "아츠 부착과 자연 취약, 냉기 취약을 부여하고"
+        if (arcaneForm(self) === "will") { t.arts.nature = Math.min(4, t.arts.nature + 1); setTimer(t, "arts:nature", 4); }
+        t.speedMod = (t.speedMod || 0) - 20; setTimer(t, "speedMod", 4); // 구속
+      },
+      note: "전술 분신 구속 — 자연·냉기 취약 + 감속(의지 폼은 취약↑·지속↑)" },
+    // 어스름 파훼(궁): 지혜 진180+집중360+깨달음1440=1980% / 의지 진180+집중360+깨달음360=900%.
+    // 지혜=강제 부식(전 피해 취약) / 의지=아츠 부착 재부여(팀 반응 재점화).
+    { id: "arcn-u", name: "어스름 파훼", kind: "ult", fromPos: [1, 2, 3], target: "all", power: 8.8, hits: [0.8, 1.6, 6.4],
+      powerOf: (self) => (arcaneForm(self) === "wisdom" ? 8.8 : 4.0),
+      element: "nature", staggerVal: 20, selfUlt: true,
+      apply: (t, self) => {
+        if (arcaneForm(self) === "wisdom") { if (!t.statuses.includes("corrosion")) t.statuses.push("corrosion"); bumpVuln(t, "all", 0.15, 3); }
+        else { for (const e of ELEMENTS) if (t.arts[e] > 0) { t.arts[e] = Math.min(4, t.arts[e] + 1); setTimer(t, "arts:" + e, 4); } } // 부착 재부여
+      },
+      note: "3단 광역 누킹 · 지혜=강제 부식 / 의지=아츠 부착 재부여" },
   ],
 };
 

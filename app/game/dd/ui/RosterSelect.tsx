@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import { OPERATORS, SKILLS, OP_BASIC, avatarUrl, fullUrl, skillIcon, makeAlly, type OpMeta } from "../roster";
 import { OP_TALENTS } from "../operator-talents";
-import { activeSets, setEffectText, recommendedSet, recommendedLoadout, loadoutPieces, pieceImage, gearSlotName, bestFreePiece, slotOptions, GEAR_SET_CANON, SET_NAMES, pieceSlotOf, LOADOUT_SLOTS, type LoadoutSlot, type Loadout, type GearSlot } from "../gear";
+import { activeSets, setEffectText, recommendedSet, recommendedLoadout, loadoutPieces, pieceImage, gearSlotName, bestFreePiece, slotOptions, GEAR_SET_CANON, SET_NAMES, pieceSlotOf, LOADOUT_SLOTS, type LoadoutSlot, type Loadout, type GearSlot , applyGear} from "../gear";
 import { DEFAULT_PROGRESS, type OpProgress } from "../progress";
-import { weaponOf, weaponName, weaponEffectText, weaponImage, weaponSeriesName, weaponSeriesText, OP_WEAPON_STATS, WEAPON_KO, WEAPON_ICON } from "../weapons";
+import { applyWeapon, weaponOf, weaponName, weaponEffectText, weaponImage, weaponSeriesName, weaponSeriesText, OP_WEAPON_STATS, WEAPON_KO, WEAPON_ICON } from "../weapons";
 import { PRESET_PARTIES, ARCHETYPE_LABEL } from "../parties";
 import type { PartyPick } from "../run";
 import type { DDClass, DDSkill, Element } from "../combat";
@@ -85,6 +85,8 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
   ].sort((a, b) => KIND_ORDER[a.kind] - KIND_ORDER[b.kind]);
   const talents = OP_TALENTS[focusId] ?? [];
   const unit = makeAlly(focusId, 1, pr); // 기초 전투 스탯(정예화·스킬강화 반영)
+  // 목표 빌드(풀 제작·풀 단조)를 입힌 유닛 — 결의 진결 폼처럼 장비·무기 패널값이 필요한 표시에 쓴다.
+  const geared = useMemo(() => { const u = makeAlly(focusId, 1, pr); applyGear(u, lo, 3); applyWeapon(u); return u; }, [focusId, pr, lo]);
   const pcs = loadoutPieces(lo);
   const gearGrade = pcs.reduce((n, p) => n + p.grade, 0); // 장비 능력치 합
   const gearDef = pcs.reduce((n, p) => n + p.def, 0);     // 장비 방어 합
@@ -206,6 +208,21 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
                 ))}
               </div>
             )}
+            {/* 결 「전략 수립」 듀얼폼 — 장비 한 칸 차이로 뒤집히므로 현재 폼과 판정 근거를 항상 노출한다. */}
+            {focusId === "arcane" && geared.panelAttrs && (() => {
+              const p = geared.panelAttrs!; const wis = p.int >= p.wil; const gap = Math.abs(Math.round(p.int - p.wil));
+              return (
+                <div className="mt-1.5 border-t border-ef-line/40 pt-1.5">
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 font-mono text-[13px]">
+                    <span className="font-bold" style={{ color: wis ? "#ff9a2f" : "#67e8f9" }}>{wis ? "진결 · 지혜" : "진결 · 의지"}</span>
+                    <span className="text-ef-muted">{wis ? "딜 폼 — 배틀 222% · 궁 880%" : "서폿 폼 — 배틀 133% · 궁 400% · 취약↑ · 부착 부여"}</span>
+                  </div>
+                  <div className="mt-0.5 font-mono text-[12px] text-ef-muted">
+                    패널 지능 {Math.round(p.int)} {wis ? "≥" : "<"} 의지 {Math.round(p.wil)} (차이 {gap}) — 장비·무기 능력치로 폼이 결정됩니다
+                  </div>
+                </div>
+              );
+            })()}
           </div>
 
           {/* 스킬 */}
