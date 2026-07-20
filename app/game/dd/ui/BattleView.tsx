@@ -222,10 +222,11 @@ function FxLayer({ id, fx }: { id: string; fx: Fx }) {
     <>
       {hit && <span key={`fl-${fx.tick}`} className="dd-flash" />}
       {mine.map((f, i) => (
-        <span key={`fn-${fx.tick}-${i}`} className="dd-float font-mono font-black" style={{ top: `${-2 - i * 16}px`, color: f.amt > 0 ? "#8fd36a" : f.crit ? "#ffd24a" : "#ff6b5a", fontSize: f.crit ? "1.55rem" : "1.05rem" }}>
-          {f.amt > 0 ? `+${f.amt}` : f.amt}{f.crit ? "!" : ""}
-          {f.step && <em className="ml-1 align-middle text-[10px] font-bold not-italic opacity-70">{f.step}</em>}
-          {f.total != null && <em className="ml-1 align-middle text-[11px] font-black not-italic text-white/90">누적 {f.total.toLocaleString()}</em>}
+        <span key={`fn-${fx.tick}-${i}`} className="dd-float flex items-center gap-1 font-mono font-black" style={{ top: `${-2 - i * 16}px`, color: f.amt > 0 ? "#8fd36a" : f.crit ? "#ffd24a" : "#ff6b5a", fontSize: f.crit ? "1.55rem" : "1.05rem" }}>
+          {/* 단 라벨은 숫자 앞에 별도 배지로 — 뒤에 붙이면 "-25"+"1단"이 "-251단"으로 읽힌다 */}
+          {f.step && <em className="shrink-0 rounded-[2px] bg-black/70 px-1 align-middle text-[10px] font-bold not-italic leading-[1.4] text-white/75">{f.step}</em>}
+          <span>{f.amt > 0 ? `+${f.amt}` : f.amt}{f.crit ? "!" : ""}</span>
+          {f.total != null && <em className="shrink-0 align-middle text-[11px] font-black not-italic text-white/85">= {f.total.toLocaleString()}</em>}
         </span>
       ))}
       {fx.cast && fx.cast.id === id && <span key={`ct-${fx.tick}`} className="dd-cast border border-ef-accent/50 bg-black/85 px-2 py-0.5 font-mono text-[14px] font-bold text-ef-accent-soft" style={{ boxShadow: "0 2px 10px rgba(0,0,0,0.7)" }}>{fx.cast.text}</span>}
@@ -301,8 +302,9 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
             const cum = i === pat.length - 1 ? tot : Math.round((tot * upto.reduce((a, b) => a + b.w, 0)) / wSum);
             const prev = i === 0 ? 0 : Math.round((tot * pat.slice(0, i).reduce((a, b) => a + b.w, 0)) / wSum);
             const cur = pat[i];
+            // 라벨은 "1단/2단/막타" 그대로. 합계는 마지막 타에만 붙인다(매 타마다 붙이면 숫자가 뭉쳐 읽히지 않는다).
             acc.push({ id: f.id, amt: -(cum - prev), crit: crit || cur.label === "막타", tone: f.tone,
-              step: `${cur.label}${i < pat.length - 1 ? "" : ` · ${pat.length}단`}`, total: i > 0 ? cum : undefined });
+              step: cur.label, total: i === pat.length - 1 ? cum : undefined });
           }
           setFx({ tick: baseTick + i, activeId: actor.id, actingSide: actor.side, floaters: acc, cast: i === 0 && cast ? { id: actor.id, text: cast } : null });
           bump();
