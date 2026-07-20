@@ -93,6 +93,7 @@ export type DDUnit = {
   attachEl?: Element;    // 적 공격의 아츠 부착 속성(수정아겔로스 냉기 등): 명중 아군에 부착
   iceStack?: number; // 이본 「아이스 슈터」 변신 중 평타 누적(치확 +3%/스택, 최대 10)
   isMain?: boolean;  // 파티 메인딜러(편성 첫 오퍼 = 공략 시트 채용파티의 주인). 공유 게이지 우선권.
+  didosUsed?: number;  // 자이히 디도스 지원 결정체가 쓴 치유 횟수(원문 최대 2회) — 연계 「스트레스 테스트」 조건
   zfyUsedFree?: boolean; // 장방이 천리의 경지: 첫 배틀 무소모를 이미 썼는가
   utilMult: number;  // 스킬 단조 유틸 배율(취약·증폭·회복·게이지·지속) × 의지. M0=1.0
   utilBase?: number; // 의지 곱하기 전 스킬 단조 유틸 배율(재계산 기준값)
@@ -920,6 +921,22 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
     //    (장방이 자신으로 한정하면 펠리카가 부착을 깔아주는 정석 사이클이 통째로 잠긴다)
     //  · 부착과 감전을 모두 인정한다. 부착만 보면 아군이 아츠 이상으로 소모해버려 창이 거의 안 열리고,
     //    감전만 보면 "전기 부착 적을 강타"라는 원문 조건 자체가 빠진다. 감전은 그 부착의 반응 결과다.
+    // 자이히 「디도스」 지원 결정체: 원문 "메인이 강력한 일격 시 치유(최대 2회)".
+    // 메인 = 조작 중인 오퍼 → 우리 모델에선 평타를 친 아군. 결정체가 살아있는 동안 2회까지 발동한다.
+    if (self.side === "ally" && skill.kind === "attack" && t === primaryTarget) {
+      const xai = s.units.find((u) => u.id === "xaihi" && u.side === "ally" && u.hp > 0 && (u.timers.didos || 0) > 0);
+      if (xai && (xai.didosUsed || 0) < 2) {
+        xai.didosUsed = (xai.didosUsed || 0) + 1;
+        const hurt = living(s, "ally").filter((a) => a.hp < a.maxHp);
+        if (hurt.length) {
+          const tgt = hurt.reduce((lo, a) => (a.hp / a.maxHp < lo.hp / lo.maxHp ? a : lo), hurt[0]);
+          healUnit(tgt, 144 + xai.gearGrade * 0.34, s, log, xai); // 기초 144 + 의지→장비등급
+        } else { // 오버힐 → 그 아군에게 아츠 증폭 9%(25초≈5턴)
+          self.amp.arts = (self.amp.arts || 0) + 0.09 * xai.utilMult; setTimer(self, "amp:arts", 5);
+          log.push(`  → 디도스 오버힐 → ${self.name} 아츠 증폭 +9%`);
+        }
+      }
+    }
     if (self.side === "ally" && skill.kind === "attack" && (t.arts.electric > 0 || has(t, "shock")) &&
         s.units.some((u) => u.id === "zhuangfangyi" && u.side === "ally" && u.hp > 0)) markLinkEvent(s, "zhuangfangyi");
     // 엠버: 평타 주력 딜러 — 실제 돌진 검술 4단 콤보(≈431% 물리, lv9) 반영. 범용 평타 0.5 → ×8.6≈431%.
@@ -1102,17 +1119,11 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
   if (self.id === "dapan" && skill.kind === "ult") { self.linkCdMul = 0.6; log.push(`  → 간 맞추기! 연계 쿨 40% 단축`); }
   // 자이히(서포터): 디도스(치유 / 오버힐 시 아츠 증폭) · 스택 오버플로(팀 냉기/자연 증폭, 지능→장비등급)
   if (self.id === "xaihi") {
-    if (skill.kind === "battle") { // 디도스: 지원 결정체 → 메인 치유, 오버힐이면 아츠 증폭. 연계 활성 윈도우.
+    if (skill.kind === "battle") { // 디도스: 지원 결정체 소환. 원문은 여기서 치유하지 않는다 —
+      // "메인이 강력한 일격 시 치유(최대 2회)"라 발동은 아군 평타 쪽 훅(xaihiCrystal)이 담당한다.
       setTimer(self, "didos", 3);
-      const hurt = living(s, "ally").filter((a) => a.hp < a.maxHp);
-      if (hurt.length) {
-        const tgt = hurt.reduce((lo, a) => (a.hp / a.maxHp < lo.hp / lo.maxHp ? a : lo), hurt[0]);
-        healUnit(tgt, 144 + self.gearGrade * 0.34, s, log, self); // 기초 144 + 의지→장비등급
-      } else { // 오버힐 → 최전열 아군(메인)에 아츠 증폭 9%(25초≈5턴)
-        const main = living(s, "ally").filter((a) => a.id !== self.id).sort((a, b) => a.pos - b.pos)[0] || self;
-        main.amp.arts = (main.amp.arts || 0) + 0.09 * self.utilMult; setTimer(main, "amp:arts", 5);
-        log.push(`  → 디도스 오버힐 → ${main.name} 아츠 증폭 +9%`);
-      }
+      self.didosUsed = 0; // 재소환 → 회복 횟수 초기화(연계 「스트레스 테스트」는 2회 소진 후 열린다)
+      log.push(`  → 디도스! 지원 결정체 소환(강일 2회까지 치유)`);
     }
     if (skill.kind === "ult") { // 스택 오버플로: 팀 냉기/자연 증폭(12초≈3턴, 지능→장비등급 비례, 상한 30%)
       const amp = 0.11 * self.utilMult + Math.min(0.3, self.gearGrade * 0.003); // 스킬 단조 유틸 + 장비 단조(gearGrade)
