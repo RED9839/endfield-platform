@@ -352,13 +352,9 @@ export const SKILLS: Record<string, DDSkill[]> = {
     { id: "arcn-b", name: "결정 파쇄 그리드", kind: "battle", fromPos: [1, 2, 3], target: "row", power: 2.22,
       powerOf: (self) => (arcaneForm(self) === "wisdom" ? 2.22 : 1.33),
       element: "nature", attach: "nature", staggerVal: 10,
-      // 의지 폼: 원문 "모든 스킬들이 적들을 한곳에 모으거나 이미 부착된 아츠 부착에 추가 아츠 부착".
-      // 배틀도 끌어당김 + 기존 부착 속성을 한 스택 올린다 → 팀 속성을 가리지 않는 상시 부착 지원.
-      apply: (t, self) => {
-        if (arcaneForm(self) !== "will") return;
-        t.speedMod = (t.speedMod || 0) - 15; setTimer(t, "speedMod", 2); // 끌어당김(광역 몰이)
-        for (const e of ELEMENTS) if (e !== "nature" && t.arts[e] > 0) { t.arts[e] = Math.min(4, t.arts[e] + 1); setTimer(t, "arts:" + e, 4); }
-      },
+      // 의지 폼 배틀은 원문상 "피해를 줄 때, 범위 내의 적을 중심으로 끌어당깁니다" — 끌어당김만이다.
+      // (부착 추가는 연계·궁에만 있다. 위키 총평의 "모든 스킬이 …추가 부착"은 폼 전체 성격 서술)
+      apply: (t, self) => { if (arcaneForm(self) === "will") { t.speedMod = (t.speedMod || 0) - 15; setTimer(t, "speedMod", 2); } },
       note: "광역 자연 부착 · 지혜=피해↑ / 의지=끌어당김" },
     // 응룡 4식(연계 200%, 쿨 4턴): 지혜=자연/2스택 부착 조건 · 의지=아츠 부착이면 발동(조건 완화) + 취약이 의지 비례로 커짐.
     { id: "arcn-l", name: "응룡 4식", kind: "link", fromPos: [1, 2, 3], target: "row", power: 0.89, hits: [0.36, 0.53], element: "nature", staggerVal: 10, cooldown: 2, gaugeGain: 10,
