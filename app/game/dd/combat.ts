@@ -176,6 +176,7 @@ export type DDSkill = {
   crystal?: boolean; // 오리지늄 결정 부착(관리자 봉인 시퀀스)
   apply?: (target: DDUnit, self: DDUnit) => void; // 추가 효과(취약·연타 등)
   selfUlt?: boolean; // 궁극(게이지 소모)
+  hitsOf?: (self: DDUnit) => number[] | undefined; // 런타임 결정 타수(장방이 청뢰검). 반환 시 hits보다 우선
   note?: string;
 };
 
@@ -983,8 +984,11 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
     }
     const final = applyDamage(t, dmg); // 보호막(보호) 흡수 → 체력
     // 다단히트: 단별 개별 피해를 먼저 찍고 마지막에 종합 합계. 총합은 final 그대로(반올림 오차는 막타가 흡수).
-    if (skill.hits && skill.hits.length > 1 && final > 0) {
-      const hs = skill.hits, tot = hs.reduce((a, b) => a + b, 0);
+    // 타수가 런타임에 정해지는 스킬(장방이 뇌정의 부름 = 청뢰검 수만큼 뇌격, 마지막 ×6)은 여기서 배열을 만든다.
+    const dynHits = skill.hitsOf?.(self);
+    const hitArr = dynHits ?? skill.hits;
+    if (hitArr && hitArr.length > 1 && final > 0) {
+      const hs = hitArr, tot = hs.reduce((a, b) => a + b, 0);
       let acc = 0;
       hs.forEach((h, i) => {
         const d = i === hs.length - 1 ? final - acc : Math.round((final * h) / tot);

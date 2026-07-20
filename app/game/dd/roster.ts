@@ -58,17 +58,17 @@ export const SKILLS: Record<string, DDSkill[]> = {
   // ⚠ 치명타·회복(끓어오르는 피) 미모델 → 치명 버프는 atkBuff 근사. 방어 불능+아츠부착 이중 조건이라 하이브리드 파티 필요.
   rossi: [
     // 붉은색의 그림자(배틀 85%, 불균형 5): 돌진 띄우기. 방어 불능 적이면 진주(열기) + 절흔(늑대의 발톱: 지속피해+물리/열기 취약).
-    { id: "ros-b", name: "붉은색의 그림자", kind: "battle", fromPos: [1, 2, 3], target: "single-front", power: 0.85, element: "physical", staggerVal: 5, anomaly: "launch",
+    { id: "ros-b", name: "붉은색의 그림자", kind: "battle", fromPos: [1, 2, 3], target: "single-front", power: 2.13, hits: [0.85, 1.28], element: "physical", staggerVal: 5, anomaly: "launch",
       // 진주 조건 = "이미 방어 불능 보유"(띄우기 전). 띄우기가 항상 +1이므로 post>1 ⟺ pre≥1.
       apply: (t, self) => { if (t.physBreak > 1) { t.dot = Math.round(self.attack * (1 + (self.atkBuff || 0)) * 0.3); setTimer(t, "dot", 5); bumpVuln(t, "physical", 0.12); bumpVuln(t, "heat", 0.12); } },
       note: "돌진 띄우기 + (이미 방어 불능 적)진주·늑대의 발톱(지속피해 30%/턴 + 물리/열기 취약 12%)" },
     // 그림자가 타오르는 순간(연계 67+133%+소모비례 80%/스택, 쿨 15초): 방어 불능+아츠부착 적. 아츠 소모 물리·띄우기 + 치명 버프.
     // 1단 67% + 2단 133%. 아츠 소모 비례(스택당 +80%)와 치확/치피는 combat.ts 엔진 훅에서 — apply는 raw를 못 건드림.
-    { id: "ros-l", name: "그림자가 타오르는 순간", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 2.0, hits: [0.67, 1.33], element: "physical", staggerVal: 5, cooldown: 3, anomaly: "launch",
+    { id: "ros-l", name: "그림자가 타오르는 순간", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 0.67, element: "physical", staggerVal: 5, cooldown: 3, anomaly: "launch",
       requires: (t) => !!t && t.physBreak > 0 && ELEMENTS.some((e) => t.arts[e] > 0), requiresText: "방어 불능+아츠부착 적",
       note: "아츠 소모 물리·띄우기 + 치명 버프(치확 30%/치피 100%)" },
     // 기습 '날카로운 발톱'(궁 275+111+333=719%, 불균형 25, 게이지 110): 다단 열기 누킹 + 열기 부착.
-    { id: "ros-u", name: "기습 '날카로운 발톱'", kind: "ult", fromPos: [1, 2], target: "single-front", power: 7.19, hits: [2.75, 1.11, 3.33], element: "heat", attach: "heat", staggerVal: 25, selfUlt: true, note: "다단 열기 단일 누킹 + 열기 부착" },
+    { id: "ros-u", name: "기습 '날카로운 발톱'", kind: "ult", fromPos: [1, 2], target: "single-front", power: 7.11, hits: [2.67, 1.11, 3.33], element: "heat", attach: "heat", staggerVal: 25, selfUlt: true, note: "다단 열기 단일 누킹 + 열기 부착" },
   ],
   // 미브: 물리/양손검 가드. 청파 삼형(단운→추형→개천 3스탠스) + 물리취약 연계 + 방어 불능 부여 궁.
   // 재능: 냉정(개천이 물취/불균형 적에 ×1.2, vsWeak) · 분노(연계 후 최대 HP 30% 보호막, 엔진). 자체 방어 불능 부여는 궁뿐 → 팀 방어 불능 보조 필요.
@@ -142,7 +142,7 @@ export const SKILLS: Record<string, DDSkill[]> = {
     // 전선 분쇄(배틀 86+106%=192%, 불균형 10): 갑옷 파괴(유일) + 방어 불능 소모량 비례 게이지 회복(5/10/20/30).
     { id: "pg-b", name: "전선 분쇄", kind: "battle", fromPos: [1, 2, 3], target: "row", power: 1.92, hits: [0.86, 1.06], element: "physical", staggerVal: 10, anomaly: "armor-break", gaugeOnConsume: [5, 10, 20, 30], note: "갑옷 파괴 + 방어 불능 소모 비례 게이지 회복" },
     // 보름달 참격(연계 42+54+66%=162%, 쿨 18초): 강타/갑옷파괴로 방어 불능 소모됐을 때. 게이지 회복.
-    { id: "pg-l", name: "보름달 참격", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 1.62, hits: [0.54, 0.54, 0.54], element: "physical", staggerVal: 11, cooldown: 4, gaugeGain: 25,
+    { id: "pg-l", name: "보름달 참격", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 1.62, hits: [0.42, 0.54, 0.66], element: "physical", staggerVal: 11, cooldown: 4, gaugeGain: 25,
       requires: (t) => !!t && t.statuses.includes("armor-break"), requiresText: "갑옷파괴(방어 불능 소모) 적", note: "단계별 베기 + 게이지 회복" },
     // 방패병 부대, 전진(궁 133%, 게이지 90): 광역 몰이 진군 + 넘어뜨리기(방어 불능) + 철의 서약 5포인트 부여(물리이상마다 교란/최후의 승부).
     { id: "pg-u", name: "방패병 부대, 전진", kind: "ult", fromPos: [1, 2, 3], target: "all", power: 1.33, element: "physical", staggerVal: 10, anomaly: "knockdown", selfUlt: true, grantsIronOath: 5, note: "진군 광역 몰이 + 방어 불능 + 철의 서약 5(추가타 체인)" },
@@ -192,7 +192,7 @@ export const SKILLS: Record<string, DDSkill[]> = {
       requires: (t) => !!t && t.physBreak === 0 && ELEMENTS.every((e) => t.arts[e] === 0), requiresText: "방어 불능·아츠부착 없는 적",
       apply: (t) => { t.resShred = Math.min(0.24, (t.resShred || 0) + 0.12); setTimer(t, "resShred", 3); if (!t.statuses.includes("corrosion")) t.statuses.push("corrosion"); }, note: "자연 부착 + 강제 부식(전 속성 저항↓)" },
     // 복슬복슬 파티(궁 73%×3≈219%, 게이지 90): 광역 다단 자연 + 확률 회복(친구의 그림자).
-    { id: "ard-u", name: "복슬복슬 파티", kind: "ult", fromPos: [1, 2, 3], target: "all", power: 2.19, hits: [0.73, 0.73, 0.73], element: "nature", staggerVal: 2, selfUlt: true, note: "광역 다단 자연 + 회복" },
+    { id: "ard-u", name: "복슬복슬 파티", kind: "ult", fromPos: [1, 2, 3], target: "all", power: 0.73, element: "nature", staggerVal: 2, selfUlt: true, note: "광역 다단 자연 + 회복" },
   ],
   // 자이히: 냉기/아츠 유닛 서포터(★5, "냉기 파티의 꽃·7성"). 퓨어 힐 + 오버힐 아츠 증폭 + 냉기/자연 증폭궁 + 냉기 부착 연계. 강일 트리거(메인 의존).
   // 재능: 가동 프로세스(연계가 냉기/동결 적 명중 시 냉기 취약) · 프리징 프로토콜(궁이 팀 냉기부착/동결 정화 — 휴면). 주스탯 의지·보조 지능.
@@ -319,7 +319,7 @@ export const SKILLS: Record<string, DDSkill[]> = {
     { id: "lae-l", name: "열화", kind: "link", fromPos: [1, 2, 3], target: "row", power: 2.4, element: "heat", staggerVal: 10, cooldown: 2,
       requires: (t) => !!t && (t.statuses.includes("combustion") || t.statuses.includes("corrosion")), requiresText: "연소/부식 적", note: "광역 열기 + 녹아내린 불꽃 + 궁충" },
     // 황혼(궁, 게이지 300 최고): 변신 — 즉발 도마 내리찍기(열기 부착) + 15초간 일반공격 ×3·배틀 ×2.5 강화(엔진 twilight). 딜 지분은 변신 중 강화 평타.
-    { id: "lae-u", name: "황혼", kind: "ult", fromPos: [1, 2, 3], target: "all", power: 3.0, element: "heat", attach: "heat", staggerVal: 20, selfUlt: true, note: "변신(3턴): 일반공격/배틀 강화 + 즉발 열기 부착" },
+    { id: "lae-u", name: "황혼", kind: "ult", fromPos: [1, 2, 3], target: "all", power: 0, element: "heat", attach: "heat", staggerVal: 20, selfUlt: true, note: "변신(3턴): 일반공격/배틀 강화 + 즉발 열기 부착" },
   ],
   // 이본: 냉기/권총 스트라이커(★6 한정). 냉기/자연 부착 소모 강제 동결(배틀) + 치명타 변신 말뚝딜 궁(아이스 슈터) + 빙점(냉기/동결 적 치피). 간결한 부착-배틀-동결-궁 구조. 쇄빙 파티 동결 공급.
   // 재능: 빙점(냉기 적 치피 +20%, 동결 ×2=+40%, 엔진) · 하이테크 버스트(동결 후 즉발 강일 — 근사). 주스탯 지능·보조 민첩.
@@ -337,12 +337,15 @@ export const SKILLS: Record<string, DDSkill[]> = {
   // 재능: 천지의 조화(배틀 시 전기 증폭, 엔진) · 하늘의 가호(청뢰검 비례 피해 면역 — 근사). 주스탯 의지·보조 지능.
   zhuangfangyi: [
     // 뇌정의 부름(배틀): 감전 소모 → 청뢰검 생성(최대 9) + 청뢰검 수 비례 뇌격(마지막 ×6) + 궁충. 변신 중 강화. 엔진 id훅.
-    { id: "zfy-b", name: "뇌정의 부름", kind: "battle", fromPos: [1, 2, 3], target: "single-front", power: 0, element: "electric", staggerVal: 15, note: "감전 소모 → 청뢰검 생성 + 뇌격(청뢰검 비례) + 궁충" },
+    { id: "zfy-b", name: "뇌정의 부름", kind: "battle", fromPos: [1, 2, 3], target: "single-front", power: 0, element: "electric", staggerVal: 15,
+      // 원문: 근처 청뢰검이 각각 유도 뇌격 → 타수 = 청뢰검 수(1~9), 마지막 뇌격만 ×6.
+      // 피해 총량은 엔진 훅이 per×(청뢰검+5)로 이미 계산하므로 여기선 표시용 분배 비율만 준다.
+      hitsOf: (self) => { const n = Math.max(1, Math.min(9, self.procCount || 1)); return [...Array(n - 1).fill(1), 6]; }, note: "감전 소모 → 청뢰검 생성 + 뇌격(청뢰검 비례) + 궁충" },
     // 변화의 숨결(연계 160%, 쿨 18초≈4턴): 전기 부착 적 강일 후. 전기 + 전기 부착 소모 → 강제 감전(레벨↑) + 궁충.
     { id: "zfy-l", name: "변화의 숨결", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 1.6, element: "electric", staggerVal: 10, cooldown: 4,
       requires: (_t, _self, s) => hasLinkEvent(s, "zhuangfangyi"), requiresText: "감전 적 강타 후", note: "전기 + 전기 부착 소모 강제 감전 + 궁충" },
     // 심판의 폭풍(궁 변신, 게이지 240): 천리의 경지 — 평타/배틀 강화 + 방해 면역 + 첫 배틀 3검. 25초 지속딜.
-    { id: "zfy-u", name: "심판의 폭풍", kind: "ult", fromPos: [1, 2, 3], target: "all", power: 2.0, hits: [0.67, 1.33], element: "electric", staggerVal: 20, selfUlt: true, note: "천리의 경지 변신: 평타/배틀 강화 + 첫 배틀 3검" },
+    { id: "zfy-u", name: "심판의 폭풍", kind: "ult", fromPos: [1, 2, 3], target: "all", power: 0, element: "electric", staggerVal: 20, selfUlt: true, note: "천리의 경지 변신: 평타/배틀 강화 + 첫 배틀 3검" },
   ],
   // 결: 자연 캐스터★6. 재능 「전략 수립」이 지능≥의지면 진결·지혜(딜), 의지>지능이면 진결·의지(서폿)로 스킬을 통째로 바꾼다.
   // 결의 고유 능력치는 지능 176 > 의지 121 → 상시 **진결·지혜** 폼. 배율·효과 전부 지혜 기준으로 등록한다.
