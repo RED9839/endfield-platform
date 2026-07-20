@@ -378,6 +378,14 @@ const LINK_CD = 3;     // 연계 기본 쿨타임 15~16초
 // 일반 공격(모든 오퍼 공통): 게이지 무소모, 강력한 일격으로 게이지 회복, 불균형 적엔 처형.
 export const BASIC: DDSkill = { id: "basic", name: "일반 공격", kind: "attack", fromPos: [1, 2, 3, 4], target: "single-front", power: 0.5, element: "physical", staggerVal: 6, gaugeGain: 12 };
 
+// 오리지늄 아츠 강도(원문 3식):
+//  ① 이상 피해(강타·연소·동결·쇄빙·아츠폭발·갑옷파괴·감전·부식·띄우기·넘어뜨리기) = +x% 선형
+//  ② 부가 효과(갑옷파괴 물리취약 / 감전 아츠취약 / 부식 저항감소) = 2x/(x+300) 체감 [60→33% · 244→89%]
+//  ③ 누적 불균형치(띄우기·넘어뜨리기 한정) = +x/2 % 선형 [60→+30% · 244→+122%]
+const artsDmg = (u: DDUnit) => 1 + (u.artsStr || 0) / 100;
+const artsSub = (u: DDUnit) => { const x = u.artsStr || 0; return 1 + (2 * x) / (x + 300); };
+const artsStag = (u: DDUnit) => 1 + (u.artsStr || 0) / 200;
+
 // 동결 적에게 방불/물리 이상 발동 시 쇄빙(동결 소모 → 대량 물리). 공격자 측 추가 피해 반환.
 function tryShatter(target: DDUnit, self: DDUnit, log: string[]): number {
   if (target.frozen <= 0) return 0;
@@ -385,7 +393,7 @@ function tryShatter(target: DDUnit, self: DDUnit, log: string[]): number {
   target.frozen = 0; rm(target, "stun");
   log.push(`  → 쇄빙! 동결 ${n}스택 소모 → ${SHATTER[n - 1] * 100}% 물리`);
   // 쇄빙은 위키상 아츠 이상에 포함된다(피해 유형만 물리) → 오리지늄 아츠 강도 1당 피해 +1%.
-  return self.attack * eb(self) * (1 + (self.artsStr || 0) / 100) * SHATTER[n - 1];
+  return self.attack * eb(self) * artsDmg(self) * SHATTER[n - 1];
 }
 
 // 아츠 부착 → 폭발(같은 속성 2+) / 이상(다른 속성 → 전부 소모). 공격자 측 추가 피해 반환.
@@ -395,8 +403,8 @@ export function applyAttach(target: DDUnit, el: Element, self: DDUnit, log: stri
   if (target.artsImmune && Math.random() < target.artsImmune) { log.push(`  → ${target.name} 아츠 부착 면역(만물의 지혜)`); return 0; }
   // 이유 있는 게으름(에스텔라): 냉기 부착 면역 — 동결/냉기 아츠 무효
   if (el === "cryo" && target.cryoImmune) { log.push(`  → ${target.name} 냉기 면역(이유 있는 게으름)`); return 0; }
-  const buff = eb(self) * (1 + (self.artsStr || 0) / 100); // 아츠 강도: 피해 +1%/포인트
-  const sub = 1 + (self.artsStr || 0) * 0.005; // 아츠 강도: 부가 효과(취약·저항 감소 등) +0.5%/포인트
+  const buff = eb(self) * artsDmg(self); // 아츠 강도: 피해 +1%/포인트
+  const sub = artsSub(self); // 부가 효과: 2x/(x+300) 체감
   const others = ELEMENTS.filter((e) => e !== el && target.arts[e] > 0);
   if (others.length > 0) {
     // 아츠 이상: 모든 부착 소모, 나중 부착(el) 종류로 결정. 이상 레벨 = 소모 스택 수.
@@ -451,9 +459,8 @@ export function applyAttach(target: DDUnit, el: Element, self: DDUnit, log: stri
 export function applyAnomaly(skill: DDSkill, target: DDUnit, self: DDUnit, log: string[]): number {
   const a = skill.anomaly;
   if (!a) return 0;
-  const buff = eb(self) * (1 + (self.artsStr || 0) / 100); // 오리지늄 아츠 강도: 피해 +1%/포인트
-  // 위키 3.1.2: 아츠 강도는 "부가 효과"도 0.5%/포인트 올린다 — 물리 이상의 부가 효과는 갑옷 파괴의 물리 취약.
-  const sub = 1 + (self.artsStr || 0) * 0.005;
+  const buff = eb(self) * artsDmg(self); // 오리지늄 아츠 강도: 피해 +1%/포인트
+  const sub = artsSub(self); // 부가 효과: 2x/(x+300) 체감
   const shatter = tryShatter(target, self, log); // 방불/물리 이상이 동결 적 → 쇄빙
   if (a === "launch" || a === "knockdown") {
     const bok = skill.selfPhysBonus ? self.attack * buff * skill.selfPhysBonus : 0; // 여풍 복마: 넘어뜨리기마다 +공격력×배수
@@ -472,8 +479,9 @@ export function applyAnomaly(skill: DDSkill, target: DDUnit, self: DDUnit, log: 
     if (self.side === "ally") weaponTrigger(self, "physBreak"); // 효율(리펑): 방어 불능 부여 후 전 피해+
     const label = a === "launch" ? "띄우기" : "넘어뜨리기";
     if (wasBreak) { // 방불 상태 → 120% 물리 + 불균형 10
-      target.stagger += 10;
-      log.push(`  → ${label} 발동: +120% 물리 · 불균형 +10 (방어 불능 ${target.physBreak})${bok ? " · 복마" : ""}`);
+      const stag = 10 * artsStag(self); // 아츠 강도: 누적 불균형치 +x/2 %(띄우기·넘어뜨리기 한정). 소수 유지 — 반올림하면 오차 누적
+      target.stagger += stag;
+      log.push(`  → ${label} 발동: +120% 물리 · 불균형 +${Math.round(stag)} (방어 불능 ${target.physBreak})${bok ? " · 복마" : ""}`);
       return shatter + bok + self.attack * buff * 1.2;
     }
     log.push(`  → ${label}: 방어 불능 부여 (방어 불능 ${target.physBreak})${bok ? " · 복마(+물리)" : ""}`);
@@ -800,7 +808,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
       if (tw) raw += self.attack * eb(self) * 0.85; // 궁 중 강화 배틀 1단계(62→147%)
       if (self.procCount >= 4) { // 4스택 배틀 → 강화 폭발 + 강제 연소 + 궁 +100
         raw += self.attack * eb(self) * (tw ? 4.0 : 3.42); // 추가 공격(궁 중 400% / 일반 342%)
-        t.dot = Math.round(self.attack * eb(self) * (1 + (self.artsStr || 0) / 100) * 0.5); setTimer(t, "dot", DUR_DOT); add(t, "combustion"); gearTrigger(self, "anomaly:heat"); // 강제 연소(세트 조건 = "연소를 부여한 후")
+        t.dot = Math.round(self.attack * eb(self) * artsDmg(self) * 0.5); setTimer(t, "dot", DUR_DOT); add(t, "combustion"); gearTrigger(self, "anomaly:heat"); // 강제 연소(세트 조건 = "연소를 부여한 후")
         self.ultCharge = Math.min(self.ultCost, self.ultCharge + 100 * (self.ultEffMul ?? 1) * (self.wilMul ?? 1)); // 궁 +100
         self.amp.heat = Math.max(self.amp.heat || 0, 0.2); setTimer(self, "amp:heat", 4); // 불꽃의 심장(열기 저항 무시 근사)
         self.procCount = 0;
@@ -818,7 +826,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
       }
     }
     if (skill.forceBurn && t.hp > 0) { // 울프가드 늑대의 분노: 강제 연소 + 불타는 송곳니
-      t.dot = Math.round(self.attack * eb(self) * (1 + (self.artsStr || 0) / 100) * 0.36); setTimer(t, "dot", DUR_DOT); add(t, "combustion"); gearTrigger(self, "anomaly:heat"); // 강제 연소 부여 → 세트 발동
+      t.dot = Math.round(self.attack * eb(self) * artsDmg(self) * 0.36); setTimer(t, "dot", DUR_DOT); add(t, "combustion"); gearTrigger(self, "anomaly:heat"); // 강제 연소 부여 → 세트 발동
       self.amp.heat = Math.max(self.amp.heat || 0, 0.3); setTimer(self, "amp:heat", 2);
       log.push(`  → 강제 연소 + 불타는 송곳니(+30%)`);
     }
