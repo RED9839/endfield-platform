@@ -115,6 +115,7 @@ export type GearBonus = {
   vsDefBreak: number; // 방어 불능(physBreak) 적 추가 피해 % — 물리 이상 표식. 불균형과 별개 기제다
   healGuard: number;  // 생체 보조: 치유한 대상이 받는 피해 감소 %
   anomalyHit: number; // 검술사: 물리 이상 부여 후 공격력 N배 추가 물리
+  dmgReduce: number;  // 받는 모든 피해 감소 %(생체 보조 접속기·위기 탈출 식별 패널)
   vsVuln: number;   // 취약 적 추가 피해 %
   vsArts: number;   // 아츠 부착 적 추가 피해 %
   staggerMul: number;    // 불균형 누적 증가 %
@@ -266,6 +267,7 @@ export const DEF_K = 500;
 export function mitigate(u: DDUnit, dmg: number, elem: "physical" | Element): number {
   let d = dmg * (DEF_K / (u.defense + DEF_K)); // 방어력 경감(DEF_K 클수록 완만)
   d *= 1 - u.resist[elem]; // 속성별 저항(1=100%감소, 음수=약점→피해 증가). 위키 물리/열기/전기/냉기/자연 저항 정합
+  if (u.gear?.dmgReduce) d *= 1 - u.gear.dmgReduce; // 장비 부가옵 "모든 피해 감소"
   if (u.shell && !u.shellBroken && !u.staggered) d *= 1 - u.shell; // 방어 형태(은신·웅크림): 피해 감소. 불균형(강타·갑옷파괴 누적)이면 해제 → 약점 노출(원작 "팔 파괴 시 해제")
   return d;
 }
