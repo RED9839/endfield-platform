@@ -259,7 +259,9 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
           <div className="hud-tile dd-cut mb-3 px-2.5 py-2.5">
             <div className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-0.5">
               <span className="font-mono text-[13px] uppercase tracking-wider text-ef-muted">목표 장비</span>
-              <span className="font-mono text-[15px] font-bold text-ef-ink">{opSet(focusId)} 세트</span>
+              {/* 시트 1순위엔 세트 효과를 포기하고 부품 실능력치를 택한 조합 빌드가 있다(아케쿠리 등) → 발동 세트를 그대로 표기 */}
+              <span className="font-mono text-[15px] font-bold text-ef-ink">{active.length ? `${active.join(" · ")} 세트` : "조합 빌드"}</span>
+              {!active.length && <span className="font-mono text-[12px] text-ef-muted">세트 효과 대신 부품 능력치 우선</span>}
               {opSet(focusId) === opRecSet(focusId) && <span className="font-mono text-[12px] text-ef-accent">★추천</span>}
               <button type="button" onClick={() => setGearTab("set")} className="dd-cut ml-auto shrink-0 border border-ef-line px-2.5 py-0.5 font-mono text-[13px] font-bold uppercase text-ef-muted transition hover:border-ef-accent/60 hover:text-ef-accent">⚙ 장비 변경</button>
               <span className="w-full font-mono text-[12px] text-ef-muted">맨몸으로 시작 · 공업소에서 이 빌드를 목표로 제작 · <span className="font-mono text-[13px] text-ef-ink/70">능력치 +{gearGrade} · 방어 +{gearDef}</span></span>
