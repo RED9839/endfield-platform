@@ -139,35 +139,42 @@ function Bar({ value, max, color, h = "h-2" }: { value: number; max: number; col
     </div>
   );
 }
-function Chip({ children, tone = "#a1a1aa", title, icon }: { children: React.ReactNode; tone?: string; title?: string; icon?: string }) {
+function Chip({ children, tone = "#a1a1aa", title, icon, onPick }: { children: React.ReactNode; tone?: string; title?: string; icon?: string; onPick?: (r: DOMRect) => void }) {
+  if (onPick) return <button type="button" onClick={(e) => onPick(e.currentTarget.getBoundingClientRect())} title={title}
+    className="inline-flex items-center gap-0.5 border px-1.5 py-0.5 font-mono text-[14px] font-bold leading-none tracking-wide transition-[filter] hover:brightness-125"
+    style={{ borderColor: `${tone}99`, color: tone, background: `${tone}22` }}>{icon && <img src={icon} alt="" className="-ml-0.5 h-4 w-4 shrink-0 object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />}{children}</button>;
   return <span title={title} className={`inline-flex items-center gap-0.5 border px-1.5 py-0.5 font-mono text-[14px] font-bold leading-none tracking-wide ${title ? "cursor-help" : ""}`} style={{ borderColor: `${tone}99`, color: tone, background: `${tone}22` }}>{icon && <img src={icon} alt="" className="-ml-0.5 h-4 w-4 shrink-0 object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />}{children}</span>;
 }
 // 상태효과 설명 — 신규 플레이어가 칩을 봤을 때 무슨 효과인지 알 수 있게(툴팁)
 const CHIP_DESC: Record<string, string> = {
-  pb: "방어 불능 — 물리 취약. 강타로 갑옷 파괴 가능",
-  fz: "동결 — 행동 불가(냉기 아츠 이상)",
+  pb: "방어 불능 — 그 자체로는 효과 없는 표식(최대 4). 띄우기·넘어뜨리기로 쌓고 강타·갑옷 파괴로 소모한다",
+  fz: "동결 — 행동 불가(냉기 아츠 이상). 이 상태에 방어 불능·물리 이상을 넣으면 쇄빙(대량 물리)",
   heat: "열기 부착 — 다른 속성 부착과 겹치면 아츠 이상 반응(스택 소모)",
   electric: "전기 부착 — 다른 속성 부착과 겹치면 아츠 이상 반응(스택 소모)",
   cryo: "냉기 부착 — 다른 속성 부착과 겹치면 아츠 이상 반응(스택 소모)",
   nature: "자연 부착 — 다른 속성 부착과 겹치면 아츠 이상 반응(스택 소모)",
-  shock: "감전 — 아츠 취약 증가(전기 아츠 이상)",
+  shock: "감전 — 받는 아츠 피해 12~24% 증가(전기 아츠 이상). 취약과는 별개 항목이라 서로 곱해진다",
   combustion: "연소 — 매 턴 지속 피해(열기 아츠 이상)",
-  corrosion: "부식 — 전 속성 저항 감소(자연 아츠 이상)",
+  corrosion: "부식 — 전 속성 저항을 포인트 단위로 깎는다(최대 24, 자연 아츠 이상). 취약이 아니라 저항 계산에 들어간다",
   crystal: "결정 — 파괴 시 추가타",
-  "armor-break": "갑옷 파괴 — 방어력 감소",
+  "armor-break": "갑옷 파괴 — 방어 불능을 전부 소모해 물리 피해 + 받는 물리 피해 12~24% 증가",
   stun: "기절 — 행동 불가",
   wing: "핏빛 날개 — 연계 대상 표식",
   dot: "지속 피해 — 매 턴 HP 감소",
   atk: "공격력 증가 버프",
-  wk: "허약 — 주는 피해 감소",
-  amp: "증폭 — 주는 피해 증가",
-  vuln: "취약 — 받는 피해 증가",
-  prot: "비호 — 받는 피해 감소",
-  mh: "연타 — 추가 타격",
+  wk: "허약 — 주는 피해 감소. 중첩 시 곱연산이라 0이 되지 않는다",
+  amp: "증폭 — 주는 특정 속성 피해 증가(팀 버프). 취약·받는 피해 증가와는 별개 항목",
+  vuln: "취약 — 특정 속성으로 받는 피해 증가. 텍스트에 취약이라 적힌 효과만 해당된다",
+  prot: "비호 — 받는 피해 감소. 여러 개가 겹치면 가장 강한 것 하나만 적용된다",
+  mh: "연타 — 다음 배틀/궁 피해 증가(배틀 30/45/60/75%, 궁 20/30/40/50%). 발동 후 소모",
   lae: "녹아내린 불꽃 — 열기 흡수 스택(최대 4). 4스택 배틀 → 강화 폭발",
-  zfy: "청뢰검 — 감전 소모로 생성(최대 9). 뇌격 딜·궁충이 검 수에 비례",
+  zfy: "청뢰검 — 감전 소모 시 이상 레벨+1자루 생성(최대 9). 검 수만큼 뇌격이 나가고 마지막 뇌격만 6배",
   yv: "아이스 슈터 — 변신 강화 평타 치명 확률 누적(최대 10)",
   mifu: "청파 삼형 자세 — 단운→추형→개천(스킬로 전환)",
+  recv: "받는 피해 증가 — 감전·갑옷 파괴 등이 거는 효과. 취약과 별개로 곱해진다",
+  res: "저항 감소 — 부식이 속성 저항 포인트를 깎는다(최대 24). 저항 높은 적일수록 효과가 크다",
+  spd: "속도 변화 — 행동 순서(ATB)가 빨라지거나 느려진다",
+  regen: "재생 — 자기 턴마다 체력 회복",
 };
 // 오퍼 고유 스택형 버프(재능·변신 카운터) — 표시 안 되던 procCount/iceStack/stance 등을 칩으로
 const STANCE_KO = ["단운", "추형", "개천"];
@@ -269,6 +276,8 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
   const [roundBanner, setRoundBanner] = useState<{ n: number; tick: number } | null>(null);
   // 스킬 연계 체인 연출: 몇 연쇄째인지 + 누가 이어받았는지. 피해와 무관한 표시 전용.
   const [chain, setChain] = useState<{ n: number; names: string[]; tick: number } | null>(null);
+  // 상태 칩 클릭 → 무슨 효과인지 설명 팝오버(호버 title은 터치·짧은 노출로 놓치기 쉽다)
+  const [chipInfo, setChipInfo] = useState<{ c: StatusChip; x: number; y: number } | null>(null);
   const [aiming, setAiming] = useState<DDSkill | null>(null); // 대상 선택 중인 단일 스킬
   const [linkCombo, setLinkCombo] = useState<{ unitId: string; skill: DDSkill } | null>(null); // 연계 콤보 프롬프트(스킬 발동 → 조건 열린 연계 아이콘)
   const [inspectId, setInspectId] = useState<string | null>(null); // 스탯 조회 유닛
@@ -550,6 +559,28 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
       })()}
 
       {/* 라운드 배너 */}
+      {chipInfo && (
+        <>
+          {/* 바깥 클릭으로 닫기 */}
+          <div className="fixed inset-0 z-[60]" onClick={() => setChipInfo(null)} />
+          <div className="fixed z-[61] w-[300px] border border-ef-accent/70 bg-black/95 p-3"
+               style={{ left: Math.min(Math.max(12, chipInfo.x - 150), (typeof window !== "undefined" ? window.innerWidth : 1600) - 312), top: chipInfo.y + 8, boxShadow: "0 8px 28px rgba(0,0,0,0.85)", ...CUT_SM }}>
+            <div className="mb-1.5 flex items-center gap-1.5">
+              {chipInfo.c.icon && <img src={chipInfo.c.icon} alt="" className="h-5 w-5 object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />}
+              <span className="font-mono text-[15px] font-black" style={{ color: chipInfo.c.tone }}>{chipInfo.c.label}</span>
+              <span className="ml-auto font-mono text-[11px] text-ef-muted">{chipInfo.c.dir > 0 ? "▲ 이로운 효과" : chipInfo.c.dir < 0 ? "▼ 해로운 효과" : "· 중립"}</span>
+            </div>
+            <p className="font-mono text-[13px] leading-relaxed text-white/85">{CHIP_DESC[chipInfo.c.k] ?? "설명이 등록되지 않은 효과입니다."}</p>
+            {(chipInfo.c.src || chipInfo.c.turns) && (
+              <div className="mt-2 border-t border-white/10 pt-1.5 font-mono text-[12px] text-ef-muted">
+                {chipInfo.c.src && <div>출처 · {SRC_KIND_KO[chipInfo.c.src.kind] ?? ""} {chipInfo.c.src.by}「{chipInfo.c.src.via}」</div>}
+                {chipInfo.c.turns ? <div>남은 지속 · {chipInfo.c.turns}턴</div> : null}
+              </div>
+            )}
+            <button type="button" onClick={() => setChipInfo(null)} className="mt-2 w-full border border-white/20 py-1 font-mono text-[12px] text-white/70 hover:bg-white/10">닫기</button>
+          </div>
+        </>
+      )}
       {chain && !winner && (
         <div key={`ch-${chain.tick}`} className="dd-chain pointer-events-none absolute right-6 top-[188px] z-40 flex justify-end">
           <div className="flex items-center gap-2.5 border border-ef-accent bg-black/95 px-3.5 py-1.5" style={{ boxShadow: "0 0 24px rgba(255,154,47,0.55), inset 0 0 0 1px rgba(255,214,140,0.35)" }}>
@@ -616,7 +647,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
                     {e.staggered && <Chip tone="#facc15">⚡ 불균형</Chip>}
                     {(e.charging ?? 0) > 0 && <Chip tone="#f0776e">⚡ 차징! 강공 예고</Chip>}
                     {weak.map(([eln, v]) => <Chip key={eln} tone={elementColor[eln]}>{elementName[eln]}약점{Math.round(-v * 100)}</Chip>)}
-                    {unitChips(e).map((c) => <Chip key={c.k} tone={c.tone} title={chipTitle(c)} icon={c.icon}>{c.label}</Chip>)}
+                    {unitChips(e).map((c) => <Chip key={c.k} tone={c.tone} title={chipTitle(c)} icon={c.icon} onPick={(r) => setChipInfo({ c, x: r.left + r.width / 2, y: r.bottom })}>{c.label}</Chip>)}
                   </div>}
                 </div>
               </div>
@@ -670,7 +701,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
                   {/* 보호막 · 상태(세트 제외) */}
                   {(a.shield > 0 || unitChips(a).length > 0) && <div className="mt-1.5 flex flex-wrap gap-1">
                     {a.shield > 0 && <Chip tone="#38bdf8">🛡 {a.shield}</Chip>}
-                    {unitChips(a).map((c) => <Chip key={c.k} tone={c.tone} title={chipTitle(c)} icon={c.icon}>{c.label}</Chip>)}
+                    {unitChips(a).map((c) => <Chip key={c.k} tone={c.tone} title={chipTitle(c)} icon={c.icon} onPick={(r) => setChipInfo({ c, x: r.left + r.width / 2, y: r.bottom })}>{c.label}</Chip>)}
                   </div>}
                 </div>
               </div>
