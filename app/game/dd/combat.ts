@@ -93,6 +93,7 @@ export type DDUnit = {
   attachEl?: Element;    // 적 공격의 아츠 부착 속성(수정아겔로스 냉기 등): 명중 아군에 부착
   iceStack?: number; // 이본 「아이스 슈터」 변신 중 평타 누적(치확 +3%/스택, 최대 10)
   isMain?: boolean;  // 파티 메인딜러(편성 첫 오퍼 = 공략 시트 채용파티의 주인). 공유 게이지 우선권.
+  shockLv?: number;    // 감전 이상 레벨(1~4). 장방이 「뇌정의 부름」이 '소모한 감전 이상 레벨+1'만큼 청뢰검을 만든다
   didosUsed?: number;  // 자이히 디도스 지원 결정체가 쓴 치유 횟수(원문 최대 2회) — 연계 「스트레스 테스트」 조건
   zfyUsedFree?: boolean; // 장방이 천리의 경지: 첫 배틀 무소모를 이미 썼는가
   utilMult: number;  // 스킬 단조 유틸 배율(취약·증폭·회복·게이지·지속) × 의지. M0=1.0
@@ -271,6 +272,7 @@ function expire(u: DDUnit, key: string): void {
   else if (key === "resShred") { u.resShred = 0; rm(u, "corrosion"); }
   else if (key.startsWith("vuln:")) { delete u.vuln[key.slice(5) as DmgKey]; if (key === "vuln:all") rm(u, "corrosion"); }
   else if (key.startsWith("recv:")) delete u.recv[key.slice(5) as DmgKey];
+  else if (key === "shock") delete u.shockLv;
   else if (key.startsWith("amp:")) delete u.amp[key.slice(4) as DmgKey];
 }
 
@@ -444,7 +446,7 @@ export function applyAttach(target: DDUnit, el: Element, self: DDUnit, log: stri
     }
     if (el === "electric") { // 감전
       bumpRecv(target, "arts", ELEC_VULN[level - 1] * self.utilMult * sub); // 원문 1.9 받는 아츠 피해 증가(취약 아님)
-      add(target, "shock"); // 감전 상태(아크라이트 질풍/천둥 트리거)
+      add(target, "shock"); target.shockLv = level; // 감전 상태 + 이상 레벨(장방이 청뢰검 산출용)
       log.push(`  → 감전! ${ANOM[level - 1] * 100}% 전기 + 아츠취약 ${ELEC_VULN[level - 1] * 100}%`);
       return self.attack * buff * ANOM[level - 1];
     }
@@ -722,7 +724,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
     if (self.id === "zhuangfangyi") { // 장방이: 청뢰검(procCount) — 연계 강제 감전 / 배틀 감전 소모 → 검 생성 + 뇌격
       if (skill.kind === "link" && t.arts.electric > 0) { // 변화의 숨결: 전기 부착 소모 → 강제 감전(이미 감전이면 레벨↑)
         const n = t.arts.electric; t.arts.electric = 0; delete t.timers["arts:electric"];
-        const lvUp = has(t, "shock"); add(t, "shock"); gearTrigger(self, "anomaly:electric"); bumpRecv(t, "arts", (lvUp ? 0.16 : 0.12) * self.utilMult);
+        const lvUp = has(t, "shock"); add(t, "shock"); t.shockLv = Math.min(4, (lvUp ? (t.shockLv || 1) + 1 : 1)); gearTrigger(self, "anomaly:electric"); bumpRecv(t, "arts", (lvUp ? 0.16 : 0.12) * self.utilMult);
         // 전용 소모 경로도 아츠 이상 소모다 — 무기 트리거를 applyAttach 경로와 동일하게 쏜다.
         weaponTrigger(self, "anomaly:electric", living(s, "ally"), { target: t, stacks: n, viaBattle: false });
         self.ultCharge = Math.min(self.ultCost, self.ultCharge + (10 + 10 * n) * (self.ultEffMul ?? 1) * (self.wilMul ?? 1)); s.anomalyConsumed = ANOMALY_WINDOW;
@@ -732,7 +734,9 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
         const tw = (self.timers.heavenly || 0) > 0; // 천리의 경지 변신(평타/배틀 광역+강화)
         if (t === primaryTarget) { // 청뢰검 생성·궁충·증폭은 1회만(변신 중 광역이어도)
           let gen = 0;
-          if (has(t, "shock")) { rm(t, "shock"); gen = 2; } else if ((self.procCount || 0) < 3) gen = 1;
+          // 원문: 감전 소모 시 "소모한 감전 이상 레벨 + 1"자루. 없으면 청뢰검 3 미만일 때만 +1.
+          if (has(t, "shock")) { gen = Math.min(5, (t.shockLv || 1) + 1); rm(t, "shock"); delete t.shockLv; }
+          else if ((self.procCount || 0) < 3) gen = 1;
           if (tw) gen = Math.max(gen, 3); // 변신 중 강제 3자루
           self.procCount = Math.min(9, (self.procCount || 0) + gen);
           self.ultCharge = Math.min(self.ultCost, self.ultCharge + 6 * self.procCount * (self.ultEffMul ?? 1) * (self.wilMul ?? 1)); // 뇌격당 궁 +6
@@ -886,7 +890,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
         log.push(`  → 황무지의 방랑자! 팀 전기 피해 +${(amp * 100).toFixed(1)}% (장비등급 ${self.gearGrade})`);
       }
     }
-    if (skill.forceShock && t.hp > 0) { add(t, "shock"); gearTrigger(self, "anomaly:electric"); weaponTrigger(self, "anomaly:electric", living(s, "ally"), { target: t, viaBattle: skill.kind === "battle" }); bumpVuln(t, "arts", 0.12 * self.utilMult); log.push(`  → 강제 감전(전기 부착 소모)`); }
+    if (skill.forceShock && t.hp > 0) { add(t, "shock"); t.shockLv = Math.max(1, t.shockLv || 1); gearTrigger(self, "anomaly:electric"); weaponTrigger(self, "anomaly:electric", living(s, "ally"), { target: t, viaBattle: skill.kind === "battle" }); bumpVuln(t, "arts", 0.12 * self.utilMult); log.push(`  → 강제 감전(전기 부착 소모)`); }
     // 알레쉬: 아츠 이상/쇄빙 소모 감지(연계 조건) + 강제 동결 + 진귀한 린수
     if (ELEMENTS.reduce((n, e) => n + t.arts[e], 0) + t.frozen < preReact) s.anomalyConsumed = ANOMALY_WINDOW;
     if (skill.forceFreeze && t.arts.cryo > 0) {
