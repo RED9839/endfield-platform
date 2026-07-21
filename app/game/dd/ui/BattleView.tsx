@@ -3,7 +3,7 @@
 import { useEffect, useReducer, useRef, useState } from "react";
 
 import { act, canAct, isOver, startRound, perTurn, nextActor, turnOrder, usable, BASIC, GAUGE_REGEN, findLinkChain, type DDClass, type DDSkill, type DDState, type DDUnit, type Element, CHAIN_MAX, GAUGE_COST } from "../combat";
-import { OPERATORS, SKILLS, OP_BASIC, enemyDefFor, avatarUrl, fullUrl, skillIcon, enemyImage, enemyArchetype } from "../roster";
+import { OPERATORS, SKILLS, OP_BASIC, enemyDefFor, avatarUrl, fullUrl, skillIcon, enemyImage, enemyArchetype, STACK_CARRY } from "../roster";
 import { ENCOUNTERS, allyChoose, createBattle, enemyAct, regionEncounter } from "../sim";
 import { activeSets, setEffectText, loadoutPieces } from "../gear";
 import { weaponOf, weaponEffectText, weaponImage, weaponSeriesName, weaponSeriesDesc, WEAPON_KO, WEAPON_ICON } from "../weapons";
@@ -177,10 +177,10 @@ const CHIP_DESC: Record<string, string> = {
   vuln: "취약 — 특정 속성으로 받는 피해 증가. 텍스트에 취약이라 적힌 효과만 해당된다",
   prot: "비호 — 받는 피해 감소. 여러 개가 겹치면 가장 강한 것 하나만 적용된다",
   mh: "연타 — 다음 배틀/궁 피해 증가(배틀 30/45/60/75%, 궁 20/30/40/50%). 발동 후 소모",
-  lae: "녹아내린 불꽃 — 열기 흡수 스택(최대 4). 4스택 배틀 → 강화 폭발",
-  zfy: "청뢰검 — 감전 소모 시 이상 레벨+1자루 생성(최대 9). 검 수만큼 뇌격이 나가고 마지막 뇌격만 6배",
-  yv: "아이스 슈터 — 변신 강화 평타 치명 확률 누적(최대 10)",
-  mifu: "청파 삼형 자세 — 단운→추형→개천(스킬로 전환)",
+  lae: "녹아내린 불꽃 — 열기 흡수 스택(최대 4). 4스택 배틀 → 강화 폭발. ⤴ 전투가 끝나도 유지되어 다음 교전으로 넘어간다",
+  zfy: "청뢰검 — 감전 소모 시 이상 레벨+1자루 생성(최대 9). 검 수만큼 뇌격이 나가고 마지막 뇌격만 6배. 전투가 끝나면 사라진다",
+  yv: "아이스 슈터 — 변신 강화 평타 치명 확률 누적(최대 10). 변신이 끝나면 사라진다",
+  mifu: "청파 삼형 자세 — 단운→추형→개천(스킬로 전환). 전투마다 처음부터",
   recv: "받는 피해 증가 — 감전·갑옷 파괴 등이 거는 효과. 취약과 별개로 곱해진다",
   res: "저항 감소 — 부식이 속성 저항 포인트를 깎는다(최대 24). 저항 높은 적일수록 효과가 크다",
   spd: "속도 변화 — 행동 순서(ATB)가 빨라지거나 느려진다",
@@ -188,8 +188,11 @@ const CHIP_DESC: Record<string, string> = {
 };
 // 오퍼 고유 스택형 버프(재능·변신 카운터) — 표시 안 되던 procCount/iceStack/stance 등을 칩으로
 const STANCE_KO = ["단운", "추형", "개천"];
+// 스택 칩. 전투가 끝나도 남는 스택(STACK_CARRY)에는 ⤴를 붙여 구분한다 —
+// 궁 게이지와 레바테인 녹아내린 불꽃만 넘어가고, 청뢰검·아이스 슈터·삼형 자세는 전투 내 자원이다.
+const carryMark = (id: string) => (STACK_CARRY.has(id) ? " ⤴" : "");
 const OP_STACK: Record<string, (u: DDUnit) => StatusChip | null> = {
-  laevatain: (u) => u.procCount > 0 ? { k: "lae", icon: talentIcon("laevatain"), label: `녹아내린 불꽃 ${u.procCount}/4`, tone: "#fb923c", dir: 1 } : null,
+  laevatain: (u) => u.procCount > 0 ? { k: "lae", icon: talentIcon("laevatain"), label: `녹아내린 불꽃 ${u.procCount}/4${carryMark("laevatain")}`, tone: "#fb923c", dir: 1 } : null,
   zhuangfangyi: (u) => u.procCount > 0 ? { k: "zfy", icon: talentIcon("zhuangfangyi"), label: `청뢰검 ${u.procCount}/9`, tone: "#FBCB38", dir: 1 } : null,
   yvonne: (u) => (u.iceStack ?? 0) > 0 ? { k: "yv", icon: talentIcon("yvonne"), label: `아이스 슈터 ${u.iceStack}/10`, tone: "#67e8f9", dir: 1 } : null,
   mifu: (u) => (u.stance ?? 0) > 0 ? { k: "mifu", icon: talentIcon("mifu"), label: `자세 ${STANCE_KO[u.stance] ?? u.stance}`, tone: "#a3e635", dir: 1 } : null,
@@ -606,6 +609,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
           <div><b className="text-[#a16207]">불균형</b> <span className="text-ef-muted">— 적 HP 아래 노란 바. 가득 차면 적이 행동 불가가 되고 받는 피해가 30% 오른다. 스킬마다 붙은 「불균형 +N」으로 쌓는다.</span></div>
           <div><b className="text-[#67e8f9]">부착</b> <span className="text-ef-muted">— 적에게 묻은 속성(열기·전기·냉기·자연). 연계 스킬 상당수가 이걸 조건으로 삼고, 소모하면 큰 효과가 터진다.</span></div>
           <div><b className="text-[#67e8f9]">연계</b> <span className="text-ef-muted">— 조건이 열리면 아이콘이 뜨고, 누르면 그 오퍼가 <b className="text-white/80">추가 턴</b>으로 끼어든다. 조건이 겹치면 편성 왼쪽부터.</span></div>
+          <div><b className="text-[#a3e635]">이월 ⤴</b> <span className="text-ef-muted">— 궁 에너지와 레바테인 「녹아내린 불꽃」은 다음 교전으로 넘어간다. 청뢰검·아이스 슈터·삼형 자세는 전투가 끝나면 사라진다.</span></div>
           <div><b className="text-[#ff8a76]">피격 확률</b> <span className="text-ef-muted">— 적은 위치가 아니라 직군을 보고 문다. 디펜더·뱅가드가 더 자주 맞는다.</span></div>
         </div>
       )}
@@ -688,6 +692,21 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3 dd-frame px-4 py-3" style={{ ...CUT_SM, borderColor: winner === "ally" ? "#ff9a2f66" : "#b3312a66" }}>
           <span className="text-2xl" style={{ fontFamily: "var(--dd-display)", letterSpacing: "0.16em", color: winner === "ally" ? "#e8c56a" : "#c23b32", textShadow: "0 2px 10px rgba(0,0,0,0.9)" }}>{winner === "ally" ? (nodeKind === "boss" ? "던전 클리어" : "교전 승리") : "부대 전멸"}</span>
           <span className="font-mono text-[14px] text-ef-muted">{winner === "ally" ? "전리품 정산 중…" : "잠시 후…"}</span>
+          {/* 승리 시 무엇이 다음 교전으로 넘어가는지 — 궁을 못 쓰고 끝나면 준비 구간이 낭비처럼 느껴진다 */}
+          {winner === "ally" && (() => {
+            const al = (stateRef.current?.units ?? []).filter((u) => u.side === "ally" && u.hp > 0);
+            const ult = al.filter((u) => u.ultCharge > 0);
+            const stk = al.filter((u) => STACK_CARRY.has(u.id) && (u.procCount ?? 0) > 0);
+            if (!ult.length && !stk.length) return null;
+            return (
+              <span className="mt-1 font-mono text-[13px]" style={{ color: "#a3e635" }}>
+                ⤴ 다음 교전으로 이월 —{" "}
+                {ult.map((u) => `${u.name} 궁 ${Math.round(u.ultCharge)}/${u.ultCost}`).join(" · ")}
+                {ult.length > 0 && stk.length > 0 ? " · " : ""}
+                {stk.map((u) => `${u.name} 스택 ${u.procCount}`).join(" · ")}
+              </span>
+            );
+          })()}
         </div>
       )}
 
@@ -786,7 +805,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
                   {/* 궁 바(유지) */}
                   <div className="mt-1.5 flex items-center gap-1.5">
                     {/* 궁 라벨에 충전 방법을 붙인다 — 평타만 눌러서는 영원히 안 차는데 화면에 단서가 없었다 */}
-                    <span title="궁극기 에너지 — 배틀 스킬(쓰면 팀 전원 충전)과 연계 스킬로만 찹니다. 일반 공격은 팀 게이지만 회복합니다." className={`shrink-0 cursor-help font-mono text-[11px] font-bold uppercase ${ready ? "text-amber-300" : "text-ef-muted"}`}>궁</span>
+                    <span title="궁극기 에너지 — 배틀 스킬(쓰면 팀 전원 충전)과 연계 스킬로만 찹니다. 일반 공격은 팀 게이지만 회복합니다. 전투가 끝나도 유지되어 다음 교전으로 넘어갑니다(⤴)." className={`shrink-0 cursor-help font-mono text-[11px] font-bold uppercase ${ready ? "text-amber-300" : "text-ef-muted"}`}>궁</span>
                     <div className="relative flex-1" style={ready ? { filter: "drop-shadow(0 0 4px #f5c54299)" } : undefined}>
                       <Bar value={a.ultCharge} max={a.ultCost} color={ready ? "#f5c542" : "#7a611c"} h="h-2.5" />
                       <span className="pointer-events-none absolute inset-0 flex items-center justify-center font-mono text-[11px] font-bold leading-none" style={{ color: ready ? "#1a1206" : "#e5c98a", textShadow: ready ? "none" : "0 1px 2px #000" }}>{ready ? "⚡ READY" : `${Math.round(a.ultCharge)}/${a.ultCost}`}</span>
