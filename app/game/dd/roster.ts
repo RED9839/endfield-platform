@@ -605,11 +605,16 @@ export function frontlineOrder(ids: string[]): string[] {
   const clsOf = (id: string) => OP_BASE[id]?.cls ?? "striker";
   const anchor = ids[0];
   let ordered = ids;
-  const squishyAnchor = clsOf(anchor) === "striker" || clsOf(anchor) === "caster";
-  if (squishyAnchor) {
+  // 앵커(메인딜러)는 직군과 무관하게 pos2로 보호한다. 대신 설 사람이 있으면 그쪽이 전열.
+  // 기존엔 striker/caster일 때만 보호해서, 가드형 메인딜러가 최전열에 남아 먼저 죽었다.
+  // (실측: 미브 조합에서 미브가 pos1 → 14R 전투 중 R6 전사, 행동 7회 / 후열 진천우는 17회)
+  // 앵커가 디펜더면 그 자체가 탱 컨셉이므로(엠버 조합) 그대로 전열에 둔다.
+  if (clsOf(anchor) !== "defender") {
     const rest = ids.slice(1);
-    const tank = rest.find((id) => clsOf(id) === "defender") ?? rest.find((id) => clsOf(id) === "guard");
-    if (tank) ordered = [tank, anchor, ...rest.filter((x) => x !== tank)]; // 전열=진짜 탱, pos2=앵커(보호)
+    const tank = rest.find((id) => clsOf(id) === "defender")
+      ?? rest.find((id) => clsOf(id) === "vanguard")
+      ?? rest.find((id) => clsOf(id) === "guard");
+    if (tank) ordered = [tank, anchor, ...rest.filter((x) => x !== tank)]; // 전열=탱/뱅가드, pos2=앵커(보호)
   }
   // 후열(pos4)엔 가능하면 pos4 가동 유닛을(앵커 제외)
   const p4 = ordered.find((id) => POS4_CAPABLE.has(id));

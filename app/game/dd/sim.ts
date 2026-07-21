@@ -140,10 +140,23 @@ export function allyChoose(s: DDState, self: DDUnit): DDSkill | null {
     // 스탠스 페이오프: 스탠스는 2턴이면 풀린다. 열려 있을 때 안 쓰면 사슬이 통째로 끊긴다.
     // (실측: 미브가 추형 사용 가능인데도 단운·평타를 골라 강타 0회 → 개천(배율 4.0)까지 영영 도달 못 함)
     if (sk.requiresStance != null && (self.stance ?? 0) >= sk.requiresStance) v += 6;
-    // 스탠스 승급 조건이 붙은 강타(미브 추형)는 방불 3+를 소모해야 다음 스탠스가 열린다.
-    // 2스택에서 질러버리면 스탠스가 0으로 떨어져 주력기(개천 배율 4.0)가 영영 안 열린다.
-    // 셋업이 아직 덜 찼으면 미루고, 다 찼으면 최우선으로 터뜨린다.
-    if (sk.stanceFromCrush) v += (t?.physBreak ?? 0) >= 3 ? 8 : -7;
+    // 방어 불능 소모기(강타·갑옷 파괴)는 스택 수에 따라 배율이 급증한다 —
+    // 강타 300/450/600/750%, 갑옷파괴 100/150/200/250%. 1~2스택에서 지르면 셋업이 통째로 낭비된다.
+    // 소모기끼리 스택을 서로 뺏는 문제도 여기서 정리된다(미브 추형 vs 포그 갑옷파괴).
+    if (sk.anomaly === "crush" || sk.anomaly === "armor-break") {
+      const pb = t?.physBreak ?? 0;
+      v += pb >= 4 ? 7 : pb === 3 ? 4 : pb === 2 ? -2 : -6;
+      // 스탠스 승급이 걸린 강타(미브 추형)는 3+ 소모가 곧 주력기 해금이라 더 강하게 민다.
+      if (sk.stanceFromCrush) v += pb >= 3 ? 5 : -5;
+      // 소모기가 둘 이상이면 서로 스택을 뺏는다. 게이지와 같은 원칙 — 메인딜러에게 양보한다.
+      // (미브 조합: 포그 갑옷파괴가 방불 3에서 먼저 털어가 미브 추형이 영영 스탠스를 못 올렸다)
+      if (!self.isMain) {
+        const main = living(s, "ally").find((a) => a.isMain && a !== self);
+        const mainWants = !!main && (SKILLS[main.id] ?? []).some((o) =>
+          (o.anomaly === "crush" || o.anomaly === "armor-break") && usable(s, main, o));
+        if (mainWants) v -= 8;
+      }
+    }
     // 이미 그 스탠스인데 또 진입하는 셋업은 창만 갉아먹는다.
     if (sk.setStanceTo != null && sk.setStanceTo <= (self.stance ?? 0)) v -= 3;
     if (sk.selfUlt) {
