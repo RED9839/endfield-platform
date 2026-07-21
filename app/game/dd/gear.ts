@@ -204,9 +204,10 @@ const GRADE_FACTOR = 0.13; // 실측 능력치 합 → gearGrade 환산(3부위 
 // 원작은 부품(kit) 2슬롯(방어구·장갑·부품×2 = 4슬롯, 세트 3부위 발동). 본 게임은 3슬롯 모델이라
 // 부품 1개가 원작 2개 몫을 하도록 능력치/방어를 2배 환산(부옵은 단일 — 원작 2번째 부품은 통상 다른 부옵).
 
-// ── 전 220 피스 레지스트리 (data/gear-pieces.json). loadout이 피스 id를 참조하면 그 피스 실측 스탯, 세트명이면 대표 피스(GEAR_SET_STATS). ──
+// ── Lv70 피스 레지스트리 152종 (data/gear-pieces.json). loadout이 피스 id를 참조하면 그 피스 실측 스탯, 세트명이면 대표 피스(GEAR_SET_STATS). ──
 export type GearPiece = { id: string; name: string; set: string; slot: GearSlot; rarity: number; def: number; grade: { base: number; enh: number[] }; attrs?: { str?: number; agi?: number; int?: number; wil?: number }; dmg?: { kind: DmgSub["kind"]; base: number; enh: number[] } };
-// Lv50 이하(rarity<5) 장비 전면 제거 — Lv70(rarity 5) 세트 장비만 사용.
+// Lv70(rarity 5) 장비만 사용한다. 데이터 파일에서도 Lv70 미만 91종을 제거했으므로
+// 이 필터는 이후 하위 등급이 다시 들어오는 것을 막는 안전장치다.
 export const GEAR_PIECES = (gearPiecesData as GearPiece[]).filter((p) => p.rarity >= 5);
 export const GEAR_PIECE_BY_ID: Record<string, GearPiece> = Object.fromEntries(GEAR_PIECES.map((p) => [p.id, p]));
 export const GEAR_PIECES_BY_SET_SLOT: Record<string, Partial<Record<GearSlot, GearPiece[]>>> = {};
