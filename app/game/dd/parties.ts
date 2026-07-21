@@ -17,7 +17,9 @@ export type PresetParty = {
 
 export const ARCHETYPE_LABEL: Record<PartyArchetype, string> = { arts: "아츠 폭딜", break: "물리 불균형", crit: "치명 딜" };
 
-// 정렬: 시트 채용파티 앵커 행 순서(레바테인→엠버→이본→라스트→장방이→아비웨나→로시→미브).
+// 정렬: 시트 채용파티 앵커 행 순서(레바테인→엠버→이본→라스트→장방이→로시→미브).
+// 아비웨나 조합은 제외 — 시뮬상 보스전 0%·정예 71%로 다른 조합과 격차가 커 추천에서 뺐다.
+// (아비웨나 자체는 장방이 조합 2번 슬롯 대체픽으로 남아 있다)
 // 약칭: 레=레바테인 울=울가 아델=아델리아 카=카뮤 아케=아케쿠리 안=안탈 질=질베르타 펠=펠리카
 //  엠=엠버 포=포그 미=미브 천=진천우 관=관리자 판=판 이=이본 탕=탕탕 자=자이히 에=에스텔라
 //  라=라스트 장=장방이 앜=아크라이트 알=알레쉬 웨=아비웨나 로=로시 여=여풍
@@ -78,19 +80,6 @@ export const PRESET_PARTIES: PresetParty[] = [
       // 시뮬 검증: 결 25168 / 아비웨나 5032 / 알레쉬 5014 / 아델리아 3907 / 안탈 3657 (팀DPS)
       { role: "2번 서포터", ids: ["arcane", "avywenna", "alesh", "ardelia"], note: "결 / 아비웨나 / 알레쉬 / 아델리아" },
       { role: "4번 뱅가드", ids: ["arclight", "akekuri"], note: "아크라이트 / 아케쿠리" },
-    ],
-  },
-  {
-    id: "avywenna",
-    name: "아비웨나 조합",
-    members: ["avywenna", "perlica", "gilberta", "akekuri"],
-    element: "electric",
-    archetype: "arts",
-    desc: "아비웨나 썬더랜스 전기 폭딜 — 펠리카 감전 · 질베/아델 서포터 · 아케 등 유동",
-    note: "1,2,4,5돌",
-    alternates: [
-      { role: "3번 서포터", ids: ["gilberta", "ardelia"], note: "질베르타 / 아델리아" },
-      { role: "4번 유동", ids: ["akekuri", "antal", "arclight"], note: "아케쿠리 / 안탈 / 아크라이트" },
     ],
   },
   {
