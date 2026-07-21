@@ -129,10 +129,13 @@ function parseHitPattern(lines: string[]): { label: string; w: number }[] | null
 type Fx = { tick: number; activeId: string | null; actingSide: "ally" | "enemy" | null; floaters: Floater[]; cast: { id: string; text: string } | null };
 const NO_FX: Fx = { tick: 0, activeId: null, actingSide: null, floaters: [], cast: null };
 
-function Bar({ value, max, color, h = "h-2" }: { value: number; max: number; color: string; h?: string }) {
+function Bar({ value, max, color, h = "h-2", ghost = false }: { value: number; max: number; color: string; h?: string; ghost?: boolean }) {
   const pct = Math.max(0, Math.min(100, (value / Math.max(1, max)) * 100));
   return (
     <div className={`${h} relative w-full overflow-hidden rounded-[2px] bg-black/75`} style={{ boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.05), inset 0 1px 3px rgba(0,0,0,0.9)" }}>
+      {/* 피해 잔상 — 실제 바는 즉시 줄고 잔상은 늦게 따라와서, 이번에 깎인 폭이 눈에 보인다.
+          숫자만 뜨고 사라지면 얼마나 들어갔는지 감이 안 오는데 이게 그 간극을 메운다. */}
+      {ghost && <div className="absolute inset-y-0 left-0 rounded-[2px]" style={{ width: `${pct}%`, background: "rgba(255,120,90,0.55)", transition: "width 1.1s ease-out 0.28s" }} />}
       <div className="relative h-full rounded-[2px] transition-all duration-300 ease-out" style={{ width: `${pct}%`, background: color, boxShadow: `0 0 7px ${color}77` }}>
         <span className="pointer-events-none absolute inset-x-0 top-0 h-[45%] rounded-t-[2px]" style={{ background: "linear-gradient(180deg, rgba(255,255,255,0.42), transparent)" }} />
       </div>
@@ -256,6 +259,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
   const cycleActsRef = useRef(0); // ATB: 사이클(모두 1회) 내 행동 수
   const cycleSizeRef = useRef(1); // 사이클 크기(생존 유닛 수)
   const dmgRef = useRef<Record<string, number>>({}); // 아군별 누적 가한 피해(데미지 기록)
+  const takenRef = useRef<Record<string, number>>({}); // 적별 누적으로 받은 피해 — 숫자가 얼마나 쌓였는지 카드에서 바로 보이게
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoRef = useRef(false); // 기본 수동(전투 스킬 직접 선택). 자동은 토글.
   const speedRef = useRef(1);
@@ -303,6 +307,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
     const floaters: Floater[] = [];
     for (const u of s.units) { const d = u.hp - (before.get(u.id) ?? u.hp); if (d !== 0) floaters.push({ id: u.id, amt: d, crit: crit && d < 0, tone: elementColor[unitElement(actor)] }); }
     // 데미지 기록: 아군 행동이 적에게 준 총 피해를 액터에 누적
+    for (const u of s.units) if (u.side === "enemy") { const d = (before.get(u.id) ?? u.hp) - u.hp; if (d > 0) takenRef.current[u.id] = (takenRef.current[u.id] ?? 0) + d; }
     if (actor.side === "ally") { let dealt = 0; for (const u of s.units) if (u.side === "enemy") { const d = (before.get(u.id) ?? u.hp) - u.hp; if (d > 0) dealt += d; } if (dealt > 0) dmgRef.current[actor.id] = (dmgRef.current[actor.id] ?? 0) + dealt; }
     fxTick.current += 1;
     setRoundBanner(null);
@@ -653,7 +658,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
                 {/* 정보 */}
                 <div className="w-full">
                   <div className="flex min-w-0 items-center gap-1"><span className="h-1.5 w-1.5 shrink-0" style={{ background: elementColor[el] }} /><span className="truncate font-mono text-[14px] font-bold tracking-tight text-white" style={{ textShadow: "0 1px 3px #000" }} title={e.name}>{e.name}</span></div>
-                  <div className="flex items-center gap-1"><span className="text-[9px] leading-none text-[#e0655c]/70">HP</span><div className="flex-1"><Bar value={e.hp} max={e.maxHp} color="#e0655c" /></div><span className="shrink-0 font-mono text-[11px] tabular-nums text-ef-muted"><span className="font-bold text-white/90">{Math.max(0, e.hp)}</span>/{e.maxHp}</span></div>
+                  <div className="flex items-center gap-1"><span className="text-[9px] leading-none text-[#e0655c]/70" title={`누적 피해 ${(takenRef.current[e.id] ?? 0).toLocaleString()}`}>HP</span><div className="flex-1"><Bar value={e.hp} max={e.maxHp} color="#e0655c" ghost /></div>{(takenRef.current[e.id] ?? 0) > 0 && !dead && <span className="ml-1 shrink-0 font-mono text-[10px] font-bold tabular-nums text-[#ff8a6a]/85" title="이 적에게 누적으로 넣은 피해">▼{(takenRef.current[e.id] ?? 0).toLocaleString()}</span>}<span className="shrink-0 font-mono text-[11px] tabular-nums text-ef-muted"><span className="font-bold text-white/90">{Math.max(0, e.hp)}</span>/{e.maxHp}</span></div>
                   {e.staggerMax > 0 && !dead && <div className="mt-0.5 flex items-center gap-1"><span className="text-[9px] leading-none text-[#a16207]/80" title="불균형: 가득 차면 행동 불가 + 받는 피해 증가">불균형</span><div className="relative flex-1"><Bar value={e.staggered ? e.staggerMax : e.stagger} max={e.staggerMax} color={e.staggered ? "#facc15" : "#a16207"} h="h-1" />{e.poiseKnot && !e.poiseBroken && <span className="pointer-events-none absolute top-[-1px] h-[calc(100%+2px)] w-px bg-white/70" style={{ left: "50%" }} title="불균형 지점 — 넘으면 잠시 중단" />}</div></div>}
                   {!dead && <div className="mt-0.5"><Bar value={e.atb} max={100} color="#67e8f9" h="h-1" /></div>}
                   {!dead && <div className="mt-1 flex flex-wrap justify-center gap-1">
