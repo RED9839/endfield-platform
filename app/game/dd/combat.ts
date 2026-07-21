@@ -1230,6 +1230,12 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
     applyBuff(self, "shield", Math.round(self.maxHp * 0.30), undefined, 2); setTimer(self, "furyCd", 12);
     log.push(`  → 분노! 보호막 (최대 HP 30%)`);
   }
+  // 결 「어스름 파훼」 — 집중 공격 2회를 소화하면 궁이 「깨달음」(640%)으로 전환된다.
+  // 우리 모델은 궁 1회 = 진+집중2회이므로, 궁을 쓰면 다음 궁이 깨달음이 되고 그 다음은 다시 진으로 돌아간다.
+  if (self.id === "arcane" && skill.kind === "ult") {
+    if ((self.timers.duskAwaken || 0) > 0) { delete self.timers.duskAwaken; log.push(`  → 어스름 파훼의 깨달음! (다음 궁은 다시 진 생성)`); }
+    else { setTimer(self, "duskAwaken", 99); log.push(`  → 집중 공격 2회 소화 — 다음 궁이 「깨달음」으로 전환`); }
+  }
   // 판: 간 맞추기 — 궁(채 썰어 웍) 후 식재료 준비 → 이후 연계(조미료) 쿨 40% 단축(근사).
   if (self.id === "dapan" && skill.kind === "ult") { self.linkCdMul = 0.6; log.push(`  → 간 맞추기! 연계 쿨 40% 단축`); }
   // 자이히(서포터): 디도스(치유 / 오버힐 시 아츠 증폭) · 스택 오버플로(팀 냉기/자연 증폭, 지능→장비등급)

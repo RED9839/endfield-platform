@@ -381,8 +381,15 @@ export const SKILLS: Record<string, DDSkill[]> = {
       note: "전술 분신 구속(쿨 12초≈2턴) — 취약 + 감속. 지혜 폼은 배틀로 조기 폭발" },
     // 어스름 파훼(궁): 지혜 진180+집중360+깨달음1440=1980% / 의지 진180+집중360+깨달음360=900%.
     // 지혜=강제 부식(전 피해 취약) / 의지=아츠 부착 재부여(팀 반응 재점화).
-    { id: "arcn-u", name: "어스름 파훼", kind: "ult", fromPos: [1, 2, 3], target: "all", power: 8.8, hits: [0.8, 1.6, 6.4],
-      powerOf: (self) => (arcaneForm(self) === "wisdom" ? 8.8 : 4.0),
+    // 원문(나무위키 레벨표 Lv1): 진 80% · 집중 공격 총피해 160%(최대 2회) · 깨달음 640%.
+    // 구조는 폼별 배율 차이가 아니라 **순차 전환**이다 —
+    //   시전 시 「어스름 파훼의 진」 생성(80%) → 진 안의 적이 처형/강일을 받으면 집중 공격(160%) 최대 2회
+    //   → 2회 소화 후 궁이 「어스름 파훼의 깨달음」으로 전환되어 다음 궁이 640%가 된다.
+    // 진결·지혜는 배율이 아니라 "진 생성 시 강제 부식 15초"를 추가할 뿐이다.
+    // (기존엔 80+160+640을 한 방 880%로 뭉치고 폼별 배율까지 붙여, 지혜/의지 값이 뒤섞여 있었다)
+    { id: "arcn-u", name: "어스름 파훼", kind: "ult", fromPos: [1, 2, 3], target: "all", power: 4.0, hits: [0.8, 1.6, 1.6],
+      powerOf: (self) => ((self.timers.duskAwaken || 0) > 0 ? 6.4 : 4.0),
+      hitsOf: (self) => ((self.timers.duskAwaken || 0) > 0 ? [6.4] : undefined),
       element: "nature", staggerVal: 20, selfUlt: true,
       apply: (t, self) => {
         if (arcaneForm(self) === "wisdom") {
