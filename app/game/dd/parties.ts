@@ -7,8 +7,8 @@ export type PartyArchetype = "arts" | "break" | "crit"; // 아츠 폭딜 / 물�
 export type PresetParty = {
   id: string;
   name: string;
-  members: string[]; // 슬롯 1~4번 배치 순서 그대로(전열=1번). 던전은 이 순서를 바꾸지 않는다.
-  main: string;      // 메인딜러(메인 컨트롤 오퍼레이터) — 1번 슬롯과 다를 수 있다(탱이 전열)
+  members: string[]; // 슬롯 1~4번 배치 순서 그대로. 던전은 이 순서를 바꾸지 않는다(전열/후열 개념 없음).
+  main: string;      // 메인딜러(메인 컨트롤 오퍼레이터) — 1번 슬롯과 다를 수 있다
   element: "physical" | "heat" | "electric" | "cryo" | "nature"; // 조합 주력 속성
   archetype: PartyArchetype; // 운영 축
   desc: string;

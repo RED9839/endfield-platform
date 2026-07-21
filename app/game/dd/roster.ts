@@ -597,43 +597,16 @@ export function makeAlly(id: string, pos: number, progress: OpProgress = DEFAULT
 }
 
 export function alliesPhysical(): DDUnit[] {
-  // 포지션 퍼즐: 포그·여풍은 전열/중열(pos1~3)에서만, 관리자는 후열(pos4) 가능. 진천우는 어디서나(궁극만 pos1~2).
   return [makeAlly("chenqianyu", 1), makeAlly("lifeng", 2), makeAlly("pogranichnik", 3), makeAlly("endministrator", 4)];
 }
 
-// 전열 배치 규칙 — 물몸 딜러(스트라이커/캐스터) 앵커는 전열 몰빵을 피해 pos2로 보호.
-// 단 전열로 세울 건 "진짜 탱(디펜더/가드)"만: 뱅가드·서포터·캐스터는 딜·버프·enabler 코어라 전열 희생 시 파티 딜 붕괴(카뮤·아케쿠리 등).
-// 탱이 없는 물몸 파티는 재배치 무의미 → 앵커 유지(자가생존/버스트에 의존). 탱/가드 앵커(엠버·미브·로시)도 그대로 전열.
-// pos4 가동 가능 유닛(진천우·관리자)은 후열로 몰아 평타 낭비 최소화.
-const POS4_CAPABLE = new Set(["chenqianyu", "endministrator"]); // fromPos에 4 포함(후열 완전 가동)
-export function frontlineOrder(ids: string[]): string[] {
-  if (ids.length < 2) return ids;
-  const clsOf = (id: string) => OP_BASE[id]?.cls ?? "striker";
-  const anchor = ids[0];
-  let ordered = ids;
-  // 앵커(메인딜러)는 직군과 무관하게 pos2로 보호한다. 대신 설 사람이 있으면 그쪽이 전열.
-  // 기존엔 striker/caster일 때만 보호해서, 가드형 메인딜러가 최전열에 남아 먼저 죽었다.
-  // (실측: 미브 조합에서 미브가 pos1 → 14R 전투 중 R6 전사, 행동 7회 / 후열 진천우는 17회)
-  // 앵커가 디펜더면 그 자체가 탱 컨셉이므로(엠버 조합) 그대로 전열에 둔다.
-  if (clsOf(anchor) !== "defender") {
-    const rest = ids.slice(1);
-    const tank = rest.find((id) => clsOf(id) === "defender")
-      ?? rest.find((id) => clsOf(id) === "vanguard")
-      ?? rest.find((id) => clsOf(id) === "guard");
-    if (tank) ordered = [tank, anchor, ...rest.filter((x) => x !== tank)]; // 전열=탱/뱅가드, pos2=앵커(보호)
-  }
-  // 후열(pos4)엔 가능하면 pos4 가동 유닛을(앵커 제외)
-  const p4 = ordered.find((id) => POS4_CAPABLE.has(id));
-  if (p4 && p4 !== ordered[ordered.length - 1] && p4 !== anchor) ordered = [...ordered.filter((x) => x !== p4), p4];
-  return ordered;
-}
 
 // ===== 적 데이터: namu.wiki 명일방주 엔드필드 적 문서 정합(세력·저항표·특수능력) =====
 //  세력: 아겔로스(4번협곡 + 무릉="수화자")·랜드브레이커(본 크러셔)·청파채(창적)·야외 생물.
 //  등급: 일반(normal)/강화(enhanced)/정예(elite~)/두목·우두머리(boss). 위키 Lv90 절대 스탯 대신 DD 스케일 티어 매핑.
 //  저항: 속성별(물리/열기/전기/냉기/자연) 위키 저항표 반영 — 무릉=전기·냉기↑, 파조의 상=열기 약점 등.
 export type EnemyTier = "common" | "normal" | "enhanced" | "advanced" | "alpha" | "elite" | "boss";
-export type EnemyBehavior = "melee" | "snipe" | "aoe" | "heavy" | "heal" | "buff"; // 근접·저격(후열)·광역·중장·치유·강화
+export type EnemyBehavior = "melee" | "snipe" | "aoe" | "heavy" | "heal" | "buff"; // 근접·저격·광역·중장·치유·강화
 // 보스 페이즈 1단계. combat이 HP 변화를 보고 전환시킨다.
 export type BossPhase = {
   name?: string;                    // 전환 후 표시명(컷신 연출용)
@@ -657,7 +630,7 @@ export type EnemyDef = {
   shell?: number;        // 방어 형태(0~1 피해 감소): 은신/웅크림 방어. 강타·갑옷파괴·불균형으로 해제 → 취약(산성원석충·무장 맹글러·삼미아겔로스)
   rage?: boolean;        // 분노: HP 50% 미만 시 공격력↑, 불균형 진입 시 해제(프릭비스트·레이커비스트·거대 록하울러)
   revive?: boolean;      // 부활: 사망 후 1회 재생(잔영)
-  pull?: boolean;        // 끌어당김: 후열 딜러를 강제 타격 + 취약(결정아겔로스)
+  pull?: boolean;        // 끌어당김: 고위협 딜러를 강제 타격 + 취약(결정아겔로스)
   summon?: boolean;      // 소환: 전투 중 부하 추가(삼미아겔로스 돌기둥·록하울러 무리 등)
   dotBurst?: boolean;    // 지속+폭발: 명중 시 지속 피해 후 폭발(본 크러셔 사수)
   unstoppable?: boolean; // 끊기 저항: 불균형 지속 단축(본 크러셔 파괴자)
@@ -696,30 +669,32 @@ const ENEMY_ATK_COMP = 2.8;
 const ENEMY_HP_COMP = 3.3;
 
 // 적 컨셉(역할) → 속도 아키타입 + 우선 타겟. 턴 순서·조준을 컨셉에 맞춰 전략성 부여.
-//  front=전열(낮은 pos, 탱/뱅가드) / wounded=저체력%(부상 딜러 마무리) / threat=최고위협(강화된 딜러 직격)
-export type EnemyTarget = "front" | "wounded" | "threat";
+//  any=무지향(무작위) / wounded=저체력%(부상 딜러 마무리) / threat=최고위협(강화된 딜러 직격)
+// any=무지향(무작위) / wounded=저체력 우선 / threat=최고위협 우선.
+// 전열/후열 개념을 없애면서 "front"(위치 낮은 아군 우선)를 "any"로 바꿨다.
+export type EnemyTarget = "any" | "wounded" | "threat";
 export function enemyArchetype(role: string, behavior: string): { spd: number; tgt: EnemyTarget } {
   const has = (k: string) => role.includes(k);
   // 대구경 포격·포탑·중화기·공성: 굼뜨지만 후방 고위협(딜러) 직격
   if (has("포격") || has("포탑")) return { spd: -15, tgt: "threat" };
   if (has("공성") || has("중화기")) return { spd: -13, tgt: "threat" };
-  if (has("중장")) return { spd: -18, tgt: "front" };                                  // 최저속, 전열 압살
+  if (has("중장")) return { spd: -18, tgt: "any" };                                  // 최저속, 무지향
   if (has("저격") || has("사격") || has("투척") || has("처형")) return { spd: 12, tgt: "wounded" }; // 기민, 부상자 저격/처형
-  if (has("돌격") || has("포식")) return { spd: 16, tgt: "front" };                     // 최고속 강습
-  if (has("근접") || has("약탈") || has("야수")) return { spd: 9, tgt: "front" };        // 빠른 근접
-  if (has("증폭")) return { spd: 12, tgt: "front" };                                    // 지원: 빠른 반응
+  if (has("돌격") || has("포식")) return { spd: 16, tgt: "any" };                     // 최고속 강습
+  if (has("근접") || has("약탈") || has("야수")) return { spd: 9, tgt: "any" };        // 빠른 근접
+  if (has("증폭")) return { spd: 12, tgt: "any" };                                    // 지원: 빠른 반응
   if (has("연막")) return { spd: 7, tgt: "wounded" };
-  if (has("술사")) return { spd: 3, tgt: "front" };
-  if (has("자폭")) return { spd: -8, tgt: "front" };                                    // 굼뜬 폭탄
+  if (has("술사")) return { spd: 3, tgt: "any" };
+  if (has("자폭")) return { spd: -8, tgt: "any" };                                    // 굼뜬 폭탄
   if (has("원석충")) return { spd: -4, tgt: "wounded" };
-  if (has("동결") || has("변신")) return { spd: 0, tgt: "front" };                       // 제어형 중속
+  if (has("동결") || has("변신")) return { spd: 0, tgt: "any" };                       // 제어형 중속
   if (has("최종") || has("두목")) return { spd: 13, tgt: "threat" };                     // 보스: 고속 위협
-  if (has("우두머리") || has("채주")) return { spd: -9, tgt: "front" };                   // 보스: 둔중
+  if (has("우두머리") || has("채주")) return { spd: -9, tgt: "any" };                   // 보스: 둔중
   const byBeh: Record<string, { spd: number; tgt: EnemyTarget }> = {                    // 폴백(behavior)
-    heavy: { spd: -14, tgt: "front" }, snipe: { spd: 10, tgt: "wounded" }, aoe: { spd: -4, tgt: "front" },
-    heal: { spd: 6, tgt: "wounded" }, buff: { spd: 10, tgt: "front" }, melee: { spd: 6, tgt: "front" },
+    heavy: { spd: -14, tgt: "any" }, snipe: { spd: 10, tgt: "wounded" }, aoe: { spd: -4, tgt: "any" },
+    heal: { spd: 6, tgt: "wounded" }, buff: { spd: 10, tgt: "any" }, melee: { spd: 6, tgt: "any" },
   };
-  return byBeh[behavior] ?? { spd: 0, tgt: "front" };
+  return byBeh[behavior] ?? { spd: 0, tgt: "any" };
 }
 
 // warfarin 데이터마인 실측(Lv100) — [최대 생명력, 공격력]. 이름으로 매칭한 74종.

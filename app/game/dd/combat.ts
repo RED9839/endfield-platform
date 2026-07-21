@@ -1,6 +1,7 @@
 // ===== 다키스트 던전류 전투 엔진 (엔드필드 리뉴얼) =====
 import { weaponTrigger } from "./weapons";
-// 카드/드로우 없음. 속도 기반 턴 순서 + 고정 스킬킷 + 포지션(전열/후열) + 스킬 사용 요구사항(usage gate).
+// 카드/드로우 없음. 속도 기반 턴 순서 + 고정 스킬킷 + 스킬 사용 요구사항(usage gate).
+// 전열/후열 개념은 없다 — pos는 편성 순서(화면 배치)일 뿐 피격 우선순위가 아니다.
 // 명일방주: 엔드필드 전투 시스템 wiki 정합. 액션 레이어만 DD류, 메커니즘은 원작.
 
 export type DDStatus = "stun" | "combustion" | "corrosion" | "crystal" | "armor-break" | "shock" | "wing";
@@ -14,7 +15,7 @@ export type DDUnit = {
   name: string;
   side: "ally" | "enemy";
   cls?: DDClass; // 직군
-  pos: number; // 1=전열 … 4=후열
+  pos: number; // 편성 순서(화면 좌→우). 전열/후열 개념 없음 — 피격 우선순위와 무관
   hp: number;
   maxHp: number;
   speed: number; // 행동 게이지(ATB) 충전 속도(오퍼 고유 민첩 — roster.ts applyAttrs)
@@ -78,7 +79,7 @@ export type DDUnit = {
   shellBroken?: boolean; // 방어 형태 해제됨(약점 노출)
   revive?: boolean;      // 부활(잔영): 사망 시 1회 재생(HP 50%) + 이후 강화
   revived?: boolean;     // 부활 사용됨
-  pull?: boolean;        // 끌어당김(결정아겔로스): 후열 딜러를 강제 타격 + 취약
+  pull?: boolean;        // 끌어당김(결정아겔로스): 고위협 딜러를 강제 타격 + 취약
   summon?: boolean;      // 소환(삼미아겔로스 돌기둥 등): 전투 중 부하 추가
   dotBurst?: boolean;    // 지속+폭발(본 크러셔 사수): 명중 시 지속 피해 부여 후 폭발
   unstoppable?: boolean; // 끊기 저항(본 크러셔 파괴자): 불균형 지속 단축(공세 계속)
@@ -103,7 +104,7 @@ export type DDUnit = {
   zfyUsedFree?: boolean; // 장방이 천리의 경지: 첫 배틀 무소모를 이미 썼는가
   utilMult: number;  // 스킬 단조 유틸 배율(취약·증폭·회복·게이지·지속) × 의지. M0=1.0
   utilBase?: number; // 의지 곱하기 전 스킬 단조 유틸 배율(재계산 기준값)
-  killPriority?: number; // 아군 자동 타겟 처치 우선(적 한정): 3=지원(치유/증폭) 2=원거리 1=전열
+  killPriority?: number; // 아군 자동 타겟 처치 우선(적 한정): 3=지원(치유/증폭) 2=원거리 1=근접
   lanceN?: number;   // 아비웨나 썬더랜스(적에게 누적, 가로채기로 소모) — 일반
   lanceBig?: number; // 아비웨나 강력 썬더랜스(적에게 누적) — 강력(전기 부착)
   artsImmune?: number; // 아츠 부착 확률 면역(아크라이트 만물의 지혜 0.5 = 50% 무효)
@@ -144,7 +145,7 @@ export type DDSkill = {
   id: string;
   name: string;
   kind: "attack" | "battle" | "link" | "ult"; // 일반공격·배틀·연계·궁극
-  fromPos: number[]; // 사용 가능 위치(전열/후열 제약)
+  fromPos: number[]; // (미사용) 원작의 위치 제약 — 전열/후열을 없애며 게이트하지 않는다
   target: TargetMode;
   targetRanks?: number[]; // 명중 가능한 적 랭크(생략 시 전체)
   power: number; // 공격력 배율(스킬 발동 피해). 다단히트면 hits 합과 일치.
@@ -666,7 +667,7 @@ export function pickTargets(s: DDState, self: DDUnit, skill: DDSkill): DDUnit[] 
   if (s.forcedTargetId) { const t = foes.find((f) => f.id === s.forcedTargetId); if (t) return [t]; }
   if (skill.target === "single-lowhp") return foes.length ? [foes.reduce((lo, e) => (e.hp < lo.hp ? e : lo), foes[0])] : [];
   // single-front 자동/기본 대상(수동 조준 없을 때·자동 전투): '전열 고정' 제거 → 처치 우선순위
-  //  불균형(처형) > 지원 적(치유·증폭) > 저체력% 마무리 > 전열. 무의미한 랜덤성 없이 스마트 포커스.
+  //  불균형(처형) > 지원 적(치유·증폭) > 저체력% 마무리 > 편성 순서. 무의미한 랜덤성 없이 스마트 포커스.
   if (!foes.length) return [];
   const prio = (e: DDUnit) => (e.staggered ? 4 : 0) + (e.killPriority ?? 1);
   return [[...foes].sort((a, b) => prio(b) - prio(a) || a.hp / a.maxHp - b.hp / b.maxHp || a.pos - b.pos)[0]];

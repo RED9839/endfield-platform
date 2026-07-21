@@ -261,12 +261,13 @@ export function enemyAct(s: DDState, self: DDUnit): void {
     else if (!self.staggered && Math.random() < 0.45) { self.charging = 1; s.log.push(`${self.name}[적] ⚡ 차징 시작! 다음 턴 강력 공격 — 불균형시키면 차단`); return; }
   }
   // 타겟팅: 컨셉(역할) 아키타입별 우선 대상 — 대형의 다른 부위를 위협해 배치·보호 전략 유도
-  //  front=전열(탱커 벽) / wounded=저체력%(부상 딜러 마무리) / threat=최고위협(강화된 딜러 직격)
+  //  any=무지향(무작위) / wounded=저체력%(부상 딜러 마무리) / threat=최고위협(강화된 딜러 직격)
   const tgt = enemyArchetype(def?.role ?? "", behavior).tgt;
-  const byFront = [...foes].sort((a, b) => a.pos - b.pos);
   const byWounded = [...foes].sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp || a.pos - b.pos);
   const byThreat = [...foes].sort((a, b) => b.attack * (1 + (b.atkBuff || 0)) - a.attack * (1 + (a.atkBuff || 0)) || a.pos - b.pos);
-  const pick = () => (tgt === "wounded" ? byWounded[0] : tgt === "threat" ? byThreat[0] : byFront[0]);
+  // "any"는 특정 지향이 없는 적 — 아무나 문다. 예전엔 pos가 낮은 아군(전열)을 우선했지만
+  // 전열/후열 개념을 없앴다: 플레이어가 정한 편성 순서는 배치일 뿐 피격 우선순위가 아니다.
+  const pick = () => (tgt === "wounded" ? byWounded[0] : tgt === "threat" ? byThreat[0] : foes[Math.floor(Math.random() * foes.length)]);
   // 소환(삼미아겔로스 돌기둥 등): 같은 세력 약한 적을 전장에 추가(최대 5마리, 확률)
   if (self.summon && living(s, "enemy").length < 5 && Math.random() < 0.35) {
     const bt = FACTION_POOL[def?.faction ?? ""]?.byTier;
@@ -280,7 +281,7 @@ export function enemyAct(s: DDState, self: DDUnit): void {
     const wide = (self.procCount = (self.procCount || 0) + 1) % 2 === 1;
     targets = wide ? foes : [pick()];
   } else targets = [pick()];
-  // 끌어당김(결정아겔로스): 후열 고위협 딜러를 강제로 끌어내 직격 + 물리 취약(노출)
+  // 끌어당김(결정아겔로스): 고위협 딜러를 강제로 끌어내 직격 + 물리 취약(노출)
   if (self.pull) { const back = byThreat[0]; targets = [back]; bumpVuln(back, "physical", 0.2); setTimer(back, "vuln:physical", 1); s.log.push(`${self.name}[적] 끌어당김! ${back.name} 강제 노출(취약)`); }
   const rageOn = !!def?.rage && self.hp / self.maxHp < 0.5 && !self.staggered; // 분노: HP 50%↓, 불균형이면 해제
   const powerMul = (behavior === "heavy" ? 1.55 : 1) * (rageOn ? 1.4 : 1) * (chargeAttack ? 1.8 : 1); // 차징 강공 ×1.8. aoe는 makeEnemy에서 공격력 이미 하향
@@ -507,7 +508,7 @@ export function createBattle(party: { id: string; hp?: number; loadout?: Loadout
   let bonusGauge = 0;
   // 위치 = **편성 순서 그대로**. 예전엔 frontlineOrder로 탱을 pos1에, 앵커를 pos2로 자동 재배치했는데,
   // 플레이어가 편성 화면에서 1~4번을 직접 정해 놓아도 던전에 들어가면 순서가 바뀌어 버렸다.
-  // 배치는 플레이어 몫이고, 추천 부대는 parties.ts가 이미 전열용 순서로 정의한다.
+  // 배치는 플레이어 몫이다. 전열/후열 개념이 없어 위치는 화면 배치·연출용일 뿐이다.
   const ordered = party;
   const mainId = party.find((p) => p.main)?.id ?? party[0]?.id; // 메인딜러(추천 부대는 main 지정, 없으면 1번)
   const allies = ordered.map((p, i) => {

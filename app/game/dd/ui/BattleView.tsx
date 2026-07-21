@@ -73,10 +73,10 @@ function battlePayoff(s: DDState, u: DDUnit, sk: DDSkill): string | null {
 const statusLabel: Record<string, string> = { stun: "기절", combustion: "연소", corrosion: "부식", crystal: "결정", "armor-break": "갑옷파괴", shock: "감전", wing: "날개" };
 const nodeTitle: Record<NodeKind, string> = { battle: "교전", elite: "정예 교전", boss: "보스 교전", rest: "야영" };
 const behaviorLabel: Record<string, string> = { melee: "근접 돌격", snipe: "원거리 저격", heavy: "중장 강타", aoe: "광역 자폭", heal: "치유 지원", buff: "강화 지원" };
-const targetDesc: Record<string, string> = { front: "전열 강타 — 최전열(탱커) 우선", wounded: "부상자 저격 — 체력% 낮은 대상 마무리", threat: "고위협 직격 — 공격력 높은 딜러 조준" };
+const targetDesc: Record<string, string> = { any: "무지향 — 아무나 문다", wounded: "부상자 저격 — 체력% 낮은 대상 마무리", threat: "고위협 직격 — 공격력 높은 딜러 조준" };
 // 적 행동 유형별 위협 설명 + 처치 우선도(높을수록 먼저 제거) — 적 상세 패턴 보강용
 const behaviorDesc: Record<string, string> = {
-  melee: "빠르게 접근해 전열을 직접 타격하는 근접형.",
+  melee: "빠르게 접근해 직접 타격하는 근접형.",
   snipe: "후방에서 부상자를 노리는 고화력·저체력 저격형.",
   heavy: "느리지만 단단하고 강력한 중장형(HP·불균형 높음).",
   aoe: "자폭형 광역 피해 — 방치하면 파티 전체를 타격.",
