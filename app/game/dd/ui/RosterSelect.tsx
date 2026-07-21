@@ -117,18 +117,18 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
           <h2 className="font-mono text-xl font-black uppercase tracking-[0.12em] text-white">부대 편성</h2>
           <p className="mt-0.5 font-mono text-[13px] text-ef-muted">{selected.length === 0 ? "오퍼레이터를 골라 원정대를 편성합니다 (최대 4명)" : selected.length < 4 ? `${selected.length}명 편성됨 · 최대 4명까지 · 준비되면 「원정 출발」` : "편성 완료 · 「원정 출발」로 던전에 진입합니다"}</p>
         </div>
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-end gap-2">
           {Array.from({ length: 4 }, (_, i) => {
             const id = selected[i]; const o = id ? OPERATORS.find((x) => x.id === id) : null;
             return (
               // 초상화 + 그 **아래** 피격 확률. 이미지 위에 얹으면 얼굴을 가리고 잘 안 읽힌다.
-              <div key={i} className="flex flex-col items-center gap-1">
-                <button type="button" onClick={() => o && setFocusId(o.id)} className="relative h-11 w-11 overflow-hidden border transition hover:brightness-110" style={{ ...CUT, borderColor: o ? elementColor[o.element] : "#2a2a2e", background: o ? `center top/cover url(${avatarUrl(o.id)}), #0d0906` : "linear-gradient(180deg,#131316,#0b0b0d)" }}>
-                  {!o && <span className="absolute inset-0 flex items-center justify-center font-mono text-base font-black text-ef-line">{i + 1}</span>}
-                  {o && <span className="absolute inset-x-0 bottom-0 h-1" style={{ background: elementColor[o.element] }} />}
+              <div key={i} className="flex flex-col items-center gap-1.5">
+                <button type="button" onClick={() => o && setFocusId(o.id)} className="relative h-[68px] w-[68px] overflow-hidden border transition hover:brightness-110" style={{ ...CUT, borderColor: o ? elementColor[o.element] : "#2a2a2e", background: o ? `center top/cover url(${avatarUrl(o.id)}), #0d0906` : "linear-gradient(180deg,#131316,#0b0b0d)" }}>
+                  {!o && <span className="absolute inset-0 flex items-center justify-center font-mono text-2xl font-black text-ef-line">{i + 1}</span>}
+                  {o && <span className="absolute inset-x-0 bottom-0 h-1.5" style={{ background: elementColor[o.element] }} />}
                 </button>
                 {/* 피격 확률 — 누가 맞아 줄지가 편성의 핵심인데 화면에 아무 단서가 없었다 */}
-                <span className="font-mono text-[11px] font-black leading-none tabular-nums" style={{ color: o ? "#ff9a8a" : "transparent" }}>
+                <span className="font-mono text-[13px] font-black leading-none tabular-nums" style={{ color: o ? "#ff9a8a" : "transparent" }}>
                   {o ? `${Math.round((aggroPct[o.id] ?? 0) * 100)}%` : "—"}
                 </span>
               </div>
