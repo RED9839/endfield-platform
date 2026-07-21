@@ -711,18 +711,120 @@ export function enemyArchetype(role: string, behavior: string): { spd: number; t
   return byBeh[behavior] ?? { spd: 0, tgt: "front" };
 }
 
+// warfarin 데이터마인 실측(Lv100) — [최대 생명력, 공격력]. 이름으로 매칭한 74종.
+// 이 값을 그대로 쓰지 않고 **티어 평균 대비 비율**로만 쓴다(우리 게임의 난이도 밴드를 유지하면서
+// 개체 간 상대 강약만 원작과 맞추기 위해서다). makeEnemy가 tier 평균으로 정규화한다.
+export const ENEMY_DM: Record<string, [number, number]> = {
+  "cloud-obliterator": [1325201, 4620],
+  "effigy": [993901, 4620],
+  "bk-ballista": [993901, 5081],
+  "heavy-ram-alpha": [993901, 5081],
+  "rakerbeast": [883467, 4620],
+  "heavy-sting-alpha": [872424, 4158],
+  "heavy-ram": [662600, 4620],
+  "heavy-sting": [585297, 3465],
+  "marble-appendage": [187737, 4158],
+  "walking-chrysopolis": [1104334, 4158],
+  "bk-executioner": [883467, 4620],
+  "hill-smasher": [883467, 4158],
+  "marble-aggelo": [3533869, 5497],
+  "rhodagn-the-bonekrushing-fist": [2760835, 4620],
+  "ruan-yi": [2650402, 4620],
+  "nefarith-conqueror": [2098235, 2772],
+  "nefarith": [1877368, 3234],
+  "craghowler": [1601284, 3696],
+  "triaggelos": [1104334, 4620],
+  "tidalklast": [1104334, 4620],
+  "mudflow-delta": [231910, 2079],
+  "ram-alpha": [165650, 3234],
+  "sting-alpha": [165650, 2541],
+  "hedron-delta": [165650, 2079],
+  "mudflow": [143563, 1848],
+  "falsewings-alpha": [132520, 2079],
+  "hedron": [121477, 1848],
+  "ram": [110433, 2310],
+  "sting": [110433, 1848],
+  "falsewings": [88347, 1848],
+  "glaring-rakerbeast": [1490851, 5081],
+  "tidewalker-delta": [1490851, 5081],
+  "hazefyre-axe-armorbeast": [1435634, 5081],
+  "elite-executioner": [1325201, 7391],
+  "skydrummer": [1325201, 4620],
+  "axe-armorbeast": [1104334, 4620],
+  "tidewalker": [993901, 4620],
+  "bk-siege": [993901, 1848],
+  "manglerbeast": [938684, 2310],
+  "breaking-gust": [883467, 3927],
+  "sentinel": [331300, 3465],
+  "quillbeast": [993901, 3118],
+  "bonekrusher-arsonist": [662600, 3465],
+  "quillbeastx": [662600, 2772],
+  "bk-pyromancer": [607384, 3465],
+  "cloud-stalker": [607384, 3465],
+  "nimbus-razor": [607384, 3465],
+  "tunneling-nidwyrm": [552167, 3927],
+  "prism": [88347, 1848],
+  "enyx": [706774, 2310],
+  "highway-reaver": [231910, 3003],
+  "elite-raider": [231910, 3465],
+  "brutal-pincerbeast": [220867, 2079],
+  "blazemist-originium-slug": [215345, 2079],
+  "elite-ambusher": [209823, 2656],
+  "hazefyre-claw": [198780, 2541],
+  "acid-originium-slug-alpha": [198780, 2079],
+  "elite-ripptusk": [182215, 2772],
+  "bk-raider": [154607, 2541],
+  "road-plunderer": [154607, 2310],
+  "hazefyre-tuskbeast": [154607, 2310],
+  "firemist-slug": [143563, 1848],
+  "bonekrusher-ambusher": [143563, 1963],
+  "grove-archer": [143563, 1963],
+  "bonekrusher-infiltrator": [132520, 2310],
+  "indigenous-pincerbeast": [132520, 1848],
+  "bonekrusher-vanguard": [132520, 1848],
+  "sweeping-wind": [132520, 2310],
+  "acid-slug": [121477, 1848],
+  "bonekrusher-ripptusk": [121477, 2079],
+  "rockhowler": [110433, 924],
+  "waterlamp": [88347, 1848],
+  "aethillu": [88347, 3465],
+  "eny": [1, 1155],
+};
+
+// 티어별 데이터마인 평균(HP, 공격) — 이 값으로 정규화해 티어의 난이도 밴드를 유지한다.
+const DM_AVG_CACHE: Record<string, [number, number]> = {};
+function tierDmAvg(tier: EnemyTier): [number, number] {
+  const c = DM_AVG_CACHE[tier];
+  if (c) return c;
+  const ids = Object.keys(ENEMY_DEFS).filter((k) => ENEMY_DEFS[k].tier === tier && ENEMY_DM[k]);
+  const n = Math.max(1, ids.length);
+  const hp = ids.reduce((a, k) => a + ENEMY_DM[k][0], 0) / n;
+  const atk = ids.reduce((a, k) => a + ENEMY_DM[k][1], 0) / n;
+  return (DM_AVG_CACHE[tier] = [hp || 1, atk || 1]);
+}
+
 export function makeEnemy(def: EnemyDef, pos: number): DDUnit {
   const b = TIER_STATS[def.tier];
   let { hp, attack, speed, staggerMax, defense } = b;
   hp = Math.round(hp * ENEMY_HP_COMP);
   attack = Math.round(attack * ENEMY_ATK_COMP);
-  // 역할 파워 보정(체력·공격·불균형) — 속도는 아래 컨셉 아키타입에서 별도 산정
-  if (def.behavior === "heavy") { hp = Math.round(hp * 1.35); attack = Math.round(attack * 1.15); staggerMax = Math.round(staggerMax * 1.25); }
-  // 저격형은 물몸이지만 보스에까지 적용하면 최종 보스가 가장 약해진다(마블 아겔로미레 HP 16199 = 전 보스 최저).
-  else if (def.behavior === "snipe") { if (def.tier !== "boss") hp = Math.round(hp * 0.8); }
-  else if (def.behavior === "aoe") { attack = Math.round(attack * 0.72); }
-  else if (def.behavior === "heal") { attack = Math.round(attack * 0.5); hp = Math.round(hp * 0.9); }
-  else if (def.behavior === "buff") { attack = Math.round(attack * 0.7); }
+  // 개체별 강약은 behavior 계수가 아니라 **원본 실측 비율**로 정한다.
+  // 기존엔 heavy x1.15 / aoe x0.72 같은 임의 계수가 원본과 반대로 작용했다 —
+  // 실측상 공격력이 가장 낮은 거대한 록하울러(3696)가 우리 게임에선 최강(805)이 되어 있었다.
+  const dm = ENEMY_DM[def.id];
+  if (dm) {
+    const avg = tierDmAvg(def.tier);
+    hp = Math.round(hp * (dm[0] / avg[0]));
+    attack = Math.round(attack * (dm[1] / avg[1]));
+    if (def.behavior === "heavy") staggerMax = Math.round(staggerMax * 1.25); // 불균형만 역할 보정 유지
+  } else {
+    // 데이터마인에 없는 개체(자리표시·변형)만 기존 역할 계수로 근사한다.
+    if (def.behavior === "heavy") { hp = Math.round(hp * 1.35); attack = Math.round(attack * 1.15); staggerMax = Math.round(staggerMax * 1.25); }
+    else if (def.behavior === "snipe") { if (def.tier !== "boss") hp = Math.round(hp * 0.8); }
+    else if (def.behavior === "aoe") { attack = Math.round(attack * 0.72); }
+    else if (def.behavior === "heal") { attack = Math.round(attack * 0.5); hp = Math.round(hp * 0.9); }
+    else if (def.behavior === "buff") { attack = Math.round(attack * 0.7); }
+  }
   // 컨셉(역할) 속도 아키타입: 돌격·기민형↑ / 포격·중장형↓ → 턴 순서 전략성 (최저 20)
   speed = Math.max(20, speed + enemyArchetype(def.role, def.behavior).spd);
   const u: DDUnit = { ...zero(), id: `${def.id}#${pos}`, name: def.name, side: "enemy", pos, hp, maxHp: hp, speed, attack, staggerMax, ultCost: 999 };

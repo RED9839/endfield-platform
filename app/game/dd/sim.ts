@@ -325,10 +325,11 @@ export type Encounter = { key: string; name: string; desc: string; make: () => D
 
 const D = ENEMY_DEFS;
 const pick = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
-export const bossComp = (ids: string[]): DDUnit[] => comp(...(ids as any))();
-const comp = (...ids: (keyof typeof ENEMY_DEFS)[]) => (): DDUnit[] => {
+export const bossComp = (ids: string[]): DDUnit[] => buildUnits(ids);
+// 편성 ids → 유닛. 보스의 호위 부위(guardedBy)를 함께 만들어 본체 무적을 풀 수 있게 한다.
+export function buildUnits(ids: string[]): DDUnit[] {
   const out: DDUnit[] = [];
-  for (const id of ids) {
+  for (const id of ids as (keyof typeof ENEMY_DEFS)[]) {
     const u = makeEnemy(D[id], out.length + 1);
     out.push(u);
     // 호위 부위(마블 촉수 4개): 전부 처치해야 본체(코어)가 피격 대상이 된다.
@@ -342,7 +343,8 @@ const comp = (...ids: (keyof typeof ENEMY_DEFS)[]) => (): DDUnit[] => {
     }
   }
   return out;
-};
+}
+const comp = (...ids: (keyof typeof ENEMY_DEFS)[]) => (): DDUnit[] => buildUnits(ids as string[]);
 
 // 세력별 교전 편성(랜덤 배치). 정예·보스는 티어 상향.
 const NORMAL_COMPS = [
@@ -432,9 +434,10 @@ export function regionEncounter(faction: string, kind: NodeKind, depth: number, 
   const recent = new Set(recentEnemies);
   let ids: string[];
   if (kind === "boss") {
+    // 원작 보스전은 호위 잡몹 없이 보스 단독이다. 난이도는 페이즈(EnemyDef.phases)와
+    // 호위 부위(guardedBy — 마블 촉수)로 만든다. comp()가 부위를 자동으로 붙인다.
     const bid = (bossId && D[bossId]) ? bossId : pool.boss.length ? pick(pool.boss) : "craghowler"; // 층 지정 보스 우선
-    const guards = pickSquad(faction, depth >= 6 ? "advanced" : "enhanced", depth >= 6 ? 2 : 1, new Set([bid, ...recentEnemies])); // 보스 + 서로 다른 호위(최근 회피)
-    ids = [bid, ...guards];
+    ids = [bid];
   } else if (kind === "elite") {
     // 정예 조우: 정예 개체 1마리 + 하위 등급 잡몹 다수(호위). 원작 정예 조우 구성 — 우두머리 하나에 부하가 붙는다.
     const tgt = tierAt(kind, depth, maxDepth);
@@ -452,7 +455,10 @@ export function regionEncounter(faction: string, kind: NodeKind, depth: number, 
   recentEnemies.push(...ids);
   recentEnemies = recentEnemies.slice(-8); // 최근 8마리를 회피 대상으로 유지
   const mul = floorScale(floor);
-  return ids.map((id, i) => { const u = makeEnemy(D[id], i + 1); if (mul !== 1) { u.maxHp = Math.round(u.maxHp * mul); u.hp = u.maxHp; u.attack = Math.round(u.attack * mul); } return u; });
+  // buildUnits가 guardedBy(마블 촉수)를 함께 만든다 — 이게 빠지면 본체가 무적인 채 촉수가 없어 교착된다.
+  const out = buildUnits(ids);
+  if (mul !== 1) for (const u of out) { u.maxHp = Math.round(u.maxHp * mul); u.hp = u.maxHp; u.attack = Math.round(u.attack * mul); }
+  return out;
 }
 type NodeKind = "battle" | "elite" | "boss" | "rest";
 const NODE_TO_KIND: Record<NodeKind, "normal" | "elite" | "boss"> = { battle: "normal", elite: "elite", boss: "boss", rest: "normal" };
