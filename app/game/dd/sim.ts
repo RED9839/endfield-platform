@@ -137,6 +137,15 @@ export function allyChoose(s: DDState, self: DDUnit): DDSkill | null {
       const mine = SKILLS[self.id] ?? [];
       if (mine.some((o) => (o.requiresStance ?? 0) > (self.stance ?? 0) && (o.requiresStance ?? 0) <= sk.setStanceTo!)) v += 4;
     }
+    // 스탠스 페이오프: 스탠스는 2턴이면 풀린다. 열려 있을 때 안 쓰면 사슬이 통째로 끊긴다.
+    // (실측: 미브가 추형 사용 가능인데도 단운·평타를 골라 강타 0회 → 개천(배율 4.0)까지 영영 도달 못 함)
+    if (sk.requiresStance != null && (self.stance ?? 0) >= sk.requiresStance) v += 6;
+    // 스탠스 승급 조건이 붙은 강타(미브 추형)는 방불 3+를 소모해야 다음 스탠스가 열린다.
+    // 2스택에서 질러버리면 스탠스가 0으로 떨어져 주력기(개천 배율 4.0)가 영영 안 열린다.
+    // 셋업이 아직 덜 찼으면 미루고, 다 찼으면 최우선으로 터뜨린다.
+    if (sk.stanceFromCrush) v += (t?.physBreak ?? 0) >= 3 ? 8 : -7;
+    // 이미 그 스탠스인데 또 진입하는 셋업은 창만 갉아먹는다.
+    if (sk.setStanceTo != null && sk.setStanceTo <= (self.stance ?? 0)) v -= 3;
     if (sk.selfUlt) {
       v += 10;
       // 보스 전엔 궁을 아낀다 — 게이지가 런 내내 이월되므로 보스 진입 만충이 목표.
