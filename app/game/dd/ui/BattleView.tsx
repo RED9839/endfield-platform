@@ -464,7 +464,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
   // 승리/패배 확정 → 배너 연출 후 자동 종료(교전 승리는 전리품 화면으로, 보스/패배는 결과 화면으로)
   useEffect(() => {
     if (!winner) return;
-    const t = setTimeout(() => { const su = (stateRef.current?.units ?? []).filter((u) => u.side === "ally").map((a) => ({ id: a.id, hp: a.hp, ult: a.ultCharge })); onEnd(winner, su); }, 1500);
+    const t = setTimeout(() => { const su = (stateRef.current?.units ?? []).filter((u) => u.side === "ally").map((a) => ({ id: a.id, hp: a.hp, ult: a.ultCharge, stacks: a.procCount })); onEnd(winner, su); }, 1500);
     return () => clearTimeout(t);
     /* eslint-disable-next-line react-hooks/exhaustive-deps */
   }, [winner]);

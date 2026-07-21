@@ -449,6 +449,10 @@ const zero = () => ({ physBreak: 0, stagger: 0, staggered: false, staggerTimer: 
 
 // 오퍼레이터 선택 UI용 메타(속성은 스킬의 비물리 아츠 속성에서 추론, 없으면 물리)
 export type OpMeta = { id: string; name: string; cls: DDClass; element: "physical" | Element };
+// 전투가 끝나도 유지되는 스택(procCount) — 원작에서 전투 밖으로 들고 나가는 것만.
+// 레바테인 「녹아내린 불꽃」이 그렇다. 장방이 청뢰검·미브 삼형 같은 건 전투 내 자원이라 제외.
+export const STACK_CARRY = new Set(["laevatain"]);
+
 export const OPERATORS: OpMeta[] = Object.values(OP_BASE).map((b) => {
   const el = (SKILLS[b.id] ?? []).find((s) => s.element && s.element !== "physical")?.element ?? "physical";
   return { id: b.id, name: b.name, cls: b.cls, element: el as "physical" | Element };

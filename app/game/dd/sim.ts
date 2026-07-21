@@ -1,6 +1,6 @@
 // DD 전투 시뮬 헬퍼 — AI(아군 자동/적) + 인카운터 + 전투 생성. UI와 테스트가 공유(부작용 없음).
 import { BASIC, DDState, DDUnit, DDSkill, Element, ELEMENTS, applyAttach, applyEnemyArts, applyDamage, healUnit, living, mitigate, usable, pickTargets, vulnFor, onAllyHit, EXECUTE_MULT, GAUGE_COST, setLinkChain, bumpVuln, setTimer, arcaneForm, setPhaseHook, runPhases } from "./combat";
-import { SKILLS, makeAlly, makeEnemy, ENEMY_DEFS, enemyDefFor, enemyArchetype } from "./roster";
+import { SKILLS, makeAlly, makeEnemy, ENEMY_DEFS, enemyDefFor, enemyArchetype, STACK_CARRY } from "./roster";
 import { applyGear, GEAR_SLOTS, LOADOUT_SLOTS, type Loadout, type GearSlot, type LoadoutSlot } from "./gear";
 import { applyWeapon } from "./weapons";
 import type { OpProgress } from "./progress";
@@ -515,7 +515,7 @@ export function enemyDrop(kind: NodeKind, depth: number, faction: string): { par
 }
 
 // 아군(선택 순서=포지션, 지속 HP·장비 로드아웃) + 인카운터로 전투 상태 생성. 게이지 200/300(+장비 시작 게이지).
-export function createBattle(party: { id: string; hp?: number; loadout?: Loadout; progress?: OpProgress; ult?: number; main?: boolean }[], enc: Encounter, owned?: Record<string, number>, boss?: boolean): DDState {
+export function createBattle(party: { id: string; hp?: number; loadout?: Loadout; progress?: OpProgress; ult?: number; main?: boolean; stacks?: number }[], enc: Encounter, owned?: Record<string, number>, boss?: boolean): DDState {
   let bonusGauge = 0;
   // 위치 = **편성 순서 그대로**. 예전엔 frontlineOrder로 탱을 pos1에, 앵커를 pos2로 자동 재배치했는데,
   // 플레이어가 편성 화면에서 1~4번을 직접 정해 놓아도 던전에 들어가면 순서가 바뀌어 버렸다.
@@ -527,6 +527,8 @@ export function createBattle(party: { id: string; hp?: number; loadout?: Loadout
     if (p.id === mainId) u.isMain = true;
     if (p.hp != null) u.hp = Math.max(1, Math.min(u.maxHp, p.hp)); // 지속 HP(소모전)
     if (p.ult != null) u.ultCharge = Math.max(0, Math.min(u.ultCost, p.ult)); // 궁 게이지 이월 — 전투마다 0으로 리셋되면 고비용 궁(220~240)은 영원히 못 씀
+    // 전투 밖으로 들고 나가는 스택 복원(레바테인 녹아내린 불꽃) — 전투마다 0이면 4스택 폭발을 매번 새로 쌓아야 한다.
+    if (p.stacks != null && STACK_CARRY.has(p.id)) u.procCount = Math.max(0, p.stacks);
     // 맨몸 시작 — 공업소에서 제작(owned)한 피스만 장착. 미제작 슬롯은 미적용(기본 스탯).
     let equipped: Loadout | undefined; let levels: Partial<Record<LoadoutSlot, number>> | undefined;
     if (p.loadout && owned) for (const slot of LOADOUT_SLOTS) { const ref = p.loadout[slot]; if (ref && owned[ref] != null) { (equipped ??= {})[slot] = ref; (levels ??= {})[slot] = owned[ref]; } }

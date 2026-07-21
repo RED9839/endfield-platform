@@ -26,10 +26,11 @@ const pickRand = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)
 export type NodeKind = "battle" | "elite" | "rest" | "boss";
 export type RunNode = { id: string; depth: number; lane: number; kind: NodeKind; next: string[] };
 export type RunPhase = "select" | "map" | "battle" | "rest" | "craft" | "spoils" | "victory" | "defeat";
-export type PartyPick = { id: string; loadout?: Loadout; progress?: OpProgress; ult?: number; main?: boolean };
+export type PartyPick = { id: string; loadout?: Loadout; progress?: OpProgress; ult?: number; main?: boolean; stacks?: number };
 // main: 메인딜러(메인 컨트롤 오퍼레이터). 위치는 편성 순서를 그대로 쓰므로 1번과 별개로 지정할 수 있다.
-export type PartyMember = { id: string; hp: number; maxHp: number; loadout?: Loadout; progress?: OpProgress; ult?: number; main?: boolean };
-export type BattleResult = { id: string; hp: number; ult?: number }; // ult: 궁 게이지 이월(HP처럼 런 내내 유지 — 보스 전 만충이 목표)
+export type PartyMember = { id: string; hp: number; maxHp: number; loadout?: Loadout; progress?: OpProgress; ult?: number; main?: boolean; stacks?: number };
+export type BattleResult = { id: string; hp: number; ult?: number; stacks?: number }; // ult: 궁 게이지 이월(HP처럼 런 내내 유지 — 보스 전 만충이 목표)
+                                                                                       // stacks: 전투 밖으로 들고 나가는 스택(레바테인 녹아내린 불꽃)
 
 export const REST_HEAL = 0.4; // 야영 회복 비율(최대 HP)
 
@@ -159,7 +160,7 @@ export function useDDRun() {
   const finishBattle = useCallback((result: "ally" | "enemy", survivors: BattleResult[]) => {
     if (!activeNode) return;
     if (result === "ally") {
-      setParty((cur) => cur.map((m) => { const s = survivors.find((x) => x.id === m.id); return { ...m, hp: s ? s.hp : 0, ult: s?.ult ?? m.ult }; })); // HP·궁 게이지 이월
+      setParty((cur) => cur.map((m) => { const s = survivors.find((x) => x.id === m.id); return { ...m, hp: s ? s.hp : 0, ult: s?.ult ?? m.ult, stacks: s?.stacks ?? m.stacks }; })); // HP·궁 게이지·스택 이월
       const raw = enemyDrop(activeNode.kind, activeNode.depth, faction); // 세력·티어·깊이별 드랍테이블
       const mult = Math.pow(LOOT_DECAY, floor); // 층당 재화 -6%(후반 인플레 억제)
       const drop = { parts: Math.round(raw.parts * mult), permits: Math.round(raw.permits * mult), items: raw.items };
