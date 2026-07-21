@@ -110,13 +110,13 @@ export function effectText(e: SetEffect): string {
 // 시트(공략 빌드) 기준 오퍼별 추천 세트 — recSet 기본값·프리셋 로드아웃의 단일 소스.
 // 공략 시트(구글) 1순위 빌드 기준 — 오퍼별 추천 세트(2부위 세트명).
 export const OP_RECOMMENDED_SET: Record<string, string> = {
-  laevatain: "열 작업용", ember: "경량 초자연", wulfgard: "식양의 숨결", akekuri: "개척", camu: "개척",
+  laevatain: "열 작업용", ember: "경량 초자연", wulfgard: "청파", akekuri: "?", camu: "개척",
   yvonne: "M. I. 경찰용", lastrite: "조류의 물결", tangtang: "청파", snowshine: "식양의 숨결", xaihi: "식양의 숨결",
   alesh: "개척", estella: "식양의 숨결", zhuangfangyi: "식양의 흐름", avywenna: "본 크러셔", perlica: "펄스식",
-  arclight: "개척", antal: "식양의 숨결", gilberta: "식양의 숨결", ardelia: "식양의 숨결", fluorite: "식양의 숨결",
+  arclight: "개척", antal: "식양의 숨결", gilberta: "식양의 숨결", ardelia: "식양의 숨결", fluorite: "통합 실전 훈련",
   pogranichnik: "응룡 50식", lifeng: "식양의 숨결", endministrator: "고검의 잔향", rossi: "M. I. 경찰용",
   chenqianyu: "응룡 50식", dapan: "검술사", catcher: "식양의 숨결", mifu: "고검의 잔향",
-  arcane: "열 작업용",
+  arcane: "식양의 숨결",
 };
 // 오퍼 추천 세트(시트 우선, 없으면 직군·속성 폴백)
 export function recommendedSet(id: string, cls: string, element: string): string {
@@ -216,13 +216,23 @@ export const GEAR_SET_CANON: Record<string, Partial<Record<GearSlot, GearPiece>>
 for (const p of GEAR_PIECES) { if (/[·•]/.test(p.name)) continue; const s = (GEAR_SET_CANON[p.set] ??= {}); if (!s[p.slot]) s[p.slot] = p; }
 
 // 오퍼별 장착 피스 — 공략 시트(구글) 1순위 빌드 3슬롯 전부 지정(방어구/장갑/부품).
+// 오퍼별 대체 빌드(시트에 둘 이상 실린 경우). 결은 재능 「전략 수립」이 지능/의지 비교로 폼을 바꾸므로
+// 빌드 자체가 역할을 결정한다 — 식양의 숨결(궁충·의지)=서폿 진결·의지 / 열 작업용(딜·지능)=메인 진결·지혜.
+export const OP_GEAR_ALT: Record<string, { name: string; note: string; loadout: Loadout }[]> = {
+  arcane: [
+    { name: "메인 세팅", note: "열 작업용 — 지능을 올려 진결·지혜(딜) 폼", loadout: {
+      armor: "item_equip_t4_suit_fire_natr01_body_02", gloves: "item_equip_t4_hotworkprotectivegloves",
+      kit1: "item_equip_t4_hotworkinsulationplate", kit2: "item_equip_t4_suit_heal01_edc_03" } },
+  ],
+};
+
 export const OP_GEAR: Record<string, Loadout> = {
   laevatain: { armor: "item_equip_t4_suit_fire_natr01_body_02", gloves: "item_equip_t4_suit_fire_natr01_hand_02", kit1: "item_equip_t4_suit_fire_natr01_edc_02", kit2: "item_equip_t4_suit_heal01_edc_03" },
   ember: { armor: "item_equip_t4_suit_poise01_body_01", gloves: "item_equip_t4_suit_phy01_hand_01", kit1: "item_equip_t4_suit_poise01_edc_01", kit2: "item_equip_t4_suit_poise01_edc_01" },
-  wulfgard: { armor: "item_equip_t4_suit_heal01_body_01", gloves: "item_equip_t4_suit_usp02_hand_01", kit1: "item_equip_t4_suit_usp02_edc_03", kit2: "item_equip_t4_suit_usp02_edc_03" },
-  // 아케쿠리: 시트 세트가 "개척"인데 위기 탈출(무소속 "?")·절망 피스가 박혀 있어 세트 효과가 0이었다.
-  // 위기 탈출 계열은 substat이 시트와 어긋나 bestFreePiece에서도 제외한 계열이다 → 하드코딩을 걷고
-  // 일반 추천 로직(개척 3부위 + 자유 1)에 맡긴다.
+  wulfgard: { armor: "item_equip_t4_suit_combo_cd01_body_01", gloves: "item_equip_t4_suit_heal01_hand_01", kit1: "item_equip_t4_suit_combo_cd01_edc_02", kit2: "item_equip_t4_suit_combo_cd01_edc_02" }, // 시트 첫 줄: 청파 세트
+  // 아케쿠리 — 시트 첫 줄은 "궁극기 충전 세트"다. 위기 탈출+절망 조합이라 세트 효과는 없지만
+  // 궁 충전 부가옵을 몰아주는 의도된 빌드다(세트 효과보다 효율이 좋아 끼는 구성).
+  akekuri: { armor: "item_equip_t4_parts_wuling01_body_02", gloves: "item_equip_t4_rifttrekkergloves", kit1: "item_equip_t4_parts_wuling01_edc_03", kit2: "item_equip_t4_parts_wuling01_edc_03" },
   camu: { armor: "item_equip_t4_suit_atb01_body_05", gloves: "item_equip_t4_suit_atb01_hand_02", kit1: "item_equip_t4_suit_atb01_edc_04", kit2: "item_equip_t4_parts_wuling01_edc_03" },
   yvonne: { armor: "item_equip_t4_suit_criti01_body_02", gloves: "item_equip_t4_suit_criti01_hand_02", kit1: "item_equip_t4_suit_criti01_edc_03", kit2: "item_equip_t4_suit_criti01_edc_03" },
   lastrite: { armor: "item_equip_t4_suit_phy01_body_01", gloves: "item_equip_t4_suit_burst01_hand_01", kit1: "item_equip_t4_suit_burst01_edc_01", kit2: "item_equip_t4_suit_burst01_edc_01" },
@@ -238,12 +248,12 @@ export const OP_GEAR: Record<string, Loadout> = {
   antal: { armor: "item_equip_t4_suit_burst01_body_01", gloves: "item_equip_t4_suit_usp02_hand_01", kit1: "item_equip_t4_suit_usp02_edc_01", kit2: "item_equip_t4_suit_usp02_edc_01" },
   gilberta: { armor: "item_equip_t4_suit_usp02_body_01", gloves: "item_equip_t4_rifttrekkergloves", kit1: "item_equip_t4_suit_usp02_edc_03", kit2: "item_equip_t4_suit_usp02_edc_03" },
   ardelia: { armor: "item_equip_t4_suit_usp02_body_01", gloves: "item_equip_t4_rifttrekkergloves", kit1: "item_equip_t4_suit_usp02_edc_03", kit2: "item_equip_t4_suit_usp02_edc_03" },
-  fluorite: { armor: "item_equip_t4_suit_attri01_body_01", gloves: "item_equip_t4_suit_usp02_hand_01", kit1: "item_equip_t4_suit_usp02_edc_01", kit2: "item_equip_t4_suit_usp02_edc_01" },
+  fluorite: { armor: "item_equip_t4_suit_attri01_body_01", gloves: "item_equip_t4_aicfieldworkgloves", kit1: "item_equip_t4_aicfieldworkember", kit2: "item_equip_t4_aicfieldworkember" }, // 시트 첫 줄: 궁극기 충전(통합 실전 훈련)
   // 결은 빌드가 두 벌이다(위키 4.2). 우리 게임은 전무 42식·척결(지능 +156) 고정이라 패널상 항상
   // 진결·지혜(딜)이므로 **딜러 빌드(열 작업용)**를 목표 장비로 쓴다.
   //   열 작업용 3피스 세트효과 "적에게 부식을 부여한 후 자연 피해 +50%" ↔ 결 지혜 궁의 강제 부식과 정확히 맞물린다.
   //   (서포터 빌드 식양의 숨결은 진결·의지 전용 — 폼을 의지로 돌릴 때 장비 변경에서 고르면 된다)
-  arcane: { armor: "item_equip_t4_suit_fire_natr01_body_02", gloves: "item_equip_t4_hotworkprotectivegloves", kit1: "item_equip_t4_hotworkinsulationplate", kit2: "item_equip_t4_suit_heal01_edc_03" },
+  arcane: { armor: "item_equip_t4_eternalxiranitelightarmor", gloves: "item_equip_t4_aicfieldworkwraps", kit1: "item_equip_t4_eternalxiranitereinforcedplate", kit2: "item_equip_t4_suit_usp02_edc_03" }, // 시트 첫 줄: 식양의 숨결(서폿)
   pogranichnik: { armor: "item_equip_t4_suit_attri01_body_04", gloves: "item_equip_t4_suit_atk02_hand_02", kit1: "item_equip_t4_suit_atk02_edc_04", kit2: "item_equip_t4_suit_atk02_edc_04" },
   lifeng: { armor: "item_equip_t4_suit_atk02_body_02", gloves: "item_equip_t4_suit_usp02_hand_01", kit1: "item_equip_t4_suit_usp02_edc_01", kit2: "item_equip_t4_suit_usp02_edc_01" },
   endministrator: { armor: "item_equip_t4_suit_crush_fracture_body_02", gloves: "item_equip_t4_suit_crush_fracture_hand_02", kit1: "item_equip_t4_suit_crush_fracture_edc_02", kit2: "item_equip_t4_suit_phy01_edc_03" },

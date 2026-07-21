@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 import { OPERATORS, SKILLS, OP_BASIC, avatarUrl, fullUrl, skillIcon, makeAlly, type OpMeta } from "../roster";
 import { OP_TALENTS } from "../operator-talents";
 import { DMG_SHORT as DMG_KO, SKILL_KIND_SHORT as kindLabel } from "../labels";
-import { activeSets, setEffectText, recommendedSet, recommendedLoadout, loadoutPieces, pieceImage, gearSlotName, bestFreePiece, slotOptions, GEAR_SET_CANON, SET_NAMES, pieceSlotOf, LOADOUT_SLOTS, type LoadoutSlot, type Loadout, type GearSlot , applyGear , attrsText, sumAttrs } from "../gear";
+import { OP_GEAR_ALT, activeSets, setEffectText, recommendedSet, recommendedLoadout, loadoutPieces, pieceImage, gearSlotName, bestFreePiece, slotOptions, GEAR_SET_CANON, SET_NAMES, pieceSlotOf, LOADOUT_SLOTS, type LoadoutSlot, type Loadout, type GearSlot , applyGear , attrsText, sumAttrs } from "../gear";
 import { DEFAULT_PROGRESS, type OpProgress } from "../progress";
 import { applyWeapon, weaponOf, weaponName, weaponEffectText, weaponImage, weaponSeriesName, weaponSeriesText, OP_WEAPON_STATS, WEAPON_KO, WEAPON_ICON } from "../weapons";
 import { PRESET_PARTIES, ARCHETYPE_LABEL } from "../parties";
@@ -33,11 +33,15 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
   const [pieceChoice, setPieceChoice] = useState<Record<string, Partial<Record<LoadoutSlot, string>>>>({}); // 부위별 직접 교체(오퍼→슬롯→피스id)
   const [gearTab, setGearTab] = useState<"set" | LoadoutSlot | null>(null); // 장비 변경 모달 탭(null=닫힘)
   const opRecSet = (id: string) => { const op = OPERATORS.find((o) => o.id === id); return op ? recSet(op) : "검술사"; };
+  const [altBuild, setAltBuild] = useState<Record<string, number>>({}); // 오퍼별 대체 빌드 선택(결: 서폿/메인)
   const opSet = (id: string) => setChoice[id] ?? opRecSet(id);
   const opProg = (id: string) => progress[id] ?? DEFAULT_PROGRESS;
   // 목표 로드아웃 — 추천 세트면 시트 1순위 빌드. 다른 세트를 고르면 그 세트 "2부위"(방어구+장갑) → 세트 효과 발동 + 부품은 자유 슬롯(최고 부옵).
   // 실제 피스 id 사용(세트명 X) → 공업소 제작·소유(owned) 시스템과 호환.
   const opLoadout = (id: string): Loadout => {
+    // 대체 빌드를 골랐으면 그것을 쓴다(결: 식양의 숨결=서폿 / 열 작업용=메인 — 빌드가 폼을 결정한다)
+    const ai = altBuild[id];
+    if (ai != null && OP_GEAR_ALT[id]?.[ai]) return OP_GEAR_ALT[id][ai].loadout;
     const set = opSet(id);
     const element = OPERATORS.find((o) => o.id === id)?.element;
     let base: Loadout;
@@ -297,6 +301,21 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
               {opSet(focusId) === opRecSet(focusId) && <span className="font-mono text-[12px] text-ef-accent">★추천</span>}
               <button type="button" onClick={() => setGearTab("set")} className="dd-cut ml-auto shrink-0 border border-ef-line px-2.5 py-0.5 font-mono text-[13px] font-bold uppercase text-ef-muted transition hover:border-ef-accent/60 hover:text-ef-accent">⚙ 장비 변경</button>
               <span className="w-full font-mono text-[12px] text-ef-muted">맨몸으로 시작 · 공업소에서 이 빌드를 목표로 제작 · <span className="font-mono text-[13px] text-ef-ink/70">{attrsText(gearAttrs) || `능력치 +${gearGrade}`} · 방어 +{gearDef}</span></span>
+              {OP_GEAR_ALT[focusId] && (
+                <span className="flex w-full flex-wrap items-center gap-1.5">
+                  <span className="font-mono text-[12px] text-ef-muted">빌드</span>
+                  {[{ name: "서폿 세팅", note: "시트 1순위 — 궁 충전·의지" }, ...OP_GEAR_ALT[focusId]].map((b, i) => {
+                    const on = (altBuild[focusId] ?? -1) === i - 1;
+                    return (
+                      <button key={b.name} type="button" title={b.note}
+                        onClick={() => setAltBuild((m) => ({ ...m, [focusId]: i - 1 }))}
+                        className={`dd-cut border px-2 py-0.5 font-mono text-[12px] font-bold transition ${on ? "border-ef-accent text-ef-accent" : "border-ef-line text-ef-muted hover:border-ef-accent/60 hover:text-white"}`}>
+                        {b.name}
+                      </button>
+                    );
+                  })}
+                </span>
+              )}
               {active.map((n) => <span key={n} className="w-full truncate font-mono text-[13px] text-green-300">◆ {setEffectText(n)}</span>)}
             </div>
             <div className="space-y-1.5">
