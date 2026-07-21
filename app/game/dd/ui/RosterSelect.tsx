@@ -154,6 +154,7 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
         <span className="font-mono text-[13px] font-bold text-white/90">테스트 버전입니다</span>
         <span className="min-w-0 font-mono text-[12px] text-ef-muted">
           오퍼레이터 수치·스킬 판정·적 밸런스가 원작 대조 과정에서 계속 바뀝니다. 진행 상황이나 승률은 언제든 달라질 수 있습니다.
+          <b className="text-white/80">원작과 다르게 구현된 부분도 있습니다</b> — 턴제로 옮기며 조정한 것도, 아직 대조하지 못한 것도 있습니다.
         </span>
       </div>
 
