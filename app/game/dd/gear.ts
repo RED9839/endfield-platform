@@ -268,8 +268,10 @@ export const OP_GEAR: Record<string, Loadout> = {
 // element 오퍼는 오퍼 속성 피해(elem), 물리 오퍼는 물리 피해(all)를 극대화, 없으면 공격%(atkPct) 폴백.
 export function bestFreePiece(slot: GearSlot, element: string): GearPiece | null {
   const want = element === "physical" ? "all" : "elem";
-  // 무소속("?") 피스 제외 — 위기 탈출(Redeemer) 계열은 substat 데이터가 시트와 어긋나(elem 오표기 등) 오픽 유발.
-  const cands = GEAR_PIECES.filter((p) => p.slot === slot && p.dmg && p.set !== "?");
+  // 무소속 피스도 후보다. 위기 탈출 계열은 세트가 없는 대신 자체 부가옵이 좋다 —
+  // 도장 ultEff 0.257(세트 최고 0.246) · 장갑 all 0.24(0.23) · 식별 패널 dmgReduce 0.178.
+  // 과거 제외 사유였던 elem 오표기는 홈페이지 재생성 때 해소됐다(현재 elem 오표기 0건).
+  const cands = GEAR_PIECES.filter((p) => p.slot === slot && p.dmg);
   const pickMax = (kind: DmgSub["kind"]): GearPiece | null => {
     let best: GearPiece | null = null;
     for (const p of cands) {
@@ -281,11 +283,12 @@ export function bestFreePiece(slot: GearSlot, element: string): GearPiece | null
   return pickMax(want) ?? pickMax("atkPct"); // 속성/물리 딜 피스 → 없으면 공격%
 }
 
-// 슬롯 교체 후보(피커용) — 오퍼 속성 딜(elem/all) 우선, 이름 중복 제거, 상위 N개. 무소속 제외.
+// 슬롯 교체 후보(피커용) — 오퍼 속성 딜(elem/all) 우선, 이름 중복 제거, 상위 N개.
+// 무소속(세트 없음) 피스도 포함한다 — 세트 효과를 포기하고 부가옵을 취하는 선택지가 원작에 실재한다.
 export function slotOptions(slot: GearSlot, element?: string, n = 16): GearPiece[] {
   const want = element === "physical" ? "all" : "elem";
   const seen = new Set<string>(); const out: GearPiece[] = [];
-  const sorted = [...GEAR_PIECES].filter((p) => p.slot === slot && p.dmg && p.set !== "?").sort((a, b) => (a.dmg!.kind === want ? 0 : 1) - (b.dmg!.kind === want ? 0 : 1) || b.dmg!.base - a.dmg!.base);
+  const sorted = [...GEAR_PIECES].filter((p) => p.slot === slot && p.dmg).sort((a, b) => (a.dmg!.kind === want ? 0 : 1) - (b.dmg!.kind === want ? 0 : 1) || b.dmg!.base - a.dmg!.base);
   for (const p of sorted) { const base = p.name.replace(/\s*·\s*[IVX]+$/, "").trim(); if (seen.has(base)) continue; seen.add(base); out.push(p); }
   return out.slice(0, n);
 }
