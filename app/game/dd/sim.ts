@@ -399,12 +399,14 @@ for (const [id, d] of Object.entries(ENEMY_DEFS)) {
 }
 // 풀이 작은 세력을 근연 세력으로 보강(수화자=수(水)계 아겔로스 → 일반 아겔로스류 혼입)
 const KIN_FACTION: Record<string, string> = { "수화자": "아겔로스" };
-// 자체 보스가 없으면 근연 세력의 보스를 빌린다 — 무릉(수화자)은 파조의 상이 정예로 내려가
-// 자체 보스가 사라졌지만, 지역 자체는 아겔로스 보스로 성립한다(무릉의 아겔로스 계열).
+// 자체 보스가 없는 세력은 **같은 지역의 보스**를 쓴다. 잡몹 보강(KIN_FACTION)과는 기준이 다르다 —
+// 수화자는 개체가 아겔로스 계열이라 잡몹은 아겔로스에서 빌리지만, 무릉 지역의 보스는 원일(청파채)이다.
+// (파조의 상이 정예로 내려가며 수화자에 자체 보스가 없어졌다)
+const REGION_BOSS_KIN: Record<string, string> = { "수화자": "청파채" }; // 수화자 = 무릉 → 무릉 보스 = 원일
 export const bossPoolOf = (f: string): string[] => {
   const own = FACTION_POOL[f]?.boss ?? [];
   if (own.length) return own;
-  const kin = KIN_FACTION[f];
+  const kin = REGION_BOSS_KIN[f];
   return kin ? FACTION_POOL[kin]?.boss ?? [] : [];
 };
 export const FACTIONS: FactionKey[] = Object.keys(FACTION_POOL).filter((f) => bossPoolOf(f).length); // 보스(근연 포함) 있는 세력만 리전
