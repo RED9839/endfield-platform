@@ -1043,6 +1043,9 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
     if (self.id === "ember" && skill.kind === "attack") raw *= t.staggered ? 14 : 8.6;
     // 글로벌 배율: 치명타 기댓값(시전자) → 증폭(시전자)+취약(대상,위계+부식) → 불균형(+30%) → 현실정지 → 비호
     let cr = self.critRate, cd = self.critDmg;
+    // 로시 궁 「기습 '날카로운 발톱'」 — 원문 "이번 스킬이 치명타 피해를 줬을 경우 더 강한 치명타 피해".
+    // 스킬 표의 "치명타 피해 증가" 행이 Lv1~M3 내내 60% 고정이다(스킬 한정, 자기 버프 아님).
+    if (self.id === "rossi" && skill.kind === "ult") cd += 0.6;
     if (self.id === "yvonne") { // 이본 「아이스 슈터」 변신 — 원문: 7초간 강화 평타, 평타마다 치확 +3%(최대 10스택=+30%), 만스택 시 치피 +60%
       if ((self.timers.iceshot || 0) > 0) {
         const st = Math.min(10, self.iceStack || 0);
