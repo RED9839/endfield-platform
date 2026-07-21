@@ -675,7 +675,7 @@ const TIER_STATS: Record<EnemyTier, { hp: number; attack: number; speed: number;
   advanced: { hp: 1144, attack: 168, speed: 55, staggerMax: 96,  defense: 100 },
   alpha:    { hp: 1443, attack: 208, speed: 52, staggerMax: 116, defense: 100 },
   elite:    { hp: 2059, attack: 242, speed: 50, staggerMax: 146, defense: 100 },
-  boss:     { hp: 6136, attack: 250, speed: 60, staggerMax: 236, defense: 100 },
+  boss:     { hp: 6136, attack: 212, speed: 60, staggerMax: 236, defense: 100 },
 };
 
 // 아군 저항(≈37.5%) 도입에 따른 적 공격 보정: 아군 실피해 유지(1/(1−저항)≈1.5). 원본 손맛(큰 raw→저항 경감).
@@ -727,7 +727,9 @@ export const ENEMY_DM: Record<string, [number, number]> = {
   "walking-chrysopolis": [1104334, 4158],
   "bk-executioner": [883467, 4620],
   "hill-smasher": [883467, 4158],
-  "marble-aggelo": [3533869, 5497],
+  // 마블은 데이터마인에 항목이 2개(1,656,501/2,310 · 3,533,869/5,497) — 코어(1페)와 본체다.
+  // 우리는 페이즈 시스템이 상승분을 담당하므로 1페 값을 기준으로 쓴다(큰 값을 쓰면 이중 계산).
+  "marble-aggelo": [1656501, 2310],
   "rhodagn-the-bonekrushing-fist": [2760835, 4620],
   "ruan-yi": [2650402, 4620],
   "nefarith-conqueror": [2098235, 2772],

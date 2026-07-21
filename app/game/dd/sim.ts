@@ -6,18 +6,10 @@ import { applyWeapon } from "./weapons";
 import type { OpProgress } from "./progress";
 import { rewardItemPool } from "./items";
 
-// 원문 1.13 비조작 오퍼레이터 피격 계수. 원문이 쓰는 값은 0/0.01/0.1/0.2/0.3/0.4/0.5/0.7이며
-// "대부분 진화·엘리트·보스급"에 붙는다. 광역기일수록 낮은 계수를 쓰는 쪽이 원작 체감과 맞는다.
-// 잡몹(common/normal)은 계수가 없어 1(전원 풀 피해) — 원문도 "대부분의 적 스킬은 감소가 없다".
-const OFFHAND_COEF: Record<string, Record<string, number>> = {
-  // 중장 보스는 805 × 1.55(heavy 배수) = 1248을 한 명에게 집중한다.
-  // 광역 보스가 이에 맞먹으려면 504 × (1 + 3c) ≈ 1100 → c ≈ 0.4.
-  // 집중 피해가 행동 자체를 지우므로 광역 총량은 그보다 약간 낮게 잡는다.
-  boss:     { aoe: 0.4, heavy: 0.5, snipe: 0.5, melee: 0.5, heal: 1, buff: 1 },
-  elite:    { aoe: 0.4, heavy: 0.5, snipe: 0.7, melee: 0.7, heal: 1, buff: 1 },
-  alpha:    { aoe: 0.5, heavy: 0.7, snipe: 1,   melee: 1,   heal: 1, buff: 1 },
-  advanced: { aoe: 0.7, heavy: 1,   snipe: 1,   melee: 1,   heal: 1, buff: 1 },
-};
+
+// 광역 나눔 계수: 전체 타격 시 대상당 피해. 1/대상수(완전 분산)와 1(분산 없음)의 중간.
+// 광역은 전원을 깎는 대신 대상당 위력이 낮은 것이 원작 감각이다.
+const SPREAD = 0.55;
 
 const EL_TAG: Record<Element, string> = { heat: "열기 ", electric: "전기 ", cryo: "냉기 ", nature: "자연 " };
 
@@ -261,8 +253,14 @@ export function enemyAct(s: DDState, self: DDUnit): void {
     if (ids.length) { const mid = ids[Math.floor(Math.random() * ids.length)]; const m = makeEnemy(D[mid], living(s, "enemy").length + 1); s.units.push(m); s.log.push(`${self.name}[적] 소환! ${m.name} 등장`); return; }
   }
   let targets: DDUnit[];
-  if (behavior === "aoe") { const wide = (self.procCount = (self.procCount || 0) + 1) % 2 === 1; targets = wide ? foes : [pick()]; } // 광역: 전체 나눔공격(격턴)/평시 단일
-  else targets = [pick()];
+  // 광역: 격턴으로 전체 "나눔"공격, 평시엔 단일.
+  // 나눔이 이름뿐이고 전원에게 풀 데미지가 들어가고 있었다 — 광역 보스가 단일 보스의 몇 배를 넣던 원인.
+  let spread = 1;
+  if (behavior === "aoe") {
+    const wide = (self.procCount = (self.procCount || 0) + 1) % 2 === 1;
+    targets = wide ? foes : [pick()];
+    if (wide) spread = SPREAD; // 대상 수로 완전히 나누면 광역이 무의미해지므로 부분 분산
+  } else targets = [pick()];
   // 끌어당김(결정아겔로스): 후열 고위협 딜러를 강제로 끌어내 직격 + 물리 취약(노출)
   if (self.pull) { const back = byThreat[0]; targets = [back]; bumpVuln(back, "physical", 0.2); setTimer(back, "vuln:physical", 1); s.log.push(`${self.name}[적] 끌어당김! ${back.name} 강제 노출(취약)`); }
   const rageOn = !!def?.rage && self.hp / self.maxHp < 0.5 && !self.staggered; // 분노: HP 50%↓, 불균형이면 해제
@@ -284,12 +282,7 @@ export function enemyAct(s: DDState, self: DDUnit): void {
       s.log.push(`${self.name}[적] → ${t.name} 무의식! 물리 면역 + 회복`);
       continue;
     }
-    // 원문 1.13 「비조작 오퍼레이터 받는 대미지 감소」
-    //  정예·보스급의 강력한 공격은 조작 중이 아닌 오퍼에게 계수(0~0.7)만큼만 들어간다.
-    //  이게 없어서 광역 보스가 4명 전원을 풀 데미지로 때렸고, 단일 보스의 2.5배를 넣고 있었다.
-    //  (네파리스 2183 vs 원일 649 피해/라운드 — 승률 22% vs 43%)
-    const offhand = t.isMain ? 1 : OFFHAND_COEF[def?.tier ?? "normal"]?.[behavior] ?? 1;
-    const raw = self.attack * atkMul * powerMul * offhand * (1 + vulnFor(t, elem)) * (1 - (t.protection || 0));
+    const raw = self.attack * atkMul * powerMul * spread * (1 + vulnFor(t, elem)) * (1 - (t.protection || 0));
     const dmg = applyDamage(t, mitigate(t, raw, elem));
     s.log.push(`${self.name}[적] → ${t.name} ${elem !== "physical" ? EL_TAG[elem] : ""}공격 -${dmg} (HP ${t.hp}/${t.maxHp})`);
     onAllyHit(s, self, t, dmg, s.log); // 아군 피격 트리거(엠버 강철·레바테인 불씨·디펜더 패링)
