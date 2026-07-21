@@ -21,14 +21,15 @@ setLinkChain((s, _self) => {
   // 쿨(linkCd)에 더해 **직전 연계를 쓴 본인은 제외**한다 — 쿨 1턴짜리는 자기 연계로
   // 자기 조건을 재생성해 연쇄를 독점할 수 있다(아크라이트). 다른 오퍼가 조건을 다시
   // 세워주면(감전 재부착 → 소모) 같은 연쇄 안에서도 재발동한다.
-  let best: { unit: DDUnit; skill: DDSkill } | null = null;
-  for (const a of living(s, "ally")) {
+  // 조건이 동시에 열리면 **편성 왼쪽(pos 낮은 쪽)부터** 발동한다 — 원작 규칙.
+  // 예전엔 계수(power)가 큰 연계를 먼저 골랐다. 그러면 플레이어가 순서를 정해도
+  // 누가 이어받을지 예측할 수 없고, 편성 순서가 아무 의미를 갖지 못한다.
+  for (const a of [...living(s, "ally")].sort((x, y) => x.pos - y.pos)) {
     if (s.chainLinker === a.id) continue; // 직전 연계 발동자 본인 — 자기 연계로 자기 연계를 열 수 없다
     const link = (SKILLS[a.id] ?? []).find((o) => o.kind === "link" && usable(s, a, o));
-    if (!link) continue;
-    if (!best || link.power > best.skill.power) best = { unit: a, skill: link };
+    if (link) return { unit: a, skill: link };
   }
-  return best;
+  return null;
 });
 
 // ── 보스 페이즈 ──
