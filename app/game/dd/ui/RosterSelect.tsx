@@ -10,6 +10,7 @@ import { DEFAULT_PROGRESS, type OpProgress } from "../progress";
 import { applyWeapon, weaponOf, weaponName, weaponEffectText, weaponImage, weaponSeriesName, weaponSeriesText, OP_WEAPON_STATS, WEAPON_KO, WEAPON_ICON } from "../weapons";
 import { PRESET_PARTIES, ARCHETYPE_LABEL } from "../parties";
 import type { PartyPick } from "../run";
+import { aggroShares } from "../aggro";
 import type { DDClass, DDSkill, Element } from "../combat";
 
 const PRIMARY = "#ff9a2f";
@@ -71,6 +72,13 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
   };
   // 유효한 메인딜러 — 프리셋 지정이 편성에 남아 있으면 그것, 아니면 1번.
   const mainPick = mainId && selected.includes(mainId) ? mainId : selected[0];
+  // 피격 확률 — 전열/후열이 없으므로 직군 어그로 가중으로만 갈린다.
+  // 적 83종 중 61종(무지향)이 이 확률로 대상을 고른다. 나머지는 저체력/최고위협 우선.
+  const aggroPct = (() => {
+    const ops = selected.map((id) => OPERATORS.find((o) => o.id === id));
+    const sh = aggroShares(ops.map((o) => o?.cls));
+    return Object.fromEntries(selected.map((id, i) => [id, sh[i]])) as Record<string, number>;
+  })();
   const start = () => onStart(selected.map((id) => ({ id, loadout: opLoadout(id), progress: opProg(id), main: id === mainPick })));
 
   const loadPreset = (p: (typeof PRESET_PARTIES)[number]) => {
@@ -116,10 +124,18 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
               <button key={i} type="button" onClick={() => o && setFocusId(o.id)} className="relative h-11 w-11 overflow-hidden border transition hover:brightness-110" style={{ ...CUT, borderColor: o ? elementColor[o.element] : "#2a2a2e", background: o ? `center top/cover url(${avatarUrl(o.id)}), #0d0906` : "linear-gradient(180deg,#131316,#0b0b0d)" }}>
                 {!o && <span className="absolute inset-0 flex items-center justify-center font-mono text-base font-black text-ef-line">{i + 1}</span>}
                 {o && <span className="absolute inset-x-0 bottom-0 h-1" style={{ background: elementColor[o.element] }} />}
+                {/* 피격 확률 — 누가 맞아 줄지가 편성의 핵심인데 화면에 아무 단서가 없었다 */}
+                {o && <span className="absolute inset-x-0 bottom-1 text-center font-mono text-[11px] font-black leading-none text-white"
+                            style={{ textShadow: "0 1px 3px #000, 0 0 2px #000" }}>{Math.round((aggroPct[o.id] ?? 0) * 100)}%</span>}
               </button>
             );
           })}
         </div>
+        {selected.length > 0 && (
+          <span className="font-mono text-[12px] leading-tight text-ef-muted" title="적이 누구를 노릴지는 위치가 아니라 직군으로 갈립니다. 디펜더 2.5 · 뱅가드 1.8 · 가드 1.4 · 스트라이커 1.0 · 캐스터/서포터 0.8 가중. 적 83종 중 61종이 이 확률을 따르고, 나머지는 저체력·최고위협을 우선합니다.">
+            초상화 하단 <b className="text-white/90">%</b> = 피격 확률<br />직군 어그로 · 편성 순서 무관
+          </span>
+        )}
         <div className="ml-auto flex items-center gap-3">
           <span className="font-mono text-lg font-black tabular-nums" style={{ color: selected.length === 4 ? PRIMARY : "#85858e" }}>{selected.length}<span className="text-sm text-ef-muted">/4</span></span>
           <button type="button" disabled={selected.length < 1} onClick={start} className="dd-cut px-5 py-2.5 font-mono text-sm font-black uppercase tracking-[0.12em] transition enabled:hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40" style={{ background: selected.length ? `linear-gradient(180deg,#ffb257,${PRIMARY})` : "#16161a", color: selected.length ? "#0a0a0a" : "#777", boxShadow: selected.length ? "0 0 22px -4px rgba(255,154,47,0.7)" : "none" }}>원정 출발 ▶</button>

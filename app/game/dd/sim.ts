@@ -5,6 +5,7 @@ import { applyGear, GEAR_SLOTS, LOADOUT_SLOTS, type Loadout, type GearSlot, type
 import { applyWeapon } from "./weapons";
 import type { OpProgress } from "./progress";
 import { rewardItemPool } from "./items";
+import { aggroWeight } from "./aggro";
 
 
 const EL_TAG: Record<Element, string> = { heat: "열기 ", electric: "전기 ", cryo: "냉기 ", nature: "자연 " };
@@ -270,9 +271,8 @@ export function enemyAct(s: DDState, self: DDUnit): void {
   // 어그로를 끄는 건 위치도 무기 사거리도 아니라 역할이다. 사거리로 가르면 오히려
   // 근거리 메인딜러(미브·엠버·라스트·레바테인·로시)가 집중포화를 맞아 반대로 간다
   //   — 실측 타워 완주 균등 84% / 직군 87% / 사거리 79%.
-  const AGGRO: Record<string, number> = { defender: 2.5, vanguard: 1.8, guard: 1.4, striker: 1, caster: 0.8, supporter: 0.8 };
   const pickAggro = () => {
-    const w = foes.map((f) => AGGRO[f.cls ?? ""] ?? 1); // 직군 미상(적 부위 등)은 1
+    const w = foes.map((f) => aggroWeight(f.cls)); // 직군 미상(적 부위 등)은 1
     let r = Math.random() * w.reduce((a, b) => a + b, 0);
     for (let i = 0; i < foes.length; i++) { r -= w[i]; if (r <= 0) return foes[i]; }
     return foes[foes.length - 1];
