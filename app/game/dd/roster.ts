@@ -623,6 +623,16 @@ export function frontlineOrder(ids: string[]): string[] {
 //  저항: 속성별(물리/열기/전기/냉기/자연) 위키 저항표 반영 — 무릉=전기·냉기↑, 파조의 상=열기 약점 등.
 export type EnemyTier = "common" | "normal" | "enhanced" | "advanced" | "alpha" | "elite" | "boss";
 export type EnemyBehavior = "melee" | "snipe" | "aoe" | "heavy" | "heal" | "buff"; // 근접·저격(후열)·광역·중장·치유·강화
+// 보스 페이즈 1단계. combat이 HP 변화를 보고 전환시킨다.
+export type BossPhase = {
+  name?: string;                    // 전환 후 표시명(컷신 연출용)
+  at?: number;                      // 이 HP 비율 이하로 내려가면 전환
+  refill?: boolean;                 // 체력바를 새로 채운다(페이즈별 독립 체력)
+  becomes?: string;                 // 다른 EnemyDef로 교체
+  summon?: { id: string; n: number; guarded?: boolean }; // 소환(+소환체 생존 중 본체 무적)
+  atkMul?: number; spdMul?: number; // 발악 강화
+  note?: string;
+};
 export type EnemyDef = {
   id: string; name: string; faction: string; role: string; tier: EnemyTier;
   element: "physical" | Element; behavior: EnemyBehavior;
@@ -644,6 +654,15 @@ export type EnemyDef = {
   stun?: boolean;        // 속박·기절: 명중 아군 확률 행동 불가(단운수·형상아겔로스·처형자)
   slow?: boolean;        // 감속: 명중 아군 ATB 속도 저하(모방아겔로스·겁운객)
   heal?: boolean;        // 치유: 자기 턴에 아군[적] 최저 체력 회복(겁운객)
+  // ── 보스 페이즈(아카라이브 패턴 정리 기준) ──
+  // 원작 보스는 호위 잡몹이 아니라 페이즈로 구성된다. 아래 조합으로 실제 구조를 표현한다.
+  //  at      = HP 비율이 이 값 이하로 내려가면 전환(로댄 0.7, 마블 발악 0.25)
+  //  refill  = 전환 시 체력바를 새로 채운다(트리아겔로스: 페이즈마다 별도 체력바)
+  //  becomes = 다른 개체로 교체(본 크러셔 네파리스 → 정복자 네파리스)
+  //  summon  = 전환 시 잡몹 소환. guarded면 그들이 살아있는 동안 본체 무적(트리아겔로스 2페)
+  //  atkMul/spdMul = 발악 강화(마블 3페)
+  phases?: BossPhase[];
+  guardedBy?: { id: string; n: number };  // 개전 시 호위 부위가 먼저 나오고, 전부 처치해야 본체를 때릴 수 있다(마블 촉수 4개)
   buff?: boolean;        // 동료 강화: 자기 턴에 다른 적 공격력 강화(굴절아겔로스)
   charge?: boolean;      // 차징: 한 턴 강공 예고 → 다음 턴 강타(끊으면 캔슬)
 };
@@ -699,7 +718,8 @@ export function makeEnemy(def: EnemyDef, pos: number): DDUnit {
   attack = Math.round(attack * ENEMY_ATK_COMP);
   // 역할 파워 보정(체력·공격·불균형) — 속도는 아래 컨셉 아키타입에서 별도 산정
   if (def.behavior === "heavy") { hp = Math.round(hp * 1.35); attack = Math.round(attack * 1.15); staggerMax = Math.round(staggerMax * 1.25); }
-  else if (def.behavior === "snipe") { hp = Math.round(hp * 0.8); }
+  // 저격형은 물몸이지만 보스에까지 적용하면 최종 보스가 가장 약해진다(마블 아겔로미레 HP 16199 = 전 보스 최저).
+  else if (def.behavior === "snipe") { if (def.tier !== "boss") hp = Math.round(hp * 0.8); }
   else if (def.behavior === "aoe") { attack = Math.round(attack * 0.72); }
   else if (def.behavior === "heal") { attack = Math.round(attack * 0.5); hp = Math.round(hp * 0.9); }
   else if (def.behavior === "buff") { attack = Math.round(attack * 0.7); }
@@ -770,9 +790,20 @@ export const ENEMY_DEFS: Record<string, EnemyDef> = {
   "cloud-obliterator": { id: "cloud-obliterator", name: "개천장",       faction: "청파채", role: "중화기", tier: "advanced", element: "heat",     behavior: "aoe",  resist: { heat: 0.2, electric: 0.2, cryo: 0.2, nature: 0.2 } }, // 물리 약점
   // ── 보스: 본편 검증 스토리 보스(저항 데이터마인 정합) ──
   craghowler:       { id: "craghowler",       name: "거대한 록하울러",   faction: "야외 생물", role: "우두머리", tier: "boss", element: "physical", behavior: "heavy", resist: { physical: 0.2, nature: 0.2, cryo: 0.2, electric: 0.2 } }, // 열기 약점
-  triaggelos:       { id: "triaggelos",       name: "트리아겔로스",      faction: "아겔로스", role: "삼형태(3P)", tier: "boss", element: "physical", behavior: "aoe", resist: { physical: 0.2, heat: 0.2, nature: 0.2 } }, // 광맥 구역 보스
-  "marble-aggelo":  { id: "marble-aggelo",    name: "마블 아겔로미레",   faction: "아겔로스", role: "4번협곡 최종", tier: "boss", element: "physical", behavior: "snipe" }, // 저항 0(인간형)
-  nefarith:         { id: "nefarith",         name: "'본 크러셔' 네파리스", faction: "랜드브레이커", role: "두목", tier: "boss", element: "electric", behavior: "aoe", attach: "electric" }, // 저항 0
+  triaggelos:       { id: "triaggelos",       name: "트리아겔로스",      faction: "아겔로스", role: "삼형태(3P)", tier: "boss", element: "physical", behavior: "aoe", resist: { physical: 0.2, heat: 0.2, nature: 0.2 },
+    // 1페 근접·차지 → 2페 잡몹전(소형 아겔로스 소환, 소환체 생존 중 본체 무적) → 3페 은신·원거리.
+    // 페이즈마다 체력바가 새로 찬다(원문: "1페이즈의 체력을 전부 깎으면 코어 색이 변하며 2페이즈로").
+    phases: [
+      { name: "트리아겔로스 · 2페이즈", refill: true, summon: { id: "sting", n: 3, guarded: true }, note: "잡몹전 — 소환체가 남아있는 동안 본체 무적" },
+      { name: "트리아겔로스 · 3페이즈", refill: true, spdMul: 1.15, note: "은신·원거리" },
+    ] }, // 광맥 구역 보스
+  "marble-aggelo":  { id: "marble-aggelo",    name: "마블 아겔로미레",   faction: "아겔로스", role: "4번협곡 최종", tier: "boss", element: "physical", behavior: "snipe",
+    // 1페: 촉수 4개를 먼저 처치해야 코어가 노출된다 → 코어 격파 시 2페 본체 → 25%에서 3페 발악.
+    guardedBy: { id: "marble-appendage", n: 4 },
+    phases: [{ name: "마블 아겔로미레 · 발악", at: 0.25, atkMul: 1.3, spdMul: 1.15, note: "3페이즈 — 호전성 증가, 패턴 강화" }] }, // 저항 0(인간형)
+  nefarith:         { id: "nefarith",         name: "'본 크러셔' 네파리스", faction: "랜드브레이커", role: "두목", tier: "boss", element: "electric", behavior: "aoe", attach: "electric",
+    // 원작: 본 크러셔 네파리스(1페) → 정복자 네파리스(2페)로 개체가 바뀐다.
+    phases: [{ name: "'정복자' 네파리스", becomes: "nefarith-conqueror", refill: true, note: "2페이즈 — 정복자로 각성" }] }, // 저항 0
   "ruan-yi":        { id: "ruan-yi",          name: "원일",             faction: "청파채", role: "채주(탕탕 오빠)", tier: "boss", element: "heat", behavior: "heavy", resist: { heat: 0.2, cryo: 0.2 } },
   tidalklast:       { id: "tidalklast",       name: "파조의 상",         faction: "수화자", role: "중간보스", tier: "boss", element: "cryo", behavior: "aoe", attach: "cryo", resist: { electric: 0.2, cryo: 0.2 } },
   // ── 미등록 44종(warfarin 대조 추가) — 변형은 원본 상속, 신규는 description 속성 + id 접미사 behavior ──
@@ -782,12 +813,15 @@ export const ENEMY_DEFS: Record<string, EnemyDef> = {
   "bonekrusher-arsonist": { id: "bonekrusher-arsonist", name: "본 크러셔 집행자", faction: "랜드브레이커", role: "aoe", tier: "enhanced", element: "heat", behavior: "aoe", resist: {"nature":0.5} },
   "bonekrusher-infiltrator": { id: "bonekrusher-infiltrator", name: "본 크러셔 침투자", faction: "랜드브레이커", role: "melee", tier: "normal", element: "physical", behavior: "melee" },
   "bonekrusher-ripptusk": { id: "bonekrusher-ripptusk", name: "본 크러셔 립터스크", faction: "랜드브레이커", role: "melee", tier: "normal", element: "physical", behavior: "melee" },
-  "rhodagn-the-bonekrushing-fist": { id: "rhodagn-the-bonekrushing-fist", name: "'본 크러셔의 주먹' 로댄", faction: "랜드브레이커", role: "melee", tier: "boss", element: "heat", behavior: "melee" },
+  "rhodagn-the-bonekrushing-fist": { id: "rhodagn-the-bonekrushing-fist", name: "'본 크러셔의 주먹' 로댄", faction: "랜드브레이커", role: "melee", tier: "boss", element: "heat", behavior: "heavy",
+    // 원작: HP 70%에서 컷신과 함께 2페이즈 — 등의 화염방사기를 적극 사용한다.
+    phases: [{ name: "로댄 · 2페이즈", at: 0.7, atkMul: 1.25, note: "화염방사기 개방" }] },
   "road-plunderer": { id: "road-plunderer", name: "막류재", faction: "청파채", role: "melee", tier: "normal", element: "physical", behavior: "melee" },
   "eny": { id: "eny", name: "야생의 터스크비스트", faction: "야외 생물", role: "melee", tier: "normal", element: "physical", behavior: "melee" },
   "hazefyre-tuskbeast": { id: "hazefyre-tuskbeast", name: "안갯불에 물든 터스크비스트", faction: "안갯불", role: "melee", tier: "normal", element: "heat", behavior: "melee", resist: {"physical":0.2,"nature":0.2,"cryo":0.2,"electric":0.2,"heat":0.2} },
   "hazefyre-claw": { id: "hazefyre-claw", name: "안갯불에 물든 랜드브레이커", faction: "랜드브레이커", role: "buff", tier: "normal", element: "heat", behavior: "buff", resist: {"physical":0.2,"nature":0.2,"cryo":0.2,"electric":0.2,"heat":0.2} },
-  "marble-appendage": { id: "marble-appendage", name: "마블 부속체", faction: "아겔로스", role: "melee", tier: "boss", element: "physical", behavior: "melee" },
+  // 마블 촉수 — 보스 본체가 아니라 파괴 대상 "부위"다. 4개가 동시에 나오므로 보스 티어면 과하다.
+  "marble-appendage": { id: "marble-appendage", name: "마블 부속체", faction: "아겔로스", role: "부위", tier: "advanced", element: "physical", behavior: "melee" },
   "ram-alpha": { id: "ram-alpha", name: "큰뿔아겔로스 · α", faction: "아겔로스", role: "heavy", tier: "common", element: "physical", behavior: "heavy" },
   "sting-alpha": { id: "sting-alpha", name: "일미아겔로스 · α", faction: "아겔로스", role: "snipe", tier: "common", element: "physical", behavior: "snipe" },
   "elite-raider": { id: "elite-raider", name: "약탈자 · 정예", faction: "랜드브레이커", role: "melee", tier: "normal", element: "heat", behavior: "melee" },
@@ -829,5 +863,8 @@ export const ENEMY_DEFS: Record<string, EnemyDef> = {
   "shadowyingelite":{ id: "shadowyingelite",name: "그림자에 물든 응룡 대원 · 정예", faction: "그림자에 물든", role: "침식 정예병", tier: "advanced", element: "physical", behavior: "melee", resist: { physical: 0.2, electric: 0.35 } },
   "shadowyingbrk":  { id: "shadowyingbrk",  name: "그림자에 물든 응룡 대원 · 돌파", faction: "그림자에 물든", role: "침식 돌파병", tier: "enhanced", element: "physical", behavior: "melee", resist: { physical: 0.2 } },
   "shadowyingcap":  { id: "shadowyingcap",  name: "그림자에 물든 응룡 대장",     faction: "그림자에 물든", role: "침식 지휘관", tier: "alpha", element: "electric", behavior: "heavy", attach: "electric", resist: { physical: 0.2, electric: 0.35 } },
-  "alleikhreos":    { id: "alleikhreos",    name: "알레이크레오스, 천부장",       faction: "그림자에 물든", role: "천부장(최종보스)", tier: "boss", element: "physical", behavior: "heavy", resist: { physical: 0.2, heat: 0.2, electric: 0.2, cryo: 0.2, nature: 0.2 } },
+  "alleikhreos":    { id: "alleikhreos",    name: "알레이크레오스, 천부장",       faction: "그림자에 물든", role: "천부장(최종보스)", tier: "boss", element: "physical", behavior: "heavy", resist: { physical: 0.2, heat: 0.2, electric: 0.2, cryo: 0.2, nature: 0.2,
+},
+    // 원작: 최종보스 2페이즈 구성.
+    phases: [{ name: "알레이크레오스 · 2페이즈", refill: true, atkMul: 1.2, note: "천부장 각성" }] },
 };

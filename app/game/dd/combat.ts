@@ -95,6 +95,10 @@ export type DDUnit = {
   iceStack?: number; // 이본 「아이스 슈터」 변신 중 평타 누적(치확 +3%/스택, 최대 10)
   isMain?: boolean;  // 파티 메인딜러(편성 첫 오퍼 = 공략 시트 채용파티의 주인). 공유 게이지 우선권.
   shockLv?: number;    // 감전 이상 레벨(1~4). 장방이 「뇌정의 부름」이 '소모한 감전 이상 레벨+1'만큼 청뢰검을 만든다
+  summonedBy?: string; // 이 유닛을 소환한 본체(소환체 전멸 판정용)
+  phaseIdx?: number;   // 보스 현재 페이즈(0=1페이즈). 전환 시 증가
+  guardIds?: string[]; // 이 본체를 지키는 부위(전부 죽어야 본체가 피격 대상이 된다)
+  invuln?: boolean;    // 페이즈 기믹 무적(트리아겔로스 소환 중)
   didosUsed?: number;  // 자이히 디도스 지원 결정체가 쓴 치유 횟수(원문 최대 2회) — 연계 「스트레스 테스트」 조건
   zfyUsedFree?: boolean; // 장방이 천리의 경지: 첫 배틀 무소모를 이미 썼는가
   utilMult: number;  // 스킬 단조 유틸 배율(취약·증폭·회복·게이지·지속) × 의지. M0=1.0
@@ -292,11 +296,22 @@ export function mitigate(u: DDUnit, dmg: number, elem: "physical" | Element): nu
 
 // 피해 적용: 보호막(보호) 우선 흡수 → 체력. 실제 체력 피해 반환.
 export function applyDamage(u: DDUnit, dmg: number): number {
+  if (u.invuln) return 0; // 페이즈 기믹 무적(트리아겔로스: 소환체가 남아있는 동안 본체 무적)
   let d = Math.max(0, Math.round(dmg));
   if (u.shield > 0) { const ab = Math.min(u.shield, d); u.shield -= ab; d -= ab; }
   u.hp = Math.max(0, u.hp - d);
   return d;
 }
+
+// 보스 페이즈 전환. sim이 매 행동 뒤에 호출한다(roster를 직접 import하면 순환이라 provider 주입).
+export type PhaseHook = (s: DDState, boss: DDUnit, log: string[]) => void;
+let phaseHook: PhaseHook | null = null;
+export const setPhaseHook = (f: PhaseHook) => { phaseHook = f; };
+export const runPhases = (s: DDState, log: string[]) => {
+  if (!phaseHook) return;
+  // HP 0도 포함해야 한다 — "페이즈 체력바를 다 깎으면 다음 페이즈"(네파리스·트리아겔로스)가 여기서 걸린다.
+  for (const u of [...s.units].filter((x) => x.side === "enemy")) phaseHook(s, u, log);
+};
 
 // 회복: 체력 회복(최대 초과 X). 카뮤 혈류 소생(자기 회복 시 열기 증폭) 처리.
 export const ATTR_AVG = 116;     // 능력치 평균(힘/민첩/지능/의지 각각)
@@ -421,6 +436,35 @@ function tryShatter(target: DDUnit, self: DDUnit, log: string[]): number {
   log.push(`  → 쇄빙! 동결 ${n}스택 소모 → ${SHATTER[n - 1] * 100}% 물리`);
   // 쇄빙은 위키상 아츠 이상에 포함된다(피해 유형만 물리) → 오리지늄 아츠 강도 1당 피해 +1%.
   return self.attack * eb(self) * artsDmg(self) * lvCoef(self, true) * SHATTER[n - 1];
+}
+
+// 적이 오퍼레이터에게 거는 아츠 이상(원문 2.6) — 오퍼레이터가 일으키는 것과 **완전히 다르다**.
+// 원문: 적 스킬이 [아츠 부착]을 붙이고, 같은 속성이 4스택에 도달하면 아래 효과가 발동한다.
+//   연소 = 8초간 매초 최대 체력 2%의 방어 무시 열기 / 감전 = 2초 기절 + 10초간 받는 아츠 피해 20% 증가
+//   부식 = 6초 돌진 불가 + 이동속도 20% 감소     / 동결 = 3.5초 행동 불가
+// 아츠 폭발도, 대량 피해도 없다. 기존에는 아군에게 applyAttach(플레이어 규칙)를 그대로 써서
+// 적의 평타마다 "아츠 폭발 160%"가 터졌다(네파리스 표시 피해 95 뒤에 실피해 800+).
+export function applyEnemyArts(target: DDUnit, el: Element, log: string[]): void {
+  if (target.side !== "ally") return;
+  target.arts[el] = Math.min(4, (target.arts[el] || 0) + 1);
+  setTimer(target, "arts:" + el, DUR_ATTACH);
+  if (target.arts[el] < 4) return;
+  target.arts[el] = 0; delete target.timers["arts:" + el];
+  if (el === "heat") { // 연소: 최대 체력 비례 지속 피해(방어 무시)
+    target.dot = Math.max(target.dot || 0, Math.round(target.maxHp * 0.02 * 2)); // 8초 ≈ 2턴분/턴
+    setTimer(target, "dot", 2); add(target, "combustion");
+    log.push(`  ☠ ${target.name} 연소! 최대 체력 비례 지속 피해(방어 무시)`);
+  } else if (el === "electric") { // 감전: 짧은 기절 + 받는 아츠 피해 증가
+    target.timers.stun = 1; add(target, "stun");
+    bumpRecv(target, "arts", 0.2, 2);
+    log.push(`  ☠ ${target.name} 감전! 행동 불가(1턴) + 받는 아츠 피해 +20%`);
+  } else if (el === "nature") { // 부식: 이동 저하 → 우리 모델의 속도 감소
+    target.speedMod = (target.speedMod || 0) - 12; setTimer(target, "speedMod", 2);
+    log.push(`  ☠ ${target.name} 부식! 속도 감소`);
+  } else { // cryo 동결: 행동 불가
+    target.timers.stun = 1; add(target, "stun");
+    log.push(`  ☠ ${target.name} 동결! 행동 불가(1턴)`);
+  }
 }
 
 // 아츠 부착 → 폭발(같은 속성 2+) / 이상(다른 속성 → 전부 소모). 공격자 측 추가 피해 반환.
@@ -585,7 +629,11 @@ export const living = (s: DDState, side?: "ally" | "enemy") =>
   s.units.filter((u) => u.hp > 0 && (!side || u.side === side));
 
 export function pickTargets(s: DDState, self: DDUnit, skill: DDSkill): DDUnit[] {
-  const foes = living(s, self.side === "ally" ? "enemy" : "ally");
+  const all = living(s, self.side === "ally" ? "enemy" : "ally");
+  // 무적 대상(호위 부위가 남은 본체·소환 중 보스)은 때려도 0이므로 후보에서 뺀다.
+  // 전부 무적이면 어쩔 수 없이 원래 목록을 쓴다(교착 방지).
+  const targetable = all.filter((u) => !u.invuln);
+  const foes = targetable.length ? targetable : all;
   if (skill.target === "self") return [self];
   // 레바테인 황혼 변신 중: 강화 일반공격은 광역(공격 범위 대폭 증가)
   if (self.id === "laevatain" && skill.kind === "attack" && (self.timers.twilight || 0) > 0) return foes;
@@ -1350,6 +1398,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
   // ── 연계 예약 ── 이 행동으로 조건이 열린 아군의 연계가 **쿨이 아니고 조건이 서면**, 그 오퍼가 ATB에서
   // 다음 차례로 끼어들어(추가 턴) 자기 차례에 연계를 발동한다. 즉시 발동이 아니라 턴 순서에 등장 → 자기 턴에 발동.
   // usable이 쿨(linkCd)·조건(requires)을 둘 다 검사. 실제 발동은 nextActor→pendingLink 처리(step/allyChoose).
+  runPhases(s, log); // 이 행동으로 보스 페이즈가 넘어갔는지 판정(HP 임계·페이즈 체력바 소진)
   if (self.side === "ally" && !s.manualLink && !s.chaining && linkChainProvider) {
     s.chaining = true;
     const nx = linkChainProvider(s, self);

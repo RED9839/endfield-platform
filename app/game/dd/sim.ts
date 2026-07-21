@@ -1,10 +1,23 @@
 // DD 전투 시뮬 헬퍼 — AI(아군 자동/적) + 인카운터 + 전투 생성. UI와 테스트가 공유(부작용 없음).
-import { BASIC, DDState, DDUnit, DDSkill, Element, ELEMENTS, applyAttach, applyDamage, healUnit, living, mitigate, usable, pickTargets, vulnFor, onAllyHit, EXECUTE_MULT, GAUGE_COST, setLinkChain, bumpVuln, setTimer, arcaneForm } from "./combat";
+import { BASIC, DDState, DDUnit, DDSkill, Element, ELEMENTS, applyAttach, applyEnemyArts, applyDamage, healUnit, living, mitigate, usable, pickTargets, vulnFor, onAllyHit, EXECUTE_MULT, GAUGE_COST, setLinkChain, bumpVuln, setTimer, arcaneForm, setPhaseHook, runPhases } from "./combat";
 import { SKILLS, makeAlly, makeEnemy, ENEMY_DEFS, enemyDefFor, frontlineOrder, enemyArchetype } from "./roster";
 import { applyGear, GEAR_SLOTS, LOADOUT_SLOTS, type Loadout, type GearSlot, type LoadoutSlot } from "./gear";
 import { applyWeapon } from "./weapons";
 import type { OpProgress } from "./progress";
 import { rewardItemPool } from "./items";
+
+// 원문 1.13 비조작 오퍼레이터 피격 계수. 원문이 쓰는 값은 0/0.01/0.1/0.2/0.3/0.4/0.5/0.7이며
+// "대부분 진화·엘리트·보스급"에 붙는다. 광역기일수록 낮은 계수를 쓰는 쪽이 원작 체감과 맞는다.
+// 잡몹(common/normal)은 계수가 없어 1(전원 풀 피해) — 원문도 "대부분의 적 스킬은 감소가 없다".
+const OFFHAND_COEF: Record<string, Record<string, number>> = {
+  // 중장 보스는 805 × 1.55(heavy 배수) = 1248을 한 명에게 집중한다.
+  // 광역 보스가 이에 맞먹으려면 504 × (1 + 3c) ≈ 1100 → c ≈ 0.4.
+  // 집중 피해가 행동 자체를 지우므로 광역 총량은 그보다 약간 낮게 잡는다.
+  boss:     { aoe: 0.4, heavy: 0.5, snipe: 0.5, melee: 0.5, heal: 1, buff: 1 },
+  elite:    { aoe: 0.4, heavy: 0.5, snipe: 0.7, melee: 0.7, heal: 1, buff: 1 },
+  alpha:    { aoe: 0.5, heavy: 0.7, snipe: 1,   melee: 1,   heal: 1, buff: 1 },
+  advanced: { aoe: 0.7, heavy: 1,   snipe: 1,   melee: 1,   heal: 1, buff: 1 },
+};
 
 const EL_TAG: Record<Element, string> = { heat: "열기 ", electric: "전기 ", cryo: "냉기 ", nature: "자연 " };
 
@@ -24,6 +37,56 @@ setLinkChain((s, _self) => {
     if (!best || link.power > best.skill.power) best = { unit: a, skill: link };
   }
   return best;
+});
+
+// ── 보스 페이즈 ──
+// 원작 보스는 호위 잡몹이 아니라 페이즈로 구성된다(아카라이브 패턴 정리).
+//  · 로댄 HP 70% → 2페 / 마블 25% → 3페 발악  : at 임계
+//  · 트리아겔로스 : 페이즈마다 체력바가 새로 참(refill) + 2페 소환체 생존 중 본체 무적
+//  · 네파리스     : 본 크러셔 → 정복자로 개체 교체(becomes)
+//  · 마블 1페     : 촉수 4개를 전부 처치해야 코어(본체)가 피격 대상이 된다(guardedBy)
+setPhaseHook((s, b, log) => {
+  const base = b.id.split("#")[0];
+  const def = ENEMY_DEFS[base] as any;
+  // 호위 부위가 살아있으면 본체는 무적(마블 촉수)
+  if (b.guardIds?.length) {
+    const alive = b.guardIds.some((gid) => s.units.some((u) => u.id === gid && u.hp > 0));
+    if (!alive) { b.guardIds = []; b.invuln = false; log.push(`  ◈ ${b.name} 부위를 전부 파괴! 코어 노출 — 이제 본체를 공격할 수 있다`); }
+    else b.invuln = true;
+  }
+  // 소환체 생존 중 무적(트리아겔로스 2페)
+  if (b.timers.guardSummon) {
+    const alive = s.units.some((u) => u.side === "enemy" && u.hp > 0 && u.summonedBy === b.id);
+    if (!alive) { delete b.timers.guardSummon; b.invuln = false; log.push(`  ◈ ${b.name} 소환체 전멸! 무적 해제`); }
+    else b.invuln = true;
+  }
+  const phases: any[] = def?.phases ?? [];
+  const idx = b.phaseIdx ?? 0;
+  const nx = phases[idx];
+  if (!nx) return;
+  const ratio = b.hp / b.maxHp;
+  const trigger = nx.at != null ? ratio <= nx.at : b.hp <= 0;
+  if (!trigger) return;
+  b.phaseIdx = idx + 1;
+  if (nx.becomes && ENEMY_DEFS[nx.becomes]) { // 개체 교체 — 스탯을 새 개체로 갈아끼운다
+    const n = makeEnemy(ENEMY_DEFS[nx.becomes], b.pos);
+    b.name = nx.name ?? n.name; b.maxHp = n.maxHp; b.hp = n.maxHp; b.attack = n.attack;
+    b.speed = n.speed; b.staggerMax = n.staggerMax; b.resist = n.resist; b.defense = n.defense;
+  } else {
+    if (nx.name) b.name = nx.name;
+    if (nx.refill) b.hp = b.maxHp;
+    if (nx.atkMul) b.attack = Math.round(b.attack * nx.atkMul);
+    if (nx.spdMul) b.speed = Math.round(b.speed * nx.spdMul);
+  }
+  b.staggered = false; b.stagger = 0; // 페이즈 전환은 경직을 끊는다
+  if (nx.summon) { // 잡몹 소환(+무적)
+    for (let i = 0; i < nx.summon.n && living(s, "enemy").length < 6; i++) {
+      const m = makeEnemy(D[nx.summon.id], living(s, "enemy").length + 1);
+      m.summonedBy = b.id; s.units.push(m);
+    }
+    if (nx.summon.guarded) { b.timers.guardSummon = 999; b.invuln = true; }
+  }
+  log.push(`  ★ 페이즈 전환! ${b.name}${nx.note ? ` — ${nx.note}` : ""}`);
 });
 
 // 아군 AI: 사용 가능 스킬 중 점수 최대. usage gate가 셋업→페이오프를 자동 정렬.
@@ -221,13 +284,19 @@ export function enemyAct(s: DDState, self: DDUnit): void {
       s.log.push(`${self.name}[적] → ${t.name} 무의식! 물리 면역 + 회복`);
       continue;
     }
-    const raw = self.attack * atkMul * powerMul * (1 + vulnFor(t, elem)) * (1 - (t.protection || 0));
+    // 원문 1.13 「비조작 오퍼레이터 받는 대미지 감소」
+    //  정예·보스급의 강력한 공격은 조작 중이 아닌 오퍼에게 계수(0~0.7)만큼만 들어간다.
+    //  이게 없어서 광역 보스가 4명 전원을 풀 데미지로 때렸고, 단일 보스의 2.5배를 넣고 있었다.
+    //  (네파리스 2183 vs 원일 649 피해/라운드 — 승률 22% vs 43%)
+    const offhand = t.isMain ? 1 : OFFHAND_COEF[def?.tier ?? "normal"]?.[behavior] ?? 1;
+    const raw = self.attack * atkMul * powerMul * offhand * (1 + vulnFor(t, elem)) * (1 - (t.protection || 0));
     const dmg = applyDamage(t, mitigate(t, raw, elem));
     s.log.push(`${self.name}[적] → ${t.name} ${elem !== "physical" ? EL_TAG[elem] : ""}공격 -${dmg} (HP ${t.hp}/${t.maxHp})`);
     onAllyHit(s, self, t, dmg, s.log); // 아군 피격 트리거(엠버 강철·레바테인 불씨·디펜더 패링)
     if (t.hp <= 0) { s.log.push(`  ✗ ${t.name} 전투불능!`); continue; }
     // 아츠 부착(침식체 냉기·염술사 열기): 아군에 부착 → 연소/동결 등 이상 유발
-    if (def?.attach) { const ex = applyAttach(t, def.attach, self, s.log); if (ex > 0) applyDamage(t, mitigate(t, ex, def.attach)); }
+    // 원문 2.6: 적이 거는 아츠 이상은 플레이어 규칙(폭발·대량 피해)이 아니라 전용 효과다.
+    if (def?.attach) applyEnemyArts(t, def.attach, s.log);
     // 잡기/속박(bind·단운수 갈고리·형상아겔로스): 확률로 시간 정지 1턴(다음 라운드 시작 시 해제). 슈퍼아머(카치르·스노우샤인 디펜더)는 저항.
     if ((def?.bind || def?.stun) && Math.random() < 0.5) {
       if (t.id === "catcher" || t.id === "snowshine") s.log.push(`  → ${t.name} 슈퍼아머! 잡기 저항`);
@@ -256,7 +325,24 @@ export type Encounter = { key: string; name: string; desc: string; make: () => D
 
 const D = ENEMY_DEFS;
 const pick = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
-const comp = (...ids: (keyof typeof ENEMY_DEFS)[]) => (): DDUnit[] => ids.map((id, i) => makeEnemy(D[id], i + 1));
+export const bossComp = (ids: string[]): DDUnit[] => comp(...(ids as any))();
+const comp = (...ids: (keyof typeof ENEMY_DEFS)[]) => (): DDUnit[] => {
+  const out: DDUnit[] = [];
+  for (const id of ids) {
+    const u = makeEnemy(D[id], out.length + 1);
+    out.push(u);
+    // 호위 부위(마블 촉수 4개): 전부 처치해야 본체(코어)가 피격 대상이 된다.
+    const g = (D[id] as any).guardedBy;
+    if (g) {
+      u.invuln = true; u.guardIds = [];
+      for (let i = 0; i < g.n; i++) {
+        const part = makeEnemy(D[g.id as keyof typeof ENEMY_DEFS], out.length + 1);
+        part.summonedBy = u.id; out.push(part); u.guardIds.push(part.id);
+      }
+    }
+  }
+  return out;
+};
 
 // 세력별 교전 편성(랜덤 배치). 정예·보스는 티어 상향.
 const NORMAL_COMPS = [
@@ -273,13 +359,17 @@ const ELITE_COMPS = [
   comp("bk-siege", "bk-ballista", "bk-pyromancer"),       // 랜드브레이커
   comp("hill-smasher", "cloud-obliterator", "cloud-stalker"), // 청파채
 ];
+// 보스전은 원작대로 **호위 잡몹 없이 보스 단독**이다(원일·마블·로댄 등 확인).
+// 난이도는 잡몹이 아니라 페이즈(EnemyDef.phases)와 호위 부위(guardedBy)로 만든다.
+// 트리아겔로스만 2페이즈에서 소형 아겔로스를 소환한다 — 편성이 아니라 페이즈 훅이 처리한다.
 const BOSS_COMPS = [
-  comp("craghowler", "rockhowler"),                       // 야외 생물
-  comp("triaggelos", "sting", "sting"),                   // 아겔로스(광맥 구역 보스)
-  comp("nefarith", "bk-raider"),                          // 랜드브레이커
-  comp("ruan-yi", "highway-reaver"),                      // 청파채(무릉 보스)
-  comp("tidalklast", "mudflow", "mudflow"),               // 수화자(중간보스)
-  comp("marble-aggelo"),                                  // 아겔로스(4번협곡 최종)
+  comp("craghowler"),                    // 야외 생물
+  comp("triaggelos"),                    // 아겔로스(광맥) — 3페이즈, 2페 소환
+  comp("nefarith"),                      // 랜드브레이커 — 2페 정복자 네파리스
+  comp("ruan-yi"),                       // 청파채(무릉)
+  comp("tidalklast"),                    // 수화자(중간보스)
+  comp("marble-aggelo"),                 // 아겔로스(4번협곡 최종) — 촉수 4개 선행
+  comp("rhodagn-the-bonekrushing-fist"), // 랜드브레이커 — HP 70%에서 2페
 ];
 
 export const ENCOUNTERS: Encounter[] = [
