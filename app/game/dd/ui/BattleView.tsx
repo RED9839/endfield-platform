@@ -2,7 +2,7 @@
 
 import { useEffect, useReducer, useRef, useState } from "react";
 
-import { act, canAct, isOver, startRound, perTurn, nextActor, turnOrder, usable, BASIC, GAUGE_REGEN, findLinkChain, type DDClass, type DDSkill, type DDState, type DDUnit, type Element } from "../combat";
+import { act, canAct, isOver, startRound, perTurn, nextActor, turnOrder, usable, BASIC, GAUGE_REGEN, findLinkChain, type DDClass, type DDSkill, type DDState, type DDUnit, type Element, CHAIN_MAX } from "../combat";
 import { OPERATORS, SKILLS, OP_BASIC, enemyDefFor, avatarUrl, fullUrl, skillIcon, enemyImage, enemyArchetype } from "../roster";
 import { ENCOUNTERS, allyChoose, createBattle, enemyAct, regionEncounter } from "../sim";
 import { activeSets, setEffectText, loadoutPieces } from "../gear";
@@ -293,6 +293,8 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
   const comboRelRef = useRef<ReturnType<typeof setTimeout> | null>(null); // 연쇄 종료 → 누적 숫자 놓아주기(떠오르며 사라짐)
   // 연쇄 종료: 합계의 hold를 푼다.
   const releaseCombo = () => {
+    // 연계 콤보 아이콘이 떠 있으면 연쇄가 아직 안 끝났다 — 플레이어가 누르길 기다린다.
+    if (linkComboRef.current) { comboRelRef.current = setTimeout(releaseCombo, 1200); return; }
     comboRef.current = { gen: comboRef.current.gen + 1, tot: {}, hits: {}, key: {} };
     // hold를 풀면 .dd-total-out으로 넘어가 떠오르며 사라진다. 그 뒤엔 born 수명으로 정리된다.
     setFx((prev) => (prev.floaters.some((f) => f.hold) ? { ...prev, floaters: prev.floaters.map((f) => (f.hold ? { ...f, hold: false, born: Date.now() } : f)) } : prev));
@@ -317,7 +319,9 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
   // 상태 칩 클릭 → 무슨 효과인지 설명 팝오버(호버 title은 터치·짧은 노출로 놓치기 쉽다)
   const [chipInfo, setChipInfo] = useState<{ c: StatusChip; x: number; y: number } | null>(null);
   const [aiming, setAiming] = useState<DDSkill | null>(null); // 대상 선택 중인 단일 스킬
+  const linkComboRef = useRef<unknown>(null); // 콤보 프롬프트 대기 중 — 누적 해제를 미룬다
   const [linkCombo, setLinkCombo] = useState<{ unitId: string; skill: DDSkill } | null>(null); // 연계 콤보 프롬프트(스킬 발동 → 조건 열린 연계 아이콘)
+  linkComboRef.current = linkCombo; // 렌더마다 동기화 — releaseCombo가 최신 상태를 본다
   const [inspectId, setInspectId] = useState<string | null>(null); // 스탯 조회 유닛
   const [inspectTab, setInspectTab] = useState<"skill" | "gear" | "talent">("skill"); // 오퍼 상세 하단 탭
   const [detailId, setDetailId] = useState<string | null>(null); // 스킬 상세 펼침
@@ -501,6 +505,9 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
     const s = stateRef.current!; const lc = linkCombo; if (!lc) return;
     setLinkCombo(null);
     const u = s.units.find((x) => x.id === lc.unitId);
+    // 자동 모드에선 act()가 예약하며 chainStep을 달아 주지만, 수동은 플레이어가 직접 쏘므로
+    // 여기서 달아야 한다. 없으면 s.chain이 1로 남아 "새 연쇄"로 취급돼 누적 피해가 초기화된다.
+    if (u) u.chainStep = Math.min(CHAIN_MAX, (s.chain ?? 1) + 1);
     if (u && u.hp > 0 && usable(s, u, lc.skill)) doAction(u, () => act(s, u, lc.skill), lc.skill.name);
     const nx = u ? findLinkChain(s, u) : null;
     if (nx) { setLinkCombo({ unitId: nx.unit.id, skill: nx.skill }); bump(); return; }
