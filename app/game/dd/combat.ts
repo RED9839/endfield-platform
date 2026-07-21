@@ -631,7 +631,7 @@ export const setLinkChain = (f: LinkChain | null) => { linkChainProvider = f; };
 
 // anomalyConsumed: 아츠 이상/부착 소모·흡수 윈도우(남은 턴). 0/undefined = 닫힘.
 // chaining: 연계 연쇄 재진입 방지(연쇄는 1단까지).
-export type DDState = { units: DDUnit[]; round: number; log: string[]; lastLinkAlly?: string; chain?: number; skillGauge: number; maxGauge: number; boss?: boolean; anomalyConsumed?: number; allyHit?: boolean; moraleAccum?: number; forcedTargetId?: string; chaining?: boolean; linkEvents?: Record<string, number>; manualLink?: boolean };
+export type DDState = { units: DDUnit[]; round: number; log: string[]; lastLinkAlly?: string; chain?: number; skillGauge: number; maxGauge: number; boss?: boolean; anomalyConsumed?: number; allyHit?: boolean; moraleAccum?: number; forcedTargetId?: string; chaining?: boolean; linkEvents?: Record<string, number>; manualLink?: boolean; chainUsed?: string[] };
 // 연계 탐색 — 이 행동으로 조건이 열린 아군의 연계(유닛·스킬). 수동 콤보 UI가 이걸 호출해 아이콘을 띄운다.
 export function findLinkChain(s: DDState, self: DDUnit): { unit: DDUnit; skill: DDSkill } | null { return linkChainProvider ? linkChainProvider(s, self) : null; }
 
@@ -727,7 +727,13 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
   const log = s.log;
   // 스킬 연계 체인: 예약(chainStep)을 달고 온 행동이면 그 단계를, 아니면 새 체인의 1단으로 본다.
   // 적이 끼어들면 연쇄는 끊긴다 — 아군 행동이 이어질 때만 체인이 자란다.
-  if (self.side === "ally") { s.chain = self.chainStep ?? 1; delete self.chainStep; } else s.chain = 1;
+  if (self.side === "ally") {
+    s.chain = self.chainStep ?? 1; delete self.chainStep;
+    if (s.chain === 1) s.chainUsed = []; // 새 연쇄 시작 → 참여자 명단 초기화
+  } else { s.chain = 1; s.chainUsed = []; }
+  // 한 연쇄에 같은 오퍼는 연계 1회. 쿨만 믿으면 쿨 0인 오퍼(아크라이트 쿨 1턴)가 자기 연계로
+  // 자기 연계를 계속 열어 연쇄를 독점한다 — 실측 150행동 중 146회가 아크라이트 연계였다.
+  if (self.side === "ally" && skill.kind === "link") (s.chainUsed ??= []).push(self.id);
   log.push(`${self.name}[pos${self.pos}] → ${skill.name}${(s.chain ?? 1) > 1 ? `  ⛓ ${s.chain}연쇄` : ""}`);
   SRC_CTX = { by: self.name, via: skill.name, kind: "skill" }; // 이 스킬로 걸리는 효과의 기본 출처(무기/장비 트리거가 일시 override)
   // 자원: 스킬 게이지(파티 공유) 소모 + 궁극기 에너지(개인) 충전 — 위키 정합

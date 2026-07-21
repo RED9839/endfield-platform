@@ -17,9 +17,11 @@ const EL_TAG: Record<Element, string> = { heat: "열기 ", electric: "전기 ", 
 setLinkChain((s, _self) => {
   // 조건(requires)·쿨(linkCd)이 충족된 연계를 **직접 탐색**한다(allyChoose 점수에 밀리지 않게).
   // self 포함 — 자기 셋업으로 자기 연계가 열리는 경우(장방이 등)도 잡고, 연계→연계 체인이 확실히 이어진다.
-  // 이미 발동한 연계는 쿨(linkCd)이 usable을 막으므로 무한 루프가 없다.
+  // 쿨(linkCd)에 더해 **이번 연쇄에 이미 연계한 오퍼는 제외**한다 — 쿨 1턴짜리는 쿨만으로
+  // 자기 연계를 계속 열어 연쇄를 독점할 수 있다(아크라이트).
   let best: { unit: DDUnit; skill: DDSkill } | null = null;
   for (const a of living(s, "ally")) {
+    if (s.chainUsed?.includes(a.id)) continue; // 이번 연쇄에서 이미 연계함
     const link = (SKILLS[a.id] ?? []).find((o) => o.kind === "link" && usable(s, a, o));
     if (!link) continue;
     if (!best || link.power > best.skill.power) best = { unit: a, skill: link };
