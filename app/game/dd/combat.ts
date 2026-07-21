@@ -698,9 +698,19 @@ export function onAllyHit(s: DDState, self: DDUnit, t: DDUnit, final: number, lo
   // 패링(스노우샤인·카치르): 방패 태세 중 아군 피격 시 반격(공격자=self).
   if (self.side === "enemy") {
     const snow = s.units.find((u) => u.id === "snowshine" && u.hp > 0 && (u.timers.guard || 0) > 0);
-    if (snow) { log.push(`  → 스노우샤인 반격(패링)!`); applyAttach(self, "cryo", snow, log); snow.ultCharge = Math.min(snow.ultCost, snow.ultCharge + 10); }
+    // 원본 반격 배율(Lv1): 스노우샤인 200% 냉기 / 카치르 178% 물리. 기존엔 부착·방불만 넣고 피해가 없었다.
+    if (snow) {
+      const d = applyDamage(self, mitigate(self, snow.attack * eb(snow) * 2.0, "cryo"));
+      log.push(`  → 스노우샤인 반격(패링)! 냉기 -${d.toLocaleString()}`);
+      applyAttach(self, "cryo", snow, log); snow.ultCharge = Math.min(snow.ultCost, snow.ultCharge + 10);
+    }
     const cat = s.units.find((u) => u.id === "catcher" && u.hp > 0 && (u.timers.guard || 0) > 0);
-    if (cat) { self.physBreak = Math.min(MAX_BREAK, self.physBreak + 1); setTimer(self, "physBreak", DUR_BREAK); log.push(`  → 카치르 반격(패링)! 방어 불능 1스택 (방어 불능 ${self.physBreak})`); }
+    if (cat) {
+      const d = applyDamage(self, mitigate(self, cat.attack * eb(cat) * 1.78, "physical"));
+      self.physBreak = Math.min(MAX_BREAK, self.physBreak + 1); setTimer(self, "physBreak", DUR_BREAK);
+      log.push(`  → 카치르 반격(패링)! 물리 -${d.toLocaleString()} · 방어 불능 1스택 (방어 불능 ${self.physBreak})`);
+    }
+
   }
 }
 
