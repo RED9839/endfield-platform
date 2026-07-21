@@ -107,7 +107,9 @@ function castFromLog(line?: string): string | null {
   return i >= 0 ? line.slice(i + 1).trim() : null;
 }
 
-type Floater = { id: string; amt: number; crit: boolean; tone: string; step?: string; total?: number; key?: number; born?: number };
+type Floater = { id: string; amt: number; crit: boolean; tone: string; step?: string; total?: number; key?: number; born?: number;
+  // 콤보 누적 숫자: 한 대상에 숫자 하나만 띄우고 그 값을 계속 키운다. hold면 사라지지 않고 화면에 머문다.
+  hold?: boolean; delta?: number; hits?: number };
 // 데미지 숫자가 화면에 머무는 시간(ms). CSS .dd-float 애니메이션 길이와 맞춘다.
 const FLOAT_MS = 2600;
 
@@ -234,10 +236,16 @@ function FxLayer({ id, fx }: { id: string; fx: Fx }) {
     <>
       {hit && <span key={`fl-${fx.tick}`} className="dd-flash" />}
       {mine.map((f, i) => (
-        <span key={f.key ?? `fn-${fx.tick}-${i}`} className="dd-float flex items-center gap-1 font-mono font-black" style={{ top: `${-2 - i * 14}px`, opacity: mine.length > 1 && i < mine.length - 1 ? 0.78 : 1, color: f.amt > 0 ? "#8fd36a" : f.crit ? "#ffd24a" : "#ff6b5a", fontSize: f.crit ? "1.55rem" : "1.05rem" }}>
+        <span key={f.key ?? `fn-${fx.tick}-${i}`} className={`${f.hold ? "dd-combo" : "dd-float"} flex items-center gap-1 font-mono font-black`}
+          style={{ top: `${-2 - i * 14}px`, opacity: mine.length > 1 && i < mine.length - 1 ? 0.78 : 1, color: f.amt > 0 ? "#8fd36a" : f.crit ? "#ffd24a" : "#ff6b5a", fontSize: f.crit ? "1.55rem" : f.hits ? "1.35rem" : "1.05rem" }}>
           {/* 단 라벨은 숫자 앞에 별도 배지로 — 뒤에 붙이면 "-25"+"1단"이 "-251단"으로 읽힌다 */}
           {f.step && <em className="shrink-0 rounded-[2px] bg-black/70 px-1 align-middle text-[10px] font-bold not-italic leading-[1.4] text-white/75">{f.step}</em>}
-          <span>{f.amt > 0 ? `+${f.amt}` : f.amt}{f.crit ? "!" : ""}</span>
+          {/* 누적값. amt가 바뀔 때마다 key가 바뀌어 튀는 연출이 다시 돈다 → 숫자가 "올라간" 게 보인다 */}
+          <span key={f.amt} className={f.hits ? "dd-combo-bump" : undefined}>{f.amt > 0 ? `+${f.amt}` : f.amt}{f.crit ? "!" : ""}</span>
+          {/* 이번에 더해진 양 — 누적만 보이면 얼마가 붙었는지 안 보인다 */}
+          {/* 첫 기여는 누적값과 증가분이 같아 "-362 +362"로 중복된다 → 쌓인 게 있을 때만 보여준다 */}
+          {f.delta != null && f.delta !== 0 && Math.abs(f.delta) < Math.abs(f.amt) && <em key={`d${f.amt}`} className="dd-combo-delta shrink-0 align-middle text-[12px] font-black not-italic text-white/90">+{Math.abs(f.delta).toLocaleString()}</em>}
+          {f.hits != null && f.hits > 1 && <em className="shrink-0 align-middle text-[10px] font-bold not-italic text-white/60">{f.hits}타</em>}
           {f.total != null && <em className="shrink-0 align-middle text-[11px] font-black not-italic text-white/85">= {f.total.toLocaleString()}</em>}
         </span>
       ))}
@@ -266,11 +274,21 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
   const fxTick = useRef(0);
   const hitTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]); // 다단히트 순차 연출 타이머
   const flSeq = useRef(0); // 데미지 숫자 고유키 — 행동이 바뀌어도 살아있는 숫자는 유지된다
+  // 콤보 누적: 대상별로 숫자 하나만 띄우고 값을 키운다. 다단히트의 각 단은 물론,
+  // 연쇄(연계)로 이어지는 다음 행동의 피해도 같은 숫자에 계속 더해진다.
+  const comboRef = useRef<{ gen: number; tot: Record<string, number>; hits: Record<string, number>; key: Record<string, number> }>({ gen: 0, tot: {}, hits: {}, key: {} });
+  const comboRelRef = useRef<ReturnType<typeof setTimeout> | null>(null); // 연쇄 종료 → 누적 숫자 놓아주기(떠오르며 사라짐)
+  // 콤보 종료: hold를 풀면 .dd-float 애니메이션으로 넘어가 떠오르며 사라진다.
+  const releaseCombo = () => {
+    comboRef.current = { gen: comboRef.current.gen + 1, tot: {}, hits: {}, key: {} };
+    setFx((prev) => (prev.floaters.some((f) => f.hold) ? { ...prev, floaters: prev.floaters.map((f) => (f.hold ? { ...f, hold: false, born: Date.now(), delta: undefined } : f)) } : prev));
+  };
   const stampFloaters = (fs: Floater[]): Floater[] => fs.map((f) => (f.key != null ? f : { ...f, key: ++flSeq.current, born: Date.now() }));
   // 새 숫자를 기존 숫자 위에 얹는다(교체 X). 수명이 지난 것만 걷어낸다 → 다음 행동이 와도 읽을 시간이 남는다.
   const mergeFx = (next: Omit<Fx, "floaters"> & { floaters: Floater[] }, keepOld = true) =>
     setFx((prev) => { const now = Date.now();
-      const alive = keepOld ? prev.floaters.filter((f) => f.born != null && now - f.born < FLOAT_MS && !next.floaters.some((n) => n.key === f.key)) : [];
+      // hold(콤보 누적 중)는 수명 무시 — 연쇄가 끝날 때 release가 풀어 준다.
+      const alive = keepOld ? prev.floaters.filter((f) => (f.hold || (f.born != null && now - f.born < FLOAT_MS)) && !next.floaters.some((n) => n.key === f.key)) : [];
       return { ...next, floaters: [...alive, ...stampFloaters(next.floaters)] }; });
   const [auto, setAuto] = useState(false);
   const [speed, setSpeed] = useState(1);
@@ -311,41 +329,52 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
     if (actor.side === "ally") { let dealt = 0; for (const u of s.units) if (u.side === "enemy") { const d = (before.get(u.id) ?? u.hp) - u.hp; if (d > 0) dealt += d; } if (dealt > 0) dmgRef.current[actor.id] = (dmgRef.current[actor.id] ?? 0) + dealt; }
     fxTick.current += 1;
     setRoundBanner(null);
-    // 다단히트는 총합 하나로 뭉쳐 뜨면 몇 대 맞았는지 안 보인다 → 단별로 순차 발사 + 누적 합계 표시.
+    // ── 콤보 누적 표시 ──
+    // 대상마다 숫자를 하나만 띄우고 그 값을 계속 키운다. 다단히트의 각 단이 더해지고,
+    // 연쇄(연계)로 다음 오퍼가 이어붙으면 그 피해까지 같은 숫자에 누적된다.
+    // (예전엔 단마다 별도 숫자가 위로 쌓여서, 총량이 얼마인지 한눈에 안 들어왔다.)
     const pat = parseHitPattern(newLines);
-    const damaged = floaters.filter((f) => f.amt < 0); // 피해를 입은 대상만 단별로 쪼갠다(회복은 그대로)
-    if (pat && damaged.length) {
-      const wSum = pat.reduce((a, b) => a + b.w, 0);
-      const others = floaters.filter((f) => f.amt >= 0);
-      // 타수가 많을수록 간격을 줄이되 최소 90ms는 준다 — 이전 타가 화면에 남아 쌓이므로 다 읽을 수 있다.
-      const gap = Math.min(150, Math.max(90, delay() / (pat.length + 1)));
-      hitTimersRef.current.forEach(clearTimeout); hitTimersRef.current = [];
-      const baseTick = fxTick.current; // 버스트 내내 고정 — tick이 바뀌면 앞선 타가 리마운트되며 사라진다
-      const stack: Floater[] = []; // 이미 뜬 단들을 그대로 들고 간다(지우지 않고 위로 쌓임)
-      for (let i = 0; i < pat.length; i++) {
-        const shot = () => {
-          const acc: Floater[] = [...others, ...stack];
-          for (const f of damaged) {
-            const tot = -f.amt;
-            // 각 대상의 실제 피해를 단 비율로 분배. 마지막 단이 반올림 오차를 흡수해 합이 정확히 맞는다.
-            const upto = pat.slice(0, i + 1);
-            const cum = i === pat.length - 1 ? tot : Math.round((tot * upto.reduce((a, b) => a + b.w, 0)) / wSum);
-            const prev = i === 0 ? 0 : Math.round((tot * pat.slice(0, i).reduce((a, b) => a + b.w, 0)) / wSum);
-            const cur = pat[i];
-            // 라벨은 "1단/2단/막타" 그대로. 합계는 마지막 타에만 붙인다(매 타마다 붙이면 숫자가 뭉쳐 읽히지 않는다).
-            const fl: Floater = { id: f.id, amt: -(cum - prev), crit: crit || cur.label === "막타", tone: f.tone,
-              step: cur.label, total: i === pat.length - 1 ? cum : undefined };
-            acc.push(fl); stack.push(fl);
-          }
-          mergeFx({ tick: baseTick, activeId: actor.id, actingSide: actor.side, floaters: acc, cast: i === 0 && cast ? { id: actor.id, text: cast } : null });
-          bump();
-        };
-        if (i === 0) shot(); else hitTimersRef.current.push(setTimeout(shot, gap * i));
-      }
-      fxTick.current = baseTick + 1;
-      return;
+    const damaged = floaters.filter((f) => f.amt < 0); // 피해만 누적(회복은 기존대로 개별 표시)
+    const others = floaters.filter((f) => f.amt >= 0);
+    if (comboRelRef.current) { clearTimeout(comboRelRef.current); comboRelRef.current = null; }
+    // 연쇄 1단(= 새 행동)이거나 적 행동이면 이전 콤보를 놓아주고 새로 시작한다.
+    if (chainN <= 1) releaseCombo();
+    const combo = comboRef.current;
+    const base: Record<string, number> = { ...combo.tot };   // 이번 행동 전까지의 누적
+    const baseHits: Record<string, number> = { ...combo.hits };
+    for (const f of damaged) {
+      combo.tot[f.id] = (base[f.id] ?? 0) + -f.amt;
+      combo.hits[f.id] = (baseHits[f.id] ?? 0) + (pat ? pat.length : 1);
+      combo.key[f.id] ??= ++flSeq.current; // 대상별 고정 키 → 같은 DOM 노드가 값만 바꾼다(리마운트 X = 안 사라짐)
     }
-    mergeFx({ tick: fxTick.current, activeId: actor.id, actingSide: actor.side, floaters, cast: cast ? { id: actor.id, text: cast } : null });
+    const steps = pat ?? [{ label: "", w: 1 }];
+    const wSum = steps.reduce((a, b) => a + b.w, 0);
+    const chainTag = chainN > 1 ? `⛓${chainN}연쇄` : "";
+    hitTimersRef.current.forEach(clearTimeout); hitTimersRef.current = [];
+    const baseTick = fxTick.current; // 버스트 내내 고정 — tick이 바뀌면 앞선 숫자가 리마운트되며 사라진다
+    const gap = Math.min(150, Math.max(90, delay() / (steps.length + 1)));
+    for (let i = 0; i < steps.length; i++) {
+      const shot = () => {
+        const acc: Floater[] = [...others];
+        for (const f of damaged) {
+          const tot = -f.amt;
+          // 이번 행동 피해를 단 비율로 분배. 마지막 단이 반올림 오차를 흡수해 합이 정확히 맞는다.
+          const upto = i === steps.length - 1 ? tot : Math.round((tot * steps.slice(0, i + 1).reduce((a, b) => a + b.w, 0)) / wSum);
+          const prev = i === 0 ? 0 : Math.round((tot * steps.slice(0, i).reduce((a, b) => a + b.w, 0)) / wSum);
+          const run = (base[f.id] ?? 0) + upto;              // 화면에 뜨는 누적값
+          const hits = (baseHits[f.id] ?? 0) + i + 1;
+          const label = [chainTag, pat ? steps[i].label : ""].filter(Boolean).join(" ");
+          acc.push({ id: f.id, amt: -run, crit: crit || steps[i].label === "막타", tone: f.tone, key: combo.key[f.id],
+            step: label || undefined, delta: -(upto - prev), hits, hold: true });
+        }
+        mergeFx({ tick: baseTick, activeId: actor.id, actingSide: actor.side, floaters: acc, cast: i === 0 && cast ? { id: actor.id, text: cast } : null });
+        bump();
+      };
+      if (i === 0) shot(); else hitTimersRef.current.push(setTimeout(shot, gap * i));
+    }
+    fxTick.current = baseTick + 1;
+    // 연쇄가 더 안 이어지면 누적 숫자를 놓아준다(다음 행동이 오면 위에서 타이머가 취소된다).
+    comboRelRef.current = setTimeout(releaseCombo, gap * steps.length + delay() * 1.6);
     bump();
   }
 
