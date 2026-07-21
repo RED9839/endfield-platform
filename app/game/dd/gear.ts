@@ -140,12 +140,23 @@ for (const g of gearSummaries) GEAR_IMG_BY_NAME[g.name] = g.image;
 export const pieceImage = (name: string): string => GEAR_IMG_BY_NAME[name] ?? GEAR_IMG_BY_NAME[name.replace(/\s*·\s*(I{1,3}|IV|V)$/, "").trim()] ?? "";
 
 // 로드아웃 → 슬롯별 착용 피스(방어구/장갑/부품). ref가 피스 id면 그 피스, 세트명이면 세트 대표 피스.
-export function loadoutPieces(loadout: Loadout | undefined): { slot: LoadoutSlot; slotName: string; name: string; set: string; image: string; grade: number; def: number; dmg?: { kind: string; base: number }; slots: number }[] {
+// 능력치 합을 "힘 15 · 민첩 10"처럼 실제 항목으로 적는다.
+// 기존엔 grade.base를 "능력치 +25"로 뭉뚱그려 어느 스탯이 오르는지 알 수 없었다.
+export const ATTR_KO: Record<string, string> = { str: "힘", agi: "민첩", int: "지능", wil: "의지" };
+export const attrsText = (a?: Partial<Record<string, number>>): string =>
+  a ? (["str", "agi", "int", "wil"] as const).filter((k) => (a[k] ?? 0) > 0).map((k) => `${ATTR_KO[k]} +${a[k]}`).join(" · ") : "";
+export const sumAttrs = (list: { attrs?: Partial<Record<string, number>> }[]): Record<string, number> => {
+  const t: Record<string, number> = { str: 0, agi: 0, int: 0, wil: 0 };
+  for (const p of list) for (const k of ["str", "agi", "int", "wil"]) t[k] += p.attrs?.[k] ?? 0;
+  return t;
+};
+
+export function loadoutPieces(loadout: Loadout | undefined): { slot: LoadoutSlot; slotName: string; name: string; set: string; image: string; grade: number; def: number; dmg?: { kind: string; base: number }; slots: number; attrs?: Partial<Record<"str" | "agi" | "int" | "wil", number>> }[] {
   return LOADOUT_SLOTS.map((slot) => {
     const ref = loadout?.[slot];
     const p = ref ? (GEAR_PIECE_BY_ID[ref] ?? GEAR_SET_CANON[ref]?.[pieceSlotOf(slot)]) : undefined;
     const m = 1; // 부품이 실제 2칸이 되었으므로 배수 없음
-    return { slot, slotName: gearSlotName(slot), name: p?.name ?? "없음", set: p?.set ?? "", image: p ? pieceImage(p.name) : "", grade: (p?.grade.base ?? 0) * m, def: (p?.def ?? 0) * m, dmg: p?.dmg ? { kind: p.dmg.kind, base: +(p.dmg.base * m).toFixed(4) } : undefined, slots: m };
+    return { slot, slotName: gearSlotName(slot), name: p?.name ?? "없음", set: p?.set ?? "", image: p ? pieceImage(p.name) : "", grade: (p?.grade.base ?? 0) * m, def: (p?.def ?? 0) * m, dmg: p?.dmg ? { kind: p.dmg.kind, base: +(p.dmg.base * m).toFixed(4) } : undefined, slots: m , attrs: p?.attrs};
   });
 }
 

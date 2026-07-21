@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ChevronLeft, Hammer, Check, Lock } from "lucide-react";
 
-import { GEAR_PIECES_BY_SET_SLOT, GEAR_PIECE_BY_ID, GEAR_SLOTS, LOADOUT_SLOTS, gearSlotName, pieceImage, pieceSlotOf, slotOptions, type GearPiece, type GearSlot, type LoadoutSlot } from "../gear";
+import { GEAR_PIECES_BY_SET_SLOT, GEAR_PIECE_BY_ID, GEAR_SLOTS, LOADOUT_SLOTS, gearSlotName, pieceImage, pieceSlotOf, slotOptions, type GearPiece, type GearSlot, type LoadoutSlot  , attrsText } from "../gear";
 import { craftCost, forgeCost, skillForgeCost, canAfford, pieceLevel, isOwned, type CraftState } from "../craft";
 import { SKILL_MAX, skillLabel } from "../progress";
 import { OPERATORS, avatarUrl } from "../roster";
@@ -187,7 +187,7 @@ export default function CraftPanel({ craft, party = [], onCraft, onForge, onSwap
                       <span className="flex h-11 w-11 shrink-0 items-center justify-center border border-ef-line/50 bg-black/40">{pieceImage(opt.name) ? <img src={pieceImage(opt.name)} alt="" className="h-full w-full object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = "hidden"; }} /> : null}</span>
                       <span className="min-w-0 flex-1">
                         <span className="block truncate font-mono text-[15px] font-bold text-white" title={opt.name}>{opt.name}{sel && <span className="ml-1 text-[11px] text-ef-accent">● 착용</span>}</span>
-                        <span className="font-mono text-[13px] text-ef-ink/70">능력치 +{opt.grade.base} · 방어 +{opt.def}{opt.dmg ? ` · ${dmgText(opt)}` : ""}</span>
+                        <span className="font-mono text-[13px] text-ef-ink/70">{attrsText(opt.attrs) || `능력치 +${opt.grade.base}`} · 방어 +{opt.def}{opt.dmg ? ` · ${dmgText(opt)}` : ""}</span>
                         <span className="block font-mono text-[12px] text-ef-muted">{opt.set !== "?" ? opt.set + " 세트" : "자유 슬롯"} · {isOwned(craft, opt.id) ? <span className="text-emerald-300/80">제작됨</span> : <span className="text-amber-300/70">미제작</span>}</span>
                       </span>
                     </button>

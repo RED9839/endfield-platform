@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 import { OPERATORS, SKILLS, OP_BASIC, avatarUrl, fullUrl, skillIcon, makeAlly, type OpMeta } from "../roster";
 import { OP_TALENTS } from "../operator-talents";
 import { DMG_SHORT as DMG_KO, SKILL_KIND_SHORT as kindLabel } from "../labels";
-import { activeSets, setEffectText, recommendedSet, recommendedLoadout, loadoutPieces, pieceImage, gearSlotName, bestFreePiece, slotOptions, GEAR_SET_CANON, SET_NAMES, pieceSlotOf, LOADOUT_SLOTS, type LoadoutSlot, type Loadout, type GearSlot , applyGear} from "../gear";
+import { activeSets, setEffectText, recommendedSet, recommendedLoadout, loadoutPieces, pieceImage, gearSlotName, bestFreePiece, slotOptions, GEAR_SET_CANON, SET_NAMES, pieceSlotOf, LOADOUT_SLOTS, type LoadoutSlot, type Loadout, type GearSlot , applyGear , attrsText, sumAttrs } from "../gear";
 import { DEFAULT_PROGRESS, type OpProgress } from "../progress";
 import { applyWeapon, weaponOf, weaponName, weaponEffectText, weaponImage, weaponSeriesName, weaponSeriesText, OP_WEAPON_STATS, WEAPON_KO, WEAPON_ICON } from "../weapons";
 import { PRESET_PARTIES, ARCHETYPE_LABEL } from "../parties";
@@ -88,6 +88,7 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
   const geared = useMemo(() => { const u = makeAlly(focusId, 1, pr); applyGear(u, lo, 3); applyWeapon(u); return u; }, [focusId, pr, lo]);
   const pcs = loadoutPieces(lo);
   const gearGrade = pcs.reduce((n, p) => n + p.grade, 0); // 장비 능력치 합
+  const gearAttrs = sumAttrs(pcs); // 힘/민첩/지능/의지 실제 합 — 어느 스탯이 오르는지 보이게
   const gearDef = pcs.reduce((n, p) => n + p.def, 0);     // 장비 방어 합
 
   return (
@@ -295,7 +296,7 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
               {!active.length && <span className="font-mono text-[12px] text-ef-muted">세트 효과 대신 부품 능력치 우선</span>}
               {opSet(focusId) === opRecSet(focusId) && <span className="font-mono text-[12px] text-ef-accent">★추천</span>}
               <button type="button" onClick={() => setGearTab("set")} className="dd-cut ml-auto shrink-0 border border-ef-line px-2.5 py-0.5 font-mono text-[13px] font-bold uppercase text-ef-muted transition hover:border-ef-accent/60 hover:text-ef-accent">⚙ 장비 변경</button>
-              <span className="w-full font-mono text-[12px] text-ef-muted">맨몸으로 시작 · 공업소에서 이 빌드를 목표로 제작 · <span className="font-mono text-[13px] text-ef-ink/70">능력치 +{gearGrade} · 방어 +{gearDef}</span></span>
+              <span className="w-full font-mono text-[12px] text-ef-muted">맨몸으로 시작 · 공업소에서 이 빌드를 목표로 제작 · <span className="font-mono text-[13px] text-ef-ink/70">{attrsText(gearAttrs) || `능력치 +${gearGrade}`} · 방어 +{gearDef}</span></span>
               {active.map((n) => <span key={n} className="w-full truncate font-mono text-[13px] text-green-300">◆ {setEffectText(n)}</span>)}
             </div>
             <div className="space-y-1.5">
@@ -329,7 +330,7 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
             {/* 헤더 */}
             <div className="flex items-center gap-2 border-b border-ef-line p-3.5">
               <span className="font-mono text-lg font-bold text-white">장비 변경 <span className="text-sm text-ef-muted">— {op.name}</span></span>
-              <span className="ml-2 font-mono text-[13px] text-ef-ink/70">능력치 +{gearGrade} · 방어 +{gearDef}</span>
+              <span className="ml-2 font-mono text-[13px] text-ef-ink/70">{attrsText(gearAttrs) || `능력치 +${gearGrade}`} · 방어 +{gearDef}</span>
               <button type="button" onClick={() => setGearTab(null)} className="ml-auto shrink-0 border border-ef-line px-2 py-1 font-mono text-sm text-ef-muted transition hover:border-ef-accent/60 hover:text-white">✕</button>
             </div>
             {/* 탭: 세트 / 방어구 / 장갑 / 부품 */}
