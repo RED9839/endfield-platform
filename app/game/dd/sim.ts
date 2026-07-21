@@ -7,10 +7,6 @@ import type { OpProgress } from "./progress";
 import { rewardItemPool } from "./items";
 
 
-// 광역 나눔 계수: 전체 타격 시 대상당 피해. 1/대상수(완전 분산)와 1(분산 없음)의 중간.
-// 광역은 전원을 깎는 대신 대상당 위력이 낮은 것이 원작 감각이다.
-const SPREAD = 0.55;
-
 const EL_TAG: Record<Element, string> = { heat: "열기 ", electric: "전기 ", cryo: "냉기 ", nature: "자연 " };
 
 // 연계/궁 연쇄 provider 등록 — combat.ts가 roster(SKILLS)를 직접 import하면 순환이라 주입 방식.
@@ -255,11 +251,9 @@ export function enemyAct(s: DDState, self: DDUnit): void {
   let targets: DDUnit[];
   // 광역: 격턴으로 전체 "나눔"공격, 평시엔 단일.
   // 나눔이 이름뿐이고 전원에게 풀 데미지가 들어가고 있었다 — 광역 보스가 단일 보스의 몇 배를 넣던 원인.
-  let spread = 1;
   if (behavior === "aoe") {
     const wide = (self.procCount = (self.procCount || 0) + 1) % 2 === 1;
     targets = wide ? foes : [pick()];
-    if (wide) spread = SPREAD; // 대상 수로 완전히 나누면 광역이 무의미해지므로 부분 분산
   } else targets = [pick()];
   // 끌어당김(결정아겔로스): 후열 고위협 딜러를 강제로 끌어내 직격 + 물리 취약(노출)
   if (self.pull) { const back = byThreat[0]; targets = [back]; bumpVuln(back, "physical", 0.2); setTimer(back, "vuln:physical", 1); s.log.push(`${self.name}[적] 끌어당김! ${back.name} 강제 노출(취약)`); }
@@ -282,7 +276,7 @@ export function enemyAct(s: DDState, self: DDUnit): void {
       s.log.push(`${self.name}[적] → ${t.name} 무의식! 물리 면역 + 회복`);
       continue;
     }
-    const raw = self.attack * atkMul * powerMul * spread * (1 + vulnFor(t, elem)) * (1 - (t.protection || 0));
+    const raw = self.attack * atkMul * powerMul * (1 + vulnFor(t, elem)) * (1 - (t.protection || 0));
     const dmg = applyDamage(t, mitigate(t, raw, elem));
     s.log.push(`${self.name}[적] → ${t.name} ${elem !== "physical" ? EL_TAG[elem] : ""}공격 -${dmg} (HP ${t.hp}/${t.maxHp})`);
     onAllyHit(s, self, t, dmg, s.log); // 아군 피격 트리거(엠버 강철·레바테인 불씨·디펜더 패링)

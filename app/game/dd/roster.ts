@@ -675,7 +675,7 @@ const TIER_STATS: Record<EnemyTier, { hp: number; attack: number; speed: number;
   advanced: { hp: 1144, attack: 168, speed: 55, staggerMax: 96,  defense: 100 },
   alpha:    { hp: 1443, attack: 208, speed: 52, staggerMax: 116, defense: 100 },
   elite:    { hp: 2059, attack: 242, speed: 50, staggerMax: 146, defense: 100 },
-  boss:     { hp: 6136, attack: 212, speed: 60, staggerMax: 236, defense: 100 },
+  boss:     { hp: 6136, attack: 250, speed: 60, staggerMax: 236, defense: 100 },
 };
 
 // 아군 저항(≈37.5%) 도입에 따른 적 공격 보정: 아군 실피해 유지(1/(1−저항)≈1.5). 원본 손맛(큰 raw→저항 경감).
