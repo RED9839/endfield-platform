@@ -116,6 +116,17 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
         </div>
       </div>
 
+      {/* 테스트 버전 고지 — 밸런스·수치가 계속 바뀌는 단계임을 편성 시점에 알린다 */}
+      <div className="dd-cut mb-3 flex flex-wrap items-center gap-x-3 gap-y-1 border px-3.5 py-2"
+           style={{ borderColor: "#f5c54266", background: "linear-gradient(90deg, rgba(245,197,66,0.12), rgba(245,197,66,0.03))" }}>
+        <span className="shrink-0 border px-1.5 py-px font-mono text-[12px] font-black uppercase tracking-[0.14em]"
+              style={{ borderColor: "#f5c542aa", color: "#f5c542" }}>TEST BUILD</span>
+        <span className="font-mono text-[13px] font-bold text-white/90">테스트 버전입니다</span>
+        <span className="min-w-0 font-mono text-[12px] text-ef-muted">
+          오퍼레이터 수치·스킬 판정·적 밸런스가 원작 대조 과정에서 계속 바뀝니다. 진행 상황이나 승률은 언제든 달라질 수 있습니다.
+        </span>
+      </div>
+
       {/* ===== 추천 부대(컴팩트 로우) ===== */}
       <div className="mb-3 flex flex-wrap items-center gap-1.5">
         <span className="mr-1 font-mono text-[13px] font-bold uppercase tracking-[0.2em] text-ef-muted">추천 부대</span>
