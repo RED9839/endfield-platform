@@ -24,14 +24,17 @@ export default function GamePage() {
   const run = useDDRun();
   const [warnNode, setWarnNode] = useState<RunNode | null>(null); // 제작 알림 팝업 대상 노드
   const [noWarn, setNoWarn] = useState(false); // "다시 표시 안 함"
+  // 층당 1회만 — 예전엔 교전 노드마다 떠서 전투로 가는 길을 매번 막았다(맨몸 시작이라 제작 가능 상태가 늘 참).
+  const [warnedFloor, setWarnedFloor] = useState<number | null>(null);
   useEffect(() => { setNoWarn(localStorage.getItem(WARN_KEY) === "1"); }, []);
   // 전투 노드 진입 — 제작 가능한 장비가 있고 알림을 끄지 않았으면 먼저 팝업
   const handleEnter = (n: RunNode) => {
-    if (n.kind !== "rest" && run.hasCraftable && !noWarn) setWarnNode(n);
+    if (n.kind !== "rest" && run.hasCraftable && !noWarn && warnedFloor !== run.floor) setWarnNode(n);
     else run.enterNode(n);
   };
   const dismissWarn = (proceed: boolean, dontShow: boolean) => {
     if (dontShow) { localStorage.setItem(WARN_KEY, "1"); setNoWarn(true); }
+    setWarnedFloor(run.floor); // 이 층에서는 다시 묻지 않는다
     const n = warnNode; setWarnNode(null);
     if (proceed && n) run.enterNode(n);
     else if (!proceed) run.openCraft();

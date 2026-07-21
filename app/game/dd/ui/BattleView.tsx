@@ -2,7 +2,7 @@
 
 import { useEffect, useReducer, useRef, useState } from "react";
 
-import { act, canAct, isOver, startRound, perTurn, nextActor, turnOrder, usable, BASIC, GAUGE_REGEN, findLinkChain, type DDClass, type DDSkill, type DDState, type DDUnit, type Element, CHAIN_MAX } from "../combat";
+import { act, canAct, isOver, startRound, perTurn, nextActor, turnOrder, usable, BASIC, GAUGE_REGEN, findLinkChain, type DDClass, type DDSkill, type DDState, type DDUnit, type Element, CHAIN_MAX, GAUGE_COST } from "../combat";
 import { OPERATORS, SKILLS, OP_BASIC, enemyDefFor, avatarUrl, fullUrl, skillIcon, enemyImage, enemyArchetype } from "../roster";
 import { ENCOUNTERS, allyChoose, createBattle, enemyAct, regionEncounter } from "../sim";
 import { activeSets, setEffectText, loadoutPieces } from "../gear";
@@ -39,7 +39,9 @@ function skillReason(s: DDState, u: DDUnit, sk: DDSkill): string | null {
 }
 // 뉴비용: 스킬 잠금 사유를 쉬운 말로 부연(툴팁)
 const REASON_HELP: Record<string, string> = {
-  "궁 게이지 부족": "궁극기 게이지가 아직 안 찼습니다. 공격하거나 피격되면 충전됩니다.",
+  // 원작 확인: 일반 공격 표에 궁극기 에너지 항목이 없다(스킬 게이지만 회복).
+  // 궁은 배틀·연계로만 찬다 — "공격하면 충전"이라고 안내하면 평타만 눌러도 찰 거라 오해한다.
+  "궁 게이지 부족": "궁극기 에너지는 배틀 스킬(팀 전원 충전)과 연계 스킬로만 찹니다. 일반 공격은 팀 게이지만 회복하고 궁은 오르지 않습니다.",
   "스킬 게이지 부족": "파티가 함께 쓰는 공유 게이지가 모자랍니다. 매 라운드 자동 회복되니 다음 턴을 노립니다.",
   "자세 전환 필요": "먼저 자세(스탠스)를 전환해야 쓸 수 있습니다.",
   "조건 미충족": "발동 조건이 아직 열리지 않았습니다. 적을 불균형 상태로 만들거나 아츠 이상을 걸면 열립니다.",
@@ -326,6 +328,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
   const [inspectTab, setInspectTab] = useState<"skill" | "gear" | "talent">("skill"); // 오퍼 상세 하단 탭
   const [detailId, setDetailId] = useState<string | null>(null); // 스킬 상세 펼침
   const [showLog, setShowLog] = useState(false);
+  const [showHelp, setShowHelp] = useState(false); // 용어 안내 — 팀 게이지/궁/불균형/부착을 설명 없이 던지고 있었다
   const [tab, setTab] = useState<"dmg" | "log">("dmg"); // 하단 패널: 데미지 기록 / 전투 기록
   const [, bump] = useReducer((x) => x + 1, 0);
 
@@ -579,19 +582,33 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
             <h2 className="font-mono text-xl font-black uppercase leading-tight tracking-[0.1em]" style={{ color: nodeKind === "boss" ? "#f0776e" : "#f4e9d2" }}>{nodeTitle[nodeKind]}<span className="ml-2 text-ef-accent">R{s.round}</span></h2>
           </div>
           <div className="flex shrink-0 items-center gap-2">
+            <button type="button" onClick={() => setShowHelp((v) => !v)} className={`hud-btn dd-cut px-3 py-1.5 font-mono text-[15px] font-bold uppercase tracking-wider ${showHelp ? "text-ef-accent" : "text-ef-muted"}`} title="전투 용어 설명">❔ 용어</button>
             <button type="button" onClick={() => setShowLog((v) => !v)} className={`hud-btn dd-cut px-3 py-1.5 font-mono text-[15px] font-bold uppercase tracking-wider ${showLog ? "hud-btn-on" : "text-ef-muted"}`} title="데미지·전투 기록">기록 {showLog ? "▴" : "▾"}</button>
             {!winner && <button type="button" onClick={cycleSpeed} className="hud-btn dd-cut px-3 py-1.5 font-mono text-[15px] font-bold uppercase tracking-wider text-ef-muted" title="재생 속도">{speed}배속</button>}
             {!winner && <button type="button" onClick={toggleAuto} className={`hud-btn dd-cut px-3.5 py-1.5 font-mono text-[15px] font-bold uppercase tracking-wider ${auto ? "hud-btn-on" : "text-ef-muted"}`}>{auto ? "자동 ON" : "수동"}</button>}
           </div>
         </div>
         <div className="mt-2 flex items-center gap-2.5">
-          <span className="shrink-0 font-mono text-[13px] uppercase tracking-wider text-ef-muted">스킬 게이지 · <span className="cursor-help underline decoration-dotted underline-offset-2" title="파티 전원이 함께 쓰는 게이지입니다. 배틀 스킬을 쓰면 소모되고, 매 라운드 자동 회복됩니다.">공유</span> <span className="text-ef-accent-soft" title="라운드마다 자동 회복">+{GAUGE_REGEN}/R</span></span>
+          <span className="shrink-0 font-mono text-[13px] uppercase tracking-wider text-ef-muted">스킬 게이지 · <span className="cursor-help underline decoration-dotted underline-offset-2" title="파티 4명이 함께 쓰는 하나의 게이지입니다. 누가 배틀 스킬을 써도 여기서 100이 빠지므로, 한 명이 연달아 쓰면 나머지가 못 씁니다. 매 라운드 자동 회복되고 일반 공격으로도 조금씩 찹니다. 궁극기 에너지와는 별개입니다.">4인 공용</span> <span className="text-ef-accent-soft" title="라운드마다 자동 회복">+{GAUGE_REGEN}/R</span></span>
           <div className="min-w-[120px] flex-1"><Bar value={s.skillGauge} max={s.maxGauge} color={PRIMARY} h="h-2.5" /></div>
           <span className="shrink-0 font-mono text-[13px] font-bold text-ef-ink">{Math.round(s.skillGauge)}/{s.maxGauge}</span>
+          {/* 남은 배틀 횟수 — 숫자만으론 "지금 배틀을 몇 번 쓸 수 있나"가 안 읽힌다 */}
+          <span className="shrink-0 font-mono text-[12px] font-bold" title="배틀 스킬 1회에 100 소모 — 지금 게이지로 쓸 수 있는 횟수"
+                style={{ color: s.skillGauge >= GAUGE_COST ? "#f5c542" : "#7a7a82" }}>배틀 {Math.floor(s.skillGauge / GAUGE_COST)}회분</span>
         </div>
       </div>
 
       {/* 데미지·전투 기록 — 상단 드롭다운(기본 접힘) */}
+      {showHelp && (
+        <div className="hud-panel dd-cut mt-2 grid gap-x-6 gap-y-1.5 p-3 font-mono text-[13px] leading-snug sm:grid-cols-2" style={{ borderColor: "rgba(103,232,249,0.4)" }}>
+          <div><b className="text-[#f5c542]">팀 게이지</b> <span className="text-ef-muted">— 파티 4명이 함께 쓰는 자원. 배틀 스킬 1회에 100 소모. 일반 공격으로 조금씩 회복하고 라운드마다 +45.</span></div>
+          <div><b className="text-[#f5c542]">궁 에너지</b> <span className="text-ef-muted">— 오퍼별 개인 자원. <b className="text-white/80">배틀·연계로만</b> 찬다. 일반 공격으로는 안 오른다.</span></div>
+          <div><b className="text-[#a16207]">불균형</b> <span className="text-ef-muted">— 적 HP 아래 노란 바. 가득 차면 적이 행동 불가가 되고 받는 피해가 30% 오른다. 스킬마다 붙은 「불균형 +N」으로 쌓는다.</span></div>
+          <div><b className="text-[#67e8f9]">부착</b> <span className="text-ef-muted">— 적에게 묻은 속성(열기·전기·냉기·자연). 연계 스킬 상당수가 이걸 조건으로 삼고, 소모하면 큰 효과가 터진다.</span></div>
+          <div><b className="text-[#67e8f9]">연계</b> <span className="text-ef-muted">— 조건이 열리면 아이콘이 뜨고, 누르면 그 오퍼가 <b className="text-white/80">추가 턴</b>으로 끼어든다. 조건이 겹치면 편성 왼쪽부터.</span></div>
+          <div><b className="text-[#ff8a76]">피격 확률</b> <span className="text-ef-muted">— 적은 위치가 아니라 직군을 보고 문다. 디펜더·뱅가드가 더 자주 맞는다.</span></div>
+        </div>
+      )}
       {showLog && (() => {
         const dmgList = allies.map((a) => ({ id: a.id, name: OPERATORS.find((o) => o.id === a.id)?.name ?? a.id, dmg: Math.round(dmgRef.current[a.id] ?? 0), el: unitElement(a) })).sort((x, y) => y.dmg - x.dmg);
         const dmgMax = Math.max(1, ...dmgList.map((d) => d.dmg));
@@ -768,7 +785,8 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
                   </div>
                   {/* 궁 바(유지) */}
                   <div className="mt-1.5 flex items-center gap-1.5">
-                    <span className={`shrink-0 font-mono text-[11px] font-bold uppercase ${ready ? "text-amber-300" : "text-ef-muted"}`}>궁</span>
+                    {/* 궁 라벨에 충전 방법을 붙인다 — 평타만 눌러서는 영원히 안 차는데 화면에 단서가 없었다 */}
+                    <span title="궁극기 에너지 — 배틀 스킬(쓰면 팀 전원 충전)과 연계 스킬로만 찹니다. 일반 공격은 팀 게이지만 회복합니다." className={`shrink-0 cursor-help font-mono text-[11px] font-bold uppercase ${ready ? "text-amber-300" : "text-ef-muted"}`}>궁</span>
                     <div className="relative flex-1" style={ready ? { filter: "drop-shadow(0 0 4px #f5c54299)" } : undefined}>
                       <Bar value={a.ultCharge} max={a.ultCost} color={ready ? "#f5c542" : "#7a611c"} h="h-2.5" />
                       <span className="pointer-events-none absolute inset-0 flex items-center justify-center font-mono text-[11px] font-bold leading-none" style={{ color: ready ? "#1a1206" : "#e5c98a", textShadow: ready ? "none" : "0 1px 2px #000" }}>{ready ? "⚡ READY" : `${Math.round(a.ultCharge)}/${a.ultCost}`}</span>
@@ -801,6 +819,16 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
           </div>
         );
       })()}
+      {/* 적/아군 자동 행동 중 — 수동인데 스킬 패널이 사라지면 멈춘 줄 안다. 누가 움직이는 중인지 알린다. */}
+      {!winner && !current && !auto && !linkCombo && (
+        <div className="hud-panel dd-cut mt-3 flex items-center gap-2.5 px-4 py-3" style={{ borderColor: "rgba(224,101,92,0.35)" }}>
+          <span className="dd-turn-dot h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: fx.actingSide === "ally" ? "#f5c542" : "#e0655c" }} />
+          <span className="font-mono text-[15px] font-bold" style={{ color: fx.actingSide === "ally" ? "#f5c542" : "#e0655c" }}>
+            {fx.actingSide === "ally" ? "아군 행동 중" : "적 행동 중"}
+          </span>
+          <span className="font-mono text-[13px] text-ef-muted">— 잠시 기다리면 다음 차례가 옵니다. 속도를 올리려면 우측 상단 「1배속」을 누르세요.</span>
+        </div>
+      )}
       {/* 수동 조작 — 스킬 선택 */}
       {!winner && current && !auto && (
         <div className="hud-panel dd-cut mt-3 p-3" style={{ borderColor: "rgba(255,154,47,0.4)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.05), 0 -8px 30px -20px rgba(255,154,47,0.4)" }}>
@@ -837,8 +865,8 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
                       : dmg > 0 ? <span className="shrink-0 whitespace-nowrap font-mono text-[17px] font-bold tabular-nums" style={{ color: elementColor[el] }}>{dmg.toLocaleString()}<span className="ml-0.5 text-[13px] font-normal text-ef-muted">피해</span></span>
                       : <span className="shrink-0 whitespace-nowrap font-mono text-[14px] text-ef-muted">{sk.target === "self" ? "버프/유틸" : "유틸"}</span>}
                     {!off && (sk.kind === "battle"
-                      ? <span className="shrink-0 whitespace-nowrap font-mono text-[13px] font-bold text-orange-300/80" title="스킬 게이지 소모">−{sk.gaugeCost ?? 100}<span className="ml-0.5 text-[11px] font-normal text-ef-muted">게이지</span></span>
-                      : sk.gaugeGain ? <span className="shrink-0 whitespace-nowrap font-mono text-[13px] font-bold text-green-300/80" title="스킬 게이지 회복">＋{sk.gaugeGain}<span className="ml-0.5 text-[11px] font-normal text-ef-muted">게이지</span></span> : null)}
+                      ? <span className="shrink-0 whitespace-nowrap font-mono text-[13px] font-bold text-orange-300/80" title="팀 공용 스킬 게이지를 소모합니다. 궁극기 에너지와는 별개입니다.">−{sk.gaugeCost ?? 100}<span className="ml-0.5 text-[11px] font-normal text-ef-muted">팀게이지</span></span>
+                      : sk.gaugeGain ? <span className="shrink-0 whitespace-nowrap font-mono text-[13px] font-bold text-green-300/80" title="팀 공용 스킬 게이지를 회복합니다. 궁극기 에너지는 오르지 않습니다.">＋{sk.gaugeGain}<span className="ml-0.5 text-[11px] font-normal text-ef-muted">팀게이지</span></span> : null)}
                     <span className="ml-auto shrink-0 whitespace-nowrap font-mono text-[13px] text-ef-muted">{targetLabel[sk.target]}</span>
                   </span>
                 </span>

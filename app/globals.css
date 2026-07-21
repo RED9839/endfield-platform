@@ -636,3 +636,7 @@ input[type="checkbox"] {
     animation: none;
   }
 }
+
+/* 적/아군 행동 중 표시의 맥박 — 화면이 멈춘 게 아니라 진행 중임을 알린다 */
+.dd-turn-dot { animation: dd-turn-dot 1s ease-in-out infinite; }
+@keyframes dd-turn-dot { 0%,100% { opacity: 0.35; transform: scale(0.85); } 50% { opacity: 1; transform: scale(1.15); } }
