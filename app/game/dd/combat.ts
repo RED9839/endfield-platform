@@ -438,6 +438,21 @@ function tryShatter(target: DDUnit, self: DDUnit, log: string[]): number {
   return self.attack * eb(self) * artsDmg(self) * lvCoef(self, true) * SHATTER[n - 1];
 }
 
+// 카뮤 「사르는 불꽃」 핏빛 날개 — 원문 "목표 처치 시 다른 적으로 이동".
+// 날개는 목표 주변을 배회하는 소환물이라 대상이 죽어도 사라지지 않고 다음 적을 따라간다.
+// 배회 효과(허약·열기 취약)와 남은 지속시간을 함께 옮긴다. 옮길 적이 없으면 그대로 소멸.
+export function moveBloodWing(s: DDState, dead: DDUnit, log: string[]): void {
+  if (dead.side !== "enemy" || !has(dead, "wing")) return;
+  const left = Math.max(1, dead.timers.wing ?? 1);
+  rm(dead, "wing"); delete dead.timers.wing;
+  const next = living(s, "enemy").find((e) => e !== dead && !has(e, "wing"));
+  if (!next) return;
+  add(next, "wing"); setTimer(next, "wing", left);
+  applyBuff(next, "weaken", 0.05, undefined, left);
+  bumpVuln(next, "heat", 0.05, left);
+  log.push(`  🦇 핏빛 날개가 ${next.name}에게 옮겨간다 (배회 ${left}턴)`);
+}
+
 // 적이 오퍼레이터에게 거는 아츠 이상(원문 2.6) — 오퍼레이터가 일으키는 것과 **완전히 다르다**.
 // 원문: 적 스킬이 [아츠 부착]을 붙이고, 같은 속성이 4스택에 도달하면 아래 효과가 발동한다.
 //   연소 = 8초간 매초 최대 체력 2%의 방어 무시 열기 / 감전 = 2초 기절 + 10초간 받는 아츠 피해 20% 증가
@@ -1108,6 +1123,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
     }
     log.push(`  ${t.name} -${final} (HP ${t.hp}/${t.maxHp})`);
     // 레바테인 「불꽃의 심장」 원문: "주변의 적이 처치될 때, 열기 부착도 함께 흡수됩니다."
+    if (t.side === "enemy" && t.hp <= 0) moveBloodWing(s, t, log); // 핏빛 날개는 대상이 죽으면 다음 적으로
     if (t.side === "enemy" && t.hp <= 0 && t.arts.heat > 0) {
       const lae = s.units.find((u) => u.id === "laevatain" && u.side === "ally" && u.hp > 0);
       if (lae) {
@@ -1425,6 +1441,7 @@ export function startRound(s: DDState): void {
 // 유닛 자기 턴 시작 효과 — 지속피해·재생·불균형 회복·타이머 감쇠·연계 쿨. ATB에서 행동 직전 호출.
 export function perTurn(s: DDState, u: DDUnit): void {
   if (u.dot > 0) { u.hp = Math.max(0, u.hp - u.dot); s.log.push(`${u.name} 지속 피해 -${u.dot}`); }
+  if (u.hp <= 0) moveBloodWing(s, u, s.log); // 지속 피해로 죽어도 날개는 옮겨간다
   if ((u.regen || 0) > 0 && (u.regenTurns || 0) > 0) { const h = Math.min(u.maxHp - u.hp, u.regen!); if (h > 0) { u.hp += h; s.log.push(`${u.name} 재생 +${h}`); } u.regenTurns = (u.regenTurns || 0) - 1; if ((u.regenTurns || 0) <= 0) u.regen = 0; }
   if (u.staggered) { u.staggerTimer -= 1; if (u.staggerTimer <= 0) { u.staggered = false; u.stagger = 0; s.log.push(`${u.name} 불균형 회복`); } }
   for (const key of Object.keys(u.timers)) { if (--u.timers[key] <= 0) { delete u.timers[key]; delete u.effectSrc[key]; expire(u, key); } } // 효과 지속시간 감쇠

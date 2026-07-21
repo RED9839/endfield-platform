@@ -411,6 +411,16 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
 
   // 단일 대상 스킬? (자기/전체/열 대상 제외)
   const isSingleTarget = (sk: DDSkill) => sk.target !== "self" && sk.target !== "all" && sk.target !== "row";
+  // 대상 지정 시 조건 재검사 — usable()은 pickTargets[0](기본 대상)로만 판정하므로,
+  // 플레이어가 다른 적을 찍으면 조건이 안 맞는 적에게도 발동해 버린다(연계 게이트 무력화).
+  function usableOn(sk: DDSkill, u: DDUnit, targetId: string): boolean {
+    const s = stateRef.current!;
+    const prev = s.forcedTargetId;
+    s.forcedTargetId = targetId;
+    const ok = usable(s, u, sk);
+    s.forcedTargetId = prev;
+    return ok;
+  }
   function chooseSkill(sk: DDSkill) {
     const foes = stateRef.current!.units.filter((u) => u.side === "enemy" && u.hp > 0);
     if (isSingleTarget(sk) && foes.length > 1) setAiming(sk); // 대상 여러 → 선택 모드
@@ -419,6 +429,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
   function playerAct(sk: DDSkill, targetId?: string) {
     const s = stateRef.current!; if (!current) return;
     const actor = current;
+    if (targetId && !usableOn(sk, actor, targetId)) return; // 그 적에겐 조건 미충족 — 발동하지 않는다
     s.forcedTargetId = targetId; // 플레이어 지정 대상(단일 스킬)
     doAction(actor, () => act(s, actor, sk), sk.name);
     s.forcedTargetId = undefined;
@@ -629,9 +640,11 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
                     {ed?.traits?.map((t, i) => <div key={i} className="font-mono text-[12px] leading-snug text-ef-muted">◆ {t}</div>)}
                   </div>
                 )}
-                {aiming && !dead && <span className="absolute -top-1 z-20 font-mono text-[13px] font-bold text-ef-accent" style={{ textShadow: "0 0 6px #000" }}>🎯 대상</span>}
+                {aiming && !dead && (usableOn(aiming, current!, e.id)
+                  ? <span className="absolute -top-1 z-20 font-mono text-[13px] font-bold text-ef-accent" style={{ textShadow: "0 0 6px #000" }}>🎯 대상</span>
+                  : <span className="absolute -top-1 z-20 font-mono text-[13px] font-bold text-red-400/90" style={{ textShadow: "0 0 6px #000" }}>🚫 조건 미충족</span>)}
                 {/* 아트(접지 그림자·선택 링) */}
-                <div onClick={aiming && !dead ? () => playerAct(aiming, e.id) : () => setInspectId(e.id)} className="relative flex h-32 w-full cursor-pointer items-end justify-center">
+                <div onClick={aiming && !dead ? () => { if (usableOn(aiming, current!, e.id)) playerAct(aiming, e.id); } : () => setInspectId(e.id)} className="relative flex h-32 w-full cursor-pointer items-end justify-center">
                   <span className="pointer-events-none absolute bottom-1 h-2.5 w-24 rounded-[50%]" style={{ background: "radial-gradient(50% 50% at 50% 50%, rgba(0,0,0,0.6), transparent)" }} />
                   {isAct && !dead && <span className="pointer-events-none absolute bottom-0 h-6 w-28 rounded-[50%]" style={{ background: `radial-gradient(50% 50% at 50% 50%, ${elementColor[el]}66, transparent 70%)` }} />}
                   <img src={enemyImage(e.id)} alt="" loading="lazy" className={`relative max-h-full w-auto object-contain transition group-hover:scale-[1.03] ${dead ? "opacity-30 grayscale" : ""}`} style={{ filter: dead ? undefined : aiming ? "drop-shadow(0 3px 10px rgba(255,154,47,0.7))" : e.staggered ? "drop-shadow(0 3px 10px rgba(250,204,21,0.6))" : "drop-shadow(0 6px 12px rgba(0,0,0,0.6))" }} onError={(ev) => { (ev.currentTarget as HTMLImageElement).style.visibility = "hidden"; }} />
