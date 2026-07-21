@@ -836,9 +836,7 @@ export function makeEnemy(def: EnemyDef, pos: number): DDUnit {
   u.resist = { physical: 0, heat: 0, electric: 0, cryo: 0, nature: 0, ...def.resist };
   const tr = ENEMY_TRAITS[def.name]; // 고유 특징 메커니즘을 유닛에 반영
   if (tr?.selfDestruct) u.selfDestruct = tr.selfDestruct;
-  // 보스·정예의 방어 형태(피해 감소)는 제거 — 체감상 뎀감이 겹치면 딜이 안 들어가는 느낌만 남는다.
-  // 잡몹(산성원석충 등)의 웅크림은 강타·불균형으로 여는 기믹이 살아있으므로 유지한다.
-  if (tr?.shell && def.tier !== "boss" && def.tier !== "elite") u.shell = tr.shell;
+  if (tr?.shell) u.shell = tr.shell;
   if (tr?.revive) u.revive = true;
   if (tr?.pull) u.pull = true;
   if (tr?.summon) u.summon = true;
