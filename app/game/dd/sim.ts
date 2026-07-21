@@ -158,6 +158,7 @@ export function allyChoose(s: DDState, self: DDUnit): DDSkill | null {
 
 // 적 AI: 세력별 역할(behavior)에 따라 근접/저격/광역/중장/치유/강화 행동. 속성·부착·잡기 반영.
 export function enemyAct(s: DDState, self: DDUnit): void {
+  s.chain = 1; // 적이 끼어들면 스킬 연계 체인은 끊긴다(enemyAct는 act()를 거치지 않는다)
   const def = enemyDefFor(self.id);
   const behavior = def?.behavior ?? "melee";
   const elem: "physical" | Element = def?.element ?? "physical";

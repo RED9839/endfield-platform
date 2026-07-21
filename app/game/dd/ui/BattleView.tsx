@@ -258,6 +258,8 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
   const [winner, setWinner] = useState<"ally" | "enemy" | null>(null);
   const [fx, setFx] = useState<Fx>(NO_FX);
   const [roundBanner, setRoundBanner] = useState<{ n: number; tick: number } | null>(null);
+  // 스킬 연계 체인 연출: 몇 연쇄째인지 + 누가 이어받았는지. 피해와 무관한 표시 전용.
+  const [chain, setChain] = useState<{ n: number; names: string[]; tick: number } | null>(null);
   const [aiming, setAiming] = useState<DDSkill | null>(null); // 대상 선택 중인 단일 스킬
   const [linkCombo, setLinkCombo] = useState<{ unitId: string; skill: DDSkill } | null>(null); // 연계 콤보 프롬프트(스킬 발동 → 조건 열린 연계 아이콘)
   const [inspectId, setInspectId] = useState<string | null>(null); // 스탯 조회 유닛
@@ -276,6 +278,9 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
     const logStart = s.log.length;
     run();
     const newLines = s.log.slice(logStart);
+    // 체인은 아군 연쇄일 때만 — 적 행동은 연쇄를 끊는다.
+    const chainN = actor.side === "ally" ? s.chain ?? 1 : 1;
+    setChain((c) => (chainN > 1 ? { n: chainN, names: [...(c && chainN > c.n ? c.names : []), actor.name].slice(-5), tick: fxTick.current + 1 } : null));
     const crit = newLines.some((l) => /폭발|치명/.test(l));
     const floaters: Floater[] = [];
     for (const u of s.units) { const d = u.hp - (before.get(u.id) ?? u.hp); if (d !== 0) floaters.push({ id: u.id, amt: d, crit: crit && d < 0, tone: elementColor[unitElement(actor)] }); }
@@ -533,6 +538,14 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
       })()}
 
       {/* 라운드 배너 */}
+      {chain && !winner && (
+        <div key={`ch-${chain.tick}`} className="dd-chain pointer-events-none absolute right-6 top-[188px] z-40 flex justify-end">
+          <div className="flex items-center gap-2.5 border border-ef-accent bg-black/95 px-3.5 py-1.5" style={{ boxShadow: "0 0 24px rgba(255,154,47,0.55), inset 0 0 0 1px rgba(255,214,140,0.35)" }}>
+            <span className="font-mono text-[17px] font-black text-ef-accent" style={{ textShadow: "0 0 10px rgba(255,154,47,0.9)" }}>⛓ {chain.n}연쇄</span>
+            <span className="font-mono text-[12px] font-bold text-white/85">{chain.names.join(" → ")}</span>
+          </div>
+        </div>
+      )}
       {roundBanner && !winner && (
         <div key={roundBanner.tick} className="dd-round pointer-events-none absolute inset-x-0 top-24 z-40 text-center" style={{ fontFamily: "var(--dd-display)", fontSize: "2.4rem", fontWeight: 800, letterSpacing: "0.28em", color: "#e8c56a", textShadow: "0 3px 16px rgba(0,0,0,0.9)" }}>라운드 {roundBanner.n}</div>
       )}

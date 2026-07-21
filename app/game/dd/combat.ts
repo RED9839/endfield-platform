@@ -70,6 +70,7 @@ export type DDUnit = {
   wilMul?: number;   // 의지 → 유틸·궁극기 게이지 배율
   healRecv?: number; // 의지 → 받는 회복량 배율(1.0 기준). 회복 시 곱연산
   procCount: number; // 제너릭 재능 카운터(아크라이트 황무지의 방랑자 등)
+  chainStep?: number;    // 스킬 연계 체인에서 이 오퍼가 맡은 단계(예약 시 기록, 발동 시 소비)
   pendingLink?: DDSkill; // 예약된 연계 — 조건이 열리면 ATB 우선으로 끼어든 뒤 자기 차례에 이 연계를 발동
   pendingLinkAtb?: number; // 연계 예약 직전 ATB — 연계 발동 후 복원해 정규 턴을 뺏지 않음(원래 턴 + 연계 턴)
   selfDestruct?: number; // 적 자폭(화염원석충): 사망 시 광역 아군 피해(배율) + 취약 부착
@@ -356,6 +357,9 @@ export const SKILL_RANK9 = 1.8;
 
 // 자원 경제(전투 시스템 wiki): 스킬 게이지(파티 공유) + 궁극기 에너지(개인)
 export const GAUGE_COST = 100;     // 배틀 스킬 1칸 소모
+// 스킬 연계 체인(연출 전용): 아군 행동이 다른 아군의 연계를 불러 이어진 깊이.
+// 피해에는 관여하지 않는다 — 밸런스를 건드리지 않고 '이어지는 감각'만 보여주기 위한 카운터다.
+export const CHAIN_MAX = 9;
 const ANOMALY_WINDOW = 2;  // 아츠 이상/부착 소모·흡수 윈도우 지속(턴). 1이면 그 라운드 안에서만 = 속도 느린 셋업이 빠른 페이오프를 못 살림
 export const GAUGE_REGEN = 45;     // 라운드당 자연 회복(≈12.5초/칸)
 const BASIC_RECOVER = 18;   // 일반 공격 강력한 일격 → 게이지 회복
@@ -568,7 +572,7 @@ export const setLinkChain = (f: LinkChain | null) => { linkChainProvider = f; };
 
 // anomalyConsumed: 아츠 이상/부착 소모·흡수 윈도우(남은 턴). 0/undefined = 닫힘.
 // chaining: 연계 연쇄 재진입 방지(연쇄는 1단까지).
-export type DDState = { units: DDUnit[]; round: number; log: string[]; lastLinkAlly?: string; skillGauge: number; maxGauge: number; boss?: boolean; anomalyConsumed?: number; allyHit?: boolean; moraleAccum?: number; forcedTargetId?: string; chaining?: boolean; linkEvents?: Record<string, number>; manualLink?: boolean };
+export type DDState = { units: DDUnit[]; round: number; log: string[]; lastLinkAlly?: string; chain?: number; skillGauge: number; maxGauge: number; boss?: boolean; anomalyConsumed?: number; allyHit?: boolean; moraleAccum?: number; forcedTargetId?: string; chaining?: boolean; linkEvents?: Record<string, number>; manualLink?: boolean };
 // 연계 탐색 — 이 행동으로 조건이 열린 아군의 연계(유닛·스킬). 수동 콤보 UI가 이걸 호출해 아이콘을 띄운다.
 export function findLinkChain(s: DDState, self: DDUnit): { unit: DDUnit; skill: DDSkill } | null { return linkChainProvider ? linkChainProvider(s, self) : null; }
 
@@ -648,7 +652,10 @@ export const canAct = (u: DDUnit) => u.hp > 0 && !(u.side === "enemy" && (u.stag
 // 한 유닛의 행동 실행
 export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
   const log = s.log;
-  log.push(`${self.name}[pos${self.pos}] → ${skill.name}`);
+  // 스킬 연계 체인: 예약(chainStep)을 달고 온 행동이면 그 단계를, 아니면 새 체인의 1단으로 본다.
+  // 적이 끼어들면 연쇄는 끊긴다 — 아군 행동이 이어질 때만 체인이 자란다.
+  if (self.side === "ally") { s.chain = self.chainStep ?? 1; delete self.chainStep; } else s.chain = 1;
+  log.push(`${self.name}[pos${self.pos}] → ${skill.name}${(s.chain ?? 1) > 1 ? `  ⛓ ${s.chain}연쇄` : ""}`);
   SRC_CTX = { by: self.name, via: skill.name, kind: "skill" }; // 이 스킬로 걸리는 효과의 기본 출처(무기/장비 트리거가 일시 override)
   // 자원: 스킬 게이지(파티 공유) 소모 + 궁극기 에너지(개인) 충전 — 위키 정합
   if (self.side === "ally") {
@@ -1349,6 +1356,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
     if (nx && !nx.unit.pendingLink) {
       nx.unit.pendingLinkAtb = nx.unit.atb; // 원래 ATB 저장 → 연계 후 복원(정규 턴 유지 = 원래 턴 + 연계 턴)
       nx.unit.pendingLink = nx.skill;
+      nx.unit.chainStep = Math.min(CHAIN_MAX, (s.chain ?? 1) + 1); // 이어붙은 만큼 체인 단계 상승
       nx.unit.atb = Math.max(0, ...living(s).map((u) => u.atb)) + 10; // ATB 최우선으로 끌어올려 다음 차례에 등장
       log.push(`  ⇢ ${nx.unit.name} 연계 대기 — 다음 차례에 「${nx.skill.name}」`);
     }
