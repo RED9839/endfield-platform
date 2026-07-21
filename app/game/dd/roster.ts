@@ -914,7 +914,8 @@ export const ENEMY_DEFS: Record<string, EnemyDef> = {
     // 원작: 본 크러셔 네파리스(1페) → 정복자 네파리스(2페)로 개체가 바뀐다.
     phases: [{ name: "'정복자' 네파리스", becomes: "nefarith-conqueror", refill: true, note: "2페이즈 — 정복자로 각성" }] }, // 저항 0
   "ruan-yi":        { id: "ruan-yi",          name: "원일",             faction: "청파채", role: "채주(탕탕 오빠)", tier: "boss", element: "heat", behavior: "heavy", resist: { heat: 0.2, cryo: 0.2 } },
-  tidalklast:       { id: "tidalklast",       name: "파조의 상",         faction: "수화자", role: "중간보스", tier: "boss", element: "cryo", behavior: "aoe", attach: "cryo", resist: { electric: 0.2, cryo: 0.2 } },
+  // 파조의 상은 원작에서도 "중간보스" — 런을 끝내는 보스가 아니라 정예 조우 급이다.
+  tidalklast:       { id: "tidalklast",       name: "파조의 상",         faction: "수화자", role: "중간보스", tier: "elite", element: "cryo", behavior: "aoe", attach: "cryo", resist: { electric: 0.2, cryo: 0.2 } },
   // ── 미등록 44종(warfarin 대조 추가) — 변형은 원본 상속, 신규는 description 속성 + id 접미사 behavior ──
   "tunneling-nidwyrm": { id: "tunneling-nidwyrm", name: "터널링 니드웜", faction: "야외 생물", role: "melee", tier: "enhanced", element: "nature", behavior: "melee", resist: {"heat":0.3} },
   "heavy-ram": { id: "heavy-ram", name: "쌍뿔아겔로스", faction: "아겔로스", role: "heavy", tier: "advanced", element: "physical", behavior: "heavy", resist: {"physical":0.2,"nature":0.2,"heat":0.2} },

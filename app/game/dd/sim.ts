@@ -378,7 +378,6 @@ const BOSS_COMPS = [
   comp("triaggelos"),                    // 아겔로스(광맥) — 3페이즈, 2페 소환
   comp("nefarith"),                      // 랜드브레이커 — 2페 정복자 네파리스
   comp("ruan-yi"),                       // 청파채(무릉)
-  comp("tidalklast"),                    // 수화자(중간보스)
   comp("marble-aggelo"),                 // 아겔로스(4번협곡 최종) — 촉수 4개 선행
   comp("rhodagn-the-bonekrushing-fist"), // 랜드브레이커 — HP 70%에서 2페
 ];
@@ -398,7 +397,17 @@ for (const [id, d] of Object.entries(ENEMY_DEFS)) {
   if (d.tier === "boss") f.boss.push(id);
   else (f.byTier[d.tier] ??= []).push(id);
 }
-export const FACTIONS: FactionKey[] = Object.keys(FACTION_POOL).filter((f) => FACTION_POOL[f].boss.length); // 보스 있는 세력만 리전
+// 풀이 작은 세력을 근연 세력으로 보강(수화자=수(水)계 아겔로스 → 일반 아겔로스류 혼입)
+const KIN_FACTION: Record<string, string> = { "수화자": "아겔로스" };
+// 자체 보스가 없으면 근연 세력의 보스를 빌린다 — 무릉(수화자)은 파조의 상이 정예로 내려가
+// 자체 보스가 사라졌지만, 지역 자체는 아겔로스 보스로 성립한다(무릉의 아겔로스 계열).
+export const bossPoolOf = (f: string): string[] => {
+  const own = FACTION_POOL[f]?.boss ?? [];
+  if (own.length) return own;
+  const kin = KIN_FACTION[f];
+  return kin ? FACTION_POOL[kin]?.boss ?? [] : [];
+};
+export const FACTIONS: FactionKey[] = Object.keys(FACTION_POOL).filter((f) => bossPoolOf(f).length); // 보스(근연 포함) 있는 세력만 리전
 const TIER_RANK = ["common", "normal", "enhanced", "advanced", "alpha", "elite"];
 const TIERS_NORMAL = ["common", "normal", "enhanced", "advanced"];
 const TIERS_ELITE = ["advanced", "alpha", "elite"];
@@ -406,8 +415,6 @@ const tierAt = (kind: string, depth: number, maxDepth: number) => { const arr = 
 const shuffle = <T,>(arr: T[]): T[] => { const a = [...arr]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 // 세력에서 목표 티어(없으면 최근접) 적 1마리 id
 function enemyOfTier(faction: string, tier: string): string { return pickSquad(faction, tier, 1)[0]; }
-// 풀이 작은 세력을 근연 세력 적으로 보강(수화자=수(水)계 아겔로스 → 일반 아겔로스류 혼입)
-const KIN_FACTION: Record<string, string> = { "수화자": "아겔로스" };
 // 목표 티어 주변에서 '서로 다른' 적 n종 편성(다양성 우선, 후보 부족분만 중복 허용)
 function pickSquad(faction: string, tier: string, n: number, exclude: Set<string> = new Set(), hard: Set<string> = new Set()): string[] {
   const pool = FACTION_POOL[faction] ?? FACTION_POOL[FACTIONS[0]];
@@ -445,7 +452,8 @@ export function regionEncounter(faction: string, kind: NodeKind, depth: number, 
   if (kind === "boss") {
     // 원작 보스전은 호위 잡몹 없이 보스 단독이다. 난이도는 페이즈(EnemyDef.phases)와
     // 호위 부위(guardedBy — 마블 촉수)로 만든다. comp()가 부위를 자동으로 붙인다.
-    const bid = (bossId && D[bossId]) ? bossId : pool.boss.length ? pick(pool.boss) : "craghowler"; // 층 지정 보스 우선
+    const bp = bossPoolOf(faction);
+    const bid = (bossId && D[bossId]) ? bossId : bp.length ? pick(bp) : "craghowler"; // 층 지정 보스 우선(없으면 근연 세력 보스)
     ids = [bid];
   } else if (kind === "elite") {
     // 정예 조우: 정예 개체 1마리 + 하위 등급 잡몹 다수(호위). 원작 정예 조우 구성 — 우두머리 하나에 부하가 붙는다.
