@@ -1006,12 +1006,42 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
         if (self.gear?.breakEnergy) self.ultCharge = Math.min(self.ultCost, self.ultCharge + 10); // 재앙 방호: 불균형 돌파 시 궁 충전
       }
     }
-    const final = applyDamage(t, dmg); // 보호막(보호) 흡수 → 체력
+    // 장방이 「뇌정의 부름」(변신 전 단일): 원문 "근처 청뢰검 **유도** 뇌격" — 뇌격은 검이 스스로 적을 쫓는다.
+    // 대상이 도중에 죽으면 남은 뇌격은 옆의 적에게 넘어간다(변신 중엔 이미 광역이라 이월 개념이 없다).
+    // 단별로 쪼개 순차 적용하고, 사망 시점 이후의 몫만 다음 적에게 그 적의 경감으로 다시 계산해 넣는다.
+    const homing = self.id === "zhuangfangyi" && skill.kind === "battle" && (self.timers.heavenly || 0) <= 0 && t.hp > 0;
+    let final: number;
+    let homingSplit = false; // 유도 이월로 단별 로그를 이미 찍었는가(아래 공용 다단 표시 스킵)
+    if (homing) {
+      const hs0 = skill.hitsOf?.(self) ?? [1];
+      const tot0 = hs0.reduce((a, b) => a + b, 0);
+      const mitT = Math.max(1e-9, mitigate(t, 1, elem)); // 이월분을 경감 전 값으로 되돌리기 위한 계수
+      let planned = 0, dealtT = 0, spill = 0, landed = 0;
+      const shots: number[] = [];
+      for (let i = 0; i < hs0.length; i++) {
+        const share = i === hs0.length - 1 ? dmg - planned : (dmg * hs0[i]) / tot0;
+        planned += share;
+        if (t.hp > 0) { const d = applyDamage(t, share); dealtT += d; shots.push(d); landed++; }
+        else spill += share / mitT; // 이미 죽었다 → 이 뇌격은 다른 적을 쫓는다
+      }
+      final = dealtT;
+      if (spill > 0) {
+        // 실제로 꽂힌 타수만 찍는다(총합을 다시 쪼개면 죽은 적이 전 타를 맞은 것처럼 보인다)
+        if (landed > 1) shots.forEach((d, i) => log.push(`    ${i + 1}단 -${d.toLocaleString()}`));
+        homingSplit = true;
+        const next = living(s, "enemy").find((e) => e !== t);
+        if (next) {
+          const d2 = applyDamage(next, mitigate(next, spill, elem));
+          next.stagger = Math.min(next.staggerMax, (next.stagger || 0) + stg);
+          log.push(`  ⚡ 청뢰검 유도! ${t.name} 처치 → 남은 ${hs0.length - landed}뇌격이 ${next.name}에게 -${d2.toLocaleString()}`);
+        } else log.push(`  ⚡ 남은 ${hs0.length - landed}뇌격 — 쫓을 적이 없다`);
+      }
+    } else final = applyDamage(t, dmg); // 보호막(보호) 흡수 → 체력
     // 다단히트: 단별 개별 피해를 먼저 찍고 마지막에 종합 합계. 총합은 final 그대로(반올림 오차는 막타가 흡수).
     // 타수가 런타임에 정해지는 스킬(장방이 뇌정의 부름 = 청뢰검 수만큼 뇌격, 마지막 ×6)은 여기서 배열을 만든다.
     const dynHits = skill.hitsOf?.(self);
     const hitArr = dynHits ?? skill.hits;
-    if (hitArr && hitArr.length > 1 && final > 0) {
+    if (!homingSplit && hitArr && hitArr.length > 1 && final > 0) {
       const hs = hitArr, tot = hs.reduce((a, b) => a + b, 0);
       let acc = 0;
       hs.forEach((h, i) => {
