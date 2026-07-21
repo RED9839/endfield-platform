@@ -265,9 +265,19 @@ export function enemyAct(s: DDState, self: DDUnit): void {
   const tgt = enemyArchetype(def?.role ?? "", behavior).tgt;
   const byWounded = [...foes].sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp || a.pos - b.pos);
   const byThreat = [...foes].sort((a, b) => b.attack * (1 + (b.atkBuff || 0)) - a.attack * (1 + (a.atkBuff || 0)) || a.pos - b.pos);
-  // "any"는 특정 지향이 없는 적 — 아무나 문다. 예전엔 pos가 낮은 아군(전열)을 우선했지만
-  // 전열/후열 개념을 없앴다: 플레이어가 정한 편성 순서는 배치일 뿐 피격 우선순위가 아니다.
-  const pick = () => (tgt === "wounded" ? byWounded[0] : tgt === "threat" ? byThreat[0] : foes[Math.floor(Math.random() * foes.length)]);
+  // "any"는 특정 지향이 없는 적 — 직군 어그로 가중으로 대상을 뽑는다.
+  // 전열/후열을 없앤 뒤 균등 무작위로 뒀더니 탱이 몸으로 막는다는 감각이 사라졌다.
+  // 어그로를 끄는 건 위치도 무기 사거리도 아니라 역할이다. 사거리로 가르면 오히려
+  // 근거리 메인딜러(미브·엠버·라스트·레바테인·로시)가 집중포화를 맞아 반대로 간다
+  //   — 실측 타워 완주 균등 84% / 직군 87% / 사거리 79%.
+  const AGGRO: Record<string, number> = { defender: 2.5, vanguard: 1.8, guard: 1.4, striker: 1, caster: 0.8, supporter: 0.8 };
+  const pickAggro = () => {
+    const w = foes.map((f) => AGGRO[f.cls ?? ""] ?? 1); // 직군 미상(적 부위 등)은 1
+    let r = Math.random() * w.reduce((a, b) => a + b, 0);
+    for (let i = 0; i < foes.length; i++) { r -= w[i]; if (r <= 0) return foes[i]; }
+    return foes[foes.length - 1];
+  };
+  const pick = () => (tgt === "wounded" ? byWounded[0] : tgt === "threat" ? byThreat[0] : pickAggro());
   // 소환(삼미아겔로스 돌기둥 등): 같은 세력 약한 적을 전장에 추가(최대 5마리, 확률)
   if (self.summon && living(s, "enemy").length < 5 && Math.random() < 0.35) {
     const bt = FACTION_POOL[def?.faction ?? ""]?.byTier;
