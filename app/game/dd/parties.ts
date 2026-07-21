@@ -7,7 +7,8 @@ export type PartyArchetype = "arts" | "break" | "crit"; // 아츠 폭딜 / 물�
 export type PresetParty = {
   id: string;
   name: string;
-  members: string[]; // 슬롯 1~4번 주픽(members[0]=메인 딜러)
+  members: string[]; // 슬롯 1~4번 배치 순서 그대로(전열=1번). 던전은 이 순서를 바꾸지 않는다.
+  main: string;      // 메인딜러(메인 컨트롤 오퍼레이터) — 1번 슬롯과 다를 수 있다(탱이 전열)
   element: "physical" | "heat" | "electric" | "cryo" | "nature"; // 조합 주력 속성
   archetype: PartyArchetype; // 운영 축
   desc: string;
@@ -27,7 +28,8 @@ export const PRESET_PARTIES: PresetParty[] = [
   {
     id: "laevatain",
     name: "레바테인 조합",
-    members: ["laevatain", "wulfgard", "arcane", "camu"],
+    members: ["camu", "laevatain", "wulfgard", "arcane"],
+    main: "laevatain",
     element: "heat",
     archetype: "arts",
     desc: "레바테인 열기 폭딜 — 울가 연소 서브딜 · 결 자연 부착/취약 · 카뮤 뱅가드",
@@ -41,6 +43,7 @@ export const PRESET_PARTIES: PresetParty[] = [
     id: "ember",
     name: "엠버 조합",
     members: ["ember", "pogranichnik", "mifu", "chenqianyu"],
+    main: "ember",
     element: "physical",
     archetype: "break",
     desc: "엠버 탱 + 물리 불균형 — 포그·미브(관리자/판) 방어 불능 셋업 → 진천우 강타",
@@ -51,6 +54,7 @@ export const PRESET_PARTIES: PresetParty[] = [
     id: "yvonne",
     name: "이본 조합",
     members: ["yvonne", "tangtang", "xaihi", "arcane"],
+    main: "yvonne",
     element: "cryo",
     archetype: "arts",
     desc: "이본 냉기 치명 — 탕탕 서브딜 · 자이히 냉기 증폭 · 결/질베/펠 유동",
@@ -61,6 +65,7 @@ export const PRESET_PARTIES: PresetParty[] = [
     id: "lastrite",
     name: "라스트 라이트 조합",
     members: ["lastrite", "xaihi", "tangtang", "arcane"],
+    main: "lastrite",
     element: "cryo",
     archetype: "arts",
     desc: "라스트 라이트 냉기 누킹 — 자이히 냉기 증폭 · 탕탕 서브딜 · 결/질베/펠 유동",
@@ -70,7 +75,8 @@ export const PRESET_PARTIES: PresetParty[] = [
   {
     id: "zhuangfangyi",
     name: "장방이 조합",
-    members: ["zhuangfangyi", "arcane", "perlica", "arclight"],
+    members: ["arclight", "zhuangfangyi", "arcane", "perlica"],
+    main: "zhuangfangyi",
     element: "electric",
     archetype: "arts",
     desc: "장방이 전기 딜 — 결 자연 부착 공급 · 펠리카 감전 셋업 · 아크라이트 게이지",
@@ -86,6 +92,7 @@ export const PRESET_PARTIES: PresetParty[] = [
     id: "rossi",
     name: "로시 조합",
     members: ["rossi", "tangtang", "gilberta", "perlica"],
+    main: "rossi",
     element: "heat",
     archetype: "crit",
     desc: "로시 치명 딜 — 탕탕 서브딜 · 질베 취약 · 펠리카 등 유동",
@@ -98,7 +105,8 @@ export const PRESET_PARTIES: PresetParty[] = [
   {
     id: "arcane",
     name: "결 조합",
-    members: ["arcane", "wulfgard", "xaihi", "camu"],
+    members: ["camu", "arcane", "wulfgard", "xaihi"],
+    main: "arcane",
     element: "nature",
     archetype: "arts",
     desc: "결 자연 광역 딜 — 울가 아츠 이상 서브딜 · 자이히 증폭/힐 · 카뮤 뱅가드",
@@ -107,7 +115,8 @@ export const PRESET_PARTIES: PresetParty[] = [
   {
     id: "mifu",
     name: "미브 조합",
-    members: ["mifu", "chenqianyu", "pogranichnik", "lifeng"],
+    members: ["pogranichnik", "mifu", "lifeng", "chenqianyu"],
+    main: "mifu",
     element: "physical",
     archetype: "break",
     desc: "미브·진천우·포그 방어 불능 셋업 → 불균형 유발 후 여풍/엠버 마무리",

@@ -26,8 +26,9 @@ const pickRand = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)
 export type NodeKind = "battle" | "elite" | "rest" | "boss";
 export type RunNode = { id: string; depth: number; lane: number; kind: NodeKind; next: string[] };
 export type RunPhase = "select" | "map" | "battle" | "rest" | "craft" | "spoils" | "victory" | "defeat";
-export type PartyPick = { id: string; loadout?: Loadout; progress?: OpProgress; ult?: number };
-export type PartyMember = { id: string; hp: number; maxHp: number; loadout?: Loadout; progress?: OpProgress; ult?: number };
+export type PartyPick = { id: string; loadout?: Loadout; progress?: OpProgress; ult?: number; main?: boolean };
+// main: 메인딜러(메인 컨트롤 오퍼레이터). 위치는 편성 순서를 그대로 쓰므로 1번과 별개로 지정할 수 있다.
+export type PartyMember = { id: string; hp: number; maxHp: number; loadout?: Loadout; progress?: OpProgress; ult?: number; main?: boolean };
 export type BattleResult = { id: string; hp: number; ult?: number }; // ult: 궁 게이지 이월(HP처럼 런 내내 유지 — 보스 전 만충이 목표)
 
 export const REST_HEAL = 0.4; // 야영 회복 비율(최대 HP)
@@ -107,7 +108,7 @@ export function useDDRun() {
 
   const startRun = useCallback((picks: PartyPick[]) => {
     resetEncounterHistory(); // 새 원정 — 적 등장 이력 초기화
-    const p = picks.map((pick) => { const u = makeAlly(pick.id, 1, pick.progress); return { id: pick.id, hp: u.maxHp, maxHp: u.maxHp, loadout: pick.loadout, progress: pick.progress }; });
+    const p = picks.map((pick) => { const u = makeAlly(pick.id, 1, pick.progress); return { id: pick.id, main: pick.main, hp: u.maxHp, maxHp: u.maxHp, loadout: pick.loadout, progress: pick.progress }; });
     const map = genMap();
     setParty(p);
     setNodes(map);

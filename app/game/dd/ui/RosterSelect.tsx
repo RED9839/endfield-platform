@@ -27,6 +27,9 @@ const pieceDmg = (p: { dmg?: { kind: string; base: number } }, mul = 1) => { if 
 
 export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]) => void }) {
   const [selected, setSelected] = useState<string[]>([]);
+  // 메인딜러(메인 컨트롤 오퍼레이터). 배치 순서와 별개다 — 탱이 1번 전열에 서도 메인은 딜러다.
+  // 추천 부대는 parties.ts가 지정하고, 직접 편성하면 1번이 메인이 된다.
+  const [mainId, setMainId] = useState<string | null>(null);
   const [setChoice, setSetChoice] = useState<Record<string, string>>({});
   const [progress, setProgress] = useState<Record<string, OpProgress>>({});
   const [focusId, setFocusId] = useState<string>(OPERATORS[0].id);
@@ -66,13 +69,15 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
       return [...cur, id];
     });
   };
-  const start = () => onStart(selected.map((id) => ({ id, loadout: opLoadout(id), progress: opProg(id) })));
+  // 유효한 메인딜러 — 프리셋 지정이 편성에 남아 있으면 그것, 아니면 1번.
+  const mainPick = mainId && selected.includes(mainId) ? mainId : selected[0];
+  const start = () => onStart(selected.map((id) => ({ id, loadout: opLoadout(id), progress: opProg(id), main: id === mainPick })));
 
   const loadPreset = (p: (typeof PRESET_PARTIES)[number]) => {
     setSelected(p.members);
     const S: Record<string, string> = {}; const P: Record<string, OpProgress> = {};
     for (const id of p.members) { const op = OPERATORS.find((o) => o.id === id); S[id] = op ? recSet(op) : "검술사"; P[id] = DEFAULT_PROGRESS; }
-    setSetChoice(S); setProgress(P); setFocusId(p.members[0]);
+    setSetChoice(S); setProgress(P); setFocusId(p.main); setMainId(p.main);
   };
 
   const op = OPERATORS.find((o) => o.id === focusId)!;
@@ -162,6 +167,8 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
                       <button key={o.id} type="button" onClick={() => { setFocusId(o.id); setGearTab(null); }} title={o.name} className="group relative aspect-square overflow-hidden border transition" style={{ ...CUT, borderColor: foc ? "#ffbe6b" : on ? elementColor[o.element] : `${elementColor[o.element]}44`, background: `center top/cover url(${avatarUrl(o.id)}), #000`, boxShadow: foc ? "0 0 14px -2px rgba(255,190,107,0.8)" : on ? `0 0 10px -3px ${elementColor[o.element]}` : "none" }}>
                         <span className="absolute inset-x-0 bottom-0 h-[3px]" style={{ background: elementColor[o.element] }} />
                         {on && <span className="absolute left-0 top-0 flex h-4 w-4 items-center justify-center bg-ef-accent font-mono text-[12px] font-black text-black">{order}</span>}
+                        {/* 메인딜러 표식 — 배치 순서(숫자)와 별개다. 탱이 1번 전열에 서도 메인은 딜러다. */}
+                        {on && o.id === mainPick && <span className="absolute right-0 top-0 bg-[#f5c542] px-1 font-mono text-[10px] font-black leading-4 text-black" title="메인 컨트롤 오퍼레이터">M</span>}
                         {!on && selected.length >= 4 && <span className="absolute inset-0 bg-black/50" />}
                       </button>
                     );

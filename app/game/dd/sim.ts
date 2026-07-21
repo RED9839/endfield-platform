@@ -1,6 +1,6 @@
 // DD 전투 시뮬 헬퍼 — AI(아군 자동/적) + 인카운터 + 전투 생성. UI와 테스트가 공유(부작용 없음).
 import { BASIC, DDState, DDUnit, DDSkill, Element, ELEMENTS, applyAttach, applyEnemyArts, applyDamage, healUnit, living, mitigate, usable, pickTargets, vulnFor, onAllyHit, EXECUTE_MULT, GAUGE_COST, setLinkChain, bumpVuln, setTimer, arcaneForm, setPhaseHook, runPhases } from "./combat";
-import { SKILLS, makeAlly, makeEnemy, ENEMY_DEFS, enemyDefFor, frontlineOrder, enemyArchetype } from "./roster";
+import { SKILLS, makeAlly, makeEnemy, ENEMY_DEFS, enemyDefFor, enemyArchetype } from "./roster";
 import { applyGear, GEAR_SLOTS, LOADOUT_SLOTS, type Loadout, type GearSlot, type LoadoutSlot } from "./gear";
 import { applyWeapon } from "./weapons";
 import type { OpProgress } from "./progress";
@@ -503,12 +503,13 @@ export function enemyDrop(kind: NodeKind, depth: number, faction: string): { par
 }
 
 // 아군(선택 순서=포지션, 지속 HP·장비 로드아웃) + 인카운터로 전투 상태 생성. 게이지 200/300(+장비 시작 게이지).
-export function createBattle(party: { id: string; hp?: number; loadout?: Loadout; progress?: OpProgress; ult?: number }[], enc: Encounter, owned?: Record<string, number>, boss?: boolean): DDState {
+export function createBattle(party: { id: string; hp?: number; loadout?: Loadout; progress?: OpProgress; ult?: number; main?: boolean }[], enc: Encounter, owned?: Record<string, number>, boss?: boolean): DDState {
   let bonusGauge = 0;
-  // 전열 배치 규칙 적용: 물몸 딜러 앵커 보호(pos2), 탱/뱅가드 전열(pos1). 선택 순서(로드아웃 유지)는 id로 재매핑.
-  const order = frontlineOrder(party.map((p) => p.id));
-  const ordered = order.map((id) => party.find((p) => p.id === id)!).filter(Boolean) as typeof party;
-  const mainId = party[0]?.id; // 편성 첫 오퍼 = 메인딜러(공략 시트 채용파티는 주인이 첫 번째)
+  // 위치 = **편성 순서 그대로**. 예전엔 frontlineOrder로 탱을 pos1에, 앵커를 pos2로 자동 재배치했는데,
+  // 플레이어가 편성 화면에서 1~4번을 직접 정해 놓아도 던전에 들어가면 순서가 바뀌어 버렸다.
+  // 배치는 플레이어 몫이고, 추천 부대는 parties.ts가 이미 전열용 순서로 정의한다.
+  const ordered = party;
+  const mainId = party.find((p) => p.main)?.id ?? party[0]?.id; // 메인딜러(추천 부대는 main 지정, 없으면 1번)
   const allies = ordered.map((p, i) => {
     const u = makeAlly(p.id, i + 1, p.progress); // 정예화·스킬랭크·장비강화(gearGrade) 반영
     if (p.id === mainId) u.isMain = true;
