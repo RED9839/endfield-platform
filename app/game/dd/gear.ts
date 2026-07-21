@@ -176,25 +176,13 @@ function emptyBonus(): GearBonus {
 export const GEAR_DEFENSE: Record<GearSlot, number> = { armor: 56, gloves: 42, kit: 21 };
 export const GEAR_DEFENSE_PER_SLOT = GEAR_DEFENSE.armor; // (하위호환) 참조용
 
-// ── 세트별 실측 부옵 (warfarin gear.data, 세트 대표 피스). 각 피스: 방어(주옵) + 능력치(→gearGrade) + 피해 부옵. ──
-// grade = 능력치(힘/민첩/지능/의지) 합(실측), dmg = 피해 부옵(실측%). 단조로 스케일. dmg.kind: ult/battle/link/attack/all(물리)/elem(오퍼속성)/atkPct/hpPct/critRate/critDmg/energy.
+// 세트별 대표 피스 표(GEAR_SET_STATS)는 제거했다. 피스 레지스트리(gear-pieces.json 152종)와
+// 부옵 종류가 어긋나 있었고 — 응룡 50식/고검의 잔향/검술사 방어구를 "치명타 피해 +11.5%"로 적었는데
+// warfarin 원문은 셋 다 "물리 피해 보너스 +11.5%"였다 — 어디서도 참조되지 않는 죽은 데이터였다.
+// 부품 실측값은 아래 레지스트리가 유일한 출처다.
+// dmg.kind: ult/battle/link/attack/all(물리 피해 보너스)/elem(오퍼 속성 피해)/atkPct/hpPct/critRate/critDmg/
+//           energy/artsStr/vsBroken/ultEff/mainPct/subPct/heal/dmgReduce/strPct·agiPct·intPct·wilPct
 type DmgSub = { kind: "ult" | "battle" | "link" | "attack" | "all" | "elem" | "atkPct" | "hpPct" | "critRate" | "critDmg" | "energy" | "artsStr" | "vsBroken" | "ultEff" | "mainPct" | "subPct" | "heal" | "dmgReduce" | "strPct" | "agiPct" | "intPct" | "wilPct"; v: number };
-export const GEAR_SET_STATS: Record<string, Partial<Record<GearSlot, { grade: number; dmg?: DmgSub }>>> = {
-  "개척": { armor: { grade: 145, dmg: { kind: "ult", v: 0.259 } }, gloves: { grade: 108, dmg: { kind: "atkPct", v: 0.23 } }, kit: { grade: 53, dmg: { kind: "elem", v: 0.414 } } },
-  "열 작업용": { armor: { grade: 145, dmg: { kind: "atkPct", v: 0.115 } }, gloves: { grade: 108, dmg: { kind: "hpPct", v: 0.172 } }, kit: { grade: 53, dmg: { kind: "hpPct", v: 0.207 } } },
-  "M. I. 경찰용": { armor: { grade: 145, dmg: { kind: "hpPct", v: 0.103 } }, gloves: { grade: 108, dmg: { kind: "all", v: 0.345 } }, kit: { grade: 53, dmg: { kind: "atkPct", v: 0.23 } } },
-  "본 크러셔": { armor: { grade: 145, dmg: { kind: "critRate", v: 0.123 } }, gloves: { grade: 108, dmg: { kind: "atkPct", v: 0.192 } }, kit: { grade: 53, dmg: { kind: "all", v: 0.414 } } },
-  "식양의 흐름": { armor: { grade: 145, dmg: { kind: "atkPct", v: 0.115 } }, gloves: { grade: 108, dmg: { kind: "atkPct", v: 0.192 } }, kit: { grade: 53, dmg: { kind: "all", v: 0.414 } } },
-  "고검의 잔향": { armor: { grade: 145, dmg: { kind: "critDmg", v: 0.115 } }, gloves: { grade: 108, dmg: { kind: "hpPct", v: 0.172 } }, kit: { grade: 53, dmg: { kind: "critDmg", v: 0.23 } } },
-  "검술사": { armor: { grade: 145, dmg: { kind: "critRate", v: 0.123 } }, gloves: { grade: 108, dmg: { kind: "critDmg", v: 0.192 } }, kit: { grade: 53, dmg: { kind: "critDmg", v: 0.23 } } },
-  "생체 보조": { armor: { grade: 145, dmg: { kind: "battle", v: 0.103 } }, gloves: { grade: 108, dmg: { kind: "critRate", v: 0.205 } }, kit: { grade: 53, dmg: { kind: "atkPct", v: 0.23 } } },
-  "식양의 숨결": { armor: { grade: 145, dmg: { kind: "hpPct", v: 0.103 } }, gloves: { grade: 108, dmg: { kind: "critRate", v: 0.205 } }, kit: { grade: 53, dmg: { kind: "critRate", v: 0.246 } } },
-  "조류의 물결": { armor: { grade: 145, dmg: { kind: "critRate", v: 0.123 } }, gloves: { grade: 108, dmg: { kind: "atkPct", v: 0.192 } }, kit: { grade: 53, dmg: { kind: "atkPct", v: 0.23 } } },
-  "청파": { armor: { grade: 145, dmg: { kind: "critRate", v: 0.123 } }, gloves: { grade: 108, dmg: { kind: "critRate", v: 0.205 } }, kit: { grade: 53, dmg: { kind: "all", v: 0.414 } } },
-  "응룡 50식": { armor: { grade: 145, dmg: { kind: "critDmg", v: 0.115 } }, gloves: { grade: 108, dmg: { kind: "elem", v: 0.345 } }, kit: { grade: 53, dmg: { kind: "critDmg", v: 0.23 } } },
-  "펄스식": { armor: { grade: 145, dmg: { kind: "hpPct", v: 0.103 } }, gloves: { grade: 108, dmg: { kind: "atkPct", v: 0.192 } }, kit: { grade: 53, dmg: { kind: "hpPct", v: 0.207 } } },
-  "재앙 방호": { armor: { grade: 102, dmg: { kind: "ult", v: 0.184 } }, gloves: { grade: 76, dmg: { kind: "hpPct", v: 0.122 } }, kit: { grade: 38, dmg: { kind: "hpPct", v: 0.147 } } },
-};
 // 장비 능력치 → 오퍼 attrs 환산 계수. 우리 OP_ATTACK은 원작 실수치가 아니라 ×0.1507 축소된 값이라
 // 장비 능력치 → 공격력 반영 비율. 원본 그대로면 공격력 ×1.8 폭주라 축소하되, 0.2로는 단조가 딜에 +2%뿐
 // (무의미)이라 0.3으로 올려 단조를 살렸다(딜 +3.4%). 그만큼의 폭주는 적 HP 상향(ENEMY_HP_COMP)으로 상쇄.
