@@ -327,8 +327,9 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
               <span className="font-mono text-[15px] font-bold text-ef-ink">{active.length ? `${active.join(" · ")} 세트` : "조합 빌드"}</span>
               {!active.length && <span className="font-mono text-[12px] text-ef-muted">세트 효과 대신 부품 능력치 우선</span>}
               {opSet(focusId) === opRecSet(focusId) && <span className="font-mono text-[12px] text-ef-accent">★추천</span>}
-              <button type="button" onClick={() => setGearTab("set")} className="dd-cut ml-auto shrink-0 border border-ef-line px-2.5 py-0.5 font-mono text-[13px] font-bold uppercase text-ef-muted transition hover:border-ef-accent/60 hover:text-ef-accent">⚙ 장비 변경</button>
-              <span className="w-full font-mono text-[12px] text-ef-muted">맨몸으로 시작 · 공업소에서 이 빌드를 목표로 제작 · <span className="font-mono text-[13px] text-ef-ink/70">{attrsText(gearAttrs) || `능력치 +${gearGrade}`} · 방어 +{gearDef}</span></span>
+              <button type="button" title="목표 장비를 바꿉니다 — 세트를 통째로 고르거나 부위별로 다른 부품을 끼울 수 있습니다. 공업소는 여기서 정한 빌드를 목표로 제작합니다." onClick={() => setGearTab("set")} className="dd-cut ml-auto shrink-0 border border-ef-line px-2.5 py-0.5 font-mono text-[13px] font-bold uppercase text-ef-muted transition hover:border-ef-accent/60 hover:text-ef-accent">⚙ 장비 변경</button>
+              {/* 「장비 변경」이 있는 줄 몰라 추천 세트를 그대로 쓰는 경우가 많다 — 바꿀 수 있다고 먼저 말해 준다 */}
+              <span className="w-full font-mono text-[12px] text-ef-muted">맨몸으로 시작 · 공업소에서 이 빌드를 목표로 제작 · <b className="text-ef-accent-soft">우측 「⚙ 장비 변경」에서 세트·부위를 바꿀 수 있습니다</b> · <span className="font-mono text-[13px] text-ef-ink/70">{attrsText(gearAttrs) || `능력치 +${gearGrade}`} · 방어 +{gearDef}</span></span>
               {OP_GEAR_ALT[focusId] && (
                 <span className="flex w-full flex-wrap items-center gap-1.5">
                   <span className="font-mono text-[12px] text-ef-muted">빌드</span>
