@@ -754,7 +754,11 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
       s.lastLinkAlly = self.id; // 팀 연계 윈도우(관리자 봉인 게이트)
       let cd = skill.cooldown ?? LINK_CD;
       if (self.id === "zhuangfangyi" && (self.timers.heavenly || 0) > 0) cd = Math.max(1, Math.round(cd / 4)); // 천리의 경지: 연계 쿨 4배(변화의 숨결 연타 → 감전 → 청뢰검 폭증)
-      self.linkCd = Math.max(1, Math.floor(cd * (self.linkCdMul ?? 1))); // 연계 쿨타임 진입(쿨감은 내림 → 퍼센트 쿨감이 턴 단위로 실효: ×0.85면 쿨 2턴 이상 −1턴)
+      // 연계 쿨타임 진입. 정수 턴에 내림을 걸면 퍼센트 쿨감이 크게 튄다 —
+      // x0.85가 쿨 4턴엔 -25%, 3턴엔 -33%, 2턴엔 -50%, 1턴엔 0%가 됐다.
+      // 소수로 두고 **초과 대기분(음수)을 다음 쿨에서 차감**해 장기 평균이 실제 배율과 맞게 한다.
+      // (쿨 4 x 0.85 = 3.4 -> 4턴/3턴/4턴... 평균 3.4턴 = 정확히 -15%)
+      self.linkCd = cd * (self.linkCdMul ?? 1) + Math.min(0, self.linkCd);
     } else if (skill.kind === "ult") {
       self.ultCharge = 0;
     }
@@ -1464,7 +1468,9 @@ export function perTurn(s: DDState, u: DDUnit): void {
   if ((u.regen || 0) > 0 && (u.regenTurns || 0) > 0) { const h = Math.min(u.maxHp - u.hp, u.regen!); if (h > 0) { u.hp += h; s.log.push(`${u.name} 재생 +${h}`); } u.regenTurns = (u.regenTurns || 0) - 1; if ((u.regenTurns || 0) <= 0) u.regen = 0; }
   if (u.staggered) { u.staggerTimer -= 1; if (u.staggerTimer <= 0) { u.staggered = false; u.stagger = 0; s.log.push(`${u.name} 불균형 회복`); } }
   for (const key of Object.keys(u.timers)) { if (--u.timers[key] <= 0) { delete u.timers[key]; delete u.effectSrc[key]; expire(u, key); } } // 효과 지속시간 감쇠
-  if (u.linkCd > 0) u.linkCd -= 1; // 연계 쿨타임 감소
+  // 0 초과일 때만 감소 — 마지막 감소로 소수 나머지(예 0.4-1=-0.6)까지만 남고 거기서 멈춘다.
+  // 하한을 풀면 조건을 기다리는 동안 음수가 적립돼 다음 쿨이 반토막 난다(장방이 연계 18→36회).
+  if (u.linkCd > 0) u.linkCd -= 1; // 연계 쿨 감소(남은 음수 = 소수 나머지 → 다음 쿨에서 차감)
 }
 
 export function isOver(s: DDState): "ally" | "enemy" | null {
