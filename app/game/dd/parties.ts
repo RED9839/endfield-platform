@@ -7,8 +7,10 @@ export type PartyArchetype = "arts" | "break" | "crit"; // 아츠 폭딜 / 물�
 export type PresetParty = {
   id: string;
   name: string;
-  members: string[]; // 슬롯 1~4번 배치 순서 그대로. 던전은 이 순서를 바꾸지 않는다(전열/후열 개념 없음).
-  main: string;      // 메인딜러(메인 컨트롤 오퍼레이터) — 1번 슬롯과 다를 수 있다
+  members: string[]; // 슬롯 1~4번 배치 순서 그대로(1번=메인 딜러). 던전은 이 순서를 바꾸지 않는다.
+                     // 전열/후열이 없어 순서는 화면 배치일 뿐 — 피격은 직군 어그로로만 갈린다.
+  main: string;      // 메인딜러(메인 컨트롤 오퍼레이터). 추천 부대는 1번과 같지만,
+                     // 직접 편성해 순서를 바꿔도 메인이 따라 바뀌지 않게 별도로 둔다
   element: "physical" | "heat" | "electric" | "cryo" | "nature"; // 조합 주력 속성
   archetype: PartyArchetype; // 운영 축
   desc: string;
@@ -28,7 +30,7 @@ export const PRESET_PARTIES: PresetParty[] = [
   {
     id: "laevatain",
     name: "레바테인 조합",
-    members: ["camu", "laevatain", "wulfgard", "arcane"],
+    members: ["laevatain", "wulfgard", "arcane", "camu"],
     main: "laevatain",
     element: "heat",
     archetype: "arts",
@@ -75,7 +77,7 @@ export const PRESET_PARTIES: PresetParty[] = [
   {
     id: "zhuangfangyi",
     name: "장방이 조합",
-    members: ["arclight", "zhuangfangyi", "arcane", "perlica"],
+    members: ["zhuangfangyi", "arcane", "perlica", "arclight"],
     main: "zhuangfangyi",
     element: "electric",
     archetype: "arts",
@@ -105,7 +107,7 @@ export const PRESET_PARTIES: PresetParty[] = [
   {
     id: "arcane",
     name: "결 조합",
-    members: ["camu", "arcane", "wulfgard", "xaihi"],
+    members: ["arcane", "wulfgard", "xaihi", "camu"],
     main: "arcane",
     element: "nature",
     archetype: "arts",
@@ -115,7 +117,7 @@ export const PRESET_PARTIES: PresetParty[] = [
   {
     id: "mifu",
     name: "미브 조합",
-    members: ["pogranichnik", "mifu", "lifeng", "chenqianyu"],
+    members: ["mifu", "chenqianyu", "pogranichnik", "lifeng"],
     main: "mifu",
     element: "physical",
     archetype: "break",
