@@ -209,7 +209,9 @@ export const OP_GEAR: Record<string, Loadout> = {
   laevatain: { armor: "item_equip_t4_suit_fire_natr01_body_02", gloves: "item_equip_t4_suit_fire_natr01_hand_02", kit1: "item_equip_t4_suit_fire_natr01_edc_02", kit2: "item_equip_t4_suit_heal01_edc_03" },
   ember: { armor: "item_equip_t4_suit_poise01_body_01", gloves: "item_equip_t4_suit_phy01_hand_01", kit1: "item_equip_t4_suit_poise01_edc_01", kit2: "item_equip_t4_suit_poise01_edc_01" },
   wulfgard: { armor: "item_equip_t4_suit_heal01_body_01", gloves: "item_equip_t4_suit_usp02_hand_01", kit1: "item_equip_t4_suit_usp02_edc_03", kit2: "item_equip_t4_suit_usp02_edc_03" },
-  akekuri: { armor: "item_equip_t4_parts_wuling01_body_02", gloves: "item_equip_t4_rifttrekkergloves", kit1: "item_equip_t4_parts_wuling01_edc_03", kit2: "item_equip_t4_parts_wuling01_edc_03" },
+  // 아케쿠리: 시트 세트가 "개척"인데 위기 탈출(무소속 "?")·절망 피스가 박혀 있어 세트 효과가 0이었다.
+  // 위기 탈출 계열은 substat이 시트와 어긋나 bestFreePiece에서도 제외한 계열이다 → 하드코딩을 걷고
+  // 일반 추천 로직(개척 3부위 + 자유 1)에 맡긴다.
   camu: { armor: "item_equip_t4_suit_atb01_body_05", gloves: "item_equip_t4_suit_atb01_hand_02", kit1: "item_equip_t4_suit_atb01_edc_04", kit2: "item_equip_t4_parts_wuling01_edc_03" },
   yvonne: { armor: "item_equip_t4_suit_criti01_body_02", gloves: "item_equip_t4_suit_criti01_hand_02", kit1: "item_equip_t4_suit_criti01_edc_03", kit2: "item_equip_t4_suit_criti01_edc_03" },
   lastrite: { armor: "item_equip_t4_suit_phy01_body_01", gloves: "item_equip_t4_suit_burst01_hand_01", kit1: "item_equip_t4_suit_burst01_edc_01", kit2: "item_equip_t4_suit_burst01_edc_01" },
