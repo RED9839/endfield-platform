@@ -1000,6 +1000,9 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
     if (self.id === "yvonne" && skill.kind === "attack" && (self.timers.iceshot || 0) > 0) raw *= 2.66; // 아이스 슈터 강화 평타(원문 강일 133% vs 평타 50%)
     // 장방이 천리의 경지 변신: 강화 일반공격 ×2.5(궁 중 평타 강화)
     if (self.id === "zhuangfangyi" && skill.kind === "attack" && (self.timers.heavenly || 0) > 0) { raw *= 2.5; markLinkEvent(s, "zhuangfangyi"); } // 변신 강화 평타 = 전기 부착 행위 → 연계창(자체수급)
+    // 원작 연계의 공통 트리거: "메인 컨트롤 오퍼레이터가 강력한 일격 피해를 준 다음".
+    // 턴제인 우리 모델에선 아군의 평타가 이에 대응한다. 이 창이 없으면 연계가 개전 즉시 열려 있게 된다.
+    if (self.side === "ally" && skill.kind === "attack") markLinkEvent(s, "_strike");
     // 「변화의 숨결」 연계 조건(원문) = "메인이 **전기 부착** 적에게 강력한 일격/처형 후".
     //  · 메인 = 조작 중인 오퍼 → 턴제인 우리 모델에선 "평타를 친 아군 누구나"가 대응된다.
     //    (장방이 자신으로 한정하면 펠리카가 부착을 깔아주는 정석 사이클이 통째로 잠긴다)

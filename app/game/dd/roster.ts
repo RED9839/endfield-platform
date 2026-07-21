@@ -12,7 +12,7 @@ export const SKILLS: Record<string, DDSkill[]> = {
     // 귀궁우(배틀 169%, 불균형 10): 올려치기 띄우기. 자체 방어 불능 빌드.
     { id: "cqy-b", name: "귀궁우", kind: "battle", fromPos: [1, 2, 3, 4], target: "single-front", power: 1.69, element: "physical", staggerVal: 10, anomaly: "launch", note: "올려치기 + 띄우기(방어 불능 누적)" },
     // 견천하(연계 120%, 쿨 16초): 방어 불능 적일 때. 관통 돌진(경로 모든 적) 띄우기. 게이지 무소모.
-    { id: "cqy-l", name: "견천하", kind: "link", fromPos: [1, 2, 3, 4], target: "row", power: 1.2, element: "physical", staggerVal: 10, cooldown: 3, anomaly: "launch", note: "관통 돌진·띄우기(원문 무조건)" },
+    { id: "cqy-l", name: "견천하", kind: "link", fromPos: [1, 2, 3, 4], target: "row", power: 1.2, element: "physical", staggerVal: 10, cooldown: 3, anomaly: "launch", requires: (t) => !!t && t.physBreak > 0, requiresText: "방어 불능 적", note: "관통 돌진·띄우기(원문 무조건)" },
     // 예풍상(궁 671%=36×6+455, 불균형 35, 게이지 70): 7단 단일 누킹. 보스 삭제기(현 최고 단일 계수).
     { id: "cqy-u", name: "예풍상", kind: "ult", fromPos: [1, 2], target: "single-lowhp", power: 6.71, hits: [0.36, 0.36, 0.36, 0.36, 0.36, 0.36, 4.55], element: "physical", staggerVal: 35, selfUlt: true, note: "7단 단일 대량 물리" },
   ],
@@ -24,7 +24,7 @@ export const SKILLS: Record<string, DDSkill[]> = {
       apply: (t) => { if (t.physBreak === 0) bumpVuln(t, "physical", 0.05); }, note: "광역 넘어뜨리기+물리취약(방어 불능 0일 때)+복마" },
     // 분노의 형상(연계 47+167%=2.14, 불균형 10, 쿨 16초): 물리취약/갑옷파괴 적 강일 시. 20초 연타 획득.
     { id: "lf-l", name: "분노의 형상", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 2.14, hits: [0.47, 1.67], element: "physical", staggerVal: 10, cooldown: 3,
-      apply: (_t, self) => { self.multiHit = Math.min(4, self.multiHit + 1); }, note: "연타 획득" },
+      requires: (t) => !!t && (vulnFor(t, "physical") > 0 || t.statuses.includes("armor-break")), requiresText: "물리취약/갑옷파괴 적", apply: (_t, self) => { self.multiHit = Math.min(4, self.multiHit + 1); }, note: "연타 획득" },
     // 움직이지 않는 마음(궁 178+178%=3.56, 불균형 15): 광역 넘어뜨리기 광역 몰이. 연타 소모 추가 267%(엔진 MH_ULT). 복마.
     { id: "lf-u", name: "움직이지 않는 마음", kind: "ult", fromPos: [1, 2, 3], target: "all", power: 3.56, hits: [1.78, 1.78], element: "physical", staggerVal: 15, anomaly: "knockdown", selfPhysBonus: 1.0, selfUlt: true, note: "광역 넘어뜨리기 광역 몰이 + 연타 소모 폭딜 + 복마" },
   ],
@@ -36,7 +36,7 @@ export const SKILLS: Record<string, DDSkill[]> = {
     { id: "adm-b", name: "구성 시퀀스", kind: "battle", fromPos: [1, 2, 3, 4], target: "row", power: 1.56, element: "physical", staggerVal: 10, anomaly: "crush", note: "강타: 방어 불능 소모 대량 물리(주력기)" },
     // 봉인 시퀀스(연계 45%, 불균형 10, 결정 파괴 178%): 아군 연계가 피해를 줄 때만 사용. 결정 부착·봉인. 자체 방어 불능 부여 없음.
     { id: "adm-l", name: "봉인 시퀀스", kind: "link", fromPos: [1, 2, 3, 4], target: "single-front", power: 0.45, element: "physical", staggerVal: 10, crystal: true, cooldown: 3,
-      note: "오리지늄 결정 부착·봉인" },
+      requires: (_t, self, s) => !!s.lastLinkAlly && s.lastLinkAlly !== self.id, requiresText: "다른 아군 연계 피해 후", note: "오리지늄 결정 부착·봉인" },
     // 폭격 시퀀스(궁 356% + 결정 파괴 267%, 불균형 25): 광역 대량 물리 + 결정 파괴 추가 물리(엔진).
     { id: "adm-u", name: "폭격 시퀀스", kind: "ult", fromPos: [1, 2, 3, 4], target: "all", power: 3.56, element: "physical", staggerVal: 25, selfUlt: true, note: "광역 대량 물리 + 결정 파괴" },
   ],
@@ -48,7 +48,7 @@ export const SKILLS: Record<string, DDSkill[]> = {
     // 디스토션(연계 동결적 280%, 물취 10%, 쿨 18초): 동결 적일 때. 강제 띄우기(물리) → 동결 적이면 쇄빙(엔진) + 물리취약.
     { id: "est-l", name: "디스토션", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 2.8, element: "physical", staggerVal: 10, cooldown: 4, anomaly: "launch",
       // 원문: 게이트 없음. "동결 적 명중 시 추가 피해 + 물리 취약"은 조건이 아니라 보너스다.
-      apply: (t) => { if (t.frozen > 0) bumpVuln(t, "physical", 0.1); }, note: "강제 띄우기 → 쇄빙 + 물리취약" },
+      requires: (t) => !!t && t.frozen > 0, requiresText: "동결 적", apply: (t) => { if (t.frozen > 0) bumpVuln(t, "physical", 0.1); }, note: "강제 띄우기 → 쇄빙 + 물리취약" },
     // 트레몰로(궁 489%, 불균형 15, 게이지 70): 원형 광역 물리 + (물리취약 적)강제 띄우기.
     { id: "est-u", name: "트레몰로", kind: "ult", fromPos: [1, 2, 3], target: "all", power: 4.89, element: "physical", staggerVal: 15, anomaly: "launch", selfUlt: true, note: "원형 광역 + 강제 띄우기" },
   ],
@@ -63,7 +63,7 @@ export const SKILLS: Record<string, DDSkill[]> = {
     // 그림자가 타오르는 순간(연계 67+133%+소모비례 80%/스택, 쿨 15초): 방어 불능+아츠부착 적. 아츠 소모 물리·띄우기 + 치명 버프.
     // 1단 67% + 2단 133%. 아츠 소모 비례(스택당 +80%)와 치확/치피는 combat.ts 엔진 훅에서 — apply는 raw를 못 건드림.
     { id: "ros-l", name: "그림자가 타오르는 순간", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 0.67, element: "physical", staggerVal: 5, cooldown: 3, anomaly: "launch",
-      note: "아츠 소모 물리·띄우기 + 치명 버프(치확 30%/치피 100%)" },
+      requires: (t) => !!t && t.physBreak > 0 && ELEMENTS.some((e) => t.arts[e] > 0), requiresText: "방어 불능+아츠부착 적", note: "아츠 소모 물리·띄우기 + 치명 버프(치확 30%/치피 100%)" },
     // 기습 '날카로운 발톱'(궁 275+111+333=719%, 불균형 25, 게이지 110): 다단 열기 누킹 + 열기 부착.
     { id: "ros-u", name: "기습 '날카로운 발톱'", kind: "ult", fromPos: [1, 2], target: "single-front", power: 7.11, hits: [2.67, 1.11, 3.33], element: "heat", attach: "heat", staggerVal: 25, selfUlt: true, note: "다단 열기 단일 누킹 + 열기 부착" },
   ],
@@ -78,7 +78,7 @@ export const SKILLS: Record<string, DDSkill[]> = {
     { id: "mf-b3", name: "청파 삼형·개천", kind: "battle", fromPos: [1, 2, 3], target: "row", power: 4.0, element: "physical", staggerVal: 10, gaugeCost: 50, requiresStance: 2, vsWeak: 0.2, note: "주력 딜(강타) · 냉정: 물리취약/불균형 적 피해 ×1.2" },
     // 후회 없는 주먹(연계 111%, 쿨 20초): 방어 불능 3+ 적. 물리취약 + 추형 전환.
     { id: "mf-l", name: "후회 없는 주먹", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 1.11, element: "physical", staggerVal: 10, cooldown: 4, setStanceTo: 1,
-      apply: (t) => bumpVuln(t, "physical", 0.05), note: "물리취약 + 추형 전환" },
+      requires: (t) => !!t && t.physBreak >= 3, requiresText: "방어 불능 3+ 적", apply: (t) => bumpVuln(t, "physical", 0.05), note: "물리취약 + 추형 전환" },
     // 절심(궁 311%, 게이지 80): 강제 띄우기+넘어뜨리기(방어 불능 부여) + 추형 전환.
     { id: "mf-u", name: "절심", kind: "ult", fromPos: [1, 2, 3], target: "single-front", power: 3.11, element: "physical", staggerVal: 20, selfUlt: true, anomaly: "knockdown", setStanceTo: 1, note: "방어 불능 부여(넘어뜨리기) + 추형 전환" },
   ],
@@ -91,7 +91,7 @@ export const SKILLS: Record<string, DDSkill[]> = {
       apply: (t) => { applyBuff(t, "weaken", 0.05); bumpVuln(t, "heat", 0.05); if (!t.statuses.includes("wing")) t.statuses.push("wing"); setTimer(t, "wing", 8); }, note: "열기 부착 + 허약/열기취약 + 핏빛 날개" },
     // 영혼의 가시(연계 133%, 쿨 20초): 열기 부착 소모/흡수 후. 게이지 16. 죄를 쫓는 자(날개 적 → 회복+연타).
     { id: "camu-l", name: "영혼의 가시", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 1.33, element: "heat", staggerVal: 10, cooldown: 4, gaugeGain: 18,
-      note: "열기 부착 소모 후 발동 · 핏빛 날개 적 명중 시 회복 + 연타 획득" },
+      requires: (_t, _s, st) => !!st.anomalyConsumed, requiresText: "열기 부착 소모·흡수 후", note: "열기 부착 소모 후 발동 · 핏빛 날개 적 명중 시 회복 + 연타 획득" },
     // 추적(궁 후 배틀 슬롯 교체, 게이지 무소모): 궁 「선혈의 비」 후 15초(≈3턴) 배틀이 이걸로 교체(연계 아님 — 원작 "다음 배틀=추적").
     // kind:"battle" + gaugeCost:0 → 배틀 슬롯에서 camu-b와 교체 표시(상호배타), 무소모. gaugeGain 32로 뱅가드 수급.
     { id: "camu-chase", name: "추적", kind: "battle", gaugeCost: 0, fromPos: [1, 2, 3], target: "single-front", power: 2.22, element: "heat", staggerVal: 20, gaugeGain: 32,
@@ -107,7 +107,7 @@ export const SKILLS: Record<string, DDSkill[]> = {
     { id: "ake-b", name: "열정 분출", kind: "battle", fromPos: [1, 2, 3], target: "single-front", power: 1.42, element: "heat", attach: "heat", staggerVal: 10, note: "열기 부착" },
     // 섬광 돌진(연계 80×2=160%, 쿨 10초): 불균형 상태/불균형 지점 적. 게이지 15(승리의 함성으로 증가).
     { id: "ake-l", name: "섬광 돌진", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 1.6, hits: [0.8, 0.8], element: "physical", staggerVal: 10, cooldown: 2, gaugeGain: 15,
-      note: "게이지 대량 수급(승리의 함성)" },
+      requires: (t) => !!t && (t.staggered || (t.staggerMax > 0 && t.stagger >= t.staggerMax * 0.5)), requiresText: "불균형/불균형 지점 적", note: "게이지 대량 수급(승리의 함성)" },
     // 소대, 집합!(궁, 게이지 120): 무딜. 게이지 대량 회복(58) + 연타 획득(몰입의 시간).
     { id: "ake-u", name: "소대, 집합!", kind: "ult", fromPos: [1, 2, 3], target: "self", power: 0, staggerVal: 0, selfUlt: true, gaugeGain: 74, grantsMultiHit: 1, note: "게이지 대량 회복 + 연타(몰입의 시간, 소모 후 부여)" },
   ],
@@ -118,7 +118,7 @@ export const SKILLS: Record<string, DDSkill[]> = {
     { id: "ale-b", name: "비정규 루어", kind: "battle", fromPos: [1, 2, 3], target: "single-front", power: 2.0, element: "physical", staggerVal: 10, forceFreeze: true, note: "냉기 부착 적 → 강제 동결 + 게이지" },
     // 얼음 낚시 기술(연계 133%, 쿨 9초≈2턴): 아츠이상/결정 소모됐을 때. 게이지 10 + 린수 확률(강화 213% + 게이지).
     { id: "ale-l", name: "얼음 낚시 기술", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 1.33, element: "physical", staggerVal: 10, cooldown: 2, gaugeGain: 12, lure: { power: 2.13, gauge: 10 },
-      note: "게이지 수급 + 린수 확률 강화" },
+      requires: (_t, _s, st) => !!st.anomalyConsumed, requiresText: "아츠이상/결정 소모됨", note: "게이지 수급 + 린수 확률 강화" },
     // 월척이다!(궁 436%, 게이지 100): 광역 냉기 + 냉기 부착 + 게이지. 처치 시 추가 게이지.
     { id: "ale-u", name: "월척이다!", kind: "ult", fromPos: [1, 2, 3], target: "all", power: 4.36, element: "cryo", staggerVal: 20, attach: "cryo", selfUlt: true, gaugeGain: 20, note: "광역 냉기 부착 + 게이지" },
   ],
@@ -140,7 +140,7 @@ export const SKILLS: Record<string, DDSkill[]> = {
     { id: "pg-b", name: "전선 분쇄", kind: "battle", fromPos: [1, 2, 3], target: "row", power: 1.92, hits: [0.86, 1.06], element: "physical", staggerVal: 10, anomaly: "armor-break", gaugeOnConsume: [5, 10, 20, 30], note: "갑옷 파괴 + 방어 불능 소모 비례 게이지 회복" },
     // 보름달 참격(연계 42+54+66%=162%, 쿨 18초): 강타/갑옷파괴로 방어 불능 소모됐을 때. 게이지 회복.
     { id: "pg-l", name: "보름달 참격", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 1.62, hits: [0.42, 0.54, 0.66], element: "physical", staggerVal: 11, cooldown: 4, gaugeGain: 25,
-      note: "단계별 베기 + 게이지 회복" },
+      requires: (t) => !!t && t.statuses.includes("armor-break"), requiresText: "강타·갑옷파괴로 방불 소모", note: "단계별 베기 + 게이지 회복" },
     // 방패병 부대, 전진(궁 133%, 게이지 90): 광역 몰이 진군 + 넘어뜨리기(방어 불능) + 철의 서약 5포인트 부여(물리이상마다 교란/최후의 승부).
     { id: "pg-u", name: "방패병 부대, 전진", kind: "ult", fromPos: [1, 2, 3], target: "all", power: 1.33, element: "physical", staggerVal: 10, anomaly: "knockdown", selfUlt: true, grantsIronOath: 5, note: "진군 광역 몰이 + 방어 불능 + 철의 서약 5(추가타 체인)" },
   ],
@@ -186,8 +186,7 @@ export const SKILLS: Record<string, DDSkill[]> = {
       apply: (t) => { if (t.statuses.includes("corrosion")) { t.statuses = t.statuses.filter((x) => x !== "corrosion"); t.resShred = 0; bumpVuln(t, "physical", 0.12, 6); bumpVuln(t, "arts", 0.12, 6); } }, note: "자연 + 부식 소모 → 물리/아츠 취약 + 회복(친구의 그림자)" },
     // 화산 분화(연계 45+111%=156%, 쿨 18초≈4턴): 방어 불능·아츠부착 없는 적에 강일 후. 자연 + 주변 강제 부식 7초(취약 셋업).
     { id: "ard-l", name: "화산 분화", kind: "link", fromPos: [1, 2, 3], target: "all", power: 1.56, hits: [0.45, 1.11], element: "nature", staggerVal: 10, cooldown: 4,
-      requires: (t) => !!t && t.physBreak === 0 && ELEMENTS.every((e) => t.arts[e] === 0), requiresText: "방어 불능·아츠부착 없는 적",
-      apply: (t) => { t.resShred = Math.min(0.24, (t.resShred || 0) + 0.12); setTimer(t, "resShred", 3); if (!t.statuses.includes("corrosion")) t.statuses.push("corrosion"); }, note: "자연 부착 + 강제 부식(전 속성 저항↓)" },
+      requires: (t, _self, st) => !!t && hasLinkEvent(st, "_strike") && t.physBreak === 0 && ELEMENTS.every((e) => t.arts[e] === 0), requiresText: "메인 강일 후 · 방불·부착 없는 적", apply: (t) => { t.resShred = Math.min(0.24, (t.resShred || 0) + 0.12); setTimer(t, "resShred", 3); if (!t.statuses.includes("corrosion")) t.statuses.push("corrosion"); }, note: "자연 부착 + 강제 부식(전 속성 저항↓)" },
     // 복슬복슬 파티(궁 73%×3≈219%, 게이지 90): 광역 다단 자연 + 확률 회복(친구의 그림자).
     { id: "ard-u", name: "복슬복슬 파티", kind: "ult", fromPos: [1, 2, 3], target: "all", power: 0.73, element: "nature", staggerVal: 2, selfUlt: true, note: "광역 다단 자연 + 회복" },
   ],
@@ -234,7 +233,7 @@ export const SKILLS: Record<string, DDSkill[]> = {
     // 프로토콜ω·뇌격(배틀 178%): 즉발 전기 + 전기 부착(좁은 범위, 빠른 발동).
     { id: "prl-b", name: "프로토콜ω · 뇌격", kind: "battle", fromPos: [1, 2, 3], target: "single-front", power: 1.78, element: "electric", attach: "electric", staggerVal: 10, note: "즉발 전기 부착" },
     // 실시간 프로토콜·연쇄 섬광(연계 80%, 쿨 20초≈4턴): 메인 강일 후(상시). 전기 + 강제 감전(부착 무관 아츠 취약 12%).
-    { id: "prl-l", name: "실시간 프로토콜 · 연쇄 섬광", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 0.8, element: "electric", staggerVal: 10, cooldown: 4, forceShock: true, note: "강제 감전(아츠 취약, 부착 무관)" },
+    { id: "prl-l", name: "실시간 프로토콜 · 연쇄 섬광", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 0.8, element: "electric", staggerVal: 10, cooldown: 4, forceShock: true, requires: (_t, _self, st) => hasLinkEvent(st, "_strike"), requiresText: "메인 강일 후", note: "강제 감전(아츠 취약, 부착 무관)" },
     // 프로토콜ε·70.41κ(궁 445%, 게이지 80): 광역 깡딜 전기. 불균형 적엔 오블리터레이션 +30%.
     { id: "prl-u", name: "프로토콜ε · 70.41κ", kind: "ult", fromPos: [1, 2, 3], target: "all", power: 4.45, element: "electric", staggerVal: 20, selfUlt: true, note: "광역 깡딜 전기(불균형 적 +30%)" },
   ],
