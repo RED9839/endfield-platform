@@ -18,7 +18,7 @@ const STATUS_ICON: Record<string, string> = {
 };
 import { OP_TALENTS } from "../operator-talents";
 import { DMG_SHORT as DMG_KO, SKILL_KIND_LABEL as kindLabel } from "../labels";
-import { ITEMS, useItem as applyItem, canUseItem, itemColor, itemImage } from "../items";
+import { ITEMS, useItem as applyItem, canUseItem, autoItemPick, itemColor, itemImage } from "../items";
 import type { BattleResult, NodeKind, PartyMember } from "../run";
 
 const PRIMARY = "#ff9a2f";
@@ -396,6 +396,14 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
       timerRef.current = setTimeout(step, delay()); return;
     }
     if (autoRef.current) {
+      // 자동도 위급하면 소비 아이템을 쓴다 — 안 쓰면 수동보다 일방적으로 불리하다.
+      const pick = autoItemPick(s, items);
+      if (pick) {
+        doAction(u, () => { applyItem(s, pick.id, pick.target); }, ITEMS[pick.id]?.name ?? "아이템");
+        onUseItem(pick.id);
+        afterAction();
+        timerRef.current = setTimeout(step, delay()); return;
+      }
       const sk = allyChoose(s, u);
       doAction(u, () => { if (sk) act(s, u, sk); else s.log.push(`${u.name} 행동 불가(스킬 없음)`); }, sk ? sk.name : null);
       afterAction();

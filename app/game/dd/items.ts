@@ -82,6 +82,23 @@ export function canUseItem(s: DDState, id: string): boolean {
 export function condText(c: ItemCond): string {
   return c.type === "hp" ? `HP<${Math.round(c.below * 100)}%` : c.type === "dead" ? "전투 불능 시" : "상시";
 }
+// 자동 전투용 소비 아이템 판단 — 플레이어가 할 법한 최소 운용을 규칙화한다.
+// 자동에서 아이템을 아예 안 쓰면 수동보다 일방적으로 불리하다(실측: 노힐 파티 보스 승률
+// 미브 29->43% · 엠버 43->63% · 로시 86->100%가 아이템 유무만으로 갈렸다).
+// 우선순위: 전사자 부활 > 위급(45% 미만) 즉시 회복 > 재생. 여유 있으면 쓰지 않는다.
+export function autoItemPick(s: DDState, inv: Record<string, number>): { id: string; target: DDUnit } | null {
+  const has = (id: string) => (inv[id] ?? 0) > 0 && canUseItem(s, id);
+  const dead = deadAlly(s);
+  if (dead) { const rev = Object.keys(inv).find((id) => ITEMS[id]?.kind === "revive" && has(id)); if (rev) return { id: rev, target: dead }; }
+  const alive = living(s, "ally");
+  const hurt = alive.filter((a) => a.hp / a.maxHp < 0.45).sort((a, b) => a.hp / a.maxHp - b.hp / b.maxHp)[0];
+  if (!hurt) return null;
+  const byKind = (k: string) => Object.keys(inv).filter((id) => ITEMS[id]?.kind === k && has(id))
+    .sort((a, b) => (ITEMS[b].rarity ?? 0) - (ITEMS[a].rarity ?? 0))[0];
+  const pick = byKind("heal-shield") ?? byKind("heal") ?? byKind("regen");
+  return pick ? { id: pick, target: hurt } : null;
+}
+
 export function useItem(s: DDState, id: string, caster: DDUnit): boolean {
   const item = ITEMS[id]; if (!item) return false;
   item.run(s, caster); return true;
