@@ -53,7 +53,8 @@ export default function RunMap({ nodes, frontier, cleared, party, items, faction
     if (n.kind === "rest") return null;
     const d = enemyDrop(n.kind, n.depth, faction ?? "");
     const m = Math.pow(LOOT_DECAY, floor);
-    return { parts: Math.round(d.parts * m), permits: Math.round(d.permits * m) };
+    // 실제 드랍대로 — 크레딧은 전 노드, 부품·프로토콜 프리즘은 실제로 떨어지는 노드(정예·보스)만.
+    return { credits: Math.round(d.credits * m), parts: Math.round(d.parts * m), chips: Math.round(d.chips * m) };
   };
   const maxDepth = Math.max(...nodes.map((n) => n.depth));
   const depths = Array.from({ length: maxDepth + 1 }, (_, d) => nodes.filter((n) => n.depth === d).sort((a, b) => a.lane - b.lane));
@@ -118,7 +119,11 @@ export default function RunMap({ nodes, frontier, cleared, party, items, faction
                       {isCleared ? <span className="block font-mono text-[14px] uppercase text-ef-muted">완료</span> : (() => {
                         const rw = nodeReward(n);
                         if (n.kind === "rest") return <span className="block font-mono text-[12px] font-bold text-green-300/85">✚ HP +{Math.round(REST_HEAL * 100)}%</span>;
-                        return <span className="block whitespace-nowrap font-mono text-[12px] text-amber-300/75" title="예상 보상 — 부품 · 관리권"><img src={RESOURCE_ICON.parts} alt="" className="mr-0.5 inline-block h-3.5 w-3.5 align-[-2px] object-contain" />{rw?.parts} <img src={RESOURCE_ICON.permits} alt="" className="ml-1 mr-0.5 inline-block h-3.5 w-3.5 align-[-2px] object-contain" />{rw?.permits}</span>;
+                        return <span className="block whitespace-nowrap font-mono text-[12px]" title="예상 보상 — 크레딧(전 노드) · 부품·프리즘(정예·보스만)">
+                          <img src={RESOURCE_ICON.credits} alt="" className="mr-0.5 inline-block h-3.5 w-3.5 align-[-2px] object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} /><span style={{ color: "#f5c542" }}>{rw?.credits}</span>
+                          {(rw?.parts ?? 0) > 0 && <><img src={RESOURCE_ICON.parts} alt="" className="ml-1.5 mr-0.5 inline-block h-3.5 w-3.5 align-[-2px] object-contain" /><span className="text-amber-300/75">{rw?.parts}</span></>}
+                          {(rw?.chips ?? 0) > 0 && <><img src={RESOURCE_ICON.chips} alt="" className="ml-1.5 mr-0.5 inline-block h-3.5 w-3.5 align-[-2px] object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} /><span className="text-cyan-300/75">{rw?.chips}</span></>}
+                        </span>;
                       })()}
                       {isFrontier && <span className="block font-mono text-[13px] font-bold uppercase tracking-wider text-ef-accent">▶ 진입</span>}
                     </span>
