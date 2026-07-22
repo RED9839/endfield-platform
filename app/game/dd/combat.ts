@@ -730,6 +730,7 @@ export function onAllyHit(s: DDState, self: DDUnit, t: DDUnit, final: number, lo
 // 결 「전략 수립」: 패널 지능 ≥ 의지면 진결·지혜(딜), 의지 > 지능이면 진결·의지(서폿).
 // 원작이 "레벨·재능·잠재·장비·무기가 주는 패널 능력치"로 판정하므로 밸런스 축소 전 panelAttrs를 쓴다.
 export const arcaneForm = (u: DDUnit): "wisdom" | "will" => {
+  if (u.isMain) return "wisdom"; // 메인 딜러로 기용 시 진결·지혜(딜) 폼 — 서브(4번 서폿)일 땐 아래 패널 판정(의지 빌드→진결·의지)
   const a = u.panelAttrs ?? u.attrs;
   return !a || a.int >= a.wil ? "wisdom" : "will";
 };
@@ -1378,7 +1379,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
   }
   // 이본 「아이스 슈터」: 삐삐 배치 + 메인 전환 — 7초(≈2턴) 강화 평타. 평타마다 치확 +3%(최대 10스택), 만스택 시 치피 +60%.
   if (self.id === "yvonne" && skill.kind === "ult") {
-    setTimer(self, "iceshot", 3); // 7초 ≈ 평타 2회분. perTurn이 자기 턴 시작에 감쇠하므로 2를 주면 실사용 1턴 → 3
+    setTimer(self, "iceshot", 5); // 7초 ≈ 강화 평타 2턴. perTurn이 자기 턴 시작에 감쇠 → 실사용 2턴(치확 스택 만렙까지)
     self.iceStack = 0;
     self.atb += 100; // 변신 후 바로 자기 턴(강화 평타 즉시 활용)
     log.push(`  → 아이스 슈터 변신! 강화 평타(평타마다 치확 +3%, 만스택 시 치피 +60%) · 즉시 추가 행동`);
