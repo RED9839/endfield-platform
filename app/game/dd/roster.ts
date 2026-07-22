@@ -271,7 +271,8 @@ export const SKILLS: Record<string, DDSkill[]> = {
     { id: "tt-l", name: "야, 강물! 도와줘!", kind: "link", fromPos: [1, 2, 3], target: "row", power: 1.07, element: "cryo", staggerVal: 10, cooldown: 3,
       requires: (t, _s, st) => !!t && (t.arts.cryo > 0 || !!st.anomalyConsumed), requiresText: "냉기 부착 또는 아츠 폭발한 적", note: "냉기 관통 + 와류 생성 + 의기투합" },
     // 대당가께서 지켜보고 계신다!(궁 거대 파도 311%, 게이지 90): 시간 정지(행동 불가) + 거대 파도 + 지속 냉기.
-    { id: "tt-u", name: "대당가께서 지켜보고 계신다!", kind: "ult", fromPos: [1, 2, 3], target: "all", power: 3.11, element: "cryo", staggerVal: 20, selfUlt: true, note: "시간 정지(행동 불가) + 거대 파도 + 지속 냉기" },
+    // 실측: 지속 피해 142% + 거대한 파도(기본) 178% = 320%. 311%는 낙하공격 조기발동판(엔진 미구현)이라 기본값 채택.
+    { id: "tt-u", name: "대당가께서 지켜보고 계신다!", kind: "ult", fromPos: [1, 2, 3], target: "all", power: 3.2, element: "cryo", staggerVal: 20, selfUlt: true, note: "시간 정지(행동 불가) + 지속 냉기 142% + 거대 파도 178%" },
   ],
   // 라스트 라이트(라라): 냉기/양손검 스트라이커(★6 한정, 첫 스트라이커). 냉기 부착 3+ 소모 단일 누킹 + 저체온증 냉기 취약 + 저온 취성(궁 취약 1.5배) + 자기 충전 궁(240). 대보스 특화·다수전 약점.
   // 재능: 저체온증(아츠 부착 소모 시 냉기 취약 ×4%, 엔진) · 저온 취성(궁 냉기/아츠 취약 1.5배, 엔진). 궁은 배틀/연계로만 충전. 주스탯 힘·보조 의지.
