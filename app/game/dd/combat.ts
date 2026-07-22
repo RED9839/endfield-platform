@@ -181,6 +181,7 @@ export type DDSkill = {
   setStanceTo?: number; // 사용 후 스탠스 설정
   stanceFromCrush?: boolean; // 강타로 방불 3+ 소모 시 스탠스 2(미브 추형)
   vsWeak?: number; // 물리취약/불균형 적 추가 피해(미브 냉정 등)
+  countsAsCrush?: boolean; // 원작 "강타 피해로 간주"(미브 개천) — 방불 소모 없이 강타 트리거(고검의 잔향 등) 발동
   crystal?: boolean; // 오리지늄 결정 부착(관리자 봉인 시퀀스)
   apply?: (target: DDUnit, self: DDUnit) => void; // 추가 효과(취약·연타 등)
   selfUlt?: boolean; // 궁극(게이지 소모)
@@ -1399,6 +1400,8 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
   // 미브 청파 삼형 스탠스 전환(2턴 윈도우)
   if (skill.stanceFromCrush) { self.stance = primaryPre >= 3 ? 2 : 0; setTimer(self, "stance", 2); }
   else if (skill.setStanceTo != null) { self.stance = skill.setStanceTo; setTimer(self, "stance", 2); }
+  // 개천: 원작 "강타 피해로 간주" — 방불 소모 없이 강타 트리거(고검의 잔향 등) 발동
+  if (skill.countsAsCrush && primaryTarget) { gearTrigger(self, "crush", primaryTarget); if (self.side === "ally") weaponTrigger(self, "crush"); }
   // 포그 궁: 본인에게 철의 서약 5스택 부여(30초≈6턴)
   if (skill.grantsIronOath) { self.ironOath = skill.grantsIronOath; setTimer(self, "ironOath", 6); s.log.push(`  → ${self.name} 철의 서약 ${skill.grantsIronOath}스택 획득`); }
   // 포그 뱅가드 게이지 수급: 플랫 + 방불 소모량 비례
