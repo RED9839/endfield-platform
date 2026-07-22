@@ -1,6 +1,6 @@
 // ===== 다키스트 던전류 전투 엔진 (엔드필드 리뉴얼) =====
 import { weaponTrigger } from "./weapons";
-import { skillRankDmg, skillUtilMult, type SkillRanks, type SkillKind } from "./progress";
+import { skillRankDmg, skillUtilMult, realAtk, type SkillRanks, type SkillKind } from "./progress";
 // 카드/드로우 없음. 속도 기반 턴 순서 + 고정 스킬킷 + 스킬 사용 요구사항(usage gate).
 // 전열/후열 개념은 없다 — pos는 편성 순서(화면 배치)일 뿐 피격 우선순위가 아니다.
 // 명일방주: 엔드필드 전투 시스템 wiki 정합. 액션 레이어만 DD류, 메커니즘은 원작.
@@ -21,7 +21,7 @@ export type DDUnit = {
   maxHp: number;
   speed: number; // 행동 게이지(ATB) 충전 속도(오퍼 고유 민첩 — roster.ts applyAttrs)
   atb: number;   // 행동 게이지 0~100. 속도만큼 차고 100이면 행동, 초과분 이월.
-  attack: number;
+  attack: number; // 공격력 스탯(M0 ×1.8 포함). 실ATK = realAtk(attack) = attack/1.8.
   opElement?: "physical" | Element; // 오퍼 주력 속성(장비 부품 속성 피해 보너스용)
   defense: number; // 방어력 → 받는 모든 피해 ×(100/(def+100)). 기본 0(장비로 증가)
   resist: Record<"physical" | Element, number>; // 속성별 저항(물리/열기/전기/냉기/자연, 0~1=1%↓, 음수=약점). 위키 저항표 정합
@@ -184,7 +184,7 @@ export type DDSkill = {
   stanceFromCrush?: boolean; // 강타로 방불 3+ 소모 시 스탠스 2(미브 추형)
   vsWeak?: number; // 물리취약/불균형 적 추가 피해(미브 냉정 등)
   countsAsCrush?: boolean; // 원작 "강타 피해로 간주"(미브 개천) — 방불 소모 없이 강타 트리거(고검의 잔향 등) 발동
-  masteryDmg?: [number, number, number, number]; // 스킬별 마스터리 딜 배율 M0~M3(warfarin 실측). 표준 곡선[1,1.069,1.153,1.25]과 다른 소수 스킬용
+  mst?: [number, number, number]; // 스킬 마스터리 M1·M2·M3 실측 배율/100(warfarin). power=Lv9(M0). 피해 = realAtk × (M0=power / M1~3=mst).
   crystal?: boolean; // 오리지늄 결정 부착(관리자 봉인 시퀀스)
   apply?: (target: DDUnit, self: DDUnit) => void; // 추가 효과(취약·연타 등)
   selfUlt?: boolean; // 궁극(게이지 소모)
@@ -423,7 +423,7 @@ const DUR_FROZEN = 2;  // 동결 6~9초
 const DUR_BUFF = 3;    // 증폭/허약/비호/보호막/속도 일반 버프
 const LINK_CD = 3;     // 연계 기본 쿨타임 15~16초
 // 일반 공격(모든 오퍼 공통): 게이지 무소모, 강력한 일격으로 게이지 회복, 불균형 적엔 처형.
-export const BASIC: DDSkill = { id: "basic", name: "일반 공격", kind: "attack", fromPos: [1, 2, 3, 4], target: "single-front", power: 0.5, element: "physical", staggerVal: 6, gaugeGain: 12 };
+export const BASIC: DDSkill = { id: "basic", name: "일반 공격", kind: "attack", fromPos: [1, 2, 3, 4], target: "single-front", power: 0.9, mst: [0.96, 1.04, 1.13], element: "physical", staggerVal: 6, gaugeGain: 12 }; // power=Lv9(50%×1.8=90%). 피해 = realAtk × 0.9(M0) = 옛 attack×0.5
 
 // 오리지늄 아츠 강도(원문 3식):
 //  ① 이상 피해(강타·연소·동결·쇄빙·아츠폭발·갑옷파괴·감전·부식·띄우기·넘어뜨리기) = +x% 선형
@@ -622,7 +622,9 @@ export function baseDamage(skill: DDSkill, self: DDUnit): number {
   // 평타 배율(무기 「궁 후 평타 +120%」 등) vs 스킬 배율. 적은 attrs/무기가 없어 ×1.
   const am = skill.kind === "attack" ? (self.strMul ?? 1) : (self.skillAttrMul ?? 1);
   const bm = skill.kind === "battle" ? 1 + (self.battleAmp ?? 0) : 1; // 무기: 배틀 한정 증폭(장방이)
-  let dmg = self.attack * eb(self) * (skill.powerOf?.(self) ?? skill.power) * am * bm;
+  // mst 스킬은 실ATK(=공격력÷1.8, 장비·무기 포함) × Lv9 배율. 그 외(버프·arcane 폴백)는 레거시 attack × Lv1 배율.
+  const base = (skill.mst ? realAtk(self.attack) : self.attack) * eb(self);
+  let dmg = base * (skill.powerOf?.(self) ?? skill.power ?? 0) * am * bm;
   if (self.multiHit > 0) {
     const n = Math.min(4, self.multiHit);
     if (skill.kind === "battle") dmg *= 1 + MH_BATTLE[n - 1];
@@ -1006,7 +1008,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
     }
     if (skill.lure) {
       const chance = 0.1 + Math.min(0.3, (self.gearGrade / 10) * 0.005); // 낚시의 달인(지능→장비등급 치환)
-      if (Math.random() < chance) { raw += self.attack * eb(self) * (skill.lure.power - skill.power); gaugeUp(s, skill.lure.gauge); log.push(`  → 진귀한 린수! 강화 피해 + 게이지`); }
+      if (Math.random() < chance) { raw += realAtk(self.attack) * eb(self) * (skill.lure.power - (skill.power ?? 0)); gaugeUp(s, skill.lure.gauge); log.push(`  → 진귀한 린수! 강화 피해 + 게이지`); }
     }
     // 카뮤 죄를 쫓는 자: 연계가 핏빛 날개 배회 적 명중 시 회복([60+지능×0.3]→장비등급) + 연타
     if (self.id === "camu" && skill.kind === "link" && has(t, "wing")) {
@@ -1078,9 +1080,12 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
       if (self.hp / self.maxHp > 0.5) gb += elem === "physical" ? g.selfHpHighPhys : g.selfHpHighArts; // 전달자: 고체력 시 물리/아츠 피해+
       dmg *= 1 + gb;
     }
-    // 스킬 마스터리(종류별) 딜 보너스 — 공격력엔 M0만 들었으므로 여기서 랭크 보너스를 곱한다.
-    // masteryDmg 있으면 스킬별 실측 곡선(예: 개천 [1,1.038,1.083,1.136]), 없으면 표준 곡선.
-    if (self.side === "ally") { const r = self.skillRanks?.[skill.kind] ?? 0; dmg *= skill.masteryDmg ? skill.masteryDmg[Math.max(0, Math.min(3, r))] : skillRankDmg(r); }
+    // 스킬 마스터리(종류별) 딜 보너스. mst 스킬은 M1~3 실측 배율/Lv9(power) 비율, 그 외는 표준 곡선.
+    if (self.side === "ally") {
+      const r = Math.max(0, Math.min(3, self.skillRanks?.[skill.kind] ?? 0));
+      if (skill.mst) { if (r > 0) dmg *= skill.mst[r - 1] / (skill.power || 1); }
+      else dmg *= skillRankDmg(r);
+    }
     if (t.staggered) dmg *= 1.3;
     if (self.id === "perlica" && t.staggered) dmg *= 1.3; // 펠리카 오블리터레이션 프로토콜(불균형 적 추가 +30%)
     if (self.id === "fluorite" && (t.speedMod || 0) < 0) dmg *= 1.2; // 플루라이트 몰락의 조력자(감속 적 +20%)

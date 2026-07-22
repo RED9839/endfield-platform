@@ -4,6 +4,7 @@ import { useEffect, useReducer, useRef, useState } from "react";
 
 import { act, canAct, isOver, startRound, perTurn, nextActor, turnOrder, usable, BASIC, GAUGE_REGEN, findLinkChain, type DDClass, type DDSkill, type DDState, type DDUnit, type Element, CHAIN_MAX, GAUGE_COST } from "../combat";
 import { OPERATORS, SKILLS, OP_BASIC, enemyDefFor, avatarUrl, fullUrl, skillIcon, enemyImage, enemyArchetype, STACK_CARRY } from "../roster";
+import { realAtk } from "../progress";
 import { ENCOUNTERS, allyChoose, createBattle, enemyAct, regionEncounter } from "../sim";
 import { activeSets, setEffectText, loadoutPieces } from "../gear";
 import { weaponOf, weaponEffectText, weaponImage, weaponSeriesName, weaponSeriesDesc, WEAPON_KO, WEAPON_ICON } from "../weapons";
@@ -875,7 +876,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
           </div>
           <div className={`flex flex-wrap gap-2 ${aiming ? "pointer-events-none opacity-40" : ""}`}>
             {skills.map((sk) => {
-              const dmg = sk.power > 0 && current ? Math.round(current.attack * (1 + (current.atkBuff || 0)) * (current.weakenMul ?? 1) * sk.power) : 0;
+              const dmg = sk.power > 0 && current ? Math.round(realAtk(current.attack) * (1 + (current.atkBuff || 0)) * (current.weakenMul ?? 1) * sk.power) : 0;
               const el = sk.element ?? "physical";
               const open = detailId === sk.id;
               const reason = current ? skillReason(s, current, sk) : null;
@@ -908,7 +909,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
             const sk = skills.find((x) => x.id === detailId);
             if (!sk || !current) return null;
             const el = sk.element ?? "physical";
-            const dmg = sk.power > 0 ? Math.round(current.attack * (1 + (current.atkBuff || 0)) * (current.weakenMul ?? 1) * sk.power) : 0;
+            const dmg = sk.power > 0 ? Math.round(realAtk(current.attack) * (1 + (current.atkBuff || 0)) * (current.weakenMul ?? 1) * sk.power) : 0;
             const Row = ({ k, v, tone }: { k: string; v: string; tone?: string }) => <div className="flex items-baseline gap-1.5"><span className="w-14 shrink-0 font-mono text-[13px] uppercase tracking-wider text-ef-muted">{k}</span><span className="font-mono text-[15px] font-bold" style={{ color: tone ?? "#e6e1d6" }}>{v}</span></div>;
             return (
               <div className="mt-2 border border-ef-accent/40 bg-black/40 p-3" style={CUT_SM}>
@@ -1007,7 +1008,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
                   <div className="h-full rounded-[2px] transition-all" style={{ width: `${Math.max(0, Math.min(100, hpR * 100))}%`, background: hpTone, boxShadow: `0 0 8px ${hpTone}99` }} />
                 </div>
                 <div className="grid grid-cols-4 gap-1">
-                  <St label="공격" value={u.attack} />
+                  <St label="공격" value={Math.round(realAtk(u.attack))} />
                   <St label="방어" value={u.defense} />
                   <St label="속도" value={Math.max(1, u.speed + (u.speedMod || 0))} />
                   {ally ? <St label="치명" value={`${Math.round(u.critRate * 100)}%`} /> : <St label="불균형" value={`${Math.round(u.stagger)}/${u.staggerMax}`} />}
@@ -1127,7 +1128,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
                 {inspectTab === "skill" && <Sec title="스킬">
                   {[...uskills].sort((a, b) => KIND_ORDER[a.kind] - KIND_ORDER[b.kind]).map((sk) => <div key={sk.id} className="mb-2.5 flex items-start gap-2.5 last:mb-0">
                     <img src={skillIcon(u.id, sk.kind)} alt="" className="h-9 w-9 shrink-0 border border-ef-line object-cover" onError={hide} />
-                    <div className="min-w-0"><div className="flex flex-wrap items-baseline gap-x-1.5"><span className="font-mono text-[16px] font-bold text-white">{sk.name}</span><span className="font-mono text-[13px] uppercase text-ef-accent/70">{kindLabel[sk.kind]}</span>{sk.power > 0 && <span className="font-mono text-[13px]" style={{ color: elementColor[sk.element as Element | "physical"] ?? "#e8c56a" }}>배율 {Math.round(sk.power * 100)}% · {targetLabel[sk.target as DDSkill["target"]]} · ~{Math.round(u.attack * (1 + (u.atkBuff || 0)) * (u.weakenMul ?? 1) * sk.power).toLocaleString()}</span>}</div>{sk.note && <div className="mt-0.5 font-mono text-[15px] leading-relaxed text-ef-muted">{sk.note}</div>}</div>
+                    <div className="min-w-0"><div className="flex flex-wrap items-baseline gap-x-1.5"><span className="font-mono text-[16px] font-bold text-white">{sk.name}</span><span className="font-mono text-[13px] uppercase text-ef-accent/70">{kindLabel[sk.kind]}</span>{sk.power > 0 && <span className="font-mono text-[13px]" style={{ color: elementColor[sk.element as Element | "physical"] ?? "#e8c56a" }}>배율 {Math.round(sk.power * 100)}% · {targetLabel[sk.target as DDSkill["target"]]} · ~{Math.round(realAtk(u.attack) * (1 + (u.atkBuff || 0)) * (u.weakenMul ?? 1) * sk.power).toLocaleString()}</span>}</div>{sk.note && <div className="mt-0.5 font-mono text-[15px] leading-relaxed text-ef-muted">{sk.note}</div>}</div>
                   </div>)}
                 </Sec>}
                 {inspectTab === "talent" && talents.length > 0 && <Sec title="재능">

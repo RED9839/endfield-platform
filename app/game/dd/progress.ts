@@ -36,8 +36,10 @@ export const PROMO_LABEL = ["0", "I", "II", "III", "IV"];
 const SKILL_MULT = [1.8, 1.925, 2.075, 2.25]; // ×1.8 × [1, 1.069, 1.153, 1.25]
 export const skillMult = (m: number) => SKILL_MULT[Math.max(0, Math.min(SKILL_MAX, m))];
 export const skillLabel = (m: number) => (m <= 0 ? "9Lv" : `M${Math.min(SKILL_MAX, m)}`);
-// M0(9레벨) 대비 랭크 딜 보너스. 공격력엔 M0 기준(×1.8)만 넣고, 스킬 종류별 랭크는 이 배율로 따로 적용.
+// M0(9레벨) 대비 랭크 딜 보너스(mst 없는 스킬 폴백용). 스킬 종류별 랭크는 이 배율로 따로 적용.
 export const skillRankDmg = (m: number) => skillMult(m) / SKILL_MULT[0]; // M0=1.0 · M1=1.069 · M2=1.153 · M3=1.25
+// mst 스킬 피해 = realAtk × Lv9 배율. 공격력 스탯엔 M0(×1.8)이 들어 있으므로 되돌려 실ATK를 얻는다(장비·무기 보너스 포함).
+export const realAtk = (attackStat: number) => attackStat / SKILL_MULT[0];
 
 // 유틸 배율(취약·증폭·회복·게이지 등)도 같은 마스터리 곡선. warfarin 실측: 아델리아 취약 표
 //  16%(Lv9)→17·18·20%(M1~M3) = 16×[1.069,1.153,1.25] 정수 반올림 → 딜과 동일한 곡선을 쓴다.
