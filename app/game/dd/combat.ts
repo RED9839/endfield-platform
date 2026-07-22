@@ -1019,7 +1019,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
     }
     // 레바테인 황혼 변신: 강화 일반공격 ×3(위키 강화 평타 464%/일반 157%≈2.95). 배틀 강화는 흡수 블록에서 처리
     if (self.id === "laevatain" && skill.kind === "attack" && (self.timers.twilight || 0) > 0) raw *= 3;
-    if (self.id === "yvonne" && skill.kind === "attack" && (self.timers.iceshot || 0) > 0) raw *= 2.66; // 아이스 슈터 강화 평타(원문 강일 133% vs 평타 50%)
+    if (self.id === "yvonne" && skill.kind === "attack" && (self.timers.iceshot || 0) > 0) { raw *= 2.66; raw += realAtk(self.attack) * eb(self) * 4.8; } // 아이스 슈터 말뚝딜: 강력 일격 240% + 추가 공격 480%(실측 yv-u) — 단일 궁딜 최상위
     // 장방이 천리의 경지 변신: 강화 일반공격 ×2.5(궁 중 평타 강화)
     if (self.id === "zhuangfangyi" && skill.kind === "attack" && (self.timers.heavenly || 0) > 0) { raw *= 2.5; markLinkEvent(s, "zhuangfangyi"); } // 변신 강화 평타 = 전기 부착 행위 → 연계창(자체수급)
     // 원작 연계의 공통 트리거: "메인 컨트롤 오퍼레이터가 강력한 일격 피해를 준 다음".
