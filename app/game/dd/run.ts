@@ -118,8 +118,7 @@ export function useDDRun() {
     setCleared([]);
     setDepthReached(0);
     setActiveId(null);
-    const STARTER = ["heal-cap-1", "can-1"]; // 기본 소비템(tier3)
-    setItems({ [STARTER[Math.floor(Math.random() * STARTER.length)]]: 1 }); // 시작 키트 — 랜덤 1개만
+    setItems({ "heal-cap-1": 2 }); // 시작 키트 — 메밀꽃 치유 캡슐 2개
     setCraft({ mats: { parts: 30, permits: 8, chips: 10 }, owned: {}, credits: 100 }); // 시작 지급 — 0강 풀세트 2층 완성 목표 // 맨몸 시작 — 소량 재료 + 크레딧(야영 상점 교환)
     setLoot({ credits: 0, parts: 0, permits: 0, chips: 0, items: {}, kills: 0 }); // 전리품 초기화
     setFloor(0); // 1층부터
