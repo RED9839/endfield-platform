@@ -1,6 +1,6 @@
 "use client";
 
-import { Hammer } from "lucide-react";
+import { Hammer, Sparkles } from "lucide-react";
 
 import type { CraftState } from "../craft";
 import { RESOURCE_ICON } from "../items";
@@ -17,7 +17,7 @@ const FACTION_META: Record<string, { tone: string; region: string; icon: string 
   "그림자에 물든": { tone: "#a78bfa", region: "초자연의 균열", icon: "🌀" },
 };
 
-export default function RunHud({ faction, depth, maxDepth, floor, totalFloors, floorName, craft, onCraft, canCraft, hasCraftable }: { faction: string; depth: number; maxDepth: number; floor?: number; totalFloors?: number; floorName?: string; craft: CraftState; onCraft?: () => void; canCraft?: boolean; hasCraftable?: boolean }) {
+export default function RunHud({ faction, depth, maxDepth, floor, totalFloors, floorName, craft, onCraft, canCraft, hasCraftable }: { faction: string; depth: number; maxDepth: number; floor?: number; totalFloors?: number; floorName?: string; craft: CraftState; onCraft?: (tab?: "party" | "mastery") => void; canCraft?: boolean; hasCraftable?: boolean }) {
   const fm = FACTION_META[faction] ?? { tone: "#a1a1aa", region: faction, icon: "◆" };
   const owned = Object.keys(craft.owned).length;
   return (
@@ -57,9 +57,14 @@ export default function RunHud({ faction, depth, maxDepth, floor, totalFloors, f
           <img src={RESOURCE_ICON.permits} alt="" className="h-4 w-4 shrink-0 object-contain" /><span className="font-mono text-sm font-bold text-white">{craft.mats.permits}</span><span className="font-mono text-[14px] text-ef-muted">관리권</span>
         </div>
         {onCraft && (
-          <button type="button" onClick={onCraft} disabled={!canCraft} title={hasCraftable ? "제작 가능한 장비가 있습니다 — 공업소에서 강해질 수 있습니다" : undefined} className={`hud-btn relative flex items-center gap-1.5 px-3 py-1.5 font-mono text-sm font-bold uppercase tracking-wider transition disabled:opacity-40 ${hasCraftable ? "!border-ef-accent bg-ef-accent/15 text-ef-accent shadow-[0_0_14px_-2px_rgba(255,154,47,0.5)]" : canCraft ? "hud-btn-on" : "text-ef-accent"}`} style={CUT}>
+          <button type="button" onClick={() => onCraft("party")} disabled={!canCraft} title={hasCraftable ? "제작 가능한 장비가 있습니다 — 공업소에서 강해질 수 있습니다" : "장비 확인·제작·단조"} className="hud-btn relative flex items-center gap-1.5 px-3 py-1.5 font-mono text-sm font-bold uppercase tracking-wider">
             {hasCraftable && <span className="absolute -right-1 -top-1 flex h-3 w-3"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-ef-accent opacity-75" /><span className="relative inline-flex h-3 w-3 rounded-full bg-ef-accent" /></span>}
-            <Hammer className="h-4 w-4" />제작 {hasCraftable ? <span className="text-[13px]">가능!</span> : owned > 0 && <span className="text-[14px] opacity-70">·{owned}</span>}
+            <Hammer className="h-4 w-4" />장비 {hasCraftable ? <span className="text-[13px]">가능!</span> : owned > 0 && <span className="text-[14px] opacity-70">·{owned}</span>}
+          </button>
+        )}
+        {onCraft && (
+          <button type="button" onClick={() => onCraft("mastery")} disabled={!canCraft} title="스킬 마스터리 — 오퍼 스킬을 프로토콜 프리즘으로 강화" className="hud-btn relative flex items-center gap-1.5 px-3 py-1.5 font-mono text-sm font-bold uppercase tracking-wider">
+            <Sparkles className="h-4 w-4" />스킬 마스터리
           </button>
         )}
       </div>

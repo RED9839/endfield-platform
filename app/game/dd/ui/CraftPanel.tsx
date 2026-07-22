@@ -26,9 +26,9 @@ function Cost({ parts, permits, chips, ok }: { parts?: number; permits?: number;
   </span>;
 }
 
-export default function CraftPanel({ craft, party = [], onCraft, onForge, onSwap, onForgeSkill, onClose }: { craft: CraftState; party?: PartyMember[]; onCraft: (id: string) => boolean; onForge: (id: string) => boolean; onSwap?: (opId: string, slot: LoadoutSlot, pieceId: string) => void; onForgeSkill?: (opId: string) => boolean; onClose: () => void }) {
+export default function CraftPanel({ craft, party = [], onCraft, onForge, onSwap, onForgeSkill, onClose, initialTab }: { craft: CraftState; party?: PartyMember[]; onCraft: (id: string) => boolean; onForge: (id: string) => boolean; onSwap?: (opId: string, slot: LoadoutSlot, pieceId: string) => void; onForgeSkill?: (opId: string) => boolean; onClose: () => void; initialTab?: "party" | "catalog" | "mastery" }) {
   const [set, setSet] = useState(SETS[0]);
-  const [tab, setTab] = useState<"party" | "catalog">(party.length > 0 ? "party" : "catalog");
+  const [tab, setTab] = useState<"party" | "catalog" | "mastery">(initialTab ?? (party.length > 0 ? "party" : "catalog"));
   const [swap, setSwap] = useState<{ opId: string; slot: LoadoutSlot } | null>(null); // 교체 피커 열림 슬롯
   const affordCraft = (p: GearPiece) => { const c = craftCost(p); return craft.mats.parts >= c.parts && craft.mats.permits >= c.permits; };
   const affordForge = (lv: number) => { const c = forgeCost(lv); return craft.mats.parts >= c.parts && craft.mats.permits >= c.permits; };
@@ -90,12 +90,43 @@ export default function CraftPanel({ craft, party = [], onCraft, onForge, onSwap
         </div>
       </div>
 
-      {/* 탭: 부대 장비 / 전체 카탈로그 */}
+      {/* 탭: 부대 장비 / 스킬 마스터리 / 전체 카탈로그 */}
       <div className="mb-3 flex items-center gap-2">
         {party.length > 0 && <button type="button" onClick={() => setTab("party")} className={`hud-btn dd-cut px-3.5 py-1.5 font-mono text-[15px] font-bold uppercase tracking-wider ${tab === "party" ? "hud-btn-on" : "text-ef-muted"}`}>부대 장비</button>}
+        {party.length > 0 && onForgeSkill && <button type="button" onClick={() => setTab("mastery")} className={`hud-btn dd-cut px-3.5 py-1.5 font-mono text-[15px] font-bold uppercase tracking-wider ${tab === "mastery" ? "hud-btn-on" : "text-ef-muted"}`}>스킬 마스터리</button>}
         <button type="button" onClick={() => setTab("catalog")} className={`hud-btn dd-cut px-3.5 py-1.5 font-mono text-[15px] font-bold uppercase tracking-wider ${tab === "catalog" ? "hud-btn-on" : "text-ef-muted"}`}>전체 카탈로그</button>
-        <span className="ml-1 font-mono text-[13px] text-ef-muted">{tab === "party" ? "부대가 실제 착용한 피스 — 제작·단조 우선" : "세트별 대체 피스 제작"}</span>
+        <span className="ml-1 font-mono text-[13px] text-ef-muted">{tab === "party" ? "부대가 실제 착용한 피스 — 제작·단조 우선" : tab === "mastery" ? "오퍼 스킬 랭크 강화 — 프로토콜 프리즘 소모" : "세트별 대체 피스 제작"}</span>
       </div>
+
+      {/* 스킬 마스터리 — 오퍼별 랭크·강화를 크게 모아 본다(장비 아래 묻히지 않게 별도 탭) */}
+      {tab === "mastery" && onForgeSkill && (
+        <div className="grid gap-2.5 lg:grid-cols-2">
+          {party.map((m) => {
+            const op = OPERATORS.find((o) => o.id === m.id);
+            const rank = m.progress?.skillRank ?? 0;
+            const maxed = rank >= SKILL_MAX;
+            const cost = skillForgeCost(rank);
+            const ok = canAfford(craft.mats, cost);
+            return (
+              <div key={m.id} className="hud-panel dd-cut flex items-center gap-3 p-3">
+                <img src={avatarUrl(m.id)} alt="" loading="lazy" className="h-12 w-12 shrink-0 border border-ef-line object-cover" style={{ background: "#000" }} />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2"><span className="font-mono text-[17px] font-bold text-white">{opName(m.id)}</span>{op && <span className="font-mono text-[12px] uppercase text-ef-muted">{op.element}</span>}</div>
+                  <div className="mt-0.5 flex items-center gap-1.5 font-mono text-sm">
+                    <span className="font-bold" style={{ color: rank > 0 ? "#67e8f9" : "#e6e6e8" }}>{skillLabel(rank)}</span>
+                    {!maxed && <><span className="text-ef-muted">→</span><span className="font-bold text-ef-accent-soft">{skillLabel(rank + 1)}</span></>}
+                  </div>
+                </div>
+                {maxed
+                  ? <span className="shrink-0 font-mono text-[14px] font-bold text-ef-accent-soft">최대 강화</span>
+                  : <button type="button" disabled={!ok} onClick={() => onForgeSkill(m.id)} title="스킬을 강화해 딜을 올린다(프로토콜 프리즘 소모, 다음 전투부터 반영)" className={`dd-cut flex shrink-0 flex-col items-center gap-0.5 px-3 py-1.5 font-mono ${ok ? "border border-ef-accent/60 text-ef-accent hover:bg-ef-accent/10" : "border border-ef-line/40 text-ef-muted opacity-50 cursor-not-allowed"}`}>
+                      <span className="flex items-center gap-1 text-[14px] font-bold uppercase"><Hammer className="h-3.5 w-3.5" />강화</span>
+                      <Cost chips={cost.chips} ok={ok} /></button>}
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* 부대 장비 */}
       {tab === "party" && (

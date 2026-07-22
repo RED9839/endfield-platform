@@ -191,8 +191,9 @@ export function useDDRun() {
 
   const restart = useCallback(() => { setPhase("select"); setParty([]); setNodes([]); setFrontier([]); setCleared([]); setActiveId(null); setItems({}); setCraft(initialCraft()); setLoot({ credits: 0, parts: 0, permits: 0, chips: 0, items: {}, kills: 0 }); }, []);
   const [craftOrigin, setCraftOrigin] = useState<RunPhase>("map"); // 공업소를 어디서 열었나 → 닫으면 그리로
-  const openCraft = useCallback(() => { setCraftOrigin("map"); setPhase("craft"); }, []);
-  const openCraftFromRest = useCallback(() => { setCraftOrigin("rest"); setPhase("craft"); }, []);
+  const [craftTab, setCraftTab] = useState<"party" | "mastery">("party"); // 공업소 진입 탭(장비/마스터리)
+  const openCraft = useCallback((tab: "party" | "mastery" = "party") => { setCraftTab(tab); setCraftOrigin("map"); setPhase("craft"); }, []);
+  const openCraftFromRest = useCallback((tab: "party" | "mastery" = "party") => { setCraftTab(tab); setCraftOrigin("rest"); setPhase("craft"); }, []);
   // 야영지 상점: 크레딧으로 재료·소비템 구매
   const buyShop = useCallback((s: ShopItem) => {
     setCraft((c) => {
@@ -223,5 +224,5 @@ export function useDDRun() {
   }, [items]);
   const closeCraft = useCallback(() => setPhase(craftOrigin), [craftOrigin]);
 
-  return { phase, buyShop, sellMat, sellItem, itemSellValue, sellUnit, shop: SHOP, party, nodes, frontier, cleared, activeNode, depthReached, faction, maxDepth: MAX_DEPTH, floor, floorName: FLOORS[floor].name, floorBoss: FLOORS[floor].boss, totalFloors: FLOORS.length, hasCraftable, items, useItem, addItem, craft, craftPiece, forgePiece, swapGear, forgeSkill, loot, lastLoot, continueSpoils, openCraft, closeCraft, openCraftFromRest, startRun, enterNode, finishBattle, rest, restart };
+  return { phase, craftTab, buyShop, sellMat, sellItem, itemSellValue, sellUnit, shop: SHOP, party, nodes, frontier, cleared, activeNode, depthReached, faction, maxDepth: MAX_DEPTH, floor, floorName: FLOORS[floor].name, floorBoss: FLOORS[floor].boss, totalFloors: FLOORS.length, hasCraftable, items, useItem, addItem, craft, craftPiece, forgePiece, swapGear, forgeSkill, loot, lastLoot, continueSpoils, openCraft, closeCraft, openCraftFromRest, startRun, enterNode, finishBattle, rest, restart };
 }

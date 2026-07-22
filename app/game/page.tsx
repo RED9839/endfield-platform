@@ -66,7 +66,7 @@ export default function GamePage() {
         </>
       )}
 
-      {run.phase === "craft" && <CraftPanel craft={run.craft} party={run.party} onCraft={run.craftPiece} onForge={run.forgePiece} onSwap={run.swapGear} onForgeSkill={run.forgeSkill} onClose={run.closeCraft} />}
+      {run.phase === "craft" && <CraftPanel craft={run.craft} party={run.party} onCraft={run.craftPiece} onForge={run.forgePiece} onSwap={run.swapGear} onForgeSkill={run.forgeSkill} onClose={run.closeCraft} initialTab={run.craftTab} />}
 
       {run.phase === "battle" && run.activeNode && (
         <BattleView
@@ -161,7 +161,7 @@ export default function GamePage() {
               </div>
             </div>
             {/* 정비 전에 공업소에 들러 장비를 만들 수 있다 — 예전엔 맵으로 나가야 했다 */}
-            <button type="button" onClick={run.openCraftFromRest} className="dd-cut mb-4 flex w-full items-center justify-center gap-2 border py-2.5 font-mono text-sm font-bold uppercase tracking-wider transition hover:border-ef-accent hover:text-ef-accent" style={{ borderColor: run.hasCraftable ? "rgba(255,154,47,0.55)" : "rgba(255,255,255,0.14)", color: run.hasCraftable ? "#ffc478" : "#9a9aa2" }}>
+            <button type="button" onClick={() => run.openCraftFromRest()} className="dd-cut mb-4 flex w-full items-center justify-center gap-2 border py-2.5 font-mono text-sm font-bold uppercase tracking-wider transition hover:border-ef-accent hover:text-ef-accent" style={{ borderColor: run.hasCraftable ? "rgba(255,154,47,0.55)" : "rgba(255,255,255,0.14)", color: run.hasCraftable ? "#ffc478" : "#9a9aa2" }}>
               <Hammer className="h-4 w-4" /> 공업소 들르기{run.hasCraftable && <span className="ml-1 rounded-full bg-ef-accent/20 px-1.5 py-0.5 text-[11px] text-ef-accent">제작 가능</span>}
             </button>
             <div className="mb-5 space-y-2">
