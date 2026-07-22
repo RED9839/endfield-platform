@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 
-import { OPERATORS, SKILLS, OP_BASIC, OP_BASIC_ATK, avatarUrl, fullUrl, skillIcon, makeAlly, type OpMeta } from "../roster";
+import { OPERATORS, SKILLS, OP_BASIC, OP_BASIC_ATK, skillExtraHit, avatarUrl, fullUrl, skillIcon, makeAlly, type OpMeta } from "../roster";
 import { OP_TALENTS } from "../operator-talents";
 import { DMG_SHORT as DMG_KO, SKILL_KIND_SHORT as kindLabel } from "../labels";
 import { OP_GEAR_ALT, activeSets, setEffectText, recommendedSet, recommendedLoadout, loadoutPieces, pieceImage, gearSlotName, bestFreePiece, slotOptions, GEAR_SET_CANON, SET_NAMES, pieceSlotOf, LOADOUT_SLOTS, type LoadoutSlot, type Loadout, type GearSlot , applyGear , attrsText, sumAttrs } from "../gear";
@@ -96,8 +96,8 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
   const active = activeSets(lo);
   const pr = opProg(focusId);
   const skills = [
-    ...(OP_BASIC[focusId] ? [{ id: `${focusId}-basic`, name: OP_BASIC[focusId].name, kind: "attack" as const, note: OP_BASIC[focusId].note, power: OP_BASIC_ATK[focusId] ?? 0.9, target: "single-front", element: "physical" as Element, staggerVal: 6, gaugeCost: undefined as number | undefined, gaugeGain: 12 as number | undefined, requiresText: undefined as string | undefined }] : []),
-    ...(SKILLS[focusId] ?? []).map((s) => ({ id: s.id, name: s.name, kind: s.kind, note: s.note, power: s.power, target: s.target as string, element: (s.element ?? "physical") as Element, staggerVal: s.staggerVal, gaugeCost: s.gaugeCost, gaugeGain: s.gaugeGain, requiresText: s.requiresText })),
+    ...(OP_BASIC[focusId] ? [{ id: `${focusId}-basic`, name: OP_BASIC[focusId].name, kind: "attack" as const, note: OP_BASIC[focusId].note, power: OP_BASIC_ATK[focusId] ?? 0.9, target: "single-front", element: "physical" as Element, staggerVal: 6, gaugeCost: undefined as number | undefined, gaugeGain: 12 as number | undefined, requiresText: undefined as string | undefined, extra: null as string | null }] : []),
+    ...(SKILLS[focusId] ?? []).map((s) => ({ id: s.id, name: s.name, kind: s.kind, note: s.note, power: s.power, target: s.target as string, element: (s.element ?? "physical") as Element, staggerVal: s.staggerVal, gaugeCost: s.gaugeCost, gaugeGain: s.gaugeGain, requiresText: s.requiresText, extra: skillExtraHit(s) })),
   ].sort((a, b) => KIND_ORDER[a.kind] - KIND_ORDER[b.kind]);
   const talents = OP_TALENTS[focusId] ?? [];
   const unit = makeAlly(focusId, 1, pr); // 기초 전투 스탯(정예화·스킬강화 반영)
@@ -289,6 +289,7 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
                     </div>
                     <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 font-mono text-[12px]">
                       {sk.power > 0 && <span className="font-bold" style={{ color: elementColor[el] }}>{Math.round(sk.power * 100)}%</span>}
+                      {sk.extra && <span className="font-bold text-orange-300/90">{sk.extra}</span>}
                       <span className="text-ef-muted">{elementName[el]} · {tgtType(sk.target)}</span>
                       {sk.kind === "battle" && <span className="text-orange-300/80">게이지 −{sk.gaugeCost ?? 100}</span>}
                       {sk.gaugeGain ? <span className="text-emerald-300/80">게이지 +{sk.gaugeGain}</span> : null}

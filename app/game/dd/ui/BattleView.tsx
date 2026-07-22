@@ -3,7 +3,7 @@
 import { useEffect, useReducer, useRef, useState } from "react";
 
 import { act, canAct, isOver, startRound, perTurn, nextActor, turnOrder, usable, BASIC, GAUGE_REGEN, findLinkChain, type DDClass, type DDSkill, type DDState, type DDUnit, type Element, CHAIN_MAX, GAUGE_COST } from "../combat";
-import { OPERATORS, SKILLS, OP_BASIC, OP_BASIC_ATK, enemyDefFor, avatarUrl, fullUrl, skillIcon, enemyImage, enemyArchetype, STACK_CARRY } from "../roster";
+import { OPERATORS, SKILLS, OP_BASIC, OP_BASIC_ATK, skillExtraHit, enemyDefFor, avatarUrl, fullUrl, skillIcon, enemyImage, enemyArchetype, STACK_CARRY } from "../roster";
 import { realAtk } from "../progress";
 import { ENCOUNTERS, allyChoose, createBattle, enemyAct, regionEncounter } from "../sim";
 import { activeSets, setEffectText, loadoutPieces } from "../gear";
@@ -959,8 +959,8 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
         const el = unitElement(u);
         const talents = ally ? OP_TALENTS[u.id] ?? [] : [];
         const uskills = ally ? [
-          ...(OP_BASIC[u.id] ? [{ id: `${u.id}-basic`, name: OP_BASIC[u.id].name, kind: "attack" as const, note: OP_BASIC[u.id].note, power: OP_BASIC_ATK[u.id] ?? 0.9, target: "single-front", element: unitElement(u) }] : []),
-          ...(SKILLS[u.id] ?? []).map((s) => ({ id: s.id, name: s.name, kind: s.kind, note: s.note, power: s.power, target: s.target, element: s.element ?? "physical" })),
+          ...(OP_BASIC[u.id] ? [{ id: `${u.id}-basic`, name: OP_BASIC[u.id].name, kind: "attack" as const, note: OP_BASIC[u.id].note, power: OP_BASIC_ATK[u.id] ?? 0.9, target: "single-front", element: unitElement(u), extra: null as string | null }] : []),
+          ...(SKILLS[u.id] ?? []).map((s) => ({ id: s.id, name: s.name, kind: s.kind, note: s.note, power: s.power, target: s.target, element: s.element ?? "physical", extra: skillExtraHit(s) })),
         ] : [];
         const loadout = ally ? party.find((p) => p.id === u.id)?.loadout ?? {} : {};
         const ownedMap = owned ?? {};
@@ -1128,7 +1128,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
                 {inspectTab === "skill" && <Sec title="스킬">
                   {[...uskills].sort((a, b) => KIND_ORDER[a.kind] - KIND_ORDER[b.kind]).map((sk) => <div key={sk.id} className="mb-2.5 flex items-start gap-2.5 last:mb-0">
                     <img src={skillIcon(u.id, sk.kind)} alt="" className="h-9 w-9 shrink-0 border border-ef-line object-cover" onError={hide} />
-                    <div className="min-w-0"><div className="flex flex-wrap items-baseline gap-x-1.5"><span className="font-mono text-[16px] font-bold text-white">{sk.name}</span><span className="font-mono text-[13px] uppercase text-ef-accent/70">{kindLabel[sk.kind]}</span>{sk.power > 0 && <span className="font-mono text-[13px]" style={{ color: elementColor[sk.element as Element | "physical"] ?? "#e8c56a" }}>배율 {Math.round(sk.power * 100)}% · {targetLabel[sk.target as DDSkill["target"]]} · ~{Math.round(realAtk(u.attack) * (1 + (u.atkBuff || 0)) * (u.weakenMul ?? 1) * sk.power).toLocaleString()}</span>}</div>{sk.note && <div className="mt-0.5 font-mono text-[15px] leading-relaxed text-ef-muted">{sk.note}</div>}</div>
+                    <div className="min-w-0"><div className="flex flex-wrap items-baseline gap-x-1.5"><span className="font-mono text-[16px] font-bold text-white">{sk.name}</span><span className="font-mono text-[13px] uppercase text-ef-accent/70">{kindLabel[sk.kind]}</span>{sk.power > 0 && <span className="font-mono text-[13px]" style={{ color: elementColor[sk.element as Element | "physical"] ?? "#e8c56a" }}>배율 {Math.round(sk.power * 100)}%{sk.extra ? <span className="text-orange-300/90"> · {sk.extra}</span> : null} · {targetLabel[sk.target as DDSkill["target"]]} · ~{Math.round(realAtk(u.attack) * (1 + (u.atkBuff || 0)) * (u.weakenMul ?? 1) * sk.power).toLocaleString()}</span>}</div>{sk.note && <div className="mt-0.5 font-mono text-[15px] leading-relaxed text-ef-muted">{sk.note}</div>}</div>
                   </div>)}
                 </Sec>}
                 {inspectTab === "talent" && talents.length > 0 && <Sec title="재능">

@@ -538,6 +538,28 @@ export const OP_BASIC_ATK: Record<string, number> = {
   lastrite: 2.56, avywenna: 2.5, dapan: 2.4, laevatain: 2.82, yvonne: 3.19, zhuangfangyi: 2.97,
 };
 
+// 스킬 표시 배율은 base뿐이라 추가타(엔진 보너스)가 숨어 헷갈림 → 표시용 추가타 라벨(%)을 돌려준다.
+const EXTRA_HARDCODED: Record<string, string> = {
+  "lae-b": "4스택 폭발 +342%",       // 레바테인 화염(불꽃의 심장)
+  "mf-b2": "강타 피해",             // 미브 추형
+  "mf-b3": "강타(방어 불능 소모)",     // 미브 개천
+  "adm-b": "강타(방어 불능 소모 대량)", // 관리자 구성 시퀀스
+  "adm-l": "결정 파괴 +178%",        // 관리자 봉인 시퀀스
+  "adm-u": "결정 파괴 +267%",        // 관리자 폭격 시퀀스
+  "lf-u": "연타 소모 +267%",         // 여풍 궁
+  "zfy-b": "청뢰검 비례 뇌격",        // 장방이 뇌정의 부름
+  "dp-l": "강타(+10%)",             // 판 조미료
+};
+export function skillExtraHit(sk: DDSkill): string | null {
+  if (sk.shockBonus) return `감전 소모 +${Math.round(sk.shockBonus.power * 100)}%`;   // 아크라이트 질풍
+  if (sk.burnShockConsume) return `연소·감전 소모 +${Math.round(sk.burnShockConsume * 100)}%`; // 울가 탄흔
+  if (sk.cryoNuke) return `냉기 소모 +${Math.round(sk.cryoNuke * 100)}%/스택`;         // 라라 겨울 포식자
+  if (sk.lanceRecover) return "투창 회수(수 비례 폭딜)";                                // 아비웨나 가로채기
+  if (sk.iceBomb) return "동결 소모 +냉기(스택 비례)";                                  // 이본 얼음 폭탄
+  if (sk.lure) return `린수 강화 ${Math.round(sk.lure.power * 100)}%`;                 // 알레쉬 얼음 낚시
+  return EXTRA_HARDCODED[sk.id] ?? null;
+}
+
 // 오퍼별 실제 능력치(endfield.wiki.gg Lv90 Elite max 실측). 힘→최대HP·민첩→물리저항·지능→아츠저항·의지→회복량.
 export type OpAttrs = { str: number; agi: number; int: number; wil: number };
 // 오퍼별 주요/보조 능력치 — **공략 시트 「주,부옵」 컬럼 실측**(고정값).
