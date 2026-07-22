@@ -7,7 +7,7 @@ import { ChevronLeft, Tent, Hammer } from "lucide-react";
 import { OPERATORS } from "./dd/roster";
 import { ITEMS, RESOURCE_ICON, itemImage } from "./dd/items";
 import { skillLabel } from "./dd/progress";
-import { encounterForNode, useDDRun, REST_HEAL, type RunNode } from "./dd/run";
+import { encounterForNode, useDDRun, REST_HEAL, REST_SALVAGE, type RunNode } from "./dd/run";
 import BattleView from "./dd/ui/BattleView";
 import RosterSelect from "./dd/ui/RosterSelect";
 import RunMap from "./dd/ui/RunMap";
@@ -114,7 +114,11 @@ export default function GamePage() {
         <div className="mx-auto max-w-[720px] px-4 py-10 sm:px-7">
           <div className="hud-panel dd-cut p-6">
             <div className="mb-3 flex items-center gap-2"><Tent className="h-6 w-6 text-ef-accent" style={{ filter: "drop-shadow(0 0 6px rgba(255,154,47,0.5))" }} /><h2 className="text-2xl">야영지</h2></div>
-            <p className="mb-5 text-sm text-ef-muted">부대가 잠시 정비합니다. 각 생존 대원이 최대 HP의 <b className="text-ef-ink">{Math.round(REST_HEAL * 100)}%</b>를 회복합니다.</p>
+            <p className="mb-4 text-sm text-ef-muted">부대가 잠시 정비합니다. 정비를 마치면 각 생존 대원이 최대 HP의 <b className="text-green-300">{Math.round(REST_HEAL * 100)}%</b>를 회복하고, 잔해에서 <b className="text-ef-accent-soft">부품 +{REST_SALVAGE.parts} · 관리권 +{REST_SALVAGE.permits}</b>를 회수합니다.</p>
+            {/* 정비 전에 공업소에 들러 장비를 만들 수 있다 — 예전엔 맵으로 나가야 했다 */}
+            <button type="button" onClick={run.openCraftFromRest} className="dd-cut mb-4 flex w-full items-center justify-center gap-2 border py-2.5 font-mono text-sm font-bold uppercase tracking-wider transition hover:border-ef-accent hover:text-ef-accent" style={{ borderColor: run.hasCraftable ? "rgba(255,154,47,0.55)" : "rgba(255,255,255,0.14)", color: run.hasCraftable ? "#ffc478" : "#9a9aa2" }}>
+              <Hammer className="h-4 w-4" /> 공업소 들르기{run.hasCraftable && <span className="ml-1 rounded-full bg-ef-accent/20 px-1.5 py-0.5 text-[11px] text-ef-accent">제작 가능</span>}
+            </button>
             <div className="mb-5 space-y-2">
               {run.party.map((m) => {
                 const op = OPERATORS.find((o) => o.id === m.id);

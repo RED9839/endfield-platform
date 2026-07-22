@@ -32,7 +32,8 @@ export type PartyMember = { id: string; hp: number; maxHp: number; loadout?: Loa
 export type BattleResult = { id: string; hp: number; ult?: number; stacks?: number }; // ult: 궁 게이지 이월(HP처럼 런 내내 유지 — 보스 전 만충이 목표)
                                                                                        // stacks: 전투 밖으로 들고 나가는 스택(레바테인 녹아내린 불꽃)
 
-export const REST_HEAL = 0.4; // 야영 회복 비율(최대 HP)
+export const REST_HEAL = 0.55; // 야영 회복 비율(최대 HP). 어그로가 탱에 몰려 전열만 닳으므로 넉넉히.
+export const REST_SALVAGE = { parts: 20, permits: 3 }; // 야영 중 부품 회수 — 정비 화면이 회복만 있고 비어 있었다
 
 const ENCOUNTER_OF: Record<NodeKind, string> = { battle: "normal", elite: "elite", boss: "boss", rest: "normal" };
 export const encounterForNode = (k: NodeKind) => ENCOUNTER_OF[k];
@@ -183,12 +184,15 @@ export function useDDRun() {
   const rest = useCallback(() => {
     if (!activeNode) return;
     setParty((cur) => cur.map((m) => (m.hp > 0 ? { ...m, hp: Math.min(m.maxHp, Math.round(m.hp + m.maxHp * REST_HEAL)) } : m)));
+    setCraft((c) => ({ ...c, mats: { parts: c.mats.parts + REST_SALVAGE.parts, permits: c.mats.permits + REST_SALVAGE.permits } })); // 정비 중 부품 회수
     advanceFrom(activeNode);
   }, [activeNode, advanceFrom]);
 
   const restart = useCallback(() => { setPhase("select"); setParty([]); setNodes([]); setFrontier([]); setCleared([]); setActiveId(null); setItems({}); setCraft(initialCraft()); setLoot({ parts: 0, permits: 0, items: {}, kills: 0 }); }, []);
-  const openCraft = useCallback(() => setPhase("craft"), []);
-  const closeCraft = useCallback(() => setPhase("map"), []);
+  const [craftOrigin, setCraftOrigin] = useState<RunPhase>("map"); // 공업소를 어디서 열었나 → 닫으면 그리로
+  const openCraft = useCallback(() => { setCraftOrigin("map"); setPhase("craft"); }, []);
+  const openCraftFromRest = useCallback(() => { setCraftOrigin("rest"); setPhase("craft"); }, []);
+  const closeCraft = useCallback(() => setPhase(craftOrigin), [craftOrigin]);
 
-  return { phase, party, nodes, frontier, cleared, activeNode, depthReached, faction, maxDepth: MAX_DEPTH, floor, floorName: FLOORS[floor].name, floorBoss: FLOORS[floor].boss, totalFloors: FLOORS.length, hasCraftable, items, useItem, addItem, craft, craftPiece, forgePiece, swapGear, forgeSkill, loot, lastLoot, continueSpoils, openCraft, closeCraft, startRun, enterNode, finishBattle, rest, restart };
+  return { phase, party, nodes, frontier, cleared, activeNode, depthReached, faction, maxDepth: MAX_DEPTH, floor, floorName: FLOORS[floor].name, floorBoss: FLOORS[floor].boss, totalFloors: FLOORS.length, hasCraftable, items, useItem, addItem, craft, craftPiece, forgePiece, swapGear, forgeSkill, loot, lastLoot, continueSpoils, openCraft, closeCraft, openCraftFromRest, startRun, enterNode, finishBattle, rest, restart };
 }
