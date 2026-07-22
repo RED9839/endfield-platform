@@ -1031,8 +1031,9 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
     //  · 부착과 감전을 모두 인정한다. 부착만 보면 아군이 아츠 이상으로 소모해버려 창이 거의 안 열리고,
     //    감전만 보면 "전기 부착 적을 강타"라는 원문 조건 자체가 빠진다. 감전은 그 부착의 반응 결과다.
     // 자이히 「디도스」 지원 결정체: 원문 "메인이 강력한 일격 시 치유(최대 2회)".
-    // 메인 = 조작 중인 오퍼 → 우리 모델에선 평타를 친 아군. 결정체가 살아있는 동안 2회까지 발동한다.
-    if (self.side === "ally" && skill.kind === "attack" && t === primaryTarget) {
+    // 우리 모델은 아군이 평타를 거의 안 치고 스킬만 굴려서 평타 한정이면 치유가 영영 안 돈다 →
+    // 아군의 딜 행동(평타·배틀·연계·궁 = mst 스킬) 전부를 "강일" 트리거로 인정해 결정체가 2회까지 확실히 치유한다.
+    if (self.side === "ally" && (skill.kind === "attack" || !!skill.mst) && t === primaryTarget) {
       const xai = s.units.find((u) => u.id === "xaihi" && u.side === "ally" && u.hp > 0 && (u.timers.didos || 0) > 0);
       if (xai && (xai.didosUsed || 0) < 2) {
         xai.didosUsed = (xai.didosUsed || 0) + 1;
