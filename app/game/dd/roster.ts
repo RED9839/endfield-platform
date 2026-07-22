@@ -526,13 +526,15 @@ const OP_ATTACK: Record<string, number> = {
 };
 
 // 일반 공격 배율 = warfarin 실측 풀콤보(강평까지 전 단계 Lv9 합) / 100. 평타 1턴 = 콤보 1회.
+// 단, "평타는 배틀 스킬보다 강하면 안 된다" 원칙 → 오퍼의 최강 딜 배틀 스킬 배율 ×0.9로 상한(min).
+//   (배틀 base가 셋업+엔진보너스라 낮은 오퍼는 평타도 낮게 캡됨 — 그런 오퍼는 변신/투창/궁이 주력이라 평타 필러 비중 낮음)
 // combat baseDamage가 BASIC(일반 공격)에 이 값을 쓴다(옛 고정 0.9 대체). 마스터리 비율은 BASIC.mst가 유지.
 export const OP_BASIC_ATK: Record<string, number> = {
-  chenqianyu: 2.53, lifeng: 2.81, endministrator: 2.78, estella: 2.34, rossi: 3.3, mifu: 3.77,
-  camu: 2.86, akekuri: 2.34, alesh: 2.49, arclight: 2.39, pogranichnik: 2.96,
-  ember: 4.31, snowshine: 3.84, catcher: 3.57, ardelia: 3.2, xaihi: 2.52, antal: 2.44,
-  gilberta: 2.82, perlica: 2.69, wulfgard: 3.39, fluorite: 2.58, tangtang: 3.05,
-  lastrite: 4.37, avywenna: 2.5, dapan: 3.1, laevatain: 2.82, yvonne: 3.19, zhuangfangyi: 2.97,
+  chenqianyu: 2.53, lifeng: 2.81, endministrator: 2.52, estella: 2.34, rossi: 3.3, mifu: 3.77,
+  camu: 2.86, akekuri: 2.3, alesh: 2.49, arclight: 1.46, pogranichnik: 2.96,
+  ember: 2.81, snowshine: 3.84, catcher: 3.57, ardelia: 2.3, xaihi: 2.52, antal: 1.44,
+  gilberta: 2.51, perlica: 2.69, wulfgard: 1.66, fluorite: 2.58, tangtang: 3.05,
+  lastrite: 2.3, avywenna: 1.08, dapan: 2.16, laevatain: 1.01, yvonne: 1.8, zhuangfangyi: 2.97,
 };
 
 // 오퍼별 실제 능력치(endfield.wiki.gg Lv90 Elite max 실측). 힘→최대HP·민첩→물리저항·지능→아츠저항·의지→회복량.
