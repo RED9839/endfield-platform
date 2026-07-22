@@ -596,7 +596,9 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
 
       {/* 데미지·전투 기록 — 상단 드롭다운(기본 접힘) */}
       {showHelp && (
-        <div className="hud-panel dd-cut mt-2 grid gap-x-6 gap-y-1.5 p-3 font-mono text-[13px] leading-snug sm:grid-cols-2" style={{ borderColor: "rgba(103,232,249,0.4)" }}>
+        <div className="flex items-start justify-center p-4 sm:p-8" style={{ position: "fixed", inset: 0, zIndex: 60, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(2px)" }} onClick={() => setShowHelp(false)}>
+        <div onClick={(e) => e.stopPropagation()} className="hud-panel dd-cut mt-14 grid w-full max-w-[820px] gap-x-6 gap-y-1.5 p-4 font-mono text-[13px] leading-snug sm:grid-cols-2" style={{ borderColor: "rgba(103,232,249,0.55)", boxShadow: "0 0 50px -12px rgba(103,232,249,0.4)" }}>
+          <div className="sm:col-span-2 mb-1 flex items-center justify-between"><span className="font-mono text-[15px] font-bold uppercase tracking-wider text-ef-accent-soft">❔ 전투 용어</span><button type="button" onClick={() => setShowHelp(false)} className="hud-btn dd-cut px-2 py-0.5 font-mono text-[13px] text-ef-muted hover:text-white">닫기</button></div>
           <div><b className="text-[#f5c542]">팀 게이지</b> <span className="text-ef-muted">— 파티 4명이 함께 쓰는 자원. 배틀 스킬 1회에 100 소모. 일반 공격으로 조금씩 회복하고 라운드마다 +45.</span></div>
           <div><b className="text-[#f5c542]">궁 에너지</b> <span className="text-ef-muted">— 오퍼별 개인 자원. <b className="text-white/80">배틀·연계로만</b> 찬다. 일반 공격으로는 안 오른다.</span></div>
           <div><b className="text-[#a16207]">불균형</b> <span className="text-ef-muted">— 적 HP 아래 노란 바. 가득 차면 적이 행동 불가가 되고 받는 피해가 30% 오른다. 스킬마다 붙은 「불균형 +N」으로 쌓는다.</span></div>
@@ -604,6 +606,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
           <div><b className="text-[#67e8f9]">연계</b> <span className="text-ef-muted">— 조건이 열리면 아이콘이 뜨고, 누르면 그 오퍼가 <b className="text-white/80">추가 턴</b>으로 끼어든다. 조건이 겹치면 편성 왼쪽부터.</span></div>
           <div><b className="text-[#a3e635]">이월 ⤴</b> <span className="text-ef-muted">— 궁 에너지와 레바테인 「녹아내린 불꽃」은 다음 교전으로 넘어간다. 청뢰검·아이스 슈터·삼형 자세는 전투가 끝나면 사라진다.</span></div>
           <div><b className="text-[#ff8a76]">피격 확률</b> <span className="text-ef-muted">— 적은 위치가 아니라 직군을 보고 문다. 디펜더·뱅가드가 더 자주 맞는다.</span></div>
+        </div>
         </div>
       )}
       {showLog && (() => {
