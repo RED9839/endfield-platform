@@ -89,14 +89,14 @@ export default function GamePage() {
       {/* 교전 승리 전리품 — 각 전투 후 획득 표시 → 계속 시 다음 구역 */}
       {run.phase === "spoils" && run.lastLoot && (() => {
         const L = run.lastLoot;
-        const item = ITEMS[L.item];
+        const item = L.item ? ITEMS[L.item] : null;
         return (
           <div className="mx-auto max-w-[520px] px-4 py-14 text-center sm:px-7">
             <div className="hud-panel dd-cut p-8" style={{ borderColor: "#ff9a2f44", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04), 0 0 50px -20px rgba(255,154,47,0.5)" }}>
               <div className="mb-1 font-mono text-[13px] font-bold uppercase tracking-[0.28em] text-ef-accent/70">{L.kind === "elite" ? "정예 격파" : "교전 승리"}</div>
               <div className="mb-6 text-2xl font-bold" style={{ fontFamily: "var(--dd-display)", letterSpacing: "0.1em", color: "#ffbe6b", textShadow: "0 0 20px rgba(255,190,107,0.4)" }}>전리품 획득</div>
               <div className="mb-6 flex flex-wrap justify-center gap-2">
-                {([[RESOURCE_ICON.credits, "크레딧", `+${L.credits}`], ...(L.parts > 0 ? [[RESOURCE_ICON.parts, "부품", `+${L.parts}`]] as [string, string, string][] : []), ...(L.chips > 0 ? [[RESOURCE_ICON.chips, "프로토콜 프리즘", `+${L.chips}`]] as [string, string, string][] : []), [item ? itemImage(item.id) : "🎁", item?.name ?? "아이템", "×1"]] as [string, string, string][]).map(([ic, lb, v]) => (
+                {([[RESOURCE_ICON.credits, "크레딧", `+${L.credits}`], ...(L.parts > 0 ? [[RESOURCE_ICON.parts, "부품", `+${L.parts}`]] as [string, string, string][] : []), ...(L.chips > 0 ? [[RESOURCE_ICON.chips, "프로토콜 프리즘", `+${L.chips}`]] as [string, string, string][] : []), ...(item ? [[itemImage(item.id), item.name, "×1"]] as [string, string, string][] : [])] as [string, string, string][]).map(([ic, lb, v]) => (
                   <div key={lb} className="min-w-[112px] border border-ef-line/50 bg-[#120c07] px-3 py-2.5">
                     {ic.startsWith("/") ? <img src={ic} alt="" className="mx-auto h-7 w-7 object-contain" /> : <div className="text-xl leading-none">{ic}</div>}
                     <div className="mt-1 font-mono text-[12px] uppercase tracking-wider text-ef-muted">{lb}</div>

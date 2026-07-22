@@ -29,8 +29,9 @@ export const SHOP: ShopItem[] = [
   { key: "buy-parts", label: "장비 부품 ×10", kind: "mat", give: { parts: 10 }, price: 30, desc: "장비 제작·단조 재료" },
   { key: "buy-permits", label: "관리권 ×5", kind: "mat", give: { permits: 5 }, price: 40, desc: "장비 제작·단조 재료" },
   { key: "buy-chips", label: "프로토콜 프리즘 ×5", kind: "mat", give: { chips: 5 }, price: 45, desc: "마스터리 전용 재료" },
-  { key: "buy-heal", label: "메밀꽃 회복제(소) ×1", kind: "item", give: { itemId: "recov-1" }, price: 25, desc: "즉시 회복 + 보호막" },
-  { key: "buy-can", label: "시트론 통조림 ×1", kind: "item", give: { itemId: "can-1" }, price: 20, desc: "3라운드 재생" },
+  // 상점은 하급(tier3) 소비템만. 상급·최상급은 정예·보스가 드롭한다(상점 판매 X).
+  { key: "buy-heal", label: "메밀꽃 치유 캡슐 ×1", kind: "item", give: { itemId: "heal-cap-1" }, price: 20, desc: "즉시 회복 620 (기본 회복제)" },
+  { key: "buy-can", label: "시트론 통조림 ×1", kind: "item", give: { itemId: "can-1" }, price: 15, desc: "3라운드 재생 (기본 재생제)" },
 ];
 export const canBuy = (cs: CraftState, s: ShopItem) => cs.credits >= s.price;
 

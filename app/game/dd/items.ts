@@ -124,21 +124,16 @@ const REGION_THEME: Record<string, { heal: string; regen: string }> = {
 };
 const DEFAULT_THEME = REGION_THEME["아겔로스"];
 
-// 노드 종류 + 깊이 → 아이템 등급(품질). 정예/보스는 상위, 일반은 깊이로 상승.
-function itemTier(nodeKind: string, depth: number): number {
-  if (nodeKind === "boss") return 6;
-  if (nodeKind === "elite") return depth >= 4 ? 6 : 4;
-  return depth <= 1 ? 2 : depth <= 3 ? 3 : 4; // 일반
-}
 // 드랍 후보 풀: 지역 테마(회복+재생) @등급 + 범용(등급대). 전투당 1개 랜덤 획득.
-export function rewardItemPool(faction: string, nodeKind: string, depth: number): string[] {
-  const tier = itemTier(nodeKind, depth);
+// 소비 아이템 드롭 — 기본 몹은 크레딧만(드롭 X). 정예·보스만 **상점에서 안 파는 상급**을 준다.
+//  · 기본 몹  : 없음
+//  · 정예     : tier4(상급) + 기본 부활/버프 — 상점(tier3)보다 한 급 위
+//  · 보스     : tier6(최상급) + 금속 병 부활/버프 — 이 게임 최고 소비템
+export function rewardItemPool(faction: string, nodeKind: string, _depth: number): string[] {
   const th = REGION_THEME[faction] ?? DEFAULT_THEME;
-  const pool = [LINE_TIER[th.heal][tier], LINE_TIER[th.regen][tier]];
-  if (tier <= 2) pool.push("ult-1");             // 저티어: 궁 에너지
-  else if (tier === 3) pool.push("revive-1", "power-1"); // 중티어: 기본 부활/버프
-  else pool.push("revive-2", "power-2");         // 상위: 금속 병 부활/버프
-  return pool.filter(Boolean);
+  if (nodeKind === "boss") return [LINE_TIER[th.heal][6], LINE_TIER[th.regen][6], "revive-2", "power-2"].filter(Boolean);
+  if (nodeKind === "elite") return [LINE_TIER[th.heal][4], LINE_TIER[th.regen][4], "revive-1", "power-1"].filter(Boolean);
+  return []; // 기본 몹(교전): 소비템 드롭 없음
 }
 export function itemColor(kind: ItemKind): string {
   return kind === "heal" ? "#86efac" : kind === "heal-shield" ? "#38bdf8" : kind === "regen" ? "#5eead4"

@@ -79,7 +79,7 @@ export function useDDRun() {
   const [floor, setFloor] = useState(0); // 현재 층(0~5) — FLOORS 인덱스
   const [faction, setFaction] = useState<string>(FLOORS[0].faction); // 이번 층 세력 리전(층 보스 세력)
   const [loot, setLoot] = useState<{ credits: number; parts: number; permits: number; chips: number; items: Record<string, number>; kills: number }>({ credits: 0, parts: 0, permits: 0, chips: 0, items: {}, kills: 0 }); // 이번 원정 누적 전리품(승리 화면 표시)
-  const [lastLoot, setLastLoot] = useState<{ credits: number; parts: number; permits: number; chips: number; item: string; kind: NodeKind } | null>(null); // 방금 교전 획득(전리품 화면 표시)
+  const [lastLoot, setLastLoot] = useState<{ credits: number; parts: number; permits: number; chips: number; item: string | null; kind: NodeKind } | null>(null); // 방금 교전 획득(전리품 화면 표시)
 
   const useItem = useCallback((id: string) => setItems((m) => { const n = (m[id] ?? 0) - 1; const c = { ...m }; if (n <= 0) delete c[id]; else c[id] = n; return c; }), []);
   const addItem = useCallback((id: string) => setItems((m) => ({ ...m, [id]: (m[id] ?? 0) + 1 })), []);
@@ -165,10 +165,10 @@ export function useDDRun() {
       const raw = enemyDrop(activeNode.kind, activeNode.depth, faction); // 세력·티어·깊이별 드랍테이블
       const mult = Math.pow(LOOT_DECAY, floor); // 층당 재화 -6%(후반 인플레 억제)
       const drop = { credits: Math.round(raw.credits * mult), parts: Math.round(raw.parts * mult), permits: Math.round(raw.permits * mult), chips: Math.round(raw.chips * mult), items: raw.items };
-      const dropItem = pickRand(drop.items);
+      const dropItem = drop.items.length ? pickRand(drop.items) : null; // 기본 몹은 소비템 없음(빈 풀)
       setCraft((c) => ({ ...c, credits: c.credits + drop.credits, mats: { parts: c.mats.parts + drop.parts, permits: c.mats.permits + drop.permits, chips: (c.mats.chips ?? 0) + drop.chips } })); // 크레딧 + 소량 재료
-      addItem(dropItem); // 소모품
-      setLoot((l) => ({ credits: l.credits + drop.credits, parts: l.parts + drop.parts, permits: l.permits + drop.permits, chips: l.chips + drop.chips, items: { ...l.items, [dropItem]: (l.items[dropItem] ?? 0) + 1 }, kills: l.kills + 1 }));
+      if (dropItem) addItem(dropItem); // 소모품(정예·보스만)
+      setLoot((l) => ({ credits: l.credits + drop.credits, parts: l.parts + drop.parts, permits: l.permits + drop.permits, chips: l.chips + drop.chips, items: dropItem ? { ...l.items, [dropItem]: (l.items[dropItem] ?? 0) + 1 } : l.items, kills: l.kills + 1 }));
       setLastLoot({ credits: drop.credits, parts: drop.parts, permits: drop.permits, chips: drop.chips, item: dropItem, kind: activeNode.kind });
       setPhase("spoils"); // 교전·보스 승리 → 전리품 화면(계속 시 다음 구역/층)
     } else {
