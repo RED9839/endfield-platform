@@ -215,11 +215,7 @@ export default function GamePage() {
         </div>
       )}
 
-      {showStatus && (
-        <div className="overflow-y-auto" style={{ position: "fixed", inset: 0, zIndex: 100, background: "#0a0a0c" }}>
-          <StatusPanel party={run.party} craft={run.craft} onClose={() => setShowStatus(false)} />
-        </div>
-      )}
+      {showStatus && <StatusPanel party={run.party} craft={run.craft} onClose={() => setShowStatus(false)} />}
     </main>
   );
 }
