@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ChevronLeft, Tent, Hammer } from "lucide-react";
+import { ChevronLeft, Tent, Hammer, ShoppingCart } from "lucide-react";
 
 import { OPERATORS } from "./dd/roster";
 import { ITEMS, RESOURCE_ICON, itemImage } from "./dd/items";
@@ -96,7 +96,7 @@ export default function GamePage() {
               <div className="mb-1 font-mono text-[13px] font-bold uppercase tracking-[0.28em] text-ef-accent/70">{L.kind === "elite" ? "정예 격파" : "교전 승리"}</div>
               <div className="mb-6 text-2xl font-bold" style={{ fontFamily: "var(--dd-display)", letterSpacing: "0.1em", color: "#ffbe6b", textShadow: "0 0 20px rgba(255,190,107,0.4)" }}>전리품 획득</div>
               <div className="mb-6 flex flex-wrap justify-center gap-2">
-                {([[RESOURCE_ICON.parts, "부품", `+${L.parts}`], [RESOURCE_ICON.permits, "관리권", `+${L.permits}`], [item ? itemImage(item.id) : "🎁", item?.name ?? "아이템", "×1"]] as [string, string, string][]).map(([ic, lb, v]) => (
+                {([[RESOURCE_ICON.credits, "크레딧", `+${L.credits}`], ...(L.parts > 0 ? [[RESOURCE_ICON.parts, "부품", `+${L.parts}`]] as [string, string, string][] : []), ...(L.chips > 0 ? [[RESOURCE_ICON.chips, "전술칩", `+${L.chips}`]] as [string, string, string][] : []), [item ? itemImage(item.id) : "🎁", item?.name ?? "아이템", "×1"]] as [string, string, string][]).map(([ic, lb, v]) => (
                   <div key={lb} className="min-w-[112px] border border-ef-line/50 bg-[#120c07] px-3 py-2.5">
                     {ic.startsWith("/") ? <img src={ic} alt="" className="mx-auto h-7 w-7 object-contain" /> : <div className="text-xl leading-none">{ic}</div>}
                     <div className="mt-1 font-mono text-[12px] uppercase tracking-wider text-ef-muted">{lb}</div>
@@ -114,7 +114,52 @@ export default function GamePage() {
         <div className="mx-auto max-w-[720px] px-4 py-10 sm:px-7">
           <div className="hud-panel dd-cut p-6">
             <div className="mb-3 flex items-center gap-2"><Tent className="h-6 w-6 text-ef-accent" style={{ filter: "drop-shadow(0 0 6px rgba(255,154,47,0.5))" }} /><h2 className="text-2xl">야영지</h2></div>
-            <p className="mb-4 text-sm text-ef-muted">부대가 잠시 정비합니다. 정비를 마치면 각 생존 대원이 최대 HP의 <b className="text-green-300">{Math.round(REST_HEAL * 100)}%</b>를 회복하고, 잔해에서 <b className="text-ef-accent-soft">부품 +{REST_SALVAGE.parts} · 관리권 +{REST_SALVAGE.permits}</b>를 회수합니다.</p>
+            <p className="mb-4 text-sm text-ef-muted">부대가 잠시 정비합니다. 정비를 마치면 각 생존 대원이 최대 HP의 <b className="text-green-300">{Math.round(REST_HEAL * 100)}%</b>를 회복하고, 잔해에서 <b style={{ color: "#f5c542" }}>크레딧 +{REST_SALVAGE.credits}</b>를 회수합니다.</p>
+            {/* 크레딧 상점 — 몹이 준 크레딧으로 재료·소비템을 산다. 안 쓰는 재료는 되판다(구매가 30%). */}
+            <div className="dd-cut mb-4 border p-3" style={{ borderColor: "rgba(245,197,66,0.4)" }}>
+              <div className="mb-2 flex items-center gap-2">
+                <ShoppingCart className="h-4 w-4" style={{ color: "#f5c542" }} />
+                <span className="font-mono text-sm font-bold" style={{ color: "#f5c542" }}>크레딧 상점</span>
+                <span className="ml-auto flex items-center gap-1 font-mono text-sm font-bold" style={{ color: "#f5c542" }}>{run.craft.credits}<span className="text-[12px] text-ef-muted">크레딧</span></span>
+              </div>
+              <div className="grid gap-1.5 sm:grid-cols-2">
+                {run.shop.map((s) => { const ok = run.craft.credits >= s.price;
+                  return (
+                    <button key={s.key} type="button" disabled={!ok} onClick={() => run.buyShop(s)} title={s.desc}
+                      className="dd-cut flex items-center gap-2 border px-2.5 py-1.5 text-left transition enabled:hover:border-ef-accent disabled:opacity-40"
+                      style={{ borderColor: "rgba(255,255,255,0.12)" }}>
+                      <span className="min-w-0 flex-1 truncate font-mono text-[13px] text-white">{s.label}</span>
+                      <span className="shrink-0 font-mono text-[13px] font-bold" style={{ color: ok ? "#f5c542" : "#ff6b5a" }}>{s.price}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              {/* 되팔기 — 안 쓰는 재료·소비템을 크레딧으로(구매가 30%) */}
+              <div className="mt-2 border-t border-ef-line/40 pt-2">
+                <div className="mb-1 flex flex-wrap items-center gap-1.5">
+                  <span className="font-mono text-[12px] text-ef-muted">재료 되팔기(30%):</span>
+                  {([["parts","부품",run.craft.mats.parts],["permits","관리권",run.craft.mats.permits],["chips","전술칩",run.craft.mats.chips ?? 0]] as const).map(([mat,label,have]) => (
+                    <button key={mat} type="button" disabled={have < 5} onClick={() => run.sellMat(mat, 5)}
+                      className="dd-cut border px-2 py-0.5 font-mono text-[12px] transition enabled:hover:border-ef-accent disabled:opacity-35"
+                      style={{ borderColor: "rgba(255,255,255,0.12)", color: "#cfcfd4" }} title={`보유 ${have} — 5개씩 되팔기`}>{label} ×5</button>
+                  ))}
+                </div>
+                {Object.entries(run.items).some(([, n]) => (n as number) > 0) && (
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className="font-mono text-[12px] text-ef-muted">아이템 되팔기(30%):</span>
+                    {Object.entries(run.items).filter(([, n]) => (n as number) > 0).map(([id, n]) => { const def = ITEMS[id]; if (!def) return null;
+                      return (
+                        <button key={id} type="button" onClick={() => run.sellItem(id)} title={`${def.desc} — ${run.itemSellValue(def.rarity)}크레딧`}
+                          className="dd-cut flex items-center gap-1 border px-2 py-0.5 font-mono text-[12px] transition hover:border-ef-accent"
+                          style={{ borderColor: "rgba(255,255,255,0.12)", color: "#cfcfd4" }}>
+                          {def.name}<span className="text-ef-muted">×{n as number}</span><span style={{ color: "#f5c542" }}>+{run.itemSellValue(def.rarity)}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
             {/* 정비 전에 공업소에 들러 장비를 만들 수 있다 — 예전엔 맵으로 나가야 했다 */}
             <button type="button" onClick={run.openCraftFromRest} className="dd-cut mb-4 flex w-full items-center justify-center gap-2 border py-2.5 font-mono text-sm font-bold uppercase tracking-wider transition hover:border-ef-accent hover:text-ef-accent" style={{ borderColor: run.hasCraftable ? "rgba(255,154,47,0.55)" : "rgba(255,255,255,0.14)", color: run.hasCraftable ? "#ffc478" : "#9a9aa2" }}>
               <Hammer className="h-4 w-4" /> 공업소 들르기{run.hasCraftable && <span className="ml-1 rounded-full bg-ef-accent/20 px-1.5 py-0.5 text-[11px] text-ef-accent">제작 가능</span>}

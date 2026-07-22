@@ -69,6 +69,8 @@ export const itemImage = (id: string) => { const it = ITEMS[id]; return it ? `/i
 export const RESOURCE_ICON = {
   parts: `/items/${encodeURIComponent("식양 장비 부품")}.webp`,   // 부품
   permits: `/items/${encodeURIComponent("무릉 관리권")}.webp`,    // 관리권
+  chips: `/items/${encodeURIComponent("귀중한 칩")}.webp`,        // 전술 칩 — 스킬 강화 전용
+  credits: `/items/${encodeURIComponent("탈로시안 화폐")}.webp`,   // 크레딧(상점 통화)
 } as const;
 
 // 조건부 게이트 제거 — 소비 아이템은 자기 턴에 조건 없이 상시 사용(자유 행동).

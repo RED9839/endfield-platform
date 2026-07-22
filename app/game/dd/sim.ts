@@ -506,12 +506,13 @@ type NodeKind = "battle" | "elite" | "boss" | "rest";
 const NODE_TO_KIND: Record<NodeKind, "normal" | "elite" | "boss"> = { battle: "normal", elite: "elite", boss: "boss", rest: "normal" };
 
 // ===== 드랍테이블 리뉴얼 — 세력·티어·깊이별 재료(장비 부품·관리권) + 아이템 =====
-export function enemyDrop(kind: NodeKind, depth: number, faction: string): { parts: number; permits: number; items: string[] } {
+export function enemyDrop(kind: NodeKind, depth: number, faction: string): { credits: number; parts: number; permits: number; chips: number; items: string[] } {
   const k = NODE_TO_KIND[kind];
-  const base = k === "boss" ? { parts: 60, permits: 10 } : k === "elite" ? { parts: 38, permits: 6 } : { parts: 24, permits: 4 };
-  const depthBonus = Math.floor(depth * (k === "boss" ? 3 : 1.5)); // 깊을수록 재료↑
-  const factionBonus = FACTION_POOL[faction]?.boss.length ? 0 : 0; // (세력별 특화 여지)
-  return { parts: base.parts + depthBonus + factionBonus, permits: base.permits + (k === "boss" ? Math.floor(depth / 2) : 0), items: rewardItemPool(faction, k, depth) };
+  // 기본 몹(교전)=크레딧만. 정예·보스는 크레딧 + 소량 재료(직접 드롭). 나머지 재료는 야영지 상점에서 크레딧으로 산다.
+  const cr = k === "boss" ? 90 : k === "elite" ? 55 : 40;
+  const mat = k === "boss" ? { parts: 30, permits: 5, chips: 6 } : k === "elite" ? { parts: 16, permits: 2, chips: 3 } : { parts: 0, permits: 0, chips: 0 };
+  const dc = Math.floor(depth * (k === "boss" ? 6 : 3)); // 깊을수록 크레딧↑
+  return { credits: cr + dc, parts: mat.parts, permits: mat.permits, chips: mat.chips, items: rewardItemPool(faction, k, depth) };
 }
 
 // 아군(선택 순서=포지션, 지속 HP·장비 로드아웃) + 인카운터로 전투 상태 생성. 게이지 200/300(+장비 시작 게이지).

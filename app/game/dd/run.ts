@@ -4,9 +4,9 @@ import { useCallback, useMemo, useState } from "react";
 
 import { makeAlly } from "./roster";
 import { GEAR_SLOTS, LOADOUT_SLOTS, GEAR_PIECE_BY_ID, type Loadout } from "./gear";
-import { rewardItemPool } from "./items";
+import { rewardItemPool, ITEMS } from "./items";
 import { SKILL_MAX, DEFAULT_PROGRESS, type OpProgress } from "./progress";
-import { initialCraft, craftPiece as doCraft, forgePiece as doForge, cloneCraft, craftCost, skillForgeCost, canAfford, type CraftState } from "./craft";
+import { initialCraft, craftPiece as doCraft, forgePiece as doForge, cloneCraft, craftCost, skillForgeCost, canAfford, canBuy, sellUnit, matAmount, itemSellValue, SHOP, type CraftState, type ShopItem, type SellMat } from "./craft";
 import { FACTIONS, enemyDrop, resetEncounterHistory } from "./sim";
 
 const MAX_DEPTH = 6; // 층당 구역 7개(0~6), 6=층 보스
@@ -33,7 +33,7 @@ export type BattleResult = { id: string; hp: number; ult?: number; stacks?: numb
                                                                                        // stacks: 전투 밖으로 들고 나가는 스택(레바테인 녹아내린 불꽃)
 
 export const REST_HEAL = 0.55; // 야영 회복 비율(최대 HP). 어그로가 탱에 몰려 전열만 닳으므로 넉넉히.
-export const REST_SALVAGE = { parts: 20, permits: 3 }; // 야영 중 부품 회수 — 정비 화면이 회복만 있고 비어 있었다
+export const REST_SALVAGE = { credits: 40 }; // 야영 중 크레딧 회수 — 상점에서 원하는 재료로 바꾼다
 
 const ENCOUNTER_OF: Record<NodeKind, string> = { battle: "normal", elite: "elite", boss: "boss", rest: "normal" };
 export const encounterForNode = (k: NodeKind) => ENCOUNTER_OF[k];
@@ -78,8 +78,8 @@ export function useDDRun() {
   const [craft, setCraft] = useState<CraftState>(initialCraft); // 제작: 재료(장비 부품·관리권) + 보유 피스
   const [floor, setFloor] = useState(0); // 현재 층(0~5) — FLOORS 인덱스
   const [faction, setFaction] = useState<string>(FLOORS[0].faction); // 이번 층 세력 리전(층 보스 세력)
-  const [loot, setLoot] = useState<{ parts: number; permits: number; items: Record<string, number>; kills: number }>({ parts: 0, permits: 0, items: {}, kills: 0 }); // 이번 원정 누적 전리품(승리 화면 표시)
-  const [lastLoot, setLastLoot] = useState<{ parts: number; permits: number; item: string; kind: NodeKind } | null>(null); // 방금 교전 획득(전리품 화면 표시)
+  const [loot, setLoot] = useState<{ credits: number; parts: number; permits: number; chips: number; items: Record<string, number>; kills: number }>({ credits: 0, parts: 0, permits: 0, chips: 0, items: {}, kills: 0 }); // 이번 원정 누적 전리품(승리 화면 표시)
+  const [lastLoot, setLastLoot] = useState<{ credits: number; parts: number; permits: number; chips: number; item: string; kind: NodeKind } | null>(null); // 방금 교전 획득(전리품 화면 표시)
 
   const useItem = useCallback((id: string) => setItems((m) => { const n = (m[id] ?? 0) - 1; const c = { ...m }; if (n <= 0) delete c[id]; else c[id] = n; return c; }), []);
   const addItem = useCallback((id: string) => setItems((m) => ({ ...m, [id]: (m[id] ?? 0) + 1 })), []);
@@ -94,7 +94,7 @@ export function useDDRun() {
     const rank = m?.progress?.skillRank ?? 0;
     if (!m || rank >= SKILL_MAX || !canAfford(craft.mats, skillForgeCost(rank))) return false;
     const cost = skillForgeCost(rank);
-    setCraft((c) => ({ ...c, mats: { parts: c.mats.parts - cost.parts, permits: c.mats.permits - cost.permits } }));
+    setCraft((c) => ({ ...c, mats: { parts: c.mats.parts - cost.parts, permits: c.mats.permits - cost.permits, chips: (c.mats.chips ?? 0) - (cost.chips ?? 0) } }));
     setParty((ps) => ps.map((p) => p.id === opId ? { ...p, progress: { ...(p.progress ?? DEFAULT_PROGRESS), skillRank: rank + 1 } } : p));
     return true;
   }, [party, craft]);
@@ -119,8 +119,8 @@ export function useDDRun() {
     setDepthReached(0);
     setActiveId(null);
     setItems({ "heal-cap-1": 2, "can-1": 1, "recov-1": 1 }); // 시작 키트
-    setCraft({ mats: { parts: 100, permits: 16 }, owned: {} }); // 맨몸 시작 — 공업소에서 목표 빌드 직접 제작
-    setLoot({ parts: 0, permits: 0, items: {}, kills: 0 }); // 전리품 초기화
+    setCraft({ mats: { parts: 40, permits: 8, chips: 10 }, owned: {}, credits: 120 }); // 맨몸 시작 — 소량 재료 + 크레딧(야영 상점 교환)
+    setLoot({ credits: 0, parts: 0, permits: 0, chips: 0, items: {}, kills: 0 }); // 전리품 초기화
     setFloor(0); // 1층부터
     setFaction(FLOORS[0].faction); // 1층 세력
     setPhase("map");
@@ -164,12 +164,12 @@ export function useDDRun() {
       setParty((cur) => cur.map((m) => { const s = survivors.find((x) => x.id === m.id); return { ...m, hp: s ? s.hp : 0, ult: s?.ult ?? m.ult, stacks: s?.stacks ?? m.stacks }; })); // HP·궁 게이지·스택 이월
       const raw = enemyDrop(activeNode.kind, activeNode.depth, faction); // 세력·티어·깊이별 드랍테이블
       const mult = Math.pow(LOOT_DECAY, floor); // 층당 재화 -6%(후반 인플레 억제)
-      const drop = { parts: Math.round(raw.parts * mult), permits: Math.round(raw.permits * mult), items: raw.items };
+      const drop = { credits: Math.round(raw.credits * mult), parts: Math.round(raw.parts * mult), permits: Math.round(raw.permits * mult), chips: Math.round(raw.chips * mult), items: raw.items };
       const dropItem = pickRand(drop.items);
-      setCraft((c) => ({ ...c, mats: { parts: c.mats.parts + drop.parts, permits: c.mats.permits + drop.permits } })); // 제작 재료
+      setCraft((c) => ({ ...c, credits: c.credits + drop.credits, mats: { parts: c.mats.parts + drop.parts, permits: c.mats.permits + drop.permits, chips: (c.mats.chips ?? 0) + drop.chips } })); // 크레딧 + 소량 재료
       addItem(dropItem); // 소모품
-      setLoot((l) => ({ parts: l.parts + drop.parts, permits: l.permits + drop.permits, items: { ...l.items, [dropItem]: (l.items[dropItem] ?? 0) + 1 }, kills: l.kills + 1 })); // 누적 전리품
-      setLastLoot({ parts: drop.parts, permits: drop.permits, item: dropItem, kind: activeNode.kind }); // 이번 교전 획득
+      setLoot((l) => ({ credits: l.credits + drop.credits, parts: l.parts + drop.parts, permits: l.permits + drop.permits, chips: l.chips + drop.chips, items: { ...l.items, [dropItem]: (l.items[dropItem] ?? 0) + 1 }, kills: l.kills + 1 }));
+      setLastLoot({ credits: drop.credits, parts: drop.parts, permits: drop.permits, chips: drop.chips, item: dropItem, kind: activeNode.kind });
       setPhase("spoils"); // 교전·보스 승리 → 전리품 화면(계속 시 다음 구역/층)
     } else {
       setPhase("defeat");
@@ -184,15 +184,44 @@ export function useDDRun() {
   const rest = useCallback(() => {
     if (!activeNode) return;
     setParty((cur) => cur.map((m) => (m.hp > 0 ? { ...m, hp: Math.min(m.maxHp, Math.round(m.hp + m.maxHp * REST_HEAL)) } : m)));
-    setCraft((c) => ({ ...c, mats: { parts: c.mats.parts + REST_SALVAGE.parts, permits: c.mats.permits + REST_SALVAGE.permits } })); // 정비 중 부품 회수
+    // 정비 중 회수분은 크레딧으로 — 상점에서 원하는 재료로 바꾸라고.
+    setCraft((c) => ({ ...c, credits: c.credits + REST_SALVAGE.credits }));
     advanceFrom(activeNode);
   }, [activeNode, advanceFrom]);
 
-  const restart = useCallback(() => { setPhase("select"); setParty([]); setNodes([]); setFrontier([]); setCleared([]); setActiveId(null); setItems({}); setCraft(initialCraft()); setLoot({ parts: 0, permits: 0, items: {}, kills: 0 }); }, []);
+  const restart = useCallback(() => { setPhase("select"); setParty([]); setNodes([]); setFrontier([]); setCleared([]); setActiveId(null); setItems({}); setCraft(initialCraft()); setLoot({ credits: 0, parts: 0, permits: 0, chips: 0, items: {}, kills: 0 }); }, []);
   const [craftOrigin, setCraftOrigin] = useState<RunPhase>("map"); // 공업소를 어디서 열었나 → 닫으면 그리로
   const openCraft = useCallback(() => { setCraftOrigin("map"); setPhase("craft"); }, []);
   const openCraftFromRest = useCallback(() => { setCraftOrigin("rest"); setPhase("craft"); }, []);
+  // 야영지 상점: 크레딧으로 재료·소비템 구매
+  const buyShop = useCallback((s: ShopItem) => {
+    setCraft((c) => {
+      if (!canBuy(c, s)) return c;
+      const n = cloneCraft(c); n.credits -= s.price;
+      if (s.kind === "mat") { const g = s.give as Partial<{ parts: number; permits: number; chips: number }>;
+        n.mats.parts += g.parts ?? 0; n.mats.permits += g.permits ?? 0; n.mats.chips = (n.mats.chips ?? 0) + (g.chips ?? 0); }
+      return n;
+    });
+    if (s.kind === "item") { const it = (s.give as { itemId: string }).itemId; addItem(it); }
+  }, [addItem]);
+  // 안 쓰는 재료 되팔기 — 구매가 30%
+  const sellMat = useCallback((mat: SellMat, qty = 1) => {
+    setCraft((c) => {
+      const have = mat === "chips" ? c.mats.chips ?? 0 : c.mats[mat];
+      const q = Math.min(qty, have); if (q <= 0) return c;
+      const n = cloneCraft(c);
+      if (mat === "chips") n.mats.chips = (n.mats.chips ?? 0) - q; else n.mats[mat] -= q;
+      n.credits += sellUnit(mat) * q;
+      return n;
+    });
+  }, []);
+  // 소비 아이템 되팔기 — 레어도 기준가 30%
+  const sellItem = useCallback((itemId: string) => {
+    const def = ITEMS[itemId]; if (!def) return;
+    setItems((m) => { if (!(m[itemId] > 0)) return m; return { ...m, [itemId]: m[itemId] - 1 }; });
+    setCraft((c) => (items[itemId] > 0 ? { ...cloneCraft(c), credits: c.credits + itemSellValue(def.rarity) } : c));
+  }, [items]);
   const closeCraft = useCallback(() => setPhase(craftOrigin), [craftOrigin]);
 
-  return { phase, party, nodes, frontier, cleared, activeNode, depthReached, faction, maxDepth: MAX_DEPTH, floor, floorName: FLOORS[floor].name, floorBoss: FLOORS[floor].boss, totalFloors: FLOORS.length, hasCraftable, items, useItem, addItem, craft, craftPiece, forgePiece, swapGear, forgeSkill, loot, lastLoot, continueSpoils, openCraft, closeCraft, openCraftFromRest, startRun, enterNode, finishBattle, rest, restart };
+  return { phase, buyShop, sellMat, sellItem, itemSellValue, shop: SHOP, party, nodes, frontier, cleared, activeNode, depthReached, faction, maxDepth: MAX_DEPTH, floor, floorName: FLOORS[floor].name, floorBoss: FLOORS[floor].boss, totalFloors: FLOORS.length, hasCraftable, items, useItem, addItem, craft, craftPiece, forgePiece, swapGear, forgeSkill, loot, lastLoot, continueSpoils, openCraft, closeCraft, openCraftFromRest, startRun, enterNode, finishBattle, rest, restart };
 }
