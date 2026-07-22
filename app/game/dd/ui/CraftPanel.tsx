@@ -22,7 +22,7 @@ function ForgePips({ lv }: { lv: number }) {
 // 재료 비용(감당 가능 여부 색상)
 function Cost({ parts, permits, chips, ok }: { parts?: number; permits?: number; chips?: number; ok: boolean }) {
   return <span className={`font-mono text-[12px] tabular-nums ${ok ? "text-ef-muted" : "text-red-400/90"}`} title="비용">
-    {chips ? <>{chips}<span className="opacity-55">전술칩</span></> : <>{parts}<span className="opacity-55">부품</span> {permits}<span className="opacity-55">관리권</span></>}
+    {chips ? <>{chips}<span className="opacity-55">프리즘</span></> : <>{parts}<span className="opacity-55">부품</span> {permits}<span className="opacity-55">관리권</span></>}
   </span>;
 }
 
@@ -80,7 +80,7 @@ export default function CraftPanel({ craft, party = [], onCraft, onForge, onSwap
         <div>
           <p className="font-mono text-[13px] font-bold uppercase tracking-[0.32em] text-ef-accent/70">Industry · 장비 제조</p>
           <h2 className="font-mono text-xl font-black uppercase tracking-[0.12em] text-white">공업소</h2>
-          <p className="mt-0.5 font-mono text-[13px] text-ef-muted">장비 제작·단조는 <b className="text-ef-ink/70">부품·관리권</b>, 오퍼 <b className="text-ef-ink/70">마스터리</b>는 <b style={{color:"#67e8f9"}}>전술 칩</b>으로. 재료는 야영지 크레딧 상점에서 삽니다.</p>
+          <p className="mt-0.5 font-mono text-[13px] text-ef-muted">장비 제작·단조는 <b className="text-ef-ink/70">부품·관리권</b>, 오퍼 <b className="text-ef-ink/70">마스터리</b>는 <b style={{color:"#67e8f9"}}>프로토콜 프리즘</b>으로. 재료는 야영지 크레딧 상점에서 삽니다.</p>
         </div>
         <div className="ml-auto flex items-center gap-2">
           <span className="hud-tile flex items-center gap-1.5 px-2.5 py-1.5 font-mono text-sm" style={CUT} title="장비 부품 — 제작·단조 재료"><img src={RESOURCE_ICON.parts} alt="" className="h-4.5 w-4.5 shrink-0 object-contain" /><b className="text-white">{craft.mats.parts}</b><span className="text-[13px] text-ef-muted">부품</span></span>
@@ -132,7 +132,7 @@ export default function CraftPanel({ craft, party = [], onCraft, onForge, onSwap
                       <span className="font-mono text-sm font-bold" style={{ color: rank > 0 ? "#67e8f9" : "#e6e6e8" }}>{skillLabel(rank)}</span>
                       {maxed ? <span className="ml-auto font-mono text-[13px] text-ef-accent-soft">최대 강화</span> : <>
                         <span className="font-mono text-[13px] text-ef-muted">→ {skillLabel(rank + 1)}</span>
-                        <button type="button" disabled={!ok} onClick={() => onForgeSkill(m.id)} title="마스터리 — 오퍼 스킬을 강화해 딜을 올린다(전술 칩 소모, 다음 전투부터 반영)" className={`dd-cut ml-auto flex items-center gap-1.5 px-2.5 py-1 font-mono text-[13px] font-bold ${ok ? "border border-ef-accent/60 text-ef-accent hover:bg-ef-accent/10" : "border border-ef-line/40 text-ef-muted opacity-50 cursor-not-allowed"}`}>
+                        <button type="button" disabled={!ok} onClick={() => onForgeSkill(m.id)} title="마스터리 — 오퍼 스킬을 강화해 딜을 올린다(프로토콜 프리즘 소모, 다음 전투부터 반영)" className={`dd-cut ml-auto flex items-center gap-1.5 px-2.5 py-1 font-mono text-[13px] font-bold ${ok ? "border border-ef-accent/60 text-ef-accent hover:bg-ef-accent/10" : "border border-ef-line/40 text-ef-muted opacity-50 cursor-not-allowed"}`}>
                           <Hammer className="h-3 w-3" />마스터리 <Cost chips={cost.chips} ok={ok} /></button>
                       </>}
                     </div>

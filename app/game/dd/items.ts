@@ -69,7 +69,7 @@ export const itemImage = (id: string) => { const it = ITEMS[id]; return it ? `/i
 export const RESOURCE_ICON = {
   parts: `/items/${encodeURIComponent("식양 장비 부품")}.webp`,   // 부품
   permits: `/items/${encodeURIComponent("무릉 관리권")}.webp`,    // 관리권
-  chips: `/items/${encodeURIComponent("귀중한 칩")}.webp`,        // 전술 칩 — 스킬 강화 전용
+  chips: `/items/${encodeURIComponent("별체 결정 조각 상품군")}.webp`, // 프로토콜 프리즘 — 마스터리 전용
   credits: `/items/${encodeURIComponent("탈로시안 화폐")}.webp`,   // 크레딧(상점 통화)
 } as const;
 

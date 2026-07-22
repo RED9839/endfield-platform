@@ -96,7 +96,7 @@ export default function GamePage() {
               <div className="mb-1 font-mono text-[13px] font-bold uppercase tracking-[0.28em] text-ef-accent/70">{L.kind === "elite" ? "정예 격파" : "교전 승리"}</div>
               <div className="mb-6 text-2xl font-bold" style={{ fontFamily: "var(--dd-display)", letterSpacing: "0.1em", color: "#ffbe6b", textShadow: "0 0 20px rgba(255,190,107,0.4)" }}>전리품 획득</div>
               <div className="mb-6 flex flex-wrap justify-center gap-2">
-                {([[RESOURCE_ICON.credits, "크레딧", `+${L.credits}`], ...(L.parts > 0 ? [[RESOURCE_ICON.parts, "부품", `+${L.parts}`]] as [string, string, string][] : []), ...(L.chips > 0 ? [[RESOURCE_ICON.chips, "전술칩", `+${L.chips}`]] as [string, string, string][] : []), [item ? itemImage(item.id) : "🎁", item?.name ?? "아이템", "×1"]] as [string, string, string][]).map(([ic, lb, v]) => (
+                {([[RESOURCE_ICON.credits, "크레딧", `+${L.credits}`], ...(L.parts > 0 ? [[RESOURCE_ICON.parts, "부품", `+${L.parts}`]] as [string, string, string][] : []), ...(L.chips > 0 ? [[RESOURCE_ICON.chips, "프리즘", `+${L.chips}`]] as [string, string, string][] : []), [item ? itemImage(item.id) : "🎁", item?.name ?? "아이템", "×1"]] as [string, string, string][]).map(([ic, lb, v]) => (
                   <div key={lb} className="min-w-[112px] border border-ef-line/50 bg-[#120c07] px-3 py-2.5">
                     {ic.startsWith("/") ? <img src={ic} alt="" className="mx-auto h-7 w-7 object-contain" /> : <div className="text-xl leading-none">{ic}</div>}
                     <div className="mt-1 font-mono text-[12px] uppercase tracking-wider text-ef-muted">{lb}</div>
@@ -138,7 +138,7 @@ export default function GamePage() {
               <div className="mt-2 border-t border-ef-line/40 pt-2">
                 <div className="mb-1 flex flex-wrap items-center gap-1.5">
                   <span className="font-mono text-[12px] text-ef-muted">재료 되팔기(30%):</span>
-                  {([["parts","부품",run.craft.mats.parts],["permits","관리권",run.craft.mats.permits],["chips","전술칩",run.craft.mats.chips ?? 0]] as const).map(([mat,label,have]) => (
+                  {([["parts","부품",run.craft.mats.parts],["permits","관리권",run.craft.mats.permits],["chips","프리즘",run.craft.mats.chips ?? 0]] as const).map(([mat,label,have]) => (
                     <button key={mat} type="button" disabled={have < 5} onClick={() => run.sellMat(mat, 5)}
                       className="dd-cut border px-2 py-0.5 font-mono text-[12px] transition enabled:hover:border-ef-accent disabled:opacity-35"
                       style={{ borderColor: "rgba(255,255,255,0.12)", color: "#cfcfd4" }} title={`보유 ${have} — 5개씩 되팔기`}>{label} ×5</button>

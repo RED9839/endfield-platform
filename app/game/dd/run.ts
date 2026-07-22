@@ -33,7 +33,7 @@ export type BattleResult = { id: string; hp: number; ult?: number; stacks?: numb
                                                                                        // stacks: 전투 밖으로 들고 나가는 스택(레바테인 녹아내린 불꽃)
 
 export const REST_HEAL = 0.55; // 야영 회복 비율(최대 HP). 어그로가 탱에 몰려 전열만 닳으므로 넉넉히.
-export const REST_SALVAGE = { credits: 45 }; // 야영 중 크레딧 회수 — 상점에서 원하는 재료로 바꾼다
+export const REST_SALVAGE = { credits: 30 }; // 야영 중 크레딧 회수 — 상점에서 원하는 재료로 바꾼다
 
 const ENCOUNTER_OF: Record<NodeKind, string> = { battle: "normal", elite: "elite", boss: "boss", rest: "normal" };
 export const encounterForNode = (k: NodeKind) => ENCOUNTER_OF[k];
@@ -119,7 +119,7 @@ export function useDDRun() {
     setDepthReached(0);
     setActiveId(null);
     setItems({ "heal-cap-1": 2, "can-1": 1, "recov-1": 1 }); // 시작 키트
-    setCraft({ mats: { parts: 50, permits: 8, chips: 10 }, owned: {}, credits: 150 }); // 시작 지급 — 2층 기본 장비 완성 목표 기준 // 맨몸 시작 — 소량 재료 + 크레딧(야영 상점 교환)
+    setCraft({ mats: { parts: 30, permits: 8, chips: 10 }, owned: {}, credits: 100 }); // 시작 지급 — 0강 풀세트 2층 완성 목표 // 맨몸 시작 — 소량 재료 + 크레딧(야영 상점 교환)
     setLoot({ credits: 0, parts: 0, permits: 0, chips: 0, items: {}, kills: 0 }); // 전리품 초기화
     setFloor(0); // 1층부터
     setFaction(FLOORS[0].faction); // 1층 세력
