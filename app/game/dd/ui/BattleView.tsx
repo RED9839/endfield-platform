@@ -591,14 +591,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
             {!winner && <button type="button" onClick={toggleAuto} className={`hud-btn dd-cut px-3.5 py-1.5 font-mono text-[15px] font-bold uppercase tracking-wider ${auto ? "hud-btn-on" : "text-ef-muted"}`}>{auto ? "자동 ON" : "수동"}</button>}
           </div>
         </div>
-        <div className="mt-2 flex items-center gap-2.5">
-          <span className="shrink-0 font-mono text-[13px] uppercase tracking-wider text-ef-muted">스킬 게이지 · <span className="cursor-help underline decoration-dotted underline-offset-2" title="파티 4명이 함께 쓰는 하나의 게이지입니다. 누가 배틀 스킬을 써도 여기서 100이 빠지므로, 한 명이 연달아 쓰면 나머지가 못 씁니다. 매 라운드 자동 회복되고 일반 공격으로도 조금씩 찹니다. 궁극기 에너지와는 별개입니다.">4인 공용</span> <span className="text-ef-accent-soft" title="라운드마다 자동 회복">+{GAUGE_REGEN}/R</span></span>
-          <div className="min-w-[120px] flex-1"><Bar value={s.skillGauge} max={s.maxGauge} color={PRIMARY} h="h-2.5" /></div>
-          <span className="shrink-0 font-mono text-[13px] font-bold text-ef-ink">{Math.round(s.skillGauge)}/{s.maxGauge}</span>
-          {/* 남은 배틀 횟수 — 숫자만으론 "지금 배틀을 몇 번 쓸 수 있나"가 안 읽힌다 */}
-          <span className="shrink-0 font-mono text-[12px] font-bold" title="배틀 스킬 1회에 100 소모 — 지금 게이지로 쓸 수 있는 횟수"
-                style={{ color: s.skillGauge >= GAUGE_COST ? "#f5c542" : "#7a7a82" }}>배틀 {Math.floor(s.skillGauge / GAUGE_COST)}회분</span>
-        </div>
+
       </div>
 
       {/* 데미지·전투 기록 — 상단 드롭다운(기본 접힘) */}
@@ -846,6 +839,19 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
             {fx.actingSide === "ally" ? "아군 행동 중" : "적 행동 중"}
           </span>
           <span className="font-mono text-[13px] text-ef-muted">— 잠시 기다리면 다음 차례가 옵니다. 속도를 올리려면 우측 상단 「1배속」을 누르세요.</span>
+        </div>
+      )}
+      {/* 팀 게이지 — 스킬 선택 바로 위에 둬서 "지금 배틀 몇 번 쓸 수 있나"가 손에 잡히게 */}
+      {!winner && (
+        <div className="hud-panel dd-cut mt-3 px-3 py-2">
+          <div className="flex items-center gap-2.5">
+          <span className="shrink-0 font-mono text-[13px] uppercase tracking-wider text-ef-muted">스킬 게이지 · <span className="cursor-help underline decoration-dotted underline-offset-2" title="파티 4명이 함께 쓰는 하나의 게이지입니다. 누가 배틀 스킬을 써도 여기서 100이 빠지므로, 한 명이 연달아 쓰면 나머지가 못 씁니다. 매 라운드 자동 회복되고 일반 공격으로도 조금씩 찹니다. 궁극기 에너지와는 별개입니다.">4인 공용</span> <span className="text-ef-accent-soft" title="라운드마다 자동 회복">+{GAUGE_REGEN}/R</span></span>
+          <div className="min-w-[120px] flex-1"><Bar value={s.skillGauge} max={s.maxGauge} color={PRIMARY} h="h-2.5" /></div>
+          <span className="shrink-0 font-mono text-[13px] font-bold text-ef-ink">{Math.round(s.skillGauge)}/{s.maxGauge}</span>
+          {/* 남은 배틀 횟수 — 숫자만으론 "지금 배틀을 몇 번 쓸 수 있나"가 안 읽힌다 */}
+          <span className="shrink-0 font-mono text-[12px] font-bold" title="배틀 스킬 1회에 100 소모 — 지금 게이지로 쓸 수 있는 횟수"
+                style={{ color: s.skillGauge >= GAUGE_COST ? "#f5c542" : "#7a7a82" }}>배틀 {Math.floor(s.skillGauge / GAUGE_COST)}회분</span>
+          </div>
         </div>
       )}
       {/* 수동 조작 — 스킬 선택 */}
