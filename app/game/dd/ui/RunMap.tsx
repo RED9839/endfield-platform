@@ -64,7 +64,7 @@ export default function RunMap({ nodes, frontier, cleared, party, items, faction
       <div className="hud-panel dd-cut mb-4 px-4 py-3">
         <p className="font-mono text-[13px] font-bold uppercase tracking-[0.32em] text-ef-accent/70">Darkest Protocol · 던전 진행</p>
         <h2 className="font-mono text-2xl font-black uppercase tracking-[0.12em] text-white">경로 선택</h2>
-        <p className="mt-1 text-[15px] text-ef-muted"><b className="text-ef-ink">{totalFloors}개 층</b>의 보스를 차례로 격파하며 등반합니다 — <span className="text-amber-300/85">층이 오를수록 적이 강해집니다</span>. 각 구역에서 방 하나(강조 표시)를 골라 다음 구역으로. 정예·보스는 위험하나 보상↑, HP는 야영에서만 회복.</p>
+        <p className="mt-1 text-[15px] text-ef-muted"><b className="text-ef-ink">{totalFloors}개 층</b>의 보스를 차례로 격파하며 등반합니다 — <span className="text-amber-300/85">층이 오를수록 적이 강해집니다</span>. 각 구역에서 방 하나(강조 표시)를 골라 다음 구역으로. 정예·보스는 위험하나 보상↑, HP는 야영에서만 회복. <b style={{ color: "#f5c542" }}>제작·마스터리·상점은 야영지에서만</b> 이용할 수 있습니다.</p>
       </div>
 
       <div className="mb-3"><PartyBar party={party} /></div>

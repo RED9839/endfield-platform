@@ -25,7 +25,7 @@ export default function StatusPanel({ party, craft, onClose }: { party: PartyMem
         <div>
           <p className="font-mono text-[13px] font-bold uppercase tracking-[0.32em] text-ef-accent/70">Squad · 부대 현황</p>
           <h2 className="font-mono text-xl font-black uppercase tracking-[0.12em] text-white">오퍼레이터 상태</h2>
-          <p className="mt-0.5 font-mono text-[13px] text-ef-muted">장비·스킬 마스터리 확인(읽기 전용) — 제작·강화는 <b className="text-ef-ink/70">야영지 공업소</b>에서</p>
+          <p className="mt-0.5 font-mono text-[13px] text-ef-muted">여기선 <b className="text-ef-ink/70">확인만</b> — 장비 제작·단조와 스킬 마스터리는 <b style={{ color: "#f5c542" }}>야영지 공업소</b>에서만 할 수 있습니다.</p>
         </div>
       </div>
 
