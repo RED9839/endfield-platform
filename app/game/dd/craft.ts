@@ -13,9 +13,10 @@ export const cloneCraft = (c: CraftState): CraftState => ({ mats: { ...c.mats },
 // 파워의 대부분은 "12피스 소유"에서 나오므로(단조는 부차적), 중반에 풀 커버리지 되도록 부품 낮게.
 export const craftCost = (p: GearPiece): CraftMats => { const r = p.rarity || 4; return { parts: 4 + r * 2, permits: r >= 5 ? 2 : 1 }; };
 // 단조 비용(현재 레벨 → +1). +0→+1→+2→+3.
-export const forgeCost = (lv: number): CraftMats => [{ parts: 5, permits: 1 }, { parts: 9, permits: 1 }, { parts: 15, permits: 2 }][lv] ?? { parts: Infinity, permits: Infinity };
+// 단조 비용(현재 레벨 → +1). +0→+1→+2→+3. 원작은 Lv70 장비 단조가 일상적이라 풀단조가 런 안에 닿게 낮게 잡는다.
+export const forgeCost = (lv: number): CraftMats => [{ parts: 4, permits: 1 }, { parts: 7, permits: 1 }, { parts: 11, permits: 1 }][lv] ?? { parts: Infinity, permits: Infinity };
 // 스킬 단조 비용(현재 랭크 → +1). 9Lv(M0)→M1→M2→M3. 스킬은 오퍼 딜 전반을 올려 장비 단조보다 비싸다.
-export const skillForgeCost = (rank: number): CraftMats => [{ parts: 14, permits: 2 }, { parts: 22, permits: 3 }, { parts: 34, permits: 4 }][rank] ?? { parts: Infinity, permits: Infinity };
+export const skillForgeCost = (rank: number): CraftMats => [{ parts: 11, permits: 2 }, { parts: 17, permits: 2 }, { parts: 26, permits: 3 }][rank] ?? { parts: Infinity, permits: Infinity };
 export const canAfford = (m: CraftMats, c: CraftMats) => m.parts >= c.parts && m.permits >= c.permits;
 
 const afford = (m: CraftMats, c: CraftMats) => m.parts >= c.parts && m.permits >= c.permits;
