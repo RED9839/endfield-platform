@@ -33,25 +33,25 @@ const H50 = { type: "hp", below: 0.9 } as const;
 // 파티 HP 중앙값 ~2806 기준 실효 회복: r2 ~12% · r3 ~22% · r4 ~47%(보호막 포함) · r6 ~67%.
 export const ITEMS: Record<string, ItemDef> = {
   // ── 메밀꽃 계열(즉시 회복) ──
-  "powder-buck": { id: "powder-buck", name: "메밀꽃 가루", kind: "heal", rarity: 2, cond: H60, desc: "즉시 회복 340", run: heal(340) },
-  "heal-cap-1": { id: "heal-cap-1", name: "메밀꽃 치유 캡슐", kind: "heal", rarity: 3, cond: H60, desc: "즉시 회복 620", run: heal(620) },
-  "recov-1": { id: "recov-1", name: "메밀꽃 회복제(소)", kind: "heal-shield", rarity: 4, cond: H60, desc: "즉시 회복 700 + 보호막(최대 HP 22%)", run: healShield(700, 0.22) },
-  "recov-3": { id: "recov-3", name: "메밀꽃 회복제(특)", kind: "heal-shield", rarity: 6, cond: H60, desc: "즉시 회복 1050 + 보호막(최대 HP 30%)", run: healShield(1050, 0.3) },
+  "powder-buck": { id: "powder-buck", name: "메밀꽃 가루", kind: "heal", rarity: 2, cond: H60, desc: "즉시 회복 290", run: heal(290) },
+  "heal-cap-1": { id: "heal-cap-1", name: "메밀꽃 치유 캡슐", kind: "heal", rarity: 3, cond: H60, desc: "즉시 회복 530", run: heal(530) },
+  "recov-1": { id: "recov-1", name: "메밀꽃 회복제(소)", kind: "heal-shield", rarity: 4, cond: H60, desc: "즉시 회복 600 + 보호막(최대 HP 22%)", run: healShield(600, 0.22) },
+  "recov-3": { id: "recov-3", name: "메밀꽃 회복제(특)", kind: "heal-shield", rarity: 6, cond: H60, desc: "즉시 회복 890 + 보호막(최대 HP 30%)", run: healShield(890, 0.3) },
   // ── 금초 계열(즉시 회복) ──
-  "powder-gold": { id: "powder-gold", name: "금초 가루", kind: "heal", rarity: 2, cond: H60, desc: "즉시 회복 340", run: heal(340) },
-  "drink-1": { id: "drink-1", name: "금초 청량음료", kind: "heal", rarity: 3, cond: H60, desc: "즉시 회복 620", run: heal(620) },
-  "coldtea-1": { id: "coldtea-1", name: "금초 냉차", kind: "heal-shield", rarity: 4, cond: H60, desc: "즉시 회복 700 + 보호막(최대 HP 22%)", run: healShield(700, 0.22) },
-  "coldtea-2": { id: "coldtea-2", name: "금초 냉차(대)", kind: "heal-shield", rarity: 6, cond: H60, desc: "즉시 회복 1050 + 보호막(최대 HP 30%)", run: healShield(1050, 0.3) },
+  "powder-gold": { id: "powder-gold", name: "금초 가루", kind: "heal", rarity: 2, cond: H60, desc: "즉시 회복 290", run: heal(290) },
+  "drink-1": { id: "drink-1", name: "금초 청량음료", kind: "heal", rarity: 3, cond: H60, desc: "즉시 회복 530", run: heal(530) },
+  "coldtea-1": { id: "coldtea-1", name: "금초 냉차", kind: "heal-shield", rarity: 4, cond: H60, desc: "즉시 회복 600 + 보호막(최대 HP 22%)", run: healShield(600, 0.22) },
+  "coldtea-2": { id: "coldtea-2", name: "금초 냉차(대)", kind: "heal-shield", rarity: 6, cond: H60, desc: "즉시 회복 890 + 보호막(최대 HP 30%)", run: healShield(890, 0.3) },
   // ── 시트론 계열(재생) ──
-  "powder-cit": { id: "powder-cit", name: "시트론 가루", kind: "regen", rarity: 2, cond: H50, desc: "재생 130/라운드(3라운드)", run: regen(130) },
-  "can-1": { id: "can-1", name: "시트론 통조림", kind: "regen", rarity: 3, cond: H50, desc: "재생 210/라운드(3라운드)", run: regen(210) },
-  "mix-1": { id: "mix-1", name: "시트론 혼합제(소)", kind: "regen", rarity: 4, cond: H50, desc: "재생 300/라운드 + 즉시 5%", run: regen(300, 0.05) },
-  "mix-3": { id: "mix-3", name: "시트론 혼합제(특)", kind: "regen", rarity: 6, cond: H50, desc: "재생 450/라운드 + 즉시 8%", run: regen(450, 0.08) },
+  "powder-cit": { id: "powder-cit", name: "시트론 가루", kind: "regen", rarity: 2, cond: H50, desc: "재생 110/라운드(3라운드)", run: regen(110) },
+  "can-1": { id: "can-1", name: "시트론 통조림", kind: "regen", rarity: 3, cond: H50, desc: "재생 180/라운드(3라운드)", run: regen(180) },
+  "mix-1": { id: "mix-1", name: "시트론 혼합제(소)", kind: "regen", rarity: 4, cond: H50, desc: "재생 255/라운드 + 즉시 4%", run: regen(255, 0.04) },
+  "mix-3": { id: "mix-3", name: "시트론 혼합제(특)", kind: "regen", rarity: 6, cond: H50, desc: "재생 380/라운드 + 즉시 7%", run: regen(380, 0.07) },
   // ── 야침 계열(재생) ──
-  "powder-nee": { id: "powder-nee", name: "야침 가루", kind: "regen", rarity: 2, cond: H50, desc: "재생 130/라운드(3라운드)", run: regen(130) },
-  "inject-1": { id: "inject-1", name: "야침 주사약", kind: "regen", rarity: 3, cond: H50, desc: "재생 210/라운드(3라운드)", run: regen(210) },
-  "spray-1": { id: "spray-1", name: "야침 스프레이", kind: "regen", rarity: 4, cond: H50, desc: "재생 300/라운드 + 즉시 5%", run: regen(300, 0.05) },
-  "spray-2": { id: "spray-2", name: "야침 스프레이(대)", kind: "regen", rarity: 6, cond: H50, desc: "재생 450/라운드 + 즉시 8%", run: regen(450, 0.08) },
+  "powder-nee": { id: "powder-nee", name: "야침 가루", kind: "regen", rarity: 2, cond: H50, desc: "재생 110/라운드(3라운드)", run: regen(110) },
+  "inject-1": { id: "inject-1", name: "야침 주사약", kind: "regen", rarity: 3, cond: H50, desc: "재생 180/라운드(3라운드)", run: regen(180) },
+  "spray-1": { id: "spray-1", name: "야침 스프레이", kind: "regen", rarity: 4, cond: H50, desc: "재생 255/라운드 + 즉시 4%", run: regen(255, 0.04) },
+  "spray-2": { id: "spray-2", name: "야침 스프레이(대)", kind: "regen", rarity: 6, cond: H50, desc: "재생 380/라운드 + 즉시 7%", run: regen(380, 0.07) },
   // ── 범용(지역 무관): 부활 · 피해 버프 · 궁 에너지 ──
   "revive-1": { id: "revive-1", name: "아츠를 각인한 병", kind: "revive", rarity: 3, cond: { type: "dead" }, desc: "전투 불능 아군 부활 + 최대 HP 30%", run: revive(0.3) },
   "revive-2": { id: "revive-2", name: "아츠를 각인한 금속 병", kind: "revive", rarity: 4, cond: { type: "dead" }, desc: "전투 불능 아군 부활 + 최대 HP 50%", run: revive(0.5) },

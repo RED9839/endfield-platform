@@ -32,7 +32,7 @@ export type PartyMember = { id: string; hp: number; maxHp: number; loadout?: Loa
 export type BattleResult = { id: string; hp: number; ult?: number; stacks?: number }; // ult: 궁 게이지 이월(HP처럼 런 내내 유지 — 보스 전 만충이 목표)
                                                                                        // stacks: 전투 밖으로 들고 나가는 스택(레바테인 녹아내린 불꽃)
 
-export const REST_HEAL = 0.55; // 야영 회복 비율(최대 HP). 어그로가 탱에 몰려 전열만 닳으므로 넉넉히.
+export const REST_HEAL = 0.30; // 야영 회복 비율(최대 HP)
 export const REST_SALVAGE = { credits: 30 }; // 야영 중 크레딧 회수 — 상점에서 원하는 재료로 바꾼다
 
 const ENCOUNTER_OF: Record<NodeKind, string> = { battle: "normal", elite: "elite", boss: "boss", rest: "normal" };
