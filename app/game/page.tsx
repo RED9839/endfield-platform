@@ -140,8 +140,8 @@ export default function GamePage() {
                   <span className="font-mono text-[12px] text-ef-muted">재료 되팔기(30%):</span>
                   {([["parts","부품",run.craft.mats.parts],["permits","관리권",run.craft.mats.permits],["chips","프리즘",run.craft.mats.chips ?? 0]] as const).map(([mat,label,have]) => (
                     <button key={mat} type="button" disabled={have < 5} onClick={() => run.sellMat(mat, 5)}
-                      className="dd-cut border px-2 py-0.5 font-mono text-[12px] transition enabled:hover:border-ef-accent disabled:opacity-35"
-                      style={{ borderColor: "rgba(255,255,255,0.12)", color: "#cfcfd4" }} title={`보유 ${have} — 5개씩 되팔기`}>{label} ×5</button>
+                      className="dd-cut flex items-center gap-1 border px-2 py-0.5 font-mono text-[12px] transition enabled:hover:border-ef-accent disabled:opacity-35"
+                      style={{ borderColor: "rgba(255,255,255,0.12)", color: "#cfcfd4" }} title={`보유 ${have} — 5개 팔면 ${run.sellUnit(mat) * 5}크레딧`}>{label} ×5<span style={{ color: "#f5c542" }}>+{run.sellUnit(mat) * 5}</span></button>
                   ))}
                 </div>
                 {Object.entries(run.items).some(([, n]) => (n as number) > 0) && (

@@ -223,5 +223,5 @@ export function useDDRun() {
   }, [items]);
   const closeCraft = useCallback(() => setPhase(craftOrigin), [craftOrigin]);
 
-  return { phase, buyShop, sellMat, sellItem, itemSellValue, shop: SHOP, party, nodes, frontier, cleared, activeNode, depthReached, faction, maxDepth: MAX_DEPTH, floor, floorName: FLOORS[floor].name, floorBoss: FLOORS[floor].boss, totalFloors: FLOORS.length, hasCraftable, items, useItem, addItem, craft, craftPiece, forgePiece, swapGear, forgeSkill, loot, lastLoot, continueSpoils, openCraft, closeCraft, openCraftFromRest, startRun, enterNode, finishBattle, rest, restart };
+  return { phase, buyShop, sellMat, sellItem, itemSellValue, sellUnit, shop: SHOP, party, nodes, frontier, cleared, activeNode, depthReached, faction, maxDepth: MAX_DEPTH, floor, floorName: FLOORS[floor].name, floorBoss: FLOORS[floor].boss, totalFloors: FLOORS.length, hasCraftable, items, useItem, addItem, craft, craftPiece, forgePiece, swapGear, forgeSkill, loot, lastLoot, continueSpoils, openCraft, closeCraft, openCraftFromRest, startRun, enterNode, finishBattle, rest, restart };
 }
