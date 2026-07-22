@@ -26,6 +26,7 @@ model User {
   materialInventory    UserMaterialInventory[]
   operatorSettings     UserOperatorSetting[]
   operatorSettingLikes UserOperatorSettingLike[]
+  ddRunRecords         DDRunRecord[]
 
   @@index([role])
 }
@@ -153,4 +154,26 @@ model HomeStackState {
   key       String   @id
   value     String
   updatedAt DateTime @updatedAt
+}
+
+// 닼던류(DD) 원정 완주/실패 기록 — 학습·밸런스 분석용. 로그인 시 유저 연결, 익명 플레이도 허용(userId null).
+// data(Json)에 전체 RunRecord(파티 빌드·전투별·경제 등)를 담고, 조회/집계용 필드는 컬럼으로 뽑아둔다.
+model DDRunRecord {
+  id           String   @id @default(cuid())
+  userId       String?
+  result       String // "victory" | "defeat"
+  floorReached Int
+  totalFloors  Int
+  durationSec  Int
+  battles      Int      @default(0)
+  rounds       Int      @default(0)
+  dmgDealt     Int      @default(0)
+  data         Json
+  createdAt    DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([result])
 }
