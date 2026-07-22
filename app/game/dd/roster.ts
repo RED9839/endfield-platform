@@ -75,7 +75,7 @@ export const SKILLS: Record<string, DDSkill[]> = {
     // 추형(배틀, 게이지 50, 스탠스 1 요구): 강타. 방어 불능 3+ 소모 시 → 개천(스탠스 2).
     { id: "mf-b2", name: "청파 삼형·추형", kind: "battle", fromPos: [1, 2, 3], target: "single-front", power: 0.89, element: "physical", staggerVal: 5, gaugeCost: 50, requiresStance: 1, anomaly: "crush", stanceFromCrush: true, note: "강타 + (방어 불능 3+ 소모)개천 전환" },
     // 개천(배틀, 게이지 50, 스탠스 2 요구): 주력 딜(강타 간주). 냉정: 물취/불균형 적 ×1.2.
-    { id: "mf-b3", name: "청파 삼형·개천", kind: "battle", fromPos: [1, 2, 3], target: "row", power: 4.0, element: "physical", staggerVal: 10, gaugeCost: 50, requiresStance: 2, vsWeak: 0.2, countsAsCrush: true, setStanceTo: 0, note: "주력 딜(강타 간주) · 냉정: 물리취약/불균형 적 피해 ×1.2 · 사용 후 단운으로" },
+    { id: "mf-b3", name: "청파 삼형·개천", kind: "battle", fromPos: [1, 2, 3], target: "row", power: 4.0, element: "physical", staggerVal: 10, gaugeCost: 50, requiresStance: 2, vsWeak: 0.2, countsAsCrush: true, setStanceTo: 0, masteryDmg: [1, 1.038, 1.083, 1.136], note: "주력 딜(강타 간주) · 냉정: 물리취약/불균형 적 피해 ×1.2 · 마스터리 실측 528→600 · 사용 후 단운으로" },
     // 후회 없는 주먹(연계 111%, 쿨 20초): 방어 불능 3+ 적. 물리취약 + 추형 전환.
     { id: "mf-l", name: "후회 없는 주먹", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 1.11, element: "physical", staggerVal: 10, cooldown: 4, setStanceTo: 1,
       requires: (t) => !!t && t.physBreak >= 3, requiresText: "방어 불능 3스택 이상인 적", apply: (t) => bumpVuln(t, "physical", 0.05), note: "물리취약 + 추형 전환" },
@@ -586,9 +586,9 @@ export function makeAlly(id: string, pos: number, progress: OpProgress = DEFAULT
   const hp = Math.round((OP_HP[id] ?? b.hp) * pm);
   const u: DDUnit = { ...b, side: "ally", pos, hp, maxHp: hp, staggerMax: 0, ...zero() }; // 불균형 없음. HP=6000+힘×5 환산·방어 0
   u.hp = hp; u.maxHp = hp; // zero()가 hp를 덮지 않도록 재확정
-  u.attack = Math.round((OP_ATTACK[id] ?? b.attack) * pm * skillMult(progress.skillRank)); // Lv90 기초 × 정예화 × 스킬랭크(랭크9=1.8). 모든 딜이 attack 비례 → 균일 스케일
-  u.utilBase = skillUtilMult(progress.skillRank); // 스킬 단조 → 유틸(취약·증폭·회복·게이지·지속) 배율. 장비 능력치(gearGrade)는 applyGear가 세트 실측 부옵으로 처리
-  u.utilMult = u.utilBase; // applyAttrs가 의지 배율을 곱해 확정
+  u.attack = Math.round((OP_ATTACK[id] ?? b.attack) * pm * skillMult(0)); // Lv90 기초 × 정예화 × M0(×1.8). 스킬 종류별 랭크 보너스는 combat이 skillRankDmg로 따로 곱한다
+  u.skillRanks = { ...progress.skillRanks }; // 기본/배틀/연계/궁 각각의 마스터리 랭크
+  u.utilBase = 1; u.utilMult = 1; // 유틸은 act()에서 사용 스킬 종류의 랭크로 매 행동 재설정(의지 배율 포함)
   u.opElement = (SKILLS[id] ?? []).find((s) => s.element && s.element !== "physical")?.element ?? "physical"; // 주력 속성(장비 부품 속성 피해)
   u.attrs = OP_ATTRS[id]; // 실제 능력치(힘/민첩/지능/의지)
   applyAttrs(u); // 능력치 → 역할 배율(힘=기본공격 / 민첩=속도 / 주옵=스킬 / 의지=유틸·궁충)

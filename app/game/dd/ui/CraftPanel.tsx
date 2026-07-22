@@ -5,8 +5,8 @@ import { ChevronLeft, Hammer, Check, Lock } from "lucide-react";
 
 import { GEAR_PIECES_BY_SET_SLOT, GEAR_PIECE_BY_ID, GEAR_SLOTS, LOADOUT_SLOTS, gearSlotName, pieceImage, pieceSlotOf, slotOptions, type GearPiece, type GearSlot, type LoadoutSlot  , attrsText } from "../gear";
 import { craftCost, forgeCost, skillForgeCost, canAfford, pieceLevel, isOwned, type CraftState } from "../craft";
-import { SKILL_MAX, skillLabel } from "../progress";
-import { OPERATORS, avatarUrl } from "../roster";
+import { SKILL_MAX, SKILL_KINDS, skillLabel, type SkillKind } from "../progress";
+import { OPERATORS, avatarUrl, SKILLS, skillIcon } from "../roster";
 import type { PartyMember } from "../run";
 import { RESOURCE_ICON } from "../items";
 import { DMG_LABEL } from "../labels";
@@ -26,7 +26,7 @@ function Cost({ parts, permits, chips, ok }: { parts?: number; permits?: number;
   </span>;
 }
 
-export default function CraftPanel({ craft, party = [], onCraft, onForge, onSwap, onForgeSkill, onClose, initialTab }: { craft: CraftState; party?: PartyMember[]; onCraft: (id: string) => boolean; onForge: (id: string) => boolean; onSwap?: (opId: string, slot: LoadoutSlot, pieceId: string) => void; onForgeSkill?: (opId: string) => boolean; onClose: () => void; initialTab?: "party" | "catalog" | "mastery" }) {
+export default function CraftPanel({ craft, party = [], onCraft, onForge, onSwap, onForgeSkill, onClose, initialTab }: { craft: CraftState; party?: PartyMember[]; onCraft: (id: string) => boolean; onForge: (id: string) => boolean; onSwap?: (opId: string, slot: LoadoutSlot, pieceId: string) => void; onForgeSkill?: (opId: string, kind: SkillKind) => boolean; onClose: () => void; initialTab?: "party" | "catalog" | "mastery" }) {
   const [set, setSet] = useState(SETS[0]);
   const [tab, setTab] = useState<"party" | "catalog" | "mastery">(initialTab ?? (party.length > 0 ? "party" : "catalog"));
   const [swap, setSwap] = useState<{ opId: string; slot: LoadoutSlot } | null>(null); // 교체 피커 열림 슬롯
@@ -98,35 +98,48 @@ export default function CraftPanel({ craft, party = [], onCraft, onForge, onSwap
         <span className="ml-1 font-mono text-[13px] text-ef-muted">{tab === "party" ? "부대가 실제 착용한 피스 — 제작·단조 우선" : tab === "mastery" ? "오퍼 스킬 랭크 강화 — 프로토콜 프리즘 소모" : "세트별 대체 피스 제작"}</span>
       </div>
 
-      {/* 스킬 마스터리 — 오퍼별 랭크·강화를 크게 모아 본다(장비 아래 묻히지 않게 별도 탭) */}
-      {tab === "mastery" && onForgeSkill && (
+      {/* 스킬 마스터리 — 오퍼별로 기본/배틀/연계/궁 각각 강화(원작대로 트랙 분리) */}
+      {tab === "mastery" && onForgeSkill && (() => {
+        const KIND_KO: Record<string, string> = { attack: "기본공격", battle: "배틀", link: "연계", ult: "궁극기" };
+        const KIND_TONE: Record<string, string> = { attack: "#9a9aa2", battle: "#ff9a2f", link: "#67e8f9", ult: "#f5c542" };
+        return (
         <div className="grid gap-2.5 lg:grid-cols-2">
           {party.map((m) => {
             const op = OPERATORS.find((o) => o.id === m.id);
-            const rank = m.progress?.skillRank ?? 0;
-            const maxed = rank >= SKILL_MAX;
-            const cost = skillForgeCost(rank);
-            const ok = canAfford(craft.mats, cost);
+            const ranks = m.progress?.skillRanks ?? { attack: 0, battle: 0, link: 0, ult: 0 };
+            const byKind = (k: SkillKind) => (SKILLS[m.id] ?? []).find((s) => s.kind === k);
             return (
-              <div key={m.id} className="hud-panel dd-cut flex items-center gap-3 p-3">
-                <img src={avatarUrl(m.id)} alt="" loading="lazy" className="h-12 w-12 shrink-0 border border-ef-line object-cover" style={{ background: "#000" }} />
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2"><span className="font-mono text-[17px] font-bold text-white">{opName(m.id)}</span>{op && <span className="font-mono text-[12px] uppercase text-ef-muted">{op.element}</span>}</div>
-                  <div className="mt-0.5 flex items-center gap-1.5 font-mono text-sm">
-                    <span className="font-bold" style={{ color: rank > 0 ? "#67e8f9" : "#e6e6e8" }}>{skillLabel(rank)}</span>
-                    {!maxed && <><span className="text-ef-muted">→</span><span className="font-bold text-ef-accent-soft">{skillLabel(rank + 1)}</span></>}
-                  </div>
+              <div key={m.id} className="hud-panel dd-cut p-3">
+                <div className="mb-2 flex items-center gap-2">
+                  <img src={avatarUrl(m.id)} alt="" loading="lazy" className="h-10 w-10 shrink-0 border border-ef-line object-cover" style={{ background: "#000" }} />
+                  <span className="font-mono text-[17px] font-bold text-white">{opName(m.id)}</span>
+                  {op && <span className="font-mono text-[12px] uppercase text-ef-muted">{op.element}</span>}
                 </div>
-                {maxed
-                  ? <span className="shrink-0 font-mono text-[14px] font-bold text-ef-accent-soft">최대 강화</span>
-                  : <button type="button" disabled={!ok} onClick={() => onForgeSkill(m.id)} title="스킬을 강화해 딜을 올린다(프로토콜 프리즘 소모, 다음 전투부터 반영)" className={`dd-cut flex shrink-0 flex-col items-center gap-0.5 px-3 py-1.5 font-mono ${ok ? "border border-ef-accent/60 text-ef-accent hover:bg-ef-accent/10" : "border border-ef-line/40 text-ef-muted opacity-50 cursor-not-allowed"}`}>
-                      <span className="flex items-center gap-1 text-[14px] font-bold uppercase"><Hammer className="h-3.5 w-3.5" />강화</span>
-                      <Cost chips={cost.chips} ok={ok} /></button>}
+                <div className="flex flex-col gap-1.5">
+                  {SKILL_KINDS.map((k) => {
+                    const sk = k === "attack" ? { name: "일반 공격" } : byKind(k);
+                    if (!sk) return null;
+                    const rank = ranks[k] ?? 0; const maxed = rank >= SKILL_MAX; const cost = skillForgeCost(rank); const ok = canAfford(craft.mats, cost);
+                    return (
+                      <div key={k} className="flex items-center gap-2 border border-ef-line/40 px-2 py-1.5">
+                        {k !== "attack" && <img src={skillIcon(m.id, k)} alt="" className="h-4 w-4 shrink-0 object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />}
+                        <span className="w-11 shrink-0 font-mono text-[11px] font-bold uppercase" style={{ color: KIND_TONE[k] }}>{KIND_KO[k]}</span>
+                        <span className="min-w-0 flex-1 truncate font-mono text-[12px] text-white" title={sk.name}>{sk.name}</span>
+                        <span className="shrink-0 font-mono text-[13px] font-bold" style={{ color: rank > 0 ? "#67e8f9" : "#c9c9cf" }}>{skillLabel(rank)}</span>
+                        {maxed
+                          ? <span className="shrink-0 font-mono text-[12px] text-ef-accent-soft">최대</span>
+                          : <button type="button" disabled={!ok} onClick={() => onForgeSkill(m.id, k)} title="이 스킬을 강화(프로토콜 프리즘 소모, 다음 전투부터)" className={`dd-cut flex shrink-0 items-center gap-1 px-2 py-0.5 font-mono text-[12px] font-bold ${ok ? "border border-ef-accent/60 text-ef-accent hover:bg-ef-accent/10" : "border border-ef-line/40 text-ef-muted opacity-50 cursor-not-allowed"}`}>
+                              <Hammer className="h-3 w-3" />강화 <Cost chips={cost.chips} ok={ok} /></button>}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             );
           })}
         </div>
-      )}
+        );
+      })()}
 
       {/* 부대 장비 */}
       {tab === "party" && (
@@ -151,24 +164,6 @@ export default function CraftPanel({ craft, party = [], onCraft, onForge, onSwap
                     );
                   })}
                 </div>
-                {/* 스킬 단조 — 재화(부품·관리권)로 skillRank 업그레이드. 다음 전투부터 스킬 딜 반영 */}
-                {onForgeSkill && (() => {
-                  const rank = m.progress?.skillRank ?? 0;
-                  const maxed = rank >= SKILL_MAX;
-                  const cost = skillForgeCost(rank);
-                  const ok = canAfford(craft.mats, cost);
-                  return (
-                    <div className="mt-2 flex items-center gap-2 border-t border-ef-line/40 pt-2">
-                      <span className="font-mono text-[13px] text-ef-muted">마스터리</span>
-                      <span className="font-mono text-sm font-bold" style={{ color: rank > 0 ? "#67e8f9" : "#e6e6e8" }}>{skillLabel(rank)}</span>
-                      {maxed ? <span className="ml-auto font-mono text-[13px] text-ef-accent-soft">최대 강화</span> : <>
-                        <span className="font-mono text-[13px] text-ef-muted">→ {skillLabel(rank + 1)}</span>
-                        <button type="button" disabled={!ok} onClick={() => onForgeSkill(m.id)} title="마스터리 — 오퍼 스킬을 강화해 딜을 올린다(프로토콜 프리즘 소모, 다음 전투부터 반영)" className={`dd-cut ml-auto flex items-center gap-1.5 px-2.5 py-1 font-mono text-[13px] font-bold ${ok ? "border border-ef-accent/60 text-ef-accent hover:bg-ef-accent/10" : "border border-ef-line/40 text-ef-muted opacity-50 cursor-not-allowed"}`}>
-                          <Hammer className="h-3 w-3" />마스터리 <Cost chips={cost.chips} ok={ok} /></button>
-                      </>}
-                    </div>
-                  );
-                })()}
               </div>
             );
           })}

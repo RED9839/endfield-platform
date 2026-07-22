@@ -1,5 +1,6 @@
 // ===== 다키스트 던전류 전투 엔진 (엔드필드 리뉴얼) =====
 import { weaponTrigger } from "./weapons";
+import { skillRankDmg, skillUtilMult, type SkillRanks, type SkillKind } from "./progress";
 // 카드/드로우 없음. 속도 기반 턴 순서 + 고정 스킬킷 + 스킬 사용 요구사항(usage gate).
 // 전열/후열 개념은 없다 — pos는 편성 순서(화면 배치)일 뿐 피격 우선순위가 아니다.
 // 명일방주: 엔드필드 전투 시스템 wiki 정합. 액션 레이어만 DD류, 메커니즘은 원작.
@@ -104,6 +105,7 @@ export type DDUnit = {
   zfyUsedFree?: boolean; // 장방이 천리의 경지: 첫 배틀 무소모를 이미 썼는가
   utilMult: number;  // 스킬 단조 유틸 배율(취약·증폭·회복·게이지·지속) × 의지. M0=1.0
   utilBase?: number; // 의지 곱하기 전 스킬 단조 유틸 배율(재계산 기준값)
+  skillRanks?: SkillRanks; // 기본/배틀/연계/궁 각각의 마스터리 랭크(오퍼별)
   killPriority?: number; // 아군 자동 타겟 처치 우선(적 한정): 3=지원(치유/증폭) 2=원거리 1=근접
   lanceN?: number;   // 아비웨나 썬더랜스(적에게 누적, 가로채기로 소모) — 일반
   lanceBig?: number; // 아비웨나 강력 썬더랜스(적에게 누적) — 강력(전기 부착)
@@ -182,6 +184,7 @@ export type DDSkill = {
   stanceFromCrush?: boolean; // 강타로 방불 3+ 소모 시 스탠스 2(미브 추형)
   vsWeak?: number; // 물리취약/불균형 적 추가 피해(미브 냉정 등)
   countsAsCrush?: boolean; // 원작 "강타 피해로 간주"(미브 개천) — 방불 소모 없이 강타 트리거(고검의 잔향 등) 발동
+  masteryDmg?: [number, number, number, number]; // 스킬별 마스터리 딜 배율 M0~M3(warfarin 실측). 표준 곡선[1,1.069,1.153,1.25]과 다른 소수 스킬용
   crystal?: boolean; // 오리지늄 결정 부착(관리자 봉인 시퀀스)
   apply?: (target: DDUnit, self: DDUnit) => void; // 추가 효과(취약·연타 등)
   selfUlt?: boolean; // 궁극(게이지 소모)
@@ -740,6 +743,8 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
   // 쿨만 믿으면 쿨 1턴짜리(아크라이트)가 자기 연계로 조건을 재생성해 연쇄를 독점한다
   // (실측 150행동 중 146회). 다른 오퍼가 조건을 다시 세워주면(감전 재부착 후 소모) 재발동은 허용.
   s.chainLinker = self.side === "ally" && skill.kind === "link" ? self.id : undefined;
+  // 스킬 마스터리(기본/배틀/연계/궁 각각) — 이 행동 스킬 종류의 랭크로 유틸 배율 설정
+  if (self.side === "ally") self.utilMult = skillUtilMult(self.skillRanks?.[skill.kind] ?? 0) * (self.wilMul ?? 1);
   log.push(`${self.name}[pos${self.pos}] → ${skill.name}${(s.chain ?? 1) > 1 ? `  ⛓ ${s.chain}연쇄` : ""}`);
   SRC_CTX = { by: self.name, via: skill.name, kind: "skill" }; // 이 스킬로 걸리는 효과의 기본 출처(무기/장비 트리거가 일시 override)
   // 자원: 스킬 게이지(파티 공유) 소모 + 궁극기 에너지(개인) 충전 — 위키 정합
@@ -1073,6 +1078,9 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
       if (self.hp / self.maxHp > 0.5) gb += elem === "physical" ? g.selfHpHighPhys : g.selfHpHighArts; // 전달자: 고체력 시 물리/아츠 피해+
       dmg *= 1 + gb;
     }
+    // 스킬 마스터리(종류별) 딜 보너스 — 공격력엔 M0만 들었으므로 여기서 랭크 보너스를 곱한다.
+    // masteryDmg 있으면 스킬별 실측 곡선(예: 개천 [1,1.038,1.083,1.136]), 없으면 표준 곡선.
+    if (self.side === "ally") { const r = self.skillRanks?.[skill.kind] ?? 0; dmg *= skill.masteryDmg ? skill.masteryDmg[Math.max(0, Math.min(3, r))] : skillRankDmg(r); }
     if (t.staggered) dmg *= 1.3;
     if (self.id === "perlica" && t.staggered) dmg *= 1.3; // 펠리카 오블리터레이션 프로토콜(불균형 적 추가 +30%)
     if (self.id === "fluorite" && (t.speedMod || 0) < 0) dmg *= 1.2; // 플루라이트 몰락의 조력자(감속 적 +20%)

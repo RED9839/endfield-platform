@@ -4,7 +4,7 @@
 import { X } from "lucide-react";
 import { OPERATORS, avatarUrl, SKILLS, skillIcon } from "../roster";
 import { GEAR_PIECE_BY_ID, LOADOUT_SLOTS, OP_GEAR, gearSlotName, type LoadoutSlot } from "../gear";
-import { skillLabel, skillMult, SKILL_MAX } from "../progress";
+import { skillLabel, SKILL_MAX } from "../progress";
 import type { CraftState } from "../craft";
 import type { PartyMember } from "../run";
 
@@ -45,8 +45,8 @@ export default function StatusPanel({ party, craft, onClose }: { party: PartyMem
             });
             const ownedN = slots.filter((s) => s.owned).length;
             const totalN = slots.filter((s) => s.pid).length;
-            const rank = m.progress?.skillRank ?? 0;
-            const mult = skillMult(rank);
+            const ranks = m.progress?.skillRanks ?? { attack: 0, battle: 0, link: 0, ult: 0 };
+            const maxRank = Math.max(...Object.values(ranks));
             const skills = (SKILLS[m.id] ?? []).filter((s) => s.kind !== "attack");
             return (
               <div key={m.id} className="hud-panel dd-cut p-3.5">
@@ -58,8 +58,7 @@ export default function StatusPanel({ party, craft, onClose }: { party: PartyMem
                     <div className="mt-0.5 flex items-center gap-2 font-mono text-[13px]">
                       <span style={{ color: ownedN === totalN && totalN > 0 ? "#86efac" : "#c9c9cf" }}>장비 {ownedN}/{totalN}</span>
                       <span className="text-ef-line">·</span>
-                      <span style={{ color: rank > 0 ? "#67e8f9" : "#8a8a90" }}>마스터리 {skillLabel(rank)}{rank >= SKILL_MAX ? "(최대)" : ""}</span>
-                      {rank > 0 && <span className="font-mono text-[12px] text-ef-accent-soft">딜 ×{mult.toFixed(2)}</span>}
+                      <span style={{ color: maxRank > 0 ? "#67e8f9" : "#8a8a90" }}>마스터리 {maxRank >= SKILL_MAX ? "M3(최대)" : skillLabel(maxRank)}</span>
                     </div>
                   </div>
                 </div>
@@ -82,17 +81,21 @@ export default function StatusPanel({ party, craft, onClose }: { party: PartyMem
                     </div>
                   </div>
 
-                  {/* 스킬(마스터리) */}
+                  {/* 스킬(마스터리 — 기본/배틀/연계/궁 각각) */}
                   <div>
-                    <div className="mb-1 font-mono text-[12px] font-bold uppercase tracking-wider text-ef-muted">스킬 <span className="text-[#67e8f9]">{skillLabel(rank)}</span></div>
+                    <div className="mb-1 font-mono text-[12px] font-bold uppercase tracking-wider text-ef-muted">스킬 마스터리</div>
                     <div className="flex flex-col gap-1">
-                      {skills.map((sk) => (
-                        <div key={sk.id} className="flex items-center gap-2 border border-ef-line/40 px-2 py-1" style={CUT_SM}>
-                          <img src={skillIcon(m.id, sk.kind)} alt="" className="h-4 w-4 shrink-0 object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
+                      {[{ kind: "attack" as const, name: "일반 공격" }, ...skills].map((sk) => {
+                        const r = ranks[sk.kind] ?? 0;
+                        return (
+                        <div key={sk.kind === "attack" ? "attack" : (sk as { id: string }).id} className="flex items-center gap-2 border border-ef-line/40 px-2 py-1" style={CUT_SM}>
+                          {sk.kind !== "attack" && <img src={skillIcon(m.id, sk.kind)} alt="" className="h-4 w-4 shrink-0 object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />}
                           <span className="w-8 shrink-0 font-mono text-[10px] font-bold uppercase" style={{ color: KIND_TONE[sk.kind] }}>{KIND_KO[sk.kind] ?? sk.kind}</span>
                           <span className="min-w-0 flex-1 truncate font-mono text-[12px] text-white" title={sk.name}>{sk.name}</span>
+                          <span className="shrink-0 font-mono text-[11px] font-bold" style={{ color: r > 0 ? "#67e8f9" : "#8a8a90" }}>{skillLabel(r)}</span>
                         </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 </div>

@@ -187,7 +187,7 @@ export default function GamePage() {
             {run.phase === "victory" && (() => {
               const L = run.loot;
               const crafted = Object.keys(run.craft.owned).length;
-              const enhanced = run.party.filter((m) => (m.progress?.skillRank ?? 0) > 0);
+              const enhanced = run.party.filter((m) => Object.values(m.progress?.skillRanks ?? {}).some((r) => (r as number) > 0));
               const opName = (opid: string) => OPERATORS.find((o) => o.id === opid)?.name ?? opid;
               const lootItems = Object.entries(L.items).filter(([, n]) => n > 0);
               return (
@@ -204,7 +204,7 @@ export default function GamePage() {
                   </div>
                   <div className="space-y-1 font-mono text-[14px]">
                     {crafted > 0 && <div className="text-ef-muted">🛠 제작 장비 <b className="text-ef-ink">{crafted}</b>개</div>}
-                    {enhanced.length > 0 && <div className="text-ef-muted">⬆ 스킬 강화 <span className="text-ef-accent-soft">{enhanced.map((m) => `${opName(m.id)} ${skillLabel(m.progress!.skillRank)}`).join(" · ")}</span></div>}
+                    {enhanced.length > 0 && <div className="text-ef-muted">⬆ 스킬 강화 <span className="text-ef-accent-soft">{enhanced.map((m) => `${opName(m.id)} ${skillLabel(Math.max(...Object.values(m.progress!.skillRanks)))}`).join(" · ")}</span></div>}
                     {lootItems.length > 0 && <div className="text-ef-muted">🎁 획득 아이템 <span className="text-ef-ink">{lootItems.map(([itid, n]) => `${ITEMS[itid]?.name ?? itid}×${n}`).join(" · ")}</span></div>}
                   </div>
                 </div>

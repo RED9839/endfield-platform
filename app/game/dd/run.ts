@@ -5,7 +5,7 @@ import { useCallback, useMemo, useState } from "react";
 import { makeAlly } from "./roster";
 import { GEAR_SLOTS, LOADOUT_SLOTS, GEAR_PIECE_BY_ID, type Loadout } from "./gear";
 import { rewardItemPool, ITEMS } from "./items";
-import { SKILL_MAX, DEFAULT_PROGRESS, type OpProgress } from "./progress";
+import { SKILL_MAX, DEFAULT_PROGRESS, type OpProgress, type SkillKind } from "./progress";
 import { initialCraft, craftPiece as doCraft, forgePiece as doForge, cloneCraft, craftCost, skillForgeCost, canAfford, canBuy, sellUnit, matAmount, itemSellValue, SHOP, type CraftState, type ShopItem, type SellMat } from "./craft";
 import { FACTIONS, enemyDrop, resetEncounterHistory } from "./sim";
 
@@ -88,14 +88,15 @@ export function useDDRun() {
   const forgePiece = useCallback((pieceId: string) => { let ok = false; setCraft((c) => { const n = cloneCraft(c); ok = doForge(n, pieceId); return ok ? n : c; }); return ok; }, []);
   // 장비 슬롯 교체(런 중) — 파티원 로드아웃의 해당 슬롯을 다른 피스로. 다음 전투 createBattle에 반영.
   const swapGear = useCallback((opId: string, slot: keyof Loadout, pieceId: string) => setParty((ps) => ps.map((p) => p.id === opId ? { ...p, loadout: { ...p.loadout, [slot]: pieceId } } : p)), []);
-  // 스킬 단조(런 중) — 재화(부품·관리권) 소모 → 파티원 skillRank +1. 다음 전투 createBattle → makeAlly(progress)에 반영.
-  const forgeSkill = useCallback((opId: string) => {
+  // 스킬 마스터리(런 중) — 프로토콜 프리즘 소모 → 파티원의 특정 스킬 트랙(기본/배틀/연계/궁) +1.
+  const forgeSkill = useCallback((opId: string, kind: SkillKind) => {
     const m = party.find((p) => p.id === opId);
-    const rank = m?.progress?.skillRank ?? 0;
+    const ranks = m?.progress?.skillRanks ?? DEFAULT_PROGRESS.skillRanks;
+    const rank = ranks[kind] ?? 0;
     if (!m || rank >= SKILL_MAX || !canAfford(craft.mats, skillForgeCost(rank))) return false;
     const cost = skillForgeCost(rank);
     setCraft((c) => ({ ...c, mats: { parts: c.mats.parts - cost.parts, permits: c.mats.permits - cost.permits, chips: (c.mats.chips ?? 0) - (cost.chips ?? 0) } }));
-    setParty((ps) => ps.map((p) => p.id === opId ? { ...p, progress: { ...(p.progress ?? DEFAULT_PROGRESS), skillRank: rank + 1 } } : p));
+    setParty((ps) => ps.map((p) => p.id === opId ? { ...p, progress: { ...(p.progress ?? DEFAULT_PROGRESS), skillRanks: { ...(p.progress?.skillRanks ?? DEFAULT_PROGRESS.skillRanks), [kind]: rank + 1 } } } : p));
     return true;
   }, [party, craft]);
 
