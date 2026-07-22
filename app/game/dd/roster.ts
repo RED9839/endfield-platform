@@ -44,7 +44,7 @@ export const SKILLS: Record<string, DDSkill[]> = {
   // 재능: 공감(쇄빙 시 게이지 반환 +15, 엔진) · 이유 있는 게으름(냉기 부착 면역, 엔진 cryoImmune). 주스탯 의지.
   estella: [
     // 서스테인(배틀 150%, 불균형 10): 일직선 냉기 + 냉기 부착.
-    { id: "est-b", name: "서스테인", kind: "battle", fromPos: [1, 2, 3], target: "row", power: 1.5, element: "cryo", attach: "cryo", staggerVal: 10, note: "일직선 냉기 + 냉기 부착" },
+    { id: "est-b", name: "서스테인", kind: "battle", fromPos: [1, 2, 3], target: "row", power: 1.56, element: "cryo", attach: "cryo", staggerVal: 10, note: "일직선 냉기 + 냉기 부착(실측 Lv1 156%)" },
     // 디스토션(연계 동결적 280%, 물취 10%, 쿨 18초): 동결 적일 때. 강제 띄우기(물리) → 동결 적이면 쇄빙(엔진) + 물리취약.
     { id: "est-l", name: "디스토션", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 2.8, element: "physical", staggerVal: 10, cooldown: 4, anomaly: "launch",
       // 원문: 게이트 없음. "동결 적 명중 시 추가 피해 + 물리 취약"은 조건이 아니라 보너스다.
@@ -65,7 +65,8 @@ export const SKILLS: Record<string, DDSkill[]> = {
     { id: "ros-l", name: "그림자가 타오르는 순간", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 0.67, element: "physical", staggerVal: 5, cooldown: 3, anomaly: "launch",
       requires: (t) => !!t && t.physBreak > 0 && ELEMENTS.some((e) => t.arts[e] > 0), requiresText: "방어 불능 + 아츠 부착된 적", note: "아츠 소모 물리·띄우기 + 치명 버프(치확 30%/치피 100%)" },
     // 기습 '날카로운 발톱'(궁 275+111+333=719%, 불균형 25, 게이지 110): 다단 열기 누킹 + 열기 부착.
-    { id: "ros-u", name: "기습 '날카로운 발톱'", kind: "ult", fromPos: [1, 2], target: "single-front", power: 7.11, hits: [2.67, 1.11, 3.33], element: "heat", attach: "heat", staggerVal: 25, selfUlt: true, note: "다단 열기 단일 누킹 + 열기 부착" },
+    // 실측 Lv9: 찌르기 475%(성장비 ×1.727 예외) + 베기1 200% + 베기2 600% = 1275% → hits=Lv9/180.
+    { id: "ros-u", name: "기습 '날카로운 발톱'", kind: "ult", fromPos: [1, 2], target: "single-front", power: 7.08, hits: [2.64, 1.11, 3.33], element: "heat", attach: "heat", staggerVal: 25, selfUlt: true, note: "다단 열기 단일 누킹 + 열기 부착(실측 Lv9 475+200+600)" },
   ],
   // 미브: 물리/양손검 가드. 청파 삼형(단운→추형→개천 3스탠스) + 물리취약 연계 + 방어 불능 부여 궁.
   // 재능: 냉정(개천이 물취/불균형 적에 ×1.2, vsWeak) · 분노(연계 후 최대 HP 30% 보호막, 엔진). 자체 방어 불능 부여는 궁뿐 → 팀 방어 불능 보조 필요.
@@ -75,7 +76,8 @@ export const SKILLS: Record<string, DDSkill[]> = {
     // 추형(배틀, 게이지 50, 스탠스 1 요구): 강타. 방어 불능 3+ 소모 시 → 개천(스탠스 2).
     { id: "mf-b2", name: "청파 삼형·추형", kind: "battle", fromPos: [1, 2, 3], target: "single-front", power: 0.89, element: "physical", staggerVal: 5, gaugeCost: 50, requiresStance: 1, anomaly: "crush", stanceFromCrush: true, note: "강타 + (방어 불능 3+ 소모)개천 전환" },
     // 개천(배틀, 게이지 50, 스탠스 2 요구): 주력 딜(강타 간주). 냉정: 물취/불균형 적 ×1.2.
-    { id: "mf-b3", name: "청파 삼형·개천", kind: "battle", fromPos: [1, 2, 3], target: "row", power: 4.0, element: "physical", staggerVal: 10, gaugeCost: 50, requiresStance: 2, vsWeak: 0.2, countsAsCrush: true, setStanceTo: 0, masteryDmg: [1, 1.038, 1.083, 1.136], note: "주력 딜(강타 간주) · 냉정: 물리취약/불균형 적 피해 ×1.2 · 마스터리 실측 528→600 · 사용 후 단운으로" },
+    // 개천은 Lv1 400%→Lv9 528%로 성장비 ×1.32(타 스킬 ×1.8 예외, warfarin 실측). power=528/180이라야 ×1.8 적용 시 실측 Lv9.
+    { id: "mf-b3", name: "청파 삼형·개천", kind: "battle", fromPos: [1, 2, 3], target: "row", power: 2.933, element: "physical", staggerVal: 10, gaugeCost: 50, requiresStance: 2, vsWeak: 0.2, countsAsCrush: true, setStanceTo: 0, masteryDmg: [1, 1.038, 1.083, 1.136], note: "주력 딜(강타 간주) · 실측 Lv9 528%·M3 600% · 냉정: 물취/불균형 ×1.2 · 사용 후 단운으로" },
     // 후회 없는 주먹(연계 111%, 쿨 20초): 방어 불능 3+ 적. 물리취약 + 추형 전환.
     { id: "mf-l", name: "후회 없는 주먹", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 1.11, element: "physical", staggerVal: 10, cooldown: 4, setStanceTo: 1,
       requires: (t) => !!t && t.physBreak >= 3, requiresText: "방어 불능 3스택 이상인 적", apply: (t) => bumpVuln(t, "physical", 0.05), note: "물리취약 + 추형 전환" },
