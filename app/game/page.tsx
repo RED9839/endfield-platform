@@ -13,32 +13,18 @@ import RosterSelect from "./dd/ui/RosterSelect";
 import RunMap from "./dd/ui/RunMap";
 import RunHud from "./dd/ui/RunHud";
 import CraftPanel from "./dd/ui/CraftPanel";
+import StatusPanel from "./dd/ui/StatusPanel";
 import type { Element } from "./dd/combat";
 
 const PRIMARY = "#ff9a2f";
 const CUT_SM = { clipPath: "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))" };
 const elementColor: Record<"physical" | Element, string> = { physical: "#d4d4d8", heat: "#fb923c", electric: "#FBCB38", cryo: "#67e8f9", nature: "#86efac" };
 
-const WARN_KEY = "dd-craft-warn-off";
 export default function GamePage() {
   const run = useDDRun();
-  const [warnNode, setWarnNode] = useState<RunNode | null>(null); // 제작 알림 팝업 대상 노드
-  const [noWarn, setNoWarn] = useState(false); // "다시 표시 안 함"
-  // 층당 1회만 — 예전엔 교전 노드마다 떠서 전투로 가는 길을 매번 막았다(맨몸 시작이라 제작 가능 상태가 늘 참).
-  const [warnedFloor, setWarnedFloor] = useState<number | null>(null);
-  useEffect(() => { setNoWarn(localStorage.getItem(WARN_KEY) === "1"); }, []);
-  // 전투 노드 진입 — 제작 가능한 장비가 있고 알림을 끄지 않았으면 먼저 팝업
-  const handleEnter = (n: RunNode) => {
-    if (n.kind !== "rest" && run.hasCraftable && !noWarn && warnedFloor !== run.floor) setWarnNode(n);
-    else run.enterNode(n);
-  };
-  const dismissWarn = (proceed: boolean, dontShow: boolean) => {
-    if (dontShow) { localStorage.setItem(WARN_KEY, "1"); setNoWarn(true); }
-    setWarnedFloor(run.floor); // 이 층에서는 다시 묻지 않는다
-    const n = warnNode; setWarnNode(null);
-    if (proceed && n) run.enterNode(n);
-    else if (!proceed) run.openCraft();
-  };
+  const [showStatus, setShowStatus] = useState(false); // 부대 현황(읽기 전용) 오버레이
+  // 제작·마스터리는 야영지에서만. 맵에선 노드 진입만 — 진입 전 제작 안내 모달은 무의미해 제거했다.
+  const handleEnter = (n: RunNode) => run.enterNode(n);
 
   return (
     <main className="dd-realm min-h-screen bg-ef-bg text-ef-ink">
@@ -61,7 +47,10 @@ export default function GamePage() {
 
       {run.phase === "map" && (
         <>
-          <div className="mx-auto max-w-[1500px] px-4 pt-4 sm:px-7"><RunHud faction={run.faction} depth={run.depthReached} maxDepth={run.maxDepth} floor={run.floor} totalFloors={run.totalFloors} floorName={run.floorName} craft={run.craft} onCraft={run.openCraft} canCraft hasCraftable={run.hasCraftable} /></div>
+          <div className="mx-auto max-w-[1500px] px-4 pt-4 sm:px-7"><RunHud faction={run.faction} depth={run.depthReached} maxDepth={run.maxDepth} floor={run.floor} totalFloors={run.totalFloors} floorName={run.floorName} craft={run.craft} hasCraftable={run.hasCraftable} /></div>
+          <div className="mx-auto mt-2 max-w-[1500px] px-4 sm:px-7">
+            <button type="button" onClick={() => setShowStatus(true)} className="hud-btn dd-cut flex items-center gap-1.5 px-3 py-1.5 font-mono text-[13px] font-bold uppercase tracking-wider text-ef-muted hover:text-white">📋 부대 현황 — 장비·마스터리 확인</button>
+          </div>
           <RunMap nodes={run.nodes} frontier={run.frontier} cleared={run.cleared} party={run.party} items={run.items} faction={run.faction} floor={run.floor} totalFloors={run.totalFloors} onEnter={handleEnter} />
         </>
       )}
@@ -226,28 +215,12 @@ export default function GamePage() {
         </div>
       )}
 
-      {warnNode && <CraftWarnModal onClose={dismissWarn} />}
+      {showStatus && (
+        <div className="overflow-y-auto" style={{ position: "fixed", inset: 0, zIndex: 100, background: "#0a0a0c" }}>
+          <StatusPanel party={run.party} craft={run.craft} onClose={() => setShowStatus(false)} />
+        </div>
+      )}
     </main>
   );
 }
 
-// 전투 진입 전 제작 알림 팝업 — 제작 가능한 장비가 있을 때
-function CraftWarnModal({ onClose }: { onClose: (proceed: boolean, dontShow: boolean) => void }) {
-  const [dont, setDont] = useState(false);
-  return (
-    <div className="z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm px-4" style={{ position: "fixed", inset: 0 }}>
-      <div className="w-full max-w-[440px] border border-ef-accent/50 bg-ef-card p-5" style={{ ...CUT_SM, boxShadow: "0 0 40px -8px rgba(255,154,47,0.35)" }}>
-        <div className="mb-2 flex items-center gap-2"><Hammer className="h-5 w-5 text-ef-accent" /><h3 className="font-mono text-lg font-black uppercase tracking-wider text-white">제작 가능한 장비가 있습니다</h3></div>
-        <p className="mb-4 font-mono text-[14px] leading-relaxed text-ef-muted">공업소에서 파티 장비를 제작하면 더 강해집니다. 지금 제작하시겠습니까?</p>
-        <label className="mb-4 flex cursor-pointer select-none items-center gap-2 font-mono text-[13px] text-ef-muted">
-          <input type="checkbox" checked={dont} onChange={(e) => setDont(e.target.checked)} className="h-4 w-4 accent-[#ff9a2f]" />
-          다시 표시 안 함
-        </label>
-        <div className="flex gap-2">
-          <button type="button" onClick={() => onClose(false, dont)} className="dd-cut flex flex-1 items-center justify-center gap-1.5 py-2.5 font-mono text-sm font-black uppercase tracking-wider transition hover:brightness-110" style={{ background: `linear-gradient(180deg,#ffb257,${PRIMARY})`, color: "#0a0a0a", boxShadow: "0 0 18px -4px rgba(255,154,47,0.6)" }}><Hammer className="h-4 w-4" />공업소로</button>
-          <button type="button" onClick={() => onClose(true, dont)} className="hud-btn dd-cut flex-1 py-2.5 font-mono text-sm font-bold uppercase tracking-wider text-ef-muted transition hover:text-white">그냥 진입</button>
-        </div>
-      </div>
-    </div>
-  );
-}
