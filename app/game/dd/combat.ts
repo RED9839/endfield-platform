@@ -108,6 +108,7 @@ export type DDUnit = {
   utilBase?: number; // 의지 곱하기 전 스킬 단조 유틸 배율(재계산 기준값)
   skillRanks?: SkillRanks; // 기본/배틀/연계/궁 각각의 마스터리 랭크(오퍼별)
   killPriority?: number; // 아군 자동 타겟 처치 우선(적 한정): 3=지원(치유/증폭) 2=원거리 1=근접
+  tier?: string; // 적 등급(EnemyTier). 정예(elite)·보스(boss)는 동결 조건은 걸리되 행동 불가/속도감소는 저항(ccResist)
   lanceN?: number;   // 아비웨나 썬더랜스(적에게 누적, 가로채기로 소모) — 일반
   lanceBig?: number; // 아비웨나 강력 썬더랜스(적에게 누적) — 강력(전기 부착)
   artsImmune?: number; // 아츠 부착 확률 면역(아크라이트 만물의 지혜 0.5 = 50% 무효)
@@ -488,9 +489,12 @@ export function applyEnemyArts(target: DDUnit, el: Element, log: string[]): void
   } else if (el === "nature") { // 부식: 이동 저하 → 우리 모델의 속도 감소
     target.speedMod = (target.speedMod || 0) - 12; setTimer(target, "speedMod", 2);
     log.push(`  ☠ ${target.name} 부식! 속도 감소`);
-  } else { // cryo 동결: 행동 불가
+  } else if (!ccResist(target)) { // cryo 동결: 행동 불가
     target.timers.stun = 1; add(target, "stun");
     log.push(`  ☠ ${target.name} 동결! 행동 불가(1턴)`);
+  } else { // 정예·보스: 조건용 동결만 남기고 행동 불가 저항
+    target.frozen = Math.max(target.frozen, 1); setTimer(target, "frozen", DUR_FROZEN);
+    log.push(`  ☠ ${target.name} 동결(조건)! 정예·보스는 행동 불가 저항`);
   }
 }
 
@@ -526,8 +530,8 @@ export function applyAttach(target: DDUnit, el: Element, self: DDUnit, log: stri
       return self.attack * buff * ANOM[level - 1];
     }
     if (el === "cryo") { // 동결(쇄빙 대기)
-      target.frozen = level; add(target, "stun"); setTimer(target, "frozen", DUR_FROZEN);
-      log.push(`  → 동결! 130% 냉기 + 빙결(쇄빙 대기, ${level}스택)`);
+      target.frozen = level; if (!ccResist(target)) add(target, "stun"); setTimer(target, "frozen", DUR_FROZEN); // 정예·보스는 동결 조건만(행동 불가 저항)
+      log.push(`  → 동결! 130% 냉기 + 빙결(쇄빙 대기, ${level}스택)${ccResist(target) ? " · 정예·보스 행동 불가 저항" : ""}`);
       return self.attack * buff * 1.3;
     }
     // nature: 부식 — 모든 속성 저항 '포인트' 감소(물리 포함, 상한 24포인트) + 부식 상태(아델리아 소모 마커)
@@ -737,7 +741,9 @@ export const arcaneForm = (u: DDUnit): "wisdom" | "will" => {
   const a = u.panelAttrs ?? u.attrs;
   return !a || a.int >= a.wil ? "wisdom" : "will";
 };
-export const canAct = (u: DDUnit) => u.hp > 0 && !(u.side === "enemy" && (u.staggered || (u.timers.stun || 0) > 0 || u.frozen > 0)); // 불균형/시간 정지/동결 적은 행동 불가
+// 정예·보스는 동결/속도감소 등 행동 저해 CC에 저항(조건 판정용 상태는 걸림). 일반·강화 개체만 행동 불가.
+export const ccResist = (u: DDUnit) => u.side === "enemy" && (u.tier === "elite" || u.tier === "boss");
+export const canAct = (u: DDUnit) => u.hp > 0 && !(u.side === "enemy" && (u.staggered || (u.timers.stun || 0) > 0 || (u.frozen > 0 && !ccResist(u)))); // 불균형/시간 정지/동결 적은 행동 불가(정예·보스는 동결에 안 묶임)
 
 // 한 유닛의 행동 실행
 export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
@@ -894,7 +900,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
       const stacks = Math.min(4, t.arts.cryo + t.arts.nature);
       if (stacks > 0) {
         t.arts.cryo = 0; t.arts.nature = 0; delete t.timers["arts:cryo"]; delete t.timers["arts:nature"];
-        t.frozen = stacks; add(t, "stun"); setTimer(t, "frozen", DUR_FROZEN); gearTrigger(self, "anomaly:cryo"); // 강제 동결(세트 조건 = "동결을 부여한 후")
+        t.frozen = stacks; if (!ccResist(t)) add(t, "stun"); setTimer(t, "frozen", DUR_FROZEN); gearTrigger(self, "anomaly:cryo"); // 강제 동결(세트 조건 = "동결을 부여한 후")
         raw += self.attack * eb(self) * (0.67 + 0.89 * stacks); // 동결 부여 67% + 스택당 89%
         gainUlt(self, 10 + 30 * stacks); // 궁충(동결 10 + 스택당 30)
         s.anomalyConsumed = ANOMALY_WINDOW;
@@ -1000,13 +1006,13 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
     if (ELEMENTS.reduce((n, e) => n + t.arts[e], 0) + t.frozen < preReact) s.anomalyConsumed = ANOMALY_WINDOW;
     if (skill.forceFreeze && t.arts.cryo > 0) {
       const n = Math.min(4, t.arts.cryo);
-      t.arts.cryo = 0; t.frozen = n; add(t, "stun"); setTimer(t, "frozen", DUR_FROZEN);
+      t.arts.cryo = 0; t.frozen = n; if (!ccResist(t)) add(t, "stun"); setTimer(t, "frozen", DUR_FROZEN);
       gaugeUp(s, [10, 20, 30, 40][n - 1]);
       gainUlt(self, 8); // 급속 냉동 보존 기술(자기 동결)
       log.push(`  → 강제 동결! 냉기 ${n}스택 소모 + 게이지 + 궁 에너지`);
     }
     if (skill.freezeZone && t.hp > 0) { // 살얼음 추위(스노우샤인): 부착 무관 직접 동결 + 빙설 지대 지속 냉기
-      t.frozen = Math.max(t.frozen, skill.freezeZone); add(t, "stun"); setTimer(t, "frozen", DUR_FROZEN);
+      t.frozen = Math.max(t.frozen, skill.freezeZone); if (!ccResist(t)) add(t, "stun"); setTimer(t, "frozen", DUR_FROZEN);
       t.dot = Math.round(self.attack * eb(self) * 0.29); setTimer(t, "dot", DUR_DOT);
       log.push(`  → 빙설 지대! 강제 동결(${skill.freezeZone}) + 지속 냉기 ${t.dot}/라운드`);
     }
