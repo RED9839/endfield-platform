@@ -79,7 +79,8 @@ export const GEAR_SETS: Record<string, SetEffect[]> = {
 };
 
 const ELEMENT_KO: Record<Element | "all", string> = { heat: "열기", electric: "전기", cryo: "냉기", nature: "자연", all: "전 속성" };
-const KIND_KO: Record<"attack" | "battle" | "link" | "ult" | "all", string> = { attack: "기본", battle: "배틀", link: "연계", ult: "궁극", all: "모든 스킬" };
+// 스킬 종류 표기는 labels.ts(SKILL_KIND_SHORT) 기준과 일치 — 일반/배틀/연계/궁극.
+const KIND_KO: Record<"attack" | "battle" | "link" | "ult" | "all", string> = { attack: "일반", battle: "배틀", link: "연계", ult: "궁극", all: "모든 스킬" };
 export function effectText(e: SetEffect): string {
   switch (e.type) {
     case "dmgVs": return `${e.cond === "broken" ? "불균형" : e.cond === "vulnerable" ? "취약" : "아츠부착"} 적 피해 +${Math.round(e.pct * 100)}%`;

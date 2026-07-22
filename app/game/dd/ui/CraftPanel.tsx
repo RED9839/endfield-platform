@@ -9,7 +9,7 @@ import { SKILL_MAX, SKILL_KINDS, skillLabel, type SkillKind } from "../progress"
 import { OPERATORS, avatarUrl, SKILLS, skillIcon } from "../roster";
 import type { PartyMember } from "../run";
 import { RESOURCE_ICON } from "../items";
-import { DMG_LABEL } from "../labels";
+import { DMG_LABEL, SKILL_KIND_SHORT } from "../labels";
 
 const CUT = { clipPath: "polygon(0 0, calc(100% - 7px) 0, 100% 7px, 100% 100%, 7px 100%, 0 calc(100% - 7px))" };
 const dmgText = (p: GearPiece) => { if (!p.dmg) return ""; const pct = ["hpPct"].includes(p.dmg.kind) || p.dmg.base < 1; return `${DMG_LABEL[p.dmg.kind] ?? p.dmg.kind} +${pct ? Math.round(p.dmg.base * 100) + "%" : Math.round(p.dmg.base)}`; };
@@ -100,7 +100,6 @@ export default function CraftPanel({ craft, party = [], onCraft, onForge, onSwap
 
       {/* 스킬 마스터리 — 오퍼별로 기본/배틀/연계/궁 각각 강화(원작대로 트랙 분리) */}
       {tab === "mastery" && onForgeSkill && (() => {
-        const KIND_KO: Record<string, string> = { attack: "기본공격", battle: "배틀", link: "연계", ult: "궁극기" };
         const KIND_TONE: Record<string, string> = { attack: "#9a9aa2", battle: "#ff9a2f", link: "#67e8f9", ult: "#f5c542" };
         return (
         <div className="grid gap-2.5 lg:grid-cols-2">
@@ -123,7 +122,7 @@ export default function CraftPanel({ craft, party = [], onCraft, onForge, onSwap
                     return (
                       <div key={k} className="flex items-center gap-2 border border-ef-line/40 px-2 py-1.5">
                         {k !== "attack" && <img src={skillIcon(m.id, k)} alt="" className="h-4 w-4 shrink-0 object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />}
-                        <span className="w-11 shrink-0 font-mono text-[11px] font-bold uppercase" style={{ color: KIND_TONE[k] }}>{KIND_KO[k]}</span>
+                        <span className="w-11 shrink-0 font-mono text-[11px] font-bold uppercase" style={{ color: KIND_TONE[k] }}>{SKILL_KIND_SHORT[k]}</span>
                         <span className="min-w-0 flex-1 truncate font-mono text-[12px] text-white" title={sk.name}>{sk.name}</span>
                         <span className="shrink-0 font-mono text-[13px] font-bold" style={{ color: rank > 0 ? "#67e8f9" : "#c9c9cf" }}>{skillLabel(rank)}</span>
                         {maxed

@@ -5,12 +5,12 @@ import { X } from "lucide-react";
 import { OPERATORS, avatarUrl, SKILLS, skillIcon } from "../roster";
 import { GEAR_PIECE_BY_ID, LOADOUT_SLOTS, OP_GEAR, gearSlotName, type LoadoutSlot } from "../gear";
 import { skillLabel, SKILL_MAX } from "../progress";
+import { SKILL_KIND_SHORT } from "../labels";
 import type { CraftState } from "../craft";
 import type { PartyMember } from "../run";
 
 const CUT_SM = { clipPath: "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))" };
 const elementColor: Record<string, string> = { physical: "#d4d4d8", heat: "#fb923c", electric: "#FBCB38", cryo: "#67e8f9", nature: "#86efac" };
-const KIND_KO: Record<string, string> = { attack: "기본", battle: "배틀", link: "연계", ult: "궁극" };
 const KIND_TONE: Record<string, string> = { attack: "#9a9aa2", battle: "#ff9a2f", link: "#67e8f9", ult: "#f5c542" };
 
 function ForgePips({ lv }: { lv: number }) {
@@ -90,7 +90,7 @@ export default function StatusPanel({ party, craft, onClose }: { party: PartyMem
                         return (
                         <div key={sk.kind === "attack" ? "attack" : (sk as { id: string }).id} className="flex items-center gap-2 border border-ef-line/40 px-2 py-1" style={CUT_SM}>
                           {sk.kind !== "attack" && <img src={skillIcon(m.id, sk.kind)} alt="" className="h-4 w-4 shrink-0 object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />}
-                          <span className="w-8 shrink-0 font-mono text-[10px] font-bold uppercase" style={{ color: KIND_TONE[sk.kind] }}>{KIND_KO[sk.kind] ?? sk.kind}</span>
+                          <span className="w-8 shrink-0 font-mono text-[10px] font-bold uppercase" style={{ color: KIND_TONE[sk.kind] }}>{SKILL_KIND_SHORT[sk.kind as keyof typeof SKILL_KIND_SHORT] ?? sk.kind}</span>
                           <span className="min-w-0 flex-1 truncate font-mono text-[12px] text-white" title={sk.name}>{sk.name}</span>
                           <span className="shrink-0 font-mono text-[11px] font-bold" style={{ color: r > 0 ? "#67e8f9" : "#8a8a90" }}>{skillLabel(r)}</span>
                         </div>

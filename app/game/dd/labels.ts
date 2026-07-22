@@ -18,5 +18,8 @@ export const DMG_SHORT: Record<string, string> = {
 };
 export const dmgLabel = (k: string, short = false) => (short ? DMG_SHORT[k] : DMG_LABEL[k]) ?? k;
 
-export const SKILL_KIND_LABEL: Record<DDSkill["kind"], string> = { attack: "기본공격", battle: "배틀스킬", link: "연계스킬", ult: "궁극기" };
-export const SKILL_KIND_SHORT: Record<DDSkill["kind"], string> = { attack: "기본", battle: "배틀", link: "연계", ult: "궁극" };
+// 스킬 종류 명칭 단일 출처(용어집·DMG_LABEL과 일치): 일반 공격 · 배틀 스킬 · 연계 스킬 · 궁극기.
+export const SKILL_KIND_LABEL: Record<DDSkill["kind"], string> = { attack: "일반 공격", battle: "배틀 스킬", link: "연계 스킬", ult: "궁극기" };
+export const SKILL_KIND_SHORT: Record<DDSkill["kind"], string> = { attack: "일반", battle: "배틀", link: "연계", ult: "궁극" };
+// 종류를 가리지 않는 "모든 스킬"까지 포함(장비 kindDmg.all 표시용).
+export const SKILL_KIND_ALL: Record<DDSkill["kind"] | "all", string> = { ...SKILL_KIND_SHORT, all: "모든 스킬" };
