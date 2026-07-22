@@ -23,6 +23,7 @@ const elementColor: Record<"physical" | Element, string> = { physical: "#d4d4d8"
 export default function GamePage() {
   const run = useDDRun();
   const [showStatus, setShowStatus] = useState(false); // 부대 현황(읽기 전용) 오버레이
+  const [copied, setCopied] = useState(false); // 원정 기록 JSON 복사 피드백
   // 제작·마스터리는 야영지에서만. 맵에선 노드 진입만 — 진입 전 제작 안내 모달은 무의미해 제거했다.
   const handleEnter = (n: RunNode) => run.enterNode(n);
 
@@ -207,6 +208,25 @@ export default function GamePage() {
                     {enhanced.length > 0 && <div className="text-ef-muted">⬆ 스킬 강화 <span className="text-ef-accent-soft">{enhanced.map((m) => `${opName(m.id)} ${skillLabel(Math.max(...Object.values(m.progress!.skillRanks)))}`).join(" · ")}</span></div>}
                     {lootItems.length > 0 && <div className="text-ef-muted">🎁 획득 아이템 <span className="text-ef-ink">{lootItems.map(([itid, n]) => `${ITEMS[itid]?.name ?? itid}×${n}`).join(" · ")}</span></div>}
                   </div>
+                </div>
+              );
+            })()}
+            {/* 원정 기록 — 자동 저장(localStorage + 서버 JSONL). 학습·밸런스 분석용, JSON 복사 가능 */}
+            {run.lastRecord && (() => {
+              const r = run.lastRecord;
+              return (
+                <div className="dd-cut mx-auto mb-6 max-w-[440px] border border-ef-line/40 bg-black/30 p-3 text-left font-mono text-[13px]">
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className="font-bold uppercase tracking-[0.2em] text-ef-muted">◆ 원정 기록</span>
+                    <button type="button" onClick={() => { try { navigator.clipboard?.writeText(JSON.stringify(r, null, 2)); setCopied(true); setTimeout(() => setCopied(false), 1500); } catch { /* clipboard 불가 */ } }} className="hud-btn dd-cut px-2 py-0.5 text-[12px] text-ef-muted hover:text-white">{copied ? "복사됨 ✓" : "JSON 복사"}</button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-ef-muted">
+                    <span>도달 층 <b className="text-ef-ink">{r.floorReached}/{r.totalFloors}</b></span>
+                    <span>소요 <b className="text-ef-ink">{Math.floor(r.durationSec / 60)}분 {r.durationSec % 60}초</b></span>
+                    <span>전투 <b className="text-ef-ink">{r.totals.battles}</b>회 · {r.totals.rounds}R</span>
+                    <span>가한 피해 <b className="text-ef-ink">{r.totals.dmgDealt.toLocaleString()}</b></span>
+                  </div>
+                  <div className="mt-1.5 text-[12px] text-ef-line">기록 자동 저장됨 — 파티 빌드·전투별 라운드·피해·잔여 HP까지 담겨 학습/분석에 씁니다.</div>
                 </div>
               );
             })()}

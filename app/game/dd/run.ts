@@ -1,6 +1,6 @@
 "use client";
 // 닼던류 런 상태 — 편성 → 던전 맵(노드 진행) → 전투(HP 지속 소모) → 야영/보스. DD 엔진 위에 로그라이크 흐름.
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 
 import { makeAlly } from "./roster";
 import { GEAR_SLOTS, LOADOUT_SLOTS, GEAR_PIECE_BY_ID, type Loadout } from "./gear";
@@ -31,6 +31,16 @@ export type PartyPick = { id: string; loadout?: Loadout; progress?: OpProgress; 
 export type PartyMember = { id: string; hp: number; maxHp: number; loadout?: Loadout; progress?: OpProgress; ult?: number; main?: boolean; stacks?: number };
 export type BattleResult = { id: string; hp: number; ult?: number; stacks?: number }; // ult: 궁 게이지 이월(HP처럼 런 내내 유지 — 보스 전 만충이 목표)
                                                                                        // stacks: 전투 밖으로 들고 나가는 스택(레바테인 녹아내린 불꽃)
+// 전투 종료 시 학습용 통계(BattleView가 넘김): 라운드 수·상대 목록·가한 총 피해.
+export type BattleStats = { rounds: number; enemies: string[]; dmgDealt: number };
+// 원정 1회 완주/실패 기록 — 학습·밸런스 분석용. localStorage 이력 + /api/dd-record(디스크 JSONL).
+export type RunRecord = {
+  ts: number; date: string; result: "victory" | "defeat"; floorReached: number; totalFloors: number; durationSec: number;
+  party: { id: string; main: boolean; promotion: number; skillRanks: Record<string, number>; gearLevel: number; loadout: Record<string, string | undefined> }[];
+  battles: { floor: number; kind: NodeKind; boss?: string; rounds: number; enemies: string[]; dmgDealt: number; partyHp: { id: string; hpFrac: number }[] }[];
+  economy: { credits: number; parts: number; permits: number; chips: number; kills: number; items: Record<string, number> };
+  totals: { battles: number; rounds: number; dmgDealt: number };
+};
 
 export const REST_HEAL = 0.30; // 야영 회복 비율(최대 HP)
 export const REST_SALVAGE = { credits: 30 }; // 야영 중 크레딧 회수 — 상점에서 원하는 재료로 바꾼다
@@ -80,6 +90,31 @@ export function useDDRun() {
   const [faction, setFaction] = useState<string>(FLOORS[0].faction); // 이번 층 세력 리전(층 보스 세력)
   const [loot, setLoot] = useState<{ credits: number; parts: number; permits: number; chips: number; items: Record<string, number>; kills: number }>({ credits: 0, parts: 0, permits: 0, chips: 0, items: {}, kills: 0 }); // 이번 원정 누적 전리품(승리 화면 표시)
   const [lastLoot, setLastLoot] = useState<{ credits: number; parts: number; permits: number; chips: number; item: string | null; kind: NodeKind } | null>(null); // 방금 교전 획득(전리품 화면 표시)
+  const [lastRecord, setLastRecord] = useState<RunRecord | null>(null); // 방금 완주/실패 기록(승리 화면 표시·복사)
+  // 최신 상태 미러(콜백 클로저에서 stale 방지) + 원정 기록 누적
+  const partyRef = useRef(party); partyRef.current = party;
+  const lootRef = useRef(loot); lootRef.current = loot;
+  const floorRef = useRef(floor); floorRef.current = floor;
+  const battlesRef = useRef<RunRecord["battles"]>([]);
+  const startRef = useRef(0);
+
+  // 원정 종료(완주/실패) 기록 — 학습·밸런스 분석용. localStorage 이력(최근 30) + /api/dd-record(디스크 JSONL).
+  const saveRecord = useCallback((result: "victory" | "defeat") => {
+    const now = Date.now();
+    const p = partyRef.current, l = lootRef.current, battles = battlesRef.current;
+    const rec: RunRecord = {
+      ts: now, date: new Date(now).toISOString(), result,
+      floorReached: result === "victory" ? FLOORS.length : floorRef.current + 1, totalFloors: FLOORS.length,
+      durationSec: startRef.current ? Math.round((now - startRef.current) / 1000) : 0,
+      party: p.map((m) => ({ id: m.id, main: !!m.main, promotion: m.progress?.promotion ?? DEFAULT_PROGRESS.promotion, skillRanks: m.progress?.skillRanks ?? DEFAULT_PROGRESS.skillRanks, gearLevel: m.progress?.gearLevel ?? 0, loadout: (m.loadout ?? {}) as Record<string, string | undefined> })),
+      battles: [...battles],
+      economy: { credits: l.credits, parts: l.parts, permits: l.permits, chips: l.chips, kills: l.kills, items: l.items },
+      totals: { battles: battles.length, rounds: battles.reduce((n, b) => n + b.rounds, 0), dmgDealt: battles.reduce((n, b) => n + b.dmgDealt, 0) },
+    };
+    setLastRecord(rec);
+    try { const key = "dd_run_history"; const hist = JSON.parse(localStorage.getItem(key) || "[]"); hist.unshift(rec); localStorage.setItem(key, JSON.stringify(hist.slice(0, 30))); } catch { /* localStorage 불가 무시 */ }
+    try { fetch("/api/dd-record", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(rec), keepalive: true }).catch(() => {}); } catch { /* 오프라인 무시 */ }
+  }, []);
 
   const useItem = useCallback((id: string) => setItems((m) => { const n = (m[id] ?? 0) - 1; const c = { ...m }; if (n <= 0) delete c[id]; else c[id] = n; return c; }), []);
   const addItem = useCallback((id: string) => setItems((m) => ({ ...m, [id]: (m[id] ?? 0) + 1 })), []);
@@ -111,6 +146,7 @@ export function useDDRun() {
 
   const startRun = useCallback((picks: PartyPick[]) => {
     resetEncounterHistory(); // 새 원정 — 적 등장 이력 초기화
+    battlesRef.current = []; startRef.current = Date.now(); setLastRecord(null); // 기록 누적 초기화
     const p = picks.map((pick) => { const u = makeAlly(pick.id, 1, pick.progress); return { id: pick.id, main: pick.main, hp: u.maxHp, maxHp: u.maxHp, loadout: pick.loadout, progress: pick.progress }; });
     const map = genMap();
     setParty(p);
@@ -132,7 +168,7 @@ export function useDDRun() {
     setParty((cur) => cur.map((m) => (m.hp > 0 ? { ...m, hp: m.maxHp } : m))); // 층 클리어 보상: 생존자 HP 완전 회복
     setFloor((f) => {
       const nf = f + 1;
-      if (nf >= FLOORS.length) { setPhase("victory"); return f; } // 최종 층(알레이크레오스) 클리어
+      if (nf >= FLOORS.length) { saveRecord("victory"); setPhase("victory"); return f; } // 최종 층(알레이크레오스) 클리어 → 완주 기록
       const map = genMap();
       setFaction(FLOORS[nf].faction);
       setNodes(map);
@@ -144,7 +180,7 @@ export function useDDRun() {
       setPhase("map");
       return nf;
     });
-  }, []);
+  }, [saveRecord]);
 
   const enterNode = useCallback((n: RunNode) => {
     setActiveId(n.id);
@@ -159,8 +195,14 @@ export function useDDRun() {
     setPhase("map");
   }, []);
 
-  const finishBattle = useCallback((result: "ally" | "enemy", survivors: BattleResult[]) => {
+  const finishBattle = useCallback((result: "ally" | "enemy", survivors: BattleResult[], stats?: BattleStats) => {
     if (!activeNode) return;
+    // 전투 1건 기록(승패 무관) — 층·종류·보스·라운드·상대·가한 피해·파티 잔여 HP
+    battlesRef.current.push({
+      floor: floorRef.current + 1, kind: activeNode.kind, boss: activeNode.kind === "boss" ? FLOORS[floorRef.current]?.boss : undefined,
+      rounds: stats?.rounds ?? 0, enemies: stats?.enemies ?? [], dmgDealt: stats?.dmgDealt ?? 0,
+      partyHp: partyRef.current.map((m) => { const s = survivors.find((x) => x.id === m.id); return { id: m.id, hpFrac: Math.round(((s?.hp ?? 0) / Math.max(1, m.maxHp)) * 100) / 100 }; }),
+    });
     if (result === "ally") {
       setParty((cur) => cur.map((m) => { const s = survivors.find((x) => x.id === m.id); return { ...m, hp: s ? s.hp : 0, ult: s?.ult ?? m.ult, stacks: s?.stacks ?? m.stacks }; })); // HP·궁 게이지·스택 이월
       const raw = enemyDrop(activeNode.kind, activeNode.depth, faction); // 세력·티어·깊이별 드랍테이블
@@ -173,11 +215,12 @@ export function useDDRun() {
       setLastLoot({ credits: drop.credits, parts: drop.parts, permits: drop.permits, chips: drop.chips, item: dropItem, kind: activeNode.kind });
       setPhase("spoils"); // 교전·보스 승리 → 전리품 화면(계속 시 다음 구역/층)
     } else {
+      saveRecord("defeat"); // 원정 실패 기록
       setPhase("defeat");
       setActiveId(null);
     }
     /* eslint-disable-next-line react-hooks/exhaustive-deps */
-  }, [activeNode, addItem, faction, floor]);
+  }, [activeNode, addItem, faction, floor, saveRecord]);
 
   // 전리품 화면 "계속" → 다음 구역으로(교전 승리 후 advanceFrom 지연분)
   const continueSpoils = useCallback(() => { if (!activeNode) return; if (activeNode.kind === "boss") advanceFloor(); else advanceFrom(activeNode); }, [activeNode, advanceFrom, advanceFloor]);
@@ -225,5 +268,5 @@ export function useDDRun() {
   }, [items]);
   const closeCraft = useCallback(() => setPhase(craftOrigin), [craftOrigin]);
 
-  return { phase, craftTab, buyShop, sellMat, sellItem, itemSellValue, sellUnit, shop: SHOP, party, nodes, frontier, cleared, activeNode, depthReached, faction, maxDepth: MAX_DEPTH, floor, floorName: FLOORS[floor].name, floorBoss: FLOORS[floor].boss, totalFloors: FLOORS.length, hasCraftable, items, useItem, addItem, craft, craftPiece, forgePiece, swapGear, forgeSkill, loot, lastLoot, continueSpoils, openCraft, closeCraft, openCraftFromRest, startRun, enterNode, finishBattle, rest, restart };
+  return { phase, craftTab, buyShop, sellMat, sellItem, itemSellValue, sellUnit, shop: SHOP, party, nodes, frontier, cleared, activeNode, depthReached, faction, maxDepth: MAX_DEPTH, floor, floorName: FLOORS[floor].name, floorBoss: FLOORS[floor].boss, totalFloors: FLOORS.length, hasCraftable, items, useItem, addItem, craft, craftPiece, forgePiece, swapGear, forgeSkill, loot, lastLoot, lastRecord, continueSpoils, openCraft, closeCraft, openCraftFromRest, startRun, enterNode, finishBattle, rest, restart };
 }

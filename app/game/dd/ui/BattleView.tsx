@@ -20,7 +20,7 @@ const STATUS_ICON: Record<string, string> = {
 import { OP_TALENTS } from "../operator-talents";
 import { DMG_SHORT as DMG_KO, SKILL_KIND_LABEL as kindLabel } from "../labels";
 import { ITEMS, useItem as applyItem, canUseItem, autoItemPick, itemColor, itemImage } from "../items";
-import type { BattleResult, NodeKind, PartyMember } from "../run";
+import type { BattleResult, BattleStats, NodeKind, PartyMember } from "../run";
 
 const PRIMARY = "#ff9a2f";
 const CUT_SM = { clipPath: "polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px))" };
@@ -275,7 +275,7 @@ function FxLayer({ id, fx }: { id: string; fx: Fx }) {
 const shakeCls = (hit: boolean, tick: number) => (hit ? (tick % 2 ? "dd-shake-a" : "dd-shake-b") : "");
 const actCls = (active: boolean, tick: number) => (active ? (tick % 2 ? "dd-act-a" : "dd-act-b") : "");
 
-export default function BattleView({ party, encounterKey, nodeKind, faction, bossId, floor = 0, depth = 0, maxDepth = 6, owned, items, onUseItem, onEnd }: { party: PartyMember[]; encounterKey: string; nodeKind: NodeKind; faction?: string; bossId?: string; floor?: number; depth?: number; maxDepth?: number; owned?: Record<string, number>; items: Record<string, number>; onUseItem: (id: string) => void; onEnd: (result: "ally" | "enemy", survivors: BattleResult[]) => void }) {
+export default function BattleView({ party, encounterKey, nodeKind, faction, bossId, floor = 0, depth = 0, maxDepth = 6, owned, items, onUseItem, onEnd }: { party: PartyMember[]; encounterKey: string; nodeKind: NodeKind; faction?: string; bossId?: string; floor?: number; depth?: number; maxDepth?: number; owned?: Record<string, number>; items: Record<string, number>; onUseItem: (id: string) => void; onEnd: (result: "ally" | "enemy", survivors: BattleResult[], stats?: BattleStats) => void }) {
   const stateRef = useRef<DDState | null>(null);
   if (!stateRef.current) {
     const base = ENCOUNTERS.find((e) => e.key === encounterKey) ?? ENCOUNTERS[0];
@@ -471,7 +471,13 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
   // 승리/패배 확정 → 배너 연출 후 자동 종료(교전 승리는 전리품 화면으로, 보스/패배는 결과 화면으로)
   useEffect(() => {
     if (!winner) return;
-    const t = setTimeout(() => { const su = (stateRef.current?.units ?? []).filter((u) => u.side === "ally").map((a) => ({ id: a.id, hp: a.hp, ult: a.ultCharge, stacks: a.procCount })); onEnd(winner, su); }, 1500);
+    const t = setTimeout(() => {
+      const s = stateRef.current;
+      const su = (s?.units ?? []).filter((u) => u.side === "ally").map((a) => ({ id: a.id, hp: a.hp, ult: a.ultCharge, stacks: a.procCount }));
+      const foes = (s?.units ?? []).filter((u) => u.side === "enemy");
+      const stats = { rounds: s?.round ?? 0, enemies: foes.map((e) => e.name), dmgDealt: foes.reduce((n, e) => n + Math.max(0, e.maxHp - e.hp), 0) }; // 학습용 전투 기록
+      onEnd(winner, su, stats);
+    }, 1500);
     return () => clearTimeout(t);
     /* eslint-disable-next-line react-hooks/exhaustive-deps */
   }, [winner]);
