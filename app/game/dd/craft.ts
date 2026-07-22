@@ -37,9 +37,9 @@ export const canBuy = (cs: CraftState, s: ShopItem) => cs.credits >= s.price;
 // 안 쓰는 재료는 상점에 되판다 — 구매 단가의 30%(내림). 부품 30원/10개=3원/개 → 되팔기 0원 방지 위해 올림 처리.
 export const SELL_RATE = 0.3;
 export type SellMat = "parts" | "permits" | "chips";
-// 재료 1개당 구매 단가(SHOP 번들 기준): 부품 3 · 관리권 8 · 프리즘 9
+// 재료 1개당 구매 단가(SHOP 번들 기준): 부품 3 · 관리권 8 · 프로토콜 프리즘 9
 const BUY_UNIT: Record<SellMat, number> = { parts: 3, permits: 8, chips: 9 };
-export const sellUnit = (mat: SellMat) => Math.max(1, Math.round(BUY_UNIT[mat] * SELL_RATE)); // 부품 1 · 관리권 2 · 프리즘 3
+export const sellUnit = (mat: SellMat) => Math.max(1, Math.round(BUY_UNIT[mat] * SELL_RATE)); // 부품 1 · 관리권 2 · 프로토콜 프리즘 3
 export const matAmount = (cs: CraftState, mat: SellMat) => (mat === "chips" ? cs.mats.chips ?? 0 : cs.mats[mat]);
 // 소비 아이템 되팔기 — 레어도별 기준가의 30%(내림, 최소 3). r2 15 → 5 · r3 20 → 6 · r4 25 → 8 · r6 40 → 12
 const ITEM_BASE: Record<number, number> = { 2: 15, 3: 20, 4: 25, 5: 32, 6: 40 };

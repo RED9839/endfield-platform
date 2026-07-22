@@ -22,7 +22,7 @@ function ForgePips({ lv }: { lv: number }) {
 // 재료 비용(감당 가능 여부 색상)
 function Cost({ parts, permits, chips, ok }: { parts?: number; permits?: number; chips?: number; ok: boolean }) {
   return <span className={`font-mono text-[12px] tabular-nums ${ok ? "text-ef-muted" : "text-red-400/90"}`} title="비용">
-    {chips ? <>{chips}<span className="opacity-55">프리즘</span></> : <>{parts}<span className="opacity-55">부품</span> {permits}<span className="opacity-55">관리권</span></>}
+    {chips ? <>{chips}<span className="opacity-55">프로토콜 프리즘</span></> : <>{parts}<span className="opacity-55">부품</span> {permits}<span className="opacity-55">관리권</span></>}
   </span>;
 }
 
