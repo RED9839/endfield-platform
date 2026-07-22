@@ -525,6 +525,16 @@ const OP_ATTACK: Record<string, number> = {
   arcane: 114,
 };
 
+// 일반 공격 배율 = warfarin 실측 풀콤보(강평까지 전 단계 Lv9 합) / 100. 평타 1턴 = 콤보 1회.
+// combat baseDamage가 BASIC(일반 공격)에 이 값을 쓴다(옛 고정 0.9 대체). 마스터리 비율은 BASIC.mst가 유지.
+export const OP_BASIC_ATK: Record<string, number> = {
+  chenqianyu: 2.53, lifeng: 2.81, endministrator: 2.78, estella: 2.34, rossi: 3.3, mifu: 3.77,
+  camu: 2.86, akekuri: 2.34, alesh: 2.49, arclight: 2.39, pogranichnik: 2.96,
+  ember: 4.31, snowshine: 3.84, catcher: 3.57, ardelia: 3.2, xaihi: 2.52, antal: 2.44,
+  gilberta: 2.82, perlica: 2.69, wulfgard: 3.39, fluorite: 2.58, tangtang: 3.05,
+  lastrite: 4.37, avywenna: 2.5, dapan: 3.1, laevatain: 2.82, yvonne: 3.19, zhuangfangyi: 2.97,
+};
+
 // 오퍼별 실제 능력치(endfield.wiki.gg Lv90 Elite max 실측). 힘→최대HP·민첩→물리저항·지능→아츠저항·의지→회복량.
 export type OpAttrs = { str: number; agi: number; int: number; wil: number };
 // 오퍼별 주요/보조 능력치 — **공략 시트 「주,부옵」 컬럼 실측**(고정값).
@@ -590,6 +600,7 @@ export function makeAlly(id: string, pos: number, progress: OpProgress = DEFAULT
   const u: DDUnit = { ...b, side: "ally", pos, hp, maxHp: hp, staggerMax: 0, ...zero() }; // 불균형 없음. HP=6000+힘×5 환산·방어 0
   u.hp = hp; u.maxHp = hp; // zero()가 hp를 덮지 않도록 재확정
   u.attack = Math.round((OP_ATTACK[id] ?? b.attack) * pm * skillMult(0)); // 공격력 스탯 = 실ATK(Lv90×정예화) × M0(×1.8). mst 스킬 피해는 combat이 realAtk(=÷1.8)로 되돌려 Lv9 배율을 곱한다
+  u.basicAtk = OP_BASIC_ATK[id] ?? 0.9; // 일반 공격 실측 풀콤보 배율(강평까지)
   u.skillRanks = { ...progress.skillRanks }; // 기본/배틀/연계/궁 각각의 마스터리 랭크
   u.utilBase = 1; u.utilMult = 1; // 유틸은 act()에서 사용 스킬 종류의 랭크로 매 행동 재설정(의지 배율 포함)
   u.opElement = (SKILLS[id] ?? []).find((s) => s.element && s.element !== "physical")?.element ?? "physical"; // 주력 속성(장비 부품 속성 피해)

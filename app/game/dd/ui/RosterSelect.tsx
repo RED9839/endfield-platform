@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 
-import { OPERATORS, SKILLS, OP_BASIC, avatarUrl, fullUrl, skillIcon, makeAlly, type OpMeta } from "../roster";
+import { OPERATORS, SKILLS, OP_BASIC, OP_BASIC_ATK, avatarUrl, fullUrl, skillIcon, makeAlly, type OpMeta } from "../roster";
 import { OP_TALENTS } from "../operator-talents";
 import { DMG_SHORT as DMG_KO, SKILL_KIND_SHORT as kindLabel } from "../labels";
 import { OP_GEAR_ALT, activeSets, setEffectText, recommendedSet, recommendedLoadout, loadoutPieces, pieceImage, gearSlotName, bestFreePiece, slotOptions, GEAR_SET_CANON, SET_NAMES, pieceSlotOf, LOADOUT_SLOTS, type LoadoutSlot, type Loadout, type GearSlot , applyGear , attrsText, sumAttrs } from "../gear";
@@ -96,7 +96,7 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
   const active = activeSets(lo);
   const pr = opProg(focusId);
   const skills = [
-    ...(OP_BASIC[focusId] ? [{ id: `${focusId}-basic`, name: OP_BASIC[focusId].name, kind: "attack" as const, note: OP_BASIC[focusId].note, power: 0.5, target: "single-front", element: "physical" as Element, staggerVal: 6, gaugeCost: undefined as number | undefined, gaugeGain: 12 as number | undefined, requiresText: undefined as string | undefined }] : []),
+    ...(OP_BASIC[focusId] ? [{ id: `${focusId}-basic`, name: OP_BASIC[focusId].name, kind: "attack" as const, note: OP_BASIC[focusId].note, power: OP_BASIC_ATK[focusId] ?? 0.9, target: "single-front", element: "physical" as Element, staggerVal: 6, gaugeCost: undefined as number | undefined, gaugeGain: 12 as number | undefined, requiresText: undefined as string | undefined }] : []),
     ...(SKILLS[focusId] ?? []).map((s) => ({ id: s.id, name: s.name, kind: s.kind, note: s.note, power: s.power, target: s.target as string, element: (s.element ?? "physical") as Element, staggerVal: s.staggerVal, gaugeCost: s.gaugeCost, gaugeGain: s.gaugeGain, requiresText: s.requiresText })),
   ].sort((a, b) => KIND_ORDER[a.kind] - KIND_ORDER[b.kind]);
   const talents = OP_TALENTS[focusId] ?? [];

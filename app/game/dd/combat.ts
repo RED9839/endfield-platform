@@ -22,6 +22,7 @@ export type DDUnit = {
   speed: number; // 행동 게이지(ATB) 충전 속도(오퍼 고유 민첩 — roster.ts applyAttrs)
   atb: number;   // 행동 게이지 0~100. 속도만큼 차고 100이면 행동, 초과분 이월.
   attack: number; // 공격력 스탯(M0 ×1.8 포함). 실ATK = realAtk(attack) = attack/1.8.
+  basicAtk?: number; // 일반 공격 배율(실측 풀콤보 Lv9/100, OP_BASIC_ATK). BASIC 피해 = realAtk × basicAtk.
   opElement?: "physical" | Element; // 오퍼 주력 속성(장비 부품 속성 피해 보너스용)
   defense: number; // 방어력 → 받는 모든 피해 ×(100/(def+100)). 기본 0(장비로 증가)
   resist: Record<"physical" | Element, number>; // 속성별 저항(물리/열기/전기/냉기/자연, 0~1=1%↓, 음수=약점). 위키 저항표 정합
@@ -623,8 +624,10 @@ export function baseDamage(skill: DDSkill, self: DDUnit): number {
   const am = skill.kind === "attack" ? (self.strMul ?? 1) : (self.skillAttrMul ?? 1);
   const bm = skill.kind === "battle" ? 1 + (self.battleAmp ?? 0) : 1; // 무기: 배틀 한정 증폭(장방이)
   // mst 스킬은 실ATK(=공격력÷1.8, 장비·무기 포함) × Lv9 배율. 그 외(버프·arcane 폴백)는 레거시 attack × Lv1 배율.
+  // 일반 공격(BASIC)은 오퍼별 실측 풀콤보 배율(basicAtk)을 쓴다 — 강평까지 전 단계 합.
+  const pw = skill.id === "basic" ? (self.basicAtk ?? skill.power ?? 0) : (skill.powerOf?.(self) ?? skill.power ?? 0);
   const base = (skill.mst ? realAtk(self.attack) : self.attack) * eb(self);
-  let dmg = base * (skill.powerOf?.(self) ?? skill.power ?? 0) * am * bm;
+  let dmg = base * pw * am * bm;
   if (self.multiHit > 0) {
     const n = Math.min(4, self.multiHit);
     if (skill.kind === "battle") dmg *= 1 + MH_BATTLE[n - 1];
@@ -1018,10 +1021,12 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
       log.push(`  → ${self.name} 연타 획득 (${self.multiHit}스택)`);
     }
     // 레바테인 황혼 변신: 강화 일반공격 ×3(위키 강화 평타 464%/일반 157%≈2.95). 배틀 강화는 흡수 블록에서 처리
-    if (self.id === "laevatain" && skill.kind === "attack" && (self.timers.twilight || 0) > 0) raw *= 3;
-    if (self.id === "yvonne" && skill.kind === "attack" && (self.timers.iceshot || 0) > 0) { raw *= 2.66; raw += realAtk(self.attack) * eb(self) * 4.8; } // 아이스 슈터 말뚝딜: 강력 일격 240% + 추가 공격 480%(실측 yv-u) — 단일 궁딜 최상위
+    // 변신 강화 평타는 옛 고정 평타(0.9) 기준으로 튜닝됨 → basicAtk 도입분을 상쇄해 값 보존(×0.9/basicAtk).
+    const bpc = 0.9 / (self.basicAtk ?? 0.9);
+    if (self.id === "laevatain" && skill.kind === "attack" && (self.timers.twilight || 0) > 0) raw *= 3 * bpc;
+    if (self.id === "yvonne" && skill.kind === "attack" && (self.timers.iceshot || 0) > 0) { raw *= 2.66 * bpc; raw += realAtk(self.attack) * eb(self) * 4.8; } // 아이스 슈터 말뚝딜: 강력 일격 240% + 추가 공격 480%(실측 yv-u) — 단일 궁딜 최상위
     // 장방이 천리의 경지 변신: 강화 일반공격 ×2.5(궁 중 평타 강화)
-    if (self.id === "zhuangfangyi" && skill.kind === "attack" && (self.timers.heavenly || 0) > 0) { raw *= 2.5; markLinkEvent(s, "zhuangfangyi"); } // 변신 강화 평타 = 전기 부착 행위 → 연계창(자체수급)
+    if (self.id === "zhuangfangyi" && skill.kind === "attack" && (self.timers.heavenly || 0) > 0) { raw *= 2.5 * bpc; markLinkEvent(s, "zhuangfangyi"); } // 변신 강화 평타 = 전기 부착 행위 → 연계창(자체수급)
     // 원작 연계의 공통 트리거: "메인 컨트롤 오퍼레이터가 강력한 일격 피해를 준 다음".
     // 턴제인 우리 모델에선 아군의 평타가 이에 대응한다. 이 창이 없으면 연계가 개전 즉시 열려 있게 된다.
     if (self.side === "ally" && skill.kind === "attack") markLinkEvent(s, "_strike");
@@ -1051,7 +1056,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
         s.units.some((u) => u.id === "zhuangfangyi" && u.side === "ally" && u.hp > 0)) markLinkEvent(s, "zhuangfangyi");
     // 엠버: 평타 주력 딜러 — 실제 돌진 검술 4단 콤보(≈431% 물리, lv9) 반영. 범용 평타 0.5 → ×8.6≈431%.
     // 불균형 적엔 처형 공격(실 720%) → 추가 배수. 진군(방불 셋업)→경량 초자연 물리 증폭→평타 페이오프.
-    if (self.id === "ember" && skill.kind === "attack") raw *= t.staggered ? 14 : 8.6;
+    if (self.id === "ember" && skill.kind === "attack") raw *= (t.staggered ? 14 : 8.6) * bpc;
     // 글로벌 배율: 치명타 기댓값(시전자) → 증폭(시전자)+취약(대상,위계+부식) → 불균형(+30%) → 현실정지 → 비호
     let cr = self.critRate, cd = self.critDmg;
     // 로시 궁 「기습 '날카로운 발톱'」 — 원문 "이번 스킬이 치명타 피해를 줬을 경우 더 강한 치명타 피해".

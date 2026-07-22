@@ -3,7 +3,7 @@
 import { useEffect, useReducer, useRef, useState } from "react";
 
 import { act, canAct, isOver, startRound, perTurn, nextActor, turnOrder, usable, BASIC, GAUGE_REGEN, findLinkChain, type DDClass, type DDSkill, type DDState, type DDUnit, type Element, CHAIN_MAX, GAUGE_COST } from "../combat";
-import { OPERATORS, SKILLS, OP_BASIC, enemyDefFor, avatarUrl, fullUrl, skillIcon, enemyImage, enemyArchetype, STACK_CARRY } from "../roster";
+import { OPERATORS, SKILLS, OP_BASIC, OP_BASIC_ATK, enemyDefFor, avatarUrl, fullUrl, skillIcon, enemyImage, enemyArchetype, STACK_CARRY } from "../roster";
 import { realAtk } from "../progress";
 import { ENCOUNTERS, allyChoose, createBattle, enemyAct, regionEncounter } from "../sim";
 import { activeSets, setEffectText, loadoutPieces } from "../gear";
@@ -959,7 +959,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
         const el = unitElement(u);
         const talents = ally ? OP_TALENTS[u.id] ?? [] : [];
         const uskills = ally ? [
-          ...(OP_BASIC[u.id] ? [{ id: `${u.id}-basic`, name: OP_BASIC[u.id].name, kind: "attack" as const, note: OP_BASIC[u.id].note, power: 0.5, target: "single-front", element: unitElement(u) }] : []),
+          ...(OP_BASIC[u.id] ? [{ id: `${u.id}-basic`, name: OP_BASIC[u.id].name, kind: "attack" as const, note: OP_BASIC[u.id].note, power: OP_BASIC_ATK[u.id] ?? 0.9, target: "single-front", element: unitElement(u) }] : []),
           ...(SKILLS[u.id] ?? []).map((s) => ({ id: s.id, name: s.name, kind: s.kind, note: s.note, power: s.power, target: s.target, element: s.element ?? "physical" })),
         ] : [];
         const loadout = ally ? party.find((p) => p.id === u.id)?.loadout ?? {} : {};
