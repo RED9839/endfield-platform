@@ -31,6 +31,7 @@ export default function GamePage() {
     return RESOURCE_ICON.parts;
   };
   const [showStatus, setShowStatus] = useState(false); // 부대 현황(읽기 전용) 오버레이
+  const [sellQty, setSellQty] = useState<Record<string, number>>({ parts: 1, permits: 1, chips: 1 }); // 재료 되팔기 수량 입력
   const [copied, setCopied] = useState(false); // 원정 기록 JSON 복사 피드백
   // 제작·마스터리는 야영지에서만. 맵에선 노드 진입만 — 진입 전 제작 안내 모달은 무의미해 제거했다.
   const handleEnter = (n: RunNode) => run.enterNode(n);
@@ -193,20 +194,28 @@ export default function GamePage() {
               {/* 되팔기 — 안 쓰는 재료·소비템을 크레딧으로(구매가 30%) */}
               <div className="mt-2 border-t border-ef-line/40 pt-2">
                 <div className="mb-1 flex flex-col gap-1">
-                  <span className="font-mono text-[12px] text-ef-muted">재료 되팔기(30%) <span className="text-ef-muted/70">— 1개씩 또는 5개씩</span>:</span>
-                  {([["parts","부품",run.craft.mats.parts],["permits","관리권",run.craft.mats.permits],["chips","프로토콜 프리즘 세트",run.craft.mats.chips ?? 0]] as const).map(([mat,label,have]) => (
+                  <span className="font-mono text-[12px] text-ef-muted">재료 되팔기(30%) <span className="text-ef-muted/70">— 팔 개수를 입력하세요</span>:</span>
+                  {([["parts","부품",run.craft.mats.parts],["permits","관리권",run.craft.mats.permits],["chips","프로토콜 프리즘 세트",run.craft.mats.chips ?? 0]] as const).map(([mat,label,have]) => {
+                    const qty = Math.max(1, Math.min(have, sellQty[mat] ?? 1)); // 보유량 초과 방지
+                    const setQ = (v: number) => setSellQty((s) => ({ ...s, [mat]: Math.max(1, Math.min(have || 1, v || 1)) }));
+                    return (
                     <div key={mat} className="flex items-center gap-1.5 font-mono text-[12px]">
                       <img src={RESOURCE_ICON[mat]} alt="" className="h-4 w-4 shrink-0 object-contain" />
                       <span className="w-28 shrink-0 truncate" style={{ color: "#cfcfd4" }}>{label}</span>
                       <span className="w-14 shrink-0 text-ef-muted">보유 {have}</span>
-                      <button type="button" disabled={have < 1} onClick={() => run.sellMat(mat, 1)}
-                        className="dd-cut border px-2 py-0.5 transition enabled:hover:border-ef-accent disabled:opacity-35"
-                        style={{ borderColor: "rgba(255,255,255,0.12)", color: "#cfcfd4" }} title={`1개 팔기 — ${run.sellUnit(mat)}크레딧`}>×1<span className="ml-0.5" style={{ color: "#f5c542" }}>+{run.sellUnit(mat)}</span></button>
-                      <button type="button" disabled={have < 5} onClick={() => run.sellMat(mat, 5)}
-                        className="dd-cut border px-2 py-0.5 transition enabled:hover:border-ef-accent disabled:opacity-35"
-                        style={{ borderColor: "rgba(255,255,255,0.12)", color: "#cfcfd4" }} title={`5개 팔기 — ${run.sellUnit(mat) * 5}크레딧`}>×5<span className="ml-0.5" style={{ color: "#f5c542" }}>+{run.sellUnit(mat) * 5}</span></button>
+                      {/* 개수 입력 + 스테퍼 */}
+                      <button type="button" disabled={have < 1 || qty <= 1} onClick={() => setQ(qty - 1)} className="dd-cut border px-1.5 py-0.5 leading-none transition enabled:hover:border-ef-accent disabled:opacity-30" style={{ borderColor: "rgba(255,255,255,0.12)", color: "#cfcfd4" }}>−</button>
+                      <input type="number" min={1} max={have || 1} value={have < 1 ? 0 : qty} disabled={have < 1}
+                        onChange={(e) => setQ(parseInt(e.target.value, 10))}
+                        className="w-12 shrink-0 border bg-black/40 px-1 py-0.5 text-center tabular-nums text-white outline-none focus:border-ef-accent disabled:opacity-35"
+                        style={{ borderColor: "rgba(255,255,255,0.14)" }} />
+                      <button type="button" disabled={have < 1 || qty >= have} onClick={() => setQ(qty + 1)} className="dd-cut border px-1.5 py-0.5 leading-none transition enabled:hover:border-ef-accent disabled:opacity-30" style={{ borderColor: "rgba(255,255,255,0.12)", color: "#cfcfd4" }}>+</button>
+                      <button type="button" disabled={have < 1} onClick={() => setQ(have)} className="shrink-0 font-mono text-[11px] text-ef-muted underline decoration-dotted underline-offset-2 transition enabled:hover:text-ef-accent disabled:opacity-30" title="보유량 전부">전체</button>
+                      <button type="button" disabled={have < 1} onClick={() => { run.sellMat(mat, qty); setSellQty((s) => ({ ...s, [mat]: 1 })); }}
+                        className="dd-cut border px-2.5 py-0.5 transition enabled:hover:border-ef-accent disabled:opacity-35"
+                        style={{ borderColor: "rgba(255,255,255,0.12)", color: "#cfcfd4" }} title={`${qty}개 팔기 — ${run.sellUnit(mat) * qty}크레딧`}>판매<span className="ml-1" style={{ color: "#f5c542" }}>+{run.sellUnit(mat) * qty}</span></button>
                     </div>
-                  ))}
+                  ); })}
                 </div>
                 {Object.entries(run.items).some(([, n]) => (n as number) > 0) && (
                   <div className="flex flex-wrap items-center gap-1.5">
