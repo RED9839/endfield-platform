@@ -697,8 +697,15 @@ export function usable(s: DDState, self: DDUnit, skill: DDSkill): boolean {
   if (skill.kind === "battle" && self.side === "ally" && !zfyFree && s.skillGauge < (skill.gaugeCost ?? GAUGE_COST)) return false; // 스킬 게이지 부족
   if (skill.kind === "link" && self.linkCd > 0) return false; // 연계 쿨타임
   if (skill.requiresStance != null && self.stance < skill.requiresStance) return false; // 미브 스탠스 요구
-  const tg = pickTargets(s, self, skill)[0];
-  if (skill.requires && !skill.requires(tg, self, s)) return false;
+  // 발동 조건 검사. 광역(row/all)은 **대상 중 하나라도** 만족하면 발동한다 —
+  // 첫 대상만 보면 다른 적에 걸어둔 조건(울프가드 「아츠 부착 적」, 진천우 「방어 불능 적」 등)을
+  // 놓쳐서, 2번 적에 부착·표식을 쌓아도 연계가 안 열리는 버그가 났다.
+  const tgs = pickTargets(s, self, skill);
+  if (skill.requires) {
+    const multi = (skill.target === "row" || skill.target === "all") && tgs.length > 1;
+    const pass = multi ? tgs.some((t) => skill.requires!(t, self, s)) : skill.requires(tgs[0], self, s);
+    if (!pass) return false;
+  }
   return true;
 }
 
