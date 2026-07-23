@@ -96,6 +96,7 @@ textarea {
   display: none;
 }
 
+
 .mobile-scroll-row > * {
   scroll-snap-align: start;
 }

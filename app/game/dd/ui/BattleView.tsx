@@ -775,7 +775,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
                   <div className="flex items-center gap-1"><span className="text-[9px] leading-none text-[#e0655c]/70" title={`누적 피해 ${(takenRef.current[e.id] ?? 0).toLocaleString()}`}>HP</span><div className="flex-1"><Bar value={e.hp} max={e.maxHp} color="#e0655c" ghost /></div>{(takenRef.current[e.id] ?? 0) > 0 && !dead && <span className="ml-1 shrink-0 font-mono text-[10px] font-bold tabular-nums text-[#ff8a6a]/85" title="이 적에게 누적으로 넣은 피해">▼{(takenRef.current[e.id] ?? 0).toLocaleString()}</span>}<span className="shrink-0 font-mono text-[11px] tabular-nums text-ef-muted"><span className="font-bold text-white/90">{Math.max(0, e.hp)}</span>/{e.maxHp}</span></div>
                   {e.staggerMax > 0 && !dead && <div className="mt-0.5 flex items-center gap-1"><span className="text-[9px] leading-none text-[#a16207]/80" title="불균형: 가득 차면 행동 불가 + 받는 피해 증가">불균형</span><div className="relative flex-1"><Bar value={e.staggered ? e.staggerMax : e.stagger} max={e.staggerMax} color={e.staggered ? "#facc15" : "#a16207"} h="h-1" />{e.poiseKnot && !e.poiseBroken && <span className="pointer-events-none absolute top-[-1px] h-[calc(100%+2px)] w-px bg-white/70" style={{ left: "50%" }} title="불균형 지점 — 넘으면 잠시 중단" />}</div></div>}
                   {!dead && <div className="mt-0.5"><Bar value={e.atb} max={100} color="#67e8f9" h="h-1" /></div>}
-                  {!dead && <div className="mt-1 flex flex-wrap justify-center gap-1">
+                  {!dead && <div className="flex flex-nowrap gap-1 overflow-x-auto overflow-y-hidden min-h-[22px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&>*]:shrink-0 mt-1">
                     {e.staggered && <Chip tone="#facc15">⚡ 불균형</Chip>}
                     {(e.charging ?? 0) > 0 && <Chip tone="#f0776e">⚡ 차징! 강공 예고</Chip>}
                     {weak.map(([eln, v]) => <Chip key={eln} tone={elementColor[eln]}>{elementName[eln]}약점{Math.round(-v * 100)}</Chip>)}
@@ -839,8 +839,8 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
                       <span className="pointer-events-none absolute inset-0 flex items-center justify-center font-mono text-[11px] font-bold leading-none" style={{ color: ready ? "#1a1206" : "#e5c98a", textShadow: ready ? "none" : "0 1px 2px #000" }}>{ready ? "⚡ READY" : `${Math.round(a.ultCharge)}/${a.ultCost}`}</span>
                     </div>
                   </div>
-                  {/* 보호막 · 상태(세트 제외) */}
-                  {(a.shield > 0 || unitChips(a).length > 0) && <div className="mt-1.5 flex flex-wrap gap-1">
+                  {/* 보호막 · 상태(세트 제외) — 고정 높이 단일 행(칩 쌓여도 카드 안 늘어남) */}
+                  {(a.shield > 0 || unitChips(a).length > 0) && <div className="flex flex-nowrap gap-1 overflow-x-auto overflow-y-hidden min-h-[22px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&>*]:shrink-0 mt-1.5">
                     {a.shield > 0 && <Chip tone="#38bdf8">🛡 {a.shield}</Chip>}
                     {unitChips(a).map((c) => <Chip key={c.k} tone={c.tone} title={chipTitle(c)} icon={c.icon} onPick={(r) => setChipInfo({ c, x: r.left + r.width / 2, y: r.bottom })}>{c.label}</Chip>)}
                   </div>}
