@@ -485,7 +485,7 @@ export const avatarUrl = (id: string) => `/operators/${id}/${id === "endministra
 export const fullUrl = (id: string) => `/operators/${id}/${id === "endministrator" ? "full1" : "full"}.webp`; // 전신 아트(스포트라이트)
 export const bustUrl = (id: string) => `/operators/${id}/bust.png`; // 상반신 헤드샷(인게임 가로 아이콘, 투명 배경) — 전투 카드용
 // 오퍼별 상반신 헤드샷 얼굴 정렬 object-position — 카드 실측 206×142 기준 object-cover 역산(가로 오프셋).
-// 값 산출: test/_bust_solve.mjs (머리 실루엣 검출 + 종횡비 반영, arcane·mifu는 무기/머리에 속아 수동 보정). 0%/100%는 얼굴이 가장자리라 최선값.
+// 값 산출: test/_bust_solve.mjs (머리 실루엣 검출 + 종횡비 반영, arcane·mifu·perlica·gilberta는 무기/팔/머리에 속아 수동 보정). 0%/100%는 얼굴이 가장자리라 최선값.
 export const OP_BUST_POS: Record<string, string> = {
   akekuri: "0% 50%",
   alesh: "74.5% 50%",
@@ -502,12 +502,12 @@ export const OP_BUST_POS: Record<string, string> = {
   endministrator: "0% 50%",
   estella: "0% 50%",
   fluorite: "51% 50%",
-  gilberta: "29.4% 50%",
+  gilberta: "45.4% 50%",
   laevatain: "50.1% 50%",
   lastrite: "42.1% 50%",
   lifeng: "100% 50%",
   mifu: "0% 50%",
-  perlica: "26.4% 50%",
+  perlica: "69.3% 50%",
   pogranichnik: "59% 50%",
   rossi: "35% 50%",
   snowshine: "100% 50%",
