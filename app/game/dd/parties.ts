@@ -117,13 +117,15 @@ export const PRESET_PARTIES: PresetParty[] = [
   {
     id: "mifu",
     name: "미브 조합",
-    members: ["mifu", "chenqianyu", "pogranichnik", "lifeng"],
+    members: ["mifu", "chenqianyu", "pogranichnik", "ember"],
     main: "mifu",
     element: "physical",
     archetype: "break",
-    desc: "미브·진천우·포그 방어 불능 셋업 → 불균형 유발 후 여풍/엠버 마무리",
+    // 4번은 엠버(디펜더) 고정 — 가드3+뱅가드1이면 최종보스전에 회복 수단이 없어 무너진다.
+    // 실측 완주율(15회): 여풍 33/73% · 엠버 100/100% · 결 100/100% · 카치르 47/93% (0단조/풀강)
+    desc: "미브·진천우·포그 방어 불능 셋업 → 불균형 유발, 엠버가 전선 유지",
     note: "1돌",
-    alternates: [{ role: "4번 유동", ids: ["lifeng", "ember"], note: "여풍 / 엠버" }],
+    alternates: [{ role: "4번 유동", ids: ["ember", "arcane", "lifeng"], note: "엠버 / 결 / 여풍" }],
   },
 ];
 
