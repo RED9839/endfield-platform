@@ -881,7 +881,8 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
           <div className="mb-2 flex items-center gap-2 font-mono text-[15px] font-bold uppercase tracking-wider text-ef-accent">
             {aiming ? <><span className="text-ef-accent-soft">🎯 {aiming.name} — 공격할 적을 선택</span><button type="button" onClick={() => setAiming(null)} className="ml-auto border border-ef-line px-2 py-0.5 text-[14px] text-ef-muted hover:text-white">취소</button></> : <span>{current.name} — 스킬 선택</span>}
           </div>
-          <div className={`flex flex-wrap gap-2 ${aiming ? "pointer-events-none opacity-40" : ""}`}>
+          {/* 조준 중엔 선택한 카드만 강조 유지, 나머지만 흐리게 — 뭘 골랐는지 한눈에 */}
+          <div className={`flex flex-wrap gap-2 ${aiming ? "pointer-events-none" : ""}`}>
             {skills.map((sk) => {
               const dmg = sk.power > 0 && current ? Math.round(realAtk(current.attack) * (1 + (current.atkBuff || 0)) * (current.weakenMul ?? 1) * sk.power) : 0;
               const el = sk.element ?? "physical";
@@ -892,7 +893,8 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
               const payoff = !off && current && sk.kind === "battle" ? battlePayoff(s, current, sk) : null;
               const ready = !off && (sk.kind === "link" || !!payoff); // 연계 조건 열림 · 배틀 조건부 효과 충족 → 발광
               return (
-              <button key={sk.id} type="button" onClick={() => { if (!off) chooseSkill(sk); }} className={`hud-tile dd-cut group relative flex h-[72px] w-[300px] shrink-0 items-start gap-2 overflow-hidden px-2.5 py-2 pr-8 text-left ${off ? "cursor-not-allowed opacity-55 hover:!border-ef-line/40" : open ? "!border-ef-accent" : ready ? "dd-skill-ready" : ""}`}>
+              <button key={sk.id} type="button" onClick={() => { if (!off) chooseSkill(sk); }} className={`hud-tile dd-cut group relative flex h-[72px] w-[300px] shrink-0 items-start gap-2 overflow-hidden px-2.5 py-2 pr-8 text-left ${off ? "cursor-not-allowed opacity-55 hover:!border-ef-line/40" : aiming?.id === sk.id ? "!border-ef-accent !bg-ef-accent/10 shadow-[0_0_18px_rgba(255,154,47,0.55)]" : aiming ? "opacity-30" : open ? "!border-ef-accent" : ready ? "dd-skill-ready" : ""}`}>
+                {aiming?.id === sk.id && <span className="absolute bottom-1 right-1 z-10 animate-pulse border border-ef-accent/80 bg-black/80 px-1 py-px font-mono text-[11px] font-bold text-ef-accent">🎯 조준 중</span>}
                 <img src={skillIcon(current!.id, sk.kind)} alt="" loading="lazy" className={`mt-0.5 h-9 w-9 shrink-0 border border-ef-line/60 bg-black/40 object-contain p-0.5 ${off ? "opacity-40 grayscale" : ""}`} onError={(ev) => { (ev.currentTarget as HTMLImageElement).style.visibility = "hidden"; }} />
                 <span className="min-w-0 flex-1">
                   <span className="flex min-w-0 items-center gap-1.5"><span className="shrink-0 whitespace-nowrap border px-1 py-px font-mono text-[13px] font-bold uppercase" style={{ borderColor: off ? "#7a6a4a66" : `${kindTone[sk.kind]}66`, color: off ? "#7a6a4a" : kindTone[sk.kind] }}>{kindLabel[sk.kind]}</span><span className={`min-w-0 flex-1 truncate whitespace-nowrap font-mono text-sm font-bold ${off ? "text-ef-muted" : "text-white"}`}>{sk.name}</span>{payoff && <span className="shrink-0 animate-pulse whitespace-nowrap border border-ef-accent/70 bg-ef-accent/15 px-1 py-px font-mono text-[12px] font-bold leading-none text-ef-accent" title="조건부 효과 발동 조건 충족 — 지금 쓰면 추가 효과">{payoff}</span>}</span>
