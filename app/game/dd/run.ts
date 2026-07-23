@@ -91,6 +91,7 @@ export function useDDRun() {
   const [faction, setFaction] = useState<string>(FLOORS[0].faction); // 이번 층 세력 리전(층 보스 세력)
   const [loot, setLoot] = useState<{ credits: number; parts: number; permits: number; chips: number; items: Record<string, number>; kills: number }>({ credits: 0, parts: 0, permits: 0, chips: 0, items: {}, kills: 0 }); // 이번 원정 누적 전리품(승리 화면 표시)
   const [lastLoot, setLastLoot] = useState<{ credits: number; parts: number; permits: number; chips: number; item: string | null; kind: NodeKind } | null>(null); // 방금 교전 획득(전리품 화면 표시)
+  const [lastBattle, setLastBattle] = useState<RunRecord["battles"][number] | null>(null); // 방금 전투 요약(전리품 화면 딜 분배 표시)
   const [lastRecord, setLastRecord] = useState<RunRecord | null>(null); // 방금 완주/실패 기록(승리 화면 표시·복사)
   // 최신 상태 미러(콜백 클로저에서 stale 방지) + 원정 기록 누적
   const partyRef = useRef(party); partyRef.current = party;
@@ -204,6 +205,7 @@ export function useDDRun() {
       rounds: stats?.rounds ?? 0, enemies: stats?.enemies ?? [], dmgDealt: stats?.dmgDealt ?? 0, dmgByOp: stats?.dmgByOp, actions: stats?.actions,
       partyHp: partyRef.current.map((m) => { const s = survivors.find((x) => x.id === m.id); return { id: m.id, hpFrac: Math.round(((s?.hp ?? 0) / Math.max(1, m.maxHp)) * 100) / 100 }; }),
     });
+    setLastBattle(battlesRef.current[battlesRef.current.length - 1]);
     if (result === "ally") {
       setParty((cur) => cur.map((m) => { const s = survivors.find((x) => x.id === m.id); return { ...m, hp: s ? s.hp : 0, ult: s?.ult ?? m.ult, stacks: s?.stacks ?? m.stacks }; })); // HP·궁 게이지·스택 이월
       const raw = enemyDrop(activeNode.kind, activeNode.depth, faction); // 세력·티어·깊이별 드랍테이블
@@ -269,5 +271,5 @@ export function useDDRun() {
   }, [items]);
   const closeCraft = useCallback(() => setPhase(craftOrigin), [craftOrigin]);
 
-  return { phase, craftTab, buyShop, sellMat, sellItem, itemSellValue, sellUnit, shop: SHOP, party, nodes, frontier, cleared, activeNode, depthReached, faction, maxDepth: MAX_DEPTH, floor, floorName: FLOORS[floor].name, floorBoss: FLOORS[floor].boss, totalFloors: FLOORS.length, hasCraftable, items, useItem, addItem, craft, craftPiece, forgePiece, swapGear, forgeSkill, loot, lastLoot, lastRecord, continueSpoils, openCraft, closeCraft, openCraftFromRest, startRun, enterNode, finishBattle, rest, restart };
+  return { phase, craftTab, buyShop, sellMat, sellItem, itemSellValue, sellUnit, shop: SHOP, party, nodes, frontier, cleared, activeNode, depthReached, faction, maxDepth: MAX_DEPTH, floor, floorName: FLOORS[floor].name, floorBoss: FLOORS[floor].boss, totalFloors: FLOORS.length, hasCraftable, items, useItem, addItem, craft, craftPiece, forgePiece, swapGear, forgeSkill, loot, lastLoot, lastBattle, lastRecord, continueSpoils, openCraft, closeCraft, openCraftFromRest, startRun, enterNode, finishBattle, rest, restart };
 }

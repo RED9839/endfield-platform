@@ -47,13 +47,14 @@ export default function GamePage() {
       {run.phase === "select" && <RosterSelect onStart={run.startRun} />}
 
       {run.phase === "map" && (
-        <>
-          <div className="mx-auto max-w-[1500px] px-4 pt-4 sm:px-7"><RunHud faction={run.faction} depth={run.depthReached} maxDepth={run.maxDepth} floor={run.floor} totalFloors={run.totalFloors} floorName={run.floorName} craft={run.craft} hasCraftable={run.hasCraftable} /></div>
-          <div className="mx-auto mt-2 max-w-[1500px] px-4 sm:px-7">
+        <div className="flex min-h-[calc(100vh-64px)] flex-col pb-8">
+          <div className="mx-auto w-full max-w-[1500px] px-4 pt-4 sm:px-7"><RunHud faction={run.faction} depth={run.depthReached} maxDepth={run.maxDepth} floor={run.floor} totalFloors={run.totalFloors} floorName={run.floorName} craft={run.craft} hasCraftable={run.hasCraftable} /></div>
+          <div className="mx-auto mt-2 w-full max-w-[1500px] px-4 sm:px-7">
             <button type="button" onClick={() => setShowStatus(true)} className="hud-btn dd-cut flex items-center gap-1.5 px-3 py-1.5 font-mono text-[13px] font-bold uppercase tracking-wider text-ef-muted hover:text-white">📋 부대 현황 — 장비·마스터리 확인</button>
           </div>
-          <RunMap nodes={run.nodes} frontier={run.frontier} cleared={run.cleared} party={run.party} items={run.items} faction={run.faction} floor={run.floor} totalFloors={run.totalFloors} onEnter={handleEnter} />
-        </>
+          {/* 남는 세로 공간 중앙에 맵 배치 — 하단 절반이 비던 문제 */}
+          <div className="flex flex-1 flex-col justify-center"><RunMap nodes={run.nodes} frontier={run.frontier} cleared={run.cleared} party={run.party} items={run.items} faction={run.faction} floor={run.floor} totalFloors={run.totalFloors} onEnter={handleEnter} /></div>
+        </div>
       )}
 
       {run.phase === "craft" && <CraftPanel craft={run.craft} party={run.party} onCraft={run.craftPiece} onForge={run.forgePiece} onSwap={run.swapGear} onForgeSkill={run.forgeSkill} onClose={run.closeCraft} initialTab={run.craftTab} />}
@@ -80,14 +81,48 @@ export default function GamePage() {
       {run.phase === "spoils" && run.lastLoot && (() => {
         const L = run.lastLoot;
         const item = L.item ? ITEMS[L.item] : null;
+        const B = run.lastBattle;
+        // 오퍼별 딜 분배(내림차순) — 엔드필드식 전투 리포트
+        const dmg = B?.dmgByOp ? Object.entries(B.dmgByOp).map(([opid, d]) => { const op = OPERATORS.find((o) => o.id === opid); return { id: opid, name: op?.name ?? opid, el: (op?.element ?? "physical") as keyof typeof elementColor, d }; }).sort((a, b) => b.d - a.d) : [];
+        const dmgMax = Math.max(1, ...dmg.map((x) => x.d));
         return (
-          <div className="mx-auto max-w-[520px] px-4 py-14 text-center sm:px-7">
-            <div className="hud-panel dd-cut p-8" style={{ borderColor: "#ff9a2f44", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04), 0 0 50px -20px rgba(255,154,47,0.5)" }}>
-              <div className="mb-1 font-mono text-[13px] font-bold uppercase tracking-[0.28em] text-ef-accent/70">{L.kind === "elite" ? "정예 격파" : "교전 승리"}</div>
-              <div className="mb-6 text-2xl font-bold" style={{ fontFamily: "var(--dd-display)", letterSpacing: "0.1em", color: "#ffbe6b", textShadow: "0 0 20px rgba(255,190,107,0.4)" }}>전리품 획득</div>
+          <div className="flex min-h-[calc(100vh-120px)] items-center justify-center px-4 py-10 sm:px-7">
+            <div className="relative w-full max-w-[640px]">
+              {/* 코너 브래킷 — 엔드필드 시그니처 */}
+              {[["-left-1.5 -top-1.5", "border-l-2 border-t-2"], ["-right-1.5 -top-1.5", "border-r-2 border-t-2"], ["-bottom-1.5 -left-1.5", "border-b-2 border-l-2"], ["-bottom-1.5 -right-1.5", "border-b-2 border-r-2"]].map(([pos, bd]) => (
+                <span key={pos} className={`pointer-events-none absolute z-10 h-5 w-5 ${pos} ${bd}`} style={{ borderColor: "#f5c542" }} />
+              ))}
+            <div className="hud-panel dd-cut p-7 text-center" style={{ borderColor: "#ff9a2f44", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04), 0 0 50px -20px rgba(255,154,47,0.5)" }}>
+              <div className="mb-1 flex items-center justify-between font-mono text-[12px] font-bold uppercase tracking-[0.24em] text-ef-muted">
+                <span>◆ {run.floorName} · 구역 {run.depthReached + 1}</span>
+                <span className="text-ef-accent/70">{L.kind === "elite" ? "ELITE DOWN" : "COMBAT CLEAR"}</span>
+              </div>
+              <div className="mb-1 text-3xl font-bold" style={{ fontFamily: "var(--dd-display)", letterSpacing: "0.14em", color: "#ffbe6b", textShadow: "0 0 20px rgba(255,190,107,0.4)" }}>{L.kind === "elite" ? "정예 격파" : "교전 승리"}</div>
+              {/* 해저드 스트라이프 구분선 */}
+              <div className="mx-auto mb-5 h-1 w-40 opacity-70" style={{ background: "repeating-linear-gradient(-45deg, #f5c542 0 6px, transparent 6px 12px)" }} />
+              {/* 전투 리포트 — 라운드·처치·오퍼별 딜 분배 */}
+              {B && (
+                <div className="mb-5 border border-ef-line/50 bg-black/30 px-4 py-3 text-left" style={CUT_SM}>
+                  <div className="mb-2 flex items-center gap-3 font-mono text-[12px] uppercase tracking-wider text-ef-muted">
+                    <span className="font-bold text-ef-accent/80">전투 리포트</span>
+                    <span>라운드 <b className="text-ef-ink">{B.rounds}</b></span>
+                    <span>처치 <b className="text-ef-ink">{B.enemies.length}</b></span>
+                    <span className="ml-auto">총 피해 <b className="text-ef-ink">{B.dmgDealt.toLocaleString()}</b></span>
+                  </div>
+                  {dmg.map((x, i) => (
+                    <div key={x.id} className="mt-1 flex items-center gap-2">
+                      <span className="w-24 shrink-0 truncate text-right font-mono text-[12px] font-bold text-white/90">{i === 0 && <span className="mr-0.5" style={{ color: "#f5c542" }} title="이번 전투 최고 딜">◆</span>}{x.name}</span>
+                      <div className="relative h-2.5 flex-1 overflow-hidden bg-black/50">
+                        <div className="h-full" style={{ width: `${Math.max(2, (x.d / dmgMax) * 100)}%`, background: `linear-gradient(90deg, ${elementColor[x.el]}99, ${elementColor[x.el]})` }} />
+                      </div>
+                      <span className="w-16 shrink-0 text-right font-mono text-[12px] font-bold tabular-nums" style={{ color: elementColor[x.el] }}>{x.d.toLocaleString()}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
               <div className="mb-6 flex flex-wrap justify-center gap-2">
                 {([[RESOURCE_ICON.credits, "크레딧", `+${L.credits}`], ...(L.parts > 0 ? [[RESOURCE_ICON.parts, "부품", `+${L.parts}`]] as [string, string, string][] : []), ...(L.chips > 0 ? [[RESOURCE_ICON.chips, "프로토콜 프리즘", `+${L.chips}`]] as [string, string, string][] : []), ...(item ? [[itemImage(item.id), item.name, "×1"]] as [string, string, string][] : [])] as [string, string, string][]).map(([ic, lb, v]) => (
-                  <div key={lb} className="min-w-[112px] border border-ef-line/50 bg-[#120c07] px-3 py-2.5">
+                  <div key={lb} className="min-w-[112px] border border-ef-line/50 bg-[#120c07] px-3 py-2.5" style={CUT_SM}>
                     {ic.startsWith("/") ? <img src={ic} alt="" className="mx-auto h-7 w-7 object-contain" /> : <div className="text-xl leading-none">{ic}</div>}
                     <div className="mt-1 font-mono text-[12px] uppercase tracking-wider text-ef-muted">{lb}</div>
                     <div className="font-mono text-[16px] font-bold text-ef-ink">{v}</div>
@@ -95,6 +130,7 @@ export default function GamePage() {
                 ))}
               </div>
               <button type="button" onClick={run.continueSpoils} className="dd-cut px-6 py-2.5 font-mono text-sm font-black uppercase tracking-[0.12em] transition hover:brightness-110" style={{ background: `linear-gradient(180deg,#ffb257,${PRIMARY})`, color: "#0a0a0a", boxShadow: "0 0 22px -4px rgba(255,154,47,0.6)" }}>계속 →</button>
+            </div>
             </div>
           </div>
         );

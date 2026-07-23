@@ -186,6 +186,7 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
                     const on = selected.includes(o.id); const order = selected.indexOf(o.id) + 1; const foc = focusId === o.id;
                     return (
                       <button key={o.id} type="button" onClick={() => { setFocusId(o.id); setGearTab(null); }} title={o.name} className="group relative aspect-square overflow-hidden border transition" style={{ ...CUT, borderColor: foc ? "#ffbe6b" : on ? elementColor[o.element] : `${elementColor[o.element]}44`, background: `center top/cover url(${avatarUrl(o.id)}), #000`, boxShadow: foc ? "0 0 14px -2px rgba(255,190,107,0.8)" : on ? `0 0 10px -3px ${elementColor[o.element]}` : "none" }}>
+                        <span className="pointer-events-none absolute inset-x-0 bottom-[3px] truncate bg-gradient-to-t from-black/85 via-black/40 to-transparent px-0.5 pb-px pt-2.5 text-center font-mono text-[11px] font-bold leading-tight text-white/90" style={{ textShadow: "0 1px 2px #000" }}>{o.name}</span>
                         <span className="absolute inset-x-0 bottom-0 h-[3px]" style={{ background: elementColor[o.element] }} />
                         {on && <span className="absolute left-0 top-0 flex h-4 w-4 items-center justify-center bg-ef-accent font-mono text-[12px] font-black text-black">{order}</span>}
                         {/* 메인딜러 표식 — 배치 순서(숫자)와 별개다. 탱이 1번 전열에 서도 메인은 딜러다. */}
