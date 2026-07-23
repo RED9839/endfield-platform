@@ -511,7 +511,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
     setCurrent(null); setAiming(null);
     // 연계 콤보 — 이 행동으로 조건이 열린 아군 연계가 있으면 아이콘을 띄우고 플레이어 발동 대기(step 보류)
     const nx = findLinkChain(s, actor);
-    if (nx) { setLinkCombo({ unitId: nx.unit.id, skill: nx.skill }); bump(); return; }
+    if (nx) { setLinkCombo({ unitId: nx.unit.id, skill: nx.skill }); setViewId(null); bump(); return; }
     afterAction();
     timerRef.current = setTimeout(step, delay());
   }
@@ -525,7 +525,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
     if (u) u.chainStep = Math.min(CHAIN_MAX, (s.chain ?? 1) + 1);
     if (u && u.hp > 0 && usable(s, u, lc.skill)) doAction(u, () => act(s, u, lc.skill), lc.skill.name);
     const nx = u ? findLinkChain(s, u) : null;
-    if (nx) { setLinkCombo({ unitId: nx.unit.id, skill: nx.skill }); bump(); return; }
+    if (nx) { setLinkCombo({ unitId: nx.unit.id, skill: nx.skill }); setViewId(null); bump(); return; }
     afterAction();
     timerRef.current = setTimeout(step, delay());
   }
@@ -897,7 +897,9 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
           {/* 스킬 영역 */}
           <div className="min-w-0 flex-1">
           <div className="mb-2 flex items-center gap-2 font-mono text-[15px] font-bold uppercase tracking-wider text-ef-accent">
-            {locked ? <><span className="text-ef-muted">🔒 {pu.name} — 스킬 확인 <span className="font-normal normal-case">(대기 중 · 자기 턴에 사용 가능)</span></span><button type="button" onClick={() => setViewId(null)} className="ml-auto border border-ef-line px-2 py-0.5 text-[14px] text-ef-muted hover:text-white">✕ 닫기</button></> : aiming ? <><span className="text-ef-accent-soft">🎯 {aiming.name} — 공격할 적을 선택</span><button type="button" onClick={() => setAiming(null)} className="ml-auto border border-ef-line px-2 py-0.5 text-[14px] text-ef-muted hover:text-white">취소</button></> : <span>{pu.name} — 스킬 선택</span>}
+            {locked ? <><span className="text-ef-muted">🔒 {pu.name} — 스킬 확인 <span className="font-normal normal-case">(대기 중 · 자기 턴에 사용 가능)</span></span>{current && !auto
+                ? <button type="button" onClick={() => setViewId(null)} className="ml-auto animate-pulse border border-ef-accent bg-ef-accent/15 px-3 py-0.5 text-[14px] font-bold text-ef-accent shadow-[0_0_14px_rgba(255,154,47,0.45)] hover:brightness-125">▶ {current.name} 턴으로 돌아가기</button>
+                : <button type="button" onClick={() => setViewId(null)} className="ml-auto border border-ef-line px-2 py-0.5 text-[14px] text-ef-muted hover:text-white">✕ 닫기</button>}</> : aiming ? <><span className="text-ef-accent-soft">🎯 {aiming.name} — 공격할 적을 선택</span><button type="button" onClick={() => setAiming(null)} className="ml-auto border border-ef-line px-2 py-0.5 text-[14px] text-ef-muted hover:text-white">취소</button></> : <span>{pu.name} — 스킬 선택</span>}
           </div>
           {/* 조준 중에도 카드는 살아있다 — ⓘ 상세 보기 가능, 다른 스킬 클릭 시 조준 전환, 같은 스킬 재클릭 시 취소 */}
           <div className="flex flex-wrap gap-2">
