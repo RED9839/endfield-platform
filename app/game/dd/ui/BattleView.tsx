@@ -477,7 +477,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
       const s = stateRef.current;
       const su = (s?.units ?? []).filter((u) => u.side === "ally").map((a) => ({ id: a.id, hp: a.hp, ult: a.ultCharge, stacks: a.procCount }));
       const foes = (s?.units ?? []).filter((u) => u.side === "enemy");
-      const stats = { rounds: s?.round ?? 0, enemies: foes.map((e) => e.name), dmgDealt: foes.reduce((n, e) => n + Math.max(0, e.maxHp - e.hp), 0) }; // 학습용 전투 기록
+      const stats = { rounds: s?.round ?? 0, enemies: foes.map((e) => e.name), dmgDealt: foes.reduce((n, e) => n + Math.max(0, e.maxHp - e.hp), 0), dmgByOp: Object.fromEntries(Object.entries(dmgRef.current).map(([k, v]) => [k, Math.round(v)])) }; // 학습용 전투 기록(오퍼별 딜 분배 포함)
       onEnd(winner, su, stats);
     }, 1500);
     return () => clearTimeout(t);

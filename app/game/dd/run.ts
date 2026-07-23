@@ -32,12 +32,12 @@ export type PartyMember = { id: string; hp: number; maxHp: number; loadout?: Loa
 export type BattleResult = { id: string; hp: number; ult?: number; stacks?: number }; // ult: 궁 게이지 이월(HP처럼 런 내내 유지 — 보스 전 만충이 목표)
                                                                                        // stacks: 전투 밖으로 들고 나가는 스택(레바테인 녹아내린 불꽃)
 // 전투 종료 시 학습용 통계(BattleView가 넘김): 라운드 수·상대 목록·가한 총 피해.
-export type BattleStats = { rounds: number; enemies: string[]; dmgDealt: number };
+export type BattleStats = { rounds: number; enemies: string[]; dmgDealt: number; dmgByOp?: Record<string, number> };
 // 원정 1회 완주/실패 기록 — 학습·밸런스 분석용. localStorage 이력 + /api/dd-record(디스크 JSONL).
 export type RunRecord = {
   ts: number; date: string; result: "victory" | "defeat"; floorReached: number; totalFloors: number; durationSec: number;
-  party: { id: string; main: boolean; promotion: number; skillRanks: Record<string, number>; gearLevel: number; loadout: Record<string, string | undefined> }[];
-  battles: { floor: number; kind: NodeKind; boss?: string; rounds: number; enemies: string[]; dmgDealt: number; partyHp: { id: string; hpFrac: number }[] }[];
+  party: { id: string; main: boolean; promotion: number; skillRanks: Record<string, number>; gearLevel: number; loadout: Record<string, string | undefined>; dmgDealt: number }[];
+  battles: { floor: number; kind: NodeKind; boss?: string; rounds: number; enemies: string[]; dmgDealt: number; dmgByOp?: Record<string, number>; partyHp: { id: string; hpFrac: number }[] }[];
   economy: { credits: number; parts: number; permits: number; chips: number; kills: number; items: Record<string, number> };
   totals: { battles: number; rounds: number; dmgDealt: number };
 };
@@ -106,7 +106,7 @@ export function useDDRun() {
       ts: now, date: new Date(now).toISOString(), result,
       floorReached: result === "victory" ? FLOORS.length : floorRef.current + 1, totalFloors: FLOORS.length,
       durationSec: startRef.current ? Math.round((now - startRef.current) / 1000) : 0,
-      party: p.map((m) => ({ id: m.id, main: !!m.main, promotion: m.progress?.promotion ?? DEFAULT_PROGRESS.promotion, skillRanks: m.progress?.skillRanks ?? DEFAULT_PROGRESS.skillRanks, gearLevel: m.progress?.gearLevel ?? 0, loadout: (m.loadout ?? {}) as Record<string, string | undefined> })),
+      party: p.map((m) => ({ id: m.id, main: !!m.main, promotion: m.progress?.promotion ?? DEFAULT_PROGRESS.promotion, skillRanks: m.progress?.skillRanks ?? DEFAULT_PROGRESS.skillRanks, gearLevel: m.progress?.gearLevel ?? 0, loadout: (m.loadout ?? {}) as Record<string, string | undefined>, dmgDealt: battles.reduce((n, b) => n + (b.dmgByOp?.[m.id] ?? 0), 0) })),
       battles: [...battles],
       economy: { credits: l.credits, parts: l.parts, permits: l.permits, chips: l.chips, kills: l.kills, items: l.items },
       totals: { battles: battles.length, rounds: battles.reduce((n, b) => n + b.rounds, 0), dmgDealt: battles.reduce((n, b) => n + b.dmgDealt, 0) },
@@ -200,7 +200,7 @@ export function useDDRun() {
     // 전투 1건 기록(승패 무관) — 층·종류·보스·라운드·상대·가한 피해·파티 잔여 HP
     battlesRef.current.push({
       floor: floorRef.current + 1, kind: activeNode.kind, boss: activeNode.kind === "boss" ? FLOORS[floorRef.current]?.boss : undefined,
-      rounds: stats?.rounds ?? 0, enemies: stats?.enemies ?? [], dmgDealt: stats?.dmgDealt ?? 0,
+      rounds: stats?.rounds ?? 0, enemies: stats?.enemies ?? [], dmgDealt: stats?.dmgDealt ?? 0, dmgByOp: stats?.dmgByOp,
       partyHp: partyRef.current.map((m) => { const s = survivors.find((x) => x.id === m.id); return { id: m.id, hpFrac: Math.round(((s?.hp ?? 0) / Math.max(1, m.maxHp)) * 100) / 100 }; }),
     });
     if (result === "ally") {
