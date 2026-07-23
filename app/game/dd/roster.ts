@@ -868,6 +868,7 @@ function tierDmAvg(tier: EnemyTier): [number, number] {
   return (DM_AVG_CACHE[tier] = [hp || 1, atk || 1]);
 }
 
+let ENEMY_UID = 0; // 적 인스턴스 고유 번호 — 소환이 pos를 재사용해도 id 충돌 안 나게(React key 중복 방지)
 export function makeEnemy(def: EnemyDef, pos: number): DDUnit {
   const b = TIER_STATS[def.tier];
   let { hp, attack, speed, staggerMax, defense } = b;
@@ -892,7 +893,7 @@ export function makeEnemy(def: EnemyDef, pos: number): DDUnit {
   }
   // 컨셉(역할) 속도 아키타입: 돌격·기민형↑ / 포격·중장형↓ → 턴 순서 전략성 (최저 20)
   speed = Math.max(20, speed + enemyArchetype(def.role, def.behavior).spd);
-  const u: DDUnit = { ...zero(), id: `${def.id}#${pos}`, name: def.name, side: "enemy", pos, hp, maxHp: hp, speed, attack, staggerMax, ultCost: 999, tier: def.tier };
+  const u: DDUnit = { ...zero(), id: `${def.id}#${++ENEMY_UID}`, name: def.name, side: "enemy", pos, hp, maxHp: hp, speed, attack, staggerMax, ultCost: 999, tier: def.tier };
   // 아군 자동 타겟 처치 우선순위: 지원(치유·증폭)=3 최우선 제거 대상 / 원거리(저격·광역)=2 / 전열(근접·중장)=1
   u.killPriority = def.behavior === "heal" || def.behavior === "buff" ? 3 : def.behavior === "snipe" || def.behavior === "aoe" ? 2 : 1;
   u.defense = defense;
