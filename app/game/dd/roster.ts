@@ -484,6 +484,39 @@ export const OP_BASIC: Record<string, { name: string; note: string }> = {
 export const avatarUrl = (id: string) => `/operators/${id}/${id === "endministrator" ? "avatar1" : "avatar"}.webp`;
 export const fullUrl = (id: string) => `/operators/${id}/${id === "endministrator" ? "full1" : "full"}.webp`; // 전신 아트(스포트라이트)
 export const bustUrl = (id: string) => `/operators/${id}/bust.png`; // 상반신 헤드샷(인게임 가로 아이콘, 투명 배경) — 전투 카드용
+// 오퍼별 상반신 헤드샷 얼굴 X 위치(자동 검출) — 카드가 세로로 길어 object-cover가 가로만 크롭, X 정렬로 얼굴 중심.
+export const OP_BUST_POS: Record<string, string> = {
+  akekuri: "37.1% 12%",
+  alesh: "58.1% 12%",
+  antal: "64.8% 12%",
+  arcane: "46.1% 12%",
+  arclight: "25.7% 12%",
+  ardelia: "42.9% 12%",
+  avywenna: "45.2% 12%",
+  camu: "54.1% 12%",
+  catcher: "24.4% 12%",
+  chenqianyu: "52.3% 12%",
+  dapan: "46.6% 12%",
+  ember: "48.1% 12%",
+  endministrator: "33.2% 12%",
+  estella: "52% 12%",
+  fluorite: "47.2% 12%",
+  gilberta: "51.2% 12%",
+  laevatain: "41.1% 12%",
+  lastrite: "50.6% 12%",
+  lifeng: "70.6% 12%",
+  mifu: "53.4% 12%",
+  perlica: "46.6% 12%",
+  pogranichnik: "54% 12%",
+  rossi: "43.1% 12%",
+  snowshine: "61.4% 12%",
+  tangtang: "53% 12%",
+  wulfgard: "42.5% 12%",
+  xaihi: "53.5% 12%",
+  yvonne: "50.3% 12%",
+  zhuangfangyi: "67.5% 12%",
+};
+
 
 // 오퍼 스킬 아이콘(public/operators/{id}/skills). 스킬 종류 → 파일.
 const SKILL_ICON_FILE: Record<string, string> = { attack: "normal", battle: "battle", link: "combo", ult: "ultimate" };
