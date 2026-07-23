@@ -35,6 +35,28 @@ export const SHOP: ShopItem[] = [
 ];
 export const canBuy = (cs: CraftState, s: ShopItem) => cs.credits >= s.price;
 
+// ── 물자관리 단말기 시세 물자(Stock Redistribution) ──
+// 원작: 물자 재분배 단말기가 상시 상품 + '시세' 상품을 굴린다("싸게 사서 비싸게"). 야영마다 시세가 바뀐다.
+// 상시(SHOP)엔 없는 상급 소비템·묶음 재료를 시세 변동가로 판다. ▼저렴할 때 사두는 게 이득.
+export const MARKET_GOODS: ShopItem[] = [
+  { key: "mk-chips", label: "프로토콜 프리즘 ×12", kind: "mat", give: { chips: 12 }, price: 100, desc: "마스터리 대량 — 시세 변동" },
+  { key: "mk-parts", label: "장비 부품 ×24", kind: "mat", give: { parts: 24 }, price: 65, desc: "제작 대량 — 시세 변동" },
+  { key: "mk-recov", label: "메밀꽃 회복제(소) ×1", kind: "item", give: { itemId: "recov-1" }, price: 55, desc: "회복 600 + 보호막 — 상급(상시 미판매)" },
+  { key: "mk-mix", label: "시트론 혼합제(소) ×1", kind: "item", give: { itemId: "mix-1" }, price: 50, desc: "재생 255/라운드 + 즉시 — 상급" },
+  { key: "mk-power", label: "아츠가 부여된 병 ×1", kind: "item", give: { itemId: "power-1" }, price: 60, desc: "주는 피해 +15%(전투 지속)" },
+  { key: "mk-revive", label: "아츠를 각인한 병 ×1", kind: "item", give: { itemId: "revive-1" }, price: 70, desc: "전투 불능 아군 부활 + HP 30%" },
+];
+export type MarketOffer = { key: string; price: number; trend: "low" | "mid" | "high" };
+// 시세 굴리기: 각 상품 ±35% 변동가. ▼저렴(<0.9) · 시세 · ▲비쌈(>1.12). 야영 진입 시 1회 굴려 그 방문 동안 고정.
+export function rollMarket(): MarketOffer[] {
+  return MARKET_GOODS.map((g) => {
+    const mult = 0.7 + Math.random() * 0.65; // 0.70 ~ 1.35
+    const price = Math.max(1, Math.round(g.price * mult));
+    return { key: g.key, price, trend: mult < 0.9 ? "low" : mult > 1.12 ? "high" : "mid" };
+  });
+}
+export const marketGood = (key: string) => MARKET_GOODS.find((g) => g.key === key);
+
 // 안 쓰는 재료는 상점에 되판다 — 구매 단가의 30%(내림). 부품 30원/10개=3원/개 → 되팔기 0원 방지 위해 올림 처리.
 export const SELL_RATE = 0.3;
 export type SellMat = "parts" | "permits" | "chips";

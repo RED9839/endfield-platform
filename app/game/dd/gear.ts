@@ -114,7 +114,7 @@ export const OP_RECOMMENDED_SET: Record<string, string> = {
   laevatain: "열 작업용", ember: "경량 초자연", wulfgard: "청파", akekuri: "?", camu: "개척",
   yvonne: "M. I. 경찰용", lastrite: "조류의 물결", tangtang: "청파", snowshine: "식양의 숨결", xaihi: "식양의 숨결",
   alesh: "개척", estella: "식양의 숨결", zhuangfangyi: "식양의 흐름", avywenna: "본 크러셔", perlica: "펄스식",
-  arclight: "개척", antal: "식양의 숨결", gilberta: "식양의 숨결", ardelia: "식양의 숨결", fluorite: "통합 실전 훈련",
+  arclight: "개척", antal: "식양의 숨결", gilberta: "식양의 숨결", ardelia: "식양의 숨결", fluorite: "?",
   pogranichnik: "응룡 50식", lifeng: "식양의 숨결", endministrator: "고검의 잔향", rossi: "M. I. 경찰용",
   chenqianyu: "응룡 50식", dapan: "검술사", catcher: "식양의 숨결", mifu: "고검의 잔향",
   arcane: "식양의 숨결",
@@ -134,6 +134,9 @@ export const getSetEffects = (setName: string): SetEffect[] => GEAR_SETS[setName
 export const hasSetEffect = (setName: string) => Boolean(GEAR_SETS[setName]);
 export const setEffectText = (setName: string) => hasSetEffect(setName) ? `${SET_PIECES}부위: ${GEAR_SETS[setName].map(effectText).join(" · ")}` : "세트 효과 없음";
 export const SET_NAMES = Object.keys(GEAR_SETS);
+// 장비 분류: 세트효과 있는 Lv70 = 고급 세트 장비, 세트효과 없는 Lv70(? · 절망) = 고급 단일 장비.
+export const SINGLE_SETS = ["?", "절망"]; // 세트효과 없는 Lv70 단일 피스 소속
+export const gearClass = (setName: string): "고급 세트 장비" | "고급 단일 장비" => hasSetEffect(setName) ? "고급 세트 장비" : "고급 단일 장비";
 
 // 피스명 → 실제 장비 이미지(gear-summary-data). 변형 마커(· I/II) 제거 후 매칭.
 const GEAR_IMG_BY_NAME: Record<string, string> = {};
@@ -238,7 +241,7 @@ export const OP_GEAR: Record<string, Loadout> = {
   antal: { armor: "item_equip_t4_suit_burst01_body_01", gloves: "item_equip_t4_suit_usp02_hand_01", kit1: "item_equip_t4_suit_usp02_edc_01", kit2: "item_equip_t4_suit_usp02_edc_01" },
   gilberta: { armor: "item_equip_t4_suit_usp02_body_01", gloves: "item_equip_t4_rifttrekkergloves", kit1: "item_equip_t4_suit_usp02_edc_03", kit2: "item_equip_t4_suit_usp02_edc_03" },
   ardelia: { armor: "item_equip_t4_suit_usp02_body_01", gloves: "item_equip_t4_rifttrekkergloves", kit1: "item_equip_t4_suit_usp02_edc_03", kit2: "item_equip_t4_suit_usp02_edc_03" },
-  fluorite: { armor: "item_equip_t4_suit_attri01_body_01", gloves: "item_equip_t4_aicfieldworkgloves", kit1: "item_equip_t4_aicfieldworkember", kit2: "item_equip_t4_aicfieldworkember" }, // 시트 첫 줄: 궁극기 충전(통합 실전 훈련)
+  fluorite: { armor: "item_equip_t4_parts_wuling01_body_02", gloves: "item_equip_t4_rifttrekkergloves", kit1: "item_equip_t4_parts_wuling01_edc_03", kit2: "item_equip_t4_rifttrekkerarmorslab" }, // 궁극기 충전(Lv70 고급 단일 — 절망·자유 슬롯)
   // 결은 빌드가 두 벌이다(위키 4.2). 우리 게임은 전무 42식·척결(지능 +156) 고정이라 패널상 항상
   // 진결·지혜(딜)이므로 **딜러 빌드(열 작업용)**를 목표 장비로 쓴다.
   //   열 작업용 3피스 세트효과 "적에게 부식을 부여한 후 자연 피해 +50%" ↔ 결 지혜 궁의 강제 부식과 정확히 맞물린다.

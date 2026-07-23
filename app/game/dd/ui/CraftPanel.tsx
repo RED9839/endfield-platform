@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ChevronLeft, Hammer, Check, Lock } from "lucide-react";
 
-import { GEAR_PIECES_BY_SET_SLOT, GEAR_PIECE_BY_ID, GEAR_SLOTS, LOADOUT_SLOTS, gearSlotName, pieceImage, pieceSlotOf, slotOptions, type GearPiece, type GearSlot, type LoadoutSlot  , attrsText } from "../gear";
+import { GEAR_PIECES_BY_SET_SLOT, GEAR_PIECE_BY_ID, GEAR_SLOTS, LOADOUT_SLOTS, gearSlotName, pieceImage, pieceSlotOf, slotOptions, SET_NAMES, SINGLE_SETS, type GearPiece, type GearSlot, type LoadoutSlot  , attrsText } from "../gear";
 import { craftCost, forgeCost, skillForgeCost, canAfford, pieceLevel, isOwned, type CraftState } from "../craft";
 import { SKILL_MAX, SKILL_KINDS, skillLabel, type SkillKind } from "../progress";
 import { OPERATORS, avatarUrl, SKILLS, skillIcon } from "../roster";
@@ -13,7 +13,9 @@ import { DMG_LABEL, SKILL_KIND_SHORT } from "../labels";
 
 const CUT = { clipPath: "polygon(0 0, calc(100% - 7px) 0, 100% 7px, 100% 100%, 7px 100%, 0 calc(100% - 7px))" };
 const dmgText = (p: GearPiece) => { if (!p.dmg) return ""; const pct = ["hpPct"].includes(p.dmg.kind) || p.dmg.base < 1; return `${DMG_LABEL[p.dmg.kind] ?? p.dmg.kind} +${pct ? Math.round(p.dmg.base * 100) + "%" : Math.round(p.dmg.base)}`; };
-const SETS = ["개척", "열 작업용", "M. I. 경찰용", "본 크러셔", "식양의 흐름", "고검의 잔향", "검술사", "생체 보조", "식양의 숨결", "조류의 물결", "청파", "응룡 50식", "펄스식", "재앙 방호"];
+// 카탈로그 분류: 고급 세트 장비(세트효과 Lv70) + 고급 단일 장비(세트효과 없는 Lv70, ?·절망 통합)
+const SINGLE_TAB = "__single__";
+const SETS = SET_NAMES;
 
 // 단조 레벨(0~3) 핍
 function ForgePips({ lv }: { lv: number }) {
@@ -27,7 +29,7 @@ function Cost({ parts, permits, chips, ok }: { parts?: number; permits?: number;
 }
 
 export default function CraftPanel({ craft, party = [], onCraft, onForge, onSwap, onForgeSkill, onClose, initialTab }: { craft: CraftState; party?: PartyMember[]; onCraft: (id: string) => boolean; onForge: (id: string) => boolean; onSwap?: (opId: string, slot: LoadoutSlot, pieceId: string) => void; onForgeSkill?: (opId: string, kind: SkillKind) => boolean; onClose: () => void; initialTab?: "party" | "catalog" | "mastery" }) {
-  const [set, setSet] = useState(SETS[0]);
+  const [set, setSet] = useState<string>(SETS[0]);
   const [tab, setTab] = useState<"party" | "catalog" | "mastery">(initialTab ?? (party.length > 0 ? "party" : "catalog"));
   const [swap, setSwap] = useState<{ opId: string; slot: LoadoutSlot } | null>(null); // 교체 피커 열림 슬롯
   const affordCraft = (p: GearPiece) => { const c = craftCost(p); return craft.mats.parts >= c.parts && craft.mats.permits >= c.permits; };
@@ -172,12 +174,17 @@ export default function CraftPanel({ craft, party = [], onCraft, onForge, onSwap
       {/* 전체 카탈로그 */}
       {tab === "catalog" && (
         <>
-          <div className="mb-3 flex flex-wrap gap-1.5">
+          <div className="mb-1 font-mono text-[11px] font-bold uppercase tracking-wider text-ef-accent/70">고급 세트 장비 <span className="font-normal text-ef-muted">· 3부위 세트 효과</span></div>
+          <div className="mb-2.5 flex flex-wrap gap-1.5">
             {SETS.map((s) => <button key={s} type="button" onClick={() => setSet(s)} className={`hud-btn dd-cut px-2.5 py-1 font-mono text-[15px] font-bold ${set === s ? "hud-btn-on" : "text-ef-muted"}`}>{s}</button>)}
+          </div>
+          <div className="mb-1 font-mono text-[11px] font-bold uppercase tracking-wider text-ef-accent/70">고급 단일 장비 <span className="font-normal text-ef-muted">· 세트 효과 없는 자유 슬롯 피스</span></div>
+          <div className="mb-3 flex flex-wrap gap-1.5">
+            <button type="button" onClick={() => setSet(SINGLE_TAB)} className={`hud-btn dd-cut px-2.5 py-1 font-mono text-[15px] font-bold ${set === SINGLE_TAB ? "hud-btn-on" : "text-ef-muted"}`}>고급 단일</button>
           </div>
           <div className="grid gap-3 md:grid-cols-3">
             {GEAR_SLOTS.map((slot: GearSlot) => {
-              const pieces = GEAR_PIECES_BY_SET_SLOT[set]?.[slot] ?? [];
+              const pieces = set === SINGLE_TAB ? SINGLE_SETS.flatMap((ss) => GEAR_PIECES_BY_SET_SLOT[ss]?.[slot] ?? []) : (GEAR_PIECES_BY_SET_SLOT[set]?.[slot] ?? []);
               return (
                 <div key={slot} className="hud-panel dd-cut p-2.5">
                   <div className="mb-2 font-mono text-[15px] font-bold uppercase tracking-[0.2em] text-ef-accent/80">{gearSlotName(slot)} <span className="font-normal text-ef-muted">· {pieces.length}</span></div>

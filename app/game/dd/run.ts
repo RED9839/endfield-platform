@@ -6,7 +6,7 @@ import { makeAlly } from "./roster";
 import { GEAR_SLOTS, LOADOUT_SLOTS, GEAR_PIECE_BY_ID, type Loadout } from "./gear";
 import { rewardItemPool, ITEMS } from "./items";
 import { SKILL_MAX, DEFAULT_PROGRESS, type OpProgress, type SkillKind } from "./progress";
-import { initialCraft, craftPiece as doCraft, forgePiece as doForge, cloneCraft, craftCost, skillForgeCost, canAfford, canBuy, sellUnit, matAmount, itemSellValue, SHOP, type CraftState, type ShopItem, type SellMat } from "./craft";
+import { initialCraft, craftPiece as doCraft, forgePiece as doForge, cloneCraft, craftCost, skillForgeCost, canAfford, canBuy, sellUnit, matAmount, itemSellValue, SHOP, rollMarket, marketGood, type CraftState, type ShopItem, type SellMat, type MarketOffer } from "./craft";
 import { FACTIONS, enemyDrop, resetEncounterHistory } from "./sim";
 
 const MAX_DEPTH = 6; // 층당 구역 7개(0~6), 6=층 보스
@@ -92,6 +92,7 @@ export function useDDRun() {
   const [loot, setLoot] = useState<{ credits: number; parts: number; permits: number; chips: number; items: Record<string, number>; kills: number }>({ credits: 0, parts: 0, permits: 0, chips: 0, items: {}, kills: 0 }); // 이번 원정 누적 전리품(승리 화면 표시)
   const [lastLoot, setLastLoot] = useState<{ credits: number; parts: number; permits: number; chips: number; item: string | null; kind: NodeKind } | null>(null); // 방금 교전 획득(전리품 화면 표시)
   const [lastBattle, setLastBattle] = useState<RunRecord["battles"][number] | null>(null); // 방금 전투 요약(전리품 화면 딜 분배 표시)
+  const [market, setMarket] = useState<MarketOffer[]>([]); // 물자관리 단말기 시세 물자(야영 진입마다 갱신)
   const [lastRecord, setLastRecord] = useState<RunRecord | null>(null); // 방금 완주/실패 기록(승리 화면 표시·복사)
   // 최신 상태 미러(콜백 클로저에서 stale 방지) + 원정 기록 누적
   const partyRef = useRef(party); partyRef.current = party;
@@ -186,6 +187,7 @@ export function useDDRun() {
 
   const enterNode = useCallback((n: RunNode) => {
     setActiveId(n.id);
+    if (n.kind === "rest") setMarket(rollMarket()); // 야영 진입 → 물자관리 단말기 시세 갱신
     setPhase(n.kind === "rest" ? "rest" : "battle");
   }, []);
 
@@ -252,6 +254,23 @@ export function useDDRun() {
     });
     if (s.kind === "item") { const it = (s.give as { itemId: string }).itemId; addItem(it); }
   }, [addItem]);
+  // 물자관리 단말기 시세 물자 구매 — 이번 방문의 시세가(offer.price)로 구입. 구매 후 그 물자는 '품절'.
+  const buyMarket = useCallback((key: string) => {
+    const g = marketGood(key); const offer = market.find((o) => o.key === key);
+    if (!g || !offer) return;
+    let bought = false;
+    setCraft((c) => {
+      if (c.credits < offer.price) return c;
+      const n = cloneCraft(c); n.credits -= offer.price;
+      if (g.kind === "mat") { const gv = g.give as Partial<{ parts: number; permits: number; chips: number }>;
+        n.mats.parts += gv.parts ?? 0; n.mats.permits += gv.permits ?? 0; n.mats.chips = (n.mats.chips ?? 0) + (gv.chips ?? 0); }
+      bought = true; return n;
+    });
+    if (bought) {
+      if (g.kind === "item") addItem((g.give as { itemId: string }).itemId);
+      setMarket((m) => m.filter((o) => o.key !== key)); // 품절 처리
+    }
+  }, [market, addItem]);
   // 안 쓰는 재료 되팔기 — 구매가 30%
   const sellMat = useCallback((mat: SellMat, qty = 1) => {
     setCraft((c) => {
@@ -271,5 +290,5 @@ export function useDDRun() {
   }, [items]);
   const closeCraft = useCallback(() => setPhase(craftOrigin), [craftOrigin]);
 
-  return { phase, craftTab, buyShop, sellMat, sellItem, itemSellValue, sellUnit, shop: SHOP, party, nodes, frontier, cleared, activeNode, depthReached, faction, maxDepth: MAX_DEPTH, floor, floorName: FLOORS[floor].name, floorBoss: FLOORS[floor].boss, totalFloors: FLOORS.length, hasCraftable, items, useItem, addItem, craft, craftPiece, forgePiece, swapGear, forgeSkill, loot, lastLoot, lastBattle, lastRecord, continueSpoils, openCraft, closeCraft, openCraftFromRest, startRun, enterNode, finishBattle, rest, restart };
+  return { phase, craftTab, buyShop, sellMat, sellItem, itemSellValue, sellUnit, shop: SHOP, party, nodes, frontier, cleared, activeNode, depthReached, faction, maxDepth: MAX_DEPTH, floor, floorName: FLOORS[floor].name, floorBoss: FLOORS[floor].boss, totalFloors: FLOORS.length, hasCraftable, items, useItem, addItem, craft, craftPiece, forgePiece, swapGear, forgeSkill, loot, lastLoot, lastBattle, lastRecord, market, buyMarket, continueSpoils, openCraft, closeCraft, openCraftFromRest, startRun, enterNode, finishBattle, rest, restart };
 }

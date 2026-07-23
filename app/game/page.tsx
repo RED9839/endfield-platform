@@ -6,6 +6,7 @@ import { ChevronLeft, Tent, Hammer, ShoppingCart } from "lucide-react";
 
 import { OPERATORS } from "./dd/roster";
 import { ITEMS, RESOURCE_ICON, itemImage } from "./dd/items";
+import { marketGood } from "./dd/craft";
 import { skillLabel } from "./dd/progress";
 import { encounterForNode, useDDRun, REST_HEAL, REST_SALVAGE, type RunNode } from "./dd/run";
 import BattleView from "./dd/ui/BattleView";
@@ -22,6 +23,13 @@ const elementColor: Record<"physical" | Element, string> = { physical: "#d4d4d8"
 
 export default function GamePage() {
   const run = useDDRun();
+  // 상점 아이템 아이콘: 재료면 자원 아이콘, 소비템이면 아이템 이미지
+  const giveIcon = (give: { parts?: number; permits?: number; chips?: number } | { itemId: string }): string => {
+    if ("itemId" in give) return itemImage(give.itemId);
+    if (give.chips) return RESOURCE_ICON.chips;
+    if (give.permits) return RESOURCE_ICON.permits;
+    return RESOURCE_ICON.parts;
+  };
   const [showStatus, setShowStatus] = useState(false); // 부대 현황(읽기 전용) 오버레이
   const [copied, setCopied] = useState(false); // 원정 기록 JSON 복사 피드백
   // 제작·마스터리는 야영지에서만. 맵에선 노드 진입만 — 진입 전 제작 안내 모달은 무의미해 제거했다.
@@ -141,25 +149,47 @@ export default function GamePage() {
           <div className="hud-panel dd-cut p-6">
             <div className="mb-3 flex items-center gap-2"><Tent className="h-6 w-6 text-ef-accent" style={{ filter: "drop-shadow(0 0 6px rgba(255,154,47,0.5))" }} /><h2 className="text-2xl">야영지</h2></div>
             <p className="mb-4 text-sm text-ef-muted">부대가 잠시 정비합니다. 정비를 마치면 각 생존 대원이 최대 HP의 <b className="text-green-300">{Math.round(REST_HEAL * 100)}%</b>를 회복하고, 잔해에서 <b style={{ color: "#f5c542" }}>크레딧 +{REST_SALVAGE.credits}</b>를 회수합니다.</p>
-            {/* 크레딧 상점 — 몹이 준 크레딧으로 재료·소비템을 산다. 안 쓰는 재료는 되판다(구매가 30%). */}
+            {/* 물자관리 단말기 — 원작 물자 재분배 단말기. 상시 물자 + 시세 물자(방문마다 변동). 안 쓰는 재료는 되판다(30%). */}
             <div className="dd-cut mb-4 border p-3" style={{ borderColor: "rgba(245,197,66,0.4)" }}>
               <div className="mb-2 flex items-center gap-2">
                 <ShoppingCart className="h-4 w-4" style={{ color: "#f5c542" }} />
-                <span className="font-mono text-sm font-bold" style={{ color: "#f5c542" }}>크레딧 상점</span>
-                <span className="ml-auto flex items-center gap-1 font-mono text-sm font-bold" style={{ color: "#f5c542" }}>{run.craft.credits}<span className="text-[12px] text-ef-muted">크레딧</span></span>
+                <span className="font-mono text-sm font-bold" style={{ color: "#f5c542" }}>물자관리 단말기</span>
+                <span className="rounded-sm border border-ef-line/50 px-1 py-px font-mono text-[10px] uppercase tracking-wider text-ef-muted">물자 재분배</span>
+                <span className="ml-auto flex items-center gap-1 font-mono text-sm font-bold" style={{ color: "#f5c542" }}><img src={RESOURCE_ICON.credits} alt="" className="h-4 w-4 object-contain" />{run.craft.credits}<span className="text-[12px] text-ef-muted">크레딧</span></span>
               </div>
+              <div className="mb-1 font-mono text-[11px] uppercase tracking-wider text-ef-muted">상시 물자</div>
               <div className="grid gap-1.5 sm:grid-cols-2">
                 {run.shop.map((s) => { const ok = run.craft.credits >= s.price;
                   return (
                     <button key={s.key} type="button" disabled={!ok} onClick={() => run.buyShop(s)} title={s.desc}
                       className="dd-cut flex items-center gap-2 border px-2.5 py-1.5 text-left transition enabled:hover:border-ef-accent disabled:opacity-40"
                       style={{ borderColor: "rgba(255,255,255,0.12)" }}>
+                      <img src={giveIcon(s.give)} alt="" className="h-5 w-5 shrink-0 object-contain" />
                       <span className="min-w-0 flex-1 truncate font-mono text-[13px] text-white">{s.label}</span>
                       <span className="shrink-0 font-mono text-[13px] font-bold" style={{ color: ok ? "#f5c542" : "#ff6b5a" }}>{s.price}</span>
                     </button>
                   );
                 })}
               </div>
+              {run.market.length > 0 && (<>
+                <div className="mb-1 mt-2.5 flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-wider text-ef-muted">시세 물자<span className="normal-case tracking-normal text-ef-muted/70">· 방문마다 변동</span></div>
+                <div className="grid gap-1.5 sm:grid-cols-2">
+                  {run.market.map((o) => { const g = marketGood(o.key); if (!g) return null; const ok = run.craft.credits >= o.price;
+                    const tone = o.trend === "low" ? "#7ee081" : o.trend === "high" ? "#ff8a6b" : "#cfcfd4";
+                    const badge = o.trend === "low" ? "▼저렴" : o.trend === "high" ? "▲비쌀" : "시세";
+                    return (
+                      <button key={o.key} type="button" disabled={!ok} onClick={() => run.buyMarket(o.key)} title={g.desc}
+                        className="dd-cut flex items-center gap-2 border px-2.5 py-1.5 text-left transition enabled:hover:border-ef-accent disabled:opacity-40"
+                        style={{ borderColor: o.trend === "low" ? "rgba(126,224,129,0.4)" : "rgba(255,255,255,0.12)" }}>
+                        <img src={giveIcon(g.give)} alt="" className="h-5 w-5 shrink-0 object-contain" />
+                        <span className="min-w-0 flex-1 truncate font-mono text-[13px] text-white">{g.label}</span>
+                        <span className="shrink-0 rounded-sm px-1 py-px font-mono text-[10px] font-bold" style={{ color: tone, background: tone + "1a" }}>{badge}</span>
+                        <span className="shrink-0 font-mono text-[13px] font-bold" style={{ color: ok ? "#f5c542" : "#ff6b5a" }}>{o.price}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </>)}
               {/* 되팔기 — 안 쓰는 재료·소비템을 크레딧으로(구매가 30%) */}
               <div className="mt-2 border-t border-ef-line/40 pt-2">
                 <div className="mb-1 flex flex-wrap items-center gap-1.5">
@@ -167,7 +197,7 @@ export default function GamePage() {
                   {([["parts","부품",run.craft.mats.parts],["permits","관리권",run.craft.mats.permits],["chips","프로토콜 프리즘",run.craft.mats.chips ?? 0]] as const).map(([mat,label,have]) => (
                     <button key={mat} type="button" disabled={have < 5} onClick={() => run.sellMat(mat, 5)}
                       className="dd-cut flex items-center gap-1 border px-2 py-0.5 font-mono text-[12px] transition enabled:hover:border-ef-accent disabled:opacity-35"
-                      style={{ borderColor: "rgba(255,255,255,0.12)", color: "#cfcfd4" }} title={`보유 ${have} — 5개 팔면 ${run.sellUnit(mat) * 5}크레딧`}>{label} ×5<span style={{ color: "#f5c542" }}>+{run.sellUnit(mat) * 5}</span></button>
+                      style={{ borderColor: "rgba(255,255,255,0.12)", color: "#cfcfd4" }} title={`보유 ${have} — 5개 팔면 ${run.sellUnit(mat) * 5}크레딧`}><img src={RESOURCE_ICON[mat]} alt="" className="h-4 w-4 object-contain" />{label} ×5<span style={{ color: "#f5c542" }}>+{run.sellUnit(mat) * 5}</span></button>
                   ))}
                 </div>
                 {Object.entries(run.items).some(([, n]) => (n as number) > 0) && (
@@ -178,7 +208,7 @@ export default function GamePage() {
                         <button key={id} type="button" onClick={() => run.sellItem(id)} title={`${def.desc} — ${run.itemSellValue(def.rarity)}크레딧`}
                           className="dd-cut flex items-center gap-1 border px-2 py-0.5 font-mono text-[12px] transition hover:border-ef-accent"
                           style={{ borderColor: "rgba(255,255,255,0.12)", color: "#cfcfd4" }}>
-                          {def.name}<span className="text-ef-muted">×{n as number}</span><span style={{ color: "#f5c542" }}>+{run.itemSellValue(def.rarity)}</span>
+                          <img src={itemImage(id)} alt="" className="h-4 w-4 object-contain" />{def.name}<span className="text-ef-muted">×{n as number}</span><span style={{ color: "#f5c542" }}>+{run.itemSellValue(def.rarity)}</span>
                         </button>
                       );
                     })}
