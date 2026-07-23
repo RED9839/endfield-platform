@@ -505,7 +505,7 @@ export const OP_BUST_POS: Record<string, string> = {
   gilberta: "45.4% 50%",
   laevatain: "50.1% 50%",
   lastrite: "42.1% 50%",
-  lifeng: "100% 50%",
+  lifeng: "50% 50%",
   mifu: "0% 50%",
   perlica: "69.3% 50%",
   pogranichnik: "59% 50%",
