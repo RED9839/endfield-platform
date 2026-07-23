@@ -805,11 +805,11 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
             return (
               <div key={a.id} className={`group relative flex w-[208px] flex-col items-center ${shakeCls(hit, fx.tick)} ${actCls(isAct, fx.tick)}`}>
                 <FxLayer id={a.id} fx={fx} />
-                {/* 전신 아트 */}
-                <div onClick={() => { if (dead) { setInspectId(a.id); setInspectTab("skill"); } else { setAiming(null); setViewId(viewId === a.id ? null : a.id); } }} className="relative flex h-52 w-full cursor-pointer items-end justify-center">
-                  <span className="pointer-events-none absolute bottom-1 h-3 w-28 rounded-[50%]" style={{ background: "radial-gradient(50% 50% at 50% 50%, rgba(0,0,0,0.6), transparent)" }} />
-                  {isCur && !dead && <span className="pointer-events-none absolute bottom-0 h-7 w-32 rounded-[50%]" style={{ background: `radial-gradient(50% 50% at 50% 50%, ${elementColor[el]}88, transparent 70%)` }} />}
-                  <img src={fullUrl(a.id)} alt="" loading="lazy" className={`relative max-h-full w-auto object-contain transition group-hover:brightness-110 ${dead ? "opacity-35 grayscale" : ""}`} style={{ filter: dead ? undefined : isCur ? "drop-shadow(0 6px 16px rgba(255,190,107,0.55))" : "drop-shadow(0 8px 16px rgba(0,0,0,0.6))" }} onError={(ev) => { (ev.currentTarget as HTMLImageElement).src = avatarUrl(a.id); }} />
+                {/* 상반신 아트 — 전신은 208px 폭에서 너무 작아 보인다: cover+top 크롭으로 얼굴·상체를 크게 */}
+                <div onClick={() => { if (dead) { setInspectId(a.id); setInspectTab("skill"); } else { setAiming(null); setViewId(viewId === a.id ? null : a.id); } }} className="relative h-52 w-full cursor-pointer overflow-hidden border transition" style={{ ...CUT_SM, borderColor: isCur && !dead ? `${elementColor[el]}cc` : "rgba(255,255,255,0.09)", boxShadow: isCur && !dead ? `0 0 20px -5px ${elementColor[el]}aa` : undefined, background: `radial-gradient(90% 55% at 50% 0%, ${elementColor[el]}1e, transparent 70%), #0b0a08` }}>
+                  <img src={fullUrl(a.id)} alt="" loading="lazy" className={`h-full w-full object-cover transition group-hover:brightness-110 ${dead ? "opacity-35 grayscale" : ""}`} style={{ objectPosition: "50% 18%", transform: "scale(1.55)", transformOrigin: "50% 22%" }} onError={(ev) => { (ev.currentTarget as HTMLImageElement).src = avatarUrl(a.id); }} />
+                  {/* 하단 그라데이션 — 크롭 절단면을 정보 타일로 자연스럽게 연결 */}
+                  <span className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/70 to-transparent" />
                   {dead && <span className="absolute inset-0 flex items-center justify-center text-5xl">💀</span>}
                   {isCur && !dead && <span className="absolute -top-1 z-10 font-mono text-[14px] font-black uppercase tracking-wider text-ef-accent" style={{ textShadow: "0 0 8px #000, 0 0 4px #000" }}>▶ 행동</span>}
                   {/* 피격 확률 — 편성 화면과 같은 지표를 전투 중에도. 생존 인원 기준 실시간 재분배 */}
