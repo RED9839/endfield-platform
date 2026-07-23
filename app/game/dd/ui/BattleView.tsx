@@ -869,7 +869,8 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
         <div className="hud-panel dd-cut mt-3 p-3" style={{ borderColor: "rgba(255,154,47,0.4)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.05), 0 -8px 30px -20px rgba(255,154,47,0.4)" }}>
           <div className="flex gap-3">
           {/* 행동 오퍼레이터 아트(에픽세븐식) */}
-          <div className="relative hidden w-24 shrink-0 self-stretch overflow-hidden border sm:block" style={{ ...CUT_SM, minHeight: 156, borderColor: `${elementColor[unitElement(current)]}99`, background: `radial-gradient(80% 55% at 50% 12%, ${elementColor[unitElement(current)]}33, transparent 65%), #0d0906` }}>
+          {/* 스킬 상세(ⓘ)가 열려 패널이 커져도 초상화는 고정 높이(self-start) — 같이 늘어나지 않게 */}
+          <div className="relative hidden w-24 shrink-0 self-start overflow-hidden border sm:block" style={{ ...CUT_SM, height: 156, borderColor: `${elementColor[unitElement(current)]}99`, background: `radial-gradient(80% 55% at 50% 12%, ${elementColor[unitElement(current)]}33, transparent 65%), #0d0906` }}>
             <img src={fullUrl(current.id)} alt="" className="absolute inset-0 h-full w-full object-cover object-top" onError={(ev) => { (ev.currentTarget as HTMLImageElement).src = avatarUrl(current!.id); }} />
             <div className="absolute inset-x-0 top-0 bg-gradient-to-b from-black/85 to-transparent px-1 py-1 text-center font-mono text-[12px] font-black uppercase tracking-wider text-ef-accent" style={{ textShadow: "0 0 6px #000" }}>▶ 행동</div>
             <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 to-transparent px-1 pb-2 pt-3 text-center font-mono text-[14px] font-bold text-white" style={{ textShadow: "0 1px 3px #000" }}>{current.name}</div>
