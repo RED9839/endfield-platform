@@ -5,6 +5,7 @@ import { useEffect, useReducer, useRef, useState } from "react";
 import { act, canAct, isOver, startRound, perTurn, nextActor, turnOrder, usable, BASIC, GAUGE_REGEN, findLinkChain, type DDClass, type DDSkill, type DDState, type DDUnit, type Element, CHAIN_MAX, GAUGE_COST } from "../combat";
 import { OPERATORS, SKILLS, OP_BASIC, OP_BASIC_ATK, skillExtraHit, enemyDefFor, avatarUrl, fullUrl, skillIcon, enemyImage, enemyArchetype, STACK_CARRY } from "../roster";
 import { realAtk } from "../progress";
+import { aggroShares } from "../aggro";
 import { ENCOUNTERS, allyChoose, createBattle, enemyAct, regionEncounter } from "../sim";
 import { activeSets, setEffectText, loadoutPieces } from "../gear";
 import { weaponOf, weaponEffectText, weaponImage, weaponSeriesName, weaponSeriesDesc, WEAPON_KO, WEAPON_ICON } from "../weapons";
@@ -542,6 +543,8 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
 
   const s = stateRef.current!;
   const allies = s.units.filter((u) => u.side === "ally");
+  // 피격 확률(무지향 적 기준) — 생존 아군의 직군 어그로 가중. 아군이 쓰러지면 남은 인원으로 재분배된다.
+  const aggroShare = (() => { const liv = allies.filter((x) => x.hp > 0); const shr = aggroShares(liv.map((y) => y.cls)); return new Map(liv.map((x, i) => [x.id, shr[i]])); })();
   const enemies = s.units.filter((u) => u.side === "enemy");
   const KIND_ORDER: Record<DDSkill["kind"], number> = { attack: 0, battle: 1, link: 2, ult: 3 };
   // 카뮤 「추적」은 궁 후 배틀 슬롯을 교체(원작) — 추적 상태면 사르는 불꽃 대신 추적만 노출(배틀 1칸 유지)
@@ -795,6 +798,8 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
                   <img src={fullUrl(a.id)} alt="" loading="lazy" className={`relative max-h-full w-auto object-contain transition group-hover:brightness-110 ${dead ? "opacity-35 grayscale" : ""}`} style={{ filter: dead ? undefined : isCur ? "drop-shadow(0 6px 16px rgba(255,190,107,0.55))" : "drop-shadow(0 8px 16px rgba(0,0,0,0.6))" }} onError={(ev) => { (ev.currentTarget as HTMLImageElement).src = avatarUrl(a.id); }} />
                   {dead && <span className="absolute inset-0 flex items-center justify-center text-5xl">💀</span>}
                   {isCur && !dead && <span className="absolute -top-1 z-10 font-mono text-[14px] font-black uppercase tracking-wider text-ef-accent" style={{ textShadow: "0 0 8px #000, 0 0 4px #000" }}>▶ 행동</span>}
+                  {/* 피격 확률 — 편성 화면과 같은 지표를 전투 중에도. 생존 인원 기준 실시간 재분배 */}
+                  {!dead && <span title="피격 확률 — 무지향 적이 이 오퍼를 노릴 확률(직군 어그로 가중). 아군이 쓰러지면 남은 인원에게 재분배됩니다. 저체력 우선·최고 위협 우선 적은 예외." className="absolute right-0.5 top-0.5 z-10 cursor-help border border-red-300/35 bg-black/75 px-1 py-px font-mono text-[11px] font-bold text-red-300/90">피격 {Math.round((aggroShare.get(a.id) ?? 0) * 100)}%</span>}
                 </div>
                 {/* 정보 패널 — 라벨 정렬·값 오버레이로 깔끔하게 */}
                 <div className="hud-tile dd-cut w-full px-2.5 py-2" style={isCur ? { borderColor: `${PRIMARY}aa`, boxShadow: `inset 0 1px 0 rgba(255,255,255,0.06), 0 -5px 16px -9px ${PRIMARY}` } : undefined}>
