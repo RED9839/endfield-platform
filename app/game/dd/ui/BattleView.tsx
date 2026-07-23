@@ -287,6 +287,8 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
   const cycleActsRef = useRef(0); // ATB: 사이클(모두 1회) 내 행동 수
   const cycleSizeRef = useRef(1); // 사이클 크기(생존 유닛 수)
   const dmgRef = useRef<Record<string, number>>({}); // 아군별 누적 가한 피해(데미지 기록)
+  // 행동 타임라인(사이클 기록) — r=라운드, u=오퍼, k=종류(attack/battle/link/ult/item), s=스킬·아이템 id, a=자동/예약 발동
+  const actionsRef = useRef<{ r: number; u: string; k: string; s: string; a?: 1 }[]>([]);
   const takenRef = useRef<Record<string, number>>({}); // 적별 누적으로 받은 피해 — 숫자가 얼마나 쌓였는지 카드에서 바로 보이게
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoRef = useRef(false); // 기본 수동(전투 스킬 직접 선택). 자동은 토글.
@@ -440,6 +442,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
     if (u.side === "ally" && u.pendingLink) {
       const sk = u.pendingLink; u.pendingLink = undefined;
       if (u.pendingLinkAtb != null) { u.atb = u.pendingLinkAtb; u.pendingLinkAtb = undefined; }
+      actionsRef.current.push({ r: s.round, u: u.id, k: sk.kind, s: sk.id, a: 1 });
       doAction(u, () => { if (usable(s, u, sk)) act(s, u, sk); else s.log.push(`${u.name} 연계 조건 해제`); }, sk.name);
       afterAction();
       timerRef.current = setTimeout(step, delay()); return;
@@ -455,12 +458,14 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
       // 자동도 위급하면 소비 아이템을 쓴다 — 안 쓰면 수동보다 일방적으로 불리하다.
       const pick = autoItemPick(s, items);
       if (pick) {
+        actionsRef.current.push({ r: s.round, u: u.id, k: "item", s: pick.id, a: 1 });
         doAction(u, () => { applyItem(s, pick.id, pick.target); }, ITEMS[pick.id]?.name ?? "아이템");
         onUseItem(pick.id);
         afterAction();
         timerRef.current = setTimeout(step, delay()); return;
       }
       const sk = allyChoose(s, u);
+      if (sk) actionsRef.current.push({ r: s.round, u: u.id, k: sk.kind, s: sk.id, a: 1 });
       doAction(u, () => { if (sk) act(s, u, sk); else s.log.push(`${u.name} 행동 불가(스킬 없음)`); }, sk ? sk.name : null);
       afterAction();
       timerRef.current = setTimeout(step, delay()); return;
@@ -477,7 +482,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
       const s = stateRef.current;
       const su = (s?.units ?? []).filter((u) => u.side === "ally").map((a) => ({ id: a.id, hp: a.hp, ult: a.ultCharge, stacks: a.procCount }));
       const foes = (s?.units ?? []).filter((u) => u.side === "enemy");
-      const stats = { rounds: s?.round ?? 0, enemies: foes.map((e) => e.name), dmgDealt: foes.reduce((n, e) => n + Math.max(0, e.maxHp - e.hp), 0), dmgByOp: Object.fromEntries(Object.entries(dmgRef.current).map(([k, v]) => [k, Math.round(v)])) }; // 학습용 전투 기록(오퍼별 딜 분배 포함)
+      const stats = { rounds: s?.round ?? 0, enemies: foes.map((e) => e.name), dmgDealt: foes.reduce((n, e) => n + Math.max(0, e.maxHp - e.hp), 0), dmgByOp: Object.fromEntries(Object.entries(dmgRef.current).map(([k, v]) => [k, Math.round(v)])), actions: [...actionsRef.current] }; // 학습용 전투 기록(오퍼별 딜 분배 + 행동 사이클 포함)
       onEnd(winner, su, stats);
     }, 1500);
     return () => clearTimeout(t);
@@ -506,6 +511,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
     const actor = current;
     if (targetId && !usableOn(sk, actor, targetId)) return; // 그 적에겐 조건 미충족 — 발동하지 않는다
     s.forcedTargetId = targetId; // 플레이어 지정 대상(단일 스킬)
+    actionsRef.current.push({ r: s.round, u: actor.id, k: sk.kind, s: sk.id });
     doAction(actor, () => act(s, actor, sk), sk.name);
     s.forcedTargetId = undefined;
     setCurrent(null); setAiming(null);
@@ -523,7 +529,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
     // 자동 모드에선 act()가 예약하며 chainStep을 달아 주지만, 수동은 플레이어가 직접 쏘므로
     // 여기서 달아야 한다. 없으면 s.chain이 1로 남아 "새 연쇄"로 취급돼 누적 피해가 초기화된다.
     if (u) u.chainStep = Math.min(CHAIN_MAX, (s.chain ?? 1) + 1);
-    if (u && u.hp > 0 && usable(s, u, lc.skill)) doAction(u, () => act(s, u, lc.skill), lc.skill.name);
+    if (u && u.hp > 0 && usable(s, u, lc.skill)) { actionsRef.current.push({ r: s.round, u: u.id, k: "link", s: lc.skill.id }); doAction(u, () => act(s, u, lc.skill), lc.skill.name); }
     const nx = u ? findLinkChain(s, u) : null;
     if (nx) { setLinkCombo({ unitId: nx.unit.id, skill: nx.skill }); setViewId(null); bump(); return; }
     afterAction();
@@ -532,6 +538,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
   function skipLink() { setLinkCombo(null); afterAction(); timerRef.current = setTimeout(step, delay()); }
   function playerUseItem(id: string) {
     const s = stateRef.current!; if (!current || !items[id] || !canUseItem(s, id)) return;
+    actionsRef.current.push({ r: s.round, u: current.id, k: "item", s: id });
     const before = new Map(s.units.map((u) => [u.id, u.hp]));
     applyItem(s, id, current); onUseItem(id);
     const floaters: Floater[] = [];
