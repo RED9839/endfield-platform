@@ -151,12 +151,28 @@ function Bar({ value, max, color, h = "h-2", ghost = false }: { value: number; m
     </div>
   );
 }
-function Chip({ children, tone = "#a1a1aa", title, icon, onPick }: { children: React.ReactNode; tone?: string; title?: string; icon?: string; onPick?: (r: DOMRect) => void }) {
+function Chip({ children, tone = "#a1a1aa", title, icon, onPick, compact }: { children: React.ReactNode; tone?: string; title?: string; icon?: string; onPick?: (r: DOMRect) => void; compact?: boolean }) {
+  // compact: 전투 카드용 — 아이콘 + 수치만. 카드 폭이 좁아 이름까지 넣으면 2~3개만 보이고 나머지가 잘린다.
+  // 전체 이름은 툴팁/클릭 팝오버·오퍼 상세에서 확인.
+  const cls = compact
+    ? "inline-flex items-center gap-0.5 border px-1 py-0.5 font-mono text-[13px] font-bold leading-none"
+    : "inline-flex items-center gap-0.5 border px-1.5 py-0.5 font-mono text-[14px] font-bold leading-none tracking-wide";
+  const img = icon && <img src={icon} alt="" className={`${compact ? "" : "-ml-0.5"} h-4 w-4 shrink-0 object-contain`} onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />;
   if (onPick) return <button type="button" onClick={(e) => onPick(e.currentTarget.getBoundingClientRect())} title={title}
-    className="inline-flex items-center gap-0.5 border px-1.5 py-0.5 font-mono text-[14px] font-bold leading-none tracking-wide transition-[filter] hover:brightness-125"
-    style={{ borderColor: `${tone}99`, color: tone, background: `${tone}22` }}>{icon && <img src={icon} alt="" className="-ml-0.5 h-4 w-4 shrink-0 object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />}{children}</button>;
-  return <span title={title} className={`inline-flex items-center gap-0.5 border px-1.5 py-0.5 font-mono text-[14px] font-bold leading-none tracking-wide ${title ? "cursor-help" : ""}`} style={{ borderColor: `${tone}99`, color: tone, background: `${tone}22` }}>{icon && <img src={icon} alt="" className="-ml-0.5 h-4 w-4 shrink-0 object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />}{children}</span>;
+    className={`${cls} transition-[filter] hover:brightness-125`}
+    style={{ borderColor: `${tone}99`, color: tone, background: `${tone}22` }}>{img}{children}</button>;
+  return <span title={title} className={`${cls} ${title ? "cursor-help" : ""}`} style={{ borderColor: `${tone}99`, color: tone, background: `${tone}22` }}>{img}{children}</span>;
 }
+// 칩 압축 표기: 라벨 끝의 수치만 남긴다(방어 불능 2 → 2, 허약 25% → 25%).
+// 수치가 없으면 아이콘만, 아이콘도 없으면 이름 앞 2글자.
+const chipShort = (c: StatusChip): string => {
+  const m = c.label.match(/([+\-]?\d+%?)\s*$/);
+  const val = m ? m[1] : "";
+  if (c.icon) return val;                       // 아이콘이 뜻을 전달 → 수치만
+  // 아이콘 없는 칩(공격·지속·저항·재생 등)은 숫자만 두면 뜻을 알 수 없다 → 이름 2글자 + 수치
+  const name = c.label.replace(/[+\-]?\d+(%|\/턴)?\s*$/, "").replace(/^[^\p{L}]+/u, "").trim().slice(0, 2);
+  return name + val;
+};
 // 상태효과 설명 — 신규 플레이어가 칩을 봤을 때 무슨 효과인지 알 수 있게(툴팁)
 const CHIP_DESC: Record<string, string> = {
   pb: "방어 불능 — 그 자체로는 효과 없는 표식(최대 4). 띄우기·넘어뜨리기로 쌓고 강타·갑옷 파괴로 소모합니다",
@@ -747,7 +763,6 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
             const dead = e.hp <= 0;
             const hit = fx.floaters.some((f) => f.id === e.id && f.amt < 0);
             const isAct = fx.activeId === e.id;
-            const weak = ed?.resist ? (Object.entries(ed.resist) as [Element | "physical", number][]).filter(([, v]) => v < 0) : [];
             return (
               <div key={e.id} className={`group relative flex w-[190px] flex-col items-center ${shakeCls(hit, fx.tick)} ${actCls(isAct, fx.tick)}`}>
                 <FxLayer id={e.id} fx={fx} />
@@ -781,11 +796,11 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
                   <div className="flex items-center gap-1"><span className="text-[9px] leading-none text-[#e0655c]/70" title={`누적 피해 ${(takenRef.current[e.id] ?? 0).toLocaleString()}`}>HP</span><div className="flex-1"><Bar value={e.hp} max={e.maxHp} color="#e0655c" ghost /></div>{(takenRef.current[e.id] ?? 0) > 0 && !dead && <span className="ml-1 shrink-0 font-mono text-[10px] font-bold tabular-nums text-[#ff8a6a]/85" title="이 적에게 누적으로 넣은 피해">▼{(takenRef.current[e.id] ?? 0).toLocaleString()}</span>}<span className="shrink-0 font-mono text-[11px] tabular-nums text-ef-muted"><span className="font-bold text-white/90">{Math.max(0, e.hp)}</span>/{e.maxHp}</span></div>
                   {e.staggerMax > 0 && !dead && <div className="mt-0.5 flex items-center gap-1"><span className="text-[9px] leading-none text-[#a16207]/80" title="불균형: 가득 차면 행동 불가 + 받는 피해 증가">불균형</span><div className="relative flex-1"><Bar value={e.staggered ? e.staggerMax : e.stagger} max={e.staggerMax} color={e.staggered ? "#facc15" : "#a16207"} h="h-1" />{e.poiseKnot && !e.poiseBroken && <span className="pointer-events-none absolute top-[-1px] h-[calc(100%+2px)] w-px bg-white/70" style={{ left: "50%" }} title="불균형 지점 — 넘으면 잠시 중단" />}</div></div>}
                   {!dead && <div className="mt-0.5"><Bar value={e.atb} max={100} color="#67e8f9" h="h-1" /></div>}
-                  {!dead && <div className="flex flex-nowrap gap-1 overflow-x-auto overflow-y-hidden min-h-[22px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&>*]:shrink-0 mt-1">
-                    {e.staggered && <Chip tone="#facc15">⚡ 불균형</Chip>}
-                    {(e.charging ?? 0) > 0 && <Chip tone="#f0776e">⚡ 차징! 강공 예고</Chip>}
-                    {weak.map(([eln, v]) => <Chip key={eln} tone={elementColor[eln]}>{elementName[eln]}약점{Math.round(-v * 100)}</Chip>)}
-                    {unitChips(e).map((c) => <Chip key={c.k} tone={c.tone} title={chipTitle(c)} icon={c.icon} onPick={(r) => setChipInfo({ c, x: r.left + r.width / 2, y: r.bottom })}>{c.label}</Chip>)}
+                  {!dead && <div className="flex flex-wrap content-start gap-1 overflow-hidden min-h-[22px] max-h-[46px] mt-1">
+                    {/* 약점 칩은 뺐다 — 전투 내내 안 변하는 정적 정보라 호버 팝오버에 이미 있고, 동적 버프/디버프 자리를 잡아먹었다 */}
+                    {e.staggered && <Chip compact tone="#facc15" title="불균형 — 행동 불가 + 받는 피해 +30%">⚡불균형</Chip>}
+                    {(e.charging ?? 0) > 0 && <Chip compact tone="#f0776e" title="차징! 다음 턴 강력 공격 — 불균형시키면 차단">⚡차징</Chip>}
+                    {unitChips(e).map((c) => <Chip key={c.k} compact tone={c.tone} title={chipTitle(c)} icon={c.icon} onPick={(r) => setChipInfo({ c, x: r.left + r.width / 2, y: r.bottom })}>{chipShort(c)}</Chip>)}
                   </div>}
                 </div>
               </div>
@@ -846,9 +861,9 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
                     </div>
                   </div>
                   {/* 보호막 · 상태(세트 제외) — 고정 높이 단일 행(칩 쌓여도 카드 안 늘어남) */}
-                  {(a.shield > 0 || unitChips(a).length > 0) && <div className="flex flex-nowrap gap-1 overflow-x-auto overflow-y-hidden min-h-[22px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&>*]:shrink-0 mt-1.5">
-                    {a.shield > 0 && <Chip tone="#38bdf8">🛡 {a.shield}</Chip>}
-                    {unitChips(a).map((c) => <Chip key={c.k} tone={c.tone} title={chipTitle(c)} icon={c.icon} onPick={(r) => setChipInfo({ c, x: r.left + r.width / 2, y: r.bottom })}>{c.label}</Chip>)}
+                  {(a.shield > 0 || unitChips(a).length > 0) && <div className="flex flex-wrap content-start gap-1 overflow-hidden min-h-[22px] max-h-[46px] mt-1.5">
+                    {a.shield > 0 && <Chip compact tone="#38bdf8" title={`보호막 ${a.shield}`}>🛡{a.shield}</Chip>}
+                    {unitChips(a).map((c) => <Chip key={c.k} compact tone={c.tone} title={chipTitle(c)} icon={c.icon} onPick={(r) => setChipInfo({ c, x: r.left + r.width / 2, y: r.bottom })}>{chipShort(c)}</Chip>)}
                   </div>}
                 </div>
               </div>
