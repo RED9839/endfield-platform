@@ -483,6 +483,7 @@ export const OP_BASIC: Record<string, { name: string; note: string }> = {
 // 오퍼 얼굴 아이콘 경로 — 관리자만 avatar1.webp, 나머지는 avatar.webp
 export const avatarUrl = (id: string) => `/operators/${id}/${id === "endministrator" ? "avatar1" : "avatar"}.webp`;
 export const fullUrl = (id: string) => `/operators/${id}/${id === "endministrator" ? "full1" : "full"}.webp`; // 전신 아트(스포트라이트)
+export const bustUrl = (id: string) => `/operators/${id}/bust.png`; // 상반신 헤드샷(인게임 가로 아이콘, 투명 배경) — 전투 카드용
 
 // 오퍼 스킬 아이콘(public/operators/{id}/skills). 스킬 종류 → 파일.
 const SKILL_ICON_FILE: Record<string, string> = { attack: "normal", battle: "battle", link: "combo", ult: "ultimate" };
