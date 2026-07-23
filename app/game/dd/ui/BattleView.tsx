@@ -285,6 +285,9 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
     stateRef.current.manualLink = true; // 기본 수동 — 연계는 플레이어가 콤보 아이콘으로 발동(자동 모드 시 false)
   }
   const cycleActsRef = useRef(0); // ATB: 사이클(모두 1회) 내 행동 수
+  // 전술 아이템은 자유 행동(턴 미소모)이되 **한 턴 1개**만 — 무제한이면 한 턴에 몰아써서
+  // 보스의 한 방 설계를 무력화한다(실측: 완주율은 1개/턴이나 무제한이나 100%로 동일).
+  const itemTurnRef = useRef<string | null>(null); // 이번 턴에 아이템을 쓴 오퍼 id
   const cycleSizeRef = useRef(1); // 사이클 크기(생존 유닛 수)
   const dmgRef = useRef<Record<string, number>>({}); // 아군별 누적 가한 피해(데미지 기록)
   // 행동 타임라인(사이클 기록) — r=라운드, u=오퍼, k=종류(attack/battle/link/ult/item), s=스킬·아이템 id, a=자동/예약 발동
@@ -457,20 +460,20 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
     if (autoRef.current) {
       // 자동도 위급하면 소비 아이템을 쓴다 — 안 쓰면 수동보다 일방적으로 불리하다.
       const pick = autoItemPick(s, items);
-      if (pick) {
-        actionsRef.current.push({ r: s.round, u: u.id, k: "item", s: pick.id, a: 1 });
-        doAction(u, () => { applyItem(s, pick.id, pick.target); }, ITEMS[pick.id]?.name ?? "아이템");
-        onUseItem(pick.id);
-        afterAction();
-        timerRef.current = setTimeout(step, delay()); return;
-      }
+      // 아이템은 자유 행동 — 턴을 소모하지 않고 같은 턴에 스킬까지(한 턴 1개, 수동과 동일 규칙)
+      if (pick) actionsRef.current.push({ r: s.round, u: u.id, k: "item", s: pick.id, a: 1 });
       const sk = allyChoose(s, u);
       if (sk) actionsRef.current.push({ r: s.round, u: u.id, k: sk.kind, s: sk.id, a: 1 });
-      doAction(u, () => { if (sk) act(s, u, sk); else s.log.push(`${u.name} 행동 불가(스킬 없음)`); }, sk ? sk.name : null);
+      doAction(u, () => {
+        if (pick) applyItem(s, pick.id, pick.target);
+        if (sk) act(s, u, sk); else if (!pick) s.log.push(`${u.name} 행동 불가(스킬 없음)`);
+      }, sk ? sk.name : (pick ? ITEMS[pick.id]?.name ?? "아이템" : null));
+      if (pick) onUseItem(pick.id);
       afterAction();
       timerRef.current = setTimeout(step, delay()); return;
     }
     // 수동: 플레이어 입력 대기(행동은 playerAct에서)
+    itemTurnRef.current = null; // 새 턴 → 아이템 다시 사용 가능
     setCurrent(u); setViewId(null); fxTick.current += 1; mergeFx({ tick: fxTick.current, activeId: u.id, actingSide: "ally", floaters: [], cast: null }); bump();
   }
 
@@ -536,8 +539,11 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
     timerRef.current = setTimeout(step, delay());
   }
   function skipLink() { setLinkCombo(null); afterAction(); timerRef.current = setTimeout(step, delay()); }
+  const itemUsedThisTurn = !!current && itemTurnRef.current === current.id; // 이번 턴 아이템 사용 여부
   function playerUseItem(id: string) {
     const s = stateRef.current!; if (!current || !items[id] || !canUseItem(s, id)) return;
+    if (itemTurnRef.current === current.id) return; // 한 턴 1개
+    itemTurnRef.current = current.id;
     actionsRef.current.push({ r: s.round, u: current.id, k: "item", s: id });
     const before = new Map(s.units.map((u) => [u.id, u.hp]));
     applyItem(s, id, current); onUseItem(id);
@@ -966,13 +972,13 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
           </div>{/* /flex 행 */}
           {!locked && Object.keys(items).length > 0 && (
             <div className="mt-2 border-t border-ef-line/50 pt-2">
-              <div className="mb-1.5 font-mono text-[14px] font-bold uppercase tracking-wider text-ef-muted">전술 아이템 <span className="text-ef-muted">· 자유 행동</span></div>
+              <div className="mb-1.5 font-mono text-[14px] font-bold uppercase tracking-wider text-ef-muted">전술 아이템 <span className="text-ef-muted">· 자유 행동(턴 미소모) · 한 턴 1개</span>{itemUsedThisTurn && <span className="ml-1.5 font-normal normal-case text-amber-300/80">— 이번 턴 사용함</span>}</div>
               <div className="flex flex-wrap gap-2">
                 {Object.entries(items).map(([id, n]) => {
                   const it = ITEMS[id]; if (!it) return null;
-                  const usable = canUseItem(s, id);
+                  const usable = canUseItem(s, id) && !itemUsedThisTurn; // 한 턴 1개
                   return (
-                    <button key={id} type="button" disabled={!usable} onClick={() => playerUseItem(id)} className={`group border bg-black/40 px-2.5 py-1.5 text-left transition ${usable ? "border-ef-line hover:border-ef-accent/60" : "border-ef-line/40 opacity-45"}`} style={CUT_SM}>
+                    <button key={id} type="button" disabled={!usable} title={itemUsedThisTurn ? "이번 턴에는 이미 아이템을 썼습니다 — 다음 턴에 사용 가능" : it.desc} onClick={() => playerUseItem(id)} className={`group border bg-black/40 px-2.5 py-1.5 text-left transition ${usable ? "border-ef-line hover:border-ef-accent/60" : "border-ef-line/40 opacity-45"}`} style={CUT_SM}>
                       <div className="flex items-center gap-1.5"><img src={itemImage(id)} alt="" loading="lazy" className="h-6 w-6 shrink-0 rounded-sm object-contain" style={{ background: `${itemColor(it.kind)}18` }} /><span className="font-mono text-xs font-bold text-white">{it.name}</span><span className="font-mono text-[14px] text-ef-accent">×{n}</span></div>
                       <div className="mt-0.5 max-w-[220px] truncate text-[14px] text-ef-muted group-hover:text-ef-ink">{it.desc}</div>
                     </button>
