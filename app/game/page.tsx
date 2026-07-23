@@ -129,7 +129,7 @@ export default function GamePage() {
                 </div>
               )}
               <div className="mb-6 flex flex-wrap justify-center gap-2">
-                {([[RESOURCE_ICON.credits, "크레딧", `+${L.credits}`], ...(L.parts > 0 ? [[RESOURCE_ICON.parts, "부품", `+${L.parts}`]] as [string, string, string][] : []), ...(L.chips > 0 ? [[RESOURCE_ICON.chips, "프로토콜 프리즘", `+${L.chips}`]] as [string, string, string][] : []), ...(item ? [[itemImage(item.id), item.name, "×1"]] as [string, string, string][] : [])] as [string, string, string][]).map(([ic, lb, v]) => (
+                {([[RESOURCE_ICON.credits, "크레딧", `+${L.credits}`], ...(L.parts > 0 ? [[RESOURCE_ICON.parts, "부품", `+${L.parts}`]] as [string, string, string][] : []), ...(L.chips > 0 ? [[RESOURCE_ICON.chips, "프로토콜 프리즘 세트", `+${L.chips}`]] as [string, string, string][] : []), ...(item ? [[itemImage(item.id), item.name, "×1"]] as [string, string, string][] : [])] as [string, string, string][]).map(([ic, lb, v]) => (
                   <div key={lb} className="min-w-[112px] border border-ef-line/50 bg-[#120c07] px-3 py-2.5" style={CUT_SM}>
                     {ic.startsWith("/") ? <img src={ic} alt="" className="mx-auto h-7 w-7 object-contain" /> : <div className="text-xl leading-none">{ic}</div>}
                     <div className="mt-1 font-mono text-[12px] uppercase tracking-wider text-ef-muted">{lb}</div>
@@ -192,12 +192,20 @@ export default function GamePage() {
               </>)}
               {/* 되팔기 — 안 쓰는 재료·소비템을 크레딧으로(구매가 30%) */}
               <div className="mt-2 border-t border-ef-line/40 pt-2">
-                <div className="mb-1 flex flex-wrap items-center gap-1.5">
-                  <span className="font-mono text-[12px] text-ef-muted">재료 되팔기(30%):</span>
-                  {([["parts","부품",run.craft.mats.parts],["permits","관리권",run.craft.mats.permits],["chips","프로토콜 프리즘",run.craft.mats.chips ?? 0]] as const).map(([mat,label,have]) => (
-                    <button key={mat} type="button" disabled={have < 5} onClick={() => run.sellMat(mat, 5)}
-                      className="dd-cut flex items-center gap-1 border px-2 py-0.5 font-mono text-[12px] transition enabled:hover:border-ef-accent disabled:opacity-35"
-                      style={{ borderColor: "rgba(255,255,255,0.12)", color: "#cfcfd4" }} title={`보유 ${have} — 5개 팔면 ${run.sellUnit(mat) * 5}크레딧`}><img src={RESOURCE_ICON[mat]} alt="" className="h-4 w-4 object-contain" />{label} ×5<span style={{ color: "#f5c542" }}>+{run.sellUnit(mat) * 5}</span></button>
+                <div className="mb-1 flex flex-col gap-1">
+                  <span className="font-mono text-[12px] text-ef-muted">재료 되팔기(30%) <span className="text-ef-muted/70">— 1개씩 또는 5개씩</span>:</span>
+                  {([["parts","부품",run.craft.mats.parts],["permits","관리권",run.craft.mats.permits],["chips","프로토콜 프리즘 세트",run.craft.mats.chips ?? 0]] as const).map(([mat,label,have]) => (
+                    <div key={mat} className="flex items-center gap-1.5 font-mono text-[12px]">
+                      <img src={RESOURCE_ICON[mat]} alt="" className="h-4 w-4 shrink-0 object-contain" />
+                      <span className="w-28 shrink-0 truncate" style={{ color: "#cfcfd4" }}>{label}</span>
+                      <span className="w-14 shrink-0 text-ef-muted">보유 {have}</span>
+                      <button type="button" disabled={have < 1} onClick={() => run.sellMat(mat, 1)}
+                        className="dd-cut border px-2 py-0.5 transition enabled:hover:border-ef-accent disabled:opacity-35"
+                        style={{ borderColor: "rgba(255,255,255,0.12)", color: "#cfcfd4" }} title={`1개 팔기 — ${run.sellUnit(mat)}크레딧`}>×1<span className="ml-0.5" style={{ color: "#f5c542" }}>+{run.sellUnit(mat)}</span></button>
+                      <button type="button" disabled={have < 5} onClick={() => run.sellMat(mat, 5)}
+                        className="dd-cut border px-2 py-0.5 transition enabled:hover:border-ef-accent disabled:opacity-35"
+                        style={{ borderColor: "rgba(255,255,255,0.12)", color: "#cfcfd4" }} title={`5개 팔기 — ${run.sellUnit(mat) * 5}크레딧`}>×5<span className="ml-0.5" style={{ color: "#f5c542" }}>+{run.sellUnit(mat) * 5}</span></button>
+                    </div>
                   ))}
                 </div>
                 {Object.entries(run.items).some(([, n]) => (n as number) > 0) && (

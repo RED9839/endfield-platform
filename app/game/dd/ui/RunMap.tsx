@@ -53,7 +53,7 @@ export default function RunMap({ nodes, frontier, cleared, party, items, faction
     if (n.kind === "rest") return null;
     const d = enemyDrop(n.kind, n.depth, faction ?? "");
     const m = Math.pow(LOOT_DECAY, floor);
-    // 실제 드랍대로 — 크레딧은 전 노드, 부품·프로토콜 프리즘은 실제로 떨어지는 노드(정예·보스)만.
+    // 실제 드랍대로 — 크레딧은 전 노드, 부품·프로토콜 프리즘 세트은 실제로 떨어지는 노드(정예·보스)만.
     return { credits: Math.round(d.credits * m), parts: Math.round(d.parts * m), chips: Math.round(d.chips * m) };
   };
   const maxDepth = Math.max(...nodes.map((n) => n.depth));
@@ -121,7 +121,7 @@ export default function RunMap({ nodes, frontier, cleared, party, items, faction
                         // 야영은 회복 + 상점 — "상점 있다"를 노드에서 알려야 지나치지 않는다. 한 줄엔 넘쳐 두 줄로.
                         if (n.kind === "rest") return <span className="block font-mono text-[11px] font-bold leading-tight"><span className="block text-green-300/85">✚ HP +{Math.round(REST_HEAL * 100)}%</span><span className="block text-[#f5c542]">🛒 크레딧 상점</span></span>;
                         // 정예·보스는 크레딧+부품+프리즘이라 한 줄에 넘쳐 짤렸다 → 아이콘·간격·폰트 축소로 칸에 맞춘다
-                        return <span className="flex flex-wrap items-center gap-x-1 gap-y-0.5 font-mono text-[11px] leading-tight" title="예상 보상 — 크레딧(전 노드) · 부품·프로토콜 프리즘(정예·보스만)">
+                        return <span className="flex flex-wrap items-center gap-x-1 gap-y-0.5 font-mono text-[11px] leading-tight" title="예상 보상 — 크레딧(전 노드) · 부품·프로토콜 프리즘 세트(정예·보스만)">
                           <span className="inline-flex items-center"><img src={RESOURCE_ICON.credits} alt="" className="mr-0.5 h-3 w-3 object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} /><span style={{ color: "#f5c542" }}>{rw?.credits}</span></span>
                           {(rw?.parts ?? 0) > 0 && <span className="inline-flex items-center"><img src={RESOURCE_ICON.parts} alt="" className="mr-0.5 h-3 w-3 object-contain" /><span className="text-amber-300/75">{rw?.parts}</span></span>}
                           {(rw?.chips ?? 0) > 0 && <span className="inline-flex items-center"><img src={RESOURCE_ICON.chips} alt="" className="mr-0.5 h-3 w-3 object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} /><span className="text-cyan-300/75">{rw?.chips}</span></span>}

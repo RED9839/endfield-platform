@@ -126,7 +126,7 @@ export function useDDRun() {
   const forgePiece = useCallback((pieceId: string) => { let ok = false; setCraft((c) => { const n = cloneCraft(c); ok = doForge(n, pieceId); return ok ? n : c; }); return ok; }, []);
   // 장비 슬롯 교체(런 중) — 파티원 로드아웃의 해당 슬롯을 다른 피스로. 다음 전투 createBattle에 반영.
   const swapGear = useCallback((opId: string, slot: keyof Loadout, pieceId: string) => setParty((ps) => ps.map((p) => p.id === opId ? { ...p, loadout: { ...p.loadout, [slot]: pieceId } } : p)), []);
-  // 스킬 마스터리(런 중) — 프로토콜 프리즘 소모 → 파티원의 특정 스킬 트랙(기본/배틀/연계/궁) +1.
+  // 스킬 마스터리(런 중) — 프로토콜 프리즘 세트 소모 → 파티원의 특정 스킬 트랙(기본/배틀/연계/궁) +1.
   const forgeSkill = useCallback((opId: string, kind: SkillKind) => {
     const m = party.find((p) => p.id === opId);
     const ranks = m?.progress?.skillRanks ?? DEFAULT_PROGRESS.skillRanks;

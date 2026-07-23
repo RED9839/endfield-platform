@@ -47,8 +47,8 @@ export default function RunHud({ faction, depth, maxDepth, floor, totalFloors, f
         <div className="hud-tile flex items-center gap-1.5 px-2.5 py-1.5" style={CUT} title="크레딧 — 몹 처치 보상. 야영지 상점에서 재료·소비템으로 교환합니다.">
           <img src={RESOURCE_ICON.credits} alt="" className="h-4 w-4 shrink-0 object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} /><span className="font-mono text-sm font-bold" style={{ color: "#f5c542" }}>{craft.credits}</span><span className="font-mono text-[14px] text-ef-muted">크레딧</span>
         </div>
-        <div className="hud-tile flex items-center gap-1.5 px-2.5 py-1.5" style={CUT} title="프로토콜 프리즘 — 마스터리 전용 재료">
-          <img src={RESOURCE_ICON.chips} alt="" className="h-4 w-4 shrink-0 object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} /><span className="font-mono text-sm font-bold text-white">{craft.mats.chips ?? 0}</span><span className="font-mono text-[14px] text-ef-muted">프로토콜 프리즘</span>
+        <div className="hud-tile flex items-center gap-1.5 px-2.5 py-1.5" style={CUT} title="프로토콜 프리즘 세트 — 마스터리 전용 재료">
+          <img src={RESOURCE_ICON.chips} alt="" className="h-4 w-4 shrink-0 object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} /><span className="font-mono text-sm font-bold text-white">{craft.mats.chips ?? 0}</span><span className="font-mono text-[14px] text-ef-muted">프로토콜 프리즘 세트</span>
         </div>
         <div className="hud-tile flex items-center gap-1.5 px-2.5 py-1.5" style={CUT} title="장비 부품 — 제작·단조 재료">
           <img src={RESOURCE_ICON.parts} alt="" className="h-4 w-4 shrink-0 object-contain" /><span className="font-mono text-sm font-bold text-white">{craft.mats.parts}</span><span className="font-mono text-[14px] text-ef-muted">부품</span>
@@ -63,7 +63,7 @@ export default function RunHud({ faction, depth, maxDepth, floor, totalFloors, f
           </button>
         )}
         {onCraft && (
-          <button type="button" onClick={() => onCraft("mastery")} disabled={!canCraft} title="스킬 마스터리 — 오퍼 스킬을 프로토콜 프리즘으로 강화" className="hud-btn relative flex items-center gap-1.5 px-3 py-1.5 font-mono text-sm font-bold uppercase tracking-wider">
+          <button type="button" onClick={() => onCraft("mastery")} disabled={!canCraft} title="스킬 마스터리 — 오퍼 스킬을 프로토콜 프리즘 세트으로 강화" className="hud-btn relative flex items-center gap-1.5 px-3 py-1.5 font-mono text-sm font-bold uppercase tracking-wider">
             <Sparkles className="h-4 w-4" />스킬 마스터리
           </button>
         )}
