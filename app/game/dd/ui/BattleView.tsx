@@ -810,17 +810,23 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
                 </div>
                 {/* 정보 패널 — 라벨 정렬·값 오버레이로 깔끔하게 */}
                 <div className="hud-tile dd-cut w-full px-2.5 py-2" style={isCur ? { borderColor: `${PRIMARY}aa`, boxShadow: `inset 0 1px 0 rgba(255,255,255,0.06), 0 -5px 16px -9px ${PRIMARY}` } : undefined}>
-                  {/* 헤더 */}
-                  {/* 이름 + HP 수치(바 없음 — 체력·속도는 순서 레일에서 확인) */}
+                  {/* 헤더 — 이름만. 수치는 아래 두 바(HP·궁)에 라벨과 함께 */}
                   <div className="flex items-center gap-1.5">
                     <span className="h-2.5 w-2.5 shrink-0" style={{ background: elementColor[el], boxShadow: `0 0 5px ${elementColor[el]}`, clipPath: "polygon(50% 0,100% 50%,50% 100%,0 50%)" }} />
                     <span className="truncate font-mono text-[14px] font-bold tracking-tight text-white" title={a.name}>{a.name}</span>
-                    <span className="ml-auto shrink-0 font-mono text-[12px] font-bold tabular-nums" style={{ color: lowHp ? "#f0776e" : "#cfe8b0" }}>{Math.max(0, a.hp)}<span className="text-[11px] text-ef-muted">/{a.maxHp}</span></span>
+                  </div>
+                  {/* HP 바 — 궁 바와 같은 형태로 두되 라벨·색(녹/적)으로 구분. 숫자만 있던 시절 궁 바를 체력으로 오독했다 */}
+                  <div className="mt-1.5 flex items-center gap-1.5">
+                    <span title="체력" className="w-5 shrink-0 cursor-help text-right font-mono text-[11px] font-bold uppercase text-ef-muted">HP</span>
+                    <div className="relative flex-1">
+                      <Bar value={Math.max(0, a.hp)} max={a.maxHp} color={lowHp ? "#e5484d" : "#6fbf4f"} h="h-2.5" />
+                      <span className="pointer-events-none absolute inset-0 flex items-center justify-center font-mono text-[11px] font-bold leading-none tabular-nums" style={{ color: lowHp ? "#ffd9d6" : "#eaf5df", textShadow: "0 1px 2px #000" }}>{Math.max(0, a.hp)}/{a.maxHp}</span>
+                    </div>
                   </div>
                   {/* 궁 바(유지) */}
-                  <div className="mt-1.5 flex items-center gap-1.5">
+                  <div className="mt-1 flex items-center gap-1.5">
                     {/* 궁 라벨에 충전 방법을 붙인다 — 평타만 눌러서는 영원히 안 차는데 화면에 단서가 없었다 */}
-                    <span title="궁극기 에너지 — 배틀 스킬(쓰면 팀 전원 충전)과 연계 스킬로만 찹니다. 일반 공격은 팀 게이지만 회복합니다. 전투가 끝나도 유지되어 다음 교전으로 넘어갑니다(⤴)." className={`shrink-0 cursor-help font-mono text-[11px] font-bold uppercase ${ready ? "text-amber-300" : "text-ef-muted"}`}>궁</span>
+                    <span title="궁극기 에너지 — 배틀 스킬(쓰면 팀 전원 충전)과 연계 스킬로만 찹니다. 일반 공격은 팀 게이지만 회복합니다. 전투가 끝나도 유지되어 다음 교전으로 넘어갑니다(⤴)." className={`w-5 shrink-0 cursor-help text-right font-mono text-[11px] font-bold uppercase ${ready ? "text-amber-300" : "text-ef-muted"}`}>궁</span>
                     <div className="relative flex-1" style={ready ? { filter: "drop-shadow(0 0 4px #f5c54299)" } : undefined}>
                       <Bar value={a.ultCharge} max={a.ultCost} color={ready ? "#f5c542" : "#7a611c"} h="h-2.5" />
                       <span className="pointer-events-none absolute inset-0 flex items-center justify-center font-mono text-[11px] font-bold leading-none" style={{ color: ready ? "#1a1206" : "#e5c98a", textShadow: ready ? "none" : "0 1px 2px #000" }}>{ready ? "⚡ READY" : `${Math.round(a.ultCharge)}/${a.ultCost}`}</span>
