@@ -109,6 +109,8 @@ export type DDUnit = {
   skillRanks?: SkillRanks; // 기본/배틀/연계/궁 각각의 마스터리 랭크(오퍼별)
   killPriority?: number; // 아군 자동 타겟 처치 우선(적 한정): 3=지원(치유/증폭) 2=원거리 1=근접
   tier?: string; // 적 등급(EnemyTier). 정예(elite)·보스(boss)는 동결 조건은 걸리되 행동 불가/속도감소는 저항(ccResist)
+  rage?: boolean; // 분노 개체(HP 50%↓ 강화, sim 처리). 표식용
+  rageBreakWeaken?: boolean; // 원일: 격노 중 불균형이 되면 격노가 꺾여 허약(주는 피해 감소)
   lanceN?: number;   // 아비웨나 썬더랜스(적에게 누적, 가로채기로 소모) — 일반
   lanceBig?: number; // 아비웨나 강력 썬더랜스(적에게 누적) — 강력(전기 부착)
   artsImmune?: number; // 아츠 부착 확률 면역(아크라이트 만물의 지혜 0.5 = 50% 무효)
@@ -1129,6 +1131,8 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
       } else if (!t.staggered && t.stagger >= t.staggerMax) {
         t.staggered = true; t.staggerTimer = 1; t.stagger = t.staggerMax;
         log.push(`  ⚡ ${t.name} 불균형 상태! 행동 불가 + 받는 피해 +30%`);
+        // 원일: 격노 중(HP 50%↓) 불균형이 되면 격노가 꺾여 허약 — "불균형 상태가 되면 격노가 풀리고 허약해집니다"
+        if (t.rageBreakWeaken && t.hp / t.maxHp < 0.5) { applyBuff(t, "weaken", 0.25, undefined, 3); log.push(`  → ${t.name} 격노가 꺾였다! 허약 (주는 피해 -25%, 3턴)`); }
         if (self.gear?.breakEnergy) gainUlt(self, 10); // 재앙 방호: 불균형 돌파 시 궁 충전
       }
     }

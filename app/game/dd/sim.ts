@@ -298,7 +298,7 @@ export function enemyAct(s: DDState, self: DDUnit): void {
   if (self.pull) { const back = byThreat[0]; targets = [back]; bumpVuln(back, "physical", 0.2); setTimer(back, "vuln:physical", 1); s.log.push(`${self.name}[적] 끌어당김! ${back.name} 강제 노출(취약)`); }
   const rageOn = !!def?.rage && self.hp / self.maxHp < 0.5 && !self.staggered; // 분노: HP 50%↓, 불균형이면 해제
   const powerMul = (behavior === "heavy" ? 1.55 : 1) * (rageOn ? 1.4 : 1) * (chargeAttack ? 1.8 : 1); // 차징 강공 ×1.8. aoe는 makeEnemy에서 공격력 이미 하향
-  const atkMul = 1 + (self.atkBuff || 0);
+  const atkMul = (1 + (self.atkBuff || 0)) * (self.weakenMul ?? 1); // 강화 × 허약(캐처 채집·원일 격노 꺾임 등) — 허약이 적 공격에 안 먹히던 버그 수정
   if (rageOn && !self.timers.raged) { self.timers.raged = 999; s.log.push(`${self.name}[적] 분노 상태! 공격력 상승 (HP 50%↓)`); }
 
   for (const t of targets) {

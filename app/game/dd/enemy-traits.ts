@@ -2,7 +2,7 @@
 // enemyDefFor에서 이름으로 병합. 자동 생성(test/_gen_traits_all.mjs). 메커니즘은 MECH 수동 테이블.
 import type { Element } from "./combat";
 
-export type EnemyTrait = { traits: string[]; freeze?: boolean; selfDestruct?: number; shell?: number; rage?: boolean; attach?: Element; revive?: boolean; pull?: boolean; summon?: boolean; dotBurst?: boolean; unstoppable?: boolean; teleport?: boolean; stun?: boolean; slow?: boolean; heal?: boolean; buff?: boolean; charge?: boolean };
+export type EnemyTrait = { traits: string[]; freeze?: boolean; selfDestruct?: number; shell?: number; rage?: boolean; attach?: Element; revive?: boolean; pull?: boolean; summon?: boolean; dotBurst?: boolean; unstoppable?: boolean; teleport?: boolean; stun?: boolean; rageBreakWeaken?: boolean; slow?: boolean; heal?: boolean; buff?: boolean; charge?: boolean };
 
 export const ENEMY_TRAITS: Record<string, EnemyTrait> = {
   "산성원석충 · α": { traits: ["겁이 많아서 껍질 속으로 숨어 자신을 보호하며, 주변에 마구잡이로 몸의 오리지늄을 발사해 적을 쫓아냅니다."], shell: 0.5 },
@@ -58,7 +58,7 @@ export const ENEMY_TRAITS: Record<string, EnemyTrait> = {
   "'본 크러셔의 주먹' 로댄": { traits: ["중무장한 적, 몸의 통풍구를 이용해 상대방을 자신의 주변으로 끌어들여 공격합니다.","지옥의 용광로에서 에너지를 흡수하여 자신의 능력을 강화합니다."], pull: true, rage: true },
   "막류재": { traits: ["해당 적은 특수 능력이 없습니다."] },
   "록하울러": { traits: ["무리를 지어 출몰하는 습성이 있습니다."] },
-  "원일": { traits: ["방어 태세로 받는 피해가 크게 감소합니다. 불균형 상태로 만들어야 제대로 피해를 줄 수 있습니다.","생명력이 일정 이하로 떨어지면 격노 상태에 진입합니다.","격노 상태에서 폭발하는 분노의 씨앗을 소환합니다.","불균형 상태가 되면 격노가 풀리고 허약해집니다."], rage: true, summon: true, shell: 0.5 },
+  "원일": { traits: ["방어 태세로 받는 피해가 크게 감소합니다. 불균형 상태로 만들어야 제대로 피해를 줄 수 있습니다.","생명력이 일정 이하로 떨어지면 격노 상태에 진입합니다.","격노 상태에서 폭발하는 분노의 씨앗을 소환합니다.","불균형 상태가 되면 격노가 풀리고 허약해집니다."], rage: true, summon: true, shell: 0.5, rageBreakWeaken: true },
   "보초아겔로스": { traits: ["매우 긴 사거리와 막강한 위력의 포격을 가합니다."] },
   "천고": { traits: ["생명력이 일정 이하로 떨어지면 자극을 받아 분노 상태에 진입합니다. 차지 공격 빈도가 더 높아지고, 더 큰 피해를 주며, 받는 피해가 감소합니다. 분노 상태를 끝내려면 제때에 끊어야 합니다."], rage: true, charge: true },
   "백안의 레이커비스트": { traits: ["몸놀림이 민첩하며, 발톱과 꼬리로 공격합니다.","분노 상태에서는 공격력이 증가하고 차지 공격 빈도가 더 높아집니다. 불균형 상태에 진입하면 분노 상태가 종료됩니다."], rage: true, charge: true },

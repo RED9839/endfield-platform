@@ -877,6 +877,8 @@ export function makeEnemy(def: EnemyDef, pos: number): DDUnit {
   if (tr?.heal) u.heal = true;
   if (tr?.buff) u.buff = true;
   if (tr?.charge) u.charge = true;
+  if (tr?.rage) u.rage = true;
+  if (tr?.rageBreakWeaken) u.rageBreakWeaken = true;
   if (def.tier === "alpha" || def.tier === "elite" || def.tier === "boss") u.poiseKnot = true; // 정예·보스: 불균형 지점(게이지 중간 돌파 시 1회 중단)
   if (tr?.attach) u.attachEl = tr.attach;
   return u;
