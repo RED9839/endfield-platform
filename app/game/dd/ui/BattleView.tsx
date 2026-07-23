@@ -807,7 +807,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
                 <FxLayer id={a.id} fx={fx} />
                 {/* 상반신 아트 — 전신은 208px 폭에서 너무 작아 보인다: cover+top 크롭으로 얼굴·상체를 크게 */}
                 <div onClick={() => { if (dead) { setInspectId(a.id); setInspectTab("skill"); } else { setAiming(null); setViewId(viewId === a.id ? null : a.id); } }} className="relative h-36 w-full cursor-pointer overflow-hidden border transition" style={{ ...CUT_SM, borderColor: isCur && !dead ? `${elementColor[el]}cc` : "rgba(255,255,255,0.09)", boxShadow: isCur && !dead ? `0 0 20px -5px ${elementColor[el]}aa` : undefined, background: `radial-gradient(90% 55% at 50% 0%, ${elementColor[el]}1e, transparent 70%), #0b0a08` }}>
-                  <img src={bustUrl(a.id)} alt="" loading="lazy" className={`h-full w-full object-cover transition group-hover:brightness-110 ${dead ? "opacity-35 grayscale" : ""}`} style={{ objectPosition: OP_BUST_POS[a.id] ?? "50% 12%" }} onError={(ev) => { (ev.currentTarget as HTMLImageElement).src = fullUrl(a.id); }} />
+                  <img src={bustUrl(a.id)} alt="" loading="lazy" className={`h-full w-full object-cover transition group-hover:brightness-110 ${dead ? "opacity-35 grayscale" : ""}`} style={{ objectPosition: OP_BUST_POS[a.id] ?? "50% 50%" }} onError={(ev) => { (ev.currentTarget as HTMLImageElement).src = fullUrl(a.id); }} />
                   {/* 하단 그라데이션 — 크롭 절단면을 정보 타일로 자연스럽게 연결 */}
                   <span className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/70 to-transparent" />
                   {dead && <span className="absolute inset-0 flex items-center justify-center text-5xl">💀</span>}
