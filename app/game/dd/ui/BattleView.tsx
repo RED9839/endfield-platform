@@ -326,6 +326,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
   // 상태 칩 클릭 → 무슨 효과인지 설명 팝오버(호버 title은 터치·짧은 노출로 놓치기 쉽다)
   const [chipInfo, setChipInfo] = useState<{ c: StatusChip; x: number; y: number } | null>(null);
   const [aiming, setAiming] = useState<DDSkill | null>(null); // 대상 선택 중인 단일 스킬
+  const [viewId, setViewId] = useState<string | null>(null); // 대기 아군 스킬 미리보기(잠금 패널) — 연계 쿨타임 확인용
   const linkComboRef = useRef<unknown>(null); // 콤보 프롬프트 대기 중 — 누적 해제를 미룬다
   const [linkCombo, setLinkCombo] = useState<{ unitId: string; skill: DDSkill } | null>(null); // 연계 콤보 프롬프트(스킬 발동 → 조건 열린 연계 아이콘)
   linkComboRef.current = linkCombo; // 렌더마다 동기화 — releaseCombo가 최신 상태를 본다
@@ -465,7 +466,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
       timerRef.current = setTimeout(step, delay()); return;
     }
     // 수동: 플레이어 입력 대기(행동은 playerAct에서)
-    setCurrent(u); fxTick.current += 1; mergeFx({ tick: fxTick.current, activeId: u.id, actingSide: "ally", floaters: [], cast: null }); bump();
+    setCurrent(u); setViewId(null); fxTick.current += 1; mergeFx({ tick: fxTick.current, activeId: u.id, actingSide: "ally", floaters: [], cast: null }); bump();
   }
 
   useEffect(() => { const s = stateRef.current!; cycleSizeRef.current = Math.max(1, s.units.filter((u) => u.hp > 0).length); timerRef.current = setTimeout(step, 420); return () => { if (timerRef.current) clearTimeout(timerRef.current); hitTimersRef.current.forEach(clearTimeout); }; /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, []);
@@ -547,10 +548,16 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
   const aggroShare = (() => { const liv = allies.filter((x) => x.hp > 0); const shr = aggroShares(liv.map((y) => y.cls)); return new Map(liv.map((x, i) => [x.id, shr[i]])); })();
   const enemies = s.units.filter((u) => u.side === "enemy");
   const KIND_ORDER: Record<DDSkill["kind"], number> = { attack: 0, battle: 1, link: 2, ult: 3 };
+  // 스킬 패널 대상 — 대기 아군 미리보기(viewId)가 있으면 그쪽, 없으면 수동 조작 중인 현재 오퍼.
+  // 자기 턴이 아닌 오퍼는 잠금(locked) — 스킬·연계 쿨타임은 보이되 사용은 불가.
+  const viewUnit = viewId ? allies.find((x) => x.id === viewId && x.hp > 0) ?? null : null;
+  const liveOn = !winner && !!current && !auto;
+  const pu = viewUnit ?? (liveOn ? current : null);
+  const locked = !!pu && !(liveOn && pu.id === current!.id);
   // 카뮤 「추적」은 궁 후 배틀 슬롯을 교체(원작) — 추적 상태면 사르는 불꽃 대신 추적만 노출(배틀 1칸 유지)
-  const camuChasing = current?.id === "camu" && (current.timers?.chase ?? 0) > 0;
-  const skills = current ? [...(SKILLS[current.id] ?? []), BASIC]
-    .filter((sk) => current.id !== "camu" || (sk.id === "camu-b" ? !camuChasing : sk.id === "camu-chase" ? camuChasing : true))
+  const camuChasing = pu?.id === "camu" && (pu.timers?.chase ?? 0) > 0;
+  const skills = pu ? [...(SKILLS[pu.id] ?? []), BASIC]
+    .filter((sk) => pu.id !== "camu" || (sk.id === "camu-b" ? !camuChasing : sk.id === "camu-chase" ? camuChasing : true))
     .sort((a, b) => KIND_ORDER[a.kind] - KIND_ORDER[b.kind]) : []; // 4종(불가 포함), 카뮤 배틀은 상태별 1칸 교체
   const upcoming = winner ? [] : turnOrder(s, 6); // ATB 예측 순서(비파괴)
 
@@ -792,7 +799,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
               <div key={a.id} className={`group relative flex w-[208px] flex-col items-center ${shakeCls(hit, fx.tick)} ${actCls(isAct, fx.tick)}`}>
                 <FxLayer id={a.id} fx={fx} />
                 {/* 전신 아트 */}
-                <div onClick={() => { setInspectId(a.id); setInspectTab("skill"); }} className="relative flex h-52 w-full cursor-pointer items-end justify-center">
+                <div onClick={() => { if (dead) { setInspectId(a.id); setInspectTab("skill"); } else { setAiming(null); setViewId(viewId === a.id ? null : a.id); } }} className="relative flex h-52 w-full cursor-pointer items-end justify-center">
                   <span className="pointer-events-none absolute bottom-1 h-3 w-28 rounded-[50%]" style={{ background: "radial-gradient(50% 50% at 50% 50%, rgba(0,0,0,0.6), transparent)" }} />
                   {isCur && !dead && <span className="pointer-events-none absolute bottom-0 h-7 w-32 rounded-[50%]" style={{ background: `radial-gradient(50% 50% at 50% 50%, ${elementColor[el]}88, transparent 70%)` }} />}
                   <img src={fullUrl(a.id)} alt="" loading="lazy" className={`relative max-h-full w-auto object-contain transition group-hover:brightness-110 ${dead ? "opacity-35 grayscale" : ""}`} style={{ filter: dead ? undefined : isCur ? "drop-shadow(0 6px 16px rgba(255,190,107,0.55))" : "drop-shadow(0 8px 16px rgba(0,0,0,0.6))" }} onError={(ev) => { (ev.currentTarget as HTMLImageElement).src = avatarUrl(a.id); }} />
@@ -870,37 +877,37 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
         </div>
       )}
       {/* 수동 조작 — 스킬 선택 */}
-      {!winner && current && !auto && (
+      {!winner && pu && (
         <div className="hud-panel dd-cut mt-3 p-3" style={{ borderColor: "rgba(255,154,47,0.4)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.05), 0 -8px 30px -20px rgba(255,154,47,0.4)" }}>
           <div className="flex gap-3">
           {/* 행동 오퍼레이터 아트(에픽세븐식) */}
           {/* 스킬 상세(ⓘ)가 열려 패널이 커져도 초상화는 고정 높이(self-start) — 같이 늘어나지 않게 */}
-          <div className="relative hidden w-24 shrink-0 self-start overflow-hidden border sm:block" style={{ ...CUT_SM, height: 156, borderColor: `${elementColor[unitElement(current)]}99`, background: `radial-gradient(80% 55% at 50% 12%, ${elementColor[unitElement(current)]}33, transparent 65%), #0d0906` }}>
-            <img src={fullUrl(current.id)} alt="" className="absolute inset-0 h-full w-full object-cover object-top" onError={(ev) => { (ev.currentTarget as HTMLImageElement).src = avatarUrl(current!.id); }} />
-            <div className="absolute inset-x-0 top-0 bg-gradient-to-b from-black/85 to-transparent px-1 py-1 text-center font-mono text-[12px] font-black uppercase tracking-wider text-ef-accent" style={{ textShadow: "0 0 6px #000" }}>▶ 행동</div>
-            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 to-transparent px-1 pb-2 pt-3 text-center font-mono text-[14px] font-bold text-white" style={{ textShadow: "0 1px 3px #000" }}>{current.name}</div>
-            <span className="absolute inset-x-0 bottom-0 h-[3px]" style={{ background: elementColor[unitElement(current)] }} />
+          <div onClick={() => { setInspectId(pu.id); setInspectTab("skill"); }} title="클릭 — 상세 스테이터스" className="relative hidden w-24 shrink-0 cursor-pointer self-start overflow-hidden border transition hover:brightness-125 sm:block" style={{ ...CUT_SM, height: 156, borderColor: `${elementColor[unitElement(pu)]}99`, background: `radial-gradient(80% 55% at 50% 12%, ${elementColor[unitElement(pu)]}33, transparent 65%), #0d0906` }}>
+            <img src={fullUrl(pu.id)} alt="" className="absolute inset-0 h-full w-full object-cover object-top" onError={(ev) => { (ev.currentTarget as HTMLImageElement).src = avatarUrl(pu.id); }} />
+            <div className={`absolute inset-x-0 top-0 bg-gradient-to-b from-black/85 to-transparent px-1 py-1 text-center font-mono text-[12px] font-black uppercase tracking-wider ${locked ? "text-ef-muted" : "text-ef-accent"}`} style={{ textShadow: "0 0 6px #000" }}>{locked ? "🔒 대기" : "▶ 행동"}</div>
+            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 to-transparent px-1 pb-2 pt-3 text-center font-mono text-[14px] font-bold text-white" style={{ textShadow: "0 1px 3px #000" }}>{pu.name}</div>
+            <span className="absolute inset-x-0 bottom-0 h-[3px]" style={{ background: elementColor[unitElement(pu)] }} />
           </div>
           {/* 스킬 영역 */}
           <div className="min-w-0 flex-1">
           <div className="mb-2 flex items-center gap-2 font-mono text-[15px] font-bold uppercase tracking-wider text-ef-accent">
-            {aiming ? <><span className="text-ef-accent-soft">🎯 {aiming.name} — 공격할 적을 선택</span><button type="button" onClick={() => setAiming(null)} className="ml-auto border border-ef-line px-2 py-0.5 text-[14px] text-ef-muted hover:text-white">취소</button></> : <span>{current.name} — 스킬 선택</span>}
+            {locked ? <><span className="text-ef-muted">🔒 {pu.name} — 스킬 확인 <span className="font-normal normal-case">(대기 중 · 자기 턴에 사용 가능)</span></span><button type="button" onClick={() => setViewId(null)} className="ml-auto border border-ef-line px-2 py-0.5 text-[14px] text-ef-muted hover:text-white">✕ 닫기</button></> : aiming ? <><span className="text-ef-accent-soft">🎯 {aiming.name} — 공격할 적을 선택</span><button type="button" onClick={() => setAiming(null)} className="ml-auto border border-ef-line px-2 py-0.5 text-[14px] text-ef-muted hover:text-white">취소</button></> : <span>{pu.name} — 스킬 선택</span>}
           </div>
           {/* 조준 중에도 카드는 살아있다 — ⓘ 상세 보기 가능, 다른 스킬 클릭 시 조준 전환, 같은 스킬 재클릭 시 취소 */}
           <div className="flex flex-wrap gap-2">
             {skills.map((sk) => {
-              const dmg = sk.power > 0 && current ? Math.round(realAtk(current.attack) * (1 + (current.atkBuff || 0)) * (current.weakenMul ?? 1) * sk.power) : 0;
+              const dmg = sk.power > 0 && pu ? Math.round(realAtk(pu.attack) * (1 + (pu.atkBuff || 0)) * (pu.weakenMul ?? 1) * sk.power) : 0;
               const el = sk.element ?? "physical";
               const open = detailId === sk.id;
-              const reason = current ? skillReason(s, current, sk) : null;
+              const reason = pu ? skillReason(s, pu, sk) : null;
               const off = !!reason;
               // 발광: 연계는 조건 게이트가 열리면(=usable) 그 자체가 조건 충족. 배틀은 게이지가 아니라 조건부 효과가 지금 터질 때만.
-              const payoff = !off && current && sk.kind === "battle" ? battlePayoff(s, current, sk) : null;
+              const payoff = !off && pu && sk.kind === "battle" ? battlePayoff(s, pu, sk) : null;
               const ready = !off && (sk.kind === "link" || !!payoff); // 연계 조건 열림 · 배틀 조건부 효과 충족 → 발광
               return (
-              <button key={sk.id} type="button" onClick={() => { if (off) return; if (aiming?.id === sk.id) setAiming(null); else chooseSkill(sk); }} className={`hud-tile dd-cut group relative flex h-[72px] w-[300px] shrink-0 items-start gap-2 overflow-hidden px-2.5 py-2 pr-8 text-left ${off ? "cursor-not-allowed opacity-55 hover:!border-ef-line/40" : aiming?.id === sk.id ? "!border-ef-accent !bg-ef-accent/10 shadow-[0_0_18px_rgba(255,154,47,0.55)]" : aiming ? "opacity-40 hover:opacity-80" : open ? "!border-ef-accent" : ready ? "dd-skill-ready" : ""}`}>
+              <button key={sk.id} type="button" onClick={() => { if (locked || off) return; if (aiming?.id === sk.id) setAiming(null); else chooseSkill(sk); }} className={`hud-tile dd-cut group relative flex h-[72px] w-[300px] shrink-0 items-start gap-2 overflow-hidden px-2.5 py-2 pr-8 text-left ${locked ? "cursor-default" : off ? "cursor-not-allowed opacity-55 hover:!border-ef-line/40" : aiming?.id === sk.id ? "!border-ef-accent !bg-ef-accent/10 shadow-[0_0_18px_rgba(255,154,47,0.55)]" : aiming ? "opacity-40 hover:opacity-80" : open ? "!border-ef-accent" : ready ? "dd-skill-ready" : ""}`}>
                 {aiming?.id === sk.id && <span className="absolute bottom-1 right-1 z-10 animate-pulse border border-ef-accent/80 bg-black/80 px-1 py-px font-mono text-[11px] font-bold text-ef-accent">🎯 조준 중</span>}
-                <img src={skillIcon(current!.id, sk.kind)} alt="" loading="lazy" className={`mt-0.5 h-9 w-9 shrink-0 border border-ef-line/60 bg-black/40 object-contain p-0.5 ${off ? "opacity-40 grayscale" : ""}`} onError={(ev) => { (ev.currentTarget as HTMLImageElement).style.visibility = "hidden"; }} />
+                <img src={skillIcon(pu.id, sk.kind)} alt="" loading="lazy" className={`mt-0.5 h-9 w-9 shrink-0 border border-ef-line/60 bg-black/40 object-contain p-0.5 ${off ? "opacity-40 grayscale" : ""}`} onError={(ev) => { (ev.currentTarget as HTMLImageElement).style.visibility = "hidden"; }} />
                 <span className="min-w-0 flex-1">
                   <span className="flex min-w-0 items-center gap-1.5"><span className="shrink-0 whitespace-nowrap border px-1 py-px font-mono text-[13px] font-bold uppercase" style={{ borderColor: off ? "#7a6a4a66" : `${kindTone[sk.kind]}66`, color: off ? "#7a6a4a" : kindTone[sk.kind] }}>{kindLabel[sk.kind]}</span><span className={`min-w-0 flex-1 truncate whitespace-nowrap font-mono text-sm font-bold ${off ? "text-ef-muted" : "text-white"}`}>{sk.name}</span>{payoff && <span className="shrink-0 animate-pulse whitespace-nowrap border border-ef-accent/70 bg-ef-accent/15 px-1 py-px font-mono text-[12px] font-bold leading-none text-ef-accent" title="조건부 효과 발동 조건 충족 — 지금 쓰면 추가 효과">{payoff}</span>}</span>
                   <span className="mt-1 flex min-w-0 items-center gap-2 overflow-hidden">
@@ -921,9 +928,9 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
           {/* 스킬 상세 */}
           {(() => {
             const sk = skills.find((x) => x.id === detailId);
-            if (!sk || !current) return null;
+            if (!sk || !pu) return null;
             const el = sk.element ?? "physical";
-            const dmg = sk.power > 0 ? Math.round(realAtk(current.attack) * (1 + (current.atkBuff || 0)) * (current.weakenMul ?? 1) * sk.power) : 0;
+            const dmg = sk.power > 0 ? Math.round(realAtk(pu.attack) * (1 + (pu.atkBuff || 0)) * (pu.weakenMul ?? 1) * sk.power) : 0;
             const Row = ({ k, v, tone }: { k: string; v: string; tone?: string }) => <div className="flex items-baseline gap-1.5"><span className="w-14 shrink-0 font-mono text-[13px] uppercase tracking-wider text-ef-muted">{k}</span><span className="font-mono text-[15px] font-bold" style={{ color: tone ?? "#e6e1d6" }}>{v}</span></div>;
             return (
               <div className="mt-2 border border-ef-accent/40 bg-black/40 p-3" style={CUT_SM}>
@@ -942,7 +949,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
           })()}
           </div>{/* /스킬 영역 */}
           </div>{/* /flex 행 */}
-          {Object.keys(items).length > 0 && (
+          {!locked && Object.keys(items).length > 0 && (
             <div className="mt-2 border-t border-ef-line/50 pt-2">
               <div className="mb-1.5 font-mono text-[14px] font-bold uppercase tracking-wider text-ef-muted">전술 아이템 <span className="text-ef-muted">· 자유 행동</span></div>
               <div className="flex flex-wrap gap-2">
