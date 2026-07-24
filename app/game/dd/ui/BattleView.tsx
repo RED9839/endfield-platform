@@ -354,6 +354,9 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
   const [inspectId, setInspectId] = useState<string | null>(null); // 스탯 조회 유닛
   const [inspectTab, setInspectTab] = useState<"skill" | "gear" | "talent">("skill"); // 오퍼 상세 하단 탭
   const [detailId, setDetailId] = useState<string | null>(null); // 스킬 상세 펼침
+  // 스킬 패널이 화면 최하단이라 ⓘ 상세가 펼쳐지면 뷰포트 밖으로 잘린다 → 열릴 때 보이도록 스크롤.
+  const detailRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => { if (detailId) detailRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" }); }, [detailId]);
   const [showLog, setShowLog] = useState(false);
   const [showHelp, setShowHelp] = useState(false); // 용어 안내 — 팀 게이지/궁/불균형/부착을 설명 없이 던지고 있었다
   const [tab, setTab] = useState<"dmg" | "log">("dmg"); // 하단 패널: 데미지 기록 / 전투 기록
@@ -970,7 +973,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
             const dmg = sk.power > 0 ? Math.round(realAtk(pu.attack) * (1 + (pu.atkBuff || 0)) * (pu.weakenMul ?? 1) * sk.power) : 0;
             const Row = ({ k, v, tone }: { k: string; v: string; tone?: string }) => <div className="flex items-baseline gap-1.5"><span className="w-14 shrink-0 font-mono text-[13px] uppercase tracking-wider text-ef-muted">{k}</span><span className="font-mono text-[15px] font-bold" style={{ color: tone ?? "#e6e1d6" }}>{v}</span></div>;
             return (
-              <div className="mt-2 border border-ef-accent/40 bg-black/40 p-3" style={CUT_SM}>
+              <div ref={detailRef} className="mt-2 border border-ef-accent/40 bg-black/40 p-3" style={CUT_SM}>
                 <div className="mb-2 flex items-center gap-2"><span className="border px-1 py-px font-mono text-[13px] font-bold uppercase" style={{ borderColor: `${PRIMARY}66`, color: PRIMARY }}>{kindLabel[sk.kind]}</span><span className="font-mono text-sm font-bold text-white">{sk.name}</span><button type="button" onClick={() => setDetailId(null)} className="ml-auto border border-ef-line px-1.5 py-0.5 font-mono text-[14px] text-ef-muted hover:border-ef-accent/60 hover:text-white">✕</button></div>
                 <div className="grid grid-cols-2 gap-x-5 gap-y-1.5">
                   {dmg > 0 ? <Row k="예상 피해" v={`${dmg.toLocaleString()} (배율 ${Math.round(sk.power * 100)}%)`} tone={elementColor[el]} /> : <Row k="유형" v="버프 / 유틸" />}

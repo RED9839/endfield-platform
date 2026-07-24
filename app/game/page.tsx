@@ -318,7 +318,8 @@ export default function GamePage() {
         </div>
       )}
 
-      {showStatus && <StatusPanel party={run.party} craft={run.craft} onClose={() => setShowStatus(false)} />}
+      {/* 맵에서만 — 페이즈가 바뀌어도 오버레이가 남아 전투·공업소를 덮지 않게 한정 */}
+      {showStatus && run.phase === "map" && <StatusPanel party={run.party} craft={run.craft} onClose={() => setShowStatus(false)} />}
     </main>
   );
 }
