@@ -6,7 +6,7 @@ import { act, canAct, isOver, startRound, perTurn, nextActor, turnOrder, usable,
 import { OPERATORS, SKILLS, OP_BASIC, OP_BASIC_ATK, skillExtraHit, enemyDefFor, avatarUrl, fullUrl, bustUrl, OP_BUST_POS, skillIcon, enemyImage, enemyArchetype, STACK_CARRY } from "../roster";
 import { realAtk } from "../progress";
 import { aggroShares } from "../aggro";
-import { ENCOUNTERS, allyChoose, createBattle, enemyAct, regionEncounter } from "../sim";
+import { ENCOUNTERS, allyChoose, createBattle, enemyAct, freeUlts, regionEncounter } from "../sim";
 import { activeSets, setEffectText, loadoutPieces } from "../gear";
 import { weaponOf, weaponEffectText, weaponImage, weaponSeriesName, weaponSeriesDesc, WEAPON_KO, WEAPON_ICON } from "../weapons";
 import { artsAttachmentIconPaths, artsReactionIconPaths, physicalCombatIconPaths, combatEffectIconPaths } from "@/data/combat-icon-paths";
@@ -485,6 +485,12 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
       timerRef.current = setTimeout(step, delay()); return;
     }
     if (autoRef.current) {
+      // 자유 행동 궁(원작: 궁은 언제든 즉발) — 다른 아군의 준비된 궁을 이 턴에 먼저 터뜨린다.
+      for (const { unit, skill } of freeUlts(s, u)) {
+        if (!usable(s, unit, skill)) continue;
+        actionsRef.current.push({ r: s.round, u: unit.id, k: "ult", s: skill.id, a: 1 });
+        act(s, unit, skill);
+      }
       // 자동도 위급하면 소비 아이템을 쓴다 — 안 쓰면 수동보다 일방적으로 불리하다.
       const pick = autoItemPick(s, items);
       // 아이템은 자유 행동 — 턴을 소모하지 않고 같은 턴에 스킬까지(한 턴 1개, 수동과 동일 규칙)
@@ -568,6 +574,18 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
   }
   function skipLink() { setLinkCombo(null); afterAction(); timerRef.current = setTimeout(step, delay()); }
   const itemUsedThisTurn = !!current && itemTurnRef.current === current.id; // 이번 턴 아이템 사용 여부
+  // 자유 행동 궁 — 원작처럼 다른 오퍼 턴에도 발동한다(턴 미소모).
+  function playerFireUlt(unitId: string) {
+    const s = stateRef.current!; if (!current) return;
+    const u = s.units.find((x) => x.id === unitId); if (!u || u.hp <= 0) return;
+    const sk = (SKILLS[u.id] ?? []).find((k) => k.kind === "ult"); if (!sk || !usable(s, u, sk)) return;
+    actionsRef.current.push({ r: s.round, u: u.id, k: "ult", s: sk.id, a: 1 });
+    const before = new Map(s.units.map((x) => [x.id, x.hp]));
+    act(s, u, sk);
+    const floaters: Floater[] = [];
+    for (const x of s.units) { const d = x.hp - (before.get(x.id) ?? x.hp); if (d !== 0) floaters.push({ id: x.id, amt: d, crit: false, tone: d > 0 ? "#8fd36a" : "#ffb257" }); }
+    fxTick.current += 1; mergeFx({ tick: fxTick.current, activeId: u.id, actingSide: "ally", floaters, cast: { id: u.id, text: sk.name } }); bump();
+  }
   function playerUseItem(id: string) {
     const s = stateRef.current!; if (!current || !items[id] || !canUseItem(s, id)) return;
     if (itemTurnRef.current === current.id) return; // 한 턴 1개
@@ -999,6 +1017,28 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
           })()}
           </div>{/* /스킬 영역 */}
           </div>{/* /flex 행 */}
+          {/* 자유 행동 궁 — 지금 턴이 아닌 오퍼도 궁이 찼으면 여기서 쏜다(원작: 궁은 즉발) */}
+          {!locked && current && (() => {
+            const ready = freeUlts(stateRef.current!, current);
+            if (!ready.length) return null;
+            return (
+              <div className="mt-2 border-t border-ef-line/50 pt-2">
+                <div className="mb-1.5 font-mono text-[14px] font-bold uppercase tracking-wider text-ef-muted">궁극기 <span className="text-ef-muted">· 자유 행동(턴 미소모) · 다른 오퍼도 지금 발동 가능</span></div>
+                <div className="flex flex-wrap gap-2">
+                  {ready.map(({ unit, skill }) => (
+                    <button key={unit.id} type="button" onClick={() => playerFireUlt(unit.id)} title={skill.note ?? skill.name}
+                      className="dd-skill-ready group flex items-center gap-2 border border-[#facc15]/60 bg-black/40 px-2.5 py-1.5 text-left transition hover:border-[#facc15]" style={CUT_SM}>
+                      <img src={avatarUrl(unit.id)} alt="" loading="lazy" className="h-7 w-7 shrink-0 border border-ef-line object-cover" style={{ background: "#000" }} onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = "hidden"; }} />
+                      <span className="min-w-0">
+                        <span className="block truncate font-mono text-xs font-bold text-white">{unit.name} <span className="text-[#facc15]">「{skill.name}」</span></span>
+                        <span className="block font-mono text-[13px] text-ef-muted">궁 {Math.round(unit.ultCharge)}/{unit.ultCost} · 지금 발동</span>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
           {!locked && Object.keys(items).length > 0 && (
             <div className="mt-2 border-t border-ef-line/50 pt-2">
               <div className="mb-1.5 font-mono text-[14px] font-bold uppercase tracking-wider text-ef-muted">전술 아이템 <span className="text-ef-muted">· 자유 행동(턴 미소모) · 한 턴 1개</span>{itemUsedThisTurn && <span className="ml-1.5 font-normal normal-case text-amber-300/80">— 이번 턴 사용함</span>}</div>

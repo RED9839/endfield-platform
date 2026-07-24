@@ -1,5 +1,5 @@
 // DD 전투 시뮬 헬퍼 — AI(아군 자동/적) + 인카운터 + 전투 생성. UI와 테스트가 공유(부작용 없음).
-import { BASIC, DDState, DDUnit, DDSkill, Element, ELEMENTS, applyAttach, applyEnemyArts, applyDamage, healUnit, living, mitigate, usable, pickTargets, vulnFor, onAllyHit, EXECUTE_MULT, GAUGE_COST, setLinkChain, setSkillsProvider, refreshLinkArms, bumpVuln, setTimer, arcaneForm, setPhaseHook, runPhases } from "./combat";
+import { BASIC, DDState, DDUnit, DDSkill, Element, ELEMENTS, applyAttach, applyEnemyArts, applyDamage, healUnit, living, mitigate, usable, pickTargets, vulnFor, onAllyHit, EXECUTE_MULT, GAUGE_COST, setLinkChain, setSkillsProvider, refreshLinkArms, bumpVuln, canAct, act, setTimer, arcaneForm, setPhaseHook, runPhases } from "./combat";
 import { SKILLS, makeAlly, makeEnemy, ENEMY_DEFS, enemyDefFor, enemyArchetype, STACK_CARRY } from "./roster";
 import { applyGear, GEAR_SLOTS, LOADOUT_SLOTS, type Loadout, type GearSlot, type LoadoutSlot } from "./gear";
 import { applyWeapon } from "./weapons";
@@ -342,6 +342,30 @@ export function enemyAct(s: DDState, self: DDUnit): void {
     if (self.dotBurst && t.hp > 0) { t.dot = Math.max(t.dot || 0, Math.round(self.attack * 0.35)); setTimer(t, "dot", 2); s.log.push(`  → ${t.name} 화살비 — 지속 피해`); }
   }
   refreshLinkArms(s); // 적 행동으로 열리는 연계 조건(엠버 「아군 피격 후」·카치르 「적 차징 중」 등) 장전
+}
+
+// ── 자유 행동 궁 ──
+// 원작에서 궁극기는 "메인 오퍼를 바꿔가며 언제든" 쏘는 즉발이다. 우리 ATB 모델에선 자기 차례를
+// 기다려야 해서, 보스전 아군 턴의 23%가 "궁은 찼는데 못 쏘는" 상태였고 12%는 만충인 채 전투가 끝났다.
+// → 궁은 **턴을 소모하지 않는 자유 행동**으로 다른 오퍼 턴에도 발동한다(아이템과 같은 취급).
+// 예약 연계가 걸린 오퍼는 제외 — allyChoose가 예약을 소비하는 경로와 겹치면 예약이 증발한다.
+export function freeUlts(s: DDState, actor: DDUnit | null): { unit: DDUnit; skill: DDSkill }[] {
+  const out: { unit: DDUnit; skill: DDSkill }[] = [];
+  for (const a of living(s, "ally")) {
+    if (a === actor || a.pendingLink || !canAct(a)) continue;
+    const ult = (SKILLS[a.id] ?? []).find((k) => k.kind === "ult");
+    if (ult && usable(s, a, ult)) out.push({ unit: a, skill: ult });
+  }
+  return out;
+}
+// 자동 모드/시뮬용 — 준비된 자유 행동 궁을 전부 발동. 궁 게이지는 만충에서 캡되므로 더 아낄 이유가 없다
+// (allyChoose의 보류 규칙도 "만충이면 아끼지 않는다"로 이미 같은 결론).
+export function autoFreeUlts(s: DDState, actor: DDUnit | null, onFire?: (u: DDUnit, sk: DDSkill) => void): void {
+  for (const { unit, skill } of freeUlts(s, actor)) {
+    if (!usable(s, unit, skill)) continue; // 앞선 발동으로 상황이 바뀌었을 수 있다
+    onFire?.(unit, skill);
+    act(s, unit, skill);
+  }
 }
 
 // 현재 유닛이 지금 쓸 수 있는 스킬(일반 공격 포함)
