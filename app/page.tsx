@@ -255,7 +255,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 xl:grid-cols-6">
+        <section className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 xl:grid-cols-7">
           {quickAccessItems.map((item) => {
             const Icon = item.icon;
             return (
