@@ -642,7 +642,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
                     {!ally && <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-red-200/90">✦</span>}
                     <span className="absolute inset-x-0 bottom-0 h-1" style={{ background: `linear-gradient(90deg, ${r < 0.35 ? "#e0655c" : ally ? "#8fb84a" : "#e0655c"} ${r * 100}%, rgba(0,0,0,0.85) ${r * 100}%)` }} />
                   </span>
-                  <span className={`dd-cut flex items-center gap-1 border px-2 py-1 font-mono leading-none ${now ? "text-[16px] font-black" : "text-sm font-bold"}`} style={{ borderColor: now ? "#ffbe6b99" : `${tone}44`, background: now ? "linear-gradient(90deg, rgba(255,190,107,0.2), rgba(13,9,6,0.6))" : "rgba(13,9,6,0.8)", color: now ? "#ffdf9e" : ally ? "#e6e6e8" : "#f0a8a0" }}>
+                  <span className={`dd-cut ${now ? "flex" : "hidden sm:flex"} items-center gap-1 border px-2 py-1 font-mono leading-none ${now ? "text-[16px] font-black" : "text-sm font-bold"}`} style={{ borderColor: now ? "#ffbe6b99" : `${tone}44`, background: now ? "linear-gradient(90deg, rgba(255,190,107,0.2), rgba(13,9,6,0.6))" : "rgba(13,9,6,0.8)", color: now ? "#ffdf9e" : ally ? "#e6e6e8" : "#f0a8a0" }}>
                     {now ? <span className="text-ef-accent">▶ 지금</span> : nm}
                     {!now && <span className="text-[12px] text-ef-muted">{ally ? "" : "·적"}</span>}
                   </span>
@@ -787,8 +787,8 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
       {/* ===== 전장 ===== */}
       <div className="hud-stage relative flex min-h-[56vh] flex-col justify-center gap-2 overflow-hidden border border-ef-line px-3 py-6 sm:px-6" style={{ ...CUT_SM, boxShadow: "inset 0 0 80px -20px rgba(0,0,0,0.95), inset 0 1px 0 rgba(255,255,255,0.04)" }}>
         {/* ===== 적진 (스테이지 상단, 서 있는 피규어) ===== */}
-        <div className="mb-1 flex items-center gap-2 font-mono text-[14px] font-bold uppercase tracking-[0.2em] text-red-300/70"><span className="h-px flex-1 bg-gradient-to-r from-transparent to-red-500/25" />적 {enemies.filter((e) => e.hp > 0).length}/{enemies.length}<span className="h-px flex-1 bg-gradient-to-l from-transparent to-red-500/25" /></div>
-        <div className="flex flex-wrap items-end justify-center gap-x-4 gap-y-2">
+        <div className="mb-1 mt-7 flex items-center gap-2 font-mono text-[14px] font-bold uppercase tracking-[0.2em] text-red-300/70 sm:mt-0"><span className="h-px flex-1 bg-gradient-to-r from-transparent to-red-500/25" />적 {enemies.filter((e) => e.hp > 0).length}/{enemies.length}<span className="h-px flex-1 bg-gradient-to-l from-transparent to-red-500/25" /></div>
+        <div className="flex flex-wrap items-end justify-center gap-x-1.5 gap-y-2 sm:gap-x-4">
           {enemies.map((e) => {
             const ed = enemyDefFor(e.id);
             const el = ed?.element ?? "physical";
@@ -796,7 +796,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
             const hit = fx.floaters.some((f) => f.id === e.id && f.amt < 0);
             const isAct = fx.activeId === e.id;
             return (
-              <div key={e.id} className={`group relative flex w-[190px] flex-col items-center ${shakeCls(hit, fx.tick)} ${actCls(isAct, fx.tick)}`}>
+              <div key={e.id} className={`group relative flex w-[110px] flex-col items-center sm:w-[190px] ${shakeCls(hit, fx.tick)} ${actCls(isAct, fx.tick)}`}>
                 <FxLayer id={e.id} fx={fx} />
                 {/* hover 팝오버 — 뉴비가 클릭 없이 적의 저항·특징 파악(마우스 오버) */}
                 {!dead && (ed?.traits?.length || (ed?.resist && Object.values(ed.resist).some((v) => v !== 0))) && (
@@ -816,7 +816,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
                   ? <span className="absolute -top-1 z-20 font-mono text-[13px] font-bold text-ef-accent" style={{ textShadow: "0 0 6px #000" }}>🎯 대상</span>
                   : <span className="absolute -top-1 z-20 font-mono text-[13px] font-bold text-red-400/90" style={{ textShadow: "0 0 6px #000" }}>🚫 조건 미충족</span>)}
                 {/* 아트(접지 그림자·선택 링) */}
-                <div onClick={aiming && !dead ? () => { if (usableOn(aiming, current!, e.id)) playerAct(aiming, e.id); } : () => setInspectId(e.id)} className={`relative flex w-full cursor-pointer items-end justify-center ${enemies.length <= 2 ? "h-48" : enemies.length === 3 ? "h-40" : "h-32"}`}>
+                <div onClick={aiming && !dead ? () => { if (usableOn(aiming, current!, e.id)) playerAct(aiming, e.id); } : () => setInspectId(e.id)} className={`relative flex w-full cursor-pointer items-end justify-center ${enemies.length <= 2 ? "h-28 sm:h-48" : enemies.length === 3 ? "h-24 sm:h-40" : "h-20 sm:h-32"}`}>
                   <span className="pointer-events-none absolute bottom-1 h-2.5 w-24 rounded-[50%]" style={{ background: "radial-gradient(50% 50% at 50% 50%, rgba(0,0,0,0.6), transparent)" }} />
                   {isAct && !dead && <span className="pointer-events-none absolute bottom-0 h-6 w-28 rounded-[50%]" style={{ background: `radial-gradient(50% 50% at 50% 50%, ${elementColor[el]}66, transparent 70%)` }} />}
                   <img src={enemyImage(e.id)} alt="" loading="lazy" className={`relative max-h-full w-auto object-contain transition group-hover:scale-[1.03] ${dead ? "opacity-30 grayscale" : ""}`} style={{ filter: dead ? undefined : aiming ? "drop-shadow(0 3px 10px rgba(255,154,47,0.7))" : e.staggered ? "drop-shadow(0 3px 10px rgba(250,204,21,0.6))" : "drop-shadow(0 6px 12px rgba(0,0,0,0.6))" }} onError={(ev) => { (ev.currentTarget as HTMLImageElement).style.visibility = "hidden"; }} />
@@ -844,7 +844,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
         <div className="my-3 flex items-center justify-center gap-3"><span className="hud-horizon w-1/3" /><span className="font-mono text-[13px] uppercase tracking-[0.45em] text-ef-accent/70">교전</span><span className="hud-horizon w-1/3" /></div>
 
         {/* ===== 아군진 (스테이지 하단, 전신 피규어) ===== */}
-        <div className="flex flex-wrap items-end justify-center gap-x-4 gap-y-3">
+        <div className="flex flex-wrap items-end justify-center gap-x-2 gap-y-3 sm:gap-x-4">
           {allies.map((a) => {
             const op = OPERATORS.find((o) => o.id === a.id);
             const el = op?.element ?? "physical";
@@ -856,7 +856,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
             const sets = activeSets(party.find((p) => p.id === a.id)?.loadout ?? {});
             const ready = a.ultCharge >= a.ultCost;
             return (
-              <div key={a.id} className={`group relative flex w-[208px] flex-col items-center ${shakeCls(hit, fx.tick)} ${actCls(isAct, fx.tick)}`}>
+              <div key={a.id} className={`group relative flex w-[calc(50%-0.5rem)] max-w-[208px] flex-col items-center sm:w-[208px] ${shakeCls(hit, fx.tick)} ${actCls(isAct, fx.tick)}`}>
                 <FxLayer id={a.id} fx={fx} />
                 {/* 상반신 아트 — 전신은 208px 폭에서 너무 작아 보인다: cover+top 크롭으로 얼굴·상체를 크게 */}
                 <div onClick={() => { if (dead) { setInspectId(a.id); setInspectTab("skill"); } else { setAiming(null); setViewId(viewId === a.id ? null : a.id); } }} className="relative h-36 w-full cursor-pointer overflow-hidden border transition" style={{ ...CUT_SM, borderColor: isCur && !dead ? `${elementColor[el]}cc` : "rgba(255,255,255,0.09)", boxShadow: isCur && !dead ? `0 0 20px -5px ${elementColor[el]}aa` : undefined, background: `radial-gradient(90% 55% at 50% 0%, ${elementColor[el]}1e, transparent 70%), #0b0a08` }}>
@@ -933,7 +933,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
       {!winner && (
         <div className="hud-panel dd-cut mt-3 px-3 py-2">
           <div className="flex items-center gap-2.5">
-          <span className="shrink-0 font-mono text-[13px] uppercase tracking-wider text-ef-muted">스킬 게이지 · <span className="cursor-help underline decoration-dotted underline-offset-2" title="파티 4명이 함께 쓰는 하나의 게이지입니다. 누가 배틀 스킬을 써도 여기서 100이 빠지므로, 한 명이 연달아 쓰면 나머지가 못 씁니다. 매 라운드 자동 회복되고 일반 공격으로도 조금씩 찹니다. 궁극기 에너지와는 별개입니다.">4인 공용</span> <span className="text-ef-accent-soft" title="라운드마다 자동 회복">+{GAUGE_REGEN}/R</span></span>
+          <span className="shrink-0 font-mono text-[13px] uppercase tracking-wider text-ef-muted">게이지<span className="hidden sm:inline"> · <span className="cursor-help underline decoration-dotted underline-offset-2" title="파티 4명이 함께 쓰는 하나의 게이지입니다. 누가 배틀 스킬을 써도 여기서 100이 빠지므로, 한 명이 연달아 쓰면 나머지가 못 씁니다. 매 라운드 자동 회복되고 일반 공격으로도 조금씩 찹니다. 궁극기 에너지와는 별개입니다.">4인 공용</span> <span className="text-ef-accent-soft" title="라운드마다 자동 회복">+{GAUGE_REGEN}/R</span></span></span>
           <div className="min-w-[120px] flex-1"><Bar value={s.skillGauge} max={s.maxGauge} color={PRIMARY} h="h-2.5" /></div>
           <span className="shrink-0 font-mono text-[13px] font-bold text-ef-ink">{Math.round(s.skillGauge)}/{s.maxGauge}</span>
           {/* 남은 배틀 횟수 — 숫자만으론 "지금 배틀을 몇 번 쓸 수 있나"가 안 읽힌다 */}
