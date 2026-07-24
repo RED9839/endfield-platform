@@ -487,8 +487,8 @@ export const OP_BASIC: Record<string, { name: string; note: string }> = {
 // 오퍼 얼굴 아이콘 경로 — 관리자만 avatar1.webp, 나머지는 avatar.webp
 export const avatarUrl = (id: string) => `/operators/${id}/${id === "endministrator" ? "avatar1" : "avatar"}.webp`;
 export const fullUrl = (id: string) => `/operators/${id}/${id === "endministrator" ? "full1" : "full"}.webp`; // 전신 아트(스포트라이트)
-export const bustUrl = (id: string) => `/operators/${id}/bust.png`; // 상반신 헤드샷(인게임 가로 아이콘, 투명 배경) — 전투 카드용
-// 오퍼별 헤드샷 — bust.png는 full 일러에서 얼굴 검출·크롭(head-icon 종횡비 899:349, 얼굴 크기 정규화). 항상 중앙.
+export const bustUrl = (id: string) => `/operators/${id}/bust.webp`; // 상반신 헤드샷(인게임 가로 아이콘, 투명 배경) — 전투 카드용. png→webp(-81%, 알파·크기 보존)
+// 오퍼별 헤드샷 — bust.webp는 full 일러에서 얼굴 검출·크롭(head-icon 종횡비 899:349, 얼굴 크기 정규화). 항상 중앙.
 export const OP_BUST_POS: Record<string, string> = {
   akekuri: "50% 50%",
   alesh: "50% 50%",
