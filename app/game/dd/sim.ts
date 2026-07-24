@@ -494,7 +494,8 @@ export function regionEncounter(faction: string, kind: NodeKind, depth: number, 
     ids = [...lead, ...adds];
   } else {
     const tier = tierAt(kind, depth, maxDepth);
-    ids = pickSquad(faction, tier, depth >= 4 ? 3 : 2, recent); // 일반: 초반 2마리 → 중반(depth 4+) 3마리
+    // 일반 교전도 최소 3마리. 2마리 편성은 범위·전체 스킬이 놀고 단일 딜만 정답이 되어 편성 맛이 죽는다.
+    ids = pickSquad(faction, tier, depth >= 4 ? 4 : 3, recent); // 일반: 3마리 → 중반(depth 4+) 4마리
   }
   recentEnemies.push(...ids);
   recentEnemies = recentEnemies.slice(-8); // 최근 8마리를 회피 대상으로 유지
