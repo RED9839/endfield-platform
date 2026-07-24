@@ -166,6 +166,11 @@ function Chip({ children, tone = "#a1a1aa", title, icon, onPick, compact }: { ch
 // 칩 압축 표기: 라벨 끝의 수치만 남긴다(방어 불능 2 → 2, 허약 25% → 25%).
 // 수치가 없으면 아이콘만, 아이콘도 없으면 이름 앞 2글자.
 const chipShort = (c: StatusChip): string => {
+  // 스택형(녹아내린 불꽃 3/4 · 청뢰검 5/9 · 아이스 슈터 7/10)은 현재/최대를 그대로 — 끝 숫자만
+  // 뽑으면 최대치만 남아 "4"처럼 보인다.
+  const ratio = c.label.match(/(\d+)\s*\/\s*(\d+)/);
+  if (ratio) return `${ratio[1]}/${ratio[2]}`;
+  if (c.k === "mifu") return c.label.replace(/^자세\s*/, "");   // 미브 자세는 이름 자체가 값(단운·추형·개천)
   const m = c.label.match(/([+\-]?\d+%?)\s*$/);
   const val = m ? m[1] : "";
   if (c.icon) return val;                       // 아이콘이 뜻을 전달 → 수치만
