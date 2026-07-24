@@ -164,6 +164,7 @@ export type DDSkill = {
   targetRanks?: number[]; // 명중 가능한 적 랭크(생략 시 전체)
   power: number; // 공격력 배율(스킬 발동 피해). 다단히트면 hits 합과 일치.
   hits?: number[]; // 다단히트 단별 배율(소스 레벨표). 표시 전용 — 총 피해는 power로 계산하고 로그에서 이 비율로 쪼갠다.
+  procHits?: number; // 타격당 발동 재능(로시 끓어오르는 피)용 **개별 타수** — hits는 데미지 단계라 다단 찌르기가 1로 뭉쳐 있음
   element?: "physical" | Element; // 피해 속성(생략 시 물리)
   staggerVal?: number; // 불균형치(생략 시 배틀/연계 10, 궁 25)
   attach?: Element; // 아츠 부착(→ 폭발/이상 트리거)
@@ -871,6 +872,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
     }
     const preReact = ELEMENTS.reduce((n, e) => n + t.arts[e], 0) + t.frozen; // 아츠 이상/쇄빙 소모 감지용(알레쉬 연계)
     const yvFrozen = t.frozen > 0, yvCryo = t.arts.cryo > 0; // 이본 빙점 판정(소모 전 상태)
+    const hadWolfClaw = (t.timers.wolfClaw || 0) > 0; // 로시 「끓어오르는 피」 판정 — **캐스트 전** 늑대의 발톱 상태(배틀 자기 셀프 프록 방지)
     let raw = baseDamage(skill, self); // 시전자 측 원 피해(공격력×증가×허약×배율)
     // 처형: 불균형 1회당 **첫 일반 공격**만 처형 배수 + 기력회복. 이후 평타는 불균형 +30%만 받는 평타.
     // 레바테인 황혼 변신 중 강화 평타는 원문상 처형이 나가지 않는다(궁 배율 ×3과 처형 ×6이 겹쳐 ×18이 되던 걸 차단).
@@ -1166,6 +1168,13 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
     const vMul = self.id === "lastrite" && skill.kind === "ult" ? 1.5 : 1; // 라스트 라이트 저온 취성(궁 냉기/아츠 취약 1.5배 간주)
     // 원문 1.5·1.8·1.9: 증폭 · 취약 · 받는 대미지 증가는 서로 별개의 곱연산 인자다(합치면 안 됨).
     dmg *= (1 + ampFor(self, elem)) * (1 + vulnFor(t, elem) * vMul) * (1 + recvFor(t, elem) * vMul);
+    // 로시 2재능 「끓어오르는 피」 — 늑대의 발톱 적에게 **스킬 치명타마다 공격력 24% 열기 추가타**(연소 시 ×1.5).
+    // RNG 대신 기댓값: 다단히트 타수 × 치확 × 24% (궁 연타일수록 큰 폭 — 보고서 "궁 1.5배"의 핵심). 열기 추가타라 열기 증폭·취약 적용.
+    if (self.id === "rossi" && skill.kind !== "attack" && hadWolfClaw) {
+      const nHits = skill.procHits ?? skill.hits?.length ?? 1; const burn = has(t, "combustion") ? 1.5 : 1;
+      const boil = nHits * cr * 0.24 * self.attack * eb(self) * burn;
+      if (boil > 0) { dmg += boil * (1 + ampFor(self, "heat")) * (1 + vulnFor(t, "heat")) * (1 + recvFor(t, "heat")); log.push(`  → 끓어오르는 피! 치명타당 열기 추가타${burn > 1 ? "(연소 ×1.5)" : ""}`); }
+    }
     if (self.gear) { // 장비 세트 배율: 스킬 종류·아츠 + 조건부(불균형/취약/아츠 부착 적)
       const g = self.gear;
       // 원문 1.3: 일반 공격은 '스킬'이 아니다 — 모든 스킬 피해(all)는 배틀/연계/궁에만 붙는다.

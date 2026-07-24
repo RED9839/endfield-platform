@@ -58,7 +58,7 @@ export const SKILLS: Record<string, DDSkill[]> = {
     // 붉은색의 그림자(배틀 85%, 불균형 5): 돌진 띄우기. 방어 불능 적이면 진주(열기) + 절흔(늑대의 발톱: 지속피해+물리/열기 취약).
     { id: "ros-b", name: "붉은색의 그림자", kind: "battle", fromPos: [1, 2, 3], target: "single-front", power: 3.84, mst: [4.1, 4.42, 4.8], hits: [0.85, 1.28], element: "physical", staggerVal: 5, anomaly: "launch",
       // 진주 조건 = "이미 방어 불능 보유"(띄우기 전). 띄우기가 항상 +1이므로 post>1 ⟺ pre≥1.
-      apply: (t, self) => { if (t.physBreak > 1) { t.dot = Math.round(self.attack * (1 + (self.atkBuff || 0)) * 0.3); setTimer(t, "dot", 5); bumpVuln(t, "physical", 0.12); bumpVuln(t, "heat", 0.12); } },
+      apply: (t, self) => { if (t.physBreak > 1) { t.dot = Math.round(self.attack * (1 + (self.atkBuff || 0)) * 0.3); setTimer(t, "dot", 5); bumpVuln(t, "physical", 0.12); bumpVuln(t, "heat", 0.12); setTimer(t, "wolfClaw", 5); } }, // 늑대의 발톱 마커(끓어오르는 피 조건)
       note: "돌진 띄우기 + (이미 방어 불능 적)진주·늑대의 발톱(지속피해 30%/턴 + 물리/열기 취약 12%)" },
     // 그림자가 타오르는 순간(연계 67+133%+소모비례 80%/스택, 쿨 15초): 방어 불능+아츠부착 적. 아츠 소모 물리·띄우기 + 치명 버프.
     // 1단 67% + 2단 133%. 아츠 소모 비례(스택당 +80%)와 치확/치피는 combat.ts 엔진 훅에서 — apply는 raw를 못 건드림.
@@ -66,7 +66,7 @@ export const SKILLS: Record<string, DDSkill[]> = {
       requires: (t) => !!t && t.physBreak > 0 && ELEMENTS.some((e) => t.arts[e] > 0), requiresText: "방어 불능 + 아츠 부착된 적", note: "아츠 소모 물리·띄우기 + 치명 버프(치확 30%/치피 100%)" },
     // 기습 '날카로운 발톱'(궁 275+111+333=719%, 불균형 25, 게이지 110): 다단 열기 누킹 + 열기 부착.
     // 실측 Lv9: 찌르기 475%(성장비 ×1.727 예외) + 베기1 200% + 베기2 600% = 1275% → hits=Lv9/180.
-    { id: "ros-u", name: "기습 '날카로운 발톱'", kind: "ult", fromPos: [1, 2], target: "single-front", power: 12.74, mst: [13.81, 14.73, 16], hits: [2.64, 1.11, 3.33], element: "heat", attach: "heat", staggerVal: 25, selfUlt: true, note: "다단 열기 단일 누킹 + 열기 부착(실측 Lv9 475+200+600)" },
+    { id: "ros-u", name: "기습 '날카로운 발톱'", kind: "ult", fromPos: [1, 2], target: "single-front", power: 12.74, mst: [13.81, 14.73, 16], hits: [2.64, 1.11, 3.33], procHits: 8, element: "heat", attach: "heat", staggerVal: 25, selfUlt: true, note: "다단 열기 단일 누킹 + 열기 부착(실측 Lv9 475+200+600) · 끓어오르는 피 개별 타수 8(찌르기 다단~6+베기2)" },
   ],
   // 미브: 물리/양손검 가드. 청파 삼형(단운→추형→개천 3스탠스) + 물리취약 연계 + 방어 불능 부여 궁.
   // 재능: 냉정(개천이 물취/불균형 적에 ×1.2, vsWeak) · 분노(연계 후 최대 HP 30% 보호막, 엔진). 자체 방어 불능 부여는 궁뿐 → 팀 방어 불능 보조 필요.
