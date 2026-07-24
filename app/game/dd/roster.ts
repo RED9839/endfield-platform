@@ -99,8 +99,9 @@ export const SKILLS: Record<string, DDSkill[]> = {
     { id: "camu-chase", name: "추적", kind: "battle", gaugeCost: 0, fromPos: [1, 2, 3], target: "single-front", power: 4, mst: [4.28, 4.61, 5], element: "heat", staggerVal: 20, gaugeGain: 32,
       requires: (_t, self) => (self.timers.chase || 0) > 0, requiresText: "추적 상태(궁 후 3턴)", note: "궁 후 배틀 교체 · 게이지 무소모 + 32 회복" },
     // 선혈의 비(궁 267%, 게이지 130): 광역 열기 + 열기 부착 + 게이지. 사용 후 추적 상태 15초(≈3턴).
-    { id: "camu-u", name: "선혈의 비", kind: "ult", fromPos: [1, 2, 3], target: "row", power: 4.8, mst: [5.13, 5.53, 6], element: "heat", staggerVal: 15, attach: "heat", selfUlt: true, gaugeGain: 32,
-      apply: (_t, self) => { setTimer(self, "chase", 3); }, note: "광역 열기 부착 + 게이지 · 이후 3턴 배틀→추적 교체" },
+    // 원문: "궁극기 사용 시 강제 연타 버프" → grantsMultiHit로 부여(궁 → 연타 → 추적 배틀이 소모하는 사이클).
+    { id: "camu-u", name: "선혈의 비", kind: "ult", fromPos: [1, 2, 3], target: "row", power: 4.8, mst: [5.13, 5.53, 6], element: "heat", staggerVal: 15, attach: "heat", selfUlt: true, gaugeGain: 32, grantsMultiHit: 1,
+      apply: (_t, self) => { setTimer(self, "chase", 3); }, note: "광역 열기 부착 + 게이지 + 강제 연타 · 이후 3턴 배틀→추적 교체" },
   ],
   // 아케쿠리: 열기/한손검 뱅가드(★4, 탈4성 범용). 속성 무관 게이지 수급 — 불균형 조건 연계 + 무딜 궁(게이지 대량 회복) + 연타.
   // 재능: 승리의 함성(연계 게이지 +지능→장비등급) · 몰입의 시간(궁 지속 중 연타). 열기 부착도 보유.
