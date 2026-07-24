@@ -103,7 +103,7 @@ export function allyChoose(s: DDState, self: DDUnit): DDSkill | null {
     // 점수용 배율은 Lv1 스케일(power÷M0)로 되돌려 쓴다 — 게이지·유틸 가산점이 Lv1 기준으로 튜닝돼 있어서.
     const pw = (sk.power ?? 0) / skillMult(0);
     if (sk.kind === "attack") {
-      let v = pw * (t?.staggered ? EXECUTE_MULT : 1);      // 처형 = 0.5×6 = 3.0
+      let v = pw * (t?.staggered && !t.execUsed ? EXECUTE_MULT : 1);      // 처형 = 0.5×6 = 3.0 (불균형 1회당 첫 평타만)
       if (self.id === "ember") v *= t?.staggered ? 14 : 8.6;      // 엠버 강화 평타(combat.ts 훅 실값)
       // 변신 중 강화 평타 — 변신기의 핵심 딜 수단인데 AI가 몰라 배틀/연계를 치고 있었음(combat.ts 훅 실값과 동기)
       if (self.id === "laevatain" && (self.timers.twilight || 0) > 0) v *= 3;    // 황혼: 범위 강화 평타(부착→흡수 사이클)

@@ -33,6 +33,7 @@ export type DDUnit = {
   staggerMax: number; // 0이면 불균형 없음(아군 등)
   staggered: boolean;
   staggerTimer: number; // 불균형 지속 라운드
+  execUsed?: boolean; // 이번 불균형에서 처형(일반 공격 ×6 + 기력회복)을 이미 소비했는가 — 불균형 1회당 첫 평타만
   statuses: DDStatus[];
   dot: number; // 매 라운드 시작 지속 피해(연소 등)
   regen?: number; // 매 라운드 시작 지속 회복(시트론/야침 재생 전술 아이템)
@@ -871,7 +872,8 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
     const preReact = ELEMENTS.reduce((n, e) => n + t.arts[e], 0) + t.frozen; // 아츠 이상/쇄빙 소모 감지용(알레쉬 연계)
     const yvFrozen = t.frozen > 0, yvCryo = t.arts.cryo > 0; // 이본 빙점 판정(소모 전 상태)
     let raw = baseDamage(skill, self); // 시전자 측 원 피해(공격력×증가×허약×배율)
-    if (skill.kind === "attack" && t.staggered) { raw *= EXECUTE_MULT; executed = true; log.push(`  → 처형! 불균형 적 대량 물리`); }
+    // 처형: 불균형 1회당 **첫 일반 공격**만 처형 배수 + 기력회복. 이후 평타는 불균형 +30%만 받는 평타.
+    if (skill.kind === "attack" && t.staggered && !t.execUsed) { raw *= EXECUTE_MULT; executed = true; t.execUsed = true; log.push(`  → 처형! 불균형 적 대량 물리`); }
     raw += applyAnomaly(skill, t, self, log); // 물리 이상 payoff(+쇄빙, 연타 미적용)
     if (self.id === "estella" && yvFrozen && self.side === "ally") { gaugeUp(s, 15); log.push(`  → 공감! 쇄빙 게이지 반환`); } // 에스텔라: 쇄빙 시 스킬 게이지 반환
     let burnConsumed = false;
@@ -1208,7 +1210,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
         t.stagger = Math.round(t.staggerMax * 0.5);
         log.push(`  → ${t.name} 끊기 저항! 공세를 멈추지 않는다`);
       } else if (!t.staggered && t.stagger >= t.staggerMax) {
-        t.staggered = true; t.staggerTimer = 1; t.stagger = t.staggerMax; bumpApply(t); // 불균형 돌입도 「적용」
+        t.staggered = true; t.staggerTimer = 1; t.stagger = t.staggerMax; t.execUsed = false; bumpApply(t); // 불균형 돌입 — 처형 소비 리셋(이번 불균형 첫 평타만 처형)
         log.push(`  ⚡ ${t.name} 불균형 상태! 행동 불가 + 받는 피해 +30%`);
         // 원일: 격노 중(HP 50%↓) 불균형이 되면 격노가 꺾여 허약 — "불균형 상태가 되면 격노가 풀리고 허약해집니다"
         if (t.rageBreakWeaken && t.hp / t.maxHp < 0.5) { applyBuff(t, "weaken", 0.25, undefined, 3); log.push(`  → ${t.name} 격노가 꺾였다! 허약 (주는 피해 -25%, 3턴)`); }
