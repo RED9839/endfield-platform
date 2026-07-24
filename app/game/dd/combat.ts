@@ -946,7 +946,10 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
     // 배틀/연계는 원문상 "명중 시 녹아내린 불꽃 1스택"으로 별도 가산.
     if (self.id === "laevatain" && (skill.kind === "attack" || skill.kind === "battle" || skill.kind === "link")) {
       let absorb = 0;
-      if (skill.kind === "attack") // 강평/처형만 흡수 — 살아있는 적 전체("주변 적")에서 걷는다
+      // 강평/처형만 흡수 — 살아있는 적 전체("주변 적")에서 걷는다.
+      // **4스택 풀이면 흡수하지 않는다**: 더 쌓이지도 않는데 적의 열기 부착만 지워져
+      // 울프가드 연계(「아츠 부착 적」) 조건과 팀의 부착 빌드업이 헛돌았다.
+      if (skill.kind === "attack" && (self.procCount || 0) < 4)
         for (const e of living(s, "enemy")) if (e.arts.heat > 0) { absorb += e.arts.heat; e.arts.heat = 0; delete e.timers["arts:heat"]; }
       const gain = absorb + (skill.kind === "battle" || skill.kind === "link" ? 1 : 0);
       if (absorb > 0) s.anomalyConsumed = ANOMALY_WINDOW; // 카뮤 연계 「영혼의 가시」 조건 = "열기 부착 소모/**흡수** 후" — 레바테인 흡수도 창을 연다
