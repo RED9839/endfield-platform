@@ -967,7 +967,10 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
     // 4스택 배틀 폭발 — 레바테인 본인 배틀에서만
     if (self.id === "laevatain" && skill.kind === "battle") {
       const tw = (self.timers.twilight || 0) > 0; // 황혼 변신 중
-      if (tw) raw += self.attack * eb(self) * 0.85; // 궁 중 강화 배틀 1단계(62→147%)
+      // 궁 중 강화 배틀은 **2단 히트**다(위키 「궁 중 1·2·추가 147·164·400%」). 예전엔 1단 147%만 반영해
+      // 2단 164%가 통째로 빠져 있었다. Lv9 = Lv1 ×1.8 → (147+164)×1.8 = 559.8%.
+      // baseDamage가 이미 62%×1.8 = 112%를 내므로 나머지 447.8%를 얹는다(self.attack엔 M0 ×1.8이 포함 → ÷1.8).
+      if (tw) raw += self.attack * eb(self) * 2.49;
       if (self.procCount >= 4) { // 4스택 배틀 → 강화 폭발 + 강제 연소 + 궁 +100 (소모·궁·버프는 캐스트당 1회)
         laeBurst = self.attack * eb(self) * (tw ? 4.0 : 3.42); // 추가 공격(궁 중 400% / 일반 342%) — 아래에서 광역 적용
         gainUlt(self, 100); // 궁 +100
@@ -1059,6 +1062,8 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
     // 레바테인 황혼 변신: 강화 일반공격 ×3(위키 강화 평타 464%/일반 157%≈2.95). 배틀 강화는 흡수 블록에서 처리
     // 변신 강화 평타는 옛 고정 평타(0.9) 기준으로 튜닝됨 → basicAtk 도입분을 상쇄해 값 보존(×0.9/basicAtk).
     const bpc = 0.9 / (self.basicAtk ?? 0.9);
+    // ⚠ 변신 강화 평타는 위키 비율(4단 합 464% / 평시 5단 157% = ×2.955)이어야 하는데, bpc가 곱해져
+    //    실효 ×0.957 — 변신 평타(270%)가 평시 평타(282%)보다 약하다. 이본·장방이도 같은 상태(밸런스 판단 대기).
     if (self.id === "laevatain" && skill.kind === "attack" && (self.timers.twilight || 0) > 0) raw *= 3 * bpc;
     if (self.id === "yvonne" && skill.kind === "attack" && (self.timers.iceshot || 0) > 0) { raw *= 2.66 * bpc; raw += realAtk(self.attack) * eb(self) * 4.8; } // 아이스 슈터 말뚝딜: 강력 일격 240% + 추가 공격 480%(실측 yv-u) — 단일 궁딜 최상위
     // 장방이 천리의 경지 변신: 강화 일반공격 ×2.5(궁 중 평타 강화)
