@@ -313,7 +313,8 @@ export const SKILLS: Record<string, DDSkill[]> = {
   // 재능: 불꽃의 심장(열기 부착 흡수→녹아내린 불꽃, 4스택 열기 저항 무시) · 부활의 불씨(HP 40%↓ 90% 비호+회복). 주스탯 지능·보조 힘.
   laevatain: [
     // 불타오르는 화염(배틀 초기 62%): 열기 + (불꽃의 심장)열기 부착 흡수 → 녹아내린 불꽃. 4스택 시 강화 폭발(추가 342% + 강제 연소 + 궁 +100). 흡수는 일반공격/배틀/연계 공통(엔진 id훅).
-    { id: "lae-b", name: "불타오르는 화염", kind: "battle", fromPos: [1, 2, 3], target: "single-front", power: 1.12, mst: [1.2, 1.29, 1.4], element: "heat", staggerVal: 10, gaugeCost: 100, note: "열기 + 주변 열기 부착 흡수(녹아내린 불꽃) · 4스택 시 강화 폭발 + 강제 연소 + 궁 +100" },
+    // 원문 「몰튼 코어 → **전방 지속 열기**」 + 「4스택 시 **광역** 추가 공격」 → 범위(row). 스택은 캐스트당 1회(엔진에서 가산 억제).
+    { id: "lae-b", name: "불타오르는 화염", kind: "battle", fromPos: [1, 2, 3], target: "row", power: 1.12, mst: [1.2, 1.29, 1.4], element: "heat", staggerVal: 10, gaugeCost: 100, note: "전방 지속 열기(범위) + 주변 열기 부착 흡수(녹아내린 불꽃) · 4스택 시 광역 강화 폭발 + 강제 연소 + 궁 +100" },
     // 열화(연계 240%, 쿨 10초≈2턴): 연소/부식 적. 광역 열기 + 녹아내린 불꽃(명중당) + 궁충(명중 수 비례).
     { id: "lae-l", name: "열화", kind: "link", fromPos: [1, 2, 3], target: "row", power: 4.32, mst: [4.62, 4.98, 5.4], element: "heat", staggerVal: 10, cooldown: 2,
       requires: (t) => !!t && (t.statuses.includes("combustion") || t.statuses.includes("corrosion")), requiresText: "연소 또는 부식된 적", note: "광역 열기 + 녹아내린 불꽃 + 궁충" },

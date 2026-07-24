@@ -814,6 +814,10 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
   const primaryTarget = pickTargets(s, self, skill)[0]; // 광역 스킬의 1회성 효과(청뢰검 생성 등) 기준 대상
   let executed = false; // 일반 공격 처형 여부
   let aoeTotal = 0, aoeHits = 0; // 범위기 전체 합산(대상별 합만으로는 총 딜을 알 수 없음)
+  // 레바테인 배틀은 범위(전방 지속 열기)라 대상 수만큼 루프를 돈다. 스택 가산과 4스택 소모는
+  // **캐스트당 1회**여야 하고(대상 3명이면 한 방에 3스택이 차 흡수 사이클이 무너진다),
+  // 반대로 강화 폭발 피해·강제 연소는 원문대로 **광역**이어야 한다 — 둘을 분리해 둔다.
+  let laeStacked = false, laeBurst = 0;
   for (const t of pickTargets(s, self, skill)) {
     if (t.teleport && !t.staggered && skill.kind !== "ult" && Math.random() < 0.3) { // 순간이동: 불균형이 아니면 일반 피격을 낮은 확률로 회피(궁극기 제외)
       log.push(`  → ${t.name} 순간이동! ${self.name}의 공격을 회피`); continue;
@@ -944,7 +948,9 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
     // 레바테인 「불꽃의 심장」 — 원문: "강력한 일격이나 처형이 명중한 후, 레바테인이 **주변 적의** 열기 부착을 흡수.
     // 열기 부착 1스택 흡수마다 녹아내린 불꽃 1스택(최대 4)". 흡수는 **본인의 강평/처형(일반 공격)**에서만 일어난다.
     // 배틀/연계는 원문상 "명중 시 녹아내린 불꽃 1스택"으로 별도 가산.
-    if (self.id === "laevatain" && (skill.kind === "attack" || skill.kind === "battle" || skill.kind === "link")) {
+    // 연계 「열화」만 원문이 "명중당 녹아내린 불꽃 1"이라 대상마다 가산한다. 배틀은 "명중 시 1스택" = 캐스트당 1회.
+    if (self.id === "laevatain" && (skill.kind === "attack" || skill.kind === "battle" || skill.kind === "link") && !(skill.kind === "battle" && laeStacked)) {
+      if (skill.kind === "battle") laeStacked = true;
       let absorb = 0;
       // 강평/처형만 흡수 — 살아있는 적 전체("주변 적")에서 걷는다.
       // **4스택 풀이면 흡수하지 않는다**: 더 쌓이지도 않는데 적의 열기 부착만 지워져
@@ -962,13 +968,17 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
     if (self.id === "laevatain" && skill.kind === "battle") {
       const tw = (self.timers.twilight || 0) > 0; // 황혼 변신 중
       if (tw) raw += self.attack * eb(self) * 0.85; // 궁 중 강화 배틀 1단계(62→147%)
-      if (self.procCount >= 4) { // 4스택 배틀 → 강화 폭발 + 강제 연소 + 궁 +100
-        raw += self.attack * eb(self) * (tw ? 4.0 : 3.42); // 추가 공격(궁 중 400% / 일반 342%)
-        t.dot = Math.round(self.attack * eb(self) * artsDmg(self) * lvCoef(self, true) * 0.5); setTimer(t, "dot", DUR_DOT); add(t, "combustion"); gearTrigger(self, "anomaly:heat"); // 강제 연소(세트 조건 = "연소를 부여한 후")
+      if (self.procCount >= 4) { // 4스택 배틀 → 강화 폭발 + 강제 연소 + 궁 +100 (소모·궁·버프는 캐스트당 1회)
+        laeBurst = self.attack * eb(self) * (tw ? 4.0 : 3.42); // 추가 공격(궁 중 400% / 일반 342%) — 아래에서 광역 적용
         gainUlt(self, 100); // 궁 +100
+        gearTrigger(self, "anomaly:heat"); // 세트 조건 = "연소를 부여한 후"
         self.amp.heat = Math.max(self.amp.heat || 0, 0.2); setTimer(self, "amp:heat", 4); // 불꽃의 심장(열기 저항 무시 근사)
         self.procCount = 0;
-        log.push(`  → 녹아내린 불꽃 4스택 소모! 강화 폭발${tw ? "(궁 중 400%)" : ""} + 강제 연소 + 궁 +100`);
+        log.push(`  → 녹아내린 불꽃 4스택 소모! 광역 강화 폭발${tw ? "(궁 중 400%)" : ""} + 강제 연소 + 궁 +100`);
+      }
+      if (laeBurst > 0) { // 원문 "광역 추가 공격" — 범위 대상 전원에게 추가 피해 + 강제 연소
+        raw += laeBurst;
+        t.dot = Math.round(self.attack * eb(self) * artsDmg(self) * lvCoef(self, true) * 0.5); setTimer(t, "dot", DUR_DOT); add(t, "combustion");
       }
     }
     if (skill.lanceRecover) { // 아비웨나 가로채기: 대상에게 누적된 썬더랜스(t.lanceN 일반 / t.lanceBig 강력) 전부 회수 → 스택 비례 중복 전기타
