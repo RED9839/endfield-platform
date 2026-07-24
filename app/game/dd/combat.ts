@@ -676,16 +676,24 @@ export function pickTargets(s: DDState, self: DDUnit, skill: DDSkill): DDUnit[] 
   if (self.id === "laevatain" && skill.kind === "attack" && (self.timers.twilight || 0) > 0) return foes;
   // 장방이 천리의 경지 변신 중: 강화 일반공격·배틀(뇌정의 부름) 모두 광역(공격 범위 확대)
   if (self.id === "zhuangfangyi" && (skill.kind === "attack" || skill.kind === "battle") && (self.timers.heavenly || 0) > 0) return foes;
-  if (skill.target === "all") return foes;
-  if (skill.target === "row") return [...foes].sort((a, b) => a.pos - b.pos).slice(0, 2);
-  // 플레이어 지정 타겟(단일 대상 스킬 한정) — 아군 수동 조작
-  if (s.forcedTargetId) { const t = foes.find((f) => f.id === s.forcedTargetId); if (t) return [t]; }
-  if (skill.target === "single-lowhp") return foes.length ? [foes.reduce((lo, e) => (e.hp < lo.hp ? e : lo), foes[0])] : [];
-  // single-front 자동/기본 대상(수동 조준 없을 때·자동 전투): '전열 고정' 제거 → 처치 우선순위
-  //  불균형(처형) > 지원 적(치유·증폭) > 저체력% 마무리 > 편성 순서. 무의미한 랜덤성 없이 스마트 포커스.
+  if (skill.target === "all") return foes;                                    // 전체: 적 전원
   if (!foes.length) return [];
+  // 자동 주 대상 선정: 불균형(처형) > 지원 적(치유·증폭) > 저체력% 마무리 > 편성 순서.
   const prio = (e: DDUnit) => (e.staggered ? 4 : 0) + (e.killPriority ?? 1);
-  return [[...foes].sort((a, b) => prio(b) - prio(a) || a.hp / a.maxHp - b.hp / b.maxHp || a.pos - b.pos)[0]];
+  const autoPrimary = () => [...foes].sort((a, b) => prio(b) - prio(a) || a.hp / a.maxHp - b.hp / b.maxHp || a.pos - b.pos)[0];
+  const forced = s.forcedTargetId ? foes.find((f) => f.id === s.forcedTargetId) : undefined;
+  // 범위(row): **주 대상 + 좌우 인접 1칸**. 예전엔 pos 오름차순 앞 2명 고정이라
+  // 3번 적을 조준해도 1·2번이 맞아 "왜 엉뚱한 적이?"가 됐다. 이제 조준한 적이 범위 중심이 된다.
+  if (skill.target === "row") {
+    const ordered = [...foes].sort((a, b) => a.pos - b.pos);
+    const center = forced ?? autoPrimary();
+    const i = Math.max(0, ordered.indexOf(center));
+    return ordered.slice(Math.max(0, i - 1), i + 2);
+  }
+  // 단일 대상 — 플레이어 지정(수동 조준) 우선
+  if (forced) return [forced];
+  if (skill.target === "single-lowhp") return [foes.reduce((lo, e) => (e.hp < lo.hp ? e : lo), foes[0])];
+  return [autoPrimary()];
 }
 
 // 스킬이 지금 사용 가능한가(위치 + 게이지 + 요구사항)

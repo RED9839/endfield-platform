@@ -29,7 +29,7 @@ const elementColor: Record<"physical" | Element, string> = { physical: "#d4d4d8"
 const elementName: Record<"physical" | Element, string> = { physical: "물리", heat: "열기", electric: "전기", cryo: "냉기", nature: "자연" };
 const classLabel: Record<DDClass, string> = { guard: "가드", caster: "캐스터", striker: "스트라이커", vanguard: "뱅가드", defender: "디펜더", supporter: "서포터" };
 const kindTone: Record<DDSkill["kind"], string> = { attack: "#a1a1aa", battle: "#ff9a2f", link: "#67e8f9", ult: "#facc15" };
-const targetLabel: Record<DDSkill["target"], string> = { "single-front": "단일", "single-lowhp": "단일", row: "범위", all: "범위", self: "자신" };
+const targetLabel: Record<DDSkill["target"], string> = { "single-front": "단일", "single-lowhp": "단일", row: "범위", all: "전체", self: "자신" };
 // 스킬 사용 불가 사유(usable()과 동일 순서). null=사용 가능.
 function skillReason(s: DDState, u: DDUnit, sk: DDSkill): string | null {
   if (usable(s, u, sk)) return null;
@@ -509,7 +509,8 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
   }, [winner]);
 
   // 단일 대상 스킬? (자기/전체/열 대상 제외)
-  const isSingleTarget = (sk: DDSkill) => sk.target !== "self" && sk.target !== "all" && sk.target !== "row";
+  // 조준이 필요한 스킬 — 자신/전체를 뺀 전부. 범위(row)도 **조준한 적이 범위 중심**이 되므로 조준시킨다.
+  const isSingleTarget = (sk: DDSkill) => sk.target !== "self" && sk.target !== "all";
   // 대상 지정 시 조건 재검사 — usable()은 pickTargets[0](기본 대상)로만 판정하므로,
   // 플레이어가 다른 적을 찍으면 조건이 안 맞는 적에게도 발동해 버린다(연계 게이트 무력화).
   function usableOn(sk: DDSkill, u: DDUnit, targetId: string): boolean {
@@ -973,7 +974,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
                 <div className="mb-2 flex items-center gap-2"><span className="border px-1 py-px font-mono text-[13px] font-bold uppercase" style={{ borderColor: `${PRIMARY}66`, color: PRIMARY }}>{kindLabel[sk.kind]}</span><span className="font-mono text-sm font-bold text-white">{sk.name}</span><button type="button" onClick={() => setDetailId(null)} className="ml-auto border border-ef-line px-1.5 py-0.5 font-mono text-[14px] text-ef-muted hover:border-ef-accent/60 hover:text-white">✕</button></div>
                 <div className="grid grid-cols-2 gap-x-5 gap-y-1.5">
                   {dmg > 0 ? <Row k="예상 피해" v={`${dmg.toLocaleString()} (배율 ${Math.round(sk.power * 100)}%)`} tone={elementColor[el]} /> : <Row k="유형" v="버프 / 유틸" />}
-                  <Row k="대상" v={targetLabel[sk.target]} />
+                  <Row k="대상" v={sk.target === "row" ? "범위 — 조준한 적 + 좌우 인접" : sk.target === "all" ? "전체 — 적 전원" : targetLabel[sk.target]} />
                   <Row k="속성" v={elementName[el]} tone={elementColor[el]} />
                   {(sk.staggerVal ?? 0) > 0 && <Row k="불균형" v={`+${sk.staggerVal}`} tone="#facc15" />}
                   {sk.kind === "link" && <Row k="쿨타임" v={`${sk.cooldown ?? 3}턴`} />}
