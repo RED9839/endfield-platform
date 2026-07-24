@@ -263,7 +263,7 @@ export default function CraftPanel({ craft, party = [], onCraft, onForge, onSwap
                 <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
                   {owned.map((opt) => { const sel = ref === opt.id; return (
                     <button key={opt.id} type="button" onClick={() => { onSwap(swap.opId, swap.slot, opt.id); close(); }} className={`dd-cut flex items-center gap-2 border p-2 text-left transition ${sel ? "border-ef-accent bg-ef-accent/10" : "border-ef-line hover:border-ef-accent/50"}`}>
-                      <span className="flex h-11 w-11 shrink-0 items-center justify-center border border-ef-line/50 bg-black/40">{pieceImage(opt.name) ? <img src={pieceImage(opt.name)} alt="" className="h-full w-full object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = "hidden"; }} /> : null}</span>
+                      <span className="flex h-11 w-11 shrink-0 items-center justify-center border border-ef-line/50 bg-black/40">{pieceImage(opt.name) ? <img src={pieceImage(opt.name)} alt="" loading="lazy" className="h-full w-full object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = "hidden"; }} /> : null}</span>
                       <span className="min-w-0 flex-1">
                         <span className="block truncate font-mono text-[15px] font-bold text-white" title={opt.name}>{opt.name}{sel && <span className="ml-1 text-[11px] text-ef-accent">● 착용</span>}</span>
                         <span className="font-mono text-[13px] text-ef-ink/70">{attrsText(opt.attrs) || `능력치 +${opt.grade.base}`} · 방어 +{opt.def}{opt.dmg ? ` · ${dmgText(opt)}` : ""}</span>

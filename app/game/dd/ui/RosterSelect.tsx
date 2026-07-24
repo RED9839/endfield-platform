@@ -352,7 +352,7 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
             <div className="space-y-1.5">
               {pcs.map((pc) => { const named = pc.set && pc.set !== "?"; const on = named && active.includes(pc.set); const empty = pc.name === "없음"; const swapped = !!pieceChoice[focusId]?.[pc.slot]; return (
                 <div key={pc.slot} className="flex items-center gap-2">
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center border border-ef-line/60 bg-black/40">{!empty && pieceImage(pc.name) ? <img src={pieceImage(pc.name)} alt="" className="h-full w-full object-contain" onError={(e) => ((e.currentTarget as HTMLImageElement).style.visibility = "hidden")} /> : <span className="text-[12px] text-ef-muted">—</span>}</span>
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center border border-ef-line/60 bg-black/40">{!empty && pieceImage(pc.name) ? <img src={pieceImage(pc.name)} alt="" loading="lazy" className="h-full w-full object-contain" onError={(e) => ((e.currentTarget as HTMLImageElement).style.visibility = "hidden")} /> : <span className="text-[12px] text-ef-muted">—</span>}</span>
                   <span className="w-9 shrink-0 font-mono text-[12px] uppercase tracking-wider text-ef-accent/70">{gearSlotName(pc.slot)}</span>
                   <div className="min-w-0 flex-1">
                     <div className="truncate font-mono text-[14px] font-bold text-ef-ink" title={pc.name}>{pc.name}{swapped && <span className="ml-1 text-[11px] text-ef-accent">교체됨</span>}</div>
@@ -411,7 +411,7 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
                   <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
                     {slotOptions(pieceSlotOf(gearTab), op.element).map((opt) => { const sel = lo[gearTab as LoadoutSlot] === opt.id; return (
                       <button key={opt.id} type="button" onClick={() => { const slot = gearTab as LoadoutSlot; setPieceChoice((c) => ({ ...c, [focusId]: { ...c[focusId], [slot]: opt.id } })); }} className={`dd-cut flex items-center gap-2 border p-2 text-left transition ${sel ? "border-ef-accent bg-ef-accent/10" : "border-ef-line hover:border-ef-accent/50"}`}>
-                        <span className="flex h-11 w-11 shrink-0 items-center justify-center border border-ef-line/50 bg-black/40">{pieceImage(opt.name) ? <img src={pieceImage(opt.name)} alt="" className="h-full w-full object-contain" onError={(e) => ((e.currentTarget as HTMLImageElement).style.visibility = "hidden")} /> : null}</span>
+                        <span className="flex h-11 w-11 shrink-0 items-center justify-center border border-ef-line/50 bg-black/40">{pieceImage(opt.name) ? <img src={pieceImage(opt.name)} alt="" loading="lazy" className="h-full w-full object-contain" onError={(e) => ((e.currentTarget as HTMLImageElement).style.visibility = "hidden")} /> : null}</span>
                         <span className="min-w-0 flex-1"><span className="block truncate font-mono text-[15px] font-bold text-white">{opt.name}{sel && <span className="ml-1 text-[11px] text-ef-accent">● 착용</span>}</span><span className="font-mono text-[13px] text-ef-ink/70">{attrsText(opt.attrs) || `능력치 +${opt.grade.base}`} · 방어 +{opt.def} · {pieceDmg(opt, 1)}</span><span className="block font-mono text-[12px] text-ef-muted">{opt.set !== "?" ? opt.set + " 세트" : "자유 슬롯"}</span></span>
                       </button>
                     ); })}

@@ -267,7 +267,7 @@ export default function GamePage() {
                           <button key={id} type="button" onClick={() => run.sellItem(id)} title={`${def.desc} — ${run.itemSellValue(def.rarity)}크레딧`}
                             className="dd-cut flex items-center gap-1 border px-2 py-1 font-mono text-[13px] transition hover:brightness-110"
                             style={{ borderColor: "rgba(103,232,249,0.45)", background: "rgba(103,232,249,0.08)", color: "#cfe9ee" }}>
-                            <img src={itemImage(id)} alt="" className="h-4 w-4 object-contain" />{def.name}<span className="text-ef-muted">×{n as number}</span><span style={{ color: "#f5c542" }}>+{run.itemSellValue(def.rarity)}</span>
+                            <img src={itemImage(id)} alt="" loading="lazy" className="h-4 w-4 object-contain" />{def.name}<span className="text-ef-muted">×{n as number}</span><span style={{ color: "#f5c542" }}>+{run.itemSellValue(def.rarity)}</span>
                           </button>
                         );
                       })}
