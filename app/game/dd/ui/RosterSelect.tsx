@@ -174,7 +174,7 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
       {/* ===== 3열 스포트라이트 ===== */}
       <div className="grid gap-3 lg:grid-cols-[minmax(300px,0.9fr)_minmax(320px,1fr)_minmax(360px,1.05fr)]">
         {/* 왼쪽: 로스터 그리드 */}
-        <div className="hud-panel dd-cut max-h-[74vh] overflow-y-auto p-3">
+        <div className="hud-panel dd-cut max-h-[calc(100vh-350px)] overflow-y-auto p-3">
           {classOrder.map((cls) => {
             const ops = OPERATORS.filter((o) => o.cls === cls);
             if (!ops.length) return null;
@@ -216,7 +216,7 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
         </div>
 
         {/* 오른쪽: 상세 + 편성 */}
-        <div className="hud-panel dd-cut flex max-h-[74vh] flex-col overflow-y-auto p-4">
+        <div className="hud-panel dd-cut flex max-h-[calc(100vh-350px)] flex-col overflow-y-auto p-4">
           {/* 무기 */}
           {weaponOf(focusId) && (
             <div className="hud-tile dd-cut mb-2.5 px-2.5 py-2">
@@ -365,11 +365,14 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
             </div>
           </div>
 
-          {/* 편성 추가/해제 */}
-          <button type="button" onClick={() => toggle(focusId)} disabled={focusFull} className="dd-cut mt-auto w-full py-3 font-mono text-sm font-black uppercase tracking-[0.14em] transition enabled:hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
+          {/* 편성 추가/해제 — 패널 하단 고정(sticky). 스킬·재능·목표 장비가 길어 예전엔 스크롤을
+              끝까지 내려야 버튼이 나왔다. 항상 손 닿는 곳에 둔다. */}
+          <div className="sticky bottom-0 z-10 -mx-4 mt-auto px-4 pb-1 pt-2" style={{ background: "linear-gradient(180deg, transparent, #0e0e10 28%)" }}>
+          <button type="button" onClick={() => toggle(focusId)} disabled={focusFull} className="dd-cut w-full py-3 font-mono text-sm font-black uppercase tracking-[0.14em] transition enabled:hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
             style={focusOn ? { background: "linear-gradient(180deg,#3a1512,#241010)", color: "#f0776e", border: "1px solid #b3312a88" } : focusFull ? { background: "#16161a", color: "#777" } : { background: `linear-gradient(180deg,#ffb257,${PRIMARY})`, color: "#0a0a0a", boxShadow: "0 0 22px -4px rgba(255,154,47,0.7)" }}>
             {focusOn ? "◀ 편성 해제" : focusFull ? "부대 가득 참 (4/4)" : "편성 추가 ▶"}
           </button>
+          </div>
         </div>
       </div>
 
