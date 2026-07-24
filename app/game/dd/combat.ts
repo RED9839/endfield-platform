@@ -873,7 +873,10 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
     const yvFrozen = t.frozen > 0, yvCryo = t.arts.cryo > 0; // 이본 빙점 판정(소모 전 상태)
     let raw = baseDamage(skill, self); // 시전자 측 원 피해(공격력×증가×허약×배율)
     // 처형: 불균형 1회당 **첫 일반 공격**만 처형 배수 + 기력회복. 이후 평타는 불균형 +30%만 받는 평타.
-    if (skill.kind === "attack" && t.staggered && !t.execUsed) { raw *= EXECUTE_MULT; executed = true; t.execUsed = true; log.push(`  → 처형! 불균형 적 대량 물리`); }
+    // 레바테인 황혼 변신 중 강화 평타는 원문상 처형이 나가지 않는다(궁 배율 ×3과 처형 ×6이 겹쳐 ×18이 되던 걸 차단).
+    //  → 불균형 +30%는 그대로 받되 처형 배수·기력회복·처형 소비는 없음(비변신 아군이 나중에 처형할 수 있게 execUsed도 유지).
+    const laeTwilightAtk = self.id === "laevatain" && skill.kind === "attack" && (self.timers.twilight || 0) > 0;
+    if (skill.kind === "attack" && t.staggered && !t.execUsed && !laeTwilightAtk) { raw *= EXECUTE_MULT; executed = true; t.execUsed = true; log.push(`  → 처형! 불균형 적 대량 물리`); }
     raw += applyAnomaly(skill, t, self, log); // 물리 이상 payoff(+쇄빙, 연타 미적용)
     if (self.id === "estella" && yvFrozen && self.side === "ally") { gaugeUp(s, 15); log.push(`  → 공감! 쇄빙 게이지 반환`); } // 에스텔라: 쇄빙 시 스킬 게이지 반환
     let burnConsumed = false;
