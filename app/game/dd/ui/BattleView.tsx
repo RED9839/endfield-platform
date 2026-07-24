@@ -9,7 +9,7 @@ import { aggroShares } from "../aggro";
 import { ENCOUNTERS, allyChoose, createBattle, enemyAct, freeUlts, regionEncounter } from "../sim";
 import { activeSets, setEffectText, loadoutPieces } from "../gear";
 import { weaponOf, weaponEffectText, weaponImage, weaponSeriesName, weaponSeriesDesc, WEAPON_KO, WEAPON_ICON } from "../weapons";
-import { artsAttachmentIconPaths, artsReactionIconPaths, physicalCombatIconPaths, combatEffectIconPaths } from "@/data/combat-icon-paths";
+import { artsAttachmentIconPaths, artsReactionIconPaths, physicalCombatIconPaths, combatEffectIconPaths, statCombatIconPaths } from "@/data/combat-icon-paths";
 
 // 상태효과 아이콘(데이터 실측): 이상(연소/감전/부식)·물리이상은 combat-icon-paths 에셋 연결
 const STATUS_ICON: Record<string, string> = {
@@ -174,10 +174,10 @@ const chipShort = (c: StatusChip): string => {
   const ratio = c.label.match(/(\d+)\s*\/\s*(\d+)/);
   if (ratio) return `${ratio[1]}/${ratio[2]}`;
   if (c.k === "mifu") return c.label.replace(/^자세\s*/, "");   // 미브 자세는 이름 자체가 값(단운·추형·개천)
-  const m = c.label.match(/([+\-]?\d+%?)\s*$/);
+  const m = c.label.match(/([+\-]?\d+%?)(?:\/턴)?\s*$/); // 「재생 N/턴」의 /턴 접미사까지 흡수해 숫자를 뽑는다
   const val = m ? m[1] : "";
   if (c.icon) return val;                       // 아이콘이 뜻을 전달 → 수치만
-  // 아이콘 없는 칩(공격·지속·저항·재생 등)은 숫자만 두면 뜻을 알 수 없다 → 이름 2글자 + 수치
+  // 아이콘 없는 칩은 숫자만 두면 뜻을 알 수 없다 → 이름 2글자 + 수치
   const name = c.label.replace(/[+\-]?\d+(%|\/턴)?\s*$/, "").replace(/^[^\p{L}]+/u, "").trim().slice(0, 2);
   return name + val;
 };
@@ -241,8 +241,8 @@ function unitChips(u: DDUnit): StatusChip[] {
   if (u.frozen > 0) c.push({ k: "fz", label: `동결 ${u.frozen}`, tone: "#67e8f9", dir: -1, turns: T.frozen, src: S.frozen, icon: artsReactionIconPaths.frozen });
   for (const st of u.statuses) c.push({ k: st, label: `${statusLabel[st] ?? st}`, tone: "#fbbf24", dir: -1, turns: T[st], src: S[st], icon: STATUS_ICON[st] });
   (["heat", "electric", "cryo", "nature"] as Element[]).forEach((e) => { if (u.arts[e] > 0) c.push({ k: e, label: `${elementName[e]}부착 ${u.arts[e]}`, tone: elementColor[e], dir: 0, turns: T["arts:" + e], src: S["arts:" + e], icon: artsAttachmentIconPaths[e] }); });
-  if (u.dot > 0) c.push({ k: "dot", label: `🔥 지속 ${u.dot}`, tone: "#fb923c", dir: -1, turns: T.dot, src: S.dot });
-  if ((u.atkBuff ?? 0) > 0) c.push({ k: "atk", label: `▲ 공격 +${Math.round(u.atkBuff * 100)}%`, tone: "#ffd24a", dir: 1, turns: T.atkBuff, src: S.atkBuff });
+  if (u.dot > 0) c.push({ k: "dot", label: `지속 ${u.dot}`, tone: "#fb923c", dir: -1, turns: T.dot, src: S.dot, icon: artsReactionIconPaths.burning });
+  if ((u.atkBuff ?? 0) > 0) c.push({ k: "atk", label: `공격 +${Math.round(u.atkBuff * 100)}%`, tone: "#ffd24a", dir: 1, turns: T.atkBuff, src: S.atkBuff, icon: statCombatIconPaths.attack });
   if (u.weakenMul < 1) c.push({ k: "wk", label: `허약 ${Math.round((1 - u.weakenMul) * 100)}%`, tone: "#c084fc", dir: -1, turns: T.weaken, src: S.weaken, icon: combatEffectIconPaths.weaken });
   const amp = (Object.values(u.amp) as number[]).reduce((a, b) => a + b, 0);
   if (amp > 0) { const mk = maxKey("amp:"); c.push({ k: "amp", label: `증폭 ${Math.round(amp * 100)}%`, tone: "#86efac", dir: 1, turns: T[mk] || undefined, src: S[mk], icon: combatEffectIconPaths.amplify }); }
@@ -252,11 +252,11 @@ function unitChips(u: DDUnit): StatusChip[] {
   const recv = (Object.values(u.recv) as number[]).reduce((a, b) => a + b, 0);
   if (recv > 0) { const mk = maxKey("recv:"); c.push({ k: "recv", label: `받는 피해 +${Math.round(recv * 100)}%`, tone: "#fb7185", dir: -1, turns: T[mk] || undefined, src: S[mk], icon: combatEffectIconPaths.vulnerable }); }
   // 부식 저항 감소는 취약/받는피해증가와 또 다른 인자(저항 버킷) — 포인트 단위로 표기한다.
-  if ((u.resShred || 0) > 0) { c.push({ k: "res", label: `저항 -${Math.round(u.resShred * 100)}`, tone: "#a3e635", dir: -1, turns: T.resShred, src: S.resShred }); }
+  if ((u.resShred || 0) > 0) { c.push({ k: "res", label: `저항 -${Math.round(u.resShred * 100)}`, tone: "#a3e635", dir: -1, turns: T.resShred, src: S.resShred, icon: artsReactionIconPaths.corroded }); }
   if (u.protection > 0) c.push({ k: "prot", label: `비호 ${Math.round(u.protection * 100)}%`, tone: "#38bdf8", dir: 1, turns: T.protection, src: S.protection, icon: combatEffectIconPaths.guard });
   if (u.multiHit > 0) c.push({ k: "mh", label: `연타 ${u.multiHit}`, tone: "#fb923c", dir: 1, icon: combatEffectIconPaths.combo });
   if ((u.speedMod ?? 0) !== 0) c.push({ k: "spd", label: `${u.speedMod > 0 ? "가속" : "감속"} ${Math.abs(u.speedMod)}`, tone: u.speedMod > 0 ? "#86efac" : "#c084fc", dir: u.speedMod > 0 ? 1 : -1, turns: T.speedMod, src: S.speedMod, icon: u.speedMod > 0 ? combatEffectIconPaths.haste : combatEffectIconPaths.slow });
-  if ((u.regen ?? 0) > 0) c.push({ k: "regen", label: `♺ 재생 ${u.regen}/턴`, tone: "#58d3a0", dir: 1, turns: T.regen });
+  if ((u.regen ?? 0) > 0) c.push({ k: "regen", label: `재생 ${u.regen}/턴`, tone: "#58d3a0", dir: 1, turns: T.regen, icon: statCombatIconPaths.heal });
   const opc = OP_STACK[u.id]?.(u); if (opc) c.push(opc); // 오퍼 고유 스택(녹아내린 불꽃·청뢰검·아이스 슈터·자세)
   return c;
 }

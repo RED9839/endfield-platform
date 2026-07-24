@@ -57,6 +57,12 @@ export const combatEffectIconPaths = {
 
 export type CombatEffectIconKey = keyof typeof combatEffectIconPaths;
 
+// 스탯 아이콘 — 전투 칩에서 공격 버프·재생 등에 재사용(icons/stats 원본).
+export const statCombatIconPaths = {
+  attack: "/icons/stats/attack.webp",       // 공격력 버프
+  heal: "/icons/stats/heal_efficiency.webp", // 재생·치유
+} as const;
+
 export const artsBurstIconPaths = {
   heat: "/icons/reactions/heat-burst.webp",
   cryo: "/icons/reactions/cryo-burst.webp",
