@@ -215,19 +215,29 @@ export default function CraftPanel({ craft, party = [], onCraft, onForge, onSwap
                 <button type="button" onClick={close} className="ml-auto shrink-0 border border-ef-line px-2 py-1 font-mono text-sm text-ef-muted transition hover:border-ef-accent/60 hover:text-white">✕</button>
               </div>
               <div className="overflow-y-auto p-3">
-                <div className="mb-2 font-mono text-[13px] text-ef-muted">{gearSlotName(swap.slot)} 후보 · <span>{op?.element} 효율순</span></div>
+                {/* 후보는 **제작한 장비만**. 미제작까지 늘어놓으면 지금 낄 수 있는 게 뭔지 보이지 않는다.
+                    n을 넉넉히 줘서 상위 16개 밖으로 밀려난 보유 피스가 잘리지 않게 한다. */}
+                {(() => {
+                // 현재 착용 중인 피스는 아직 미제작이어도 남긴다 — 목록에서 사라지면 뭘 끼고 있는지 알 수 없다.
+                const owned = slotOptions(pieceSlotOf(swap.slot), op?.element, 999).filter((p) => isOwned(craft, p.id) || ref === p.id);
+                const made = owned.filter((p) => isOwned(craft, p.id)).length;
+                if (!owned.length) return <div className="px-1 py-6 text-center font-mono text-[13px] text-ef-muted">제작한 {gearSlotName(swap.slot)}이(가) 없습니다.<br /><span className="text-ef-muted/70">「전체 카탈로그」에서 먼저 제작하세요.</span></div>;
+                return (<>
+                <div className="mb-2 font-mono text-[13px] text-ef-muted">{gearSlotName(swap.slot)} 후보 · <span className={made ? "text-emerald-300/80" : "text-amber-300/70"}>제작한 장비 {made}개</span>{made < owned.length && <span className="text-ef-muted/70"> (+ 착용 중 {owned.length - made})</span>} · <span>{op?.element} 효율순</span></div>
                 <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
-                  {slotOptions(pieceSlotOf(swap.slot), op?.element).map((opt) => { const sel = ref === opt.id; return (
+                  {owned.map((opt) => { const sel = ref === opt.id; return (
                     <button key={opt.id} type="button" onClick={() => { onSwap(swap.opId, swap.slot, opt.id); close(); }} className={`dd-cut flex items-center gap-2 border p-2 text-left transition ${sel ? "border-ef-accent bg-ef-accent/10" : "border-ef-line hover:border-ef-accent/50"}`}>
                       <span className="flex h-11 w-11 shrink-0 items-center justify-center border border-ef-line/50 bg-black/40">{pieceImage(opt.name) ? <img src={pieceImage(opt.name)} alt="" className="h-full w-full object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = "hidden"; }} /> : null}</span>
                       <span className="min-w-0 flex-1">
                         <span className="block truncate font-mono text-[15px] font-bold text-white" title={opt.name}>{opt.name}{sel && <span className="ml-1 text-[11px] text-ef-accent">● 착용</span>}</span>
                         <span className="font-mono text-[13px] text-ef-ink/70">{attrsText(opt.attrs) || `능력치 +${opt.grade.base}`} · 방어 +{opt.def}{opt.dmg ? ` · ${dmgText(opt)}` : ""}</span>
-                        <span className="block font-mono text-[12px] text-ef-muted">{opt.set !== "?" ? opt.set + " 세트" : "자유 슬롯"} · {isOwned(craft, opt.id) ? <span className="text-emerald-300/80">제작됨</span> : <span className="text-amber-300/70">미제작</span>}</span>
+                        <span className="block font-mono text-[12px] text-ef-muted">{opt.set !== "?" ? opt.set + " 세트" : "자유 슬롯"} · {isOwned(craft, opt.id) ? <span className="text-emerald-300/80">제작됨</span> : <span className="text-amber-300/70">미제작(장착 중)</span>}</span>
                       </span>
                     </button>
                   ); })}
                 </div>
+                </>);
+                })()}
               </div>
             </div>
           </div>

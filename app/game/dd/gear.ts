@@ -246,7 +246,9 @@ export const OP_GEAR: Record<string, Loadout> = {
   // 진결·지혜(딜)이므로 **딜러 빌드(열 작업용)**를 목표 장비로 쓴다.
   //   열 작업용 3피스 세트효과 "적에게 부식을 부여한 후 자연 피해 +50%" ↔ 결 지혜 궁의 강제 부식과 정확히 맞물린다.
   //   (서포터 빌드 식양의 숨결은 진결·의지 전용 — 폼을 의지로 돌릴 때 장비 변경에서 고르면 된다)
-  arcane: { armor: "item_equip_t4_eternalxiranitelightarmor", gloves: "item_equip_t4_aicfieldworkwraps", kit1: "item_equip_t4_eternalxiranitereinforcedplate", kit2: "item_equip_t4_suit_usp02_edc_03" }, // 시트 첫 줄: 식양의 숨결(서폿)
+  // 장갑이 존재하지 않는 id(aicfieldworkwraps)여서 목표 장비에서 통째로 비어 있었다.
+  // 방어구·강화판과 같은 eternalxiranite(식양의 숨결) 계열 장갑으로 교정.
+  arcane: { armor: "item_equip_t4_eternalxiranitelightarmor", gloves: "item_equip_t4_eternalxiranitebracer", kit1: "item_equip_t4_eternalxiranitereinforcedplate", kit2: "item_equip_t4_suit_usp02_edc_03" }, // 시트 첫 줄: 식양의 숨결(서폿)
   pogranichnik: { armor: "item_equip_t4_suit_attri01_body_04", gloves: "item_equip_t4_suit_atk02_hand_02", kit1: "item_equip_t4_suit_atk02_edc_04", kit2: "item_equip_t4_suit_atk02_edc_04" },
   lifeng: { armor: "item_equip_t4_suit_atk02_body_02", gloves: "item_equip_t4_suit_usp02_hand_01", kit1: "item_equip_t4_suit_usp02_edc_01", kit2: "item_equip_t4_suit_usp02_edc_01" },
   endministrator: { armor: "item_equip_t4_suit_crush_fracture_body_02", gloves: "item_equip_t4_suit_crush_fracture_hand_02", kit1: "item_equip_t4_suit_crush_fracture_edc_02", kit2: "item_equip_t4_suit_phy01_edc_03" },
