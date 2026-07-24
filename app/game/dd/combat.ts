@@ -950,13 +950,8 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
       gainUlt(self, ug);
       log.push(`  → 후회 없는 주먹 궁 +${Math.round(ug)}`);
     }
-    // 라스트라이트 「세쉬카의 비전」(배틀): 원문 표 "획득하는 궁극기 에너지 16". 궁 「마지막 인사」가
-    // "자신의 배틀/연계로만 궁 에너지 획득" 제약이라 이 두 경로가 유일한 수급원(비용 240).
-    if (self.id === "lastrite" && skill.kind === "battle") {
-      const ug = 16;
-      gainUlt(self, ug);
-      log.push(`  → 세쉬카의 비전 궁 +${Math.round(ug)}`);
-    }
+    // (라스트 라이트 배틀/연계 궁 자가충전은 act 말미 lastrite 블록 하나로 처리 — 예전 여기의 배틀 +16 중복 제거.
+    //  둘 다 있으면 배틀당 32가 들어갔다. 원문 표: 배틀 「세쉬카의 비전」 +16 · 연계 「겨울 포식자」 +50.)
     // 알레쉬 재능: "주변 적에게 동결/오리지늄 결정 부착 후 궁 +3. **자기가 동결을 부여**했으면 +6."
     if (self.id === "alesh" && (t.frozen > 0 || has(t, "crystal"))) {
       const own = !!skill.forceFreeze; // 자기 강제 동결로 발동
@@ -1463,7 +1458,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
   }
   // 라스트 라이트(스트라이커): 배틀/연계로만 궁 에너지 자가 충전(환영 추격 +16 / 겨울 포식자 +50, 스택 비례 근사)
   if (self.id === "lastrite") {
-    if (skill.kind === "battle") gainUlt(self, 16);
+    if (skill.kind === "battle") { gainUlt(self, 16); log.push(`  → 세쉬카의 비전 궁 +16`); }
     if (skill.kind === "link") gainUlt(self, 50);
   }
   // 아비웨나(스트라이커): 썬더랜스를 대상(적)에게 누적 — 연계 일반 3개 / 궁 강력 1개. 가로채기(배틀)로 대상 스택 소모.
