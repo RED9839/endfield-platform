@@ -297,7 +297,7 @@ function FxLayer({ id, fx }: { id: string; fx: Fx }) {
 const shakeCls = (hit: boolean, tick: number) => (hit ? (tick % 2 ? "dd-shake-a" : "dd-shake-b") : "");
 const actCls = (active: boolean, tick: number) => (active ? (tick % 2 ? "dd-act-a" : "dd-act-b") : "");
 
-export default function BattleView({ party, encounterKey, nodeKind, faction, bossId, floor = 0, depth = 0, maxDepth = 6, owned, items, onUseItem, onEnd }: { party: PartyMember[]; encounterKey: string; nodeKind: NodeKind; faction?: string; bossId?: string; floor?: number; depth?: number; maxDepth?: number; owned?: Record<string, number>; items: Record<string, number>; onUseItem: (id: string) => void; onEnd: (result: "ally" | "enemy", survivors: BattleResult[], stats?: BattleStats) => void }) {
+export default function BattleView({ party, encounterKey, nodeKind, faction, bossId, floor = 0, depth = 0, maxDepth = 6, owned, items, onUseItem, onEnd, onShowMap }: { party: PartyMember[]; encounterKey: string; nodeKind: NodeKind; faction?: string; bossId?: string; floor?: number; depth?: number; maxDepth?: number; owned?: Record<string, number>; items: Record<string, number>; onUseItem: (id: string) => void; onEnd: (result: "ally" | "enemy", survivors: BattleResult[], stats?: BattleStats) => void; onShowMap?: () => void }) {
   const stateRef = useRef<DDState | null>(null);
   if (!stateRef.current) {
     const base = ENCOUNTERS.find((e) => e.key === encounterKey) ?? ENCOUNTERS[0];
@@ -640,6 +640,8 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
             <h2 className="font-mono text-xl font-black uppercase leading-tight tracking-[0.1em]" style={{ color: nodeKind === "boss" ? "#f0776e" : "#f4e9d2" }}>{nodeTitle[nodeKind]}<span className="ml-2 text-ef-accent">R{s.round}</span></h2>
           </div>
           <div className="flex shrink-0 items-center gap-2">
+            {/* 교전 중 지도 — 남은 구역을 보고 소비템·게이지를 아낄지 정한다(진입은 불가) */}
+            {onShowMap && <button type="button" onClick={onShowMap} className="hud-btn dd-cut px-3 py-1.5 font-mono text-[15px] font-bold uppercase tracking-wider text-ef-muted" title="이번 층 지도 — 남은 구역 확인(경로 변경 불가)">🗺 지도</button>}
             <button type="button" onClick={() => setShowHelp((v) => !v)} className={`hud-btn dd-cut px-3 py-1.5 font-mono text-[15px] font-bold uppercase tracking-wider ${showHelp ? "text-ef-accent" : "text-ef-muted"}`} title="전투 용어 설명">❔ 용어</button>
             <button type="button" onClick={() => setShowLog((v) => !v)} className={`hud-btn dd-cut px-3 py-1.5 font-mono text-[15px] font-bold uppercase tracking-wider ${showLog ? "hud-btn-on" : "text-ef-muted"}`} title="데미지·전투 기록">기록 {showLog ? "▴" : "▾"}</button>
             {!winner && <button type="button" onClick={cycleSpeed} className="hud-btn dd-cut px-3 py-1.5 font-mono text-[15px] font-bold uppercase tracking-wider text-ef-muted" title="재생 속도">{speed}배속</button>}

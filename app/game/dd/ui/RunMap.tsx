@@ -46,7 +46,9 @@ function PartyBar({ party }: { party: PartyMember[] }) {
   );
 }
 
-export default function RunMap({ nodes, frontier, cleared, party, items, faction, floor = 0, totalFloors = 6, onEnter }: { nodes: RunNode[]; frontier: string[]; cleared: string[]; party: PartyMember[]; items: Record<string, number>; faction?: string; floor?: number; totalFloors?: number; onEnter: (n: RunNode) => void }) {
+// readOnly = 전투 중 「지도 보기」. 노드 진입은 막고 파티 HP 바는 감춘다 —
+// 전투 중 run.party는 전투 시작 시점 값이라 그대로 보여주면 현재 HP로 오해한다.
+export default function RunMap({ nodes, frontier, cleared, party, items, faction, floor = 0, totalFloors = 6, onEnter, readOnly = false, currentId }: { nodes: RunNode[]; frontier: string[]; cleared: string[]; party: PartyMember[]; items: Record<string, number>; faction?: string; floor?: number; totalFloors?: number; onEnter: (n: RunNode) => void; readOnly?: boolean; currentId?: string }) {
   const [itemDetail, setItemDetail] = useState<string | null>(null);
   // 노드 예상 보상(교전·정예·보스: 재화 × 층 배율 / 야영: HP 회복)
   const nodeReward = (n: RunNode) => {
@@ -60,14 +62,16 @@ export default function RunMap({ nodes, frontier, cleared, party, items, faction
   const depths = Array.from({ length: maxDepth + 1 }, (_, d) => nodes.filter((n) => n.depth === d).sort((a, b) => a.lane - b.lane));
 
   return (
-    <div className="mx-auto max-w-[1500px] px-4 py-6 sm:px-7">
+    <div className={`mx-auto max-w-[1500px] px-4 sm:px-7 ${readOnly ? "py-0" : "py-6"}`}>
       <div className="hud-panel dd-cut mb-4 px-4 py-3">
         <p className="font-mono text-[13px] font-bold uppercase tracking-[0.32em] text-ef-accent/70">Darkest Protocol · 던전 진행</p>
-        <h2 className="font-mono text-2xl font-black uppercase tracking-[0.12em] text-white">경로 선택</h2>
-        <p className="mt-1 text-[15px] text-ef-muted"><b className="text-ef-ink">{totalFloors}개 층</b>의 보스를 차례로 격파하며 등반합니다 — <span className="text-amber-300/85">층이 오를수록 적이 강해집니다</span>. 각 구역에서 방 하나(강조 표시)를 골라 다음 구역으로. 정예·보스는 위험하나 보상↑, HP는 야영에서만 회복. <b style={{ color: "#f5c542" }}>제작·마스터리·상점은 야영지에서만</b> 이용할 수 있습니다.</p>
+        <h2 className="font-mono text-2xl font-black uppercase tracking-[0.12em] text-white">{readOnly ? "이번 층 지도" : "경로 선택"}</h2>
+        {readOnly
+          ? <p className="mt-1 text-[15px] text-ef-muted">교전 중에는 경로를 바꿀 수 없습니다 — <b className="text-ef-ink">앞으로 남은 구역</b>을 미리 보고 소비템·게이지 운용을 계획하세요. <span className="text-amber-300/85">◉ 표시가 지금 싸우는 방</span>입니다.</p>
+          : <p className="mt-1 text-[15px] text-ef-muted"><b className="text-ef-ink">{totalFloors}개 층</b>의 보스를 차례로 격파하며 등반합니다 — <span className="text-amber-300/85">층이 오를수록 적이 강해집니다</span>. 각 구역에서 방 하나(강조 표시)를 골라 다음 구역으로. 정예·보스는 위험하나 보상↑, HP는 야영에서만 회복. <b style={{ color: "#f5c542" }}>제작·마스터리·상점은 야영지에서만</b> 이용할 수 있습니다.</p>}
       </div>
 
-      <div className="mb-3"><PartyBar party={party} /></div>
+      {!readOnly && <div className="mb-3"><PartyBar party={party} /></div>}
 
       <div className="mb-5 flex flex-wrap items-center gap-2">
         <span className="font-mono text-[14px] font-bold uppercase tracking-wider text-ef-muted">소지 아이템</span>
@@ -101,22 +105,23 @@ export default function RunMap({ nodes, frontier, cleared, party, items, faction
               {row.map((n) => {
                 const meta = NODE_META[n.kind];
                 const Icon = meta.icon;
-                const isFrontier = frontier.includes(n.id);
+                const isCurrent = readOnly && n.id === currentId;
+                const isFrontier = !readOnly && frontier.includes(n.id);
                 const isCleared = cleared.includes(n.id);
-                const dim = !isFrontier && !isCleared;
+                const dim = !isFrontier && !isCleared && !isCurrent;
                 return (
                   <button
                     key={n.id}
                     type="button"
                     disabled={!isFrontier}
                     onClick={() => onEnter(n)}
-                    className={`hud-tile dd-cut flex w-[124px] items-center gap-2 px-3 py-2.5 text-left ${isFrontier ? "!border-ef-accent/70 bg-ef-accent/[0.08]" : isCleared ? "opacity-80" : ""} ${dim ? "opacity-45" : ""}`}
-                    style={isFrontier ? { boxShadow: `inset 0 1px 0 rgba(255,255,255,0.06), 0 0 18px -3px ${meta.tone}88` } : undefined}
+                    className={`hud-tile dd-cut flex w-[124px] items-center gap-2 px-3 py-2.5 text-left ${isFrontier || isCurrent ? "!border-ef-accent/70 bg-ef-accent/[0.08]" : isCleared ? "opacity-80" : ""} ${dim ? "opacity-45" : ""}`}
+                    style={isFrontier || isCurrent ? { boxShadow: `inset 0 1px 0 rgba(255,255,255,0.06), 0 0 18px -3px ${meta.tone}88` } : undefined}
                   >
                     <Icon className="h-5 w-5 shrink-0" style={{ color: isCleared ? "#555" : meta.tone, filter: isFrontier ? `drop-shadow(0 0 5px ${meta.tone})` : undefined }} />
                     <span className="min-w-0">
                       <span className="block font-mono text-sm font-bold" style={{ color: isCleared ? "#666" : "#fff" }}>{meta.label}</span>
-                      {isCleared ? <span className="block font-mono text-[14px] uppercase text-ef-muted">완료</span> : (() => {
+                      {isCurrent ? <span className="block whitespace-nowrap font-mono text-[13px] font-bold uppercase tracking-wider text-ef-accent">◉ 교전 중</span> : isCleared ? <span className="block font-mono text-[14px] uppercase text-ef-muted">완료</span> : (() => {
                         const rw = nodeReward(n);
                         // 야영은 회복 + 상점 — "상점 있다"를 노드에서 알려야 지나치지 않는다. 한 줄엔 넘쳐 두 줄로.
                         if (n.kind === "rest") return <span className="block font-mono text-[11px] font-bold leading-tight"><span className="block text-green-300/85">✚ HP +{Math.round(REST_HEAL * 100)}%</span><span className="block text-[#f5c542]">🛒 크레딧 상점</span></span>;
