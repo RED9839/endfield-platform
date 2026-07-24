@@ -124,6 +124,7 @@ export type DDUnit = {
   artsImmune?: number; // 아츠 부착 확률 면역(아크라이트 만물의 지혜 0.5 = 50% 무효)
   artsStr?: number;    // 오리지늄 아츠 강도(열작업/펄스 세트 +30) — 물리/아츠 이상 피해 ×(1+강도/100)
   artsStrBase?: number; // 무기 시리즈의 일시적 아츠 강도 버프(미브) 만료 시 되돌릴 상시값
+  moraleArts?: number; // 포그 사기 격양 아츠 강도 버프(무기 artsStr와 별도 버킷 — 타이머 충돌 방지)
   linkCdMul?: number;  // 연계 쿨타임 배율(청파/개척 세트 0.85) — act()에서 linkCd에 곱
   ultEffMul?: number;  // 궁극기 충전 효율 배율(장비 부옵) — 배틀/연계 궁충에 곱
   cryoImmune?: boolean; // 냉기 부착 면역(에스텔라 이유 있는 게으름 — 동결 불가)
@@ -284,6 +285,7 @@ function expire(u: DDUnit, key: string): void {
   else if (key === "strMul") u.strMul = 1;          // 무기: 궁 후 평타 강화 종료
   else if (key === "battleAmp") u.battleAmp = 0;    // 무기: 배틀 한정 증폭 종료
   else if (key === "artsStrW") u.artsStr = u.artsStrBase ?? 0; // 무기: 아츠 강도 버프 종료
+  else if (key === "moraleArts") u.moraleArts = 0; // 포그 사기 격양 아츠 강도 종료
   else if (key === "critRate") u.critRate = BASE_CRIT_RATE;
   else if (key === "critDmg") u.critDmg = BASE_CRIT_DMG;
   else if (key === "stance") u.stance = 0;
@@ -414,6 +416,8 @@ const ULT_LINK = 10;        // 연계 사용 시 시전자 궁 충전
 const MORALE_STEP = 80;     // 포그 「생존의 깃발」: 팀 게이지 이만큼 회복마다 사기 격양
 const MORALE_ATK = 0.06;    // 사기 격양 시 팀 공격력 증가(가산)
 const MORALE_CAP = 0.36;    // 사기 격양 누적 상한
+const MORALE_ARTS = 6;      // 사기 격양 시 팀 오리지늄 아츠 강도 증가(공격력 6%와 동일 스케일, 원문 +8 튜닝다운)
+const MORALE_ARTS_CAP = 36; // 아츠 강도 누적 상한(atk 0.36과 평행)
 const MORALE_DUR = 3;       // 사기 격양 지속(턴)
 
 // 스킬 게이지 회복(파티 공유). 포그 「생존의 깃발」: 80 회복마다 팀 사기 격양(공격력 버프).
@@ -424,8 +428,12 @@ function gaugeUp(s: DDState, amt: number): void {
   s.moraleAccum = (s.moraleAccum || 0) + amt;
   while (s.moraleAccum >= MORALE_STEP) {
     s.moraleAccum -= MORALE_STEP;
-    for (const u of living(s, "ally")) { u.atkBuff = Math.min(MORALE_CAP, (u.atkBuff || 0) + MORALE_ATK); setTimer(u, "atkBuff", MORALE_DUR); }
-    s.log.push(`  → 포그 「생존의 깃발」 사기 격양! 팀 공격력 +${Math.round(MORALE_ATK * 100)}% (${MORALE_DUR}턴)`);
+    // 원문: 사기 격양 = 공격력 + **오리지늄 아츠 강도** 동시 상승(물리 파티의 물리 이상 payoff 증폭).
+    for (const u of living(s, "ally")) {
+      u.atkBuff = Math.min(MORALE_CAP, (u.atkBuff || 0) + MORALE_ATK); setTimer(u, "atkBuff", MORALE_DUR);
+      u.moraleArts = Math.min(MORALE_ARTS_CAP, (u.moraleArts || 0) + MORALE_ARTS); setTimer(u, "moraleArts", MORALE_DUR);
+    }
+    s.log.push(`  → 포그 「생존의 깃발」 사기 격양! 팀 공격력 +${Math.round(MORALE_ATK * 100)}% · 아츠 강도 +${MORALE_ARTS} (${MORALE_DUR}턴)`);
   }
 }
 export const BASE_CRIT_RATE = 0.05; // 인게임 기본 치명타 확률
@@ -447,7 +455,7 @@ export const BASIC: DDSkill = { id: "basic", name: "일반 공격", kind: "attac
 //  ① 이상 피해(강타·연소·동결·쇄빙·아츠폭발·갑옷파괴·감전·부식·띄우기·넘어뜨리기) = +x% 선형
 //  ② 부가 효과(갑옷파괴 물리취약 / 감전 아츠취약 / 부식 저항감소) = 2x/(x+300) 체감 [60→33% · 244→89%]
 //  ③ 누적 불균형치(띄우기·넘어뜨리기 한정) = +x/2 % 선형 [60→+30% · 244→+122%]
-const artsDmg = (u: DDUnit) => 1 + (u.artsStr || 0) / 100;
+const artsDmg = (u: DDUnit) => 1 + ((u.artsStr || 0) + (u.moraleArts || 0)) / 100;
 const artsSub = (u: DDUnit) => { const x = u.artsStr || 0; return 1 + (2 * x) / (x + 300); };
 const artsStag = (u: DDUnit) => 1 + (u.artsStr || 0) / 200;
 // 원문 2.3 레벨 계수: 아츠 이상·아츠 폭발 = 1+(Lv-1)/196 · 물리 이상 = 1+(Lv-1)/392.
