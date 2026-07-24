@@ -405,8 +405,8 @@ export function gainUlt(u: DDUnit, amt: number): void {
 }
 const ANOMALY_WINDOW = 2;  // 아츠 이상/부착 소모·흡수 윈도우 지속(턴). 1이면 그 라운드 안에서만 = 속도 느린 셋업이 빠른 페이오프를 못 살림
 export const GAUGE_REGEN = 45;     // 라운드당 자연 회복(≈12.5초/칸)
-const BASIC_RECOVER = 18;   // 일반 공격 강력한 일격 → 게이지 회복
-const EXEC_RECOVER = 30;    // 처형(불균형 적) → 게이지 추가 회복
+const BASIC_RECOVER = 35;   // 일반 공격 강력한 일격 → 게이지 회복(원작 기준, _combat-system.md)
+const EXEC_RECOVER = 60;    // 처형(불균형 적) → 게이지 대량 회복(원작 기준 · 강일의 약 2배)
 export const EXECUTE_MULT = 6;     // 처형 피해 배율(불균형 적 일반 공격)
 const ULT_BATTLE = 6.5;     // 배틀 사용 시 아군 전체 궁 충전
 const ULT_LINK = 10;        // 연계 사용 시 시전자 궁 충전
