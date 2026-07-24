@@ -1,5 +1,5 @@
 // DD 전투 시뮬 헬퍼 — AI(아군 자동/적) + 인카운터 + 전투 생성. UI와 테스트가 공유(부작용 없음).
-import { BASIC, DDState, DDUnit, DDSkill, Element, ELEMENTS, applyAttach, applyEnemyArts, applyDamage, healUnit, living, mitigate, usable, pickTargets, vulnFor, onAllyHit, EXECUTE_MULT, GAUGE_COST, setLinkChain, bumpVuln, setTimer, arcaneForm, setPhaseHook, runPhases } from "./combat";
+import { BASIC, DDState, DDUnit, DDSkill, Element, ELEMENTS, applyAttach, applyEnemyArts, applyDamage, healUnit, living, mitigate, usable, pickTargets, vulnFor, onAllyHit, EXECUTE_MULT, GAUGE_COST, setLinkChain, setSkillsProvider, refreshLinkArms, bumpVuln, setTimer, arcaneForm, setPhaseHook, runPhases } from "./combat";
 import { SKILLS, makeAlly, makeEnemy, ENEMY_DEFS, enemyDefFor, enemyArchetype, STACK_CARRY } from "./roster";
 import { applyGear, GEAR_SLOTS, LOADOUT_SLOTS, type Loadout, type GearSlot, type LoadoutSlot } from "./gear";
 import { applyWeapon } from "./weapons";
@@ -15,6 +15,7 @@ const EL_TAG: Record<Element, string> = { heat: "열기 ", electric: "전기 ", 
 // 우리는 ATB 속도순 독립 턴이라 셋업이 느리면 페이오프가 창을 못 받아먹음 → 셋업 직후 턴을 앞당겨 쓰게 한다.
 // allyChoose를 그대로 재사용 → 보스 전 궁 보류·셋업 가치·상태 인지 등 기존 판단이 전부 유지된다.
 // 끼어든 오퍼는 atb -= 100(자기 턴 소진)이라 총 행동 수는 불변.
+setSkillsProvider((id) => SKILLS[id] ?? []); // combat이 오퍼 연계 스킬을 찾을 수 있게(순환 import 회피)
 setLinkChain((s, _self) => {
   // 조건(requires)·쿨(linkCd)이 충족된 연계를 **직접 탐색**한다(allyChoose 점수에 밀리지 않게).
   // self 포함 — 자기 셋업으로 자기 연계가 열리는 경우(장방이 등)도 잡고, 연계→연계 체인이 확실히 이어진다.
@@ -340,6 +341,7 @@ export function enemyAct(s: DDState, self: DDUnit): void {
     // 지속+폭발(본 크러셔 사수): 명중 시 화살비 지속 피해 부여(몇 초 뒤 폭발 → 지속 피해로 근사)
     if (self.dotBurst && t.hp > 0) { t.dot = Math.max(t.dot || 0, Math.round(self.attack * 0.35)); setTimer(t, "dot", 2); s.log.push(`  → ${t.name} 화살비 — 지속 피해`); }
   }
+  refreshLinkArms(s); // 적 행동으로 열리는 연계 조건(엠버 「아군 피격 후」·카치르 「적 차징 중」 등) 장전
 }
 
 // 현재 유닛이 지금 쓸 수 있는 스킬(일반 공격 포함)

@@ -76,6 +76,13 @@ export type DDUnit = {
   chainStep?: number;    // 스킬 연계 체인에서 이 오퍼가 맡은 단계(예약 시 기록, 발동 시 소비)
   pendingLink?: DDSkill; // 예약된 연계 — 조건이 열리면 ATB 우선으로 끼어든 뒤 자기 차례에 이 연계를 발동
   pendingLinkAtb?: number; // 연계 예약 직전 ATB — 연계 발동 후 복원해 정규 턴을 뺏지 않음(원래 턴 + 연계 턴)
+  // 연계 게이트는 **조건이 새로 걸리는 순간**(상승 에지)에 열린다. 상태가 계속 유지되기만 해서는 다시 열리지 않는다.
+  // 원작 연계는 "메인이 ~한 **후**"처럼 트리거이지 상시 조건이 아닌데, 상태로만 검사하니 부착이 붙어 있는 내내
+  // 조건이 참이라 쿨만 돌면 자기 턴에 그냥 나갔다(질베르타 97%·펠리카 87% 개방률).
+  linkArmed?: boolean;   // 연계 발동 대기(장전됨). 발동하면 소비된다.
+  linkWasOpen?: boolean; // 직전 검사 시점의 조건 충족 여부 — 상승 에지 판정용
+  linkStamp?: number;    // 마지막 연계 발동 시점의 대상 지문(linkSig) — 이후 값이 달라져야 재장전
+  applyN?: number;       // 이 유닛에게 상태가 적용된 누적 횟수
   selfDestruct?: number; // 적 자폭(화염원석충): 사망 시 광역 아군 피해(배율) + 취약 부착
   shell?: number;        // 적 방어 형태(0~1 피해 감소): 은신/웅크림. 강타·갑옷파괴·불균형으로 해제
   shellBroken?: boolean; // 방어 형태 해제됨(약점 노출)
@@ -198,7 +205,11 @@ export type DDSkill = {
 
 const MAX_BREAK = 4;
 const has = (u: DDUnit, s: DDStatus) => u.statuses.includes(s);
-const add = (u: DDUnit, s: DDStatus) => { if (!has(u, s)) u.statuses.push(s); };
+// 「그 유닛에게 상태가 새로 적용된 횟수」. 연계 게이트 재장전의 신호다 —
+// 상태가 계속 붙어 있는 것만으로는 연계가 다시 열리지 않지만, **다시 걸어주면** 열려야 한다.
+// 전역 카운터가 아니라 유닛별이라, 연계 대상과 무관한 곳의 적용은 게이트를 건드리지 않는다.
+export const bumpApply = (u: DDUnit) => { u.applyN = (u.applyN ?? 0) + 1; };
+const add = (u: DDUnit, s: DDStatus) => { if (!has(u, s)) { u.statuses.push(s); bumpApply(u); } };
 const rm = (u: DDUnit, s: DDStatus) => { u.statuses = u.statuses.filter((x) => x !== s); };
 
 // 유효 공격력 배율: 공격력 증가(atkBuff) × 허약(weakenMul). 모든 피해 산출에 공통.
@@ -247,6 +258,7 @@ export function pushSrc(ctx: EffectSrc | null): EffectSrc | null { const prev = 
 export function popSrc(prev: EffectSrc | null): void { SRC_CTX = prev; }
 export const setTimer = (u: DDUnit, key: string, turns: number) => { u.timers[key] = turns; if (SRC_CTX) u.effectSrc[key] = SRC_CTX; else delete u.effectSrc[key]; };
 export function bumpVuln(u: DDUnit, key: DmgKey, val: number, turns = DUR_VULN) {
+  bumpApply(u); // 취약 부여도 「적용」 이벤트
   u.vuln[key] = Math.max(u.vuln[key] || 0, val);
   setTimer(u, "vuln:" + key, turns);
 }
@@ -503,6 +515,7 @@ export function applyEnemyArts(target: DDUnit, el: Element, log: string[]): void
 // 아츠 부착 → 폭발(같은 속성 2+) / 이상(다른 속성 → 전부 소모). 공격자 측 추가 피해 반환.
 // wctx: 무기 시리즈 트리거용 문맥(팀 대상 버프의 아군 목록 + "배틀 스킬로 부여" 조건 판정).
 export function applyAttach(target: DDUnit, el: Element, self: DDUnit, log: string[], wctx?: { allies?: DDUnit[]; viaBattle?: boolean }): number {
+  bumpApply(target); // 아츠 부착 = 연계 조건의 대표적인 「적용」 이벤트
   // 만물의 지혜(아크라이트): 아츠 부착 확률 면역 — 50% 확률로 부착 자체 무효
   if (target.artsImmune && Math.random() < target.artsImmune) { log.push(`  → ${target.name} 아츠 부착 면역(만물의 지혜)`); return 0; }
   // 이유 있는 게으름(에스텔라): 냉기 부착 면역 — 동결/냉기 아츠 무효
@@ -697,6 +710,36 @@ export function pickTargets(s: DDState, self: DDUnit, skill: DDSkill): DDUnit[] 
 }
 
 // 스킬이 지금 사용 가능한가(위치 + 게이지 + 요구사항)
+// 연계 조건(requires)이 지금 서 있는가 — 쿨·장전 무시. 상승 에지 판정과 usable이 공유한다.
+export function linkCondMet(s: DDState, self: DDUnit, skill: DDSkill): boolean {
+  if (!skill.requires) return true;
+  const tgs = pickTargets(s, self, skill);
+  if (!tgs.length) return false;
+  const multi = (skill.target === "row" || skill.target === "all") && tgs.length > 1;
+  return multi ? tgs.some((t) => skill.requires!(t, self, s)) : skill.requires(tgs[0], self, s);
+}
+// 아군 연계 게이트 장전. 조건이 **거짓 → 참**으로 바뀐 순간에만 장전한다.
+// 모든 행동(아군·적) 직후와 턴 시작에 호출해 에지를 놓치지 않는다.
+// 연계 대상들에게 지금까지 적용된 횟수의 합 — 「새로 걸렸는지」 판정용 지문.
+export function linkSig(s: DDState, self: DDUnit, skill: DDSkill): number {
+  return pickTargets(s, self, skill).reduce((n, t) => n + (t.applyN ?? 0), 0);
+}
+export function refreshLinkArms(s: DDState): void {
+  for (const u of s.units) {
+    if (u.side !== "ally" || u.hp <= 0) continue;
+    const lk = (skillsOf?.(u.id) ?? []).find((k) => k.kind === "link");
+    if (!lk) continue;
+    const open = linkCondMet(s, u, lk);
+    // ① 조건이 거짓→참으로 바뀐 순간  ② 지난 발동 이후 대상에게 뭔가 새로 적용된 뒤 조건이 참일 때
+    // ②가 있어야 "부착이 유지 중인데 다시 걸어줬다"도 열린다(상태 유지만으로는 안 열림).
+    if (open && (!u.linkWasOpen || linkSig(s, u, lk) !== u.linkStamp)) u.linkArmed = true;
+    u.linkWasOpen = open;
+  }
+}
+// roster를 직접 import하면 순환(combat→weapons→roster→combat)이라 주입받는다.
+let skillsOf: ((id: string) => DDSkill[]) | null = null;
+export const setSkillsProvider = (fn: (id: string) => DDSkill[]) => { skillsOf = fn; };
+
 export function usable(s: DDState, self: DDUnit, skill: DDSkill): boolean {
   // 위치(fromPos) 제약 제거 — 플레이어가 배치를 보거나 바꿀 수 없어 숨은 페널티만 됨. 모든 슬롯에서 전 스킬 사용 가능.
   if (skill.selfUlt && self.ultCharge < self.ultCost) return false;
@@ -704,6 +747,8 @@ export function usable(s: DDState, self: DDUnit, skill: DDSkill): boolean {
   const zfyFree = self.id === "zhuangfangyi" && skill.kind === "battle" && (self.timers.heavenly || 0) > 0 && !self.zfyUsedFree;
   if (skill.kind === "battle" && self.side === "ally" && !zfyFree && s.skillGauge < (skill.gaugeCost ?? GAUGE_COST)) return false; // 스킬 게이지 부족
   if (skill.kind === "link" && self.linkCd > 0) return false; // 연계 쿨타임
+  // 연계는 조건이 **새로 걸린** 뒤에만 발동. 부착·감전 같은 상태가 계속 붙어 있다고 매 쿨마다 열리면 안 된다.
+  if (skill.kind === "link" && self.side === "ally" && !self.linkArmed) return false;
   if (skill.requiresStance != null && self.stance < skill.requiresStance) return false; // 미브 스탠스 요구
   // 발동 조건 검사. 광역(row/all)은 **대상 중 하나라도** 만족하면 발동한다 —
   // 첫 대상만 보면 다른 적에 걸어둔 조건(울프가드 「아츠 부착 적」, 진천우 「방어 불능 적」 등)을
@@ -803,6 +848,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
       // 소수로 두고 **초과 대기분(음수)을 다음 쿨에서 차감**해 장기 평균이 실제 배율과 맞게 한다.
       // (쿨 4 x 0.85 = 3.4 -> 4턴/3턴/4턴... 평균 3.4턴 = 정확히 -15%)
       self.linkCd = cd * (self.linkCdMul ?? 1) + Math.min(0, self.linkCd);
+      self.linkArmed = false; // 장전 소비 — 지문 기록은 스킬 효과가 끝난 뒤(act 말미)에 한다
     } else if (skill.kind === "ult") {
       self.ultCharge = 0;
     }
@@ -1162,7 +1208,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
         t.stagger = Math.round(t.staggerMax * 0.5);
         log.push(`  → ${t.name} 끊기 저항! 공세를 멈추지 않는다`);
       } else if (!t.staggered && t.stagger >= t.staggerMax) {
-        t.staggered = true; t.staggerTimer = 1; t.stagger = t.staggerMax;
+        t.staggered = true; t.staggerTimer = 1; t.stagger = t.staggerMax; bumpApply(t); // 불균형 돌입도 「적용」
         log.push(`  ⚡ ${t.name} 불균형 상태! 행동 불가 + 받는 피해 +30%`);
         // 원일: 격노 중(HP 50%↓) 불균형이 되면 격노가 꺾여 허약 — "불균형 상태가 되면 격노가 풀리고 허약해집니다"
         if (t.rageBreakWeaken && t.hp / t.maxHp < 0.5) { applyBuff(t, "weaken", 0.25, undefined, 3); log.push(`  → ${t.name} 격노가 꺾였다! 허약 (주는 피해 -25%, 3턴)`); }
@@ -1516,6 +1562,9 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
   // 다음 차례로 끼어들어(추가 턴) 자기 차례에 연계를 발동한다. 즉시 발동이 아니라 턴 순서에 등장 → 자기 턴에 발동.
   // usable이 쿨(linkCd)·조건(requires)을 둘 다 검사. 실제 발동은 nextActor→pendingLink 처리(step/allyChoose).
   runPhases(s, log); // 이 행동으로 보스 페이즈가 넘어갔는지 판정(HP 임계·페이즈 체력바 소진)
+  // 연계 지문은 **자기 스킬 효과가 다 반영된 뒤** 기록한다 — 연계 자신이 건 부착으로 스스로 재장전되면 안 된다.
+  if (self.side === "ally" && skill.kind === "link") self.linkStamp = linkSig(s, self, skill);
+  refreshLinkArms(s); // 이 행동으로 조건이 새로 걸린 아군의 연계를 장전(예약·usable보다 먼저)
   if (self.side === "ally" && !s.manualLink && !s.chaining && linkChainProvider) {
     s.chaining = true;
     const nx = linkChainProvider(s, self);
@@ -1549,6 +1598,7 @@ export function perTurn(s: DDState, u: DDUnit): void {
   // 0 초과일 때만 감소 — 마지막 감소로 소수 나머지(예 0.4-1=-0.6)까지만 남고 거기서 멈춘다.
   // 하한을 풀면 조건을 기다리는 동안 음수가 적립돼 다음 쿨이 반토막 난다(장방이 연계 18→36회).
   if (u.linkCd > 0) u.linkCd -= 1; // 연계 쿨 감소(남은 음수 = 소수 나머지 → 다음 쿨에서 차감)
+  refreshLinkArms(s); // 타이머 감쇠로 조건이 풀렸다/다시 걸렸다를 놓치지 않게 턴 시작에도 에지 판정
 }
 
 export function isOver(s: DDState): "ally" | "enemy" | null {

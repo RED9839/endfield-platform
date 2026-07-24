@@ -2,7 +2,7 @@
 
 import { useEffect, useReducer, useRef, useState } from "react";
 
-import { act, canAct, isOver, startRound, perTurn, nextActor, turnOrder, usable, BASIC, GAUGE_REGEN, findLinkChain, type DDClass, type DDSkill, type DDState, type DDUnit, type Element, CHAIN_MAX, GAUGE_COST } from "../combat";
+import { act, canAct, isOver, startRound, perTurn, nextActor, turnOrder, usable, linkCondMet, BASIC, GAUGE_REGEN, findLinkChain, type DDClass, type DDSkill, type DDState, type DDUnit, type Element, CHAIN_MAX, GAUGE_COST } from "../combat";
 import { OPERATORS, SKILLS, OP_BASIC, OP_BASIC_ATK, skillExtraHit, enemyDefFor, avatarUrl, fullUrl, bustUrl, OP_BUST_POS, skillIcon, enemyImage, enemyArchetype, STACK_CARRY } from "../roster";
 import { realAtk } from "../progress";
 import { aggroShares } from "../aggro";
@@ -35,7 +35,9 @@ function skillReason(s: DDState, u: DDUnit, sk: DDSkill): string | null {
   if (usable(s, u, sk)) return null;
   if (sk.selfUlt && u.ultCharge < u.ultCost) return "궁 게이지 부족";
   if (sk.kind === "battle" && s.skillGauge < (sk.gaugeCost ?? 100)) return "스킬 게이지 부족";
-  if (sk.kind === "link" && u.linkCd > 0) return `쿨타임 ${u.linkCd}턴`;
+  if (sk.kind === "link" && u.linkCd > 0) return `쿨타임 ${Math.ceil(u.linkCd)}턴`;
+  // 조건은 서 있는데 장전이 안 됐다 = 이미 그 조건으로 한 번 썼다. 다시 걸어야 열린다.
+  if (sk.kind === "link" && !u.linkArmed && linkCondMet(s, u, sk)) return "트리거 대기";
   if (sk.requiresStance != null && u.stance < sk.requiresStance) return "자세 전환 필요";
   return sk.requiresText ?? "조건 미충족";
 }
@@ -47,6 +49,7 @@ const REASON_HELP: Record<string, string> = {
   "스킬 게이지 부족": "파티가 함께 쓰는 공유 게이지가 모자랍니다. 매 라운드 자동 회복되니 다음 턴을 노립니다.",
   "자세 전환 필요": "먼저 자세(스탠스)를 전환해야 쓸 수 있습니다.",
   "조건 미충족": "발동 조건이 아직 열리지 않았습니다. 적을 불균형 상태로 만들거나 아츠 이상을 걸면 열립니다.",
+  "트리거 대기": "연계는 조건이 **새로 걸리는 순간**에만 열립니다. 이미 그 조건으로 한 번 발동했으므로, 부착·이상을 다시 걸거나 조건이 풀렸다 다시 성립해야 합니다.",
 };
 const reasonHelp = (reason: string | null): string => (reason ? REASON_HELP[reason] ?? (reason.startsWith("쿨타임") ? "연계 스킬을 다시 쓰려면 재사용 대기(쿨타임)가 끝나야 합니다." : `발동 조건: ${reason}`) : "");
 // 배틀 스킬 강조 — '게이지가 찼다'가 아니라 '조건부 효과가 지금 터진다'일 때만 발광.
