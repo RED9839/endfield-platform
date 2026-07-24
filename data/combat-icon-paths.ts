@@ -1,8 +1,8 @@
 export const physicalCombatIconPaths = {
   physical: "/icons/elements/physical.webp",
   defenseBreak: "/icons/status/defense-break.webp",
-  launch: "/icons/status/launch.png",
-  knockdown: "/icons/status/knockdown.png",
+  launch: "/icons/status/launch.webp",
+  knockdown: "/icons/status/knockdown.webp",
   smash: "/icons/status/smash.webp",
   armorBreak: "/icons/status/armor-break.webp",
   solidification: "/icons/status/solidification.webp", // 오리지늄 결정(crystal) — endfield.wiki.gg Solidification_icon
