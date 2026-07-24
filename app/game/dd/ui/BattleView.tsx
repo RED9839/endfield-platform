@@ -852,6 +852,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
             const op = OPERATORS.find((o) => o.id === a.id);
             const el = op?.element ?? "physical";
             const dead = a.hp <= 0;
+            const chips = unitChips(a); // 유닛당 1회만 — 조건·map 두 번 호출하던 것 통합(배틀 루프 매 틱 리렌더)
             const lowHp = a.hp / a.maxHp < 0.35;
             const hit = fx.floaters.some((f) => f.id === a.id && f.amt < 0);
             const isAct = fx.activeId === a.id;
@@ -896,9 +897,9 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
                     </div>
                   </div>
                   {/* 보호막 · 상태(세트 제외) — 고정 높이 단일 행(칩 쌓여도 카드 안 늘어남) */}
-                  {(a.shield > 0 || unitChips(a).length > 0) && <div className="flex flex-wrap content-start gap-1 overflow-hidden min-h-[22px] max-h-[46px] mt-1.5">
+                  {(a.shield > 0 || chips.length > 0) && <div className="flex flex-wrap content-start gap-1 overflow-hidden min-h-[22px] max-h-[46px] mt-1.5">
                     {a.shield > 0 && <Chip compact tone="#38bdf8" title={`보호막 ${a.shield}`}>🛡{a.shield}</Chip>}
-                    {unitChips(a).map((c) => <Chip key={c.k} compact tone={c.tone} title={chipTitle(c)} icon={c.icon} onPick={(r) => setChipInfo({ c, x: r.left + r.width / 2, y: r.bottom })}>{chipShort(c)}</Chip>)}
+                    {chips.map((c) => <Chip key={c.k} compact tone={c.tone} title={chipTitle(c)} icon={c.icon} onPick={(r) => setChipInfo({ c, x: r.left + r.width / 2, y: r.bottom })}>{chipShort(c)}</Chip>)}
                   </div>}
                 </div>
               </div>
