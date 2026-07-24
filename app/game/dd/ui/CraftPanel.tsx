@@ -5,8 +5,9 @@ import { ChevronLeft, Hammer, Check, Lock } from "lucide-react";
 
 import { GEAR_PIECES_BY_SET_SLOT, GEAR_PIECE_BY_ID, GEAR_SLOTS, LOADOUT_SLOTS, gearSlotName, pieceImage, pieceSlotOf, slotOptions, SET_NAMES, SINGLE_SETS, type GearPiece, type GearSlot, type LoadoutSlot  , attrsText } from "../gear";
 import { craftCost, forgeCost, skillForgeCost, canAfford, pieceLevel, isOwned, type CraftState } from "../craft";
-import { SKILL_MAX, SKILL_KINDS, skillLabel, type SkillKind } from "../progress";
-import { OPERATORS, avatarUrl, SKILLS, skillIcon } from "../roster";
+import { SKILL_MAX, SKILL_KINDS, skillLabel, skillRankDmg, skillUtilMult, type SkillKind } from "../progress";
+import { OPERATORS, avatarUrl, SKILLS, skillIcon, OP_BASIC_ATK } from "../roster";
+import { BASIC } from "../combat";
 import type { PartyMember } from "../run";
 import { RESOURCE_ICON } from "../items";
 import { DMG_LABEL, SKILL_KIND_SHORT } from "../labels";
@@ -16,6 +17,24 @@ const dmgText = (p: GearPiece) => { if (!p.dmg) return ""; const pct = ["hpPct"]
 // 카탈로그 분류: 고급 세트 장비(세트효과 Lv70) + 고급 단일 장비(세트효과 없는 Lv70, ?·절망 통합)
 const SINGLE_TAB = "__single__";
 const SETS = SET_NAMES;
+
+// 마스터리 강화 전/후 비교 — 「무엇이 몇 % 오르는지」를 숫자로 보여준다.
+// 딜: mst 있는 스킬은 실측 배율(mst[r-1]/power), 없으면 공통 곡선(skillRankDmg).
+//     일반 공격은 오퍼별 실측 풀콤보(OP_BASIC_ATK)가 기준 배율이라 그걸 곱한다.
+// 유틸(취약·회복·게이지 등)은 같은 곡선(skillUtilMult)을 탄다 — combat.ts의 utilMult.
+function masteryPreview(opId: string, k: SkillKind, rank: number) {
+  const sk = k === "attack" ? BASIC : (SKILLS[opId] ?? []).find((s) => s.kind === k);
+  const next = Math.min(SKILL_MAX, rank + 1);
+  const base = k === "attack" ? (OP_BASIC_ATK[opId] ?? BASIC.power ?? 0.9) : (sk?.power ?? 0);
+  const mulOf = (r: number) => (sk?.mst && r > 0 ? sk.mst[r - 1] / (sk.power || 1) : skillRankDmg(r));
+  const cur = base * mulOf(rank), nxt = base * mulOf(next);
+  return {
+    hasDmg: base > 0,
+    curPct: cur * 100, nextPct: nxt * 100,
+    dmgGain: cur > 0 ? (nxt / cur - 1) * 100 : 0,
+    utilGain: (skillUtilMult(next) / skillUtilMult(rank) - 1) * 100,
+  };
+}
 
 // 단조 레벨(0~3) 핍
 function ForgePips({ lv }: { lv: number }) {
@@ -122,16 +141,33 @@ export default function CraftPanel({ craft, party = [], onCraft, onForge, onSwap
                     const sk = k === "attack" ? { name: "일반 공격" } : byKind(k);
                     if (!sk) return null;
                     const rank = ranks[k] ?? 0; const maxed = rank >= SKILL_MAX; const cost = skillForgeCost(rank); const ok = canAfford(craft.mats, cost);
+                    const pv = masteryPreview(m.id, k, rank);
                     return (
-                      <div key={k} className="flex items-center gap-2 border border-ef-line/40 px-2 py-1.5">
-                        {k !== "attack" && <img src={skillIcon(m.id, k)} alt="" className="h-4 w-4 shrink-0 object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />}
-                        <span className="w-11 shrink-0 font-mono text-[11px] font-bold uppercase" style={{ color: KIND_TONE[k] }}>{SKILL_KIND_SHORT[k]}</span>
-                        <span className="min-w-0 flex-1 truncate font-mono text-[12px] text-white" title={sk.name}>{sk.name}</span>
-                        <span className="shrink-0 font-mono text-[13px] font-bold" style={{ color: rank > 0 ? "#67e8f9" : "#c9c9cf" }}>{skillLabel(rank)}</span>
-                        {maxed
-                          ? <span className="shrink-0 font-mono text-[12px] text-ef-accent-soft">최대</span>
-                          : <button type="button" disabled={!ok} onClick={() => onForgeSkill(m.id, k)} title="이 스킬을 강화(프로토콜 프리즘 세트 소모, 다음 전투부터)" className={`dd-cut flex shrink-0 items-center gap-1 px-2 py-0.5 font-mono text-[12px] font-bold ${ok ? "border border-ef-accent/60 text-ef-accent hover:bg-ef-accent/10" : "border border-ef-line/40 text-ef-muted opacity-50 cursor-not-allowed"}`}>
-                              <Hammer className="h-3 w-3" />강화 <Cost chips={cost.chips} ok={ok} /></button>}
+                      <div key={k} className="border border-ef-line/40 px-2 py-1.5">
+                        <div className="flex items-center gap-2">
+                          {k !== "attack" && <img src={skillIcon(m.id, k)} alt="" className="h-4 w-4 shrink-0 object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />}
+                          <span className="w-11 shrink-0 font-mono text-[11px] font-bold uppercase" style={{ color: KIND_TONE[k] }}>{SKILL_KIND_SHORT[k]}</span>
+                          <span className="min-w-0 flex-1 truncate font-mono text-[12px] text-white" title={sk.name}>{sk.name}</span>
+                          <span className="shrink-0 font-mono text-[13px] font-bold" style={{ color: rank > 0 ? "#67e8f9" : "#c9c9cf" }}>{skillLabel(rank)}</span>
+                          {maxed
+                            ? <span className="shrink-0 font-mono text-[12px] text-ef-accent-soft">최대</span>
+                            : <button type="button" disabled={!ok} onClick={() => onForgeSkill(m.id, k)} title="이 스킬을 강화(프로토콜 프리즘 세트 소모, 다음 전투부터)" className={`dd-cut flex shrink-0 items-center gap-1 px-2 py-0.5 font-mono text-[12px] font-bold ${ok ? "border border-ef-accent/60 text-ef-accent hover:bg-ef-accent/10" : "border border-ef-line/40 text-ef-muted opacity-50 cursor-not-allowed"}`}>
+                                <Hammer className="h-3 w-3" />강화 <Cost chips={cost.chips} ok={ok} /></button>}
+                        </div>
+                        {/* 강화 전 → 후 비교. 「몇 %가 뭐가 오르는지」가 안 보여 강화 판단이 불가능했다. */}
+                        <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 pl-1 font-mono text-[11px] tabular-nums">
+                          {pv.hasDmg && (
+                            maxed
+                              ? <span className="text-ef-muted">피해 <b className="text-ef-accent-soft">{pv.curPct.toFixed(0)}%</b> <span className="text-ef-muted/70">(최대)</span></span>
+                              : <span className="text-ef-muted">피해 <b className="text-white/85">{pv.curPct.toFixed(0)}%</b> <span className="text-ef-muted/60">→</span> <b className="text-emerald-300">{pv.nextPct.toFixed(0)}%</b> <span className="text-emerald-300/80">+{pv.dmgGain.toFixed(1)}%</span></span>
+                          )}
+                          {!maxed && (
+                            <span className="text-ef-muted" title="취약·회복·게이지·버프 지속 등 스킬의 수치 효과">
+                              {pv.hasDmg ? "· " : ""}효과 <b className="text-cyan-300">+{pv.utilGain.toFixed(1)}%</b>
+                              {!pv.hasDmg && <span className="text-ef-muted/70"> (취약·회복·게이지 등)</span>}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     );
                   })}
