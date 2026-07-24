@@ -5,6 +5,8 @@ export const physicalCombatIconPaths = {
   knockdown: "/icons/status/knockdown.png",
   smash: "/icons/status/smash.webp",
   armorBreak: "/icons/status/armor-break.webp",
+  solidification: "/icons/status/solidification.webp", // 오리지늄 결정(crystal) — endfield.wiki.gg Solidification_icon
+  encasement: "/icons/status/encasement.webp",         // 기절/봉인(stun) — endfield.wiki.gg Edit_Encasement_icon
 } as const;
 
 export type PhysicalCombatIconKey = keyof typeof physicalCombatIconPaths;

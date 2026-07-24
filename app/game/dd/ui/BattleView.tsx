@@ -17,6 +17,9 @@ const STATUS_ICON: Record<string, string> = {
   shock: artsReactionIconPaths.electrified,
   corrosion: artsReactionIconPaths.corroded,
   "armor-break": physicalCombatIconPaths.armorBreak,
+  crystal: physicalCombatIconPaths.solidification,      // 오리지늄 결정
+  stun: physicalCombatIconPaths.encasement,             // 기절(행동 불가/봉인)
+  wing: "/operators/camu/talents/talent1.webp",         // 핏빛 날개 — 카뮤 「죄를 쫓는 자」 재능 아이콘(전용 상태 아이콘 부재)
 };
 import { OP_TALENTS } from "../operator-talents";
 import { DMG_SHORT as DMG_KO, SKILL_KIND_LABEL as kindLabel } from "../labels";
