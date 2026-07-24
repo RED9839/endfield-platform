@@ -35,6 +35,7 @@ export default function GamePage() {
   const [showMap, setShowMap] = useState(false); // 교전 중 지도 보기(읽기 전용)
   const [sellQty, setSellQty] = useState<Record<string, number>>({ parts: 1, permits: 1, chips: 1 }); // 재료 되팔기 수량 입력
   const [copied, setCopied] = useState(false); // 원정 기록 JSON 복사 피드백
+  const [abandonAsk, setAbandonAsk] = useState(false); // 원정 포기 확인 — 실수로 진행 상황을 날리지 않게
   // 상점은 클릭 한 번에 결제된다 — 오구매 방지용 확인. "다시 묻지 않기"는 브라우저에 저장해 다음 원정에도 유지.
   const [buyAsk, setBuyAsk] = useState<{ label: string; price: number; icon: string; run: () => void } | null>(null);
   const [buySkip, setBuySkip] = useState(false); // 이번 세션에 적용 중인 값(초기값은 localStorage)
@@ -61,7 +62,7 @@ export default function GamePage() {
           </div>
           <div className="ml-auto" />
           {run.phase !== "select" && (
-            <button type="button" onClick={run.restart} className="hud-btn px-3 py-1.5 font-mono text-[15px] font-bold uppercase tracking-wider text-ef-muted transition hover:!border-red-400/50 hover:text-red-300" style={CUT_SM}>원정 포기</button>
+            <button type="button" onClick={() => setAbandonAsk(true)} className="hud-btn px-3 py-1.5 font-mono text-[15px] font-bold uppercase tracking-wider text-ef-muted transition hover:!border-red-400/50 hover:text-red-300" style={CUT_SM}>원정 포기</button>
           )}
         </div>
       </header>
@@ -417,6 +418,19 @@ export default function GamePage() {
             <div className="flex gap-2">
               <button type="button" onClick={() => setBuyAsk(null)} className="hud-btn dd-cut flex-1 py-2.5 font-mono text-sm font-bold uppercase tracking-wider text-ef-muted hover:text-white">취소</button>
               <button type="button" onClick={confirmBuy} className="dd-cut flex-1 py-2.5 font-mono text-sm font-black uppercase tracking-[0.12em] transition hover:brightness-110" style={{ background: `linear-gradient(180deg,#ffb257,${PRIMARY})`, color: "#0a0a0a" }}>구매</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {abandonAsk && (
+        <div className="flex items-center justify-center px-4 backdrop-blur-sm" style={{ position: "fixed", inset: 0, zIndex: 120, background: "rgba(0,0,0,0.8)" }} onClick={() => setAbandonAsk(false)}>
+          <div className="hud-panel dd-cut w-full max-w-[420px] p-6" onClick={(e) => e.stopPropagation()}>
+            <div className="mb-3 font-mono text-lg font-bold text-red-300">원정을 포기하시겠습니까?</div>
+            <p className="mb-5 font-mono text-[13px] leading-6 text-ef-muted">현재 진행 중인 <b className="text-white">부대 편성·획득 장비·진행도</b>가 모두 사라지고 편성 화면으로 돌아갑니다. 되돌릴 수 없습니다.</p>
+            <div className="flex gap-2">
+              <button type="button" onClick={() => setAbandonAsk(false)} className="hud-btn dd-cut flex-1 py-2.5 font-mono text-sm font-bold uppercase tracking-wider text-ef-muted hover:text-white">계속 진행</button>
+              <button type="button" onClick={() => { setAbandonAsk(false); run.restart(); }} className="dd-cut flex-1 py-2.5 font-mono text-sm font-black uppercase tracking-[0.12em] text-white transition hover:brightness-110" style={{ background: "linear-gradient(180deg,#e0655c,#b3312a)" }}>원정 포기</button>
             </div>
           </div>
         </div>
