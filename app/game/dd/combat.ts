@@ -1368,11 +1368,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
     const tgt = hurt.length ? hurt.reduce((lo, a) => (a.hp / a.maxHp < lo.hp / lo.maxHp ? a : lo), hurt[0]) : self;
     healUnit(tgt, heal, s, log, self);
   }
-  // 미브(가드): 분노 — 연계 후 최대 HP 30% 보호막(방해 저항 근사). 12턴마다 1회.
-  if (self.id === "mifu" && skill.kind === "link" && (self.timers.furyCd || 0) <= 0) {
-    applyBuff(self, "shield", Math.round(self.maxHp * 0.30), undefined, 2); setTimer(self, "furyCd", 12);
-    log.push(`  → 분노! 보호막 (최대 HP 30%)`);
-  }
+  // (미브 분노 보호막은 위 mifuRage 훅 하나로 처리 — 예전 furyCd 중복 훅 제거. 둘 다 있으면 shield가 += 라 연계당 60%가 걸렸다.)
   // 결 「어스름 파훼」 — 집중 공격 2회를 소화하면 궁이 「깨달음」(640%)으로 전환된다.
   // 우리 모델은 궁 1회 = 진+집중2회이므로, 궁을 쓰면 다음 궁이 깨달음이 되고 그 다음은 다시 진으로 돌아간다.
   if (self.id === "arcane" && skill.kind === "ult") {
