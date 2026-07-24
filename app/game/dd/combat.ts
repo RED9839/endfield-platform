@@ -1090,7 +1090,9 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
         log.push(`  → 황무지의 방랑자! 팀 전기 피해 +${(amp * 100).toFixed(1)}% (장비등급 ${self.gearGrade})`);
       }
     }
-    if (skill.forceShock && t.hp > 0) { add(t, "shock"); t.shockLv = Math.max(1, t.shockLv || 1); gearTrigger(self, "anomaly:electric"); weaponTrigger(self, "anomaly:electric", living(s, "ally"), { target: t, viaBattle: skill.kind === "battle" }); bumpVuln(t, "arts", 0.12 * self.utilMult); log.push(`  → 강제 감전(전기 부착 소모)`); }
+    // 강제 감전(펠리카·아크라이트): 원문 "감전 = 받는 아츠 피해↑". 취약(vuln)이 아니라 **받피증(recv)** 버킷이라
+    // 질베 등의 아츠 취약과 곱연산으로 겹친다. 일반 감전(applyAttach)과 동일하게 아츠 강도(artsSub)에 비례한다.
+    if (skill.forceShock && t.hp > 0) { add(t, "shock"); t.shockLv = Math.max(1, t.shockLv || 1); gearTrigger(self, "anomaly:electric"); weaponTrigger(self, "anomaly:electric", living(s, "ally"), { target: t, viaBattle: skill.kind === "battle" }); bumpRecv(t, "arts", 0.12 * self.utilMult * artsSub(self)); log.push(`  → 강제 감전(받는 아츠 피해↑)`); }
     // 알레쉬: 아츠 이상/쇄빙 소모 감지(연계 조건) + 강제 동결 + 진귀한 린수
     if (ELEMENTS.reduce((n, e) => n + t.arts[e], 0) + t.frozen < preReact) s.anomalyConsumed = ANOMALY_WINDOW;
     if (skill.forceFreeze && t.arts.cryo > 0) {
