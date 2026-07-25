@@ -8,7 +8,7 @@ import { OPERATORS, SKILLS, OP_BASIC, OP_BASIC_ATK, skillExtraHit, enemyDefFor, 
 import { realAtk } from "../progress";
 import { aggroShares } from "../aggro";
 import { ENCOUNTERS, allyChoose, createBattle, enemyAct, freeUlts, regionEncounter } from "../sim";
-import { activeSets, setEffectText, loadoutPieces } from "../gear";
+import { activeSets, setEffectText, loadoutPieces, attrsText } from "../gear";
 import { weaponOf, weaponEffectText, weaponImage, weaponSeriesName, weaponSeriesDesc, WEAPON_KO, WEAPON_ICON } from "../weapons";
 import { artsAttachmentIconPaths, artsReactionIconPaths, physicalCombatIconPaths, combatEffectIconPaths, statCombatIconPaths } from "@/data/combat-icon-paths";
 
@@ -1267,7 +1267,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
                         <div className="min-w-0 flex-1">
                           <div className="truncate font-mono text-[15px] font-bold text-ef-ink" title={p.name}>{p.name}</div>
                           {empty ? <div className="font-mono text-[12px] text-ef-muted">미장착</div>
-                            : crafted ? <div className="font-mono text-[12px] text-ef-muted">능력치 <b className="text-ef-ink/80">+{p.grade}</b> · 방어 <b className="text-ef-ink/80">+{p.def}</b>{p.dmg ? <> · <span className="text-ef-accent-soft">{pieceDmgText(p.dmg)}</span></> : null}{p.slots > 1 ? <span className="text-ef-muted/70" title="원작은 부품 2슬롯 — 2슬롯 몫으로 2배 적용"> (2슬롯)</span> : null}</div>
+                            : crafted ? <div className="font-mono text-[12px] text-ef-muted"><span className="text-ef-ink/80">{attrsText(p.attrs) || `능력치 +${p.grade}`}</span> · 방어 <b className="text-ef-ink/80">+{p.def}</b>{p.dmg ? <> · <span className="text-ef-accent-soft">{pieceDmgText(p.dmg)}</span></> : null}{p.slots > 1 ? <span className="text-ef-muted/70" title="원작은 부품 2슬롯 — 능력치·방어가 2배 적용됩니다"> (2슬롯 ×2)</span> : null}</div>
                             : <div className="font-mono text-[12px] text-amber-500/80">미제작 — 공업소에서 제작 필요 (능력치 미적용)</div>}
                         </div>
                         <span className="shrink-0 font-mono text-[12px]" style={{ color: empty ? "#8a8a92" : !crafted ? "#d99a3a" : on ? "#e8c56a" : named ? "#8a8a92" : "#67e8f9aa" }}>{empty ? "" : !crafted ? "미제작" : named ? `${on ? "◆" : "◇"} ${p.set}` : "자유"}</span>

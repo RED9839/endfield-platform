@@ -70,7 +70,7 @@ export default function CraftPanel({ craft, party = [], onCraft, onForge, onSwap
           <div className="flex items-center gap-1.5 truncate font-mono text-[14px] font-bold text-white" title={p.name}>{slotLabel && <span className="shrink-0 border border-ef-line/60 px-1 py-px text-[11px] font-normal uppercase tracking-wide text-ef-muted">{gearSlotName(p.slot)}</span>}<span className="truncate">{p.name}</span></div>
           <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 font-mono text-[13px] text-ef-muted">
             <span>방어 <b className="text-ef-ink/80">{p.def}</b></span>
-            <span>능력치 <b className="text-ef-ink/80">{p.grade.base}</b></span>
+            <span className="text-ef-ink/80">{attrsText(p.attrs) || `능력치 +${p.grade.base}`}</span>
             {p.dmg && <span className="text-emerald-300/75">{dmgText(p)}</span>}
           </div>
         </div>
