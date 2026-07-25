@@ -48,7 +48,7 @@ function Cost({ parts, permits, chips, ok }: { parts?: number; permits?: number;
   </span>;
 }
 
-export default function CraftPanel({ craft, party = [], onCraft, onForge, onSwap, onForgeSkill, onClose, initialTab }: { craft: CraftState; party?: PartyMember[]; onCraft: (id: string) => boolean; onForge: (id: string) => boolean; onSwap?: (opId: string, slot: LoadoutSlot, pieceId: string) => void; onForgeSkill?: (opId: string, kind: SkillKind) => boolean; onClose: () => void; initialTab?: "party" | "catalog" | "mastery" }) {
+export default function CraftPanel({ craft, party = [], onCraft, onForge, onSwap, onForgeSkill, onClose, initialTab, onShowMap }: { craft: CraftState; party?: PartyMember[]; onCraft: (id: string) => boolean; onForge: (id: string) => boolean; onSwap?: (opId: string, slot: LoadoutSlot, pieceId: string) => void; onForgeSkill?: (opId: string, kind: SkillKind) => boolean; onClose: () => void; initialTab?: "party" | "catalog" | "mastery"; onShowMap?: () => void }) {
   const [set, setSet] = useState<string>(SETS[0]);
   const [tab, setTab] = useState<"party" | "catalog" | "mastery">(initialTab ?? (party.length > 0 ? "party" : "catalog"));
   const [swap, setSwap] = useState<{ opId: string; slot: LoadoutSlot } | null>(null); // 교체 피커 열림 슬롯
@@ -108,6 +108,8 @@ export default function CraftPanel({ craft, party = [], onCraft, onForge, onSwap
           <span className="hud-tile flex shrink-0 items-center gap-1.5 whitespace-nowrap px-2.5 py-1.5 font-mono text-sm" style={CUT} title="장비 부품 — 제작·단조 재료"><img src={RESOURCE_ICON.parts} alt="" className="h-4.5 w-4.5 shrink-0 object-contain" /><b className="text-white">{craft.mats.parts}</b><span className="whitespace-nowrap text-[13px] text-ef-muted">부품</span></span>
           <span className="hud-tile flex shrink-0 items-center gap-1.5 whitespace-nowrap px-2.5 py-1.5 font-mono text-sm" style={CUT} title="관리권 — 제작·단조 재료"><img src={RESOURCE_ICON.permits} alt="" className="h-4.5 w-4.5 shrink-0 object-contain" /><b className="text-white">{craft.mats.permits}</b><span className="whitespace-nowrap text-[13px] text-ef-muted">관리권</span></span>
           <span className="hud-tile flex shrink-0 items-center gap-1.5 whitespace-nowrap px-2.5 py-1.5 font-mono text-sm" style={CUT} title="프로토콜 프리즘 세트 — 스킬 마스터리 강화 재료"><img src={RESOURCE_ICON.chips} alt="" className="h-4.5 w-4.5 shrink-0 object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} /><b className="text-white">{craft.mats.chips ?? 0}</b><span className="whitespace-nowrap text-[13px] text-ef-muted">프리즘 세트</span></span>
+          {/* 지도 보기 — 남은 구역을 보고 무엇을 제작·단조할지 계획한다(읽기 전용) */}
+          {onShowMap && <button type="button" onClick={onShowMap} className="hud-btn dd-cut flex h-9 shrink-0 items-center px-3 font-mono text-sm font-bold text-ef-muted hover:text-white" title="이번 층 지도 — 남은 구역 확인(경로 변경 불가)">🗺 지도</button>}
           {/* 제작을 마치고 돌아가는 주 동선 — 강조해서 '원정 포기'와 헷갈리지 않게 */}
           <button type="button" onClick={onClose} className="dd-cut flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap border border-ef-accent/70 bg-ef-accent/15 px-3 font-mono text-sm font-bold text-ef-accent hover:bg-ef-accent/25">제작 완료 · 던전으로 ▶</button>
         </div>

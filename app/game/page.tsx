@@ -81,7 +81,7 @@ export default function GamePage() {
         </div>
       )}
 
-      {run.phase === "craft" && <CraftPanel craft={run.craft} party={run.party} onCraft={run.craftPiece} onForge={run.forgePiece} onSwap={run.swapGear} onForgeSkill={run.forgeSkill} onClose={run.closeCraft} initialTab={run.craftTab} />}
+      {run.phase === "craft" && <CraftPanel craft={run.craft} party={run.party} onCraft={run.craftPiece} onForge={run.forgePiece} onSwap={run.swapGear} onForgeSkill={run.forgeSkill} onClose={run.closeCraft} initialTab={run.craftTab} onShowMap={() => setShowMap(true)} />}
 
       {run.phase === "battle" && run.activeNode && (
         <BattleView
@@ -389,12 +389,12 @@ export default function GamePage() {
       {/* 교전 중 지도 — 읽기 전용. 남은 구역을 보고 소비템·게이지를 어디에 쓸지 계획한다.
           position/zIndex는 인라인으로 준다: globals.css의 `.dd-realm > *`가 position:relative를 강제해
           main 직계 자식의 fixed가 죽고 오버레이가 문서 하단으로 밀린다(StatusPanel과 같은 처리). */}
-      {showMap && run.phase === "battle" && (
+      {showMap && (run.phase === "battle" || run.phase === "craft") && (
         <div className="overflow-y-auto backdrop-blur-sm" style={{ position: "fixed", inset: 0, zIndex: 100, background: "rgba(0,0,0,0.85)" }} onClick={() => setShowMap(false)}>
           <div className="mx-auto w-full max-w-[1500px] px-4 py-6 sm:px-7" onClick={(e) => e.stopPropagation()}>
             <div className="mb-3 flex items-center gap-3">
               <span className="font-mono text-[13px] font-bold uppercase tracking-[0.3em] text-ef-accent/70">{run.floorName} · {run.floor + 1}/{run.totalFloors}층</span>
-              <button type="button" onClick={() => setShowMap(false)} className="hud-btn dd-cut ml-auto px-4 py-1.5 font-mono text-[15px] font-bold uppercase tracking-wider text-ef-muted hover:text-white">✕ 교전으로 돌아가기</button>
+              <button type="button" onClick={() => setShowMap(false)} className="hud-btn dd-cut ml-auto px-4 py-1.5 font-mono text-[15px] font-bold uppercase tracking-wider text-ef-muted hover:text-white">✕ {run.phase === "craft" ? "공업소로" : "교전으로"} 돌아가기</button>
             </div>
             <RunMap nodes={run.nodes} frontier={run.frontier} cleared={run.cleared} party={run.party} items={run.items} faction={run.faction} floor={run.floor} totalFloors={run.totalFloors} onEnter={() => {}} readOnly currentId={run.activeNode?.id} />
           </div>
