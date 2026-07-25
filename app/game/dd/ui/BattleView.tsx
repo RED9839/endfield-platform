@@ -373,6 +373,8 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
   useEffect(() => { if (detailId) detailRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" }); }, [detailId]);
   const [showLog, setShowLog] = useState(false);
   const [showHelp, setShowHelp] = useState(false); // 용어 안내 — 팀 게이지/궁/불균형/부착을 설명 없이 던지고 있었다
+  // 첫 전투 1회 온보딩 — 신규 플레이어는 '용어' 버튼을 눌러야 하는 줄 모른다. 처음 한 번만 자동으로 펼친다.
+  useEffect(() => { try { if (localStorage.getItem("dd-battle-intro") !== "1") { setShowHelp(true); localStorage.setItem("dd-battle-intro", "1"); } } catch { /* 저장소 차단 */ } }, []);
   const [tab, setTab] = useState<"dmg" | "log">("dmg"); // 하단 패널: 데미지 기록 / 전투 기록
   const [, bump] = useReducer((x) => x + 1, 0);
 
@@ -709,6 +711,10 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
         <div className="flex items-start justify-center p-4 sm:p-8" style={{ position: "fixed", inset: 0, zIndex: 60, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(2px)" }} onClick={() => setShowHelp(false)}>
         <div onClick={(e) => e.stopPropagation()} className="hud-panel dd-cut mt-14 grid w-full max-w-[820px] gap-x-6 gap-y-1.5 p-4 font-mono text-[13px] leading-snug sm:grid-cols-2" style={{ borderColor: "rgba(103,232,249,0.55)", boxShadow: "0 0 50px -12px rgba(103,232,249,0.4)" }}>
           <div className="sm:col-span-2 mb-1 flex items-center justify-between"><span className="font-mono text-[15px] font-bold uppercase tracking-wider text-ef-accent-soft">❔ 전투 용어</span><button type="button" onClick={() => setShowHelp(false)} className="hud-btn dd-cut px-2 py-0.5 font-mono text-[13px] text-ef-muted hover:text-white">닫기</button></div>
+          <div className="sm:col-span-2 mb-1 border-l-2 border-ef-accent/60 bg-ef-accent/[0.06] px-3 py-2">
+            <div className="mb-1 font-mono text-[13px] font-bold text-ef-accent-soft">🎮 전투 흐름 — 처음이라면 여기부터</div>
+            <div className="text-ef-muted"><b className="text-white/85">① 속도 순서</b>대로 행동한다(좌측 순서표). <b className="text-white/85">② 내 턴</b>에 스킬을 고른다 — <span className="text-[#a1a1aa]">일반</span>·<span className="text-ef-accent-soft">배틀</span>·<span className="text-[#67e8f9]">연계</span>·<span className="text-[#facc15]">궁</span>. <b className="text-white/85">③ 단일 스킬</b>은 이어서 <b className="text-white/85">공격할 적</b>을 고른다. <b className="text-white/85">④ 불균형</b>을 채우면 적이 무력화되고 받는 피해가 커진다.</div>
+          </div>
           <div><b className="text-[#f5c542]">팀 게이지</b> <span className="text-ef-muted">— 파티 4명이 함께 쓰는 자원. 배틀 스킬 1회에 100 소모. 일반 공격으로 조금씩 회복하고 라운드마다 +45.</span></div>
           <div><b className="text-[#f5c542]">궁 에너지</b> <span className="text-ef-muted">— 오퍼별 개인 자원. <b className="text-white/80">배틀·연계로만</b> 찬다. 일반 공격으로는 안 오른다.</span></div>
           <div><b className="text-[#a16207]">불균형</b> <span className="text-ef-muted">— 적 HP 아래 노란 바. 가득 차면 적이 행동 불가가 되고 받는 피해가 30% 오른다. 스킬마다 붙은 「불균형 +N」으로 쌓는다.</span></div>
