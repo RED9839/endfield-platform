@@ -147,6 +147,9 @@ export const pieceImage = (name: string): string => GEAR_IMG_BY_NAME[name] ?? GE
 // 능력치 합을 "힘 15 · 민첩 10"처럼 실제 항목으로 적는다.
 // 기존엔 grade.base를 "능력치 +25"로 뭉뚱그려 어느 스탯이 오르는지 알 수 없었다.
 export const ATTR_KO: Record<string, string> = { str: "힘", agi: "민첩", int: "지능", wil: "의지" };
+// 능력치 아이콘(인게임 에셋, public/icons/stats). 힘·민첩·지능·의지 순.
+export const ATTR_ICON: Record<string, string> = { str: "/icons/stats/strength.webp", agi: "/icons/stats/agility.webp", int: "/icons/stats/intelligence.webp", wil: "/icons/stats/will.webp" };
+export const ATTR_ORDER = ["str", "agi", "int", "wil"] as const;
 export const attrsText = (a?: Partial<Record<string, number>>): string =>
   a ? (["str", "agi", "int", "wil"] as const).filter((k) => (a[k] ?? 0) > 0).map((k) => `${ATTR_KO[k]} +${a[k]}`).join(" · ") : "";
 export const sumAttrs = (list: { attrs?: Partial<Record<string, number>> }[]): Record<string, number> => {

@@ -3,10 +3,11 @@
 import { useState } from "react";
 import { ChevronLeft, Hammer, Check, Lock } from "lucide-react";
 
-import { GEAR_PIECES_BY_SET_SLOT, GEAR_PIECE_BY_ID, GEAR_SLOTS, LOADOUT_SLOTS, gearSlotName, pieceImage, pieceSlotOf, slotOptions, SET_NAMES, SINGLE_SETS, type GearPiece, type GearSlot, type LoadoutSlot  , attrsText, ATTR_KO } from "../gear";
+import { GEAR_PIECES_BY_SET_SLOT, GEAR_PIECE_BY_ID, GEAR_SLOTS, LOADOUT_SLOTS, gearSlotName, pieceImage, pieceSlotOf, slotOptions, SET_NAMES, SINGLE_SETS, type GearPiece, type GearSlot, type LoadoutSlot  , ATTR_KO } from "../gear";
 import { craftCost, forgeCost, skillForgeCost, canAfford, pieceLevel, isOwned, type CraftState } from "../craft";
 import { SKILL_MAX, SKILL_KINDS, skillLabel, skillRankDmg, skillUtilMult, type SkillKind } from "../progress";
 import { OPERATORS, avatarUrl, SKILLS, skillIcon, OP_BASIC_ATK, OP_MAINSUB } from "../roster";
+import { AttrIcons } from "./AttrIcons";
 import { BASIC } from "../combat";
 import type { PartyMember } from "../run";
 import { RESOURCE_ICON } from "../items";
@@ -70,7 +71,7 @@ export default function CraftPanel({ craft, party = [], onCraft, onForge, onSwap
           <div className="flex items-center gap-1.5 truncate font-mono text-[14px] font-bold text-white" title={p.name}>{slotLabel && <span className="shrink-0 border border-ef-line/60 px-1 py-px text-[11px] font-normal uppercase tracking-wide text-ef-muted">{gearSlotName(p.slot)}</span>}<span className="truncate">{p.name}</span></div>
           <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 font-mono text-[13px] text-ef-muted">
             <span>방어 <b className="text-ef-ink/80">{p.def}</b></span>
-            <span className="text-ef-ink/80">{attrsText(p.attrs) || `능력치 +${p.grade.base}`}</span>
+            <AttrIcons attrs={p.attrs} fallback={`능력치 +${p.grade.base}`} />
             {p.dmg && <span className="text-emerald-300/75">{dmgText(p)}</span>}
           </div>
         </div>
@@ -267,7 +268,7 @@ export default function CraftPanel({ craft, party = [], onCraft, onForge, onSwap
                       <span className="flex h-11 w-11 shrink-0 items-center justify-center border border-ef-line/50 bg-black/40">{pieceImage(opt.name) ? <img src={pieceImage(opt.name)} alt="" loading="lazy" className="h-full w-full object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = "hidden"; }} /> : null}</span>
                       <span className="min-w-0 flex-1">
                         <span className="block truncate font-mono text-[15px] font-bold text-white" title={opt.name}>{opt.name}{sel && <span className="ml-1 text-[11px] text-ef-accent">● 착용</span>}</span>
-                        <span className="font-mono text-[13px] text-ef-ink/70">{attrsText(opt.attrs) || `능력치 +${opt.grade.base}`} · 방어 +{opt.def}{opt.dmg ? ` · ${dmgText(opt)}` : ""}</span>
+                        <span className="font-mono text-[13px] text-ef-ink/70"><AttrIcons attrs={opt.attrs} size={13} fallback={`능력치 +${opt.grade.base}`} /> · 방어 +{opt.def}{opt.dmg ? ` · ${dmgText(opt)}` : ""}</span>
                         <span className="block font-mono text-[12px] text-ef-muted">{opt.set !== "?" ? opt.set + " 세트" : "자유 슬롯"} · {isOwned(craft, opt.id) ? <span className="text-emerald-300/80">제작됨</span> : <span className="text-amber-300/70">미제작(장착 중)</span>}</span>
                       </span>
                     </button>

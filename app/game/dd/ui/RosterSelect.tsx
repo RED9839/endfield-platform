@@ -5,7 +5,8 @@ import { useMemo, useState } from "react";
 import { OPERATORS, SKILLS, OP_BASIC, OP_BASIC_ATK, skillExtraHit, avatarUrl, fullUrl, skillIcon, makeAlly, OP_MAINSUB, type OpMeta } from "../roster";
 import { OP_TALENTS } from "../operator-talents";
 import { DMG_SHORT as DMG_KO, SKILL_KIND_SHORT as kindLabel } from "../labels";
-import { OP_GEAR_ALT, activeSets, setEffectText, recommendedSet, recommendedLoadout, loadoutPieces, pieceImage, gearSlotName, bestFreePiece, slotOptions, GEAR_SET_CANON, SET_NAMES, pieceSlotOf, LOADOUT_SLOTS, type LoadoutSlot, type Loadout, type GearSlot , applyGear , attrsText, sumAttrs, ATTR_KO } from "../gear";
+import { OP_GEAR_ALT, activeSets, setEffectText, recommendedSet, recommendedLoadout, loadoutPieces, pieceImage, gearSlotName, bestFreePiece, slotOptions, GEAR_SET_CANON, SET_NAMES, pieceSlotOf, LOADOUT_SLOTS, type LoadoutSlot, type Loadout, type GearSlot , applyGear , sumAttrs, ATTR_KO } from "../gear";
+import { AttrIcons } from "./AttrIcons";
 import { DEFAULT_PROGRESS, type OpProgress } from "../progress";
 import { applyWeapon, weaponOf, weaponName, weaponEffectText, weaponImage, weaponSeriesName, weaponSeriesText, OP_WEAPON_STATS, WEAPON_KO, WEAPON_ICON } from "../weapons";
 import { PRESET_PARTIES, ARCHETYPE_LABEL } from "../parties";
@@ -340,7 +341,7 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
               {opSet(focusId) === opRecSet(focusId) && <span className="font-mono text-[12px] text-ef-accent">★추천</span>}
               <button type="button" title="목표 장비를 바꿉니다 — 세트를 통째로 고르거나 부위별로 다른 부품을 끼울 수 있습니다. 공업소는 여기서 정한 빌드를 목표로 제작합니다." onClick={() => setGearTab("set")} className="dd-cut ml-auto shrink-0 border border-ef-line px-2.5 py-0.5 font-mono text-[13px] font-bold uppercase text-ef-muted transition hover:border-ef-accent/60 hover:text-ef-accent">⚙ 장비 변경</button>
               {/* 「장비 변경」이 있는 줄 몰라 추천 세트를 그대로 쓰는 경우가 많다 — 바꿀 수 있다고 먼저 말해 준다 */}
-              <span className="w-full font-mono text-[12px] text-ef-muted">맨몸으로 시작 · 공업소에서 이 빌드를 목표로 제작 · <b className="text-ef-accent-soft">우측 「⚙ 장비 변경」에서 세트·부위를 바꿀 수 있습니다</b> · <span className="font-mono text-[13px] text-ef-ink/70">{attrsText(gearAttrs) || `능력치 +${gearGrade}`} · 방어 +{gearDef}</span></span>
+              <span className="w-full font-mono text-[12px] text-ef-muted">맨몸으로 시작 · 공업소에서 이 빌드를 목표로 제작 · <b className="text-ef-accent-soft">우측 「⚙ 장비 변경」에서 세트·부위를 바꿀 수 있습니다</b> · <span className="font-mono text-[13px] text-ef-ink/70"><AttrIcons attrs={gearAttrs} size={13} fallback={`능력치 +${gearGrade}`} /> · 방어 +{gearDef}</span></span>
               {OP_GEAR_ALT[focusId] && (
                 <span className="flex w-full flex-wrap items-center gap-1.5">
                   <span className="font-mono text-[12px] text-ef-muted">빌드</span>
@@ -366,7 +367,7 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
                   <div className="min-w-0 flex-1">
                     <div className="truncate font-mono text-[14px] font-bold text-ef-ink" title={pc.name}>{pc.name}{swapped && <span className="ml-1 text-[11px] text-ef-accent">교체됨</span>}</div>
                     {empty ? <div className="font-mono text-[12px] text-ef-muted">미장착</div>
-                      : <div className="font-mono text-[12px] text-ef-muted"><span className="text-ef-ink/80">{attrsText(pc.attrs) || `능력치 +${pc.grade}`}</span> · 방어 <b className="text-ef-ink/80">+{pc.def}</b>{pc.dmg ? <> · <span className="text-emerald-300/70">{pieceDmg(pc)}</span></> : null}{pc.slots > 1 ? <span className="text-ef-muted/70" title="원작은 부품 2슬롯 — 능력치·방어가 2배 적용됩니다"> (2슬롯 ×2)</span> : null} ·{named ? <span style={{ color: on ? "#e8c56a" : "#8a8a92" }}>{on ? "◆" : "◇"} {pc.set}</span> : <span className="text-[#67e8f9aa]">자유</span>}</div>}
+                      : <div className="flex flex-wrap items-center gap-x-1 font-mono text-[12px] text-ef-muted"><AttrIcons attrs={pc.attrs} size={13} fallback={`능력치 +${pc.grade}`} /> · 방어 <b className="text-ef-ink/80">+{pc.def}</b>{pc.dmg ? <> · <span className="text-emerald-300/70">{pieceDmg(pc)}</span></> : null}{pc.slots > 1 ? <span className="text-ef-muted/70" title="원작은 부품 2슬롯 — 능력치·방어가 2배 적용됩니다"> (2슬롯 ×2)</span> : null} ·{named ? <span style={{ color: on ? "#e8c56a" : "#8a8a92" }}>{on ? "◆" : "◇"} {pc.set}</span> : <span className="text-[#67e8f9aa]">자유</span>}</div>}
                   </div>
                   <button type="button" onClick={() => setGearTab(pc.slot)} className="dd-cut shrink-0 border border-ef-line px-2 py-0.5 font-mono text-[12px] font-bold uppercase text-ef-muted transition hover:border-ef-accent/60 hover:text-ef-accent">교체</button>
                 </div>
@@ -392,7 +393,7 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
             {/* 헤더 */}
             <div className="flex items-center gap-2 border-b border-ef-line p-3.5">
               <span className="font-mono text-lg font-bold text-white">장비 변경 <span className="text-sm text-ef-muted">— {op.name}</span></span>
-              <span className="ml-2 font-mono text-[13px] text-ef-ink/70">{attrsText(gearAttrs) || `능력치 +${gearGrade}`} · 방어 +{gearDef}</span>
+              <span className="ml-2 inline-flex flex-wrap items-center gap-x-1 font-mono text-[13px] text-ef-ink/70"><AttrIcons attrs={gearAttrs} size={13} fallback={`능력치 +${gearGrade}`} /> · 방어 +{gearDef}</span>
               <button type="button" onClick={() => setGearTab(null)} className="ml-auto shrink-0 border border-ef-line px-2 py-1 font-mono text-sm text-ef-muted transition hover:border-ef-accent/60 hover:text-white">✕</button>
             </div>
             {/* 탭: 세트 / 방어구 / 장갑 / 부품 */}
@@ -421,7 +422,7 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
                     {slotOptions(pieceSlotOf(gearTab), op.element).map((opt) => { const sel = lo[gearTab as LoadoutSlot] === opt.id; return (
                       <button key={opt.id} type="button" onClick={() => { const slot = gearTab as LoadoutSlot; setPieceChoice((c) => ({ ...c, [focusId]: { ...c[focusId], [slot]: opt.id } })); }} className={`dd-cut flex items-center gap-2 border p-2 text-left transition ${sel ? "border-ef-accent bg-ef-accent/10" : "border-ef-line hover:border-ef-accent/50"}`}>
                         <span className="flex h-11 w-11 shrink-0 items-center justify-center border border-ef-line/50 bg-black/40">{pieceImage(opt.name) ? <img src={pieceImage(opt.name)} alt="" loading="lazy" className="h-full w-full object-contain" onError={(e) => ((e.currentTarget as HTMLImageElement).style.visibility = "hidden")} /> : null}</span>
-                        <span className="min-w-0 flex-1"><span className="block truncate font-mono text-[15px] font-bold text-white">{opt.name}{sel && <span className="ml-1 text-[11px] text-ef-accent">● 착용</span>}</span><span className="font-mono text-[13px] text-ef-ink/70">{attrsText(opt.attrs) || `능력치 +${opt.grade.base}`} · 방어 +{opt.def} · {pieceDmg(opt, 1)}</span><span className="block font-mono text-[12px] text-ef-muted">{opt.set !== "?" ? opt.set + " 세트" : "자유 슬롯"}</span></span>
+                        <span className="min-w-0 flex-1"><span className="block truncate font-mono text-[15px] font-bold text-white">{opt.name}{sel && <span className="ml-1 text-[11px] text-ef-accent">● 착용</span>}</span><span className="flex flex-wrap items-center gap-x-1 font-mono text-[13px] text-ef-ink/70"><AttrIcons attrs={opt.attrs} size={13} fallback={`능력치 +${opt.grade.base}`} /> · 방어 +{opt.def} · {pieceDmg(opt, 1)}</span><span className="block font-mono text-[12px] text-ef-muted">{opt.set !== "?" ? opt.set + " 세트" : "자유 슬롯"}</span></span>
                       </button>
                     ); })}
                   </div>
