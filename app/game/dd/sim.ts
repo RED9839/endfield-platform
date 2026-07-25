@@ -545,6 +545,21 @@ export function enemyDrop(kind: NodeKind, depth: number, faction: string): { cre
 }
 
 // 아군(선택 순서=포지션, 지속 HP·장비 로드아웃) + 인카운터로 전투 상태 생성. 게이지 200/300(+장비 시작 게이지).
+// 정예몹 중앙 배치: 정예급(advanced 이상)이 일반 몹과 섞이면 화면 표시와 범위(row) 인접 판정이
+// 모두 중앙을 향하도록 배열 순서 + pos를 재정렬한다(둘이 어긋나면 "엉뚱한 적이 맞는" 문제).
+const CENTER_TIER_ORDER = ["common", "normal", "enhanced", "advanced", "alpha", "elite", "boss"];
+const isEliteTier = (t?: string) => CENTER_TIER_ORDER.indexOf(t ?? "normal") >= CENTER_TIER_ORDER.indexOf("advanced");
+function centerElite(enemies: DDUnit[]): DDUnit[] {
+  if (enemies.length < 3) return enemies; // 2마리 이하는 중앙 개념이 없다
+  const elites = enemies.filter((e) => isEliteTier(e.tier) && !e.summonedBy);
+  const normals = enemies.filter((e) => !elites.includes(e));
+  if (!elites.length || !normals.length) return enemies; // 정예가 없거나 전부 정예면 그대로
+  const half = Math.floor(normals.length / 2);
+  const ordered = [...normals.slice(0, half), ...elites, ...normals.slice(half)];
+  ordered.forEach((u, i) => { u.pos = i + 1; }); // 표시 순서(배열)와 범위 인접(pos)을 함께 갱신
+  return ordered;
+}
+
 export function createBattle(party: { id: string; hp?: number; loadout?: Loadout; progress?: OpProgress; ult?: number; main?: boolean; stacks?: number }[], enc: Encounter, owned?: Record<string, number>, boss?: boolean): DDState {
   let bonusGauge = 0;
   // 위치 = **편성 순서 그대로**. 예전엔 frontlineOrder로 탱을 pos1에, 앵커를 pos2로 자동 재배치했는데,
@@ -566,6 +581,6 @@ export function createBattle(party: { id: string; hp?: number; loadout?: Loadout
     applyWeapon(u); // 시그니처 무기: 공격력 +10% + 타입 고유효과
     return u;
   });
-  const enemies = enc.make();
+  const enemies = boss ? enc.make() : centerElite(enc.make()); // 정예몹은 중앙 배치(보스전은 고유 배치 유지)
   return { units: [...allies, ...enemies], round: 0, log: [], skillGauge: Math.min(300, 200 + bonusGauge), maxGauge: 300, boss };
 }
