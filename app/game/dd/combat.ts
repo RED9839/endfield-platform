@@ -200,7 +200,7 @@ export type DDSkill = {
   countsAsCrush?: boolean; // 원작 "강타 피해로 간주"(미브 개천) — 방불 소모 없이 강타 트리거(고검의 잔향 등) 발동
   mst?: [number, number, number]; // 스킬 마스터리 M1·M2·M3 실측 배율/100(warfarin). power=Lv9(M0). 피해 = realAtk × (M0=power / M1~3=mst).
   crystal?: boolean; // 오리지늄 결정 부착(관리자 봉인 시퀀스)
-  apply?: (target: DDUnit, self: DDUnit) => void; // 추가 효과(취약·연타 등)
+  apply?: (target: DDUnit, self: DDUnit, s: DDState) => void; // 추가 효과(취약·연타 등). s로 다른 적까지 조작 가능(카뮤 날개 단일화 등)
   selfUlt?: boolean; // 궁극(게이지 소모)
   hitsOf?: (self: DDUnit) => number[] | undefined; // 런타임 결정 타수(장방이 청뢰검). 반환 시 hits보다 우선
   note?: string;
@@ -1061,7 +1061,7 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
       log.push(`  → 강제 연소 + 불타는 송곳니(+30%)`);
     }
     if (skill.crystal && t.hp > 0) { add(t, "crystal"); log.push(`  → 오리지늄 결정 부착`); }
-    if (skill.apply) skill.apply(t, self);
+    if (skill.apply) skill.apply(t, self, s);
     const hadCrystal = has(t, "crystal"); // 현실 정지 판정(소모 전 기준)
     // 오리지늄 결정 소모: 결정 부착 적에게 물리 이상/궁극 → 결정 파괴 추가 물리 + 관리자 본질 붕괴(+30%)
     if (hadCrystal && (skill.anomaly || skill.kind === "ult")) {

@@ -90,7 +90,12 @@ export const SKILLS: Record<string, DDSkill[]> = {
     // 사르는 불꽃(배틀 89%, 불균형 10): 열기 + 열기 부착. 핏빛 날개 배회 → 허약 5% + 열기취약 5% + 날개 마킹.
     { id: "camu-b", name: "사르는 불꽃", kind: "battle", fromPos: [1, 2, 3], target: "single-front", power: 1.6, mst: [1.72, 1.85, 2], hits: [0.45, 0.44], element: "heat", attach: "heat", staggerVal: 10,
       requires: (_t, self) => !((self.timers.chase || 0) > 0), requiresText: "추적 상태가 아닐 때", // 궁 후 15초는 배틀이 추적으로 "교체"됨
-      apply: (t) => { applyBuff(t, "weaken", 0.05); bumpVuln(t, "heat", 0.05); if (!t.statuses.includes("wing")) t.statuses.push("wing"); setTimer(t, "wing", 8); }, note: "열기 부착 + 허약/열기취약 + 핏빛 날개" },
+      apply: (t, _self, s) => {
+        applyBuff(t, "weaken", 0.05); bumpVuln(t, "heat", 0.05);
+        // 핏빛 날개는 항상 한 명만 — 다른 적에게 걸려 있던 날개를 걷어내고 이번 배틀스킬 대상에게 옮긴다.
+        if (s) for (const e of s.units) if (e.side === "enemy" && e !== t && e.statuses.includes("wing")) { e.statuses = e.statuses.filter((x) => x !== "wing"); delete e.timers.wing; }
+        if (!t.statuses.includes("wing")) t.statuses.push("wing"); setTimer(t, "wing", 8);
+      }, note: "열기 부착 + 허약/열기취약 + 핏빛 날개(항상 한 명, 마지막 배틀 대상으로 이동)" },
     // 영혼의 가시(연계 133%, 쿨 20초): 열기 부착 소모/흡수 후. 게이지 16. 죄를 쫓는 자(날개 적 → 회복+연타).
     { id: "camu-l", name: "영혼의 가시", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 2.4, mst: [2.56, 2.76, 3], element: "heat", staggerVal: 10, cooldown: 4, gaugeGain: 18,
       requires: (_t, _s, st) => !!st.anomalyConsumed, requiresText: "열기 부착 소모·흡수 후", note: "열기 부착 소모 후 발동 · 핏빛 날개 적 명중 시 회복 + 연타 획득" },
