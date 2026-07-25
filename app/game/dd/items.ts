@@ -139,3 +139,15 @@ export function itemColor(kind: ItemKind): string {
   return kind === "heal" ? "#86efac" : kind === "heal-shield" ? "#38bdf8" : kind === "regen" ? "#5eead4"
     : kind === "revive" ? "#f0abfc" : kind === "buff" ? "#f87171" : "#ffd24a";
 }
+
+// ── 아이콘 클릭 상세용 메타 (재화 용도 · 종류/등급/사용조건 라벨) ──
+export const RESOURCE_INFO: Record<"credits" | "parts" | "permits" | "chips", { name: string; use: string }> = {
+  credits: { name: "크레딧 (탈로시안 화폐)", use: "야영지 상점 통화입니다. 재료·소비 아이템 구매에 사용합니다." },
+  parts: { name: "장비 부품", use: "공업소에서 장비 제작·단조에 쓰는 재료입니다." },
+  permits: { name: "무릉 관리권", use: "공업소에서 장비 제작·단조에 쓰는 재료입니다." },
+  chips: { name: "프로토콜 프리즘 세트", use: "스킬 마스터리 강화 전용 재료입니다." },
+};
+export const ITEM_KIND_KO: Record<ItemKind, string> = { heal: "즉시 회복", "heal-shield": "회복+보호막", regen: "재생", ult: "궁 충전", revive: "부활", buff: "강화" };
+export const rarityLabel = (r: number): string => (r >= 6 ? "특급" : r >= 4 ? "상급" : r >= 3 ? "일반" : "하급");
+export const rarityStars = (r: number): string => "★".repeat(Math.min(4, Math.max(1, Math.ceil(r / 2))));
+export const itemCondText = (c: ItemCond): string => (c.type === "hp" ? `아군 HP ${Math.round(c.below * 100)}% 이하일 때 사용 가능` : c.type === "dead" ? "전투불능 아군이 있을 때 사용 가능" : "언제든 사용 가능");

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ChevronLeft, Tent, Hammer, ShoppingCart } from "lucide-react";
 
 import { OPERATORS } from "./dd/roster";
-import { ITEMS, RESOURCE_ICON, itemImage } from "./dd/items";
+import { ITEMS, RESOURCE_ICON, itemImage, itemColor, RESOURCE_INFO, ITEM_KIND_KO, rarityLabel, rarityStars, itemCondText } from "./dd/items";
 import { marketGood } from "./dd/craft";
 import { skillLabel } from "./dd/progress";
 import { encounterForNode, useDDRun, REST_HEAL, REST_SALVAGE, type RunNode } from "./dd/run";
@@ -36,6 +36,7 @@ export default function GamePage() {
   const [sellQty, setSellQty] = useState<Record<string, number>>({ parts: 1, permits: 1, chips: 1 }); // 재료 되팔기 수량 입력
   const [copied, setCopied] = useState(false); // 원정 기록 JSON 복사 피드백
   const [abandonAsk, setAbandonAsk] = useState(false); // 원정 포기 확인 — 실수로 진행 상황을 날리지 않게
+  const [detail, setDetail] = useState<{ type: "res" | "item"; key: string } | null>(null); // 재화·소비 아이템 상세 팝업(용도·회복량·등급)
   // 상점은 클릭 한 번에 결제된다 — 오구매 방지용 확인. "다시 묻지 않기"는 브라우저에 저장해 다음 원정에도 유지.
   const [buyAsk, setBuyAsk] = useState<{ label: string; price: number; icon: string; run: () => void } | null>(null);
   const [buySkip, setBuySkip] = useState(false); // 이번 세션에 적용 중인 값(초기값은 localStorage)
@@ -71,7 +72,7 @@ export default function GamePage() {
 
       {run.phase === "map" && (
         <div className="flex min-h-[calc(100vh-64px)] flex-col pb-8">
-          <div className="mx-auto w-full max-w-[1500px] px-4 pt-4 sm:px-7"><RunHud faction={run.faction} depth={run.depthReached} maxDepth={run.maxDepth} floor={run.floor} totalFloors={run.totalFloors} floorName={run.floorName} craft={run.craft} hasCraftable={run.hasCraftable} /></div>
+          <div className="mx-auto w-full max-w-[1500px] px-4 pt-4 sm:px-7"><RunHud faction={run.faction} depth={run.depthReached} maxDepth={run.maxDepth} floor={run.floor} totalFloors={run.totalFloors} floorName={run.floorName} craft={run.craft} hasCraftable={run.hasCraftable} onResource={(k) => setDetail({ type: "res", key: k })} /></div>
           <div className="mx-auto mt-2 w-full max-w-[1500px] px-4 sm:px-7">
             <button type="button" onClick={() => setShowStatus(true)} className="hud-btn dd-cut flex items-center gap-1.5 px-3 py-1.5 font-mono text-[13px] font-bold uppercase tracking-wider text-ef-muted hover:text-white">📋 부대 현황 — 장비·마스터리 확인</button>
           </div>
@@ -265,7 +266,7 @@ export default function GamePage() {
                       <span className="font-mono text-[13px] text-ef-muted">아이템:</span>
                       {Object.entries(run.items).filter(([, n]) => (n as number) > 0).map(([id, n]) => { const def = ITEMS[id]; if (!def) return null;
                         return (
-                          <button key={id} type="button" onClick={() => run.sellItem(id)} title={`${def.desc} — ${run.itemSellValue(def.rarity)}크레딧`}
+                          <button key={id} type="button" onClick={() => setDetail({ type: "item", key: id })} title="눌러서 효과·등급 보기 (되팔기는 상세에서)"
                             className="dd-cut flex items-center gap-1 border px-2 py-1 font-mono text-[13px] transition hover:brightness-110"
                             style={{ borderColor: "rgba(103,232,249,0.45)", background: "rgba(103,232,249,0.08)", color: "#cfe9ee" }}>
                             <img src={itemImage(id)} alt="" loading="lazy" className="h-4 w-4 object-contain" />{def.name}<span className="text-ef-muted">×{n as number}</span><span style={{ color: "#f5c542" }}>+{run.itemSellValue(def.rarity)}</span>
@@ -284,11 +285,11 @@ export default function GamePage() {
                   <div className="mb-3 font-mono text-[15px] font-bold text-ef-muted">◆ 보유 물자</div>
                   <div className="grid grid-cols-2 gap-2">
                     {([["credits","크레딧",run.craft.credits],["parts","부품",run.craft.mats.parts],["permits","관리권",run.craft.mats.permits],["chips","프로토콜 프리즘 세트",run.craft.mats.chips ?? 0]] as const).map(([k,label,n]) => (
-                      <div key={k} className="dd-cut flex items-center gap-2 border border-ef-line/40 bg-black/30 px-2.5 py-2">
+                      <button key={k} type="button" onClick={() => setDetail({ type: "res", key: k })} title="눌러서 용도 보기" className="dd-cut flex items-center gap-2 border border-ef-line/40 bg-black/30 px-2.5 py-2 text-left transition hover:!border-ef-accent/50">
                         <img src={RESOURCE_ICON[k]} alt="" className="h-6 w-6 shrink-0 object-contain" />
                         <span className="min-w-0 flex-1 truncate font-mono text-[12px] text-ef-muted">{label}</span>
                         <span className="shrink-0 font-mono text-[15px] font-bold tabular-nums" style={{ color: k === "credits" ? "#f5c542" : "#e8e8ea" }}>{n}</span>
-                      </div>
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -435,6 +436,40 @@ export default function GamePage() {
           </div>
         </div>
       )}
+
+      {detail && (() => {
+        const res = detail.type === "res" ? RESOURCE_INFO[detail.key as keyof typeof RESOURCE_INFO] : null;
+        const it = detail.type === "item" ? ITEMS[detail.key] : null;
+        if (!res && !it) return null;
+        const icon = detail.type === "res" ? RESOURCE_ICON[detail.key as keyof typeof RESOURCE_ICON] : itemImage(detail.key);
+        const color = it ? itemColor(it.kind) : "#f5c542";
+        const amount = detail.type === "res"
+          ? ({ credits: run.craft.credits, parts: run.craft.mats.parts, permits: run.craft.mats.permits, chips: run.craft.mats.chips ?? 0 } as Record<string, number>)[detail.key]
+          : (run.items[detail.key] ?? 0);
+        return (
+          <div className="flex items-center justify-center px-4 backdrop-blur-sm" style={{ position: "fixed", inset: 0, zIndex: 120, background: "rgba(0,0,0,0.8)" }} onClick={() => setDetail(null)}>
+            <div className="hud-panel dd-cut w-full max-w-[420px] p-5" onClick={(e) => e.stopPropagation()}>
+              <div className="mb-3 flex items-start gap-3">
+                <img src={icon} alt="" className="h-12 w-12 shrink-0 object-contain" style={{ background: `${color}18` }} onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = "hidden"; }} />
+                <div className="min-w-0">
+                  <div className="font-mono text-lg font-bold text-white">{res ? res.name : it!.name}</div>
+                  <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                    {res ? <span className="border px-1 py-px font-mono text-[11px] font-bold" style={{ color: "#f5c542", borderColor: "#f5c54266" }}>재화</span>
+                      : <><span className="border px-1 py-px font-mono text-[11px] font-bold" style={{ color, borderColor: color + "66" }}>{ITEM_KIND_KO[it!.kind]}</span><span className="font-mono text-[11px] font-bold" style={{ color }}>{rarityStars(it!.rarity)} {rarityLabel(it!.rarity)}</span></>}
+                  </div>
+                </div>
+                <button type="button" onClick={() => setDetail(null)} className="ml-auto shrink-0 border border-ef-line px-2 py-0.5 font-mono text-[13px] text-ef-muted hover:text-white">✕</button>
+              </div>
+              <p className="mb-2 font-mono text-[13px] leading-6 text-ef-ink/90">{res ? res.use : it!.desc}</p>
+              {it && <p className="mb-3 font-mono text-[12px] text-ef-muted">· {itemCondText(it.cond)}</p>}
+              <div className="flex items-center justify-between gap-2 border-t border-ef-line/40 pt-3">
+                <span className="font-mono text-[13px] text-ef-muted">보유 <b className="text-white">{amount}</b>{it ? "개" : ""}</span>
+                {it && amount > 0 && <button type="button" onClick={() => { run.sellItem(detail.key); setDetail(null); }} className="dd-cut border border-ef-accent/50 px-3 py-1.5 font-mono text-[13px] font-bold text-ef-accent-soft transition hover:bg-ef-accent/10">되팔기 +{run.itemSellValue(it.rarity)} 크레딧</button>}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </main>
   );
 }

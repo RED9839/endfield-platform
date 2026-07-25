@@ -17,7 +17,7 @@ const FACTION_META: Record<string, { tone: string; region: string; icon: string 
   "그림자에 물든": { tone: "#a78bfa", region: "초자연의 균열", icon: "🌀" },
 };
 
-export default function RunHud({ faction, depth, maxDepth, floor, totalFloors, floorName, craft, onCraft, canCraft, hasCraftable }: { faction: string; depth: number; maxDepth: number; floor?: number; totalFloors?: number; floorName?: string; craft: CraftState; onCraft?: (tab?: "party" | "mastery") => void; canCraft?: boolean; hasCraftable?: boolean }) {
+export default function RunHud({ faction, depth, maxDepth, floor, totalFloors, floorName, craft, onCraft, canCraft, hasCraftable, onResource }: { faction: string; depth: number; maxDepth: number; floor?: number; totalFloors?: number; floorName?: string; craft: CraftState; onCraft?: (tab?: "party" | "mastery") => void; canCraft?: boolean; hasCraftable?: boolean; onResource?: (k: "credits" | "parts" | "permits" | "chips") => void }) {
   const fm = FACTION_META[faction] ?? { tone: "#a1a1aa", region: faction, icon: "◆" };
   const owned = Object.keys(craft.owned).length;
   return (
@@ -44,18 +44,18 @@ export default function RunHud({ faction, depth, maxDepth, floor, totalFloors, f
       </div>
       {/* 재료 */}
       <div className="ml-auto flex items-center gap-2">
-        <div className="hud-tile flex items-center gap-1.5 px-2.5 py-1.5" style={CUT} title="크레딧 — 몹 처치 보상. 야영지 상점에서 재료·소비템으로 교환합니다.">
+        <button type="button" onClick={() => onResource?.("credits")} className="hud-tile flex items-center gap-1.5 px-2.5 py-1.5 transition hover:!border-ef-accent/50" style={CUT} title="눌러서 용도 보기 — 크레딧">
           <img src={RESOURCE_ICON.credits} alt="" className="h-4 w-4 shrink-0 object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} /><span className="font-mono text-sm font-bold" style={{ color: "#f5c542" }}>{craft.credits}</span><span className="font-mono text-[14px] text-ef-muted">크레딧</span>
-        </div>
-        <div className="hud-tile flex items-center gap-1.5 px-2.5 py-1.5" style={CUT} title="프로토콜 프리즘 세트 — 마스터리 전용 재료">
+        </button>
+        <button type="button" onClick={() => onResource?.("chips")} className="hud-tile flex items-center gap-1.5 px-2.5 py-1.5 transition hover:!border-ef-accent/50" style={CUT} title="눌러서 용도 보기 — 프로토콜 프리즘 세트">
           <img src={RESOURCE_ICON.chips} alt="" className="h-4 w-4 shrink-0 object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} /><span className="font-mono text-sm font-bold text-white">{craft.mats.chips ?? 0}</span><span className="font-mono text-[14px] text-ef-muted">프로토콜 프리즘 세트</span>
-        </div>
-        <div className="hud-tile flex items-center gap-1.5 px-2.5 py-1.5" style={CUT} title="장비 부품 — 제작·단조 재료">
+        </button>
+        <button type="button" onClick={() => onResource?.("parts")} className="hud-tile flex items-center gap-1.5 px-2.5 py-1.5 transition hover:!border-ef-accent/50" style={CUT} title="눌러서 용도 보기 — 장비 부품">
           <img src={RESOURCE_ICON.parts} alt="" className="h-4 w-4 shrink-0 object-contain" /><span className="font-mono text-sm font-bold text-white">{craft.mats.parts}</span><span className="font-mono text-[14px] text-ef-muted">부품</span>
-        </div>
-        <div className="hud-tile flex items-center gap-1.5 px-2.5 py-1.5" style={CUT} title="관리권 — 제작·단조 재료">
+        </button>
+        <button type="button" onClick={() => onResource?.("permits")} className="hud-tile flex items-center gap-1.5 px-2.5 py-1.5 transition hover:!border-ef-accent/50" style={CUT} title="눌러서 용도 보기 — 관리권">
           <img src={RESOURCE_ICON.permits} alt="" className="h-4 w-4 shrink-0 object-contain" /><span className="font-mono text-sm font-bold text-white">{craft.mats.permits}</span><span className="font-mono text-[14px] text-ef-muted">관리권</span>
-        </div>
+        </button>
         {onCraft && (
           <button type="button" onClick={() => onCraft("party")} disabled={!canCraft} title={hasCraftable ? "제작 가능한 장비가 있습니다 — 공업소에서 강해질 수 있습니다" : "장비 확인·제작·단조"} className="hud-btn relative flex items-center gap-1.5 px-3 py-1.5 font-mono text-sm font-bold uppercase tracking-wider">
             {hasCraftable && <span className="absolute -right-1 -top-1 flex h-3 w-3"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-ef-accent opacity-75" /><span className="relative inline-flex h-3 w-3 rounded-full bg-ef-accent" /></span>}
