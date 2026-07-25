@@ -740,6 +740,10 @@ export function refreshLinkArms(s: DDState): void {
     const lk = (skillsOf?.(u.id) ?? []).find((k) => k.kind === "link");
     if (!lk) continue;
     const open = linkCondMet(s, u, lk);
+    // 쿨타임 중에는 장전하지 않는다. 쿨이 도는 동안 조건이 열리거나 대상에게 상태가 걸려도
+    // 예약해두지 않고, 지문 베이스라인을 계속 현재 값으로 갱신해 그 적용들을 무효화한다.
+    // → 쿨이 끝난 뒤 "새로" 걸린 트리거(상승 에지 또는 새 적용)만 연계를 장전한다.
+    if (u.linkCd > 0) { u.linkArmed = false; u.linkWasOpen = open; u.linkStamp = linkSig(s, u, lk); continue; }
     // ① 조건이 거짓→참으로 바뀐 순간  ② 지난 발동 이후 대상에게 뭔가 새로 적용된 뒤 조건이 참일 때
     // ②가 있어야 "부착이 유지 중인데 다시 걸어줬다"도 열린다(상태 유지만으로는 안 열림).
     if (open && (!u.linkWasOpen || linkSig(s, u, lk) !== u.linkStamp)) u.linkArmed = true;

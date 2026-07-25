@@ -34,6 +34,10 @@ const elementName: Record<"physical" | Element, string> = { physical: "물리", 
 const classLabel: Record<DDClass, string> = { guard: "가드", caster: "캐스터", striker: "스트라이커", vanguard: "뱅가드", defender: "디펜더", supporter: "서포터" };
 const kindTone: Record<DDSkill["kind"], string> = { attack: "#a1a1aa", battle: "#ff9a2f", link: "#67e8f9", ult: "#facc15" };
 const targetLabel: Record<DDSkill["target"], string> = { "single-front": "단일", "single-lowhp": "단일", row: "범위", all: "전체", self: "자신" };
+// 레바테인 「황혼」 변신 중 스킬명 변경 — 변신 강화형(평타 ×3 광역·배틀 ×2.5)은 다른 이름으로 표시한다.
+const TWILIGHT_SKILL_NAME: Record<string, string> = { basic: "황혼 · 삼단 참격", "lae-b": "황혼 · 대화염" };
+const skillLabel = (u: DDUnit | null, sk: DDSkill): string =>
+  u?.id === "laevatain" && (u.timers?.twilight ?? 0) > 0 && TWILIGHT_SKILL_NAME[sk.id] ? TWILIGHT_SKILL_NAME[sk.id] : sk.name;
 // 스킬 사용 불가 사유(usable()과 동일 순서). null=사용 가능.
 function skillReason(s: DDState, u: DDUnit, sk: DDSkill): string | null {
   if (usable(s, u, sk)) return null;
@@ -592,7 +596,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
     act(s, u, sk);
     const floaters: Floater[] = [];
     for (const x of s.units) { const d = x.hp - (before.get(x.id) ?? x.hp); if (d !== 0) floaters.push({ id: x.id, amt: d, crit: false, tone: d > 0 ? "#8fd36a" : "#ffb257" }); }
-    fxTick.current += 1; mergeFx({ tick: fxTick.current, activeId: u.id, actingSide: "ally", floaters, cast: { id: u.id, text: sk.name } }); bump();
+    fxTick.current += 1; mergeFx({ tick: fxTick.current, activeId: u.id, actingSide: "ally", floaters, cast: { id: u.id, text: skillLabel(u, sk) } }); bump();
   }
   function playerUseItem(id: string) {
     const s = stateRef.current!; if (!current || !items[id] || !canUseItem(s, id)) return;
@@ -1016,7 +1020,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
                 {aiming?.id === sk.id && <span className="absolute bottom-1 right-1 z-10 animate-pulse border border-ef-accent/80 bg-black/80 px-1 py-px font-mono text-[11px] font-bold text-ef-accent">🎯 조준 중</span>}
                 <img src={skillIcon(pu.id, sk.kind)} alt="" loading="lazy" className={`mt-0.5 h-9 w-9 shrink-0 border border-ef-line/60 bg-black/40 object-contain p-0.5 ${off ? "opacity-40 grayscale" : ""}`} onError={(ev) => { (ev.currentTarget as HTMLImageElement).style.visibility = "hidden"; }} />
                 <span className="min-w-0 flex-1">
-                  <span className="flex min-w-0 items-center gap-1.5"><span className="shrink-0 whitespace-nowrap border px-1 py-px font-mono text-[13px] font-bold uppercase" style={{ borderColor: off ? "#7a6a4a66" : `${kindTone[sk.kind]}66`, color: off ? "#7a6a4a" : kindTone[sk.kind] }}>{kindLabel[sk.kind]}</span><span title={sk.name} className={`min-w-0 flex-1 truncate whitespace-nowrap font-mono text-sm font-bold ${off ? "text-ef-muted" : "text-white"}`}>{sk.name}</span>{payoff && <span className="shrink-0 animate-pulse whitespace-nowrap border border-ef-accent/70 bg-ef-accent/15 px-1 py-px font-mono text-[12px] font-bold leading-none text-ef-accent" title="조건부 효과 발동 조건 충족 — 지금 쓰면 추가 효과">{payoff}</span>}</span>
+                  <span className="flex min-w-0 items-center gap-1.5"><span className="shrink-0 whitespace-nowrap border px-1 py-px font-mono text-[13px] font-bold uppercase" style={{ borderColor: off ? "#7a6a4a66" : `${kindTone[sk.kind]}66`, color: off ? "#7a6a4a" : kindTone[sk.kind] }}>{kindLabel[sk.kind]}</span><span title={skillLabel(pu, sk)} className={`min-w-0 flex-1 truncate whitespace-nowrap font-mono text-sm font-bold ${off ? "text-ef-muted" : "text-white"}`}>{skillLabel(pu, sk)}</span>{payoff && <span className="shrink-0 animate-pulse whitespace-nowrap border border-ef-accent/70 bg-ef-accent/15 px-1 py-px font-mono text-[12px] font-bold leading-none text-ef-accent" title="조건부 효과 발동 조건 충족 — 지금 쓰면 추가 효과">{payoff}</span>}</span>
                   <span className="mt-1 flex min-w-0 items-center gap-2 overflow-hidden">
                     {off ? <span className="min-w-0 cursor-help truncate font-mono text-[14px] font-bold text-red-400/90" title={reasonHelp(reason)}>🔒 {reason}</span>
                       : dmg > 0 ? <span className="shrink-0 whitespace-nowrap font-mono text-[17px] font-bold tabular-nums" style={{ color: elementColor[el] }}>{dmg.toLocaleString()}<span className="ml-0.5 text-[13px] font-normal text-ef-muted">피해</span></span>
