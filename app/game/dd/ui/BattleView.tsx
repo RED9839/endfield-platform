@@ -658,9 +658,9 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
       )}
       {/* 행동 순서 — 속도 기반 턴 오더(이름·연결선·아군/적 색·현재 강조) */}
       {!winner && upcoming.length > 0 && (
-        <div className="absolute left-1 top-[118px] z-30 sm:left-2">
+        <div className="absolute left-1.5 top-[118px] z-30 sm:left-2">
           <div className="mb-1.5 flex items-center gap-1 font-mono text-[14px] font-bold uppercase tracking-[0.22em] text-ef-accent/80">⏱ 속도 순서</div>
-          <div className="relative flex flex-col gap-1">
+          <div className="relative flex flex-col gap-1 rounded bg-black/35 p-1 backdrop-blur-[1px] sm:bg-transparent sm:p-0 sm:backdrop-blur-none">
             {/* 흐름 연결선 */}
             <span className="pointer-events-none absolute bottom-4 left-[17px] top-4 w-0.5 bg-gradient-to-b from-ef-accent/60 via-ef-line to-transparent" />
             {(current && upcoming[0] !== current ? [current, ...upcoming] : upcoming).slice(0, 6).map((u, i) => {
@@ -672,15 +672,15 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
               const r = Math.max(0, Math.min(1, u.hp / u.maxHp));
               return (
                 <div key={`${u.id}-${i}`} className="relative flex items-center gap-2" style={{ opacity: now ? 1 : Math.max(0.5, 1 - i * 0.11) }}>
-                  <span className={`relative z-10 shrink-0 overflow-hidden border-2 transition-all ${now ? "h-12 w-12" : "h-10 w-10"}`} style={{ borderColor: now ? "#ffbe6b" : tone, background: ally ? `center/cover url(${avatarUrl(u.id)})` : `radial-gradient(circle at 50% 35%, ${tone}66, #2a1210 75%)`, boxShadow: now ? `0 0 12px ${tone}, 0 0 0 2px #ffbe6b` : `0 0 0 1px ${tone}55` }}>
-                    {!ally && <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-red-200/90">✦</span>}
+                  <span className={`relative z-10 shrink-0 overflow-hidden border-2 transition-all ${now ? "h-12 w-12" : "h-10 w-10"}`} style={{ borderColor: now ? "#ffbe6b" : tone, background: ally ? `center/cover url(${avatarUrl(u.id)})` : `50% 20%/cover no-repeat url(${enemyImage(u.id)}), radial-gradient(circle at 50% 35%, ${tone}66, #2a1210 75%)`, boxShadow: now ? `0 0 12px ${tone}, 0 0 0 2px #ffbe6b` : `0 0 0 1px ${tone}55` }}>
+                    {!ally && <span className="pointer-events-none absolute inset-0" style={{ background: "linear-gradient(180deg, transparent 55%, rgba(20,10,8,0.55))" }} />}
                     <span className="absolute inset-x-0 bottom-0 h-1" style={{ background: `linear-gradient(90deg, ${r < 0.35 ? "#e0655c" : ally ? "#8fb84a" : "#e0655c"} ${r * 100}%, rgba(0,0,0,0.85) ${r * 100}%)` }} />
                   </span>
-                  <span className={`dd-cut ${now ? "flex" : "hidden sm:flex"} items-center gap-1 border px-2 py-1 font-mono leading-none ${now ? "text-[16px] font-black" : "text-sm font-bold"}`} style={{ borderColor: now ? "#ffbe6b99" : `${tone}44`, background: now ? "linear-gradient(90deg, rgba(255,190,107,0.2), rgba(13,9,6,0.6))" : "rgba(13,9,6,0.8)", color: now ? "#ffdf9e" : ally ? "#e6e6e8" : "#f0a8a0" }}>
+                  <span className={`dd-cut hidden items-center gap-1 border px-2 py-1 font-mono leading-none sm:flex ${now ? "text-[16px] font-black" : "text-sm font-bold"}`} style={{ borderColor: now ? "#ffbe6b99" : `${tone}44`, background: now ? "linear-gradient(90deg, rgba(255,190,107,0.2), rgba(13,9,6,0.6))" : "rgba(13,9,6,0.8)", color: now ? "#ffdf9e" : ally ? "#e6e6e8" : "#f0a8a0" }}>
                     {now ? <span className="text-ef-accent">▶ 지금</span> : nm}
                     {!now && <span className="text-[12px] text-ef-muted">{ally ? "" : "·적"}</span>}
                   </span>
-                  {now && <span className="font-mono text-sm font-bold text-white/90">{nm}</span>}
+                  {now && <span className="hidden font-mono text-sm font-bold text-white/90 sm:inline">{nm}</span>}
                 </div>
               );
             })}
@@ -825,8 +825,8 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
       {/* ===== 전장 ===== */}
       <div className="hud-stage relative flex min-h-[56vh] flex-col justify-center gap-2 overflow-hidden border border-ef-line px-3 py-6 sm:px-6" style={{ ...CUT_SM, boxShadow: "inset 0 0 80px -20px rgba(0,0,0,0.95), inset 0 1px 0 rgba(255,255,255,0.04)" }}>
         {/* ===== 적진 (스테이지 상단, 서 있는 피규어) ===== */}
-        <div className="mb-1 mt-7 flex items-center gap-2 font-mono text-[14px] font-bold uppercase tracking-[0.2em] text-red-300/70 sm:mt-0"><span className="h-px flex-1 bg-gradient-to-r from-transparent to-red-500/25" />적 {enemies.filter((e) => e.hp > 0).length}/{enemies.length}<span className="h-px flex-1 bg-gradient-to-l from-transparent to-red-500/25" /></div>
-        <div className="flex flex-wrap items-end justify-center gap-x-1.5 gap-y-2 sm:gap-x-4">
+        <div className="mb-1 mt-7 flex items-center gap-2 pl-14 font-mono text-[14px] font-bold uppercase tracking-[0.2em] text-red-300/70 sm:mt-0 sm:pl-0"><span className="h-px flex-1 bg-gradient-to-r from-transparent to-red-500/25" />적 {enemies.filter((e) => e.hp > 0).length}/{enemies.length}<span className="h-px flex-1 bg-gradient-to-l from-transparent to-red-500/25" /></div>
+        <div className="flex flex-wrap items-end justify-center gap-x-1.5 gap-y-2 pl-12 sm:gap-x-4 sm:pl-0">
           {enemies.map((e) => {
             const ed = enemyDefFor(e.id);
             const el = ed?.element ?? "physical";
@@ -862,7 +862,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
                 </div>
                 {/* 정보 */}
                 <div className="w-full">
-                  <div className="flex min-h-[2.1em] min-w-0 items-start gap-1 sm:min-h-0 sm:items-center"><span className="mt-[5px] h-1.5 w-1.5 shrink-0 sm:mt-0" style={{ background: elementColor[el] }} /><span className="line-clamp-2 font-mono text-[13px] font-bold leading-tight tracking-tight text-white sm:truncate sm:text-[14px]" style={{ textShadow: "0 1px 3px #000" }} title={e.name}>{e.name}</span></div>
+                  <div className="flex min-h-[2.1em] min-w-0 items-start gap-1"><span className="mt-[5px] h-1.5 w-1.5 shrink-0" style={{ background: elementColor[el] }} /><span className="line-clamp-2 font-mono text-[13px] font-bold leading-tight tracking-tight text-white sm:text-[14px]" style={{ textShadow: "0 1px 3px #000" }} title={e.name}>{e.name}</span></div>
                   <div className="flex items-center gap-1"><span className="text-[9px] leading-none text-[#e0655c]/70" title={`누적 피해 ${(takenRef.current[e.id] ?? 0).toLocaleString()}`}>HP</span><div className="flex-1"><Bar value={e.hp} max={e.maxHp} color="#e0655c" ghost /></div>{(takenRef.current[e.id] ?? 0) > 0 && !dead && <span className="ml-1 shrink-0 font-mono text-[10px] font-bold tabular-nums text-[#ff8a6a]/85" title="이 적에게 누적으로 넣은 피해">▼{(takenRef.current[e.id] ?? 0).toLocaleString()}</span>}<span className="shrink-0 font-mono text-[11px] tabular-nums text-ef-muted"><span className="font-bold text-white/90">{Math.max(0, e.hp)}</span>/{e.maxHp}</span></div>
                   {e.staggerMax > 0 && !dead && <div className="mt-0.5 flex items-center gap-1"><span className="text-[9px] leading-none text-[#a16207]/80" title="불균형: 가득 차면 행동 불가 + 받는 피해 증가">불균형</span><div className="relative flex-1"><Bar value={e.staggered ? e.staggerMax : e.stagger} max={e.staggerMax} color={e.staggered ? "#facc15" : "#a16207"} h="h-1" />{e.poiseKnot && !e.poiseBroken && <span className="pointer-events-none absolute top-[-1px] h-[calc(100%+2px)] w-px bg-white/70" style={{ left: "50%" }} title="불균형 지점 — 넘으면 잠시 중단" />}</div></div>}
                   {!dead && <div className="mt-0.5"><Bar value={e.atb} max={100} color="#67e8f9" h="h-1" /></div>}
