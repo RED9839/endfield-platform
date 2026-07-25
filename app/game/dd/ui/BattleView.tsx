@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useReducer, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 import { act, canAct, isOver, startRound, perTurn, nextActor, turnOrder, usable, linkCondMet, BASIC, GAUGE_REGEN, findLinkChain, type DDClass, type DDSkill, type DDState, type DDUnit, type Element, CHAIN_MAX, GAUGE_COST } from "../combat";
 import { OPERATORS, SKILLS, OP_BASIC, OP_BASIC_ATK, skillExtraHit, enemyDefFor, avatarUrl, fullUrl, bustUrl, OP_BUST_POS, skillIcon, enemyImage, enemyArchetype, STACK_CARRY } from "../roster";
@@ -358,6 +359,8 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
   // 상태 칩 클릭 → 무슨 효과인지 설명 팝오버(호버 title은 터치·짧은 노출로 놓치기 쉽다)
   const [chipInfo, setChipInfo] = useState<{ c: StatusChip; x: number; y: number } | null>(null);
   const [aiming, setAiming] = useState<DDSkill | null>(null); // 대상 선택 중인 단일 스킬
+  const [mounted, setMounted] = useState(false); // 포털(모바일 조준 바)용 — 클라이언트 마운트 후에만 body 포털
+  useEffect(() => setMounted(true), []);
   const [viewId, setViewId] = useState<string | null>(null); // 대기 아군 스킬 미리보기(잠금 패널) — 연계 쿨타임 확인용
   const linkComboRef = useRef<unknown>(null); // 콤보 프롬프트 대기 중 — 누적 해제를 미룬다
   const [linkCombo, setLinkCombo] = useState<{ unitId: string; skill: DDSkill } | null>(null); // 연계 콤보 프롬프트(스킬 발동 → 조건 열린 연계 아이콘)
@@ -625,6 +628,32 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
 
   return (
     <div className="dd-battle relative mx-auto max-w-[1640px] px-3 py-4 sm:px-5">
+      {/* 모바일 조준 바 — 스킬 선택 후 적(상단)까지 스크롤하지 않고 하단에서 바로 타겟. 데스크톱은 적 아트 클릭이라 불필요(lg:hidden) */}
+      {mounted && aiming && current && createPortal(
+        <div className="fixed inset-x-0 bottom-0 z-[90] border-t-2 border-ef-accent/60 bg-black/95 px-2.5 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 backdrop-blur lg:hidden">
+          <div className="mb-2 flex items-center gap-2">
+            <span className="min-w-0 truncate font-mono text-[13px] font-bold text-ef-accent-soft">🎯 {aiming.name} — 공격할 적 선택</span>
+            <button type="button" onClick={() => setAiming(null)} className="ml-auto shrink-0 border border-ef-line px-2.5 py-1 font-mono text-[13px] font-bold text-ef-muted active:scale-95">취소</button>
+          </div>
+          <div className="flex gap-1.5 overflow-x-auto pb-1">
+            {enemies.filter((e) => e.hp > 0).map((e) => {
+              const ok = usableOn(aiming, current, e.id);
+              return (
+                <button key={e.id} type="button" disabled={!ok} onClick={() => { if (ok) playerAct(aiming, e.id); }}
+                  className={`dd-cut flex w-[130px] shrink-0 flex-col gap-1 border px-2 py-1.5 text-left transition ${ok ? "border-ef-accent/70 bg-ef-accent/10 active:scale-95" : "cursor-not-allowed border-ef-line/40 opacity-45"}`}>
+                  <span className="flex items-center gap-1">
+                    <span className="min-w-0 truncate font-mono text-[12px] font-bold text-white">{e.name}</span>
+                    <span className="ml-auto shrink-0 text-[13px]">{ok ? "🎯" : "🚫"}</span>
+                  </span>
+                  <Bar value={e.hp} max={e.maxHp} color="#e0655c" h="h-1" />
+                  <span className="font-mono text-[10px] tabular-nums text-ef-muted"><span className="font-bold text-white/90">{Math.max(0, e.hp)}</span>/{e.maxHp}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>,
+        document.body
+      )}
       {/* 행동 순서 — 속도 기반 턴 오더(이름·연결선·아군/적 색·현재 강조) */}
       {!winner && upcoming.length > 0 && (
         <div className="absolute left-1 top-[118px] z-30 sm:left-2">
