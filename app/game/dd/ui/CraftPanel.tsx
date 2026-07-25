@@ -3,10 +3,10 @@
 import { useState } from "react";
 import { ChevronLeft, Hammer, Check, Lock } from "lucide-react";
 
-import { GEAR_PIECES_BY_SET_SLOT, GEAR_PIECE_BY_ID, GEAR_SLOTS, LOADOUT_SLOTS, gearSlotName, pieceImage, pieceSlotOf, slotOptions, SET_NAMES, SINGLE_SETS, type GearPiece, type GearSlot, type LoadoutSlot  , attrsText } from "../gear";
+import { GEAR_PIECES_BY_SET_SLOT, GEAR_PIECE_BY_ID, GEAR_SLOTS, LOADOUT_SLOTS, gearSlotName, pieceImage, pieceSlotOf, slotOptions, SET_NAMES, SINGLE_SETS, type GearPiece, type GearSlot, type LoadoutSlot  , attrsText, ATTR_KO } from "../gear";
 import { craftCost, forgeCost, skillForgeCost, canAfford, pieceLevel, isOwned, type CraftState } from "../craft";
 import { SKILL_MAX, SKILL_KINDS, skillLabel, skillRankDmg, skillUtilMult, type SkillKind } from "../progress";
-import { OPERATORS, avatarUrl, SKILLS, skillIcon, OP_BASIC_ATK } from "../roster";
+import { OPERATORS, avatarUrl, SKILLS, skillIcon, OP_BASIC_ATK, OP_MAINSUB } from "../roster";
 import { BASIC } from "../combat";
 import type { PartyMember } from "../run";
 import { RESOURCE_ICON } from "../items";
@@ -190,6 +190,7 @@ export default function CraftPanel({ craft, party = [], onCraft, onForge, onSwap
                   <img src={avatarUrl(m.id)} alt="" loading="lazy" className="h-9 w-9 shrink-0 border border-ef-line object-cover" style={{ background: "#000" }} />
                   <span className="font-mono text-[17px] font-bold text-white">{opName(m.id)}</span>
                   {op && <span className="font-mono text-[13px] uppercase text-ef-muted">{op.element}</span>}
+                  {OP_MAINSUB[m.id] && <span className="ml-auto font-mono text-[12px] text-ef-muted" title="장비 제작 시 이 능력치를 올리면 공격력이 오릅니다 (주요×0.5% + 보조×0.2%)">제작 우선 <b className="text-ef-accent-soft">★{ATTR_KO[OP_MAINSUB[m.id][0]]}</b> · ☆{ATTR_KO[OP_MAINSUB[m.id][1]]}</span>}
                 </div>
                 <div className="flex flex-col gap-1.5">
                   {LOADOUT_SLOTS.map((slot) => {

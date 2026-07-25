@@ -3,7 +3,7 @@
 import { useEffect, useReducer, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
-import { act, canAct, isOver, startRound, perTurn, nextActor, turnOrder, usable, linkCondMet, BASIC, GAUGE_REGEN, findLinkChain, type DDClass, type DDSkill, type DDState, type DDUnit, type Element, CHAIN_MAX, GAUGE_COST } from "../combat";
+import { act, canAct, isOver, startRound, perTurn, nextActor, turnOrder, usable, linkCondMet, BASIC, GAUGE_TURN_REGEN, findLinkChain, type DDClass, type DDSkill, type DDState, type DDUnit, type Element, CHAIN_MAX, GAUGE_COST } from "../combat";
 import { OPERATORS, SKILLS, OP_BASIC, OP_BASIC_ATK, skillExtraHit, enemyDefFor, avatarUrl, fullUrl, bustUrl, OP_BUST_POS, skillIcon, enemyImage, enemyArchetype, STACK_CARRY } from "../roster";
 import { realAtk } from "../progress";
 import { aggroShares } from "../aggro";
@@ -34,10 +34,11 @@ const elementName: Record<"physical" | Element, string> = { physical: "물리", 
 const classLabel: Record<DDClass, string> = { guard: "가드", caster: "캐스터", striker: "스트라이커", vanguard: "뱅가드", defender: "디펜더", supporter: "서포터" };
 const kindTone: Record<DDSkill["kind"], string> = { attack: "#a1a1aa", battle: "#ff9a2f", link: "#67e8f9", ult: "#facc15" };
 const targetLabel: Record<DDSkill["target"], string> = { "single-front": "단일", "single-lowhp": "단일", row: "범위", all: "전체", self: "자신" };
-// 레바테인 「황혼」 변신 중 스킬명 변경 — 변신 강화형(평타 ×3 광역·배틀 ×2.5)은 다른 이름으로 표시한다.
-const TWILIGHT_SKILL_NAME: Record<string, string> = { basic: "황혼 · 삼단 참격", "lae-b": "황혼 · 대화염" };
+// 레바테인 「황혼」 변신 중: 강화되는 스킬(일반 공격·배틀)은 이름 앞에 "황혼 : "를 붙여
+// 궁(황혼)이 켜져 있음을 알린다. 원래 이름은 그대로 두고 접두만 추가한다.
+const TWILIGHT_PREFIX_IDS = new Set(["basic", "lae-b"]);
 const skillLabel = (u: DDUnit | null, sk: DDSkill): string =>
-  u?.id === "laevatain" && (u.timers?.twilight ?? 0) > 0 && TWILIGHT_SKILL_NAME[sk.id] ? TWILIGHT_SKILL_NAME[sk.id] : sk.name;
+  u?.id === "laevatain" && (u.timers?.twilight ?? 0) > 0 && TWILIGHT_PREFIX_IDS.has(sk.id) ? `황혼 : ${sk.name}` : sk.name;
 // 스킬 사용 불가 사유(usable()과 동일 순서). null=사용 가능.
 function skillReason(s: DDState, u: DDUnit, sk: DDSkill): string | null {
   if (usable(s, u, sk)) return null;
@@ -719,7 +720,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
             <div className="mb-1 font-mono text-[13px] font-bold text-ef-accent-soft">🎮 전투 흐름 — 처음이라면 여기부터</div>
             <div className="text-ef-muted"><b className="text-white/85">① 속도 순서</b>대로 행동한다(좌측 순서표). <b className="text-white/85">② 내 턴</b>에 스킬을 고른다 — <span className="text-[#a1a1aa]">일반</span>·<span className="text-ef-accent-soft">배틀</span>·<span className="text-[#67e8f9]">연계</span>·<span className="text-[#facc15]">궁</span>. <b className="text-white/85">③ 단일 스킬</b>은 이어서 <b className="text-white/85">공격할 적</b>을 고른다. <b className="text-white/85">④ 불균형</b>을 채우면 적이 무력화되고 받는 피해가 커진다.</div>
           </div>
-          <div><b className="text-[#f5c542]">팀 게이지</b> <span className="text-ef-muted">— 파티 4명이 함께 쓰는 자원. 배틀 스킬 1회에 100 소모. 일반 공격으로 조금씩 회복하고 라운드마다 +45.</span></div>
+          <div><b className="text-[#f5c542]">팀 게이지</b> <span className="text-ef-muted">— 파티 4명이 함께 쓰는 자원. 배틀 스킬 1회에 100 소모. 일반 공격으로 조금씩 회복하고 아군 오퍼 턴마다 +12.</span></div>
           <div><b className="text-[#f5c542]">궁 에너지</b> <span className="text-ef-muted">— 오퍼별 개인 자원. <b className="text-white/80">배틀·연계로만</b> 찬다. 일반 공격으로는 안 오른다.</span></div>
           <div><b className="text-[#a16207]">불균형</b> <span className="text-ef-muted">— 적 HP 아래 노란 바. 가득 차면 적이 행동 불가가 되고 받는 피해가 30% 오른다. 스킬마다 붙은 「불균형 +N」으로 쌓는다.</span></div>
           <div><b className="text-[#67e8f9]">부착</b> <span className="text-ef-muted">— 적에게 묻은 속성(열기·전기·냉기·자연). 연계 스킬 상당수가 이걸 조건으로 삼고, 소모하면 큰 효과가 터진다.</span></div>
@@ -976,7 +977,7 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
       {!winner && (
         <div className="hud-panel dd-cut mt-3 px-3 py-2">
           <div className="flex items-center gap-2.5">
-          <span className="shrink-0 font-mono text-[13px] uppercase tracking-wider text-ef-muted">게이지<span className="hidden sm:inline"> · <span className="cursor-help underline decoration-dotted underline-offset-2" title="파티 4명이 함께 쓰는 하나의 게이지입니다. 누가 배틀 스킬을 써도 여기서 100이 빠지므로, 한 명이 연달아 쓰면 나머지가 못 씁니다. 매 라운드 자동 회복되고 일반 공격으로도 조금씩 찹니다. 궁극기 에너지와는 별개입니다.">4인 공용</span> <span className="text-ef-accent-soft" title="라운드마다 자동 회복">+{GAUGE_REGEN}/R</span></span></span>
+          <span className="shrink-0 font-mono text-[13px] uppercase tracking-wider text-ef-muted">게이지<span className="hidden sm:inline"> · <span className="cursor-help underline decoration-dotted underline-offset-2" title="파티 4명이 함께 쓰는 하나의 게이지입니다. 누가 배틀 스킬을 써도 여기서 100이 빠지므로, 한 명이 연달아 쓰면 나머지가 못 씁니다. 아군 오퍼 턴마다 조금씩 자동 회복되고 일반 공격으로도 찹니다. 궁극기 에너지와는 별개입니다.">4인 공용</span> <span className="text-ef-accent-soft" title="아군 오퍼 턴마다 자동 회복">+{GAUGE_TURN_REGEN}/턴</span></span></span>
           <div className="min-w-[120px] flex-1"><Bar value={s.skillGauge} max={s.maxGauge} color={PRIMARY} h="h-2.5" /></div>
           <span className="shrink-0 font-mono text-[13px] font-bold text-ef-ink">{Math.round(s.skillGauge)}/{s.maxGauge}</span>
           {/* 남은 배틀 횟수 — 숫자만으론 "지금 배틀을 몇 번 쓸 수 있나"가 안 읽힌다 */}

@@ -2,10 +2,10 @@
 
 import { useMemo, useState } from "react";
 
-import { OPERATORS, SKILLS, OP_BASIC, OP_BASIC_ATK, skillExtraHit, avatarUrl, fullUrl, skillIcon, makeAlly, type OpMeta } from "../roster";
+import { OPERATORS, SKILLS, OP_BASIC, OP_BASIC_ATK, skillExtraHit, avatarUrl, fullUrl, skillIcon, makeAlly, OP_MAINSUB, type OpMeta } from "../roster";
 import { OP_TALENTS } from "../operator-talents";
 import { DMG_SHORT as DMG_KO, SKILL_KIND_SHORT as kindLabel } from "../labels";
-import { OP_GEAR_ALT, activeSets, setEffectText, recommendedSet, recommendedLoadout, loadoutPieces, pieceImage, gearSlotName, bestFreePiece, slotOptions, GEAR_SET_CANON, SET_NAMES, pieceSlotOf, LOADOUT_SLOTS, type LoadoutSlot, type Loadout, type GearSlot , applyGear , attrsText, sumAttrs } from "../gear";
+import { OP_GEAR_ALT, activeSets, setEffectText, recommendedSet, recommendedLoadout, loadoutPieces, pieceImage, gearSlotName, bestFreePiece, slotOptions, GEAR_SET_CANON, SET_NAMES, pieceSlotOf, LOADOUT_SLOTS, type LoadoutSlot, type Loadout, type GearSlot , applyGear , attrsText, sumAttrs, ATTR_KO } from "../gear";
 import { DEFAULT_PROGRESS, type OpProgress } from "../progress";
 import { applyWeapon, weaponOf, weaponName, weaponEffectText, weaponImage, weaponSeriesName, weaponSeriesText, OP_WEAPON_STATS, WEAPON_KO, WEAPON_ICON } from "../weapons";
 import { PRESET_PARTIES, ARCHETYPE_LABEL } from "../parties";
@@ -246,13 +246,21 @@ export default function RosterSelect({ onStart }: { onStart: (picks: PartyPick[]
                 </div>
               ))}
             </div>
-            {unit.attrs && (
-              <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 border-t border-ef-line/40 pt-1.5 font-mono text-[13px]">
-                {([["힘", unit.attrs.str, "체력 · 일반 공격 피해"], ["민첩", unit.attrs.agi, "속도"], ["지능", unit.attrs.int, "스킬 피해"], ["의지", unit.attrs.wil, "유틸 · 궁극기 게이지"]] as [string, number, string][]).map(([k, v, t]) => (
-                  <span key={k} className="text-ef-muted" title={`${k} → ${t}`}>{k} <b className="text-ef-ink">{v}</b></span>
-                ))}
-              </div>
-            )}
+            {unit.attrs && (() => {
+              const ms = OP_MAINSUB[unit.id]; // [주요, 보조] 능력치 키
+              const rows: [string, "str" | "agi" | "int" | "wil", number, string][] = [["힘", "str", unit.attrs.str, "체력 · 일반 공격 피해"], ["민첩", "agi", unit.attrs.agi, "속도"], ["지능", "int", unit.attrs.int, "스킬 피해"], ["의지", "wil", unit.attrs.wil, "유틸 · 궁극기 게이지"]];
+              return (
+                <div className="mt-1.5 border-t border-ef-line/40 pt-1.5">
+                  <div className="flex flex-wrap gap-x-3 gap-y-0.5 font-mono text-[13px]">
+                    {rows.map(([k, key, v, t]) => {
+                      const main = ms?.[0] === key, sub = ms?.[1] === key;
+                      return <span key={k} className={main ? "text-ef-accent-soft" : "text-ef-muted"} title={`${k} → ${t}${main ? " · 주요 능력치" : sub ? " · 보조 능력치" : ""}`}>{main ? "★ " : sub ? "☆ " : ""}{k} <b className={main ? "text-ef-accent" : "text-ef-ink"}>{v}</b></span>;
+                    })}
+                  </div>
+                  {ms && <div className="mt-1 font-mono text-[12px] text-ef-muted">장비 제작 우선 → <b className="text-ef-accent-soft">★ 주요 {ATTR_KO[ms[0]]}</b> · <span className="text-ef-ink">☆ 보조 {ATTR_KO[ms[1]]}</span> <span className="text-ef-muted/60">— 공격력 = 주요×0.5% + 보조×0.2%</span></div>}
+                </div>
+              );
+            })()}
             {/* 결 「전략 수립」 듀얼폼 — 장비 한 칸 차이로 뒤집히므로 현재 폼과 판정 근거를 항상 노출한다. */}
             {focusId === "arcane" && geared.panelAttrs && (() => {
               const p = geared.panelAttrs!; const wis = p.int >= p.wil; const gap = Math.abs(Math.round(p.int - p.wil));

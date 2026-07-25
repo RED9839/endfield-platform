@@ -407,7 +407,8 @@ export function gainUlt(u: DDUnit, amt: number): void {
   u.ultCharge = Math.min(u.ultCost, u.ultCharge + amt * (u.ultEffMul ?? 1) * (u.wilMul ?? 1));
 }
 const ANOMALY_WINDOW = 2;  // 아츠 이상/부착 소모·흡수 윈도우 지속(턴). 1이면 그 라운드 안에서만 = 속도 느린 셋업이 빠른 페이오프를 못 살림
-export const GAUGE_REGEN = 45;     // 라운드당 자연 회복(≈12.5초/칸)
+export const GAUGE_REGEN = 45;     // (구) 라운드당 일괄 회복 — 현재 미사용. 아래 오퍼 턴마다 회복으로 대체
+export const GAUGE_TURN_REGEN = 12; // 아군 오퍼 턴이 올 때마다 조금씩 회복(파티 공유) — 4인 기준 라운드 ≈ +48
 const BASIC_RECOVER = 35;   // 일반 공격 강력한 일격 → 게이지 회복(원작 기준, _combat-system.md)
 const EXEC_RECOVER = 60;    // 처형(불균형 적) → 게이지 대량 회복(원작 기준 · 강일의 약 2배)
 export const EXECUTE_MULT = 6;     // 처형 피해 배율(불균형 적 일반 공격)
@@ -1605,10 +1606,11 @@ export function startRound(s: DDState): void {
   s.anomalyConsumed = Math.max(0, (s.anomalyConsumed ?? 0) - 1); // 아츠 이상/소모·흡수 윈도우 감쇠(즉시 리셋 X — ATB 순서상 셋업이 페이오프보다 늦게 오면 창이 닫혀버림)
   s.allyHit = false; // 피격 트리거 윈도우 리셋(엠버 전선에서의 지원)
   if (s.linkEvents) for (const k of Object.keys(s.linkEvents)) if (--s.linkEvents[k] <= 0) delete s.linkEvents[k]; // 연계 이벤트 윈도우 감쇠
-  gaugeUp(s, GAUGE_REGEN); // 스킬 게이지 자연 회복(파티 공유)
+  // 게이지 회복은 라운드 일괄이 아니라 아군 오퍼 턴마다(perTurn)에서 조금씩 준다.
 }
 // 유닛 자기 턴 시작 효과 — 지속피해·재생·불균형 회복·타이머 감쇠·연계 쿨. ATB에서 행동 직전 호출.
 export function perTurn(s: DDState, u: DDUnit): void {
+  if (u.side === "ally" && u.hp > 0) gaugeUp(s, GAUGE_TURN_REGEN); // 아군 오퍼 턴마다 팀 게이지 조금씩 회복(라운드 일괄 대체)
   if (u.dot > 0) { u.hp = Math.max(0, u.hp - u.dot); s.log.push(`${u.name} 지속 피해 -${u.dot}`); }
   if (u.hp <= 0) moveBloodWing(s, u, s.log); // 지속 피해로 죽어도 날개는 옮겨간다
   if ((u.regen || 0) > 0 && (u.regenTurns || 0) > 0) { const h = Math.min(u.maxHp - u.hp, u.regen!); if (h > 0) { u.hp += h; s.log.push(`${u.name} 재생 +${h}`); } u.regenTurns = (u.regenTurns || 0) - 1; if ((u.regenTurns || 0) <= 0) u.regen = 0; }
