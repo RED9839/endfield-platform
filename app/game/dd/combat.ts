@@ -804,8 +804,8 @@ export function onAllyHit(s: DDState, self: DDUnit, t: DDUnit, final: number, lo
     const cat = s.units.find((u) => u.id === "catcher" && u.hp > 0 && (u.timers.guard || 0) > 0);
     if (cat) {
       const d = applyDamage(self, mitigate(self, cat.attack * eb(cat) * 1.78, "physical"));
-      self.physBreak = Math.min(MAX_BREAK, self.physBreak + 1); setTimer(self, "physBreak", DUR_BREAK);
-      log.push(`  → 카치르 반격(패링)! 물리 -${d.toLocaleString()} · 방어 불능 1스택 (방어 불능 ${self.physBreak})`);
+      bumpVuln(self, "physical", 0.1); // 원작: 반격이 공격한 적에게 취약 1스택(물리 취약 +10%). 방어 불능이 아님
+      log.push(`  → 카치르 반격(패링)! 물리 -${d.toLocaleString()} · 물리 취약 +10%`);
     }
 
   }
@@ -1062,6 +1062,9 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
     }
     if (skill.crystal && t.hp > 0) { add(t, "crystal"); log.push(`  → 오리지늄 결정 부착`); }
     if (skill.apply) skill.apply(t, self, s);
+    // 자이히 「가동 프로세스」(재능): 냉기 부착/오리지늄 결정 적을 아군이 명중하면 냉기 취약(받는 냉기 +10%, 스택 없음).
+    // 원작은 연계뿐 아니라 모든 타격에 적용된다 — 자이히가 편성에 살아 있으면 누구의 공격이든 발동.
+    if (t.side === "enemy" && t.hp > 0 && (t.arts.cryo > 0 || has(t, "crystal")) && s.units.some((u) => u.id === "xaihi" && u.side === "ally" && u.hp > 0)) bumpRecv(t, "cryo", 0.1, DUR_VULN);
     const hadCrystal = has(t, "crystal"); // 현실 정지 판정(소모 전 기준)
     // 오리지늄 결정 소모: 결정 부착 적에게 물리 이상/궁극 → 결정 파괴 추가 물리 + 관리자 본질 붕괴(+30%)
     if (hadCrystal && (skill.anomaly || skill.kind === "ult")) {
@@ -1416,12 +1419,13 @@ export function act(s: DDState, self: DDUnit, skill: DDSkill): void {
       }
       log.push(`  → 오버클럭 타임! 팀 전기/열기 증폭 +8%`);
     }
-    if (skill.kind === "link") { // 자기 폭풍 실험장: 포커싱 적 아츠 부착/물리 이상 재부여(지속 갱신)
+    if (skill.kind === "link") { // 자기 폭풍 실험장: 원작 "상태이상 복제" — 대상이 가진 아츠 부착/물리 이상을 한 스택 더 복제
       const t = pickTargets(s, self, skill)[0];
       if (t) {
-        ELEMENTS.forEach((e) => { if (t.arts[e] > 0) setTimer(t, "arts:" + e, DUR_ATTACH); });
-        if (t.physBreak > 0) setTimer(t, "physBreak", DUR_BREAK);
-        log.push(`  → 안탈: 아츠 부착/물리 이상 갱신(재부여)`);
+        let dup = false;
+        ELEMENTS.forEach((e) => { if (t.arts[e] > 0) { t.arts[e] = t.arts[e] + 1; setTimer(t, "arts:" + e, DUR_ATTACH); dup = true; } });
+        if (t.physBreak > 0) { t.physBreak = Math.min(MAX_BREAK, t.physBreak + 1); setTimer(t, "physBreak", DUR_BREAK); dup = true; }
+        if (dup) log.push(`  → 안탈: 상태이상 복제(스택 +1)`);
       }
     }
   }

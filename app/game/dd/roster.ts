@@ -1,7 +1,7 @@
 // ===== DD류 물리 4인 + 적 정의 (프로토타입) =====
 // 스킬은 위키 매핑. 사용 요구(requires)가 카드 모델에서 깨지던 "연계 조건"을 DD류에선 자연 흡수.
 import { setApplyAttrs, setAttrBonus, setMainSub } from "./gear";
-import { bumpVuln, bumpRecv, vulnFor, setTimer, applyBuff, ELEMENTS, attrResists, ATTR_AVG, attrBonus, hasLinkEvent, type DDClass, type DDSkill, type DDUnit, type Element, arcaneForm } from "./combat";
+import { bumpVuln, vulnFor, setTimer, applyBuff, ELEMENTS, attrResists, ATTR_AVG, attrBonus, hasLinkEvent, type DDClass, type DDSkill, type DDUnit, type Element, arcaneForm } from "./combat";
 import { promoMult, skillMult, skillUtilMult, DEFAULT_PROGRESS, type OpProgress } from "./progress";
 import { ENEMY_TRAITS } from "./enemy-traits";
 
@@ -206,7 +206,7 @@ export const SKILLS: Record<string, DDSkill[]> = {
     // 스트레스 테스트(연계 200%, 쿨 8초≈2턴): 디도스 활성 시. 냉기 + 냉기 부착 + 가동 프로세스(냉기/동결 적 → 냉기 취약 10%).
     { id: "xai-l", name: "스트레스 테스트", kind: "link", fromPos: [1, 2, 3], target: "single-front", power: 3.6, mst: [3.85, 4.15, 4.5], element: "cryo", attach: "cryo", staggerVal: 10, cooldown: 2,
       requires: (_t, self) => (self.didosUsed || 0) >= 2, requiresText: "디도스 회복 2회 소진",
-      apply: (t) => { if (t.arts.cryo > 0 || t.frozen > 0) bumpRecv(t, "cryo", 0.1, 1); }, note: "냉기 부착 + 가동 프로세스(냉기 취약)" },
+      note: "냉기 부착 (가동 프로세스 냉기 취약은 재능이 모든 타격에 적용 — combat.ts)" },
     // 스택 오버플로(궁, 게이지 80): 팀 전체 냉기 증폭 + 자연 증폭(12초, 지능→장비등급 비례, 상한 30%).
     { id: "xai-u", name: "스택 오버플로", kind: "ult", fromPos: [1, 2, 3], target: "self", power: 0, staggerVal: 0, selfUlt: true, note: "팀 냉기/자연 증폭" },
   ],
