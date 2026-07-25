@@ -952,12 +952,19 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
       {/* 연계 콤보 — 스킬 발동으로 조건이 열린 연계를 아이콘으로 띄우고 플레이어가 발동/패스 */}
       {!winner && linkCombo && (() => {
         const op = OPERATORS.find((o) => o.id === linkCombo.unitId);
+        const lu = s.units.find((x) => x.id === linkCombo.unitId); // 연계 시전 오퍼 — 데미지 계산용
+        const lel = (linkCombo.skill.element ?? "physical") as Element | "physical";
+        const ldmg = lu && linkCombo.skill.power > 0 ? Math.round(realAtk(lu.attack) * (1 + (lu.atkBuff || 0)) * (lu.weakenMul ?? 1) * linkCombo.skill.power) : 0;
         return (
           <div className="hud-panel dd-cut mt-3 flex items-center gap-3 p-3" style={{ borderColor: "rgba(103,232,249,0.55)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.05), 0 0 30px -8px rgba(103,232,249,0.5)" }}>
             <img src={skillIcon(linkCombo.unitId, "link")} alt="" className="dd-skill-ready h-14 w-14 shrink-0 border border-[#67e8f9]/60 bg-black/40 object-contain p-1" onError={(e) => { (e.currentTarget as HTMLImageElement).style.visibility = "hidden"; }} />
             <div className="min-w-0 flex-1">
               <div className="font-mono text-[13px] font-bold uppercase tracking-wider text-[#67e8f9]">⚡ 연계 발동 가능</div>
-              <div className="truncate font-mono text-lg font-bold text-white">{op?.name ?? linkCombo.unitId} 「{linkCombo.skill.name}」</div>
+              <div className="flex min-w-0 flex-wrap items-baseline gap-x-2">
+                <span className="truncate font-mono text-lg font-bold text-white">{op?.name ?? linkCombo.unitId} 「{linkCombo.skill.name}」</span>
+                {ldmg > 0 && <span className="shrink-0 whitespace-nowrap font-mono text-lg font-black tabular-nums" style={{ color: elementColor[lel] }}>{ldmg.toLocaleString()}<span className="ml-0.5 text-[13px] font-normal text-ef-muted">피해</span></span>}
+                <span className="shrink-0 whitespace-nowrap font-mono text-[12px] text-ef-muted">배율 {Math.round(linkCombo.skill.power * 100)}%</span>
+              </div>
             </div>
             <button type="button" onClick={fireLink} className="dd-cut shrink-0 px-5 py-2.5 font-mono text-sm font-black uppercase tracking-wider transition hover:brightness-110" style={{ background: "linear-gradient(180deg,#7de3f0,#3bb8d0)", color: "#04121a", boxShadow: "0 0 20px -4px rgba(103,232,249,0.6)" }}>연계 발동 →</button>
             <button type="button" onClick={skipLink} className="shrink-0 border border-ef-line px-3 py-2.5 font-mono text-sm font-bold uppercase tracking-wider text-ef-muted transition hover:border-ef-accent/50 hover:text-white">패스</button>
