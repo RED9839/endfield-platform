@@ -89,7 +89,7 @@ function battlePayoff(s: DDState, u: DDUnit, sk: DDSkill): string | null {
 const statusLabel: Record<string, string> = { stun: "기절", combustion: "연소", corrosion: "부식", crystal: "결정", "armor-break": "갑옷파괴", shock: "감전", wing: "날개" };
 const nodeTitle: Record<NodeKind, string> = { battle: "교전", elite: "정예 교전", boss: "보스 교전", rest: "야영" };
 const behaviorLabel: Record<string, string> = { melee: "근접 돌격", snipe: "원거리 저격", heavy: "중장 강타", aoe: "광역 자폭", heal: "치유 지원", buff: "강화 지원" };
-const targetDesc: Record<string, string> = { any: "무지향 — 아무나 문다", wounded: "부상자 저격 — 체력% 낮은 대상 마무리", threat: "고위협 직격 — 공격력 높은 딜러 조준" };
+const targetDesc: Record<string, string> = { any: "무지향 — 아무 대상이나 뭅니다", wounded: "부상자 저격 — 체력% 낮은 대상 마무리", threat: "고위협 직격 — 공격력 높은 딜러 조준" };
 // 적 행동 유형별 위협 설명 + 처치 우선도(높을수록 먼저 제거) — 적 상세 패턴 보강용
 const behaviorDesc: Record<string, string> = {
   melee: "빠르게 접근해 직접 타격하는 근접형.",
@@ -718,15 +718,15 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
           <div className="sm:col-span-2 mb-1 flex items-center justify-between"><span className="font-mono text-[15px] font-bold uppercase tracking-wider text-ef-accent-soft">❔ 전투 용어</span><button type="button" onClick={() => setShowHelp(false)} className="hud-btn dd-cut px-2 py-0.5 font-mono text-[13px] text-ef-muted hover:text-white">닫기</button></div>
           <div className="sm:col-span-2 mb-1 border-l-2 border-ef-accent/60 bg-ef-accent/[0.06] px-3 py-2">
             <div className="mb-1 font-mono text-[13px] font-bold text-ef-accent-soft">🎮 전투 흐름 — 처음이라면 여기부터</div>
-            <div className="text-ef-muted"><b className="text-white/85">① 속도 순서</b>대로 행동한다(좌측 순서표). <b className="text-white/85">② 내 턴</b>에 스킬을 고른다 — <span className="text-[#a1a1aa]">일반</span>·<span className="text-ef-accent-soft">배틀</span>·<span className="text-[#67e8f9]">연계</span>·<span className="text-[#facc15]">궁</span>. <b className="text-white/85">③ 단일 스킬</b>은 이어서 <b className="text-white/85">공격할 적</b>을 고른다. <b className="text-white/85">④ 불균형</b>을 채우면 적이 무력화되고 받는 피해가 커진다.</div>
+            <div className="text-ef-muted"><b className="text-white/85">① 속도 순서</b>대로 행동합니다(좌측 순서표). <b className="text-white/85">② 내 턴</b>에 스킬을 고릅니다 — <span className="text-[#a1a1aa]">일반</span>·<span className="text-ef-accent-soft">배틀</span>·<span className="text-[#67e8f9]">연계</span>·<span className="text-[#facc15]">궁</span>. <b className="text-white/85">③ 단일 스킬</b>은 이어서 <b className="text-white/85">공격할 적</b>을 고릅니다. <b className="text-white/85">④ 불균형</b>을 채우면 적이 무력화되고 받는 피해가 커집니다.</div>
           </div>
           <div><b className="text-[#f5c542]">팀 게이지</b> <span className="text-ef-muted">— 파티 4명이 함께 쓰는 자원. 배틀 스킬 1회에 100 소모. 일반 공격으로 조금씩 회복하고 아군 오퍼 턴마다 +12.</span></div>
-          <div><b className="text-[#f5c542]">궁 에너지</b> <span className="text-ef-muted">— 오퍼별 개인 자원. <b className="text-white/80">배틀·연계로만</b> 찬다. 일반 공격으로는 안 오른다.</span></div>
-          <div><b className="text-[#a16207]">불균형</b> <span className="text-ef-muted">— 적 HP 아래 노란 바. 가득 차면 적이 행동 불가가 되고 받는 피해가 30% 오른다. 스킬마다 붙은 「불균형 +N」으로 쌓는다.</span></div>
-          <div><b className="text-[#67e8f9]">부착</b> <span className="text-ef-muted">— 적에게 묻은 속성(열기·전기·냉기·자연). 연계 스킬 상당수가 이걸 조건으로 삼고, 소모하면 큰 효과가 터진다.</span></div>
-          <div><b className="text-[#67e8f9]">연계</b> <span className="text-ef-muted">— 조건이 열리면 아이콘이 뜨고, 누르면 그 오퍼가 <b className="text-white/80">추가 턴</b>으로 끼어든다. 조건이 겹치면 편성 왼쪽부터.</span></div>
-          <div><b className="text-[#a3e635]">이월 ⤴</b> <span className="text-ef-muted">— 궁 에너지와 레바테인 「녹아내린 불꽃」은 다음 교전으로 넘어간다. 청뢰검·아이스 슈터·삼형 자세는 전투가 끝나면 사라진다.</span></div>
-          <div><b className="text-[#ff8a76]">피격 확률</b> <span className="text-ef-muted">— 적은 위치가 아니라 직군을 보고 문다. 디펜더·뱅가드가 더 자주 맞는다.</span></div>
+          <div><b className="text-[#f5c542]">궁 에너지</b> <span className="text-ef-muted">— 오퍼별 개인 자원입니다. <b className="text-white/80">배틀·연계로만</b> 찹니다. 일반 공격으로는 오르지 않습니다.</span></div>
+          <div><b className="text-[#a16207]">불균형</b> <span className="text-ef-muted">— 적 HP 아래 노란 바입니다. 가득 차면 적이 행동 불가가 되고 받는 피해가 30% 오릅니다. 스킬마다 붙은 「불균형 +N」으로 쌓습니다.</span></div>
+          <div><b className="text-[#67e8f9]">부착</b> <span className="text-ef-muted">— 적에게 묻은 속성(열기·전기·냉기·자연)입니다. 연계 스킬 상당수가 이걸 조건으로 삼고, 소모하면 큰 효과가 터집니다.</span></div>
+          <div><b className="text-[#67e8f9]">연계</b> <span className="text-ef-muted">— 조건이 열리면 아이콘이 뜨고, 누르면 그 오퍼가 <b className="text-white/80">추가 턴</b>으로 끼어듭니다. 조건이 겹치면 편성 왼쪽부터입니다.</span></div>
+          <div><b className="text-[#a3e635]">이월 ⤴</b> <span className="text-ef-muted">— 궁 에너지와 레바테인 「녹아내린 불꽃」은 다음 교전으로 넘어갑니다. 청뢰검·아이스 슈터·삼형 자세는 전투가 끝나면 사라집니다.</span></div>
+          <div><b className="text-[#ff8a76]">피격 확률</b> <span className="text-ef-muted">— 적은 위치가 아니라 직군을 보고 뭅니다. 디펜더·뱅가드가 더 자주 맞습니다.</span></div>
         </div>
         </div>
       )}

@@ -330,7 +330,7 @@ export default function GamePage() {
         <div className="mx-auto max-w-[720px] px-4 py-16 text-center sm:px-7">
           <div className="hud-panel dd-cut p-10" style={{ borderColor: run.phase === "victory" ? "#ff9a2f66" : "#b3312a66", boxShadow: `inset 0 1px 0 rgba(255,255,255,0.04), 0 0 60px -20px ${run.phase === "victory" ? "rgba(255,154,47,0.6)" : "rgba(179,49,42,0.6)"}` }}>
             <div className="mb-2 text-4xl font-bold" style={{ fontFamily: "var(--dd-display)", letterSpacing: "0.14em", color: run.phase === "victory" ? "#ffbe6b" : "#e5484d", textShadow: `0 0 24px ${run.phase === "victory" ? "rgba(255,190,107,0.5)" : "rgba(229,72,77,0.5)"}` }}>{run.phase === "victory" ? "원정 성공" : "원정 실패"}</div>
-            <p className="mb-6 text-base text-ef-muted">{run.phase === "victory" ? "던전 심층의 공포를 몰아냈다. 부대가 어둠을 뚫고 귀환한다." : "부대가 던전의 어둠 속으로 사라졌다."}</p>
+            <p className="mb-6 text-base text-ef-muted">{run.phase === "victory" ? "던전 심층의 공포를 몰아냈습니다. 부대가 어둠을 뚫고 귀환합니다." : "부대가 던전의 어둠 속으로 사라졌습니다."}</p>
             {/* 전리품 — 이번 원정 누적 획득(승리 시) */}
             {run.phase === "victory" && (() => {
               const L = run.loot;
