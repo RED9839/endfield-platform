@@ -695,19 +695,19 @@ export default function BattleView({ party, encounterKey, nodeKind, faction, bos
         </div>
       )}
       {/* 상단 헤더 — 밖(메뉴) 화면과 통일: Darkest Protocol · 부제 / 큰 제목 + 라운드, 그 아래 게이지, 우측 컨트롤 */}
-      <div className="hud-panel dd-cut mb-3 px-4 py-2.5">
+      <div className="hud-panel dd-cut mb-2 px-3 py-1.5 sm:mb-3 sm:px-4 sm:py-2.5">
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1.5">
           <div className="min-w-0">
-            <p className="font-mono text-[13px] font-bold uppercase tracking-[0.32em] text-ef-accent/70">Darkest Protocol · 던전 교전</p>
-            <h2 className="font-mono text-xl font-black uppercase leading-tight tracking-[0.1em]" style={{ color: nodeKind === "boss" ? "#f0776e" : "#f4e9d2" }}>{nodeTitle[nodeKind]}<span className="ml-2 text-ef-accent">R{s.round}</span></h2>
+            <p className="hidden font-mono text-[13px] font-bold uppercase tracking-[0.32em] text-ef-accent/70 sm:block">Darkest Protocol · 던전 교전</p>
+            <h2 className="font-mono text-base font-black uppercase leading-tight tracking-[0.1em] sm:text-xl" style={{ color: nodeKind === "boss" ? "#f0776e" : "#f4e9d2" }}>{nodeTitle[nodeKind]}<span className="ml-2 text-ef-accent">R{s.round}</span></h2>
           </div>
           <div className="flex shrink-0 items-center gap-2">
             {/* 교전 중 지도 — 남은 구역을 보고 소비템·게이지를 아낄지 정한다(진입은 불가) */}
-            {onShowMap && <button type="button" onClick={onShowMap} className="hud-btn dd-cut px-3 py-1.5 font-mono text-[15px] font-bold uppercase tracking-wider text-ef-muted" title="이번 층 지도 — 남은 구역 확인(경로 변경 불가)">🗺 지도</button>}
-            <button type="button" onClick={() => setShowHelp((v) => !v)} className={`hud-btn dd-cut px-3 py-1.5 font-mono text-[15px] font-bold uppercase tracking-wider ${showHelp ? "text-ef-accent" : "text-ef-muted"}`} title="전투 용어 설명">❔ 용어</button>
-            <button type="button" onClick={() => setShowLog((v) => !v)} className={`hud-btn dd-cut px-3 py-1.5 font-mono text-[15px] font-bold uppercase tracking-wider ${showLog ? "hud-btn-on" : "text-ef-muted"}`} title="데미지·전투 기록">기록 {showLog ? "▴" : "▾"}</button>
-            {!winner && <button type="button" onClick={cycleSpeed} className="hud-btn dd-cut px-3 py-1.5 font-mono text-[15px] font-bold uppercase tracking-wider text-ef-muted" title="재생 속도">{speed}배속</button>}
-            {!winner && <button type="button" onClick={toggleAuto} className={`hud-btn dd-cut px-3.5 py-1.5 font-mono text-[15px] font-bold uppercase tracking-wider ${auto ? "hud-btn-on" : "text-ef-muted"}`}>{auto ? "자동 ON" : "수동"}</button>}
+            {onShowMap && <button type="button" onClick={onShowMap} className="hud-btn dd-cut px-2 py-1 font-mono text-[13px] sm:px-3 sm:py-1.5 sm:text-[15px] font-bold uppercase tracking-wider text-ef-muted" title="이번 층 지도 — 남은 구역 확인(경로 변경 불가)">🗺 지도</button>}
+            <button type="button" onClick={() => setShowHelp((v) => !v)} className={`hud-btn dd-cut px-2 py-1 font-mono text-[13px] sm:px-3 sm:py-1.5 sm:text-[15px] font-bold uppercase tracking-wider ${showHelp ? "text-ef-accent" : "text-ef-muted"}`} title="전투 용어 설명">❔ 용어</button>
+            <button type="button" onClick={() => setShowLog((v) => !v)} className={`hud-btn dd-cut px-2 py-1 font-mono text-[13px] sm:px-3 sm:py-1.5 sm:text-[15px] font-bold uppercase tracking-wider ${showLog ? "hud-btn-on" : "text-ef-muted"}`} title="데미지·전투 기록">기록 {showLog ? "▴" : "▾"}</button>
+            {!winner && <button type="button" onClick={cycleSpeed} className="hud-btn dd-cut px-2 py-1 font-mono text-[13px] sm:px-3 sm:py-1.5 sm:text-[15px] font-bold uppercase tracking-wider text-ef-muted" title="재생 속도">{speed}배속</button>}
+            {!winner && <button type="button" onClick={toggleAuto} className={`hud-btn dd-cut px-2.5 py-1 font-mono text-[13px] font-bold uppercase tracking-wider sm:px-3.5 sm:py-1.5 sm:text-[15px] ${auto ? "hud-btn-on" : "text-ef-muted"}`}>{auto ? "자동 ON" : "수동"}</button>}
           </div>
         </div>
 
