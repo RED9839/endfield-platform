@@ -1,6 +1,6 @@
 "use client";
 // 닼던류 런 상태 — 편성 → 던전 맵(노드 진행) → 전투(HP 지속 소모) → 야영/보스. DD 엔진 위에 로그라이크 흐름.
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { makeAlly } from "./roster";
 import { GEAR_SLOTS, LOADOUT_SLOTS, GEAR_PIECE_BY_ID, type Loadout } from "./gear";
@@ -94,10 +94,15 @@ export function useDDRun() {
   const [lastBattle, setLastBattle] = useState<RunRecord["battles"][number] | null>(null); // 방금 전투 요약(전리품 화면 딜 분배 표시)
   const [market, setMarket] = useState<MarketOffer[]>([]); // 물자관리 단말기 시세 물자(야영 진입마다 갱신)
   const [lastRecord, setLastRecord] = useState<RunRecord | null>(null); // 방금 완주/실패 기록(승리 화면 표시·복사)
-  // 최신 상태 미러(콜백 클로저에서 stale 방지) + 원정 기록 누적
-  const partyRef = useRef(party); partyRef.current = party;
-  const lootRef = useRef(loot); lootRef.current = loot;
-  const floorRef = useRef(floor); floorRef.current = floor;
+  // 최신 상태 미러(콜백 클로저에서 stale 방지) + 원정 기록 누적.
+  // 미러 갱신은 커밋 후 effect에서 — 렌더 중 ref 쓰기는 동시성 렌더에서 안전하지 않다.
+  // 읽는 쪽(saveRecord·finishBattle)은 전부 이벤트 핸들러라 커밋 이후에만 돈다.
+  const partyRef = useRef(party);
+  const lootRef = useRef(loot);
+  const floorRef = useRef(floor);
+  useEffect(() => { partyRef.current = party; }, [party]);
+  useEffect(() => { lootRef.current = loot; }, [loot]);
+  useEffect(() => { floorRef.current = floor; }, [floor]);
   const battlesRef = useRef<RunRecord["battles"]>([]);
   const startRef = useRef(0);
 
