@@ -551,9 +551,13 @@ export function regionEncounter(faction: string, kind: NodeKind, depth: number, 
     }
     ids = [...lead, ...adds];
   } else {
-    const tier = tierAt(kind, depth, maxDepth);
-    // 일반 교전도 최소 3마리. 2마리 편성은 범위·전체 스킬이 놀고 단일 딜만 정답이 되어 편성 맛이 죽는다.
-    ids = pickSquad(faction, tier, depth >= 4 ? 4 : 3, recent); // 일반: 3마리 → 중반(depth 4+) 4마리
+    // 기본 교전도 "고위 잡몹 1 + 부하 2~3" 계층 구조 — 우두머리가 한 단계 위, 부하는 그 아래.
+    const leadTier = tierAt(kind, depth, maxDepth); // 깊이 스케일: 초반 common → 중반 enhanced → 후반 advanced
+    const lead = pickSquad(faction, leadTier, 1, recent); // 고위 잡몹 우두머리
+    const lt = D[lead[0]]?.tier ?? leadTier;
+    const subTier = TIER_RANK[Math.max(0, TIER_RANK.indexOf(lt) - 1)]; // 부하 = 한 단계 아래
+    const subs = pickSquad(faction, subTier, depth >= 4 ? 3 : 2, recent, new Set(lead)); // 부하 2~3(우두머리 중복 금지)
+    ids = [...lead, ...subs];
   }
   recentEnemies.push(...ids);
   recentEnemies = recentEnemies.slice(-8); // 최근 8마리를 회피 대상으로 유지
