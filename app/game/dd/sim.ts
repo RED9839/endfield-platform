@@ -497,6 +497,15 @@ export function resetEncounterHistory(): void { recentEnemies = []; }
 // 리전 교전 생성: 세력 + 노드종류 + 깊이 → 편성(여러 종 혼합 + 최근 등장 회피)
 // 층 스탯 배율 — 층이 오를수록 적 HP·공격력↑(타워 등반). 1층 ×1.0 → 6층 ×1.6(층당 +12%)
 export const floorScale = (floor: number) => 1 + Math.max(0, floor) * 0.04;
+// 정예/변종 네임드 목록 — 세력별 정예 표기: "· 정예"(본크러셔) · "· α/β/γ/δ"(아겔로스·수화자 변종).
+// 정예 노드 부하 테마용(정예 우두머리 + 정예/변종 부하).
+const isVariantName = (n: string) => /정예|[αβγδ]/.test(n);
+function eliteNamedOf(faction: string): string[] {
+  const ids: string[] = [];
+  const scan = (fac: string) => { const p = FACTION_POOL[fac]; if (!p) return; for (const arr of Object.values(p.byTier)) for (const id of (arr ?? [])) if (isVariantName(D[id]?.name ?? "")) ids.push(id); };
+  scan(faction); const kin = KIN_FACTION[faction]; if (kin) scan(kin);
+  return [...new Set(ids)];
+}
 // 정예 우두머리 보정: 세력(+근연) 풀에서 목표 티어 이상의 적을, 목표에 가장 가까운 티어부터 찾는다.
 function eliteLeaderAtLeast(faction: string, tier: string): string | undefined {
   const pool = FACTION_POOL[faction] ?? FACTION_POOL[FACTIONS[0]];
@@ -529,9 +538,17 @@ export function regionEncounter(faction: string, kind: NodeKind, depth: number, 
       if (TIER_RANK.indexOf(D[lead[0]]?.tier ?? "") < TIER_RANK.indexOf(tgt)) { const hi = eliteLeaderAtLeast(faction, tgt); if (hi) lead = [hi]; }
     }
     const leadTier = D[lead[0]]?.tier ?? "advanced"; // 실제로 뽑힌 티어 기준
-    // B: 부하도 우두머리와 같은 정예 tier — "정예 몹 1 + 정예 부하 2~3" 구성
-    const low = leadTier;
-    const adds = pickSquad(faction, low, depth >= 4 ? 3 : 2, recent, new Set(lead)); // 하위 호위 2~3(우두머리 중복 금지)
+    const nAdds = depth >= 4 ? 3 : 2;
+    // B: 부하는 "· 정예" 이름 붙은 정예병 우선(약탈자·정예·저격수·정예 등 — 정예 부대 테마).
+    //    세력에 정예병이 없거나 모자라면 우두머리 동급 tier로 보충.
+    const named = eliteNamedOf(faction).filter((id) => !lead.includes(id));
+    let adds: string[];
+    if (named.length) {
+      adds = shuffle(named).slice(0, nAdds);
+      if (adds.length < nAdds) adds = [...adds, ...pickSquad(faction, leadTier, nAdds - adds.length, recent, new Set([...lead, ...adds]))];
+    } else {
+      adds = pickSquad(faction, leadTier, nAdds, recent, new Set(lead)); // 정예병 없는 세력은 tier로
+    }
     ids = [...lead, ...adds];
   } else {
     const tier = tierAt(kind, depth, maxDepth);
