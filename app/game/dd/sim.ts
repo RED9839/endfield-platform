@@ -529,8 +529,8 @@ export function regionEncounter(faction: string, kind: NodeKind, depth: number, 
       if (TIER_RANK.indexOf(D[lead[0]]?.tier ?? "") < TIER_RANK.indexOf(tgt)) { const hi = eliteLeaderAtLeast(faction, tgt); if (hi) lead = [hi]; }
     }
     const leadTier = D[lead[0]]?.tier ?? "advanced"; // 실제로 뽑힌 티어 기준
-    // B: 호위 = 우두머리 한 단계 아래(정예 팩을 묵직하게 — 두 단계 아래는 잡몹이 됐다)
-    const low = TIER_RANK[Math.max(0, TIER_RANK.indexOf(leadTier) - 1)];
+    // B: 부하도 우두머리와 같은 정예 tier — "정예 몹 1 + 정예 부하 2~3" 구성
+    const low = leadTier;
     const adds = pickSquad(faction, low, depth >= 4 ? 3 : 2, recent, new Set(lead)); // 하위 호위 2~3(우두머리 중복 금지)
     ids = [...lead, ...adds];
   } else {
