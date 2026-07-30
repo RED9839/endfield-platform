@@ -171,9 +171,9 @@ export function useDDRun() {
     setPhase("map");
   }, []);
 
-  // 층 보스 격파 → 다음 층 진입(전열 재정비 = HP 회복, 재화 이월, 새 세력 맵)
+  // 층 보스 격파 → 다음 층 진입(재화 이월, 새 세력 맵). 난이도: 층클리어 완전회복 제거 —
+  // 생존자는 현재 HP를 다음 층으로 이월(누적 소모). 회복은 야영(30%)·소비 아이템으로만.
   const advanceFloor = useCallback(() => {
-    setParty((cur) => cur.map((m) => (m.hp > 0 ? { ...m, hp: m.maxHp } : m))); // 층 클리어 보상: 생존자 HP 완전 회복
     setFloor((f) => {
       const nf = f + 1;
       if (nf >= FLOORS.length) { saveRecord("victory"); setPhase("victory"); return f; } // 최종 층(알레이크레오스) 클리어 → 완주 기록

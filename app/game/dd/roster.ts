@@ -749,10 +749,10 @@ const TIER_STATS: Record<EnemyTier, { hp: number; attack: number; speed: number;
 };
 
 // 아군 저항(≈37.5%) 도입에 따른 적 공격 보정: 아군 실피해 유지(1/(1−저항)≈1.5). 원본 손맛(큰 raw→저항 경감).
-const ENEMY_ATK_COMP = 2.8;
+const ENEMY_ATK_COMP = 3.78; // 난이도 상향 +35% (기존 2.8) — 층클리어 완전회복 제거와 함께 누적 소모형 난이도
 // 아군 스킬9(×1.8) + 풀 장비 + GEAR_ATTR 0.3(단조 반영)으로 파티 딜 상승 → 적 체력 상향으로 도전성 부여.
 // 2.65→2.9: GEAR_ATTR를 0.2→0.3으로 올려 단조를 살린 만큼의 딜 폭주를 적 HP로 상쇄(풀장비 승률 92→88%).
-const ENEMY_HP_COMP = 3.3;
+const ENEMY_HP_COMP = 4.45; // 난이도 상향 +35% (기존 3.3)
 
 // 적 컨셉(역할) → 속도 아키타입 + 우선 타겟. 턴 순서·조준을 컨셉에 맞춰 전략성 부여.
 //  any=무지향(무작위) / wounded=저체력%(부상 딜러 마무리) / threat=최고위협(강화된 딜러 직격)
