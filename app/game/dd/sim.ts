@@ -497,6 +497,16 @@ export function resetEncounterHistory(): void { recentEnemies = []; }
 // 리전 교전 생성: 세력 + 노드종류 + 깊이 → 편성(여러 종 혼합 + 최근 등장 회피)
 // 층 스탯 배율 — 층이 오를수록 적 HP·공격력↑(타워 등반). 1층 ×1.0 → 6층 ×1.6(층당 +12%)
 export const floorScale = (floor: number) => 1 + Math.max(0, floor) * 0.04;
+// 정예 우두머리 보정: 세력(+근연) 풀에서 목표 티어 이상의 적을, 목표에 가장 가까운 티어부터 찾는다.
+function eliteLeaderAtLeast(faction: string, tier: string): string | undefined {
+  const pool = FACTION_POOL[faction] ?? FACTION_POOL[FACTIONS[0]];
+  const byTier: Record<string, string[]> = {};
+  for (const [t, ids] of Object.entries(pool.byTier)) byTier[t] = [...(ids ?? [])];
+  const kin = KIN_FACTION[faction];
+  if (kin && FACTION_POOL[kin]) for (const [t, ids] of Object.entries(FACTION_POOL[kin].byTier)) byTier[t] = [...(byTier[t] ?? []), ...(ids ?? [])];
+  for (let r = TIER_RANK.indexOf(tier); r < TIER_RANK.length; r++) { const ids = byTier[TIER_RANK[r]]; if (ids && ids.length) return pick(ids); }
+  return undefined;
+}
 export function regionEncounter(faction: string, kind: NodeKind, depth: number, maxDepth: number, bossId?: string, floor = 0): DDUnit[] {
   if (depth === 0) recentEnemies = []; // 원정 시작 시 히스토리 초기화(백업)
   const pool = FACTION_POOL[faction] ?? FACTION_POOL[FACTIONS[0]];
@@ -512,10 +522,15 @@ export function regionEncounter(faction: string, kind: NodeKind, depth: number, 
     // 정예 조우: 정예 개체 1마리 + 하위 등급 잡몹 다수(호위). 원작 정예 조우 구성 — 우두머리 하나에 부하가 붙는다.
     const tgt = tierAt(kind, depth, maxDepth);
     let lead = pickSquad(faction, tgt, 1, recent); // 정예 우두머리
-    // 최근 등장 회피 때문에 등급이 크게 떨어지면 회피를 풀고 다시 뽑는다 — 정예 조우엔 정예가 나와야 한다.
-    if (TIER_RANK.indexOf(D[lead[0]]?.tier ?? "") < TIER_RANK.indexOf(tgt) - 1) lead = pickSquad(faction, tgt, 1);
-    const leadTier = D[lead[0]]?.tier ?? "advanced"; // 실제로 뽑힌 티어 기준(풀에 목표 티어가 없을 수 있음)
-    const low = TIER_RANK[Math.max(0, TIER_RANK.indexOf(leadTier) - 2)]; // 우두머리보다 두 단계 아래 = 하위 등급
+    // A: 정예 우두머리는 목표 티어 이상이어야 한다(정예 노드에 진짜 정예가 나오게). 목표 미만이면
+    //    최근회피 풀고 재시도 → 그래도 낮으면 풀에서 목표 이상 티어를 강제로 뽑는다.
+    if (TIER_RANK.indexOf(D[lead[0]]?.tier ?? "") < TIER_RANK.indexOf(tgt)) {
+      lead = pickSquad(faction, tgt, 1);
+      if (TIER_RANK.indexOf(D[lead[0]]?.tier ?? "") < TIER_RANK.indexOf(tgt)) { const hi = eliteLeaderAtLeast(faction, tgt); if (hi) lead = [hi]; }
+    }
+    const leadTier = D[lead[0]]?.tier ?? "advanced"; // 실제로 뽑힌 티어 기준
+    // B: 호위 = 우두머리 한 단계 아래(정예 팩을 묵직하게 — 두 단계 아래는 잡몹이 됐다)
+    const low = TIER_RANK[Math.max(0, TIER_RANK.indexOf(leadTier) - 1)];
     const adds = pickSquad(faction, low, depth >= 4 ? 3 : 2, recent, new Set(lead)); // 하위 호위 2~3(우두머리 중복 금지)
     ids = [...lead, ...adds];
   } else {
@@ -545,10 +560,11 @@ export function enemyDrop(kind: NodeKind, depth: number, faction: string): { cre
 }
 
 // 아군(선택 순서=포지션, 지속 HP·장비 로드아웃) + 인카운터로 전투 상태 생성. 게이지 200/300(+장비 시작 게이지).
-// 정예몹 중앙 배치: 정예급(advanced 이상)이 일반 몹과 섞이면 화면 표시와 범위(row) 인접 판정이
-// 모두 중앙을 향하도록 배열 순서 + pos를 재정렬한다(둘이 어긋나면 "엉뚱한 적이 맞는" 문제).
+// 주력몹 중앙 배치: 팩 내 주력급(enhanced 이상 — 능력 보유 적)이 일반 몹과 섞이면 화면 표시와
+// 범위(row) 인접 판정이 모두 중앙을 향하도록 배열 순서 + pos를 재정렬(둘이 어긋나면 "엉뚱한 적이 맞는" 문제).
+// enhanced(염술사·집행자 등 능력 보유)도 중앙에 — 잡몹 사이에서 눈에 띄고 광역 인접 판정도 맞게.
 const CENTER_TIER_ORDER = ["common", "normal", "enhanced", "advanced", "alpha", "elite", "boss"];
-const isEliteTier = (t?: string) => CENTER_TIER_ORDER.indexOf(t ?? "normal") >= CENTER_TIER_ORDER.indexOf("advanced");
+const isEliteTier = (t?: string) => CENTER_TIER_ORDER.indexOf(t ?? "normal") >= CENTER_TIER_ORDER.indexOf("enhanced");
 function centerElite(enemies: DDUnit[]): DDUnit[] {
   if (enemies.length < 3) return enemies; // 2마리 이하는 중앙 개념이 없다
   const elites = enemies.filter((e) => isEliteTier(e.tier) && !e.summonedBy);
