@@ -2078,7 +2078,7 @@ export default function SimulatorPage() {
         <div className="flex items-center gap-2">
           <span className="h-3 w-3" style={{ background: PRIMARY }} />
           <span className="font-mono text-[11px] font-bold uppercase tracking-[0.3em] text-ef-muted">Growth Sim</span>
-          <span className="font-mono text-[11px] tracking-[0.2em] text-ef-muted/60">// 성장 시뮬레이션</span>
+          <span className="font-mono text-[11px] tracking-[0.2em] text-ef-muted/60">{"// 성장 시뮬레이션"}</span>
         </div>
       </div>
 

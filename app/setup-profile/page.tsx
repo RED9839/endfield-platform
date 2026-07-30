@@ -137,7 +137,7 @@ export default async function SetupProfilePage({
       <div className="relative z-30 mx-auto mb-6 flex max-w-md items-center gap-2">
         <span className="h-3 w-3" style={{ background: PRIMARY }} />
         <span className="font-mono text-[11px] font-bold uppercase tracking-[0.3em] text-ef-muted">Setup</span>
-        <span className="font-mono text-[11px] tracking-[0.2em] text-ef-muted/60">// 프로필 설정</span>
+        <span className="font-mono text-[11px] tracking-[0.2em] text-ef-muted/60">{"// 프로필 설정"}</span>
       </div>
 
       <section

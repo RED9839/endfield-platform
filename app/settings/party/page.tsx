@@ -600,7 +600,7 @@ export default function OperatorSettingRegisterPage() {
         <div className="mb-2.5 flex items-center gap-2">
           <span className="h-3 w-3" style={{ background: PRIMARY }} />
           <span className="font-mono text-[11px] font-bold uppercase tracking-[0.3em] text-ef-muted">Setting Editor</span>
-          <span className="hidden font-mono text-[11px] tracking-[0.2em] text-ef-muted/60 sm:inline">// 오퍼레이터 세팅</span>
+          <span className="hidden font-mono text-[11px] tracking-[0.2em] text-ef-muted/60 sm:inline">{"// 오퍼레이터 세팅"}</span>
         </div>
 
         <header

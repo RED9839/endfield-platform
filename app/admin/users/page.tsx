@@ -49,7 +49,7 @@ export default async function AdminUsersPage() {
           Admin · Users
         </span>
         <span className="font-mono text-[11px] tracking-[0.2em] text-ef-muted/60">
-          // 유저 관리
+          {"// 유저 관리"}
         </span>
       </div>
 

@@ -65,7 +65,7 @@ export default async function AdminPage() {
           Admin Console
         </span>
         <span className="font-mono text-[11px] tracking-[0.2em] text-ef-muted/60">
-          // 관리자
+          {"// 관리자"}
         </span>
       </div>
 

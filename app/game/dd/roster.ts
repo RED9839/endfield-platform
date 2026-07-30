@@ -880,7 +880,8 @@ function tierDmAvg(tier: EnemyTier): [number, number] {
 let ENEMY_UID = 0; // 적 인스턴스 고유 번호 — 소환이 pos를 재사용해도 id 충돌 안 나게(React key 중복 방지)
 export function makeEnemy(def: EnemyDef, pos: number): DDUnit {
   const b = TIER_STATS[def.tier];
-  let { hp, attack, speed, staggerMax, defense } = b;
+  const { defense } = b;
+  let { hp, attack, speed, staggerMax } = b;
   hp = Math.round(hp * ENEMY_HP_COMP);
   attack = Math.round(attack * ENEMY_ATK_COMP);
   // 개체별 강약은 behavior 계수가 아니라 **원본 실측 비율**로 정한다.

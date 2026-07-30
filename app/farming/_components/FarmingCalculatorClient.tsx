@@ -736,7 +736,7 @@ function FarmingCalculatorClientContent() {
         <div className="flex items-center gap-2">
           <span className="h-3 w-3" style={{ background: PRIMARY }} />
           <span className="font-mono text-[11px] font-bold uppercase tracking-[0.3em] text-ef-muted">Farming Calc</span>
-          <span className="font-mono text-[11px] tracking-[0.2em] text-ef-muted/60">// 재화 파밍 계산기</span>
+          <span className="font-mono text-[11px] tracking-[0.2em] text-ef-muted/60">{"// 재화 파밍 계산기"}</span>
         </div>
       </div>
 

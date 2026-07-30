@@ -140,7 +140,7 @@ function equipDrops(party: Any[], floor: number, tier: Any, count: number): Any[
   return p;
 }
 function runFull(style: string, relics: string[], fi = 0) {
-  let party = freshParty(STYLE_PARTY[style]); // 스타일별 실제 파티 조합
+  const party = freshParty(STYLE_PARTY[style]); // 스타일별 실제 파티 조합
   const deck = styleDeck(party, style);
   if (BUFF) deck.forEach((dc: Any) => { if (dc.src === "operator" && dc.kind && dc.kind !== "util") dc.eliteLevel = 2; }); // 정예화 ×1.4
   const nodes = collectCombatNodes(fi);
@@ -150,7 +150,8 @@ function runFull(style: string, relics: string[], fi = 0) {
   const pool = ops.flatMap((id: string) => FULL_KIT.map((k) => `op:${id}:${k}`));
   const rewardPool: Record<string, string[]> = { [style]: pool };
   let seq = deck.length, rIdx = 0;
-  let cleared = 0, deathFloor = 0, log: string[] = [];
+  const log: string[] = [];
+  let cleared = 0, deathFloor = 0;
   for (let i = 0; i < nodes.length; i++) {
     const node = nodes[i];
     const st = makeBattleState(curParty, deck, relics, node, node.floor * 7 + 3);

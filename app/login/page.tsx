@@ -64,7 +64,7 @@ export default async function LoginPage() {
       <div className="relative z-30 mx-auto mb-6 flex max-w-md items-center gap-2">
         <span className="h-3 w-3" style={{ background: PRIMARY }} />
         <span className="font-mono text-[11px] font-bold uppercase tracking-[0.3em] text-ef-muted">Login</span>
-        <span className="font-mono text-[11px] tracking-[0.2em] text-ef-muted/60">// 로그인</span>
+        <span className="font-mono text-[11px] tracking-[0.2em] text-ef-muted/60">{"// 로그인"}</span>
       </div>
 
       <section

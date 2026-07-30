@@ -117,7 +117,7 @@ export default async function AdminSettingsPage({
           Admin · Settings
         </span>
         <span className="font-mono text-[11px] tracking-[0.2em] text-ef-muted/60">
-          // 세팅 관리
+          {"// 세팅 관리"}
         </span>
       </div>
 
