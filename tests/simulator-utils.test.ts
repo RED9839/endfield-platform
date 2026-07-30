@@ -17,8 +17,8 @@ test("normalizeMaterials parses abbreviated and formatted counts", () => {
       { name: "Ignored", count: "0" },
     ]),
     [
-      { name: "Alpha", count: 1500, icon: "/materials/Alpha.webp" },
-      { name: "Beta", count: 2500, icon: "/materials/Beta.webp" },
+      { name: "Alpha", count: 1500, icon: "/items/Alpha.webp" },
+      { name: "Beta", count: 2500, icon: "/items/Beta.webp" },
     ],
   );
 });
@@ -39,8 +39,8 @@ test("mergeMaterials combines duplicate material names across steps", () => {
   ]);
 
   assert.deepEqual(merged, [
-    { name: "Alpha", count: 5, icon: "/materials/Alpha.webp" },
-    { name: "Beta", count: 1, icon: "/materials/Beta.webp" },
+    { name: "Alpha", count: 5, icon: "/items/Alpha.webp" },
+    { name: "Beta", count: 1, icon: "/items/Beta.webp" },
   ]);
 });
 
