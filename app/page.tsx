@@ -170,7 +170,7 @@ function DataCard({
 export default function HomePage() {
   const featured = defaultHomeFeaturedOperator;
   const featuredWeapon =
-    weaponSummaries.find((weapon) => weapon.name === "42식 · 척결") ??
+    weaponSummaries.find((weapon) => weapon.name === "찬란한 밤의 데뷔") ??
     weaponSummaries[0];
   const featuredGear =
     gearSummaries.find((gear) => gear.setName === "식양의 숨결") ??

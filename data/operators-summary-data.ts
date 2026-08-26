@@ -301,5 +301,15 @@ export const operatorSummaries: OperatorSummary[] = [
     "class": "caster",
     "weapon": "artsunit",
     "avatar": "/operators/arcane/avatar.webp"
+  },
+  {
+    "slug": "liino",
+    "name": "리노",
+    "enName": "Liino",
+    "rarity": 6,
+    "element": "electric",
+    "class": "supporter",
+    "weapon": "polearm",
+    "avatar": "/operators/liino/avatar.webp"
   }
 ];

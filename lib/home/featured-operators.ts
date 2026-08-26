@@ -14,6 +14,19 @@ export type HomeFeaturedOperator = {
 
 const homeOperatorMetas: HomeFeaturedOperator[] = [
   {
+    slug: "liino",
+    name: "리노",
+    enName: "Liino",
+    href: "/operators/liino",
+    heroImage: "/operators/liino/full.webp",
+    avatar: "/operators/liino/avatar.webp",
+    fullImage: "/operators/liino/full.webp",
+    rarity: 6,
+    element: "electric",
+    class: "supporter",
+    aliases: ["Liino", "liino", "리노", "Lino", "리이노"],
+  },
+  {
     slug: "arcane",
     name: "결",
     enName: "Arcane",

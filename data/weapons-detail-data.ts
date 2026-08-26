@@ -2,6 +2,7 @@ import { type42solemnphalanx } from "./weapons-source/type42solemnphalanx";
 import { junctionpoint } from "./weapons-source/junctionpoint";
 import { farsight } from "./weapons-source/farsight";
 import { goldenage } from "./weapons-source/goldenage";
+import { bedazzlingnightdebut } from "./weapons-source/bedazzlingnightdebut";
 import { grandvision } from "./weapons-source/grandvision";
 import { whitenightnova } from "./weapons-source/whitenightnova";
 import { forgebornscathe } from "./weapons-source/forgebornscathe";
@@ -497,6 +498,7 @@ const weaponSources: SourceWeaponDetail[] = [
   junctionpoint,
   farsight,
   goldenage,
+  bedazzlingnightdebut,
 ];
 
 export const weaponDetails: WeaponDetail[] = weaponSources.map(buildWeaponDetail);

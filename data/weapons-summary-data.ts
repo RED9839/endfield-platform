@@ -692,5 +692,14 @@ export const weaponSummaries: WeaponSummary[] = [
     "weaponType": "handcannon",
     "image": "/weapons/goldenage.webp",
     "series": "추격 · 위대한 영웅"
+  },
+  {
+    "slug": "bedazzlingnightdebut",
+    "name": "찬란한 밤의 데뷔",
+    "enName": "Bedazzling Night Debut",
+    "rarity": 6,
+    "weaponType": "polearm",
+    "image": "/weapons/bedazzlingnightdebut.webp",
+    "series": "의료 · 찬란한 장막"
   }
 ];

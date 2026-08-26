@@ -27,6 +27,7 @@ import { endministratorOperatorDetailData } from "./operators-source/endministra
 import { zhuangfangyiDetailData } from "./operators-source/zhuangfangyi";
 import { mifuOperatorDetailData } from "./operators-source/mifu";
 import { camuOperatorDetailData } from "./operators-source/camu";
+import { liinoOperatorDetailData } from "./operators-source/liino";
 
 import {
   buildOperatorDetailFromSource,
@@ -95,6 +96,7 @@ export const operatorDetails: OperatorDetail[] = [
   buildOperatorDetailFromSource(mifuOperatorDetailData),
   buildOperatorDetailFromSource(camuOperatorDetailData),
   buildOperatorDetailFromSource(arcaneOperatorDetailData),
+  buildOperatorDetailFromSource(liinoOperatorDetailData),
 ];
 
 const operatorDetailBySlug = new Map(
